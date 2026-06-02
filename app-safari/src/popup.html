@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdOff</title>
+  <link rel="stylesheet" href="popup.css">
+  <script src="i18n.js"></script>
+</head>
+<body>
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+      <img src="../assets/icon48.png" alt="AdOff" class="logo">
+      <div class="header-text">
+        <h1 data-i18n="popup.title">AdOff</h1>
+        <span class="tagline" data-i18n="popup.tagline">Ads? Off!</span>
+      </div>
+      <div class="founder-badge" id="founderBadge" style="display:none" data-i18n="popup.founder">FOUNDER</div>
+      <div class="license-badge" id="licenseBadge"></div>
+    </div>
+
+    <!-- CHANGELOG BANNER (post-aggiornamento) -->
+    <div class="changelog-banner" id="changelogBanner" style="display:none">
+      <div class="changelog-header">
+        <span class="changelog-title" id="changelogTitle">Novita'</span>
+        <button class="changelog-close" id="changelogClose">&#10005;</button>
+      </div>
+      <ul class="changelog-list" id="changelogList"></ul>
+    </div>
+
+    <!-- REVIEW PROMPT (2-step: sentiment → review / support) -->
+    <div class="review-prompt" id="reviewPrompt" style="display:none">
+
+      <!-- Step 1: sentiment -->
+      <div id="reviewStep1">
+        <div class="review-text">
+          <span class="review-icon">&#11088;</span>
+          <span id="reviewMessage" data-i18n="popup.review.sentiment">Ti trovi bene con AdOff?</span>
+        </div>
+        <div class="review-actions">
+          <button class="review-btn primary" id="btnSentimentYes" data-i18n="popup.review.yes">&#128522; S&igrave;</button>
+          <button class="review-btn ghost" id="btnSentimentNo" data-i18n="popup.review.no">&#128533; Non proprio</button>
+        </div>
+      </div>
+
+      <!-- Step 2a: happy → ask review -->
+      <div id="reviewStepYes" style="display:none">
+        <div class="review-text">
+          <span class="review-icon">&#128591;</span>
+          <span data-i18n="popup.review.askYes">Fantastico! Sono Eros e porto avanti AdOff da solo. Una recensione onesta mi aiuta pi&ugrave; di mille euro di pubblicit&agrave; &mdash; bastano 20 secondi.</span>
+        </div>
+        <div class="review-actions">
+          <button class="review-btn primary" id="btnReview" data-i18n="popup.review">Lascia una recensione</button>
+          <button class="review-btn ghost" id="btnReviewLater" data-i18n="popup.reviewLater">Magari dopo</button>
+        </div>
+      </div>
+
+      <!-- Step 2b: unhappy → offer help (does NOT block the store) -->
+      <div id="reviewStepNo" style="display:none">
+        <div class="review-text">
+          <span class="review-icon">&#128172;</span>
+          <span data-i18n="popup.review.askNo">Mi dispiace &mdash; voglio sistemarlo. Cosa non va? Scrivimi, leggo tutto io.</span>
+        </div>
+        <div class="review-actions">
+          <button class="review-btn primary" id="btnReviewSupport" data-i18n="popup.review.write">Scrivimi</button>
+          <button class="review-btn ghost" id="btnReviewNoThanks" data-i18n="popup.review.noThanks">No grazie</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TOGGLE GLOBALE -->
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <span class="toggle-label" data-i18n="popup.toggle">Blocco ads</span>
+        <span class="toggle-status" id="toggleStatus" data-i18n="popup.active">Attivo</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="globalToggle" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <!-- CONTATORI -->
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-value" id="adsBlocked">0</span>
+        <span class="stat-label" data-i18n="popup.adsBlocked">ads bloccati</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-value" id="reqBlocked">0</span>
+        <span class="stat-label" data-i18n="popup.reqBlocked">richieste bloccate</span>
+      </div>
+    </div>
+
+    <!-- SITO CORRENTE -->
+    <div class="site-row">
+      <div class="site-icon">&#127760;</div>
+      <div class="site-info">
+        <span class="site-label" data-i18n="popup.currentSite">Sito corrente</span>
+        <span class="site-name" id="currentSite">—</span>
+      </div>
+    </div>
+
+    <!-- PAUSA PER SITO -->
+    <div class="pause-section" id="pauseSection">
+      <!-- Stato: non in pausa -->
+      <div id="pauseActive" class="pause-active-row" style="display:none">
+        <div class="pause-active-info">
+          <span class="pause-icon">&#9208;</span>
+          <span id="pauseActiveLabel">In pausa per 1 ora</span>
+        </div>
+        <button class="btn-resume" id="btnResume" data-i18n="popup.resume">Riattiva</button>
+      </div>
+
+      <!-- Bottone pausa + dropdown -->
+      <div id="pauseInactive" class="pause-inactive-row">
+        <button class="btn-pause" id="btnPause" data-i18n="popup.pauseHere">⏸ Pausa qui</button>
+        <div class="pause-dropdown" id="pauseDropdown" style="display:none">
+          <button class="dropdown-item" data-type="session" data-i18n="popup.pauseSession">Solo questa visita</button>
+          <button class="dropdown-item" data-type="1hour" data-i18n="popup.pause1h">1 ora</button>
+          <button class="dropdown-item" data-type="1day" data-i18n="popup.pause1d">1 giorno</button>
+          <button class="dropdown-item" data-type="permanent" data-i18n="popup.pauseAlways">Sempre (whitelist)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BANNER LICENZA (solo per free/trial) -->
+    <div class="license-banner" id="licenseBanner" style="display:none"></div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <span class="version" id="popupVersion"></span>
+      <div class="footer-links">
+        <a class="options-link" id="helpLink" href="#">&#128172; <span data-i18n="popup.help">Aiuto</span></a>
+        <a class="options-link" id="optionsLink" href="#" data-i18n="popup.options">&#9881; Opzioni</a>
+      </div>
+    </div>
+
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
