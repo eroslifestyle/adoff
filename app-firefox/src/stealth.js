@@ -30,6 +30,9 @@
     // Travel / booking — SPA pesanti con click programmatici e window.open
     // su flow pagamento/seat-map. Il popup-blocker layer 2/3 rompe la nav.
     "ryanair.com",
+    // Streaming ads-free — il player NON serve pubblicita'. IMA stub e stealth
+    // override rompono il playback (Netflix manda il player in errore).
+    "netflix.com",
   ];
 
   // Streaming premium con SSAI via Google DAI — il player ha bisogno

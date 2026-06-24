@@ -12,6 +12,17 @@
   const hostname = location.hostname;
   const isOfficialSite = hostname === "adoff.app" || hostname === "www.adoff.app" || hostname.endsWith(".adoff-site.pages.dev");
 
+  // Siti neutrali: nessuna pubblicita' interna — AdOff deve essere completamente
+  // trasparente (no scan DOM, no hide, no stealth, no IMA). Hardcoded perche'
+  // questo script gira in ISOLATED world prima ancora della lettura storage.
+  // Netflix non mostra ads all'interno del player — qualsiasi intervento causa
+  // blocchi/playback error. Aggiungere qui solo domini verificati ads-free.
+  const NEUTRAL_SITES = [
+    "netflix.com",
+  ];
+  const isNeutralSite = NEUTRAL_SITES.some((d) => hostname === d || hostname.endsWith("." + d));
+  if (isNeutralSite) return;
+
   // Cattura codice affiliato dal sito ufficiale
   if (isOfficialSite) {
     const getCookie = (name) => {
@@ -53,9 +64,63 @@
   // EB-7: Nonce per data-adoff-stealth — formato verificabile: "ao_" + 8 hex chars
   const STEALTH_NONCE = "ao_" + Math.floor(Math.random() * 0xFFFFFFFF).toString(16).padStart(8, "0");
 
+  // --- Trial: verifica firma ECDSA del token server (anti-tampering) ---
+  // L'autorità del trial è il server. Il gate Pro/Trial in-page si fida SOLO
+  // di un token firmato verificato con la chiave pubblica embeddata; un
+  // adoffTrialEnd gonfiato via DevTools non abilita le feature Pro.
+  const TRIAL_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
+  const TRIAL_MARGIN_MS = 24 * 60 * 60 * 1000;
+  const TRIAL_PUBKEY_JWK = {
+    kty: "EC", crv: "P-256",
+    x: "FnIroHHVzo3v01gENPaA2U70c58sduDD6hGS0EhCATc",
+    y: "tAzRBzVK1O8ul76s2euNrqV0L4f1qmEtvcKB_HqpfrY",
+  };
+  function trialB64uToBytes(s) {
+    s = s.replace(/-/g, "+").replace(/_/g, "/");
+    while (s.length % 4) s += "=";
+    const bin = atob(s);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  let _trialPubKeyPromise = null;
+  function importTrialPubKey() {
+    if (!_trialPubKeyPromise) {
+      _trialPubKeyPromise = crypto.subtle.importKey(
+        "jwk", TRIAL_PUBKEY_JWK, { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]
+      );
+    }
+    return _trialPubKeyPromise;
+  }
+  async function verifyTrialToken(token, localDeviceId) {
+    if (!token || typeof token !== "string" || token.indexOf(".") < 0) return null;
+    try {
+      const [payloadB64, sigB64] = token.split(".");
+      const pubKey = await importTrialPubKey();
+      const ok = await crypto.subtle.verify(
+        { name: "ECDSA", hash: "SHA-256" }, pubKey,
+        trialB64uToBytes(sigB64), new TextEncoder().encode(payloadB64)
+      );
+      if (!ok) return null;
+      const payload = JSON.parse(new TextDecoder().decode(trialB64uToBytes(payloadB64)));
+      if (localDeviceId && payload.deviceId && payload.deviceId !== localDeviceId) return null;
+      return payload;
+    } catch (_) { return null; }
+  }
+  // Trial attivo? Autorità = token firmato; fallback ottimistico ≤30g da ora.
+  async function isTrialActive(result, now) {
+    const payload = result.adoffTrialToken
+      ? await verifyTrialToken(result.adoffTrialToken, result.adoffDeviceId)
+      : null;
+    if (payload) return payload.trialEnd > now;
+    const te = result.adoffTrialEnd || 0;
+    return !result.adoffTrialExpired && te > now
+      && te <= now + TRIAL_DURATION_MS + TRIAL_MARGIN_MS;
+  }
+
   // --- Controlla whitelist, stato e licenza prima di avviare ---
   if (!isExtensionValid()) return;
-  chrome.storage.local.get(["adoffEnabled", "adoffAdsBlocked", "adoffWhitelist", "adoffTrialEnd", "adoffLicense", "adoffIntegrity"], (result) => {
+  chrome.storage.local.get(["adoffEnabled", "adoffAdsBlocked", "adoffWhitelist", "adoffTrialEnd", "adoffTrialToken", "adoffTrialExpired", "adoffDeviceId", "adoffLicense", "adoffIntegrity"], async (result) => {
     if (chrome.runtime.lastError || !isExtensionValid()) return;
     const whitelist = result.adoffWhitelist || [];
     // EA-7: suffix matching corretto (non bidirezionale)
@@ -66,20 +131,21 @@
 
     // EM-4: Verifica integrity usando lo stesso oggetto di license-client.js
     const lic = result.adoffLicense || {};
-    const trialEnd = result.adoffTrialEnd || 0;
     // L'integrity hash viene calcolato su licData (stesso formato di license-client.js)
     const storedIntegrity = result.adoffIntegrity || "";
     // Se lic ha dati validi, verifica; se e' vuoto/free, skippa il check
     const integrityOk = !lic.valid || (storedIntegrity && computeIntegrity(lic) === storedIntegrity);
 
+    // Trial: gate basato su token firmato dal server (non falsificabile).
+    const trialOk = await isTrialActive(result, Date.now());
+
     // Comunica al MAIN world (stealth.js) se lo stealth e' abilitato (Pro/Trial)
     // Se l'integrity fallisce, trattare come Free (no stealth)
-    const isPro = integrityOk && (
+    const isPro = (integrityOk && (
       lic.type === "pro" || lic.type === "lifetime" ||
       lic.plan === "pro" || lic.plan === "lifetime" ||
-      lic.plan === "monthly" || lic.plan === "annual" ||
-      (trialEnd > Date.now()) // Trial attivo
-    );
+      lic.plan === "monthly" || lic.plan === "annual"
+    )) || trialOk;
     if (isPro) {
       // EB-7: usa nonce verificabile invece di "1" fisso
       document.documentElement.setAttribute("data-adoff-stealth", STEALTH_NONCE);

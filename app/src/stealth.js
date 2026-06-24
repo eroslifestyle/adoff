@@ -60,6 +60,9 @@
     // Travel / booking — SPA pesanti con click programmatici e window.open
     // su flow pagamento/seat-map. Il popup-blocker layer 2/3 rompe la nav.
     "ryanair.com",
+    // Streaming ads-free — il player NON serve pubblicita'. IMA stub e stealth
+    // override rompono il playback (Netflix manda il player in errore).
+    "netflix.com",
   ];
 
   // Streaming premium con SSAI via Google DAI — il content stream
@@ -638,8 +641,20 @@
       VOLUME_CHANGED: "volumeChange", VOLUME_MUTED: "mute",
     };
 
+    // AdPodInfo: alcuni player (es. RTI/Mediaset) chiamano ad.getAdPodInfo()
+    // dentro l'handler di OGNI evento, incluso CONTENT_RESUME_REQUESTED. Se
+    // manca, il listener lancia prima di riprendere il contenuto e il video
+    // non parte. Idem per getAdIdValue/getAdIdRegistry e getUniversalAdIds()
+    // che deve restituire oggetti con metodi accessor, non proprieta'.
+    class _AdPodInfo {
+      getAdPosition() { return 1; } getIsBumper() { return false; }
+      getMaxDuration() { return -1; } getPodIndex() { return 0; }
+      getTimeOffset() { return 0; } getTotalAds() { return 1; }
+    }
+
     class _Ad {
       getAdId() { return ""; } getAdSystem() { return ""; }
+      getAdIdValue() { return ""; } getAdIdRegistry() { return ""; }
       getCreativeId() { return ""; } getDuration() { return 0.1; }
       getHeight() { return 0; } getWidth() { return 0; }
       getSkipTimeOffset() { return -1; } getTitle() { return ""; }
@@ -648,12 +663,13 @@
       getWrapperCreativeIds() { return []; }
       getTraffickingParameters() { return {}; }
       getTraffickingParametersString() { return ""; }
-      getUniversalAdIds() { return []; }
+      getUniversalAdIds() { return [{ getAdIdRegistry() { return "unknown"; }, getAdIdValue() { return "unknown"; }, adIdRegistry: "unknown", adIdValue: "unknown" }]; }
       getVastMediaBitrate() { return 0; }
       isLinear() { return true; } isSkippable() { return true; }
       getAdvertiserName() { return ""; } getContentType() { return ""; }
       getDescription() { return ""; } getSurveyUrl() { return null; }
       getMinSuggestedDuration() { return 0; }
+      getAdPodInfo() { return new _AdPodInfo(); }
     }
 
     class _AdEvent {
