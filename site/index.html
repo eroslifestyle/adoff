@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdOff · Ad Blocker Invisibile con Stealth</title>
+  <meta name="description" content="AdOff blocca banner, pop-up, tracker e pubblicità video su Chrome. La tecnologia Stealth è invisibile ai sistemi anti-adblock: i siti non sanno che esiste. Gratis, 30 giorni Pro gratis, no carta." />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://adoff.app/" />
+
+  <!-- hreflang — 15 lingue -->
+  <link rel="alternate" hreflang="it" href="https://adoff.app/" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/en/" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/de/" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/fr/" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/es/" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/pt/" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/ru/" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/ar/" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/hi/" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/tr/" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/id/" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/pl/" />
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/en/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="AdOff · Ad Blocker Invisibile con Stealth Anti-Detection" />
+  <meta property="og:description" content="Blocca tutta la pubblicita', anche video. I siti non sanno che usi un ad blocker. Trial 30 giorni gratis." />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/" />
+  <meta property="og:site_name" content="AdOff" />
+  <meta property="og:locale" content="it_IT" />
+  <meta property="og:locale:alternate" content="en_US" />
+  <meta property="og:locale:alternate" content="de_DE" />
+  <meta property="og:locale:alternate" content="fr_FR" />
+  <meta property="og:locale:alternate" content="es_ES" />
+  <meta property="og:locale:alternate" content="pt_PT" />
+  <meta property="og:locale:alternate" content="ru_RU" />
+  <meta property="og:locale:alternate" content="ar_SA" />
+  <meta property="og:locale:alternate" content="zh_CN" />
+  <meta property="og:locale:alternate" content="hi_IN" />
+  <meta property="og:locale:alternate" content="ja_JP" />
+  <meta property="og:locale:alternate" content="ko_KR" />
+  <meta property="og:locale:alternate" content="tr_TR" />
+  <meta property="og:locale:alternate" content="id_ID" />
+  <meta property="og:locale:alternate" content="pl_PL" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AdOff · Blocca Tutta la Pubblicita' su Chrome" />
+  <meta name="twitter:description" content="Stealth anti-detection. I siti non ti rilevano. Trial 30 giorni gratis." />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <link rel="stylesheet" href="style.css?v=260520-205323" />
+  <script src="affiliate-tracking.js"></script>
+
+  <style>
+    /* Page-specific overrides for index.html.
+       All design tokens, components and resets live in style.css.
+       Keep this block under 80 lines. */
+
+    /* Hero — kill leftover gradient text + halo (defensive) */
+    .hero__headline,
+    .final-cta__headline,
+    .solution__reveal,
+    .gradient-text {
+      background: none !important;
+      -webkit-background-clip: unset !important;
+      -webkit-text-fill-color: currentColor !important;
+      background-clip: unset !important;
+    }
+    .hero::before,
+    .final-cta::before { content: none !important; }
+
+    /* Distribution row replacing the "metric strip" cliché. */
+    .hero__distribution {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      align-items: center;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    .hero__distribution > strong {
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      margin-right: 4px;
+    }
+    .hero__distribution .store-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      color: var(--text-muted);
+      font-weight: 500;
+      text-decoration: none;
+      transition: border-color var(--t), color var(--t), transform var(--t);
+    }
+    .hero__distribution a.store-mark:hover { border-color: var(--accent-line); color: var(--accent); transform: translateY(-1px); }
+
+    /* HERO STORE BUTTONS — Installa direttamente dagli store ufficiali */
+    .hero__stores { margin-top: 2rem; }
+    .hero__stores-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .hero__stores-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      max-width: 760px;
+    }
+    @media (max-width: 720px) {
+      .hero__stores-grid { grid-template-columns: 1fr; }
+    }
+    .store-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: #12122a;
+      border: 1.5px solid #2a2a4a;
+      color: #fff;
+      text-decoration: none;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s, background 0.2s;
+      min-height: 64px;
+    }
+    .store-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .store-btn--chrome:hover { border-color: #4285F4; background: linear-gradient(135deg, rgba(66,133,244,0.12), rgba(66,133,244,0.04)); }
+    .store-btn--firefox:hover { border-color: #FF512F; background: linear-gradient(135deg, rgba(255,81,47,0.12), rgba(255,81,47,0.04)); }
+    .store-btn--edge:hover { border-color: #0F88FF; background: linear-gradient(135deg, rgba(15,136,255,0.12), rgba(15,136,255,0.04)); }
+    .store-btn__logo { flex-shrink: 0; }
+    .store-btn__text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+    .store-btn__small {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+    .store-btn__big {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 2px;
+    }
+    .hero__stores-secondary {
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+      color: var(--text-dim);
+    }
+    .hero__stores-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .hero__stores-link:hover { color: var(--accent); }
+    .hero__stores-sep { color: var(--border); }
+
+    /* Testimonial provenance lines: tone down */
+    .testi-card__role + .testi-card__role {
+      color: var(--text-dim) !important;
+      font-size: 0.74rem !important;
+      margin-top: 2px;
+      letter-spacing: 0.02em;
+    }
+
+    /* Free plan visual de-emphasis */
+    .plan-card--free { border-style: dashed; opacity: 0.92; }
+    .plan-card--free:hover { opacity: 1; }
+
+    /* "Strikethrough" muted feature in Free plan */
+    .plan-features li .x-mark + span { color: var(--text-dim); }
+
+    /* Section reveal headers — restrict line length on long titles */
+    .section-title { max-width: 22ch; margin-left: auto; margin-right: auto; }
+
+    /* Hide deprecated decorative dot in trust strip */
+    .hero__trust-strip { display: none; }
+
+    /* Compare table styling extracted to .compare-table in style.css */
+
+    /* Footer note links in plan cards */
+    .plan-note[style*="success"] { color: var(--accent) !important; }
+
+    /* IMPORTANT — kill yellow PRO chip leftover behind feature titles */
+    .feature-card__title span[style*="f59e0b"],
+    .feature-card__title span[style*="background"] {
+      background: transparent !important;
+      color: var(--accent) !important;
+      border: 1px solid var(--accent-line) !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.08em !important;
+      text-transform: uppercase !important;
+      font-size: 0.65rem !important;
+      padding: 2px 8px !important;
+      border-radius: 999px !important;
+    }
+
+    /* Mobile: tighten hero distribution */
+    @media (max-width: 540px) {
+      .hero__distribution { font-size: 0.78rem; }
+      .hero__distribution .store-mark { padding: 4px 10px; }
+    }
+  </style>
+
+  <!-- JSON-LD Structured Data for AI Search & Rich Results -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AdOff",
+    "alternateName": "AdOff Ad Blocker",
+    "description": "Universal stealth ad blocker for Chrome, Edge, Brave, Firefox, Safari. Blocks all ads invisibly with anti-detection technology. Featherlight, ultrafast.",
+    "url": "https://adoff.app/",
+    "downloadUrl": "https://adoff.app/install.html",
+    "datePublished": "2025-01-01",
+    "dateModified": "2026-06-28",
+    "applicationCategory": "BrowserExtension",
+    "applicationSubCategory": "Ad Blocker",
+    "operatingSystem": "Windows, macOS, Linux, ChromeOS",
+    "browserRequirements": "Requires Chrome, Edge, Brave, Opera, Firefox, or Safari",
+    "fileSize": "Featherlight",
+    "softwareVersion": "3.5.28",
+    "inLanguage": ["en", "it", "de", "fr", "es", "pt", "ru", "ar", "zh", "hi", "ja", "ko", "tr", "id", "pl"],
+    "author": {
+      "@type": "Person",
+      "name": "Eros",
+      "url": "https://adoff.app/about.html"
+    },
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "Free",
+        "price": "0",
+        "priceCurrency": "EUR",
+        "description": "Network blocking, CSS hiding, basic video skip, whitelist"
+      },
+      {
+        "@type": "Offer",
+        "name": "Pro Monthly",
+        "price": "2.99",
+        "priceCurrency": "EUR",
+        "description": "Includes Stealth Mode, advanced video skip, anti-detection"
+      },
+      {
+        "@type": "Offer",
+        "name": "Pro Annual (Founder price for the first 100)",
+        "price": "19.99",
+        "priceCurrency": "EUR",
+        "description": "Founder price locked for life for the first 100 subscribers, then 24.99"
+      },
+      {
+        "@type": "Offer",
+        "name": "Founder Lifetime (limited launch offer)",
+        "price": "99",
+        "priceCurrency": "EUR"
+      }
+    ],
+    "featureList": [
+      "Universal ad blocking on all websites",
+      "Manifest V3 compliant",
+      "Stealth Mode anti-detection (Pro)",
+      "Video ad blocking on streaming platforms (Pro/Trial)",
+      "138 network blocking rules",
+      "Cosmetic filtering",
+      "Whitelist per site",
+      "Zero data collection",
+      "15 languages"
+    ]
+  }
+  </script>
+
+  <script src="/adoff-i18n.js?v=260520-205323"></script>
+  </head>
+<body>
+
+  <a href="#main-content" class="skip-link" data-i18n="a11y.skip">Salta al contenuto principale</a>
+
+  <!-- ======================== NAV ======================== -->
+  <div id="site-nav"></div>
+  <script src="/adoff-nav.js?v=260520-205323"></script>
+
+  <main id="main-content">
+
+  <!-- ======================== 1. HERO ======================== -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero__content">
+
+      <div class="wordmark wordmark--hero reveal" aria-label="AdOff">
+        <span class="wordmark__ad">Ad</span><span class="wordmark__off">Off</span><span class="wordmark__dot">.</span>
+      </div>
+
+      <div class="hero__eyebrow reveal reveal-delay-1">
+        <span class="hero__eyebrow-dot"></span>
+        <span data-i18n="hero.eyebrow">Ad blocker per Chrome che blocca pubblicità, banner e annunci video — invisibile ai siti</span>
+      </div>
+
+      <h1 class="hero__headline reveal reveal-delay-2" data-i18n-html="sl.hero.headline">
+        Il web a velocità reale.<br><em>Senza pubblicità</em>, nemmeno nei video.
+      </h1>
+
+      <p class="hero__sub reveal reveal-delay-3" data-i18n-html="hero.sub">
+        AdOff blocca banner, pop-up e tracker prima che si carichino. Neutralizza le pubblicità video alla sorgente, su qualsiasi piattaforma di streaming. E funziona in silenzio: <strong>i siti non si accorgono che esiste</strong>.
+      </p>
+
+      <div class="hero__stores reveal reveal-delay-4">
+        <div class="hero__stores-label" data-i18n="hero.stores.label">Installa direttamente dagli store ufficiali</div>
+        <div class="hero__stores-grid">
+          <a href="https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp" target="_blank" rel="noopener" class="store-btn store-btn--chrome">
+            <svg class="store-btn__logo" viewBox="0 0 48 48" width="28" height="28" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="#fff"/><circle cx="24" cy="24" r="8" fill="#4285F4"/><path d="M24 4a20 20 0 0 1 17.32 10H24a10 10 0 0 0-8.66 5L6.68 14A20 20 0 0 1 24 4z" fill="#EA4335"/><path d="M41.32 14a20 20 0 0 1 0 20l-8.66-5a10 10 0 0 0 0-10z" fill="#FBBC04"/><path d="M24 44a20 20 0 0 1-17.32-10L15.34 29a10 10 0 0 0 8.66 5z" fill="#34A853"/></svg>
+            <span class="store-btn__text">
+              <span class="store-btn__small" data-i18n="hero.stores.chrome.small">Installa da</span>
+              <span class="store-btn__big">Chrome Web Store</span>
+            </span>
+          </a>
+          <a href="https://addons.mozilla.org/firefox/addon/adoff/" target="_blank" rel="noopener" class="store-btn store-btn--firefox">
+            <svg class="store-btn__logo" viewBox="0 0 48 48" width="28" height="28" aria-hidden="true"><defs><radialGradient id="ffhero" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFCB6E"/><stop offset="100%" stop-color="#FF512F"/></radialGradient></defs><circle cx="24" cy="24" r="22" fill="url(#ffhero)"/><path d="M14 18c2-5 7-9 12-9 6 0 10 4 10 4s-4-1-7 1c5 0 8 5 8 9 0 8-7 14-15 14-9 0-15-6-15-14 0-4 2-7 4-9-1 4 1 7 3 7-1-1-1-2 0-3z" fill="#fff" opacity=".95"/></svg>
+            <span class="store-btn__text">
+              <span class="store-btn__small" data-i18n="hero.stores.firefox.small">Installa da</span>
+              <span class="store-btn__big">Firefox Add-ons</span>
+            </span>
+          </a>
+          <!-- Edge: nessuna pagina pubblica Edge Add-ons ancora -> install dal Chrome Web Store (Edge lo supporta nativamente), come install.html -->
+          <a href="https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp" target="_blank" rel="noopener" class="store-btn store-btn--edge">
+            <svg class="store-btn__logo" viewBox="0 0 48 48" width="28" height="28" aria-hidden="true"><defs><linearGradient id="edghero1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0F88FF"/><stop offset="100%" stop-color="#0A4DAB"/></linearGradient><linearGradient id="edghero2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3CC8FF"/><stop offset="100%" stop-color="#0F88FF"/></linearGradient></defs><path d="M44 24c0 11-9 20-20 20-7 0-13-3-17-8 4 3 9 5 14 4 7-1 12-6 12-12 0-3-2-5-5-5h-9c-3 0-5 3-3 6-4-2-7-7-6-12 1-6 7-11 14-11 11 0 20 8 20 18z" fill="url(#edghero1)"/><path d="M28 13c-7 0-13 5-14 11-1 5 2 10 6 12-2-3 0-6 3-6h9c3 0 5 2 5 5 0 6-5 11-12 12 8 1 17-3 19-12 2-12-7-22-16-22z" fill="url(#edghero2)"/></svg>
+            <span class="store-btn__text">
+              <span class="store-btn__small" data-i18n="hero.stores.edge.small">Installa da</span>
+              <span class="store-btn__big">Edge Add-ons</span>
+            </span>
+          </a>
+        </div>
+        <div class="hero__stores-secondary">
+          <a href="install.html" class="hero__stores-link" data-i18n="hero.allbrowsers">Tutti i browser + Safari →</a>
+          <span class="hero__stores-sep">&middot;</span>
+          <a href="#pricing" class="hero__stores-link" data-i18n="hero.plans">Vedi i piani</a>
+        </div>
+      </div>
+
+      </div><!-- /.hero__content -->
+
+      <div class="hero__media reveal reveal-delay-4">
+        <div class="hero__shots">
+          <img class="hero__shots-main" src="/assets/options.webp?v=3" width="1081" height="471" decoding="async" fetchpriority="high"
+               alt="La pagina Opzioni di AdOff: blocco ads, badge icona, contatore e selezione lingua, con menu laterale" />
+          <img class="hero__shots-pop" src="/assets/popup.webp?v=4" width="299" height="406" decoding="async"
+               alt="Il popup di AdOff: blocco ads attivo, 2 ads e 109 richieste bloccate, trial Pro di 6 giorni rimasti" />
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ======================== 2. SOCIAL PROOF ======================== -->
+  <div class="social-proof reveal">
+    <div class="container--wide">
+      <div class="social-proof__inner">
+        <div class="social-proof__stat">
+          <strong>4</strong>
+          <span data-i18n="sl.social.layers">Livelli di blocco</span>
+        </div>
+        <div class="social-proof__divider"></div>
+        <div class="social-proof__stat">
+          <strong>138</strong>
+          <span data-i18n="sl.social.rules">Regole di rete</span>
+        </div>
+        <div class="social-proof__divider"></div>
+        <div class="social-proof__stat">
+          <strong>5</strong>
+          <span data-i18n="sl.social.browsers">Browser supportati</span>
+        </div>
+        <div class="social-proof__divider"></div>
+        <div class="social-proof__stat">
+          <strong>15</strong>
+          <span data-i18n="sl.social.languages">Lingue disponibili</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== 2.5 PIATTAFORME COPERTE (super-USP) ======================== -->
+  <section class="platforms" id="platforms">
+    <div class="container">
+      <div class="platforms__header reveal">
+        <span class="section-label" data-i18n="platforms.label">Copertura universale</span>
+        <h2 class="section-title" data-i18n-html="platforms.title">Funziona su <em>ogni sito che usi</em>.<br>Senza configurarlo.</h2>
+        <p class="section-sub" data-i18n="platforms.sub">YouTube, Facebook, Instagram, TikTok, Twitch, Amazon, Google e qualunque altro sito del mondo. Una sola estensione. Una sola interfaccia. Zero allow-list da gestire.</p>
+      </div>
+
+      <div class="platforms__grid">
+        <div class="platforms-card reveal reveal-delay-1">
+          <div class="platforms-card__cat" data-i18n="platforms.video.cat">VIDEO & STREAMING</div>
+          <h3 class="platforms-card__title" data-i18n="platforms.video.title">Niente pre-roll, niente mid-roll</h3>
+          <p class="platforms-card__brands">YouTube &middot; Twitch &middot; Vimeo &middot; Dailymotion &middot; Hulu &middot; Tubi &middot; Pluto TV &middot; Rai Play &middot; Mediaset Infinity</p>
+          <p class="platforms-card__note" data-i18n="platforms.video.note">L'SDK pubblicitario video viene sostituito da uno stub neutro: il player parte istantaneamente. Disponibile in Pro.</p>
+        </div>
+
+        <div class="platforms-card reveal reveal-delay-2">
+          <div class="platforms-card__cat" data-i18n="platforms.social.cat">SOCIAL MEDIA</div>
+          <h3 class="platforms-card__title" data-i18n="platforms.social.title">Feed senza post sponsorizzati</h3>
+          <p class="platforms-card__brands">Facebook &middot; Instagram &middot; X (Twitter) &middot; TikTok &middot; Reddit &middot; LinkedIn &middot; Pinterest &middot; Snapchat</p>
+          <p class="platforms-card__note" data-i18n="platforms.social.note">Post promozionali, ads in-feed, "suggested" e contenuti sponsorizzati nascosti. Lo scroll torna a essere tuo.</p>
+        </div>
+
+        <div class="platforms-card reveal reveal-delay-3">
+          <div class="platforms-card__cat" data-i18n="platforms.search.cat">RICERCA & SHOPPING</div>
+          <h3 class="platforms-card__title" data-i18n="platforms.search.title">Solo risultati organici</h3>
+          <p class="platforms-card__brands">Google &middot; Bing &middot; Amazon &middot; eBay &middot; AliExpress</p>
+          <p class="platforms-card__note" data-i18n="platforms.search.note">Risultati "Sponsorizzato", annunci shopping e prodotti promossi rimossi prima ancora che li vedi.</p>
+        </div>
+
+        <div class="platforms-card reveal reveal-delay-4">
+          <div class="platforms-card__cat" data-i18n="platforms.news.cat">NEWS, BLOG & WALL ANTI-ADBLOCK</div>
+          <h3 class="platforms-card__title" data-i18n="platforms.news.title">Articolo invece che muro pubblicitario</h3>
+          <p class="platforms-card__brands">Corriere &middot; Repubblica &middot; La7 &middot; Sky TG24 &middot; The Guardian &middot; BBC &middot; CNN &middot; NYT</p>
+          <p class="platforms-card__note" data-i18n="platforms.news.note">Banner sticky, popup, overlay e wall "disattiva l'adblock" neutralizzati grazie alla modalita' Stealth (Pro).</p>
+        </div>
+
+        <div class="platforms-card reveal reveal-delay-5">
+          <div class="platforms-card__cat" data-i18n="platforms.music.cat">MUSICA E AUDIO</div>
+          <h3 class="platforms-card__title" data-i18n="platforms.music.title">Niente jingle prima dei brani</h3>
+          <p class="platforms-card__brands">Spotify &middot; SoundCloud &middot; Apple Music &middot; YouTube Music &middot; Deezer &middot; Tidal</p>
+          <p class="platforms-card__note" data-i18n="platforms.music.note">Annunci audio tra una canzone e l'altra e banner promozionali rimossi sui servizi di streaming musicale.</p>
+        </div>
+
+        <div class="platforms-card reveal reveal-delay-5">
+          <div class="platforms-card__cat" data-i18n="platforms.cloud.cat">EMAIL, CLOUD E LAVORO</div>
+          <h3 class="platforms-card__title" data-i18n="platforms.cloud.title">Inbox e workspace puliti</h3>
+          <p class="platforms-card__brands">Gmail &middot; Outlook &middot; Drive &middot; Notion &middot; Slack &middot; Trello</p>
+          <p class="platforms-card__note" data-i18n="platforms.cloud.note">Annunci nelle email gratuite, pop-up promozionali nei tool di produttività e overlay di upgrade neutralizzati.</p>
+        </div>
+      </div>
+
+      <p class="platforms__footnote reveal" data-i18n-html="platforms.footnote">+ <strong>qualunque altro sito web del mondo</strong>. AdOff non ha una lista chiusa di domini supportati: la combinazione di 138 regole di rete, CSS cosmetico universale e stealth anti-detection funziona ovunque, dal primo giorno.</p>
+    </div>
+  </section>
+
+  <!-- ======================== 3. PROBLEMA ======================== -->
+  <section class="problem">
+    <div class="container">
+
+      <div class="problem__header reveal">
+        <span class="section-label" data-i18n="problem.label">Il problema</span>
+        <h2 class="section-title" data-i18n-html="sl.problem.title">Il web è diventato un campo minato.<br>Ti sembra normale?</h2>
+        <p class="section-sub" data-i18n="sl.problem.sub">Conto alla rovescia su ogni video. Banner ovunque. Tracker che gonfiano la RAM. Wall anti-adblock anche quando un blocker ce l'hai. Ecco la giornata media del tuo browser.</p>
+      </div>
+
+      <div class="problem__grid">
+        <div class="pain-card reveal reveal-delay-1">
+          <div class="pain-card__number">5s</div>
+          <div class="pain-card__title" data-i18n="problem.stat1.title">Conto alla rovescia su ogni video</div>
+          <p class="pain-card__desc" data-i18n="problem.stat1.desc">Cinque, dieci, quindici secondi di attesa forzata prima di ogni video. "Salta annuncio" che compare quando vuole. Moltiplicato per ogni clip che apri, ogni giorno. Tempo che non torna.</p>
+        </div>
+        <div class="pain-card reveal reveal-delay-2">
+          <div class="pain-card__number">847</div>
+          <div class="pain-card__title" data-i18n="problem.stat2.title">Tracker per pagina</div>
+          <p class="pain-card__desc" data-i18n="problem.stat2.desc">Una singola pagina carica in media 847 script che registrano cosa guardi, quanto resti, dove clicchi. La RAM si gonfia. La batteria si scarica. Il browser rallenta. Il tuo profilo finisce in vendita.</p>
+        </div>
+        <div class="pain-card reveal reveal-delay-3">
+          <div class="pain-card__number">23%</div>
+          <div class="pain-card__title" data-i18n="problem.stat3.title">Della banda in pubblicità</div>
+          <p class="pain-card__desc" data-i18n="problem.stat3.desc">Quasi un quarto di ogni MB che scarichi è una richiesta pubblicitaria. Paghi connessione, banda mobile e batteria per essere bombardato di messaggi commerciali che non hai chiesto.</p>
+        </div>
+      </div>
+
+      <div class="problem__twist reveal">
+        <h3 data-i18n="sl.problem.twist.title">E il colpo finale: i blocker standard si fanno scoprire.</h3>
+        <p data-i18n-html="sl.problem.twist.text">
+          Installi un ad blocker, soluzione logica. Il sito ti risponde con una finestra:
+          <strong>"Disattiva il tuo ad blocker per continuare a leggere."</strong>
+          Sei intrappolato. Subisci la pubblicità, oppure perdi l'accesso al contenuto.
+          <br><br>
+          <strong>Fino ad ora.</strong>
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ======================== 4. SOLUZIONE ======================== -->
+  <section class="solution">
+    <div class="container">
+      <div class="section-divider reveal"></div>
+      <div class="reveal">
+        <p class="section-label" data-i18n="features.label">La svolta</p>
+        <h2 class="solution__reveal" data-i18n-html="sl.solution.title">Un filtro invisibile che lavora in background. <em>Mentre tu navighi.</em></h2>
+        <p class="solution__intro" data-i18n-html="sl.solution.text1">
+          AdOff è un'estensione moderna per Chrome che blocca pubblicità, pop-up, tracker e cookie banner <strong>prima che si carichino</strong>. Funziona in modo asincrono: zero blocco della pagina, zero rallentamenti. La tecnologia Stealth maschera ogni traccia, così i sistemi anti-adblock non la rilevano.
+        </p>
+        <p class="solution__intro" data-i18n="sl.solution.text2">
+          138 regole di blocco di rete. Filtri CSS cosmetici. Neutralizzazione delle pubblicità video alla sorgente, su qualsiasi piattaforma di streaming. E una Zero Log Policy: nessun dato sulla tua navigazione lascia il dispositivo. Ultra leggera. Asincrona. Privacy-first per design.
+        </p>
+
+        <div class="highlight-pill"><em>AdOff.</em>&nbsp;Ads? Off.</div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;max-width:480px;margin:24px auto 32px;text-align:left;">
+          <div style="display:flex;align-items:center;gap:12px;font-size:1rem;">
+            <span style="color:var(--success);font-size:1.2rem;">✓</span>
+            <span data-i18n="sl.solution.bullet1">Blocco rete e filtri cosmetici su qualsiasi sito</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:1rem;">
+            <span style="color:var(--success);font-size:1.2rem;">✓</span>
+            <span data-i18n="sl.solution.bullet2">Pubblicità video neutralizzate alla sorgente sulle piattaforme di streaming (Pro)</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:1rem;">
+            <span style="color:var(--success);font-size:1.2rem;">✓</span>
+            <span data-i18n="sl.solution.bullet3">Stealth anti-detection: i siti non sanno che esiste (Pro)</span>
+          </div>
+        </div>
+
+        <a href="install.html" class="btn btn--primary btn--lg"><span data-i18n="sl.solution.cta">Aggiungi AdOff a Chrome, è gratis →</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== 5. FEATURES ======================== -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="text-center reveal">
+        <span class="section-label" data-i18n="how.label">Il potere di AdOff</span>
+        <h2 class="section-title" data-i18n-html="sl.feat.title">Sei tecnologie. Un solo obiettivo:<br><em>web pulito</em>.</h2>
+      </div>
+
+      <div class="features__grid">
+
+        <div class="feature-card reveal reveal-delay-1">
+          <span class="feature-card__icon" aria-hidden="true">🚫</span>
+          <div class="feature-card__title" data-i18n="features.ads.title">Blocco totale a livello di rete</div>
+          <div class="feature-card__benefit" data-i18n="features.ads.benefit">→ Pagine più veloci. Meno dati consumati. Meno tracker che ti profilano.</div>
+          <p class="feature-card__desc" data-i18n="features.ads.desc">
+            138 regole di rete eliminano richieste pubblicitarie e tracker prima che raggiungano il browser. Banner, pop-up, redirect, fingerprinting: non si caricano nemmeno. Tu vedi solo i contenuti che ti interessano.
+          </p>
+        </div>
+
+        <div class="feature-card feature-card--stealth reveal reveal-delay-2">
+          <span class="feature-card__icon" aria-hidden="true">🎬</span>
+          <div class="feature-card__title" data-i18n-html="features.video.title">Pubblicità video neutralizzate <span class="feature-card__pro-chip">Pro</span></div>
+          <div class="feature-card__benefit" data-i18n="features.video.benefit">→ Video che partono subito. Niente conto alla rovescia, niente interruzioni a metà.</div>
+          <p class="feature-card__desc" data-i18n="features.video.desc">
+            AdOff sostituisce l'SDK pubblicitario delle piattaforme video con una versione neutra. Il player riceve subito "nessuna pubblicità disponibile" e parte. Funziona su qualsiasi piattaforma di streaming che usa lo standard IMA, ovvero quasi tutte.
+          </p>
+        </div>
+
+        <div class="feature-card feature-card--stealth reveal reveal-delay-3">
+          <span class="feature-card__icon" aria-hidden="true">👻</span>
+          <div class="feature-card__title" data-i18n-html="features.stealth.title">Stealth anti-detection <span class="feature-card__pro-chip">Pro</span></div>
+          <div class="feature-card__benefit" data-i18n="features.stealth.benefit">→ Mai più "disattiva il tuo ad blocker". Su nessun sito.</div>
+          <p class="feature-card__desc" data-i18n="features.stealth.desc">
+            AdOff opera nel <em>MAIN world</em> del browser, mascherando ogni traccia: variabili JavaScript, fetch di test, bait element. I sistemi anti-adblock non lo rilevano. Continui a leggere e a guardare video senza che nessuno ti fermi.
+          </p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-4">
+          <span class="feature-card__icon" aria-hidden="true">⚡</span>
+          <div class="feature-card__title" data-i18n="features.light.title">Architettura ultra-leggera</div>
+          <div class="feature-card__benefit" data-i18n="features.light.benefit">→ Zero impatto su RAM e batteria. Pesa pochi KB, una frazione dei blocker da diversi MB.</div>
+          <p class="feature-card__desc" data-i18n="features.light.desc">
+            Mentre altri blocker pesano 3-8 MB e gonfiano la memoria di Chrome, AdOff è una frazione di quel peso. Filtri asincroni, zero blocco del thread principale. Non lo senti girare. Senti solo che il browser è tornato veloce.
+          </p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-5">
+          <span class="feature-card__icon" aria-hidden="true">🍪</span>
+          <div class="feature-card__title" data-i18n="features.cosmetic.title">Cookie banner e overlay, spariti</div>
+          <div class="feature-card__benefit" data-i18n="features.cosmetic.benefit">→ Niente più "accetta i cookie" a ogni sito. Schermo pulito dal primo caricamento.</div>
+          <p class="feature-card__desc" data-i18n="features.cosmetic.desc">
+            I filtri cosmetici rimuovono dal DOM banner di consenso, pop-up, overlay e sezioni sponsorizzate. Spariscono mentre la pagina si carica, senza che tu debba chiudere nulla. La lettura resta tua.
+          </p>
+        </div>
+
+        <div class="feature-card reveal reveal-delay-5">
+          <span class="feature-card__icon" aria-hidden="true">🔒</span>
+          <div class="feature-card__title" data-i18n="features.privacy.title">Privacy totale, zero log</div>
+          <div class="feature-card__benefit" data-i18n="features.privacy.benefit">→ Niente telemetria, niente profilazione. Nemmeno noi sappiamo cosa fai.</div>
+          <p class="feature-card__desc" data-i18n="features.privacy.desc">
+            Nessun dato sulla tua navigazione lascia il dispositivo. Contatori, whitelist e preferenze restano in locale. L'unica connessione ai nostri server è la validazione della licenza Pro. GDPR by design, non per obbligo.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== 6. STEALTH DEEP DIVE ======================== -->
+  <section class="stealth" id="stealth">
+    <div class="container">
+
+      <div class="stealth__header reveal">
+        <span class="section-label" data-i18n="sl.stealth.label">Stealth Mode</span>
+        <h2 class="section-title" data-i18n-html="sl.stealth.title">Gli altri blocker vengono scoperti.<br>AdOff <em>no</em>.</h2>
+        <p class="section-sub" data-i18n="sl.stealth.sub">
+          I siti più aggressivi usano sei tecniche diverse per identificare un ad blocker: variabili JavaScript, fetch verso server pubblicitari, elementi esca nel DOM, mutation observer, intercettazione XHR, fingerprinting. Stealth Mode le inganna tutte.
+        </p>
+      </div>
+
+      <div class="stealth__visual reveal">
+        <div class="stealth__col stealth__col--bad">
+          <div class="stealth__col-title" data-i18n="sl.stealth.col.bad">❌ Ad Blocker standard</div>
+          <div class="stealth__row">
+            <span class="stealth__row-label" data-i18n="sl.stealth.row1">Rilevamento JS variables</span>
+            <span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Rilevato</span>
+          </div>
+          <div class="stealth__row">
+            <span class="stealth__row-label" data-i18n="sl.stealth.row2">Fetch di test ad-server</span>
+            <span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Rilevato</span>
+          </div>
+          <div class="stealth__row">
+            <span class="stealth__row-label" data-i18n="sl.stealth.row3">Bait element detection</span>
+            <span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Rilevato</span>
+          </div>
+          <div class="stealth__row">
+            <span class="stealth__row-label" data-i18n="sl.stealth.row4">DOM mutation observer</span>
+            <span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Rilevato</span>
+          </div>
+          <div class="stealth__row">
+            <span class="stealth__row-label" data-i18n="sl.stealth.row5">XHR interception test</span>
+            <span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Rilevato</span>
+          </div>
+        </div>
+
+        <div class="stealth__arrow">→</div>
+
+        <div class="stealth__col stealth__col--good">
+          <div class="stealth__col-title" data-i18n="sl.stealth.col.good">✅ AdOff Stealth Mode</div>
+          <div class="stealth__row">
+            <span class="stealth__row-label" data-i18n="sl.stealth.row1">Rilevamento JS variables</span>
+            <span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden1">🟢 Nascosto</span>
+          </div>
+          <div class="stealth__row">
+            <span class="stealth__row-label" data-i18n="sl.stealth.row2">Fetch di test ad-server</span>
+            <span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden2">🟢 Intercettato</span>
+          </div>
+          <div class="stealth__row">
+            <span class="stealth__row-label" data-i18n="sl.stealth.row3">Bait element detection</span>
+            <span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden3">🟢 Spoofato</span>
+          </div>
+          <div class="stealth__row">
+            <span class="stealth__row-label" data-i18n="sl.stealth.row4">DOM mutation observer</span>
+            <span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden4">🟢 Mascherato</span>
+          </div>
+          <div class="stealth__row">
+            <span class="stealth__row-label" data-i18n="sl.stealth.row5">XHR interception test</span>
+            <span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden2">🟢 Intercettato</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stealth__how reveal">
+        <div class="stealth__how-item">
+          <span class="stealth__how-icon" aria-hidden="true">🧬</span>
+          <div class="stealth__how-title" data-i18n="sl.stealth.how1.title">Variable Spoofing</div>
+          <p class="stealth__how-desc" data-i18n="sl.stealth.how1.desc">Simula variabili pubblicitarie standard. Il sito "vede" le ads come caricate, anche se non ci sono.</p>
+        </div>
+        <div class="stealth__how-item">
+          <span class="stealth__how-icon" aria-hidden="true">🎭</span>
+          <div class="stealth__how-title" data-i18n="sl.stealth.how2.title">Fetch Interception</div>
+          <p class="stealth__how-desc" data-i18n="sl.stealth.how2.desc">Intercetta richieste fetch/XHR ai server di rilevamento. Risponde con dati falsi convincenti.</p>
+        </div>
+        <div class="stealth__how-item">
+          <span class="stealth__how-icon" aria-hidden="true">🪄</span>
+          <div class="stealth__how-title" data-i18n="sl.stealth.how3.title">Bait Spoofing</div>
+          <p class="stealth__how-desc" data-i18n="sl.stealth.how3.desc">Gli elementi "esca" usati per rilevare gli ad blocker vengono riconosciuti e falsificati.</p>
+        </div>
+        <div class="stealth__how-item">
+          <span class="stealth__how-icon" aria-hidden="true">🌍</span>
+          <div class="stealth__how-title" data-i18n="sl.stealth.how4.title">MAIN World Execution</div>
+          <p class="stealth__how-desc" data-i18n="sl.stealth.how4.desc">Opera nel contesto privilegiato della pagina. Irrilevabile dall'isolamento standard delle estensioni.</p>
+        </div>
+        <div class="stealth__how-item">
+          <span class="stealth__how-icon" aria-hidden="true">📺</span>
+          <div class="stealth__how-title" data-i18n="sl.stealth.how5.title">IMA SDK Neutralization</div>
+          <p class="stealth__how-desc" data-i18n="sl.stealth.how5.desc">Sostituisce l'SDK pubblicitario video con uno stub neutro. Il player riceve subito "nessuna ad disponibile".</p>
+        </div>
+        <div class="stealth__how-item">
+          <span class="stealth__how-icon" aria-hidden="true">🛡️</span>
+          <div class="stealth__how-title" data-i18n="sl.stealth.how6.title">Anti-Fingerprinting</div>
+          <p class="stealth__how-desc" data-i18n="sl.stealth.how6.desc">Maschera le tracce dell'estensione nel DOM e nelle API del browser. Zero impronte rilevabili.</p>
+        </div>
+      </div>
+
+      <div class="stealth__callout reveal" data-i18n-html="sl.stealth.callout">
+        <strong>Il risultato:</strong> nessun sito ti mostra più il messaggio "disattiva il tuo ad blocker". Nemmeno le testate giornalistiche con i sistemi anti-adblock più aggressivi del mercato.
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ======================== 7. BEFORE / AFTER ======================== -->
+  <section class="before-after">
+    <div class="container">
+      <div class="text-center reveal">
+        <span class="section-label" data-i18n="sl.ba.label">Prima e dopo</span>
+        <h2 class="section-title" data-i18n="sl.ba.title">Prima e dopo AdOff</h2>
+      </div>
+
+      <div class="before-after__grid">
+        <div class="ba-col ba-col--before reveal reveal-delay-1">
+          <div class="ba-col__label" data-i18n="sl.ba.before.label">❌ Senza AdOff</div>
+          <ul class="ba-list">
+            <li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.1">Conto alla rovescia di 5-15 secondi prima di ogni video</span></li>
+            <li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.2">Pubblicità a metà video, sempre nel momento sbagliato</span></li>
+            <li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.3">Banner ovunque, anche dentro le email</span></li>
+            <li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.4">Cookie banner da chiudere ogni volta che apri un sito nuovo</span></li>
+            <li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.5">RAM e batteria divorate da centinaia di script di tracking</span></li>
+            <li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.6">Wall "disattiva il tuo ad blocker" anche se ne hai uno</span></li>
+            <li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.7">Il tuo profilo comportamentale rivenduto agli inserzionisti</span></li>
+          </ul>
+        </div>
+        <div class="ba-col ba-col--after reveal reveal-delay-2">
+          <div class="ba-col__label" data-i18n="sl.ba.after.label">✅ Con AdOff</div>
+          <ul class="ba-list">
+            <li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.1">I video partono subito, senza attesa, senza interruzioni</span></li>
+            <li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.2">Pubblicità neutralizzate alla sorgente sulle piattaforme di streaming</span></li>
+            <li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.3">Banner bloccati prima ancora che si carichino</span></li>
+            <li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.4">Cookie banner nascosti automaticamente via filtri CSS</span></li>
+            <li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.5">RAM e batteria liberi per quello che ti serve davvero</span></li>
+            <li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.6">I siti non si accorgono che hai un blocker installato</span></li>
+            <li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.7">Zero log policy: nessun dato raccolto, nemmeno da noi</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== WORKS EVERYWHERE ======================== -->
+  <section class="works" id="works">
+    <div class="container">
+      <div class="text-center reveal">
+        <span class="section-label" data-i18n="sl.works.label">Compatibilità</span>
+        <h2 class="section-title" data-i18n="sl.works.title">Funziona ovunque navighi</h2>
+        <p class="section-sub" data-i18n="sl.works.sub">AdOff blocca le pubblicità su ogni sito che visiti. Ecco solo alcuni dei posti dove dà il meglio.</p>
+      </div>
+      <div class="works__list reveal">
+        <div class="works-row">
+          <span class="works-row__cat" data-i18n="sl.works.cat.video">Video e streaming</span>
+          <span class="works-row__list">YouTube · Twitch · Vimeo · Dailymotion · Hulu</span>
+        </div>
+        <div class="works-row">
+          <span class="works-row__cat" data-i18n="sl.works.cat.social">Social network</span>
+          <span class="works-row__list">Facebook · Instagram · X (Twitter) · TikTok · Reddit · LinkedIn · Pinterest · Snapchat</span>
+        </div>
+        <div class="works-row">
+          <span class="works-row__cat" data-i18n="sl.works.cat.search">Ricerca e shopping</span>
+          <span class="works-row__list">Google · Bing · Amazon · eBay · AliExpress</span>
+        </div>
+        <div class="works-row">
+          <span class="works-row__cat" data-i18n="sl.works.cat.news">Notizie e media</span>
+          <span class="works-row__list">CNN · BBC · Forbes · Medium · Yahoo</span>
+        </div>
+        <div class="works-row">
+          <span class="works-row__cat" data-i18n="sl.works.cat.rest">Musica, email e altro</span>
+          <span class="works-row__list">Spotify · Gmail · Outlook · Wikipedia · Imgur</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== FREE vs PRO ======================== -->
+  <section class="freeVsPro" id="compare">
+    <div class="container">
+      <div class="text-center reveal">
+        <span class="section-label" data-i18n="compare.label">Free vs Pro</span>
+        <h2 class="section-title" data-i18n="compare.title">Cosa contiene ogni piano</h2>
+        <p class="section-sub" data-i18n="compare.sub">Free elimina banner e tracker. Pro aggiunge neutralizzazione video, Stealth anti-detection e supporto prioritario.</p>
+      </div>
+
+      <div class="reveal compare-table-wrap">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th data-i18n="compare.feature">Funzionalità</th>
+              <th data-i18n="compare.free">Free</th>
+              <th class="compare-table__pro">Pro ✨</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td data-i18n="compare.r1">Blocco rete (138 regole)</td><td class="compare-yes">✓</td><td class="compare-yes">✓</td></tr>
+            <tr><td data-i18n="compare.r2">Filtri CSS visivi</td><td class="compare-yes">✓</td><td class="compare-yes">✓</td></tr>
+            <tr><td data-i18n="compare.r3">Contatore ads bloccate</td><td class="compare-yes">✓</td><td class="compare-yes">✓</td></tr>
+            <tr><td data-i18n="compare.r4">Whitelist siti preferiti</td><td class="compare-yes">✓</td><td class="compare-yes">✓</td></tr>
+            <tr class="is-pro"><td data-i18n="compare.r4b">Blocco video ads base (rete)</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+            <tr class="is-pro"><td data-i18n="compare.r5">Neutralizzazione video avanzata (IMA stub)</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+            <tr class="is-pro"><td data-i18n="compare.r6">Stealth Mode anti-detection</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+            <tr class="is-pro"><td data-i18n="compare.r7">Variable spoofing + fetch interception</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+            <tr class="is-pro"><td data-i18n="compare.r8">Pausa temporizzata per sito (4 opzioni)</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+            <tr class="is-pro"><td data-i18n="compare.r9">Supporto prioritario</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="text-center reveal" style="margin-top:32px;">
+        <p style="color:var(--text-muted);font-size:0.95rem;margin-bottom:20px;" data-i18n="compare.note">Il piano Free protegge dai banner e dai tracker, su ogni sito. Il piano Pro aggiunge la neutralizzazione delle pubblicità video sulle piattaforme di streaming e lo Stealth anti-detection che ti rende invisibile ai sistemi anti-adblock.</p>
+        <a href="#pricing" class="btn btn--primary btn--lg"><span data-i18n="compare.cta">Prova Pro gratis per 30 giorni →</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== 8. FOUNDER NOTE (honest social proof) ======================== -->
+  <section class="founder-note">
+    <div class="container">
+      <div class="founder-note__card reveal" style="max-width:760px;margin:0 auto;text-align:center;">
+        <img src="/assets/eros.webp" alt="Eros, founder di AdOff" width="128" height="128" loading="lazy" decoding="async" style="width:128px;height:128px;border-radius:50%;object-fit:cover;margin:0 auto 1.2rem;display:block;box-shadow:0 4px 20px rgba(0,0,0,.12);" />
+        <span class="section-label" data-i18n="founder.note.label">Una persona vera dietro AdOff</span>
+        <h2 class="section-title" data-i18n="founder.note.title">Niente recensioni gonfiate. Solo lavoro vero.</h2>
+        <p class="founder-note__body" data-i18n-html="founder.note.body" style="font-size:1.12rem;line-height:1.7;color:var(--text2);margin:1.2rem auto 1.6rem;max-width:640px;">
+          Ciao, sono <strong>Eros</strong>, da Siracusa. Vendo chiavi e sicurezza da una vita: proteggo case e negozi. Ho costruito AdOff da solo per fare lo stesso con i tuoi dati — perché non voglio che tu (e i tuoi figli) siate il bancomat delle multinazionali. Zero log, niente dati venduti: solo il web come dovrebbe essere.
+        </p>
+        <p class="founder-note__honest" data-i18n="founder.note.honest" style="font-size:0.95rem;color:var(--text3);margin-bottom:1.4rem;">
+          AdOff è un progetto appena lanciato: niente numeri inventati, niente recensioni finte. Cerco i primi utenti veri — prova la versione gratuita e, se funziona, lascia una recensione onesta sullo store.
+        </p>
+        <div class="founder-note__badges" style="display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.6rem;">
+          <span class="founder-badge" style="font-size:0.85rem;padding:0.35rem 0.8rem;border:1px solid var(--border);border-radius:999px;color:var(--text2);" data-i18n="founder.badge.zerolog">🔒 Zero log</span>
+          <span class="founder-badge" style="font-size:0.85rem;padding:0.35rem 0.8rem;border:1px solid var(--border);border-radius:999px;color:var(--text2);" data-i18n="founder.badge.public">🛠️ Costruito in pubblico</span>
+          <span class="founder-badge" style="font-size:0.85rem;padding:0.35rem 0.8rem;border:1px solid var(--border);border-radius:999px;color:var(--text2);" data-i18n="founder.badge.solo">👤 Un solo founder, aggiornato di continuo</span>
+        </div>
+        <a href="chi-sono.html" class="founder-note__cta" style="font-weight:600;color:var(--primary);text-decoration:none;" data-i18n="founder.note.cta">→ Leggi la mia storia</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CODICE ISPEZIONABILE — trasparenza legata ai permessi -->
+  <section class="inspectable" id="inspectable">
+    <div class="container">
+      <div class="reveal" style="max-width:760px;margin:0 auto;text-align:center;">
+        <span class="section-label" data-i18n="inspect.label">Trasparenza, non promesse</span>
+        <h2 class="section-title" data-i18n="inspect.title">Il codice del core è ispezionabile</h2>
+        <p data-i18n="inspect.body" style="font-size:1.08rem;line-height:1.7;color:var(--text2);margin:1.2rem auto 1.6rem;max-width:640px;">
+          Un ad blocker deve leggere la pagina per togliere gli annunci: per questo chiede il permesso di accedere ai dati sui siti. Ma la lettura avviene <strong>solo sul tuo dispositivo</strong> — niente lascia il browser. Non devi crederci sulla parola: il codice del core (blocco di rete, filtri cosmetici, content script) è <strong>leggibile</strong>, non offuscato. Puoi scompattare il pacchetto e verificarlo tu stesso.
+        </p>
+        <div style="display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.4rem;">
+          <span class="founder-badge" style="font-size:0.85rem;padding:0.35rem 0.8rem;border:1px solid var(--border);border-radius:999px;color:var(--text2);" data-i18n="inspect.badge.readable">📖 Codice leggibile</span>
+          <span class="founder-badge" style="font-size:0.85rem;padding:0.35rem 0.8rem;border:1px solid var(--border);border-radius:999px;color:var(--text2);" data-i18n="inspect.badge.nosecret">🔑 Nessun segreto nel client</span>
+          <span class="founder-badge" style="font-size:0.85rem;padding:0.35rem 0.8rem;border:1px solid var(--border);border-radius:999px;color:var(--text2);" data-i18n="inspect.badge.local">📍 Lettura solo on-device</span>
+        </div>
+        <p data-i18n="inspect.note" style="font-size:0.92rem;color:var(--text3);max-width:600px;margin:0 auto 1.4rem;">
+          La validazione delle licenze Pro avviene su un server separato e privato: la protezione del prodotto è la licenza source-available (puoi leggerlo e usarlo; non rivenderlo come prodotto concorrente) + il server, non l'offuscamento del codice.
+        </p>
+        <a href="https://github.com/eroslifestyle/adoff" target="_blank" rel="noopener" class="btn btn--ghost" style="display:inline-flex;align-items:center;gap:0.5rem;">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          <span data-i18n="inspect.repo">Codice sorgente su GitHub</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== 9. PRICING ======================== -->
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <div class="text-center reveal">
+        <span class="section-label" data-i18n="pricing.label">Piani</span>
+        <h2 class="section-title" data-i18n="pricing.title">Scegli il tuo piano</h2>
+        <p class="section-sub" data-i18n="pricing.sub">Inizia gratis, senza carta di credito. I 30 giorni di Pro sono inclusi: puoi attivarli quando vuoi.</p>
+      </div>
+
+      <!-- Founder seats counter (shown only when backend confirms seats are live) -->
+      <div id="founderBanner" class="reveal" style="display:none;text-align:center;margin:0 auto 32px;padding:14px 22px;border:1px solid var(--primary);border-radius:14px;max-width:580px;background:rgba(124,92,252,.08);">
+        <strong style="color:var(--primary-light);">🚀 <span data-i18n="pricing.founder.title">Prezzo Founder</span></strong>
+        — <span data-i18n="pricing.founder.seatsLabel">Posti rimasti:</span> <strong id="founderSeats">100/100</strong>
+        <div style="font-size:0.88rem;color:var(--text-muted);margin-top:4px;" data-i18n="pricing.founder.seatsNote">Annuale a €19,99 bloccato a vita per i primi 100. Poi €24,99.</div>
+      </div>
+
+      <div class="pricing__grid">
+
+        <!-- ROW 1: FREE + MONTHLY -->
+
+        <!-- FREE -->
+        <div class="plan-card plan-card--free reveal reveal-delay-1">
+          <div class="plan-name" data-i18n="pricing.free.name">Free</div>
+          <div class="plan-price">
+            <span class="plan-price__amount" style="font-size:2.2rem" data-i18n="pricing.free.amount">Gratis</span>
+          </div>
+          <p class="plan-micro" data-i18n="pricing.free.micro">Per sempre · Nessuna carta</p>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> <span data-i18n="pricing.free.f1">Blocco rete completo (138 regole)</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.free.f3">Filtri CSS visivi</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.free.f5">Whitelist siti</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.free.f5b">Blocco popup e popunder</span></li>
+            <li><span class="x-mark">–</span> <span style="opacity:0.5;" data-i18n="pricing.free.f6">Stealth Mode</span></li>
+          </ul>
+          <a href="install.html" class="btn btn--ghost" data-i18n="pricing.free.btn">Inizia gratis</a>
+        </div>
+
+        <!-- MONTHLY -->
+        <div class="plan-card reveal reveal-delay-2">
+          <div class="plan-name" data-i18n="pricing.monthly.name">Mensile</div>
+          <div class="plan-price">
+            <span class="plan-price__currency">€</span>
+            <span class="plan-price__amount" id="priceMonthly">2<small style="font-size:1.6rem">.99</small></span>
+            <span class="plan-price__period" data-i18n="pricing.monthly.period.short">/ mese</span>
+          </div>
+          <p class="plan-micro" data-i18n="pricing.monthly.micro">Meno di un caffè al mese</p>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f1">Tutto il blocco rete + CSS</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f2">Stealth Mode anti-detection</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f5">Neutralizzazione video avanzata (IMA stub)</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f9">Whitelist siti preferiti</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f11">Supporto via chat</span></li>
+          </ul>
+          <button class="btn btn--outline" onclick="checkout('monthly')" data-i18n="pricing.monthly.btn">Inizia 30 giorni gratis</button>
+          <p class="plan-note" data-i18n="pricing.refundNote">Rimborso 30 giorni · senza domande</p>
+          <p class="plan-note" data-i18n="pricing.cancelAnytime">Disdici quando vuoi</p>
+        </div>
+
+        <!-- ROW 2: ANNUAL (POPULAR) + LIFETIME -->
+
+        <!-- ANNUAL — POPULAR -->
+        <div class="plan-card plan-card--popular reveal reveal-delay-3">
+          <div class="plan-badge" data-i18n="pricing.annual.badge">Piu' Popolare</div>
+          <div class="plan-name" data-i18n="pricing.annual.name">Annuale</div>
+          <div class="plan-price">
+            <span class="plan-price__currency">€</span>
+            <span class="plan-price__amount" id="priceAnnual">19<small style="font-size:1.6rem">.99</small></span>
+            <span class="plan-price__period" data-i18n="pricing.annual.period.short">/ anno</span>
+          </div>
+          <p class="plan-micro"><span id="priceAnnualEff">= €1,67/mese</span> <span id="annualEffSuffix" data-i18n="pricing.annual.founderSuffix">· prezzo Founder bloccato a vita</span></p>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f1">Tutto il blocco rete + CSS</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f2">Stealth Mode anti-detection</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f5">Neutralizzazione video avanzata (IMA stub)</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f9">Whitelist siti preferiti</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f10">Pausa per sito (4 opzioni)</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f7">Supporto prioritario</span></li>
+          </ul>
+          <button class="btn btn--primary" onclick="checkout('annual')" data-i18n="pricing.annual.btn">Inizia 30 giorni gratis</button>
+          <p class="plan-note" data-i18n="pricing.refundNote">Rimborso 30 giorni · senza domande</p>
+          <p class="plan-note" data-i18n="pricing.cancelAnytime">Disdici quando vuoi</p>
+        </div>
+
+        <!-- FOUNDER LIFETIME (limited launch offer) -->
+        <div class="plan-card reveal reveal-delay-4" id="lifetimeCard">
+          <div class="plan-name" data-i18n="pricing.lifetime.name">Founder Lifetime</div>
+          <div class="plan-price">
+            <span class="plan-price__currency">€</span>
+            <span class="plan-price__amount" id="priceLifetime">99</span>
+          </div>
+          <p class="plan-micro" data-i18n="pricing.lifetime.micro">Offerta Founder limitata · una volta sola, per sempre, aggiornamenti inclusi.</p>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> <span data-i18n="pricing.lifetime.f1">Tutto di Pro, senza scadenza</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f2">Stealth Mode completo</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f5">Neutralizzazione video avanzata (IMA stub)</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f7alt">Aggiornamenti a vita inclusi</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f8">Priorita' nel supporto</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.lifetime.founder">Badge Founder esclusivo</span></li>
+          </ul>
+          <button class="btn btn--ghost" onclick="checkout('lifetime')" data-i18n="pricing.lifetime.btn">Compra una volta per sempre</button>
+          <p class="plan-note" data-i18n="pricing.refundNote">Rimborso 30 giorni · senza domande</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== 10. GARANZIA ======================== -->
+  <section class="guarantee">
+    <div class="container">
+      <div class="guarantee__box reveal">
+        <span class="guarantee__icon" aria-hidden="true" data-i18n="sl.guarantee.label">Garanzia</span>
+        <h2 class="guarantee__title" data-i18n="sl.guarantee.title">Zero rischio. Tre garanzie.</h2>
+        <p class="guarantee__sub" data-i18n="sl.guarantee.sub">
+          Tre ragioni concrete per provare AdOff Pro oggi senza prendere alcun impegno.
+        </p>
+
+        <ul class="guarantee__list">
+          <li>
+            <span class="g-check">✓</span>
+            <div data-i18n-html="sl.guarantee.1">
+              <strong>30 giorni Pro completamente gratis.</strong> Nessuna carta di credito richiesta, nessun rinnovo automatico. Allo scadere, se non fai nulla, torni al piano Free.
+            </div>
+          </li>
+          <li>
+            <span class="g-check">✓</span>
+            <div data-i18n-html="sl.guarantee.2">
+              <strong>Rimborso completo entro 30 giorni dal primo pagamento.</strong> Nessuna domanda, nessuna burocrazia. Scrivi al supporto, il rimborso parte entro 24 ore.
+            </div>
+          </li>
+          <li>
+            <span class="g-check">✓</span>
+            <div data-i18n-html="sl.guarantee.3">
+              <strong>Piano Free per sempre, senza limiti di tempo.</strong> Il blocco di rete e i filtri cosmetici restano attivi anche senza abbonamento. AdOff non smette mai di funzionare.
+            </div>
+          </li>
+        </ul>
+
+        <div class="trust-badges">
+          <span class="trust-badge">🔐 Stripe Payments</span>
+          <span class="trust-badge">🔒 SSL / HTTPS</span>
+          <span class="trust-badge">🇪🇺 GDPR Compliant</span>
+          <span class="trust-badge">👁️ <span data-i18n="trust.badge.nodata">Zero data collection</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== 11. FAQ ======================== -->
+  <section class="faq" id="faq">
+    <div class="container">
+      <div class="text-center reveal">
+        <span class="section-label" data-i18n="faq.label">FAQ</span>
+        <h2 class="section-title" data-i18n="sl.faq.title">Domande frequenti</h2>
+      </div>
+
+      <div class="faq__list reveal">
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span data-i18n="faq.q10">Qual è la migliore estensione per bloccare la pubblicità su Chrome?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="faq.a10">
+              AdOff è tra le migliori estensioni per bloccare la pubblicità su Chrome nel 2026: combina blocco a livello di rete (oltre 138 regole), filtri cosmetici CSS e una tecnologia stealth anti-rilevamento che supera i muri anti-adblock. Blocca banner, pop-up, tracker e pubblicità video, è molto più leggera delle alternative ed è gratis, con prova Pro di 30 giorni senza carta di credito.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span data-i18n="faq.q1">AdOff è davvero gratis? Ci sono costi nascosti?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="faq.a1">
+              Sì, davvero. Il piano Free è gratuito per sempre, senza limiti di tempo e senza carta di credito. Anche i 30 giorni di Pro sono gratuiti: non chiediamo dati di pagamento. Allo scadere, se non scegli di passare a Pro, torni automaticamente al piano Free. Nessun costo nascosto, nessun rinnovo automatico indesiderato.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span data-i18n="faq.q2">Funziona davvero per le pubblicità video?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="faq.a2">
+              Il blocco video ads richiede **AdOff Pro** — incluso nei 30 giorni di prova gratuita. Il piano Free blocca ads sui siti web (banner, display, popup) ma non i pre-roll/mid-roll dei video player. Con Pro, AdOff sostituisce l'SDK pubblicitario con una versione neutra: il player riceve il messaggio "nessuna pubblicità disponibile" e parte il video senza conto alla rovescia né interruzioni.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span data-i18n="faq.q3">Come fa AdOff a bypassare i sistemi anti-adblock?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="faq.a3">
+              Con lo Stealth Mode (incluso nel trial e nel piano Pro), AdOff opera nel MAIN world del browser e maschera ogni traccia. Spoofa le variabili JavaScript usate per rilevare blocker, intercetta le fetch di test verso server pubblicitari e simula gli elementi esca attesi dai siti. Risultato: i sistemi anti-adblock non ricevono nessun segnale di un'estensione attiva. Il piano Free non include Stealth, quindi i siti più aggressivi potrebbero ancora rilevarlo.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span data-i18n="faq.q5">La mia cronologia di navigazione è al sicuro?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n-html="faq.a5">
+              Sì. <strong>Zero Log Policy</strong>: AdOff non raccoglie nessun dato sulla tua navigazione. Non sappiamo quali siti visiti, cosa cerchi, quanto resti su una pagina. Contatori, whitelist e preferenze restano sul tuo dispositivo, dentro <code>chrome.storage.local</code>. L'unica comunicazione con i nostri server è la validazione della licenza Pro (chiave + email). Il codice è ispezionabile prima dell'installazione. Siamo GDPR compliant by design, non per obbligo.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span data-i18n="faq.q4">Come funziona la Founder Lifetime?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="faq.a4">
+              La Founder Lifetime è un'offerta di lancio a tiratura limitata: €99 una sola volta e usi AdOff Pro per sempre, inclusi tutti gli aggiornamenti futuri, su tutti i tuoi dispositivi personali. Nessun rinnovo annuale, nessuna sorpresa, badge Founder incluso. Quando i posti Founder finiscono, l'offerta viene ritirata.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span data-i18n="sl.faq.q6">Posso usare AdOff su più browser?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="sl.faq.a6">
+              Sì. AdOff è disponibile per Chrome, Firefox, Edge, Opera e Brave (Safari in arrivo). La licenza Pro vale su tutti i tuoi dispositivi personali: basta inserire la stessa chiave di licenza in ogni installazione. I contatori restano locali su ciascun browser, per privacy.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span data-i18n="faq.q7">AdOff rallenta Chrome o consuma RAM?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="faq.a7">No, al contrario: lo rende più veloce. AdOff è ultra-leggera (una frazione del peso di altri blocker, che sono 3-8 MB) e opera in modo asincrono: non blocca il thread principale di Chrome. Eliminando le richieste pubblicitarie alla rete, riduce il traffico fino al 23% e accorcia i tempi di caricamento delle pagine. Meno script da eseguire significa anche meno RAM e batteria consumate.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span data-i18n="faq.q8">È sicuro installare AdOff?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="faq.a8">Sì. AdOff è pubblicata sui canali ufficiali (Chrome Web Store, Firefox Add-ons; su Edge si installa dal Chrome Web Store, supportato nativamente; Safari in arrivo), tutti store con revisione manuale del codice prima di ogni rilascio. L'estensione non legge le tue password, non accede ai dati di altre estensioni e non comunica con server esterni se non per la validazione della licenza Pro. Tutti i permessi richiesti sono visibili prima dell'installazione.</div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question" aria-expanded="false">
+            <span data-i18n="faq.q9">Funziona su tutti i siti web?</span>
+            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner" data-i18n="faq.a9">Sì. Il blocco di rete e i filtri cosmetici funzionano su qualsiasi sito. La neutralizzazione video funziona ovunque sia presente lo standard pubblicitario IMA, ovvero sulla quasi totalità delle piattaforme di streaming video. Stealth Mode bypassa i sistemi anti-adblock più diffusi, comprese le testate giornalistiche più aggressive. Se trovi un sito dove qualcosa non va, scrivici dal modulo di supporto: lo risolviamo nella release successiva.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================== 12. FINAL CTA ======================== -->
+  <section class="final-cta">
+    <div class="container">
+
+      <div class="final-cta__urgency reveal" data-i18n="sl.cta.urgency">
+        Ogni minuto che esiti, centinaia di tracker raccolgono dati su di te.
+      </div>
+
+      <h2 class="final-cta__headline reveal" data-i18n-html="sl.cta.title">
+        Riprenditi il browser.<br><em>Adesso.</em>
+      </h2>
+
+      <p class="final-cta__sub reveal" data-i18n-html="sl.cta.sub">
+        Disponibile su Chrome, Firefox, Edge, Opera e Brave (Safari in arrivo). Installazione in dieci secondi. Gratis, sicura, e veloce.
+      </p>
+
+      <div class="reveal">
+        <a href="install.html" class="btn btn--primary btn--xl">
+          <span data-i18n="sl.cta.btn">Installa AdOff su Chrome, è gratis →</span>
+        </a>
+      </div>
+
+      <div class="final-cta__micro reveal">
+        <span><span data-i18n="sl.cta.micro1">Ultra-leggera</span></span>
+        <span>·</span>
+        <span><span data-i18n="cta.micro.install">Installa in 10 secondi</span></span>
+        <span>·</span>
+        <span><span data-i18n="cta.micro.nocard">Nessuna carta richiesta</span></span>
+        <span>·</span>
+        <span><span data-i18n="sl.cta.micro3">Disinstalla quando vuoi</span></span>
+      </div>
+
+    </div>
+  </section>
+
+  </main>
+
+  <!-- ======================== SCHEMA MARKUP ======================== -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+        {
+            "@type": "Question",
+            "name": "Qual è la migliore estensione per bloccare la pubblicità su Chrome?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "AdOff è tra le migliori estensioni per bloccare la pubblicità su Chrome nel 2026: combina blocco a livello di rete (oltre 138 regole), filtri cosmetici CSS e una tecnologia stealth anti-rilevamento che supera i muri anti-adblock. Blocca banner, pop-up, tracker e pubblicità video, è molto più leggera delle alternative ed è gratis, con prova Pro di 30 giorni senza carta di credito."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "AdOff è davvero gratis? Ci sono costi nascosti?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Sì, davvero. Il piano Free è gratuito per sempre, senza limiti di tempo e senza carta di credito. Anche i 30 giorni di Pro sono gratuiti: non chiediamo dati di pagamento. Allo scadere, se non scegli di passare a Pro, torni automaticamente al piano Free. Nessun costo nascosto, nessun rinnovo automatico indesiderato."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Funziona davvero per le pubblicità video?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Sì, su tutte le piattaforme di streaming che usano lo standard pubblicitario IMA. AdOff Pro sostituisce l'SDK pubblicitario con una versione neutra: il player riceve il messaggio 'nessuna pubblicità disponibile' e parte il video. Niente conto alla rovescia, niente pubblicità a metà clip. Il blocco video ads richiede AdOff Pro — incluso nei 30 giorni di prova gratuita."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Come fa AdOff a bypassare i sistemi anti-adblock?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Con lo Stealth Mode (incluso nel trial e nel piano Pro), AdOff opera nel MAIN world del browser e maschera ogni traccia. Spoofa le variabili JavaScript usate per rilevare blocker, intercetta le fetch di test verso server pubblicitari e simula gli elementi esca attesi dai siti. Risultato: i sistemi anti-adblock non ricevono nessun segnale di un'estensione attiva. Il piano Free non include Stealth, quindi i siti più aggressivi potrebbero ancora rilevarlo."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "La mia cronologia di navigazione è al sicuro?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Sì. Zero Log Policy: AdOff non raccoglie nessun dato sulla tua navigazione. Non sappiamo quali siti visiti, cosa cerchi, quanto resti su una pagina. Contatori, whitelist e preferenze restano sul tuo dispositivo, dentro chrome.storage.local. L'unica comunicazione con i nostri server è la validazione della licenza Pro (chiave + email). Il codice è ispezionabile prima dell'installazione. Siamo GDPR compliant by design, non per obbligo."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Come funziona la Founder Lifetime?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "La Founder Lifetime è un'offerta di lancio a tiratura limitata: €99 una sola volta e usi AdOff Pro per sempre, inclusi tutti gli aggiornamenti futuri, su tutti i tuoi dispositivi personali. Nessun rinnovo annuale, nessuna sorpresa, badge Founder incluso. Quando i posti Founder finiscono, l'offerta viene ritirata."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Posso usare AdOff su più browser?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Sì. AdOff è disponibile per Chrome, Firefox, Edge, Opera e Brave (Safari in arrivo). La licenza Pro vale su tutti i tuoi dispositivi personali: basta inserire la stessa chiave di licenza in ogni installazione. I contatori restano locali su ciascun browser, per privacy."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "AdOff rallenta Chrome o consuma RAM?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No, al contrario: lo rende più veloce. AdOff è ultra-leggera (una frazione del peso di altri blocker, che sono 3-8 MB) e opera in modo asincrono: non blocca il thread principale di Chrome. Eliminando le richieste pubblicitarie alla rete, riduce il traffico fino al 23% e accorcia i tempi di caricamento delle pagine. Meno script da eseguire significa anche meno RAM e batteria consumate."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "È sicuro installare AdOff?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Sì. AdOff è pubblicata sui canali ufficiali (Chrome Web Store, Firefox Add-ons; su Edge si installa dal Chrome Web Store, supportato nativamente; Safari in arrivo), tutti store con revisione manuale del codice prima di ogni rilascio. L'estensione non legge le tue password, non accede ai dati di altre estensioni e non comunica con server esterni se non per la validazione della licenza Pro. Tutti i permessi richiesti sono visibili prima dell'installazione."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Funziona su tutti i siti web?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Sì. Free: il blocco di rete e i filtri cosmetici funzionano su qualsiasi sito. Pro: la neutralizzazione video funziona sulle piattaforme di streaming che usano SDK standard, e lo Stealth Mode (anti-detection) è disponibile sui siti con sistemi anti-adblock."
+            }
+        }
+    ]
+}
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "AdOff",
+    "url": "https://adoff.app",
+    "logo": "https://adoff.app/assets/icon128.png",
+    "description": "Privacy-first ad blocker with stealth anti-detection technology",
+    "foundingDate": "2025",
+    "sameAs": [
+      "https://github.com/eroslifestyle/adoff",
+      "https://t.me/adoffapp"
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://adoff.app/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Installa AdOff",
+        "item": "https://adoff.app/install.html"
+      }
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "AdOff · Miglior Ad Blocker Invisibile 2026",
+    "url": "https://adoff.app/",
+    "description": "AdOff blocca tutta la pubblicita' su Chrome, inclusa quella video. Stealth anti-detection avanzata: i siti non riescono a rilevare il tuo ad blocker.",
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "Piani AdOff",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "AdOff Free",
+          "description": "Piano gratuito con blocco rete completo e filtri CSS"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "AdOff Pro Mensile",
+          "description": "Piano Pro da €2,99/mese con Stealth Mode e neutralizzazione video ads"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "AdOff Pro Annuale",
+          "description": "Piano Pro annuale: prezzo Founder €19,99/anno bloccato a vita per i primi 100, poi €24,99"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "AdOff Founder Lifetime",
+          "description": "Offerta Founder a tiratura limitata: €99 una volta sola, per sempre, aggiornamenti inclusi"
+        }
+      ]
+    }
+  }
+  </script>
+
+  <!-- ======================== JS ======================== -->
+  <script src="/adoff-footer.js?v=260602a"></script>
+  
+  <script>
+    // ============================================================
+    // SCROLL REVEAL (safe: defaults to visible if observer unavailable)
+    // ============================================================
+    (function () {
+      if (!('IntersectionObserver' in window)) return;
+      document.documentElement.classList.add('js-reveal');
+
+      var observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.05, rootMargin: '0px 0px 80px 0px' }
+      );
+
+      document.querySelectorAll('.reveal').forEach(function (el) {
+        // Pre-mark elements already in viewport as visible so they paint immediately.
+        var rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+          el.classList.add('visible');
+        } else {
+          observer.observe(el);
+        }
+      });
+    })();
+
+    // ============================================================
+    // FOUNDER PRICING \u2014 real seats from backend (no fake counters)
+    // ============================================================
+    var API_URL = 'https://api.adoff.app';
+
+    function formatPrice(p) {
+      var parts = Number(p).toFixed(2).split('.');
+      return parts[1] === '00'
+        ? parts[0]
+        : parts[0] + '<small style="font-size:1.6rem">.' + parts[1] + '</small>';
+    }
+
+    // s = { active, taken, remaining, total, annual_price, annual_standard }
+    function applyFounderState(s) {
+      var annualEl   = document.getElementById('priceAnnual');
+      var effEl      = document.getElementById('priceAnnualEff');
+      var suffixEl   = document.getElementById('annualEffSuffix');
+      var banner     = document.getElementById('founderBanner');
+      var seatsEl    = document.getElementById('founderSeats');
+      var lifetime   = document.getElementById('lifetimeCard');
+
+      var founderActive = !!(s && s.active && s.remaining > 0);
+      var annual = founderActive
+        ? (s.annual_price || 19.99)
+        : ((s && s.annual_standard) || 24.99);
+
+      if (annualEl) annualEl.innerHTML = formatPrice(annual);
+      if (effEl) effEl.textContent = '= \u20ac' + (annual / 12).toFixed(2).replace('.', ',') + '/mese';
+
+      if (founderActive) {
+        if (banner) banner.style.display = 'block';
+        if (seatsEl) seatsEl.textContent = s.remaining + '/' + (s.total || 100);
+        if (lifetime) lifetime.style.display = '';
+      } else {
+        // Founder seats gone (or unverifiable): standard price, retire the limited offers.
+        if (banner) banner.style.display = 'none';
+        if (suffixEl) suffixEl.style.display = 'none';
+        if (lifetime) lifetime.style.display = 'none';
+      }
+    }
+
+    (function loadFounderStatus() {
+      fetch(API_URL + '/founder-status', { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(applyFounderState)
+        .catch(function () { applyFounderState({ active: false }); }); // conservative: standard price
+    })();
+
+    // ============================================================
+    // STRIPE CHECKOUT
+    // ============================================================
+    function checkout(plan) {
+      var btn = event.target;
+      var originalText = btn.textContent;
+      btn.textContent = 'Caricamento...';
+      btn.disabled = true;
+      var affiliateCode = (function() {
+        var nameEQ = "adoff_aff=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+          var c = ca[i];
+          while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+          if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+      })();
+      fetch(API_URL + '/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: plan,
+          lang: document.documentElement.lang || 'auto',
+          affiliate: affiliateCode
+        })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert('Errore: ' + (data.error || 'Riprova tra poco.'));
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
+      })
+      .catch(function() {
+        alert('Errore di connessione. Riprova.');
+        btn.textContent = originalText;
+        btn.disabled = false;
+      });
+    }
+
+    // ============================================================
+    // FAQ ACCORDION
+    // ============================================================
+    (function () {
+      document.querySelectorAll('.faq-question').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var item = this.closest('.faq-item');
+          var answer = item.querySelector('.faq-answer');
+          var isOpen = item.classList.contains('open');
+
+          // Close all
+          document.querySelectorAll('.faq-item').forEach(function (i) {
+            i.classList.remove('open');
+            i.querySelector('.faq-answer').style.maxHeight = '0';
+            i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+          });
+
+          // Open clicked if was closed
+          if (!isOpen) {
+            item.classList.add('open');
+            answer.style.maxHeight = answer.scrollHeight + 'px';
+            btn.setAttribute('aria-expanded', 'true');
+          }
+        });
+      });
+    })();
+  </script>
+
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>
