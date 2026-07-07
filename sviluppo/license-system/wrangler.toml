@@ -1,0 +1,39 @@
+# AdOff License API — Cloudflare Worker Config
+# Deploy: wrangler deploy
+
+name = "adoff-license-api"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+account_id = "3e114c0bdfe0d194745de3f2de4d6f7d"
+
+workers_dev = false
+
+routes = [
+  { pattern = "api.adoff.app/*", zone_name = "adoff.app" },
+  { pattern = "adoff.app/api/*", zone_name = "adoff.app" },
+  { pattern = "adoff.app/admin", zone_name = "adoff.app" },
+  { pattern = "adoff.app/admin/*", zone_name = "adoff.app" }
+]
+
+# KV Namespace — crearlo prima con:
+# wrangler kv:namespace create ADOFF_LICENSES
+[[kv_namespaces]]
+binding = "ADOFF_LICENSES"
+id = "436aa70e6f2a4d50943994dc347625b1"
+
+# D1 Database — crearlo con:
+# wrangler d1 create adoff-db
+[[d1_databases]]
+binding = "DB"
+database_name = "adoff-db"
+database_id = "ef4cb114-95e1-49a1-b5ae-d2604ba94278"
+
+# Secrets (settare con wrangler):
+# wrangler secret put ADOFF_SECRET
+# wrangler secret put ADMIN_TOKEN
+# wrangler secret put STRIPE_WEBHOOK_SECRET
+# wrangler secret put ADOFF_TRIAL_PRIVKEY   # ECDSA P-256 PKCS8 b64 — firma token /trial (valore in ~/.secrets/adoff-stores.env)
+
+# Cron trigger: controllo scadenze licenze ogni giorno alle 09:00 UTC
+[triggers]
+crons = ["0 9 * * *"]

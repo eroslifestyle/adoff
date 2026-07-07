@@ -5511,34 +5511,18 @@ export default {
       return handleHealth();
     }
 
-    // Admin panel — served same-origin from KV, aggressive no-cache + forced version redirect
+    // Admin panel — served from KV with no-cache headers
+    // NOTE: /admin serves the same HTML as /panel (via Pages), but via worker+KV.
+    // Keep no-cache headers so the CDN does not cache stale versions.
     if (path === "/admin" && request.method === "GET") {
       const html = await env.ADOFF_LICENSES.get("admin:html");
       if (!html) return new Response("Admin panel not installed. Run: wrangler kv:key put --namespace-id=... admin:html --path=admin.html", { status: 404 });
 
-      // Genera hash del contenuto per versioning
-      const encoder = new TextEncoder();
-      const data = encoder.encode(html);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const contentHash = hashArray.slice(0, 8).map(b => b.toString(16).padStart(2, "0")).join("");
-
-      // Cache-busting: se il parametro v non corrisponde all'hash corrente, redirect
-      const requestedVersion = url.searchParams.get("v");
-      if (requestedVersion !== contentHash) {
-        const newUrl = new URL(url);
-        newUrl.searchParams.set("v", contentHash);
-        return Response.redirect(newUrl.toString(), 302);
-      }
-
-      // Headers con tutte le direttive anti-cache
       const headers = new Headers();
       headers.set("Content-Type", "text/html; charset=utf-8");
-      headers.set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0, s-maxage=0");
+      headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
       headers.set("Pragma", "no-cache");
       headers.set("Expires", "0");
-      headers.set("ETag", '"' + contentHash + '"');
-      headers.set("X-Content-Hash", contentHash);
       headers.set("CDN-Cache-Control", "no-store");
       headers.set("Cloudflare-CDN-Cache-Control", "no-store");
       headers.set("Surrogate-Control", "no-store");
