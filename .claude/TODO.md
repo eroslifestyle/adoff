@@ -9,9 +9,7 @@
 
 ### P0 — Bloccanti / Core
 
-- [ ] **Store: Edge credenziali 404** — `EDGE_CLIENT_ID`, `EDGE_API_KEY`, `EDGE_PRODUCT_ID` potrebbero essere scaduti o revocati. Verificare Partner Center → Microsoft Edge → Publish API. Riattivare e ripubblicare.
-  - `source ~/.secrets/adoff-stores.env` → verificare i 3 valori
-  - Endpoint test: `GET /v1/products/{productId}` → deve tornare 200
+- [ ] **Store: Edge submission bloccata** — c'è una submission precedente in "In review" lato Partner Center. L'API restituisce `InProgressSubmission` e non può pubblicare. Azione: andare su Partner Center → Microsoft Edge Add-ons → AdOff → submissions → chiudere/cancellare la submission in coda, poi riprovare upload+publish.
 
 ---
 
