@@ -199,18 +199,21 @@
     }
   }
 
-  // Trial attivo? Autorità = token firmato; fallback ottimistico limitato a ≤30g da ora.
+  // Trial attivo? Autorità = token firmato dal server (anti-furbo).
+  // NON c'è più fallback locale — solo il server decide la scadenza.
   async function isTrialActive(result, now) {
     const payload = result.adoffTrialToken
       ? await verifyTrialToken(result.adoffTrialToken, result.adoffDeviceId)
       : null;
+    // Se il token è valido e non scaduto → trial attivo
+    // Se non c'è token o è scaduto → trial NON attivo (no fallback)
     if (payload) return payload.trialEnd > now;
-    const te = result.adoffTrialEnd || 0;
-    return !result.adoffTrialExpired && te > now
-      && te <= now + TRIAL_DURATION_MS + TRIAL_MARGIN_MS;
+    // Nessun fallback: il server dice scaduto = scaduto
+    return false;
   }
 
-  // Riconcilia il trial col server (idempotente). Salva il token firmato.
+  // Sincronizza trial col server — autorità SERVER per il countdown.
+  // Chiama GET /trial/check per ottenere trial_end server-authoritative.
   async function syncTrialBg() {
     try {
       const { adoffDeviceId } = await new Promise((r) =>
@@ -218,14 +221,13 @@
       const deviceId = adoffDeviceId || generateDeviceUuid();
       if (!adoffDeviceId) chrome.storage.local.set({ adoffDeviceId: deviceId });
 
-      const resp = await fetch(API_BASE + "/trial", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId }),
-      });
+      const resp = await fetch(`${API_BASE}/trial/check?deviceId=${encodeURIComponent(deviceId)}`);
+      if (!resp.ok) return;
       const data = await resp.json();
-      if (!data || !data.ok || !data.token) return;
+      if (!data || !data.ok) return;
+      if (!data.token) return; // server dice trial non attivo
 
+      // Verifica il token firmato dal server
       const payload = await verifyTrialToken(data.token, deviceId);
       if (!payload) return; // firma non valida → non fidarsi
 
@@ -234,6 +236,7 @@
         adoffTrialEnd: payload.trialEnd,
         adoffTrialStart: payload.trialStart,
         adoffTrialSeen: Date.now(),
+        adoffTrialExpired: !data.active,
       });
     } catch (_) { /* offline — riprova al prossimo trigger */ }
   }

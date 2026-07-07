@@ -562,12 +562,86 @@ async function signTrialToken(payloadObj, env) {
   return payloadB64 + "." + b64uEncode(sig);
 }
 
+// =============================================
+// TRIAL CHECK — server-authoritative (anti-tampering)
+// GET /trial/check ritorna lo stato trial basato SOLO su dati server.
+// Il client NON ha autorita' sul countdown — solo il server decide.
+// =============================================
+async function handleTrialCheck(request, env) {
+  let deviceId = "";
+  let body = {};
+
+  const url = new URL(request.url);
+  deviceId = url.searchParams.get("deviceId") || "";
+
+  if (!deviceId) {
+    try { body = await request.json(); } catch { /* optional */ }
+    deviceId = typeof body.deviceId === "string" ? body.deviceId : "";
+  }
+
+  if (!deviceId) {
+    return jsonResponse({ ok: false, error: "no deviceId" }, 400);
+  }
+
+  const now = Date.now();
+
+  let installTs = null;
+  try {
+    const heartbeat = await env.DB.prepare(
+      "SELECT install_ts FROM device_heartbeat WHERE device_id = ?"
+    ).bind(deviceId).first();
+    if (heartbeat?.install_ts) installTs = heartbeat.install_ts;
+  } catch (_) { /* D1 optional */ }
+
+  if (!installTs) {
+    try {
+      const trial = await env.DB.prepare(
+        "SELECT trial_start FROM trials WHERE device_id = ?"
+      ).bind(deviceId).first();
+      if (trial?.trial_start) installTs = trial.trial_start;
+    } catch (_) { /* D1 optional */ }
+  }
+
+  if (!installTs) {
+    await env.DB.prepare(
+      "CREATE TABLE IF NOT EXISTS trials (device_id TEXT PRIMARY KEY, trial_start INTEGER NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)"
+    ).run();
+    await env.DB.prepare(
+      "INSERT OR IGNORE INTO trials (device_id, trial_start) VALUES (?, ?)"
+    ).bind(deviceId, now).run();
+    installTs = now;
+
+    try {
+      const cf = request.cf || {};
+      const country = (cf.country || "XX").toUpperCase().slice(0, 2);
+      await env.DB.prepare(`
+        INSERT OR IGNORE INTO install_events (device_id, install_ts, country, plan, version)
+        VALUES (?, ?, ?, 'trial', ?)
+      `).bind(deviceId, now, country, "unknown").run();
+    } catch (_) { /* D1 optional */ }
+  }
+
+  const trialStart = installTs;
+  const trialEnd = trialStart + TRIAL_DURATION_MS;
+  const active = now < trialEnd;
+  const daysLeft = active ? Math.ceil((trialEnd - now) / 86400000) : 0;
+
+  const token = await signTrialToken(
+    { deviceId, trialStart, trialEnd, iat: now, v: 2 }, env
+  );
+
+  return jsonResponse({
+    ok: true, active, trialStart, trialEnd, daysLeft, now, token,
+    serverAuthoritative: true,
+  });
+}
+
 /**
  * POST /trial  { deviceId }
  * Ritorna un token firmato con la scadenza del trial ancorata al server.
  * La prima richiesta per un device_id fissa trial_start = now; le successive
  * ritornano sempre la stessa scadenza (idempotente). Un update/reinstall dello
- * storage locale non può estendere o resettare il trial.
+ * storage locale non puo' estendere o resettare il trial.
  */
 async function handleTrial(body, env, request) {
   const deviceId = await generateDeviceId(request, body, env);
@@ -593,6 +667,21 @@ async function handleTrial(body, env, request) {
   const trialEnd = trialStart + TRIAL_DURATION_MS;
   const active = now < trialEnd;
   const daysLeft = active ? Math.ceil((trialEnd - now) / 86400000) : 0;
+
+  // Registra installazione in D1 (se nuova) per tracking retention
+  try {
+    const cf = request.cf || {};
+    const country = (cf.country || "XX").toUpperCase().slice(0, 2);
+    const isNew = row.trial_start === now;
+    if (isNew) {
+      await env.DB.prepare(`
+        INSERT OR IGNORE INTO install_events (device_id, install_ts, country, plan, version)
+        VALUES (?, ?, ?, 'trial', ?)
+      `).bind(deviceId, trialStart, country, "unknown").run();
+    }
+  } catch (e) {
+    console.error("D1 install_events error:", e.message);
+  }
 
   const token = await signTrialToken(
     { deviceId, trialStart, trialEnd, iat: now, v: 1 }, env
@@ -5604,6 +5693,7 @@ export default {
       if (path === "/portal") return withCors(handlePortalSession(request, env));
       if (path === "/founder-status") return withCors(handleFounderStatus(env));
       if (path === "/tickets") return withCors(handleListTickets(request, env));
+      if (path === "/trial/check") return withCors(handleTrialCheck(request, env));
       if (path === "/admin/suggestions/digest") return withCors(handleAdminSuggestionsDigest(request, env));
       if (path === "/admin/suggestions") return withCors(handleAdminListSuggestions(request, env));
       if (path.startsWith("/ticket/")) return withCors(handleGetTicket(request, env, path.split("/ticket/")[1]));
