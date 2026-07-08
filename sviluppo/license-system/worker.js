@@ -5404,6 +5404,7 @@ async function gscAccessToken(env) {
       client_secret: env.GSC_CLIENT_SECRET,
       refresh_token: env.GSC_REFRESH_TOKEN,
       grant_type: "refresh_token",
+      scope: "https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly",
     }),
   });
   if (!resp.ok) throw new Error("GSC token " + resp.status + ": " + (await resp.text()).slice(0, 200));
@@ -5858,8 +5859,7 @@ async function handleAdminSeoExport(request, env) {
   const rows = [
     "Keyword,Clicks,Impressions,CTR,Position",
     ...(gsc.topQuery || []).map(r => `"${r.key}",${r.clicks},${r.impressions},${r.ctr}%,${r.position}`)
-  ].join("
-");
+  ].join("\n");
 
   return new Response(rows, {
     headers: { "Content-Type": "text/csv", "Content-Disposition": `attachment; filename="adoff-seo-${gsc.range?.end || new Date().toISOString().slice(0,10)}.csv"` },
