@@ -5787,9 +5787,11 @@ async function handleAdminSeoSitemapSubmit(request, env) {
 
   try {
     const token = await gscAccessToken(env);
+    // PUT /sitemaps/{feedpath} — feedpath è l'URL-encoded sitemap path
+    const feedpath = encodeURIComponent(sitemapUrl);
     const resp = await fetch(
-      `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(GSC_SITE)}/sitemaps/submit?sitemapUrl=${encodeURIComponent(sitemapUrl)}`,
-      { method: "POST", headers: { Authorization: "Bearer " + token } }
+      `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(GSC_SITE)}/sitemaps/${feedpath}`,
+      { method: "PUT", headers: { Authorization: "Bearer " + token } }
     );
     const text = await resp.text();
     if (!resp.ok) return jsonResponse({ ok: false, error: "Submit failed: " + text.slice(0, 200) }, 500);
