@@ -37,6 +37,7 @@ body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--
 .btn-sm{padding:5px 12px;font-size:12px;border-radius:6px}
 .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
 .btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-accent{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
 .btn-danger{background:rgba(244,63,94,.15);color:var(--danger);border:1px solid rgba(244,63,94,.3)}
 .btn-danger:hover{background:rgba(244,63,94,.25)}
 .btn-success{background:rgba(74,222,128,.15);color:var(--success);border:1px solid rgba(74,222,128,.3)}
@@ -465,6 +466,7 @@ tr:hover td{background:rgba(124,92,252,.04)}
         <button class="stat-tab" data-tab="acq" onclick="switchStatsTab('acq')">📥 Acquisizione</button>
         <button class="stat-tab" data-tab="churn" onclick="switchStatsTab('churn')">🗑️ Disinstallazioni</button>
         <button class="stat-tab" data-tab="biz" onclick="switchStatsTab('biz')">💰 Business</button>
+        <button class="stat-tab" data-tab="seo" onclick="switchStatsTab('seo')">🔍 SEO / AEO</button>
       </div>
 
       <!-- Tab: Panoramica -->
@@ -528,6 +530,127 @@ tr:hover td{background:rgba(124,92,252,.04)}
             <div class="card-title">Distribuzione piani</div>
             <div class="chart-wrap"><canvas id="stPlanChart"></canvas></div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: SEO / AEO -->
+    <div class="stat-panel" data-panel="seo">
+      <!-- Header with filters -->
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+        <div style="font-size:13px;color:var(--muted)">Periodo:</div>
+        <div class="period-btns">
+          <button class="btn btn-sm btn-outline" id="seo-period-7" onclick="setSeoPeriod(7)">7g</button>
+          <button class="btn btn-sm btn-outline" id="seo-period-30" onclick="setSeoPeriod(30)">30g</button>
+          <button class="btn btn-sm btn-outline" id="seo-period-90" onclick="setSeoPeriod(90)">90g</button>
+        </div>
+        <div class="period-btns" style="margin-left:12px">
+          <select id="seo-device" onchange="loadSeo()" style="background:var(--input);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 8px;font-size:12px">
+            <option value="">Tutti i device</option>
+            <option value="DESKTOP">Desktop</option>
+            <option value="MOBILE">Mobile</option>
+            <option value="TABLET">Tablet</option>
+          </select>
+          <select id="seo-country" onchange="loadSeo()" style="background:var(--input);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 8px;font-size:12px">
+            <option value="">Tutti i paesi</option>
+          </select>
+        </div>
+        <button class="btn btn-sm" style="margin-left:auto;background:var(--success);color:#000;font-weight:600" onclick="refreshSeo()">↻ Aggiorna</button>
+        <span id="seo-updated" style="font-size:11px;color:var(--muted)"></span>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="stats-grid" id="seo-kpis">
+        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+      </div>
+
+      <!-- Charts row: Trend + Device -->
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">📈 Trend Clicks & Impressions</div>
+          <div id="seo-trend-legend" style="display:flex;gap:16px;font-size:12px;margin-bottom:8px">
+            <span style="color:#7c5cfc">● Clicks</span>
+            <span style="color:#60a5fa">● Impressions</span>
+          </div>
+          <div class="chart-wrap chart-wrap-lg"><canvas id="seoTrendChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📱 Device Split</div>
+          <div class="chart-wrap"><canvas id="seoDeviceChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Keyword + Pages row -->
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">🔑 Top Keyword per Clicks</div>
+          <div id="seoKeywords"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📄 Top Pagine per Impressions</div>
+          <div id="seoPages"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Countries + Search Appearances row -->
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">🌍 Top Paesi</div>
+          <div id="seoCountries"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">✨ Search Appearances</div>
+          <div id="seoAppearances"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Opportunities (keywords ranking 5-20) -->
+      <div class="card">
+        <div class="card-title">🎯 Opportunità — Keyword in posizione 5-20 (alto potenziale)</div>
+        <div id="seoOpportunities"><div class="loading-center"><div class="loader"></div></div></div>
+      </div>
+
+      <!-- Sitemap + URL Inspector row -->
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">🗺️ Sitemap</div>
+          <div id="seoSitemaps"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔍 URL Inspector</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <input type="text" id="seo-inspect-url" placeholder="https://adoff.app/..." style="flex:1;background:var(--input);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 12px;font-size:13px">
+            <button class="btn btn-sm btn-primary" onclick="inspectSeoUrl()">Ispeziona</button>
+            <button class="btn btn-sm btn-outline" onclick="batchInspectSitemap()">Batch sitemap</button>
+          </div>
+          <div id="seo-inspect-result"><div class="empty" style="padding:16px"><p style="color:var(--muted);font-size:13px">Inserisci un URL e clicca "Ispeziona" per vedere lo stato di indicizzazione.</p></div></div>
+        </div>
+      </div>
+
+      <!-- Azioni + GA4 row -->
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">⚡ Azioni Rapide</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-sm btn-outline" onclick="submitSitemap()">🔄 Submit Sitemap</button>
+              <button class="btn btn-sm btn-outline" onclick="exportSeoCsv()">📤 Esporta CSV</button>
+              <button class="btn btn-sm btn-outline" onclick="exportSeoPng()">📊 Esporta PNG</button>
+            </div>
+            <div style="font-size:12px;color:var(--muted)">Ultimo submit sitemap: <span id="seo-last-sitemap">—</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 Google Analytics 4</div>
+          <div id="seo-ga4"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Batch inspect results -->
+      <div id="seo-batch-panel" style="display:none">
+        <div class="card">
+          <div class="card-title">🔍 Risultati Batch Inspect</div>
+          <div id="seo-batch-results"><div class="loading-center"><div class="loader"></div></div></div>
         </div>
       </div>
     </div>
@@ -905,6 +1028,7 @@ function switchStatsTab(name) {
   document.querySelectorAll("#page-stats .stat-panel").forEach(p => p.classList.toggle("active", p.getAttribute("data-panel") === name));
   // Chart.js non calcola le dimensioni quando il canvas è in display:none → ridimensiona ora che è visibile
   ["stNetChart", "stRevenueChart", "stPlanChart"].forEach(id => { if (charts[id] && charts[id].resize) charts[id].resize(); });
+  if (name === "seo") { loadSeo(); return; }
 }
 
 function loadPage(page, force = false) {
@@ -912,7 +1036,7 @@ function loadPage(page, force = false) {
   else if (page === "licenses") loadLicenses(force);
   else if (page === "finance") loadFinance(force);
   else if (page === "analytics") loadAnalytics(force);
-  else if (page === "stats") loadStats(force);
+  else if (page === "stats") { loadStats(force); loadSeo(); }
   else if (page === "outreach") loadOutreach(force);
   else if (page === "support") loadTickets(force);
   else if (page === "suggestions") loadSuggestions(force);
@@ -1742,6 +1866,221 @@ async function loadStats(force = false) {
     : `<div class="empty"><div class="empty-icon">📭</div><p>Nessuna disinstallazione registrata (l'estensione v3.5.3 inizia a raccoglierle dopo l'approvazione store)</p></div>`;
 
   statsLoaded = true;
+}
+
+// ── SEO / AEO ────────────────────────────────────────────────
+let seoLoaded = false;
+let seoPeriod = 30; // days
+
+function setSeoPeriod(days) {
+  seoPeriod = days;
+  document.querySelectorAll(".period-btns .btn").forEach(b => b.classList.remove("btn-accent"));
+  const btn = document.getElementById("seo-period-" + days);
+  if (btn) btn.classList.add("btn-accent");
+  seoLoaded = false;
+  loadSeo();
+}
+
+async function refreshSeo() {
+  document.getElementById("seo-updated").textContent = "↻ Sync in corso...";
+  const d = await api("/admin/seo/refresh", { method: "POST" });
+  if (!d.ok) { toast("Errore sync: " + (d.error || "?"), "error"); document.getElementById("seo-updated").textContent = ""; return; }
+  seoLoaded = false;
+  loadSeo();
+  document.getElementById("seo-updated").textContent = "✓ Aggiornato";
+  setTimeout(() => { const el = document.getElementById("seo-updated"); if (el) el.textContent = ""; }, 3000);
+}
+
+async function loadSeo(force = false) {
+  if (seoLoaded && !force) return;
+  document.getElementById("seo-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>`;
+  const d = await api("/admin/seo");
+  if (!d.ok) {
+    document.getElementById("seo-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${d.error || "Impossibile caricare"}</div>`;
+    toast("Errore caricamento SEO", "error");
+    return;
+  }
+  const data = d.data;
+  const gsc = data.gsc || {};
+  const totals = gsc.totals || {};
+  const ga4 = data.ga4 || {};
+  const sitemaps = data.sitemaps || [];
+  const cached = d.cached ? " · Cache" : "";
+
+  // Updated timestamp
+  if (data.updatedAt) {
+    const d2 = new Date(data.updatedAt);
+    const hh = String(d2.getHours()).padStart(2, "0") + ":" + String(d2.getMinutes()).padStart(2, "0");
+    document.getElementById("seo-updated").textContent = "Ultimo aggiornamento: " + hh + cached;
+  }
+
+  // KPI cards
+  document.getElementById("seo-kpis").innerHTML = `
+    ${sc("Clicks " + seoPeriod + "gg", (totals.clicks || 0).toLocaleString(), "green")}
+    ${sc("Impressions", (totals.impressions || 0).toLocaleString(), "")}
+    ${sc("CTR Medio", (totals.ctr || 0) + "%", "")}
+    ${sc("Pos. Media", (totals.position || 0).toFixed(1), "")}
+    ${ga4 && ga4.totals ? sc("Utenti GA4", (ga4.totals.users || 0).toLocaleString(), "gold") : sc("Utenti GA4", "—", "")}
+    ${sc("Sitemap attivi", sitemaps.length, "")}
+  `;
+
+  // Trend chart (use 30d trend)
+  const trend = gsc.trend30d || [];
+  const labels = trend.map(r => r.date?.slice(5) || "");
+  mkChart("seoTrendChart", "line", labels, [
+    { label: "Clicks", data: trend.map(r => r.clicks || 0), borderColor: "#7c5cfc", backgroundColor: "rgba(124,92,252,.15)", fill: true, tension: 0.4, pointRadius: 2 },
+    { label: "Impressions (×100)", data: trend.map(r => Math.round((r.impressions || 0) / 100)), borderColor: "#60a5fa", backgroundColor: "rgba(96,165,250,.1)", fill: true, tension: 0.4, pointRadius: 2 },
+  ], { legend: true });
+
+  // Device chart
+  const devices = gsc.topDevice || [];
+  const deviceColors = { DESKTOP: "#7c5cfc", MOBILE: "#4ade80", TABLET: "#fbbf24" };
+  mkChart("seoDeviceChart", "doughnut",
+    devices.map(d => d.key || "?"),
+    [{ data: devices.map(d => d.clicks || 0), backgroundColor: devices.map(d => deviceColors[d.key] || "#6a6a8a"), borderWidth: 0 }],
+    { legend: true }
+  );
+
+  // Top keywords bar list
+  const keywords = (gsc.topQuery || []).slice(0, 10).map(r => ({ label: r.key, value: r.clicks }));
+  document.getElementById("seoKeywords").innerHTML = barList(keywords, { color: "#7c5cfc", icon: "🔑", empty: "Nessun dato" });
+
+  // Top pages table
+  const pages = (gsc.topPage || []).slice(0, 10);
+  document.getElementById("seoPages").innerHTML = pages.length
+    ? `<div class="table-wrap"><table><thead><tr><th>Pagina</th><th>Clicks</th><th>Impr.</th><th>CTR</th><th>Pos</th></tr></thead><tbody>${
+        pages.map(r => `<tr>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="mono" style="font-size:12px" title="${r.key}">${r.key}</span></td>
+          <td>${r.clicks.toLocaleString()}</td>
+          <td>${r.impressions.toLocaleString()}</td>
+          <td>${r.ctr}%</td>
+          <td>${r.position}</td>
+        </tr>`).join("")
+      }</tbody></table></div>`
+    : `<div class="empty"><p>Nessun dato</p></div>`;
+
+  // Top countries bar list
+  const countries = (gsc.topCountry || []).slice(0, 8).map(r => ({ label: r.key, value: r.clicks }));
+  document.getElementById("seoCountries").innerHTML = barList(countries, { color: "#4ade80", icon: "🌍", empty: "Nessun dato" });
+
+  // Search appearances bar list
+  const appearances = (gsc.topAppearance || []).map(r => ({ label: r.key, value: r.impressions }));
+  document.getElementById("seoAppearances").innerHTML = barList(appearances, { color: "#fbbf24", icon: "✨", empty: "Nessun dato" });
+
+  // Opportunities
+  const opp = (gsc.opportunities || []).slice(0, 15).map(r => ({ label: r.key + ` (pos ${r.position})`, value: r.impressions }));
+  document.getElementById("seoOpportunities").innerHTML = barList(opp, { color: "#7c5cfc", icon: "🎯", empty: "Nessuna opportunità — tutte le keyword sono già in top 5" });
+
+  // Sitemaps
+  if (sitemaps.length) {
+    document.getElementById("seoSitemaps").innerHTML = `<div class="table-wrap"><table><thead><tr><th>Sitemap</th><th>Errori</th><th>Warning</th><th>Ultimo submit</th><th>Submitted/Indexed</th></tr></thead><tbody>${
+      sitemaps.map(s => {
+        const web = (s.contents || []).find(c => c.type === "web") || {};
+        return `<tr>
+          <td><span class="mono" style="font-size:11px" title="${s.path}">${s.path.split("/").pop()}</span></td>
+          <td style="color:${s.errors > 0 ? "var(--danger)" : "var(--success)"}">${s.errors}</td>
+          <td style="color:${s.warnings > 0 ? "var(--gold)" : "var(--muted)"}">${s.warnings}</td>
+          <td style="font-size:12px;color:var(--muted)">${s.lastSubmitted ? new Date(s.lastSubmitted).toLocaleDateString() : "—"}</td>
+          <td style="font-size:12px">${web.submitted || 0} / ${web.indexed || 0}</td>
+        </tr>`;
+      }).join("")
+    }</tbody></table></div>`;
+  } else {
+    document.getElementById("seoSitemaps").innerHTML = `<div class="empty"><p>Nessun sitemap registrato</p></div>`;
+  }
+
+  // GA4 data
+  if (ga4 && ga4.totals) {
+    const t = ga4.totals;
+    document.getElementById("seo-ga4").innerHTML = `
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        ${sc("Utenti", (t.users || 0).toLocaleString(), "gold")}
+        ${sc("Sessioni", (t.sessions || 0).toLocaleString(), "")}
+        ${sc("Tasso engagement", ((t.engagementRate || 0) * 100).toFixed(1) + "%", "green")}
+        ${sc("Bounce rate", ((t.bounceRate || 0) * 100).toFixed(1) + "%", "red")}
+        ${sc("Durata media", Math.round(t.avgSessionDuration || 0) + "s", "")}
+        ${sc("Page views", (t.pageViews || 0).toLocaleString(), "")}
+      </div>
+    `;
+  } else {
+    document.getElementById("seo-ga4").innerHTML = `<div class="empty"><p>GA4 non configurato — aggiungi GA4_PROPERTY_ID al Worker</p></div>`;
+  }
+
+  // Set period button active
+  setSeoPeriod(seoPeriod);
+  seoLoaded = true;
+}
+
+async function inspectSeoUrl() {
+  const url = document.getElementById("seo-inspect-url").value.trim();
+  if (!url) { toast("Inserisci un URL", "error"); return; }
+  document.getElementById("seo-inspect-result").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  const d = await api("/admin/seo/url-inspect", { method: "POST", body: JSON.stringify({ url }) });
+  if (!d.ok) {
+    document.getElementById("seo-inspect-result").innerHTML = `<div class="empty" style="padding:16px"><p style="color:var(--danger)">Errore: ${d.error || "?"}</p></div>`;
+    return;
+  }
+  const r = d.result || {};
+  const indexResult = r.indexStatusResult || {};
+  const coverageResult = r.coverageSummaryResult || {};
+  const mobileResult = r.mobileUsabilityResult || {};
+  const richResult = r.richResultsResult || {};
+
+  const indexColor = indexResult.indexStatus === "INDEXED" ? "var(--success)" : "var(--danger)";
+  const indexText = indexResult.indexStatus === "INDEXED" ? "✅ Indexed" : indexResult.indexStatus === "CRAWLED" ? "⚠️ Crawled" : "❌ Non indicizzato";
+
+  const issues = (r.pageFetchState?.failedCronCause || indexResult.coveringIndexStatus || richResult.verdict || "");
+
+  document.getElementById("seo-inspect-result").innerHTML = `
+    <div style="font-size:13px">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px">
+        <span style="color:${indexColor};font-weight:700;font-size:14px">${indexText}</span>
+        ${coverageResult.issue ? `<span style="color:var(--danger)">⚠️ ${coverageResult.issue}</span>` : ""}
+        ${mobileResult.verdict === "PASS" ? '<span style="color:var(--success)">📱 Mobile OK</span>' : mobileResult.verdict === "FAIL" ? '<span style="color:var(--danger)">📱 Mobile issue</span>' : ""}
+      </div>
+      ${indexResult.sitemap ? `<div style="color:var(--muted);font-size:12px;margin-bottom:4px">Sitemap: <span style="color:var(--success)">✅ Trovato</span> — ${indexResult.sitemap}</div>` : ""}
+      ${indexResult.lastCrawlTime ? `<div style="color:var(--muted);font-size:12px;margin-bottom:4px">Ultimo crawl: ${new Date(indexResult.lastCrawlTime).toLocaleDateString()}</div>` : ""}
+      ${issues ? `<div style="color:var(--danger);font-size:12px;margin-top:6px">Problema: ${issues}</div>` : '<div style="color:var(--success);font-size:12px;margin-top:6px">✅ Nessun problema rilevato</div>'}
+    </div>
+  `;
+}
+
+async function batchInspectSitemap() {
+  const panel = document.getElementById("seo-batch-panel");
+  panel.style.display = "";
+  document.getElementById("seo-batch-results").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  const d = await api("/admin/seo/url-inspect/batch", { method: "POST", body: JSON.stringify({}) });
+  if (!d.ok) {
+    document.getElementById("seo-batch-results").innerHTML = `<div class="empty"><p style="color:var(--danger)">Errore: ${d.error || "?"}</p></div>`;
+    return;
+  }
+  const results = d.results || [];
+  const indexed = results.filter(r => r.indexed).length;
+  document.getElementById("seo-batch-results").innerHTML = `
+    <div style="margin-bottom:12px;font-size:13px;color:var(--muted)">
+      ${d.inspected}/${d.total} URL ispezionate (max 20 per batch · <a href="${d.sitemapUrl || "https://adoff.app/sitemap.xml"}" target="_blank" style="color:var(--accent)">sitemap</a>)
+      — <span style="color:var(--success)">✅ ${indexed} indicizzate</span> / <span style="color:var(--danger)">❌ ${results.length - indexed} no</span>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>URL</th><th>Stato</th></tr></thead><tbody>${
+      results.map(r => `<tr>
+        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="mono" style="font-size:11px" title="${r.url}">${r.url}</span></td>
+        <td style="color:${r.indexed ? "var(--success)" : "var(--danger)"}">${r.indexed ? "✅ Indexed" : "❌ " + (r.status || "Not indexed")}</td>
+      </tr>`).join("")
+    }</tbody></table></div>
+  `;
+}
+
+async function submitSitemap() {
+  const sitemapUrl = "https://adoff.app/sitemap.xml";
+  if (!confirm("Submit " + sitemapUrl + " a Google Search Console?")) return;
+  const d = await api("/admin/seo/sitemap/submit", { method: "POST", body: JSON.stringify({ sitemapUrl }) });
+  if (!d.ok) { toast("Errore: " + (d.error || "?"), "error"); return; }
+  toast("✅ Sitemap submitted!");
+  document.getElementById("seo-last-sitemap").textContent = new Date().toLocaleString();
+}
+
+function exportSeoCsv() {
+  window.open("/admin/seo/export", "_blank");
 }
 
 // ── SUPPORT ──────────────────────────────────────────────────
