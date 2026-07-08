@@ -5529,6 +5529,341 @@ async function handleAdminGscSync(request, env) {
   }
 }
 
+// =============================================
+// SEO/AEO — unified data endpoint
+// Reuses the same OAuth token as GSC for all Google APIs
+// NOTE: Add `GA4_PROPERTY_ID` to wrangler secrets for GA4 integration
+// =============================================
+
+/** GET /admin/seo — unified SEO dashboard data (GSC + GA4 + Sitemaps) */
+async function handleAdminSeo(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  // Check cache first (TTL 1 hour)
+  const cached = await env.ADOFF_LICENSES.get("seo:data", "json");
+  if (cached && (Date.now() - cached.updatedAt) < 3600000) {
+    return jsonResponse({ ok: true, data: cached, cached: true });
+  }
+
+  try {
+    const token = await gscAccessToken(env);
+
+    const END = gscDateStr(2);
+    const start7 = gscDateStr(9);
+    const start30 = gscDateStr(32);
+    const start90 = gscDateStr(92);
+
+    const [
+      gscAggregated, gscTrend7, gscTrend30,
+      topQuery, topPage, topCountry, topDevice, topAppearance, opportunities,
+      sitemaps, ga4Data,
+    ] = await Promise.allSettled([
+      gscQuery(token, { startDate: start30, endDate: END, rowLimit: 1 }),
+      gscQuery(token, { startDate: start7, endDate: END, dimensions: ["date"], rowLimit: 10 }),
+      gscQuery(token, { startDate: start30, endDate: END, dimensions: ["date"], rowLimit: 40 }),
+      gscQuery(token, { startDate: start30, endDate: END, dimensions: ["query"], rowLimit: 25 }),
+      gscQuery(token, { startDate: start30, endDate: END, dimensions: ["page"], rowLimit: 25 }),
+      gscQuery(token, { startDate: start30, endDate: END, dimensions: ["country"], rowLimit: 10 }),
+      gscQuery(token, { startDate: start30, endDate: END, dimensions: ["device"], rowLimit: 5 }),
+      gscQuery(token, { startDate: start30, endDate: END, dimensions: ["searchAppearance"], rowLimit: 15 }),
+      gscQuery(token, { startDate: start30, endDate: END, dimensions: ["query"], rowLimit: 5000, "dimensionFilterGroups": [{ filters: [{ dimension: "position", operator: "between", expression: "5", endExpression: "20" }] }] }),
+      fetch(`https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(GSC_SITE)}/sitemaps`, { headers: { Authorization: "Bearer " + token } }).then(r => r.ok ? r.json() : { sitemap: [] }),
+      fetchGa4Data(token, env, start30, END),
+    ]);
+
+    const getResult = (r, fallback = []) => r.status === "fulfilled" ? (r.value || fallback) : fallback;
+    const totals = getResult(gscAggregated)[0] || {};
+    const trend7 = getResult(gscTrend7);
+    const trend30 = getResult(gscTrend30);
+
+    const seoData = {
+      updatedAt: Date.now(),
+      range: { start: start30, end: END },
+      gsc: {
+        totals: {
+          clicks: Math.round(totals.clicks || 0),
+          impressions: Math.round(totals.impressions || 0),
+          ctr: Math.round((totals.ctr || 0) * 1000) / 10,
+          position: Math.round((totals.position || 0) * 10) / 10,
+        },
+        trend7d: trend7.map(r => ({ date: (r.keys && r.keys[0]) || "", clicks: Math.round(r.clicks || 0), impressions: Math.round(r.impressions || 0) })),
+        trend30d: trend30.map(r => ({ date: (r.keys && r.keys[0]) || "", clicks: Math.round(r.clicks || 0), impressions: Math.round(r.impressions || 0) })),
+        topQuery: gscMapRows(getResult(topQuery)),
+        topPage: gscMapRows(getResult(topPage)),
+        topCountry: gscMapRows(getResult(topCountry)),
+        topDevice: gscMapRows(getResult(topDevice)),
+        topAppearance: gscMapRows(getResult(topAppearance)),
+        opportunities: gscMapRows(getResult(opportunities)).filter(r => r.position >= 5 && r.position <= 20 && r.impressions >= 10).sort((a, b) => b.impressions - a.impressions).slice(0, 25),
+      },
+      sitemaps: parseSitemaps(getResult(sitemaps)),
+      ga4: getResult(ga4Data, null),
+    };
+
+    await env.ADOFF_LICENSES.put("seo:data", JSON.stringify(seoData));
+    return jsonResponse({ ok: true, data: seoData, cached: false });
+  } catch (e) {
+    return jsonResponse({ ok: false, error: "SEO sync failed: " + String(e && e.message || e) }, 500);
+  }
+}
+
+/** POST /admin/seo/refresh — force refresh */
+async function handleAdminSeoRefresh(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  await env.ADOFF_LICENSES.delete("seo:data");
+  try {
+    const token = await gscAccessToken(env);
+    const END = gscDateStr(2);
+    const start30 = gscDateStr(32);
+    const start7 = gscDateStr(9);
+
+    const [
+      gscAggregated, gscTrend7, gscTrend30,
+      topQuery, topPage, topCountry, topDevice, topAppearance, opportunities,
+      sitemaps, ga4Data,
+    ] = await Promise.allSettled([
+      gscQuery(token, { startDate: start30, endDate: END, rowLimit: 1 }),
+      gscQuery(token, { startDate: start7, endDate: END, dimensions: ["date"], rowLimit: 10 }),
+      gscQuery(token, { startDate: start30, endDate: END, dimensions: ["date"], rowLimit: 40 }),
+      gscQuery(token, { startDate: start30, endDate: END, dimensions: ["query"], rowLimit: 25 }),
+      gscQuery(token, { startDate: start30, endDate: END, dimensions: ["page"], rowLimit: 25 }),
+      gscQuery(token, { startDate: start30, endDate: END, dimensions: ["country"], rowLimit: 10 }),
+      gscQuery(token, { startDate: start30, endDate: END, dimensions: ["device"], rowLimit: 5 }),
+      gscQuery(token, { startDate: start30, endDate: END, dimensions: ["searchAppearance"], rowLimit: 15 }),
+      gscQuery(token, { startDate: start30, endDate: END, dimensions: ["query"], rowLimit: 5000 }),
+      fetch(`https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(GSC_SITE)}/sitemaps`, { headers: { Authorization: "Bearer " + token } }).then(r => r.ok ? r.json() : { sitemap: [] }),
+      fetchGa4Data(token, env, start30, END),
+    ]);
+
+    const getResult = (r, fallback = []) => r.status === "fulfilled" ? (r.value || fallback) : fallback;
+    const totals = getResult(gscAggregated)[0] || {};
+    const trend7 = getResult(gscTrend7);
+    const trend30 = getResult(gscTrend30);
+
+    const seoData = {
+      updatedAt: Date.now(),
+      range: { start: start30, end: END },
+      gsc: {
+        totals: {
+          clicks: Math.round(totals.clicks || 0),
+          impressions: Math.round(totals.impressions || 0),
+          ctr: Math.round((totals.ctr || 0) * 1000) / 10,
+          position: Math.round((totals.position || 0) * 10) / 10,
+        },
+        trend7d: trend7.map(r => ({ date: (r.keys && r.keys[0]) || "", clicks: Math.round(r.clicks || 0), impressions: Math.round(r.impressions || 0) })),
+        trend30d: trend30.map(r => ({ date: (r.keys && r.keys[0]) || "", clicks: Math.round(r.clicks || 0), impressions: Math.round(r.impressions || 0) })),
+        topQuery: gscMapRows(getResult(topQuery)),
+        topPage: gscMapRows(getResult(topPage)),
+        topCountry: gscMapRows(getResult(topCountry)),
+        topDevice: gscMapRows(getResult(topDevice)),
+        topAppearance: gscMapRows(getResult(topAppearance)),
+        opportunities: gscMapRows(getResult(opportunities)).filter(r => r.position >= 5 && r.position <= 20 && r.impressions >= 10).sort((a, b) => b.impressions - a.impressions).slice(0, 25),
+      },
+      sitemaps: parseSitemaps(getResult(sitemaps)),
+      ga4: getResult(ga4Data, null),
+    };
+
+    await env.ADOFF_LICENSES.put("seo:data", JSON.stringify(seoData));
+    return jsonResponse({ ok: true, data: seoData });
+  } catch (e) {
+    return jsonResponse({ ok: false, error: String(e && e.message || e) }, 500);
+  }
+}
+
+/** GA4 Data API — returns users, sessions, engagement for last N days */
+async function fetchGa4Data(token, env, startDate, endDate) {
+  const GA4_PROPERTY_ID = env.GA4_PROPERTY_ID;
+  if (!GA4_PROPERTY_ID) return null;
+  try {
+    const url = `https://analyticsdata.googleapis.com/v1beta/properties/${GA4_PROPERTY_ID}:runReport`;
+    const body = {
+      dateRanges: [{ startDate, endDate }],
+      metrics: [
+        { name: "totalUsers" }, { name: "sessions" }, { name: "engagedSessions" },
+        { name: "engagementRate" }, { name: "bounceRate" },
+        { name: "averageSessionDurationSeconds" }, { name: "screenPageViews" },
+      ],
+      dimensions: [{ name: "date" }],
+      orderBys: [{ dimension: { dimensionName: "date" }, desc: false }],
+    };
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) return null;
+    const json = await resp.json();
+    const rows = json.rows || [];
+    const metricNames = (json.metricHeaders || []).map(h => h.name);
+    const usersIdx = metricNames.indexOf("totalUsers");
+    const sessionsIdx = metricNames.indexOf("sessions");
+    const engagedIdx = metricNames.indexOf("engagedSessions");
+    const engRateIdx = metricNames.indexOf("engagementRate");
+    const bounceIdx = metricNames.indexOf("bounceRate");
+    const avgDurIdx = metricNames.indexOf("averageSessionDurationSeconds");
+    const viewsIdx = metricNames.indexOf("screenPageViews");
+
+    const totals = rows.length ? {
+      users: rows.reduce((s, r) => s + (r.metricValues?.[usersIdx]?.value || 0), 0),
+      sessions: rows.reduce((s, r) => s + (r.metricValues?.[sessionsIdx]?.value || 0), 0),
+      engagedSessions: rows.reduce((s, r) => s + (r.metricValues?.[engagedIdx]?.value || 0), 0),
+      engagementRate: rows.reduce((s, r) => s + parseFloat(r.metricValues?.[engRateIdx]?.value || 0), 0) / rows.length,
+      bounceRate: rows.reduce((s, r) => s + parseFloat(r.metricValues?.[bounceIdx]?.value || 0), 0) / rows.length,
+      avgSessionDuration: rows.reduce((s, r) => s + parseFloat(r.metricValues?.[avgDurIdx]?.value || 0), 0) / rows.length,
+      pageViews: rows.reduce((s, r) => s + parseFloat(r.metricValues?.[viewsIdx]?.value || 0), 0),
+    } : null;
+
+    const trend = rows.map(r => ({
+      date: r.dimensionValues?.[0]?.value || "",
+      users: parseInt(r.metricValues?.[usersIdx]?.value || 0),
+      sessions: parseInt(r.metricValues?.[sessionsIdx]?.value || 0),
+    }));
+
+    return { totals, trend };
+  } catch (e) { return null; }
+}
+
+/** Parse GSC sitemaps response */
+function parseSitemaps(data) {
+  if (!data || !data.sitemap) return [];
+  return (data.sitemap || []).map(s => ({
+    path: s.path || "",
+    lastSubmitted: s.lastSubmitted || null,
+    lastDownloaded: s.lastDownloaded || null,
+    errors: s.errors || 0,
+    warnings: s.warnings || 0,
+    contents: (s.contents || []).map(c => ({
+      type: c.type || "web",
+      submitted: c.submitted || 0,
+      indexed: c.indexed || 0,
+    })),
+  }));
+}
+
+/** POST /admin/seo/url-inspect — inspect single URL */
+async function handleAdminSeoUrlInspect(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ ok: false, error: "Invalid JSON" }, 400); }
+  const url = (body && body.url || "").toString().trim();
+  if (!url) return jsonResponse({ ok: false, error: "URL required" }, 400);
+
+  try {
+    const token = await gscAccessToken(env);
+    const resp = await fetch("https://searchconsole.googleapis.com/v1/urlInspection/index:inspect", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+      body: JSON.stringify({ inspectionUrl: url, siteUrl: GSC_SITE }),
+    });
+    if (!resp.ok) {
+      const errText = await resp.text();
+      return jsonResponse({ ok: false, error: "GSC inspection failed: " + errText.slice(0, 200) }, 500);
+    }
+    const json = await resp.json();
+    return jsonResponse({ ok: true, result: json.inspectionResult || {} });
+  } catch (e) {
+    return jsonResponse({ ok: false, error: String(e && e.message || e) }, 500);
+  }
+}
+
+/** POST /admin/seo/sitemap/submit — submit sitemap to Google */
+async function handleAdminSeoSitemapSubmit(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ ok: false, error: "Invalid JSON" }, 400); }
+  const sitemapUrl = (body && body.sitemapUrl || "").toString().trim();
+  if (!sitemapUrl) return jsonResponse({ ok: false, error: "sitemapUrl required" }, 400);
+
+  try {
+    const token = await gscAccessToken(env);
+    const resp = await fetch(
+      `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(GSC_SITE)}/sitemaps/submit?sitemapUrl=${encodeURIComponent(sitemapUrl)}`,
+      { method: "POST", headers: { Authorization: "Bearer " + token } }
+    );
+    const text = await resp.text();
+    if (!resp.ok) return jsonResponse({ ok: false, error: "Submit failed: " + text.slice(0, 200) }, 500);
+    return jsonResponse({ ok: true, result: JSON.parse(text) });
+  } catch (e) {
+    return jsonResponse({ ok: false, error: String(e && e.message || e) }, 500);
+  }
+}
+
+/** POST /admin/seo/url-inspect/batch — batch inspect URLs from sitemap */
+async function handleAdminSeoUrlInspectBatch(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  let body;
+  try { body = await request.json(); } catch { return jsonResponse({ ok: false, error: "Invalid JSON" }, 400); }
+  const sitemapUrl = (body && body.sitemapUrl || "https://adoff.app/sitemap.xml").toString().trim();
+
+  try {
+    const token = await gscAccessToken(env);
+    const sitemapResp = await fetch(sitemapUrl);
+    if (!sitemapResp.ok) return jsonResponse({ ok: false, error: "Cannot fetch sitemap: " + sitemapResp.status }, 500);
+    const sitemapText = await sitemapResp.text();
+    const urls = [...sitemapText.matchAll(/<loc>(.*?)<\/loc>/g)].map(m => m[1]).slice(0, 100);
+
+    const toInspect = urls.slice(0, 20);
+    const results = [];
+    for (const url of toInspect) {
+      try {
+        const resp = await fetch("https://searchconsole.googleapis.com/v1/urlInspection/index:inspect", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+          body: JSON.stringify({ inspectionUrl: url, siteUrl: GSC_SITE }),
+        });
+        if (resp.ok) {
+          const json = await resp.json();
+          const r = json.inspectionResult || {};
+          results.push({ url, indexed: r.indexStatusResult?.indexStatus === "INDEXED", status: r.indexStatusResult?.indexStatus || "UNKNOWN" });
+        } else {
+          results.push({ url, indexed: false, status: "ERROR", error: resp.status });
+        }
+      } catch (e) {
+        results.push({ url, indexed: false, status: "ERROR", error: String(e && e.message || e) });
+      }
+      await new Promise(r => setTimeout(r, 200));
+    }
+    return jsonResponse({ ok: true, results, total: urls.length, inspected: toInspect.length });
+  } catch (e) {
+    return jsonResponse({ ok: false, error: String(e && e.message || e) }, 500);
+  }
+}
+
+/** GET /admin/seo/export — CSV export */
+async function handleAdminSeoExport(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  const cached = await env.ADOFF_LICENSES.get("seo:data", "json");
+  if (!cached) return jsonResponse({ ok: false, error: "Nessun dato — esegui prima Aggiorna" }, 400);
+
+  const { gsc } = cached;
+  const rows = [
+    "Keyword,Clicks,Impressions,CTR,Position",
+    ...(gsc.topQuery || []).map(r => `"${r.key}",${r.clicks},${r.impressions},${r.ctr}%,${r.position}`)
+  ].join("
+");
+
+  return new Response(rows, {
+    headers: { "Content-Type": "text/csv", "Content-Disposition": `attachment; filename="adoff-seo-${gsc.range?.end || new Date().toISOString().slice(0,10)}.csv"` },
+  });
+}
+
 export default {
   // Cron trigger — eseguito da Cloudflare ogni giorno alle 09:00 UTC
   async scheduled(event, env, ctx) {
@@ -5688,6 +6023,8 @@ export default {
       if (path === "/attribution/stats") return withCors(handleAttributionStats(request, env));
       if (path === "/admin/outreach") return withCors(handleOutreachList(request, env));
       if (path === "/admin/gsc") return withCors(handleAdminGsc(request, env));
+      if (path === "/admin/seo") return withCors(handleAdminSeo(request, env));
+      if (path === "/admin/seo/export") return withCors(handleAdminSeoExport(request, env));
       if (path === "/admin/seo-reply") return withCors(handleAdminSeoReply(request, env));
       if (path === "/success") return withCors(handleSuccess(request, env));
       if (path === "/portal") return withCors(handlePortalSession(request, env));
@@ -5887,6 +6224,14 @@ export default {
         return withCors(handleAdminResetPassword(body, env));
       case "/admin/reset-confirm":
         return withCors(handleAdminResetConfirm(body, env));
+      case "/admin/seo/refresh":
+        return withCors(handleAdminSeoRefresh(request, env));
+      case "/admin/seo/url-inspect":
+        return withCors(handleAdminSeoUrlInspect(request, env));
+      case "/admin/seo/url-inspect/batch":
+        return withCors(handleAdminSeoUrlInspectBatch(request, env));
+      case "/admin/seo/sitemap/submit":
+        return withCors(handleAdminSeoSitemapSubmit(request, env));
       default:
         return new Response(JSON.stringify({ error: "Not found" }), {
           status: 404,
