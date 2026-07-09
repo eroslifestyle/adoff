@@ -467,6 +467,7 @@ tr:hover td{background:rgba(124,92,252,.04)}
         <button class="stat-tab" data-tab="churn" onclick="switchStatsTab('churn')">🗑️ Disinstallazioni</button>
         <button class="stat-tab" data-tab="biz" onclick="switchStatsTab('biz')">💰 Business</button>
         <button class="stat-tab" data-tab="seo" onclick="switchStatsTab('seo')">🔍 SEO / AEO</button>
+        <button class="stat-tab" data-tab="edge" onclick="switchStatsTab('edge')">🟣 Edge</button>
       </div>
 
       <!-- Tab: Panoramica -->
@@ -845,6 +846,16 @@ tr:hover td{background:rgba(124,92,252,.04)}
 
 <div id="toast-container"></div>
 
+<!-- Tab: Edge Add-ons Status -->
+<div class="stat-panel" data-panel="edge">
+  <div style="margin-bottom:16px">
+    <div style="font-size:14px;font-weight:600;margin-bottom:8px">🟣 Microsoft Edge Add-ons — API Status</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Verifica lo stato delle credenziali API Edge Add-ons v1.1</div>
+    <button class="btn btn-sm btn-accent" onclick="loadEdgeStatus()">↻ Verifica API</button>
+  </div>
+  <div id="edge-results"><div style="color:var(--muted);font-size:13px">Clicca "Verifica API" per testare le credenziali Edge</div></div>
+</div>
+
 <script>
 "use strict";
 
@@ -1029,6 +1040,7 @@ function switchStatsTab(name) {
   // Chart.js non calcola le dimensioni quando il canvas è in display:none → ridimensiona ora che è visibile
   ["stNetChart", "stRevenueChart", "stPlanChart"].forEach(id => { if (charts[id] && charts[id].resize) charts[id].resize(); });
   if (name === "seo") { loadSeo(); return; }
+if (name === "edge") { loadEdgeStatus(); return; }
 }
 
 function loadPage(page, force = false) {
@@ -2009,6 +2021,35 @@ async function loadSeo(force = false) {
   // Set period button active
   setSeoPeriod(seoPeriod);
   seoLoaded = true;
+}
+
+// ── Edge Add-ons API Status ───────────────────────────────────
+let edgeLoaded = false;
+
+async function loadEdgeStatus() {
+  const resultsEl = document.getElementById("edge-results");
+  resultsEl.innerHTML = '<div class="loading-center"><div class="loader"></div></div>';
+  try {
+    const token = localStorage.getItem("adminToken") || "";
+    const resp = await fetch("/admin/edge/status", {
+      headers: { Authorization: "Bearer " + token },
+    });
+    const data = await resp.json();
+    if (!data.ok) {
+      resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">' + (data.error || "Errore") + '</div>';
+      return;
+    }
+    const r = data.results;
+    const rows = Object.entries(r).map(([name, ep]) => {
+      const statusColor = ep.status === 200 ? "#16a766" : ep.status === 404 ? "#f391b3" : "#ffbc6b";
+      const statusText = ep.status || "ERR";
+      const body = ep.body ? ep.body.slice(0, 200) : "";
+      return '<tr><td style="font-family:monospace;font-size:11px;padding:6px 8px">' + name + '</td><td style="padding:6px 8px;text-align:center"><span style="background:' + statusColor + ';color:#fff;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + statusText + '</span></td><td style="padding:6px 8px;font-size:11px;font-family:monospace;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + body + '</td></tr>';
+    }).join("");
+    resultsEl.innerHTML = '<div class="table-wrap"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:var(--input)"><th style="padding:8px;text-align:left;font-size:12px">Endpoint</th><th style="padding:8px;font-size:12px">Status</th><th style="padding:8px;text-align:left;font-size:12px">Response</th></tr></thead><tbody>' + rows + '</tbody></table></div><div style="margin-top:16px;padding:12px;background:var(--input);border-radius:8px;font-size:12px;color:var(--muted)"><b>API Info:</b> v1 = deprecata dal 10/01/2025 · v1.1 richiede JWT bearer (MSAL/Entra ID) · <a href="https://learn.microsoft.com/en-us/microsoft-edge/extensions/update/api/addons-api-reference" target="_blank" style="color:var(--accent)">Documentazione →</a></div>';
+  } catch(e) {
+    resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">Errore: ' + e.message + '</div>';
+  }
 }
 
 async function inspectSeoUrl() {

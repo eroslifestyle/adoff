@@ -5866,6 +5866,49 @@ async function handleAdminSeoExport(request, env) {
   });
 }
 
+/** GET /admin/edge/status — investigate Edge Add-ons API credentials */
+async function handleAdminEdgeStatus(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: 'Unauthorized' }, 401);
+  }
+  const EDGE_PRODUCT_ID = env.EDGE_PRODUCT_ID;
+  const EDGE_API_KEY = env.EDGE_API_KEY;
+  const EDGE_CLIENT_ID = env.EDGE_CLIENT_ID;
+  if (!EDGE_PRODUCT_ID) return jsonResponse({ ok: false, error: 'EDGE_PRODUCT_ID not configured' }, 400);
+  if (!EDGE_API_KEY) return jsonResponse({ ok: false, error: 'EDGE_API_KEY not configured' }, 400);
+
+  const results = {};
+  const endpoints = [
+    { name: 'get-product', url: `https://api.addons.microsoftedge.microsoft.com/v1/products/${EDGE_PRODUCT_ID}` },
+    { name: 'submissions', url: `https://api.addons.microsoftedge.microsoft.com/v1/products/${EDGE_PRODUCT_ID}/submissions` },
+    { name: 'submissions-draft', url: `https://api.addons.microsoftedge.microsoft.com/v1/products/${EDGE_PRODUCT_ID}/submissions/draft` },
+    { name: 'submissions-published', url: `https://api.addons.microsoftedge.microsoft.com/v1/products/${EDGE_PRODUCT_ID}/submissions/published` },
+    { name: 'submissions-draft-package', url: `https://api.addons.microsoftedge.microsoft.com/v1/products/${EDGE_PRODUCT_ID}/submissions/draft/package` },
+  ];
+
+  for (const ep of endpoints) {
+    try {
+      const resp = await fetch(ep.url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `ApiKey ${EDGE_API_KEY}`,
+          'X-ClientID': EDGE_CLIENT_ID || '',
+          'Content-Type': 'application/json',
+        },
+      });
+      const text = await resp.text();
+      let body = text;
+      try { body = JSON.parse(text); } catch {}
+      results[ep.name] = { status: resp.status, body };
+    } catch (e) {
+      results[ep.name] = { error: String(e) };
+    }
+  }
+
+  return jsonResponse({ ok: true, productId: EDGE_PRODUCT_ID, endpoints: results });
+}
+
 export default {
   // Cron trigger — eseguito da Cloudflare ogni giorno alle 09:00 UTC
   async scheduled(event, env, ctx) {
@@ -6028,6 +6071,7 @@ export default {
       if (path === "/admin/seo") return withCors(handleAdminSeo(request, env));
       if (path === "/admin/seo/export") return withCors(handleAdminSeoExport(request, env));
       if (path === "/admin/seo-reply") return withCors(handleAdminSeoReply(request, env));
+      if (path === "/admin/edge/status") return withCors(handleAdminEdgeStatus(request, env));
       if (path === "/success") return withCors(handleSuccess(request, env));
       if (path === "/portal") return withCors(handlePortalSession(request, env));
       if (path === "/founder-status") return withCors(handleFounderStatus(env));
