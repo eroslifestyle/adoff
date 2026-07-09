@@ -5399,12 +5399,16 @@ async function gscAccessToken(env) {
   const resp = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    // NB: con grant_type=refresh_token il parametro `scope` può SOLO restringere gli
+    // scope del grant originale — richiederne uno non concesso (es. analytics.readonly
+    // su un token emesso solo per webmasters.readonly) fa rispondere Google `invalid_scope`.
+    // Omettendolo, Google emette un access token con TUTTI gli scope del refresh token:
+    // GSC funziona sempre, GA4 si attiva da solo appena il token verrà ri-autorizzato con analytics.readonly.
     body: new URLSearchParams({
       client_id: env.GSC_CLIENT_ID,
       client_secret: env.GSC_CLIENT_SECRET,
       refresh_token: env.GSC_REFRESH_TOKEN,
       grant_type: "refresh_token",
-      scope: "https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly",
     }),
   });
   if (!resp.ok) throw new Error("GSC token " + resp.status + ": " + (await resp.text()).slice(0, 200));
@@ -5866,7 +5870,18 @@ async function handleAdminSeoExport(request, env) {
   });
 }
 
-/** GET /admin/edge/status — investigate Edge Add-ons API credentials */
+/**
+ * GET /admin/edge/status — verifica le credenziali dell'Edge Add-ons API v1.1.
+ *
+ * NB (doc ufficiale Microsoft): l'API v1.1 NON espone alcun GET su /products/{id},
+ * /submissions o /submissions/draft — quegli endpoint tornano sempre 404 "Resource not
+ * found" perché non esistono (la vecchia implementazione li sondava, da qui i 404 fuorvianti).
+ * Gli UNICI GET validi sono gli status di un'operazione:
+ *   GET /v1/products/{id}/submissions/operations/{operationId}
+ * Lo usiamo come health-check dell'auth con un operationId fittizio ben formato:
+ *   - creds VALIDE  → 404 sull'operazione (auth passata, l'operazione non esiste)
+ *   - creds SCADUTE → 401/403 (auth rifiutata → API key da rinnovare in Partner Center)
+ */
 async function handleAdminEdgeStatus(request, env) {
   const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
   if (!await verifyAdminAuth(adminToken, env)) {
@@ -5877,36 +5892,51 @@ async function handleAdminEdgeStatus(request, env) {
   const EDGE_CLIENT_ID = env.EDGE_CLIENT_ID;
   if (!EDGE_PRODUCT_ID) return jsonResponse({ ok: false, error: 'EDGE_PRODUCT_ID not configured' }, 400);
   if (!EDGE_API_KEY) return jsonResponse({ ok: false, error: 'EDGE_API_KEY not configured' }, 400);
+  if (!EDGE_CLIENT_ID) return jsonResponse({ ok: false, error: 'EDGE_CLIENT_ID not configured' }, 400);
 
-  const results = {};
-  const endpoints = [
-    { name: 'get-product', url: `https://api.addons.microsoftedge.microsoft.com/v1/products/${EDGE_PRODUCT_ID}` },
-    { name: 'submissions', url: `https://api.addons.microsoftedge.microsoft.com/v1/products/${EDGE_PRODUCT_ID}/submissions` },
-    { name: 'submissions-draft', url: `https://api.addons.microsoftedge.microsoft.com/v1/products/${EDGE_PRODUCT_ID}/submissions/draft` },
-    { name: 'submissions-published', url: `https://api.addons.microsoftedge.microsoft.com/v1/products/${EDGE_PRODUCT_ID}/submissions/published` },
-    { name: 'submissions-draft-package', url: `https://api.addons.microsoftedge.microsoft.com/v1/products/${EDGE_PRODUCT_ID}/submissions/draft/package` },
-  ];
+  const DUMMY_OPERATION_ID = '00000000-0000-0000-0000-000000000000';
+  const probeUrl = `https://api.addons.microsoftedge.microsoft.com/v1/products/${EDGE_PRODUCT_ID}/submissions/operations/${DUMMY_OPERATION_ID}`;
 
-  for (const ep of endpoints) {
-    try {
-      const resp = await fetch(ep.url, {
-        method: 'GET',
-        headers: {
-          'Authorization': `ApiKey ${EDGE_API_KEY}`,
-          'X-ClientID': EDGE_CLIENT_ID || '',
-          'Content-Type': 'application/json',
-        },
-      });
-      const text = await resp.text();
-      let body = text;
-      try { body = JSON.parse(text); } catch {}
-      results[ep.name] = { status: resp.status, body };
-    } catch (e) {
-      results[ep.name] = { error: String(e) };
-    }
+  let httpStatus = 0;
+  let body = null;
+  try {
+    const resp = await fetch(probeUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `ApiKey ${EDGE_API_KEY}`,
+        'X-ClientID': EDGE_CLIENT_ID,
+      },
+    });
+    httpStatus = resp.status;
+    const text = await resp.text();
+    try { body = JSON.parse(text); } catch { body = text.slice(0, 300); }
+  } catch (e) {
+    return jsonResponse({ ok: false, error: 'Edge API unreachable: ' + String(e && e.message || e) }, 502);
   }
 
-  return jsonResponse({ ok: true, productId: EDGE_PRODUCT_ID, endpoints: results });
+  // 404 sull'operazione fittizia = auth OK; 401/403 = credenziali scadute/non valide.
+  const credsValid = httpStatus === 404 || httpStatus === 200 || httpStatus === 202;
+  const authRejected = httpStatus === 401 || httpStatus === 403;
+
+  let state, message;
+  if (credsValid) {
+    state = 'ok';
+    message = 'Credenziali Edge API valide — pronto per upload/publish.';
+  } else if (authRejected) {
+    state = 'expired';
+    message = 'API key Edge scaduta o non valida (HTTP ' + httpStatus + '). Rinnova in Partner Center → Microsoft Edge → Publish API → Create API credentials, poi aggiorna EDGE_API_KEY.';
+  } else {
+    state = 'unknown';
+    message = 'Risposta inattesa dall\'Edge API (HTTP ' + httpStatus + ').';
+  }
+
+  return jsonResponse({
+    ok: true,
+    productId: EDGE_PRODUCT_ID,
+    state,
+    message,
+    probe: { httpStatus, body },
+  });
 }
 
 export default {

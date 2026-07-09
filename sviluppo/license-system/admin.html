@@ -2030,23 +2030,23 @@ async function loadEdgeStatus() {
   const resultsEl = document.getElementById("edge-results");
   resultsEl.innerHTML = '<div class="loading-center"><div class="loader"></div></div>';
   try {
-    const token = localStorage.getItem("adminToken") || "";
-    const resp = await fetch("/admin/edge/status", {
-      headers: { Authorization: "Bearer " + token },
-    });
-    const data = await resp.json();
+    const data = await api("/admin/edge/status");
     if (!data.ok) {
       resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">' + (data.error || "Errore") + '</div>';
       return;
     }
-    const r = data.results;
-    const rows = Object.entries(r).map(([name, ep]) => {
-      const statusColor = ep.status === 200 ? "#16a766" : ep.status === 404 ? "#f391b3" : "#ffbc6b";
-      const statusText = ep.status || "ERR";
-      const body = ep.body ? ep.body.slice(0, 200) : "";
-      return '<tr><td style="font-family:monospace;font-size:11px;padding:6px 8px">' + name + '</td><td style="padding:6px 8px;text-align:center"><span style="background:' + statusColor + ';color:#fff;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">' + statusText + '</span></td><td style="padding:6px 8px;font-size:11px;font-family:monospace;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + body + '</td></tr>';
-    }).join("");
-    resultsEl.innerHTML = '<div class="table-wrap"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:var(--input)"><th style="padding:8px;text-align:left;font-size:12px">Endpoint</th><th style="padding:8px;font-size:12px">Status</th><th style="padding:8px;text-align:left;font-size:12px">Response</th></tr></thead><tbody>' + rows + '</tbody></table></div><div style="margin-top:16px;padding:12px;background:var(--input);border-radius:8px;font-size:12px;color:var(--muted)"><b>API Info:</b> v1 = deprecata dal 10/01/2025 · v1.1 richiede JWT bearer (MSAL/Entra ID) · <a href="https://learn.microsoft.com/en-us/microsoft-edge/extensions/update/api/addons-api-reference" target="_blank" style="color:var(--accent)">Documentazione →</a></div>';
+    const stateColor = data.state === "ok" ? "#16a766" : data.state === "expired" ? "#fb4c2f" : "#ffbc6b";
+    const stateIcon = data.state === "ok" ? "✓" : data.state === "expired" ? "✕" : "!";
+    const stateLabel = data.state === "ok" ? "Credenziali valide" : data.state === "expired" ? "API key scaduta" : "Stato sconosciuto";
+    const httpStatus = (data.probe && data.probe.httpStatus) || "—";
+    resultsEl.innerHTML =
+      '<div style="display:flex;align-items:center;gap:12px;padding:16px;background:var(--input);border-radius:8px;border-left:4px solid ' + stateColor + '">' +
+        '<span style="background:' + stateColor + ';color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">' + stateIcon + '</span>' +
+        '<div><div style="font-weight:600;font-size:14px;margin-bottom:2px">' + stateLabel + ' <span style="color:var(--muted);font-weight:400;font-size:12px">(HTTP ' + httpStatus + ')</span></div>' +
+        '<div style="font-size:12px;color:var(--muted)">' + (data.message || "") + '</div></div>' +
+      '</div>' +
+      '<div style="margin-top:12px;padding:10px 12px;font-size:12px;color:var(--muted)"><b>Product ID:</b> <span style="font-family:monospace">' + (data.productId || "—") + '</span></div>' +
+      '<div style="margin-top:4px;padding:12px;background:var(--input);border-radius:8px;font-size:12px;color:var(--muted)"><b>API Info:</b> Edge Add-ons v1.1 (ApiKey + X-ClientID). L\'API espone solo POST (upload/publish) e GET operation-status — nessun GET per product/submissions. Rinnovo key: Partner Center → Publish API. <a href="https://learn.microsoft.com/en-us/microsoft-edge/extensions/update/api/using-addons-api" target="_blank" style="color:var(--accent)">Documentazione →</a></div>';
   } catch(e) {
     resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">Errore: ' + e.message + '</div>';
   }
