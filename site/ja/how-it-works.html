@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdOffの仕組み: ステルス広告ブロッキングの技術</title>
+  <meta name="description" content="AdOffがどのように3つの強力な層（ネットワークブロッキング、コスメティックフィルタリング、ステルス検出回避）を使って広告をブロックするか解説します。完全な技術詳細。" />
+  <link rel="canonical" href="https://adoff.app/ja/how-it-works.html" />
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/how-it-works.html" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/how-it-works.html" />
+  <link rel="alternate" hreflang="it" href="https://adoff.app/it/how-it-works.html" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/de/how-it-works.html" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/fr/how-it-works.html" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/es/how-it-works.html" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/pt/how-it-works.html" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/ru/how-it-works.html" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/ar/how-it-works.html" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/how-it-works.html" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/hi/how-it-works.html" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/how-it-works.html" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/how-it-works.html" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/tr/how-it-works.html" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/id/how-it-works.html" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/pl/how-it-works.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="AdOffの仕組み: ステルス広告ブロッキングの技術" />
+  <meta property="og:description" content="AdOffがどのように3つの強力な層（ネットワークブロッキング、コスメティックフィルタリング、ステルス検出回避）を使って広告をブロックするか解説します。完全な技術詳細。" />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/ja/how-it-works.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AdOffの仕組み: ステルス広告ブロッキングの技術" />
+  <meta name="twitter:description" content="AdOffがどのように3つの強力な層（ネットワークブロッキング、コスメティックフィルタリング、ステルス検出回避）を使って広告をブロックするか解説します。完全な技術詳細。" />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <link rel="stylesheet" href="style.css?v=260520-201526" />
+  <style>
+    .article-page { max-width: 780px; margin: 0 auto; padding: 80px 24px 100px; }
+    .article-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: #fff; margin-bottom: 12px; }
+    .article-page .meta { font-size: 0.88rem; color: #8888aa; margin-bottom: 40px; }
+    .article-page h2 { font-size: 1.5rem; color: #fff; margin: 48px 0 16px; }
+    .article-page h3 { font-size: 1.2rem; color: #e2e2f0; margin: 32px 0 12px; }
+    .article-page p { color: #b0b0c8; line-height: 1.8; margin-bottom: 16px; }
+    .article-page ul, .article-page ol { color: #b0b0c8; margin: 0 0 20px 24px; line-height: 1.8; }
+    .article-page li { margin-bottom: 8px; }
+    .article-page strong { color: #fff; }
+    .article-page .highlight { color: #4ade80; font-weight: 700; }
+    .tech-card { background: #12122a; border: 1px solid #2a2a4a; border-radius: 14px; padding: 24px; margin: 20px 0; }
+    .tech-card h3 { color: #7c5cfc; margin: 0 0 12px; font-size: 1.1rem; }
+    .tech-card p { margin-bottom: 0; }
+    .comp-table { width: 100%; border-collapse: collapse; margin: 24px 0 32px; }
+    .comp-table th, .comp-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #2a2a4a; }
+    .comp-table th { color: #8888aa; font-size: 0.85rem; text-transform: uppercase; }
+    .comp-table td { color: #b0b0c8; }
+    .comp-table .check { color: #4ade80; font-weight: 700; }
+    .comp-table .cross { color: #f43f5e; }
+    .comp-table .partial { color: #fbbf24; }
+    .cta-box { background: #12122a; border: 1px solid rgba(124,92,252,0.3); border-radius: 14px; padding: 32px; text-align: center; margin: 48px 0; }
+    .cta-box h3 { color: #fff; margin: 0 0 12px; }
+    .cta-box p { color: #8888aa; margin-bottom: 20px; }
+    .cta-box .btn { display: inline-block; background: linear-gradient(135deg,#7c5cfc,#4c3ad4); color: #fff; padding: 12px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; transition: all 0.2s; }
+    .cta-box .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.3); }
+    .layer-badge { display: inline-block; background: linear-gradient(135deg,#7c5cfc,#4c3ad4); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .pro-badge { background: linear-gradient(135deg,#f59e0b,#d97706); }
+    .step-list { counter-reset: steps; list-style: none; margin: 0 0 20px 0; padding: 0; }
+    .step-list li { counter-increment: steps; position: relative; padding-left: 44px; margin-bottom: 14px; color: #b0b0c8; line-height: 1.7; }
+    .step-list li::before { content: counter(steps); position: absolute; left: 0; top: 0; width: 28px; height: 28px; background: linear-gradient(135deg,#7c5cfc,#4c3ad4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #fff; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "ChromeでAdOff広告ブロッカーをインストール・使用する方法",
+    "description": "AdOffを3ステップでインストールし、3層の保護機能による完全に広告のない閲覧体験をお楽しみください。",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "name": "ChromeウェブストアからAdOffをインストール",
+        "text": "Chromeウェブストアを開いてAdOffを検索するか、adoff.appから直接拡張機能をダウンロードします。「Chromeに追加」をクリックしてインストールを確認します。",
+        "position": 1
+      },
+      {
+        "@type": "HowToStep",
+        "name": "クイックアクセスのために拡張機能をピン留め",
+        "text": "Chromeツールバーのパズルピースアイコンをクリックし、リストからAdOffを見つけてピンアイコンをクリックすると、AdOffアイコンが常に表示されます。",
+        "position": 2
+      },
+      {
+        "@type": "HowToStep",
+        "name": "広告なしでウェブを閲覧",
+        "text": "AdOffは自動的に有効になります。ネットワークブロッキング、コスメティックフィルタリング、ステルス保護はすべてバックグラウンドで静かに動作します。設定不要です。",
+        "position": 3
+      }
+    ],
+    "tool": [
+      {
+        "@type": "HowToTool",
+        "name": "Chromeブラウザ"
+      }
+    ]
+  }
+  </script>
+  <script src="/adoff-i18n.js?v=260520-201526"></script>
+  </head>
+<body>
+  <div id="site-nav"></div>
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+  <article class="article-page">
+
+    <h1>AdOffの仕組み: ステルス広告ブロッキングの技術</h1>
+    <p class="meta">2026年4月更新 &nbsp;·&nbsp; 読了時間8分 &nbsp;·&nbsp; 技術的な詳細解説</p>
+
+    <p>
+      ほとんどの広告ブロッカーはひとつのシンプルなツールで動作します：ブロックするURLのリストです。ウェブサイトがそれらの存在を発見するまで機能しますが、そこから軍拡競争が始まります。AdOffは最初から異なる方法で構築されており、本当に見えない、中断のない閲覧体験を提供するために連携して動作する<strong>3つの独立した保護層</strong>を使用しています。
+    </p>
+    <p>
+      このページでは各層がどのように機能するかを正確に説明します — 好奇心旺盛な方に十分な技術的詳細を含みつつ、誰でも理解できる書き方で。アーキテクチャを理解したい開発者の方も、他のブロッカーが諦めてもAdOffがなぜ動作し続けるのか気になる一般ユーザーの方も、ここが適切な場所です。
+    </p>
+
+    <!-- ===================== 第1層 ===================== -->
+    <h2>第1層 — ネットワークブロッキング</h2>
+    <span class="layer-badge">全プランで有効</span>
+
+    <p>
+      最初で最も効率的な層は、ブラウザが<em>ダウンロードする前に</em>広告関連のHTTPリクエストを停止するネットワークレベルで動作します。データは取得されず、スクリプトは実行されず、トラッキングピクセルは読み込まれません。リソースは単純に取得されません。
+    </p>
+
+    <div class="tech-card">
+      <h3>🔧 Chrome API: declarativeNetRequest</h3>
+      <p>
+        AdOffはChromeの<strong>declarativeNetRequest</strong> API — エンタープライズセキュリティツールでも使用されている同じ最新APIを使用しています。古い<code>webRequest</code> APIとは異なり、declarativeNetRequestはJavaScriptのオーバーヘッドなしにブラウザエンジンによってネイティブに評価されます。ルールはインストール時に一度コンパイルされ、その後のすべてのリクエストに対してほぼゼロのCPUコストでマッチングされます。
+      </p>
+    </div>
+
+    <h3>107以上の精度の高いブロッキングルール</h3>
+    <p>
+      AdOffには最も一般的な広告ネットワークが使用する広告配信インフラを標的にした<strong>107の手選りのネットワークルール</strong>が付属しています。常に保守が必要な個別ドメインの膨大なリストを維持するのではなく、AdOffのルールは広告配信の構造的なパターンを標的にします：
+    </p>
+    <ul>
+      <li><strong>広告サーバードメイン</strong> — バナー広告、動画プレロール、スポンサーコンテンツを配信するホスト名</li>
+      <li><strong>トラッキングおよびアナリティクスエンドポイント</strong> — あなたの行動をプロファイリングするピクセル、ビーコン、イベントコレクター</li>
+      <li><strong>リターゲティングインフラ</strong> — サイトからサイトへあなたを追うクロスサイトトラッカー</li>
+      <li><strong>プログラマティック広告取引所URL</strong> — 広告インプレッションをオークションするリアルタイム入札エンドポイント</li>
+      <li><strong>広告ペイロードに専用されたCDNパス</strong> — 広告コンテンツに固有のコンテンツ配信パターン</li>
+    </ul>
+
+    <h3>ネットワークレベルでのブロッキングが重要な理由</h3>
+    <p>
+      広告がネットワーク層でブロックされると、<strong>ページの読み込みが速くなります</strong>。これは見えるバナーを削除することだけではなく、ブラウザが広告サーバーへのTCP接続を開く必要がなくなり、トラッキングドメインのDNS参照を実行する必要がなくなり、広告がレンダリングして測定するために依存するサードパーティのJavaScriptを実行する必要がなくなることを意味します。
+    </p>
+    <p>
+      広告の多いニュースサイトに関する研究では、ネットワークレベルのブロッキングによってページ読み込み時間が30〜60%削減されることが一貫して示されています。ブロックされた広告リクエストはそれぞれ、開く必要のない接続、解析する必要のないスクリプト、帯域幅を消費しないペイロードです。
+    </p>
+
+    <div class="tech-card">
+      <h3>⚡ パフォーマンス優位性</h3>
+      <p>
+        declarativeNetRequestルールはJavaScriptではなくブラウザのC++エンジンによって評価されるため、AdOffは通常の閲覧中に<strong>CPUオーバーヘッドをゼロ</strong>にします。マッチングはネットワークスタックがリクエストを開始する前に行われます。ページごとにJavaScriptは実行されず、拡張機能はアイドル時には実質的にメモリを使用しません。
+      </p>
+    </div>
+
+    <!-- ===================== 第2層 ===================== -->
+    <h2>第2層 — コスメティックフィルタリング</h2>
+    <span class="layer-badge">全プランで有効</span>
+
+    <p>
+      すべての広告がプレブロックできるネットワークリクエストで届くわけではありません。一部の広告はページ自体のHTMLに直接レンダリングされ、コンテンツと同じドメインから読み込まれ、ファーストパーティのJavaScriptによって注入されます。これらに対して、AdOffは<strong>コスメティックフィルタリング</strong>を使用します — 周囲のレイアウトを乱すことなく、CSSを使用してDOMから広告要素を非表示にする技術です。
+    </p>
+
+    <h3>隔離された世界でのCSS注入</h3>
+    <p>
+      AdOffのコンテンツスクリプトはChromeの<strong>ISOLATEDワールド</strong>で実行されます — ページ自身のJavaScriptから完全に分離されたサンドボックス実行環境です。これは、拡張機能がページのスクリプトによって検出されることなくDOMを観察・変更できることを意味します。ページのスクリプトは隔離されたワールドのスコープや変数にアクセスできません。
+    </p>
+    <p>
+      コスメティックフィルターは、数千のウェブサイトにわたる広告スロットで使用される標準的なクラス名、ID、構造的なパターンをカバーするために慎重に維持されたCSSスタイルシートを注入します。これらのルールは既知の広告コンテナセレクターに<code>display: none</code>と<code>visibility: hidden</code>を適用します。
+    </p>
+
+    <div class="tech-card">
+      <h3>🎨 レイアウトシフトなし — 空白スペースなし</h3>
+      <p>
+        初歩的な広告ブロッカーによくある問題は、DOMから要素を削除することで周囲のコンテンツがジャンプしたり再配置されたりすることです。AdOffのCSSルールは<code>display: none</code>を<code>!important</code>優先度で使用し、可能な場合はブラウザの最初の描画前に適用されるため、目に見えるレイアウトシフトを防ぎます。広告が占めていたはずのスペースが単純に現れません。
+      </p>
+    </div>
+
+    <h3>DOMスキャンとダイナミック注入</h3>
+    <p>
+      現代のウェブサイトは非常に動的で、最初のHTMLが解析された後にコンテンツを読み込み、JavaScriptで広告スロットを注入し、DOMを継続的に更新します。AdOffのコンテンツスクリプトは広告パターンに一致する新しく挿入された要素のDOMを監視し、通常は1つのアニメーションフレーム内で即座に非表示ルールを適用します。広告が一瞬表示されてから消えるようなことはありません。
+    </p>
+
+    <h3>動画広告の無力化 <span style="font-size:0.75rem;color:#f59e0b;">(Pro)</span></h3>
+    <p>
+      ストリーミングプラットフォーム上のほとんどの動画プレーヤーは、プレロール、ミッドロール、ポストロールの広告挿入を管理するために標準的な広告SDKに依存しています。AdOffはこのSDKを中立スタブに置き換え、プレーヤーに即座に「表示する広告はありません」と伝えます — 動画は中断なしに直接開始されます。
+    </p>
+    <p>
+      これは二つの補完的なメカニズムで機能します：
+    </p>
+    <ul>
+      <li><strong>ネットワークレベルのリダイレクト</strong> — 広告SDKを読み込むリクエストが傍受され、拡張機能にバンドルされたローカルスタブファイルにリダイレクトされます</li>
+      <li><strong>ページレベルのインジェクション</strong> — サイトのスクリプトが実行される前にスタブが注入されるため、広告SDKを内部でバンドルしているプレーヤーでも最初に中立バージョンが見つかります</li>
+    </ul>
+    <p>
+      スタブは元のSDKの完全なAPIサーフェスを実装していますが、広告を配信することはありません。プレーヤーが<code>start()</code>を呼び出すと、スタブは即座に「広告完了」シグナルを送信します — プレーヤーは広告ブレークが自然に終了したかのように動画を再開します。これは普遍的です：このSDKを使用している世界中のあらゆるウェブサイトで、サイトの手動リストなしに機能します。
+    </p>
+    <p>
+      主要な動画プラットフォームでは、専用ハンドラーが広告再生を16×速度で加速し、人間のようなタイミングでスキップボタンを自動的にクリックします。
+    </p>
+
+    <!-- ===================== 第3層 ===================== -->
+    <h2>第3層 — ステルス検出回避 <span style="font-size:0.8rem;color:#f59e0b;">（Pro）</span></h2>
+    <span class="layer-badge pro-badge">Pro &amp; トライアル</span>
+
+    <p>
+      ここでAdOffは従来の広告ブロッカーと最も大きく異なります。多くのウェブサイトが現在、アクティブな<em>広告ブロック検出</em>スクリプトを実行しています — ブロッカーを使用しているかどうかを検出し、もしそうであれば壁、警告、または低品質なコンテンツで体験を妨害することだけを目的としたコードです。
+    </p>
+    <p>
+      ChromeのMAINワールドで動作するAdOffのステルス層は、ページ自身のJavaScriptと同じレベルで動作します。広告ブロック検出を実行前に外科的に無効化します。各技術の仕組みを説明します：
+    </p>
+
+    <div class="tech-card">
+      <h3>🪤 おとり偽装</h3>
+      <p>
+        広告ブロック検出スクリプトは一般的に、広告コンテナのように見えるDOM要素（「おとり」要素）を注入し、その寸法がゼロかどうか、または広告ブロッカーによって削除されたかどうかを確認することで機能します。AdOffのおとり偽装はこれらの要素をDOMに保持し、ジオメトリがクエリされたときに妥当な寸法を報告し、検出スクリプトが期待する「問題なし」シグナルを確実に受け取れるようにします。
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>📦 変数偽装</h3>
+      <p>
+        広告ネットワークはグローバルなJavaScript変数とプロパティを<code>window</code>オブジェクトに注入して存在を示します。広告ブロック検出スクリプトはこれらの変数の存在を確認して広告が読み込まれたことを確認します。AdOffの変数偽装は期待されるグローバル名前空間を再構築します — 実際の広告コンテンツが配信されなくても、広告スクリプトが正常に実行されたとページが信じるように存在チェックをパスする軽量スタブオブジェクトを作成します。
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>🔌 Fetch / XHR傍受</h3>
+      <p>
+        一部の検出システムはDOMにまったく依存しません — 既知の広告エンドポイントに直接<code>fetch()</code>または<code>XMLHttpRequest</code>呼び出しを行い、応答時間やステータスコードを測定します。リクエストがブロックされると即座に失敗し、ブロッカーの存在を裏切ります。AdOffは<code>window.fetch</code>と<code>XMLHttpRequest</code>の両方をプロキシハンドラーでラップし、既知の広告ドメインへのリクエストを検出して広告の読み込み成功を模倣する合成レスポンスを返します。
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>🛡️ スクリプト無効化</h3>
+      <p>
+        既知の広告ブロック検出スクリプトはURLパターンとペイロードシグネチャによって識別されます。ブラウザがこれらのスクリプトのひとつを読み込もうとすると、ステルス層は実行を傍受し、スクリプトのロジックを検出作業を行わずに完了コールバックを満たす不活性なスタブに置き換えます。ページのコードは解決されたプロミスまたはno-opコールバックを受け取り、検出パスには到達されません。
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>👁️ MutationObserver — リアルタイム防御</h3>
+      <p>
+        ウェブサイトは最初のページ読み込み後いつでも新しい検出スクリプトを注入できます — ユーザーアクション、スクロール深度、またはタイマーによってトリガーされます。AdOffのMutationObserverはドキュメントに追加される新しい<code>&lt;script&gt;</code>要素を継続的に監視します。既知の広告ブロック検出シグネチャと一致するものが見つかると、ステルス層は最初の命令が実行される前に無効化します。これにより、遅延または遅延読み込みされた検出システムに対しても保護が維持されます。
+      </p>
+    </div>
+
+    <!-- ===================== 3層の連携 ===================== -->
+    <h2>3つの層の連携</h2>
+
+    <p>
+      各層は独立していて、一方がバイパスされたり適用できない場合でも他の層は機能し続けます。しかし、その本当の力はそれらがどのように補完し合うかにあります：
+    </p>
+
+    <ul>
+      <li>
+        <strong>ネットワークブロッキング</strong>はほとんどの広告ペイロードをブラウザに存在する前に排除し、ブロックされたものだけを検出できる検出スクリプトの攻撃対象を削減します。
+      </li>
+      <li>
+        <strong>コスメティックフィルタリング</strong>はファーストパーティの広告とネットワーク層を通り抜けた残りのものを処理し、DOMに痕跡を残さずに視覚的な体験をクリーンに保ちます。
+      </li>
+      <li>
+        <strong>ステルス検出回避</strong>は他の2層を不可視性のマントで包み、ブロッカーが存在しないとページを納得させ、広告ブロック検出のペイウォールが絶対にトリガーされないようにします。
+      </li>
+    </ul>
+
+    <p>
+      結果は単に広告がないだけの閲覧体験ではなく、ウェブサイトがあなたが広告ブロッカーを使っていることを絶対に知らない体験です。警告なし、ペイウォールなし、低品質なコンテンツなし、「広告ブロッカーを無効にしてください」というオーバーレイなし。
+    </p>
+
+    <!-- ===================== プライバシー ===================== -->
+    <h2>設計によるプライバシー</h2>
+
+    <p>
+      AdOffはすべてを<strong>ブラウザ内でローカルに</strong>処理します。閲覧履歴を分析するリモートサーバーはなく、テレメトリは送信されず、訪問したURLのリストがデバイスを離れることはありません。拡張機能は本当に必要な権限のみを要求します：
+    </p>
+    <ul>
+      <li><strong>declarativeNetRequest</strong> — ネットワークブロッキングルールを適用するため</li>
+      <li><strong>storage</strong> — 設定と広告カウンターをローカルに保存するため</li>
+      <li><strong>tabs</strong> — サイトごとのバッジカウントを表示するため</li>
+      <li><strong>scripting</strong> — コスメティックフィルターとステルススクリプトを注入するため</li>
+    </ul>
+    <p>
+      「すべてのウェブサイトのすべてのデータを読み取る」という包括的な権限はありません。拡張機能内にバンドルされた分析SDKもありません。ブラウザで起きることはブラウザ内に留まります。
+    </p>
+
+    <!-- ===================== インストール方法 ===================== -->
+    <h2>3ステップで始める</h2>
+
+    <ol class="step-list">
+      <li>
+        Chromeウェブストアから<strong>AdOffをインストール</strong>するか、<a href="../install.html" style="color:#7c5cfc;">adoff.app/install</a>から直接<code>.zip</code>をダウンロードします。Chromeが権限確認を求めますので確認して承認してください。
+      </li>
+      <li>
+        Chromeツールバーのパズルピースアイコンをクリックし、ドロップダウンでAdOffを見つけてピンアイコンをクリックすることで<strong>拡張機能をピン留め</strong>します。AdOffのシールドがツールバーに常時表示されるようになります。
+      </li>
+      <li>
+        <strong>普通に閲覧してください。</strong>訪問するすべてのページで3つの層が自動的に有効になります。AdOffアイコンをいつでもクリックして、ブロックされた広告とリクエストの数を確認したり、特定のサイトで保護を一時停止したりできます。
+      </li>
+    </ol>
+
+    <p>
+      デフォルトの体験に設定は必要ありません。上級ユーザーはオプションページを探索して、ホワイトリストの管理、サイトごとのブロッキング動作の調整、または無料の30日間トライアル中にステルスPro機能を有効化することができます。
+    </p>
+
+    <!-- ===================== CTA ===================== -->
+    <div class="cta-box">
+      <h3>違いを体験する準備はできましたか？</h3>
+      <p>3層の保護をすべて30日間無料でお試しください。クレジットカード不要です。</p>
+      <a href="../install.html" class="btn">AdOffを無料でインストール →</a>
+    </div>
+
+  </article>
+  
+  <script src="/adoff-footer.js?v=260602a"></script>
+  
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

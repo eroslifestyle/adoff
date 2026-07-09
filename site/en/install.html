@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Install AdOff · Free Ad Blocker for Chrome, Edge, Brave, Firefox, Safari</title>
+  <meta name="description" content="Download and install AdOff ad blocker on Chrome, Firefox, Safari, Edge, Opera and Brave. Free 30-day Pro trial. Featherlight, installs in 30 seconds." />
+  <link rel="canonical" href="https://adoff.app/en/install.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Install AdOff · Free Ad Blocker" />
+  <meta property="og:description" content="Download AdOff for Chrome, Firefox, Safari, Edge, Opera and Brave. 30-day Pro trial included." />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/en/install.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Install AdOff · Free Ad Blocker" />
+  <meta name="twitter:description" content="Ad blocker with stealth anti-detection. 30-day Pro trial, no credit card." />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="icon" type="image/png" href="/assets/icon128.png">
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="it" href="https://adoff.app/install.html" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/en/install.html" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/de/install.html" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/fr/install.html" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/es/install.html" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/pt/install.html" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/ru/install.html" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/ar/install.html" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/install.html" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/hi/install.html" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/install.html" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/install.html" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/tr/install.html" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/id/install.html" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/pl/install.html" />
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/en/install.html" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <link rel="stylesheet" href="style.css?v=260520-205323">
+  <style>
+    .install-page { max-width: 860px; margin: 0 auto; padding: 80px 24px 60px; }
+
+    .install-hero {
+      text-align: center; margin-bottom: 48px; padding: 40px 0;
+    }
+    .install-hero h1 { font-size: 32px; margin-bottom: 12px; }
+    .install-hero p { color: #8a8aaa; font-size: 16px; max-width: 560px; margin: 0 auto; }
+
+    /* Detected badge */
+    .detected-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(124,92,252,0.12); border: 1px solid rgba(124,92,252,0.3);
+      border-radius: 24px; padding: 8px 20px; margin-top: 16px;
+      font-size: 14px; color: #b0b0c8;
+    }
+    .detected-badge strong { color: #7c5cfc; }
+
+    /* Compatibility grid */
+    .compat-section { margin-bottom: 48px; }
+    .compat-title { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 8px; }
+    .compat-sub { color: #8a8aaa; font-size: 14px; text-align: center; margin-bottom: 24px; }
+    .compat-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px; margin-bottom: 16px;
+    }
+    .compat-card {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 12px;
+      padding: 20px 12px; text-align: center; transition: all 0.2s;
+    }
+    .compat-card:hover { border-color: #7c5cfc; transform: translateY(-2px); }
+    .compat-card.supported { border-color: rgba(74,222,128,0.3); }
+    .compat-card.partial { border-color: rgba(251,191,36,0.3); }
+    .compat-card.unsupported { border-color: rgba(244,63,94,0.2); opacity: 0.6; }
+    .compat-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+    .compat-name { font-size: 14px; font-weight: 600; color: #e2e2f0; margin-bottom: 4px; }
+    .compat-status { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .compat-status.full { color: #4ade80; }
+    .compat-status.partial { color: #fbbf24; }
+    .compat-status.no { color: #f43f5e; }
+
+    /* OS row */
+    .os-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 8px; margin-top: 16px;
+    }
+    .os-card {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 10px;
+      padding: 14px 8px; text-align: center; font-size: 13px; color: #b0b0c8;
+    }
+    .os-card .os-icon { font-size: 24px; display: block; margin-bottom: 6px; }
+    .os-card .os-name { font-weight: 600; color: #e2e2f0; }
+
+    /* Download boxes */
+    .download-section { margin-bottom: 48px; }
+    .download-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 600px) { .download-grid { grid-template-columns: 1fr; } }
+
+    .download-box {
+      background: #12122a; border: 2px solid #2a2a4a; border-radius: 16px;
+      padding: 28px 24px; text-align: center; transition: all 0.3s;
+      position: relative;
+    }
+    .download-box:hover { border-color: #7c5cfc; }
+    .download-box.recommended {
+      border-color: #7c5cfc;
+      background: linear-gradient(135deg, rgba(124,92,252,0.12), rgba(124,92,252,0.04));
+    }
+    .download-box .rec-badge {
+      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, #7c5cfc, #4c3ad4); color: #fff;
+      padding: 4px 16px; border-radius: 12px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .dl-browser-list { font-size: 13px; color: #8a8aaa; margin-bottom: 16px; line-height: 1.6; }
+    .dl-browser-list strong { color: #e2e2f0; }
+    .download-btn {
+      display: inline-block; background: linear-gradient(135deg, #7c5cfc, #4c3ad4);
+      color: #fff; padding: 14px 32px; border-radius: 12px; font-size: 16px;
+      font-weight: 700; text-decoration: none; transition: all 0.3s; border: none; cursor: pointer;
+      width: 100%; box-sizing: border-box;
+    }
+    .download-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.4); }
+    .download-btn.secondary {
+      background: transparent; border: 2px solid #7c5cfc; color: #7c5cfc;
+    }
+    .download-btn.secondary:hover { background: rgba(124,92,252,0.1); }
+    .download-info { font-size: 12px; color: #3a3a5a; margin-top: 10px; }
+
+    /* OFFICIAL STORES SECTION */
+    .stores-section { margin-bottom: 56px; }
+    .stores-title {
+      font-size: 28px; font-weight: 800; text-align: center;
+      margin-bottom: 10px; color: #fff;
+      background: linear-gradient(135deg, #fff 0%, #b8a9ff 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .stores-sub {
+      color: #8a8aaa; font-size: 15px; text-align: center;
+      margin-bottom: 32px;
+    }
+    .stores-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      max-width: 920px; margin: 0 auto;
+    }
+    @media (max-width: 1020px) { .stores-grid { grid-template-columns: repeat(2, 1fr); max-width: 620px; } }
+    @media (max-width: 760px) { .stores-grid { grid-template-columns: 1fr; } }
+    .store-card {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 14px; padding: 28px 20px;
+      background: #12122a; border: 2px solid #2a2a4a; border-radius: 16px;
+      color: #fff; text-decoration: none;
+      transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s, background 0.25s;
+      text-align: center; position: relative;
+    }
+    .store-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
+    .store-card--chrome:hover { border-color: #4285F4; background: linear-gradient(135deg, rgba(66,133,244,0.10), rgba(66,133,244,0.02)); }
+    .store-card--firefox:hover { border-color: #FF512F; background: linear-gradient(135deg, rgba(255,81,47,0.10), rgba(255,81,47,0.02)); }
+    .store-card--edge:hover { border-color: #0F88FF; background: linear-gradient(135deg, rgba(15,136,255,0.10), rgba(15,136,255,0.02)); }
+    .store-card--opera:hover { border-color: #FF1B2D; background: linear-gradient(135deg, rgba(255,27,45,0.10), rgba(255,27,45,0.02)); }
+    .store-card--safari:hover { border-color: #1B88CA; background: linear-gradient(135deg, rgba(27,136,202,0.10), rgba(27,136,202,0.02)); }
+    .store-card--soon { opacity: 0.85; }
+    .store-card--soon .store-card__cta { background: linear-gradient(135deg, #4a4a6a, #2a2a4a) !important; }
+    .store-card__badge {
+      position: absolute; top: 10px; right: 10px;
+      background: #2a2a4a; color: #b8a9ff;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+      padding: 4px 8px; border-radius: 6px; text-transform: uppercase;
+    }
+    .store-card__icon { width: 56px; height: 56px; flex-shrink: 0; }
+    .store-card__icon svg { width: 100%; height: 100%; }
+    .store-card__body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .store-card__label {
+      font-size: 13px; font-weight: 600; color: #b8a9ff;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .store-card__name { font-size: 20px; font-weight: 800; color: #fff; }
+    .store-card__browsers { font-size: 12px; color: #8a8aaa; margin-top: 2px; }
+    .store-card__cta {
+      width: 100%; padding: 12px 16px; margin-top: 8px;
+      background: linear-gradient(135deg, #7c5cfc, #4c3ad4);
+      color: #fff; border-radius: 10px; font-weight: 700; font-size: 14px;
+    }
+    .store-card--chrome .store-card__cta { background: linear-gradient(135deg, #4285F4, #1A73E8); }
+    .store-card--firefox .store-card__cta { background: linear-gradient(135deg, #FF512F, #DD2476); }
+    .store-card--edge .store-card__cta { background: linear-gradient(135deg, #0F88FF, #0A4DAB); }
+    .store-card--opera .store-card__cta { background: linear-gradient(135deg, #FF1B2D, #B30D1F); }
+    .store-card--safari .store-card__cta { background: linear-gradient(135deg, #1B88CA, #006CFF); }
+    .stores-trust {
+      margin-top: 24px; text-align: center;
+      font-size: 13px; color: #8a8aaa; line-height: 1.8;
+    }
+
+    /* ZIP FALLBACK */
+    .zip-fallback {
+      background: #0a0a1a; border: 1px solid #1a1a36; border-radius: 12px;
+      padding: 16px 20px;
+    }
+    .zip-fallback__summary {
+      cursor: pointer; color: #8a8aaa; font-size: 14px; font-weight: 600;
+      list-style: none; padding: 4px 0; outline: none;
+      transition: color 0.2s;
+    }
+    .zip-fallback__summary:hover { color: #7c5cfc; }
+    .zip-fallback__summary::-webkit-details-marker { display: none; }
+    .zip-fallback[open] .zip-fallback__summary { color: #7c5cfc; }
+    .zip-fallback__body { padding-top: 12px; }
+    .zip-fallback__body .download-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 760px) { .zip-fallback__body .download-grid { grid-template-columns: 1fr; } }
+    .zip-fallback__body .download-box { padding: 18px 14px; }
+
+    /* Browser tabs */
+    .browser-tabs { display: flex; gap: 4px; margin-bottom: 0; flex-wrap: wrap; }
+    .browser-tab {
+      padding: 12px 20px; background: #1a1a36; border: 1px solid #2a2a4a;
+      border-radius: 10px 10px 0 0; color: #8a8aaa; font-size: 13px;
+      font-weight: 600; cursor: pointer; border-bottom: none; transition: all 0.2s;
+    }
+    .browser-tab.active { background: #12122a; color: #7c5cfc; border-color: #7c5cfc; }
+
+    /* Steps container */
+    .steps-container {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 0 16px 16px 16px;
+      padding: 32px; display: none;
+    }
+    .steps-container.active { display: block; }
+
+    /* Step */
+    .step {
+      display: flex; gap: 20px; padding: 24px 0;
+      border-bottom: 1px solid #1a1a36;
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c5cfc, #4c3ad4);
+      color: #fff; font-size: 18px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .step-content { flex: 1; }
+    .step-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: #fff; }
+    .step-desc { font-size: 14px; color: #b0b0c8; line-height: 1.8; }
+    .step-desc strong { color: #fff; }
+    .step-desc code {
+      background: #1a1a36; border: 1px solid #2a2a4a; padding: 2px 8px;
+      border-radius: 4px; font-family: monospace; color: #7c5cfc; font-size: 13px;
+    }
+
+    /* Hint box */
+    .hint-box {
+      background: #0a0a1a; border: 1px solid #2a2a4a; border-radius: 8px;
+      padding: 14px 16px; margin-top: 12px; font-size: 13px; line-height: 1.6;
+    }
+    .hint-box .hint-icon { font-size: 16px; margin-right: 6px; }
+    .hint-box.warning { border-color: rgba(251,191,36,0.3); }
+    .hint-box.success { border-color: rgba(74,222,128,0.3); }
+    .hint-box.info { border-color: rgba(124,92,252,0.3); }
+
+    /* FAQ */
+    .faq-section { margin-top: 48px; }
+    .faq-title { font-size: 24px; font-weight: 700; margin-bottom: 20px; text-align: center; }
+    .faq-item {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 10px;
+      margin-bottom: 8px; overflow: hidden;
+    }
+    .faq-q {
+      padding: 16px 20px; font-size: 15px; font-weight: 600; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      transition: color 0.2s;
+    }
+    .faq-q:hover { color: #7c5cfc; }
+    .faq-q .arrow { transition: transform 0.3s; font-size: 12px; }
+    .faq-item.open .faq-q .arrow { transform: rotate(180deg); }
+    .faq-a {
+      padding: 0 20px; max-height: 0; overflow: hidden;
+      transition: max-height 0.3s, padding 0.3s;
+      font-size: 14px; color: #8a8aaa; line-height: 1.7;
+    }
+    .faq-item.open .faq-a { max-height: 400px; padding: 0 20px 16px; }
+
+    /* Help footer */
+    .help-footer {
+      text-align: center; margin-top: 48px; padding: 24px;
+      background: #12122a; border-radius: 12px; border: 1px solid #2a2a4a;
+    }
+    .help-footer p { color: #8a8aaa; font-size: 14px; margin-bottom: 12px; }
+    .help-footer a { color: #7c5cfc; text-decoration: none; font-weight: 600; }
+
+    /* OS-specific instructions */
+    .os-note { font-size: 13px; color: #8a8aaa; margin-top: 6px; font-style: italic; }
+  </style>
+  <script src="/adoff-i18n.js?v=260520-205323"></script>
+  </head>
+<body>
+  <div id="site-nav"></div>
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+  <div class="install-page">
+
+    <!-- HERO -->
+    <div class="install-hero">
+      <img src="assets/icon128.png" alt="AdOff" style="width:80px;margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(124,92,252,0.5))">
+      <h1>Install AdOff</h1>
+      <p>A few clicks to freedom from ads. Installation in less than 2 minutes.</p>
+      <div class="detected-badge" id="detectedBadge">
+        <span id="detectedIcon"></span>
+        <span>Detected:</span>
+        <strong id="detectedText"></strong>
+      </div>
+    </div>
+
+    <!-- TRIAL BANNER -->
+    <div style="max-width:680px;margin:0 auto 40px;background:linear-gradient(135deg,rgba(124,92,252,0.08),rgba(124,92,252,0.02));border:1px solid rgba(124,92,252,0.25);border-radius:14px;padding:24px 28px;text-align:center;">
+      <div style="font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:8px;">First install: 30 days of Pro free</div>
+      <p style="font-size:0.92rem;color:#8888aa;margin:0;">No credit card. Unlock Stealth Mode, video ad blocking on streaming platforms, timed pause, all Pro features. After 30 days, decide whether to continue or switch to the Free plan (website ad blocking).</p>
+    </div>
+
+    <!-- COMPATIBILITY SECTION -->
+    <div class="compat-section">
+      <h2 class="compat-title">Universal, on all browsers</h2>
+      <p class="compat-sub">Chrome, Firefox, Safari, Edge, Brave, Opera. On Windows, macOS, Linux, Android.</p>
+
+      <h3 style="font-size:14px;color:#8a8aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Browsers</h3>
+      <div class="compat-grid">
+        <div class="compat-card supported">
+          <span class="compat-icon">&#127760;</span>
+          <div class="compat-name">Chrome</div>
+          <div class="compat-status full">✓ 100%</div>
+        </div>
+        <div class="compat-card supported">
+          <span class="compat-icon">&#128268;</span>
+          <div class="compat-name">Edge</div>
+          <div class="compat-status full">✓ 100%</div>
+        </div>
+        <div class="compat-card supported">
+          <span class="compat-icon">&#129409;</span>
+          <div class="compat-name">Brave</div>
+          <div class="compat-status full">✓ 100%</div>
+        </div>
+        <div class="compat-card supported">
+          <span class="compat-icon">&#127916;</span>
+          <div class="compat-name">Opera</div>
+          <div class="compat-status full">✓ 100%</div>
+        </div>
+        <div class="compat-card supported">
+          <span class="compat-icon">&#127912;</span>
+          <div class="compat-name">Vivaldi</div>
+          <div class="compat-status full">✓ 100%</div>
+        </div>
+        <div class="compat-card partial">
+          <span class="compat-icon">&#128293;</span>
+          <div class="compat-name">Firefox</div>
+          <div class="compat-status partial">● 95%</div>
+        </div>
+        <div class="compat-card partial">
+          <span class="compat-icon">&#129517;</span>
+          <div class="compat-name">Safari</div>
+          <div class="compat-status partial">● 95%</div>
+        </div>
+      </div>
+
+      <h3 style="font-size:14px;color:#8a8aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;margin-top:24px;">Operating System</h3>
+      <div class="os-grid">
+        <div class="os-card">
+          <span class="os-icon">&#128187;</span>
+          <div class="os-name">Windows</div>
+        </div>
+        <div class="os-card">
+          <span class="os-icon">&#127822;</span>
+          <div class="os-name">macOS</div>
+        </div>
+        <div class="os-card">
+          <span class="os-icon">&#128039;</span>
+          <div class="os-name">Linux</div>
+        </div>
+        <div class="os-card">
+          <span class="os-icon">&#128241;</span>
+          <div class="os-name">Android</div>
+        </div>
+        <div class="os-card">
+          <span class="os-icon">&#127823;</span>
+          <div class="os-name">ChromeOS</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OFFICIAL STORES SECTION (PRIMARY CTA) -->
+    <div class="stores-section">
+      <h2 class="stores-title">Install directly from the official store</h2>
+      <p class="stores-sub">One click. Automatic updates. 100% secure.</p>
+
+      <div class="stores-grid">
+        <!-- Chrome Web Store -->
+        <a href="https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp" target="_blank" rel="noopener" class="store-card store-card--chrome">
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><circle cx="24" cy="24" r="20" fill="#fff"/><circle cx="24" cy="24" r="8" fill="#4285F4"/><path d="M24 4a20 20 0 0 1 17.32 10H24a10 10 0 0 0-8.66 5L6.68 14A20 20 0 0 1 24 4z" fill="#EA4335"/><path d="M41.32 14a20 20 0 0 1 0 20l-8.66-5a10 10 0 0 0 0-10z" fill="#FBBC04"/><path d="M24 44a20 20 0 0 1-17.32-10L15.34 29a10 10 0 0 0 8.66 5z" fill="#34A853"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Chrome Web Store</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Chrome · Brave · Opera · Vivaldi</div>
+          </div>
+          <div class="store-card__cta">Add to Chrome →</div>
+        </a>
+
+        <!-- Firefox Add-ons -->
+        <a href="https://addons.mozilla.org/firefox/addon/adoff/" target="_blank" rel="noopener" class="store-card store-card--firefox">
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><defs><radialGradient id="ffg1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFCB6E"/><stop offset="100%" stop-color="#FF512F"/></radialGradient></defs><circle cx="24" cy="24" r="22" fill="url(#ffg1)"/><path d="M14 18c2-5 7-9 12-9 6 0 10 4 10 4s-4-1-7 1c5 0 8 5 8 9 0 8-7 14-15 14-9 0-15-6-15-14 0-4 2-7 4-9-1 4 1 7 3 7-1-1-1-2 0-3z" fill="#fff" opacity=".95"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Firefox Add-ons</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Firefox Desktop · Firefox Android</div>
+          </div>
+          <div class="store-card__cta">Add to Firefox →</div>
+        </a>
+
+        <!-- Edge -->
+        <a href="https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp" target="_blank" rel="noopener" class="store-card store-card--edge">
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><defs><linearGradient id="edg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0F88FF"/><stop offset="100%" stop-color="#0A4DAB"/></linearGradient><linearGradient id="edg2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3CC8FF"/><stop offset="100%" stop-color="#0F88FF"/></linearGradient></defs><path d="M44 24c0 11-9 20-20 20-7 0-13-3-17-8 4 3 9 5 14 4 7-1 12-6 12-12 0-3-2-5-5-5h-9c-3 0-5 3-3 6-4-2-7-7-6-12 1-6 7-11 14-11 11 0 20 8 20 18z" fill="url(#edg1)"/><path d="M28 13c-7 0-13 5-14 11-1 5 2 10 6 12-2-3 0-6 3-6h9c3 0 5 2 5 5 0 6-5 11-12 12 8 1 17-3 19-12 2-12-7-22-16-22z" fill="url(#edg2)"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Edge Add-ons</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Microsoft Edge Desktop</div>
+          </div>
+          <div class="store-card__cta">Add to Edge →</div>
+        </a>
+
+        <!-- Opera Add-ons -->
+        <a href="#zip-fallback" class="store-card store-card--opera store-card--soon">
+          <span class="store-card__badge">Coming soon</span>
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><defs><linearGradient id="op1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FF1B2D"/><stop offset="100%" stop-color="#B30D1F"/></linearGradient></defs><circle cx="24" cy="24" r="22" fill="url(#op1)"/><ellipse cx="24" cy="24" rx="9" ry="14" fill="#fff"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Opera Add-ons</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Opera Desktop · Opera GX</div>
+          </div>
+          <div class="store-card__cta">Install via ZIP →</div>
+        </a>
+
+        <!-- Safari (Mac App Store) -->
+        <a href="#zip-fallback" class="store-card store-card--safari store-card--soon">
+          <span class="store-card__badge">Coming soon</span>
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><defs><linearGradient id="sf1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1B88CA"/><stop offset="100%" stop-color="#006CFF"/></linearGradient></defs><circle cx="24" cy="24" r="22" fill="url(#sf1)"/><circle cx="24" cy="24" r="14" fill="#fff"/><circle cx="24" cy="24" r="2" fill="#1B88CA"/><path d="M24 11l3 11-3 2-3-2zM24 37l-3-11 3-2 3 2z" fill="#E53935"/><path d="M37 24l-11 3-2-3 2-3zM11 24l11-3 2 3-2 3z" fill="#1B88CA"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Mac App Store</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Safari macOS 13+</div>
+          </div>
+          <div class="store-card__cta">Install via ZIP →</div>
+        </a>
+      </div>
+
+      <p class="stores-trust">
+        <span style="color:#7c5cfc;font-weight:700;">✓</span> Manual code review before every release ·
+        <span style="color:#7c5cfc;font-weight:700;">✓</span> Automatic updates via store ·
+        <span style="color:#7c5cfc;font-weight:700;">✓</span> Verifiable integrity hash
+      </p>
+    </div>
+
+    <!-- ZIP FALLBACK SECTION (SECONDARY) -->
+    <div class="download-section" style="margin-top:48px;">
+      <details class="zip-fallback" id="zip-fallback">
+        <summary class="zip-fallback__summary">
+          Prefer to install manually? Download the ZIPs →
+        </summary>
+        <div class="zip-fallback__body">
+          <p style="color:#8a8aaa;font-size:13px;text-align:center;margin:16px 0 20px;">
+            For those who want developer/sideload installation, or for Safari (Mac App Store coming soon).
+          </p>
+          <div class="download-grid">
+            <div class="download-box" id="dlChromium">
+              <h3 style="font-size:16px;margin-bottom:6px;">Chromium ZIP</h3>
+              <p class="dl-browser-list">
+                <strong>Chrome</strong> · <strong>Edge</strong> · <strong>Brave</strong> · <strong>Opera</strong>
+              </p>
+              <a href="adoff-chrome.zip" download class="download-btn secondary" id="dlBtnChrome">
+                Download Chrome ZIP
+              </a>
+              <p class="download-info">v3.4.6 · ultra-light · All features</p>
+            </div>
+            <div class="download-box" id="dlFirefox">
+              <h3 style="font-size:16px;margin-bottom:6px;">Firefox ZIP</h3>
+              <p class="dl-browser-list">
+                <strong>Firefox</strong> Desktop · <strong>Firefox</strong> Android
+              </p>
+              <a href="adoff-firefox.zip" download class="download-btn secondary" id="dlBtnFirefox">
+                Download Firefox ZIP
+              </a>
+              <p class="download-info">v3.4.6 · ultra-light · Permanent installation</p>
+            </div>
+            <div class="download-box" id="dlSafari">
+              <h3 style="font-size:16px;margin-bottom:6px;">Safari ZIP</h3>
+              <p class="dl-browser-list">
+                <strong>Safari 16.4+</strong> · macOS Ventura+
+              </p>
+              <a href="adoff-safari.zip" download class="download-btn secondary" id="dlBtnSafari">
+                Download for Safari
+              </a>
+              <p class="download-info">v3.4.6 · ultra-light · Mac App Store coming soon</p>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- BROWSER TABS -->
+    <h2 style="font-size:22px;font-weight:700;text-align:center;margin-bottom:8px;">Step 2: Install</h2>
+    <p style="color:#8a8aaa;font-size:14px;text-align:center;margin-bottom:24px;">Select your browser for instructions</p>
+
+    <div class="browser-tabs">
+      <div class="browser-tab active" data-browser="chrome">Chrome</div>
+      <div class="browser-tab" data-browser="edge">Edge</div>
+      <div class="browser-tab" data-browser="brave">Brave</div>
+      <div class="browser-tab" data-browser="opera">Opera</div>
+      <div class="browser-tab" data-browser="vivaldi">Vivaldi</div>
+      <div class="browser-tab" data-browser="firefox">Firefox</div>
+      <div class="browser-tab" data-browser="safari">Safari</div>
+      <div class="browser-tab" data-browser="android">Mobile</div>
+    </div>
+
+    <!-- CHROME STEPS -->
+    <div class="steps-container active" id="steps-chrome">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Extract the ZIP file</div>
+          <div class="step-desc">
+            Find <strong>adoff-chrome.zip</strong> in Downloads.<br><br>
+            <strong>Windows:</strong> Right-click → <strong>Extract All</strong> → <strong>Extract</strong><br>
+            <strong>Mac:</strong> Double-click the ZIP. A folder is created automatically.<br>
+            <strong>Linux:</strong> Right-click → <strong>Extract Here</strong> or <code>unzip adoff-chrome.zip</code>
+            <div class="hint-box warning">
+              <span class="hint-icon">⚠</span>
+              <strong>Important:</strong> Do not delete the folder after installation. The browser reads it from disk. Put it somewhere safe (for example, Documents).
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Open Chrome Extensions page</div>
+          <div class="step-desc">
+            Open Chrome and type <code>chrome://extensions</code> in the address bar, then press <strong>Enter</strong>.<br><br>
+            The page with all installed extensions opens.
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Enable Developer Mode</div>
+          <div class="step-desc">
+            In the top right of the page, find the <strong>Developer Mode</strong> toggle.<br><br>
+            Click it to <strong>enable it</strong> (it turns blue).
+            <div class="hint-box info">
+              <span class="hint-icon">💡</span>
+              <span>If you don't see it, scroll to the top of the page.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Load the extension</div>
+          <div class="step-desc">
+            After enabling Developer Mode, new buttons appear at the top.<br><br>
+            Click <strong>Load unpacked</strong> (the first one on the left).<br><br>
+            A window opens to choose a folder.
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">Select the AdOff folder</div>
+          <div class="step-desc">
+            Navigate to the folder you extracted in Step 1.<br><br>
+            Select <strong>adoff-chrome</strong> and click <strong>Select Folder</strong> (Windows/Linux) or <strong>Open</strong> (Mac).
+            <div class="hint-box success">
+              <span class="hint-icon">✓</span>
+              <strong>Done.</strong> AdOff is installed. You'll see the icon in Chrome's toolbar.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <div class="step-title">Pin AdOff to the toolbar (recommended)</div>
+          <div class="step-desc">
+            To keep AdOff always visible in the toolbar:<br><br>
+            1. Click the <strong>puzzle</strong> icon in the top right (Extensions)<br>
+            2. Find <strong>AdOff</strong> in the list<br>
+            3. Click the <strong>pin</strong> next to AdOff<br><br>
+            The icon is now always visible.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDGE STEPS -->
+    <div class="steps-container" id="steps-edge">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Extract the ZIP file</div>
+          <div class="step-desc">
+            Like Chrome: find <strong>adoff-chrome.zip</strong> in Downloads, right-click → <strong>Extract All</strong>
+            <div class="hint-box warning">
+              <span class="hint-icon">⚠</span>
+              <strong>Important:</strong> Keep the extracted folder on your computer. Do not delete it.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Open Edge Extensions</div>
+          <div class="step-desc">Type in the address bar: <code>edge://extensions</code> and press <strong>Enter</strong>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Enable Developer Mode</div>
+          <div class="step-desc">In the bottom left of the page, enable <strong>Developer Mode</strong>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Load the extension</div>
+          <div class="step-desc">Click <strong>Load unpacked</strong> and select the extracted folder <strong>adoff-chrome</strong>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">Done</div>
+          <div class="step-desc">
+            <div class="hint-box success">
+              <span class="hint-icon">✓</span>
+              <span>AdOff is installed on Edge. It works identically to Chrome.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BRAVE STEPS -->
+    <div class="steps-container" id="steps-brave">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Same procedure as Chrome</div>
+          <div class="step-desc">
+            Brave uses the same system as Chrome. Follow the same steps:<br><br>
+            1. Extract the ZIP<br>
+            2. Go to <code>brave://extensions</code><br>
+            3. Enable Developer Mode (top right)<br>
+            4. Load unpacked extension<br>
+            5. Select the folder
+            <div class="hint-box success">
+              <span class="hint-icon">✓</span>
+              AdOff works perfectly with Brave's built-in blocks. No conflict.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPERA STEPS -->
+    <div class="steps-container" id="steps-opera">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Same procedure as Chrome</div>
+          <div class="step-desc">
+            Opera uses the Chromium engine. Follow the same steps:<br><br>
+            1. Extract the ZIP<br>
+            2. Go to <code>opera://extensions</code><br>
+            3. Enable Developer Mode (top right)<br>
+            4. Load unpacked extension<br>
+            5. Select the folder
+            <div class="hint-box info">
+              <span class="hint-icon">💡</span>
+              Opera might show a prompt for third-party extensions. Click <strong>Allow</strong> to proceed.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIVALDI STEPS -->
+    <div class="steps-container" id="steps-vivaldi">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Same procedure as Chrome</div>
+          <div class="step-desc">
+            Vivaldi uses the Chromium engine. Follow the same steps:<br><br>
+            1. Extract the ZIP<br>
+            2. Go to <code>vivaldi://extensions</code><br>
+            3. Enable Developer Mode (top right)<br>
+            4. Load unpacked extension<br>
+            5. Select the folder
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIREFOX STEPS -->
+    <div class="steps-container" id="steps-firefox">
+      <div class="hint-box info" style="margin-bottom:20px;">
+        <span class="hint-icon">🔥</span>
+        <strong>Firefox Version</strong>
+        <span>Make sure you downloaded the Firefox version (adoff-firefox.zip), not the Chromium one.</span>
+      </div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Extract the ZIP file</div>
+          <div class="step-desc">
+            Find <strong>adoff-firefox.zip</strong> in Downloads and extract it.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Open Firefox Debug page</div>
+          <div class="step-desc">Type in the address bar: <code>about:debugging#/runtime/this-firefox</code> and press <strong>Enter</strong>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Load temporary add-on</div>
+          <div class="step-desc">
+            Click <strong>Load Temporary Add-on</strong><br><br>
+            Select the file <strong>manifest.json</strong> in the extracted folder.
+            <div class="hint-box warning">
+              <span class="hint-icon">⚠</span>
+              <span>On Firefox, manually loaded extensions are temporary. They disappear when you close Firefox and you need to reload them every time. We're working on publishing it to the Firefox Add-ons Store for permanent installation.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAFARI STEPS -->
+    <div class="steps-container" id="steps-safari">
+      <div class="hint-box info" style="margin-bottom:20px;">
+        <span class="hint-icon">🧭</span>
+        <strong>Before you start</strong>
+        <span>Safari is more restrictive than other browsers. It requires Xcode (free Apple program) to install extensions. The process takes about 30 minutes the first time. You need macOS Ventura 13 or later, Safari 16.4 or later. Don't worry if you've never opened Terminal, I'll guide you step by step.</span>
+      </div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Extract the ZIP file</div>
+          <div class="step-desc">
+            <strong>1.1</strong> Open <strong>Finder</strong> (the smiling icon in the Dock at the bottom).<br>
+            <strong>1.2</strong> In the left sidebar, click <strong>Downloads</strong>.<br>
+            <strong>1.3</strong> Find the file <strong>adoff-safari.zip</strong> (the one you just downloaded).<br>
+            <strong>1.4</strong> <strong>Double-click</strong> the file. macOS will extract it automatically and create a folder <code>adoff-safari</code> next to the ZIP.<br>
+            <strong>1.5</strong> <strong>Do not move or rename</strong> this folder. Leave it in Downloads.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Install Xcode (free, ~10 GB)</div>
+          <div class="step-desc">
+            <strong>2.1</strong> Open <strong>Mac App Store</strong> (blue icon with white "A", in the Dock or Launchpad).<br>
+            <strong>2.2</strong> In the search bar at the top left, type <strong>Xcode</strong> and press <strong>Return</strong>.<br>
+            <strong>2.3</strong> Click <strong>Download</strong> or <strong>Install</strong> on the Xcode entry (Apple icon, by Apple).<br>
+            <strong>2.4</strong> Sign in with your Apple ID if prompted (the same one from App Store).<br>
+            <strong>2.5</strong> Wait for the download. Xcode is large (~10 GB), could take 20-60 minutes.<br>
+            <strong>2.6</strong> When ready, <strong>open Xcode at least once:</strong> click the icon in Launchpad or Applications.<br>
+            <strong>2.7</strong> A window appears with license terms. Click <strong>Agree</strong>.<br>
+            <strong>2.8</strong> Wait for Xcode to finish initial setup (1-2 minutes), then close it (Cmd+Q).
+            <div class="hint-box info" style="margin-top:10px;">
+              <span class="hint-icon">💡</span>
+              <span>If your Mac doesn't have enough space, free up at least 15 GB before starting.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Open Terminal and run the command</div>
+          <div class="step-desc">
+            <strong>3.1</strong> Press <strong>Cmd + Space</strong> together. A search bar (Spotlight) opens at the top.<br>
+            <strong>3.2</strong> Type <strong>Terminal</strong> and press <strong>Return</strong>. A white/black window opens (Terminal, nothing scary, it's a normal Mac program).<br>
+            <strong>3.3</strong> <strong>Copy</strong> this command exactly (click the gray box to select it, then Cmd+C):
+            <div style="margin:10px 0;padding:12px;background:rgba(124,92,252,0.1);border-radius:8px;border:1px solid rgba(124,92,252,0.3);">
+              <code style="word-break:break-all;font-size:13px;">xcrun safari-web-extension-converter ~/Downloads/adoff-safari</code>
+            </div>
+            <strong>3.4</strong> Click in the Terminal window, paste with <strong>Cmd+V</strong>, then press <strong>Return</strong>.<br>
+            <strong>3.5</strong> Terminal asks "Continue?". Type <strong>y</strong> and press <strong>Return</strong>.<br>
+            <strong>3.6</strong> Wait 30-60 seconds. Xcode opens automatically with a project "AdOff".<br>
+            <strong>3.7</strong> In Xcode, click the <strong>▶ Play</strong> button in the top left (or Cmd+R).<br>
+            <strong>3.8</strong> Compilation: wait 1-3 minutes. A small "AdOff" window might open. You can close it (the extension is already installed).
+            <div class="hint-box warning" style="margin-top:10px;">
+              <span class="hint-icon">⚠</span>
+              <span>If you get "permission denied" or "command not found": open Xcode, Settings, Locations, Command Line Tools and select the latest version. Then retry step 3.4.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Enable Development menu in Safari</div>
+          <div class="step-desc">
+            <strong>4.1</strong> Open <strong>Safari</strong> (compass icon in the Dock).<br>
+            <strong>4.2</strong> In the menu bar at the top, click <strong>Safari</strong> → <strong>Settings</strong> (or Cmd+,).<br>
+            <strong>4.3</strong> A window opens with tabs at the top. Click <strong>Advanced</strong> (the last one, gear icon).<br>
+            <strong>4.4</strong> At the bottom, find the option <strong>Show features for web developers</strong> (or "Show Develop menu" in older versions).<br>
+            <strong>4.5</strong> <strong>Check the box</strong>. A new <strong>Develop</strong> menu appears in Safari's menu bar.<br>
+            <strong>4.6</strong> Close the Settings window.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">Allow unsigned extensions</div>
+          <div class="step-desc">
+            <strong>5.1</strong> In Safari's menu bar, click the new <strong>Develop</strong> menu.<br>
+            <strong>5.2</strong> Scroll the menu and click <strong>Allow Unsigned Extensions</strong>.<br>
+            <strong>5.3</strong> Safari asks for your <strong>Mac password</strong> (the one you use to log in). Type it and press Return.<br>
+            <strong>5.4</strong> The option is now active (you can verify: reopening the Develop menu, "Allow Unsigned Extensions" has a checkmark).
+            <div class="hint-box warning" style="margin-top:10px;">
+              <span class="hint-icon">⚠</span>
+              <span>Important: this option disables automatically every time you restart Safari. You need to re-enable it (steps 5.1-5.3) each system restart.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <div class="step-title">Enable AdOff</div>
+          <div class="step-desc">
+            <strong>6.1</strong> Reopen Safari Settings: <strong>Safari</strong> → <strong>Settings</strong> (or Cmd+,).<br>
+            <strong>6.2</strong> Click the <strong>Extensions</strong> tab (puzzle icon).<br>
+            <strong>6.3</strong> In the left list, you should see <strong>AdOff</strong>. <strong>Check the box</strong> next to it.<br>
+            <strong>6.4</strong> A popup appears asking for site access permissions. Click <strong>Allow on All Websites</strong> (or "Allow on all websites").<br>
+            <strong>6.5</strong> Close Settings. Visit any site with ads (news, video platform, forum). Ads are blocked.<br>
+            <strong>6.6</strong> The <strong>AdOff icon</strong> (an "A" with red overlay) appears automatically in Safari's toolbar in the top right. Click it to open the popup with controls.
+            <div class="hint-box info" style="margin-top:10px;">
+              <span class="hint-icon">✓</span>
+              <span>Done. AdOff is active. You have 30 days of Pro trial free. The icon shows the countdown.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hint-box warning" style="margin-top:20px;">
+        <span class="hint-icon">🔒</span>
+        <strong>Make installation permanent</strong>
+        <span>Unsigned extensions disable when Safari restarts. To use AdOff permanently without repeating step 5 every time, you have two options: (1) Subscribe to Apple Developer program ($99/year) and sign the extension yourself, or (2) Wait for Mac App Store release. Coming soon, one-click automatic installation.</span>
+      </div>
+    </div>
+
+    <!-- ANDROID STEPS -->
+    <div class="steps-container" id="steps-android">
+      <div class="hint-box info" style="margin-bottom:20px;">
+        <span class="hint-icon">📱</span>
+        <strong>Mobile browser required</strong>
+        <span>On Android you need a browser that supports extensions. We recommend Kiwi Browser (free) or Firefox Android.</span>
+      </div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Install Kiwi Browser</div>
+          <div class="step-desc">
+            Download <strong>Kiwi Browser</strong> from Play Store. It's free and natively supports Chrome extensions.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Download AdOff</div>
+          <div class="step-desc">
+            Open this page in Kiwi Browser and download <strong>adoff-chrome.zip</strong>. Extract the ZIP with your file manager.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Load the extension</div>
+          <div class="step-desc">
+            In Kiwi Browser, go to <code>chrome://extensions</code><br><br>
+            Enable <strong>Developer Mode</strong>, tap <strong>Load unpacked</strong> (or <strong>"+(from .zip/.crx/.user.js)"</strong>), and select the extracted folder.
+            <div class="hint-box success">
+              <span class="hint-icon">✓</span>
+              AdOff now works on your Android device.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FREE VS PRO COMPARISON -->
+    <div style="max-width:680px;margin:0 auto 48px;background:var(--card,#12122a);border:1px solid rgba(124,92,252,0.18);border-radius:14px;padding:28px;text-align:center;">
+      <h3 style="font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:16px;">What you unlock with the Pro Trial</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:left;font-size:0.9rem;">
+        <div>
+          <div style="font-weight:700;color:#8888aa;margin-bottom:8px;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;">Free Plan (after trial)</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <span style="color:#4ade80;">✓ <span>Network blocking 138 rules</span></span>
+            <span style="color:#4ade80;">✓ <span>Visual CSS filters</span></span>
+            <span style="color:#4ade80;">✓ <span>Ads counter</span></span>
+            <span style="color:rgba(255,255,255,0.25);">✗ <span>Video ad neutralization</span></span>
+            <span style="color:rgba(255,255,255,0.25);">✗ <span>Stealth Mode</span></span>
+          </div>
+        </div>
+        <div>
+          <div style="font-weight:700;color:#7c5cfc;margin-bottom:8px;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;">Pro Plan (30-day trial included)</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <span style="color:#4ade80;">✓ <span>Everything from Free</span></span>
+            <span style="color:#4ade80;">✓ <span>Videos without ads</span></span>
+            <span style="color:#4ade80;">✓ <span>Stealth anti-detection</span></span>
+            <span style="color:#4ade80;">✓ <span>Timed pause</span></span>
+            <span style="color:#4ade80;">✓ <span>Priority support</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <h2 class="faq-title">Frequently Asked Questions</h2>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>Do I need to keep the folder on my computer?</span> <span class="arrow">▼</span></div>
+        <div class="faq-a">Yes. The browser reads the extension files from the folder. If you delete it, the extension stops working. Put it somewhere safe (for example, Documents).</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>Is it safe to enable Developer Mode?</span> <span class="arrow">▼</span></div>
+        <div class="faq-a">Yes, completely safe. Developer Mode simply allows you to install extensions from a folder instead of the store. It doesn't change anything else in the browser.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>The browser says "Disable developer extensions" - what do I do?</span> <span class="arrow">▼</span></div>
+        <div class="faq-a">Some browsers show a warning on startup when you have manually installed extensions. Just close the warning. The extension continues to work normally. When AdOff is on the official store, this warning will disappear.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>How do I update AdOff?</span> <span class="arrow">▼</span></div>
+        <div class="faq-a">Download the new version from the site, extract the ZIP to the same folder (overwrite the files), then go to your browser's extensions page and click the "Reload" arrow on AdOff.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>Does it work on all sites?</span> <span class="arrow">▼</span></div>
+        <div class="faq-a">Yes. AdOff blocks ads on all websites (banners, popups, trackers, social media, news, blogs). Video ad blocking on streaming platforms is available in Pro/Trial. You can also pause blocking on specific sites if needed.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>How do I uninstall AdOff?</span> <span class="arrow">▼</span></div>
+        <div class="faq-a">Go to your browser's extensions page, find AdOff and click "Remove". Then you can delete the folder from your computer.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>Which browsers are supported?</span> <span class="arrow">▼</span></div>
+        <div class="faq-a">AdOff supports all Chromium browsers (Chrome, Edge, Brave, Opera, Vivaldi, Arc) with 100% feature compatibility, Firefox with 95%, and Safari 16.4+ on macOS Ventura+ with 95% (requires Xcode). On Android use Kiwi Browser or Firefox. iOS support coming soon.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>Does it work on mobile?</span> <span class="arrow">▼</span></div>
+        <div class="faq-a">On Android, install Kiwi Browser (free from Play Store) which supports Chrome extensions. On iOS, browser extensions aren't yet supported. We're working on it.</div>
+      </div>
+    </div>
+
+    <!-- HELP FOOTER -->
+    <div class="help-footer">
+      <p>Need help? Can't install?</p>
+      <a href="support.html">Contact us</a>
+    </div>
+
+  </div>
+
+  <script>
+    // ─── Auto-detect browser and OS ───
+    (function() {
+      var ua = navigator.userAgent;
+      var browser = 'chrome';
+      var browserName = 'Chrome';
+      var os = 'Windows';
+      var osIcon = '💻';
+
+      // Detect browser (order matters — more specific first)
+      if (ua.indexOf('Vivaldi') !== -1) { browser = 'vivaldi'; browserName = 'Vivaldi'; }
+      else if (ua.indexOf('OPR') !== -1 || ua.indexOf('Opera') !== -1) { browser = 'opera'; browserName = 'Opera'; }
+      else if (ua.indexOf('Brave') !== -1) { browser = 'brave'; browserName = 'Brave'; }
+      else if (ua.indexOf('Edg') !== -1) { browser = 'edge'; browserName = 'Edge'; }
+      else if (ua.indexOf('Firefox') !== -1) { browser = 'firefox'; browserName = 'Firefox'; }
+      else if (ua.indexOf('Chrome') !== -1 || ua.indexOf('Chromium') !== -1) { browser = 'chrome'; browserName = 'Chrome'; }
+      else if (ua.indexOf('Safari') !== -1) { browser = 'safari'; browserName = 'Safari'; }
+
+      // Detect OS
+      if (ua.indexOf('Android') !== -1) { os = 'Android'; osIcon = '📱'; }
+      else if (ua.indexOf('iPhone') !== -1 || ua.indexOf('iPad') !== -1) { os = 'iOS'; osIcon = '🍎'; }
+      else if (ua.indexOf('Mac') !== -1) { os = 'macOS'; osIcon = '🍎'; }
+      else if (ua.indexOf('Linux') !== -1) { os = 'Linux'; osIcon = '🐧'; }
+      else if (ua.indexOf('CrOS') !== -1) { os = 'ChromeOS'; osIcon = '🍏'; }
+      else { os = 'Windows'; osIcon = '💻'; }
+
+      // Update detected badge
+      document.getElementById('detectedIcon').textContent = osIcon;
+      document.getElementById('detectedText').textContent = os + ' + ' + browserName;
+
+      // Auto-select browser tab
+      var tabs = document.querySelectorAll('.browser-tab');
+      var containers = document.querySelectorAll('.steps-container');
+      var targetBrowser = browser;
+
+      // Android → show android tab
+      if (os === 'Android') targetBrowser = 'android';
+
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      containers.forEach(function(c) { c.classList.remove('active'); });
+
+      var targetTab = document.querySelector('[data-browser="' + targetBrowser + '"]');
+      var targetSteps = document.getElementById('steps-' + targetBrowser);
+      if (targetTab) targetTab.classList.add('active');
+      if (targetSteps) targetSteps.classList.add('active');
+
+      // Highlight recommended download
+      if (browser === 'firefox') {
+        var dlFF = document.getElementById('dlFirefox');
+        var dlCh = document.getElementById('dlChromium');
+        if (dlFF) { dlFF.classList.add('recommended'); }
+        if (dlCh) { dlCh.classList.remove('recommended'); }
+        var recBadge = document.getElementById('recBadge');
+        if (recBadge) recBadge.parentElement === dlCh ? recBadge.style.display = 'none' : null;
+        // Move rec badge to Firefox
+        if (dlFF && recBadge) {
+          recBadge.remove();
+          dlFF.insertBefore(recBadge, dlFF.firstChild);
+          recBadge.style.display = '';
+        }
+        // Swap button styles
+        var btnCh = document.getElementById('dlBtnChrome');
+        var btnFF = document.getElementById('dlBtnFirefox');
+        if (btnCh) { btnCh.classList.add('secondary'); }
+        if (btnFF) { btnFF.classList.remove('secondary'); }
+      }
+      if (browser === 'safari') {
+        var dlSf = document.getElementById('dlSafari');
+        var dlCh = document.getElementById('dlChromium');
+        if (dlSf) { dlSf.classList.add('recommended'); }
+        if (dlCh) { dlCh.classList.remove('recommended'); }
+        var recBadgeS = document.getElementById('recBadge');
+        if (dlSf && recBadgeS) {
+          recBadgeS.remove();
+          dlSf.insertBefore(recBadgeS, dlSf.firstChild);
+          recBadgeS.style.display = '';
+        }
+        var btnChS = document.getElementById('dlBtnChrome');
+        var btnSf = document.getElementById('dlBtnSafari');
+        if (btnChS) { btnChS.classList.add('secondary'); }
+        if (btnSf) { btnSf.classList.remove('secondary'); }
+      }
+    })();
+
+    // ─── Browser tab switching ───
+    document.querySelectorAll('.browser-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.browser-tab').forEach(function(t) { t.classList.remove('active'); });
+        document.querySelectorAll('.steps-container').forEach(function(s) { s.classList.remove('active'); });
+        tab.classList.add('active');
+        var steps = document.getElementById('steps-' + tab.dataset.browser);
+        if (steps) steps.classList.add('active');
+      });
+    });
+
+    // ─── FAQ accordion ───
+    document.querySelectorAll('.faq-item').forEach(function(item) {
+      item.querySelector('.faq-q').addEventListener('click', function() {
+        item.classList.toggle('open');
+      });
+    });
+
+    // ─── Auto-open ZIP fallback quando arrivi da Opera/Safari card ───
+    function openZipFallbackOnHash() {
+      if (location.hash === '#zip-fallback') {
+        var d = document.getElementById('zip-fallback');
+        if (d) {
+          d.open = true;
+          d.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    }
+    window.addEventListener('hashchange', openZipFallbackOnHash);
+    window.addEventListener('load', openZipFallbackOnHash);
+  </script>
+  <script src="/adoff-footer.js?v=260602a"></script>
+
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

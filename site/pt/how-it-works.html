@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Como o AdOff Funciona: A Tecnologia por Trás do Bloqueio Furtivo de Anúncios</title>
+  <meta name="description" content="Descubra como o AdOff bloqueia anúncios usando três camadas poderosas: bloqueio de rede, filtragem cosmética e anti-detecção furtiva. Análise técnica completa." />
+  <link rel="canonical" href="https://adoff.app/pt/how-it-works.html" />
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/how-it-works.html" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/how-it-works.html" />
+  <link rel="alternate" hreflang="it" href="https://adoff.app/it/how-it-works.html" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/de/how-it-works.html" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/fr/how-it-works.html" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/es/how-it-works.html" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/pt/how-it-works.html" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/ru/how-it-works.html" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/ar/how-it-works.html" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/how-it-works.html" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/hi/how-it-works.html" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/how-it-works.html" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/how-it-works.html" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/tr/how-it-works.html" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/id/how-it-works.html" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/pl/how-it-works.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Como o AdOff Funciona: A Tecnologia por Trás do Bloqueio Furtivo de Anúncios" />
+  <meta property="og:description" content="Descubra como o AdOff bloqueia anúncios usando três camadas poderosas: bloqueio de rede, filtragem cosmética e anti-detecção furtiva. Análise técnica completa." />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/pt/how-it-works.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Como o AdOff Funciona: A Tecnologia por Trás do Bloqueio Furtivo de Anúncios" />
+  <meta name="twitter:description" content="Descubra como o AdOff bloqueia anúncios usando três camadas poderosas: bloqueio de rede, filtragem cosmética e anti-detecção furtiva. Análise técnica completa." />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <link rel="stylesheet" href="style.css?v=260520-201526" />
+  <style>
+    .article-page { max-width: 780px; margin: 0 auto; padding: 80px 24px 100px; }
+    .article-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: #fff; margin-bottom: 12px; }
+    .article-page .meta { font-size: 0.88rem; color: #8888aa; margin-bottom: 40px; }
+    .article-page h2 { font-size: 1.5rem; color: #fff; margin: 48px 0 16px; }
+    .article-page h3 { font-size: 1.2rem; color: #e2e2f0; margin: 32px 0 12px; }
+    .article-page p { color: #b0b0c8; line-height: 1.8; margin-bottom: 16px; }
+    .article-page ul, .article-page ol { color: #b0b0c8; margin: 0 0 20px 24px; line-height: 1.8; }
+    .article-page li { margin-bottom: 8px; }
+    .article-page strong { color: #fff; }
+    .article-page .highlight { color: #4ade80; font-weight: 700; }
+    .tech-card { background: #12122a; border: 1px solid #2a2a4a; border-radius: 14px; padding: 24px; margin: 20px 0; }
+    .tech-card h3 { color: #7c5cfc; margin: 0 0 12px; font-size: 1.1rem; }
+    .tech-card p { margin-bottom: 0; }
+    .comp-table { width: 100%; border-collapse: collapse; margin: 24px 0 32px; }
+    .comp-table th, .comp-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #2a2a4a; }
+    .comp-table th { color: #8888aa; font-size: 0.85rem; text-transform: uppercase; }
+    .comp-table td { color: #b0b0c8; }
+    .comp-table .check { color: #4ade80; font-weight: 700; }
+    .comp-table .cross { color: #f43f5e; }
+    .comp-table .partial { color: #fbbf24; }
+    .cta-box { background: #12122a; border: 1px solid rgba(124,92,252,0.3); border-radius: 14px; padding: 32px; text-align: center; margin: 48px 0; }
+    .cta-box h3 { color: #fff; margin: 0 0 12px; }
+    .cta-box p { color: #8888aa; margin-bottom: 20px; }
+    .cta-box .btn { display: inline-block; background: linear-gradient(135deg,#7c5cfc,#4c3ad4); color: #fff; padding: 12px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; transition: all 0.2s; }
+    .cta-box .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.3); }
+    .layer-badge { display: inline-block; background: linear-gradient(135deg,#7c5cfc,#4c3ad4); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .pro-badge { background: linear-gradient(135deg,#f59e0b,#d97706); }
+    .step-list { counter-reset: steps; list-style: none; margin: 0 0 20px 0; padding: 0; }
+    .step-list li { counter-increment: steps; position: relative; padding-left: 44px; margin-bottom: 14px; color: #b0b0c8; line-height: 1.7; }
+    .step-list li::before { content: counter(steps); position: absolute; left: 0; top: 0; width: 28px; height: 28px; background: linear-gradient(135deg,#7c5cfc,#4c3ad4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #fff; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "Como Instalar e Usar o Bloqueador de Anúncios AdOff no Chrome",
+    "description": "Instale o AdOff em três passos e aproveite uma experiência de navegação completamente sem anúncios, protegida por três camadas de proteção.",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "name": "Instale o AdOff pela Chrome Web Store",
+        "text": "Acesse a Chrome Web Store e pesquise por AdOff, ou baixe a extensão diretamente em adoff.app. Clique em 'Adicionar ao Chrome' e confirme a instalação.",
+        "position": 1
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Fixe a extensão para acesso rápido",
+        "text": "Clique no ícone de quebra-cabeça na barra de ferramentas do Chrome, localize o AdOff na lista e clique no ícone de fixar para que o ícone do AdOff fique sempre visível.",
+        "position": 2
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Navegue na web sem anúncios",
+        "text": "O AdOff é ativado automaticamente. O bloqueio de rede, a filtragem cosmética e a proteção furtiva funcionam silenciosamente em segundo plano. Nenhuma configuração necessária.",
+        "position": 3
+      }
+    ],
+    "tool": [
+      {
+        "@type": "HowToTool",
+        "name": "Navegador Chrome"
+      }
+    ]
+  }
+  </script>
+  <script src="/adoff-i18n.js?v=260520-201526"></script>
+  </head>
+<body>
+  <div id="site-nav"></div>
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+  <article class="article-page">
+
+    <h1>Como o AdOff Funciona: A Tecnologia por Trás do Bloqueio Furtivo de Anúncios</h1>
+    <p class="meta">Atualizado em abril de 2026 &nbsp;·&nbsp; 8 min de leitura &nbsp;·&nbsp; Análise técnica aprofundada</p>
+
+    <p>
+      A maioria dos bloqueadores de anúncios opera com uma única ferramenta simples: uma lista de URLs para bloquear.
+      Isso funciona até que um site descubra que eles existem ,  e então a corrida armamentista começa. O AdOff foi
+      construído de forma diferente, desde o início, usando <strong>três camadas independentes de proteção</strong>
+      que trabalham em conjunto para oferecer uma experiência de navegação verdadeiramente invisível e sem interrupções.
+    </p>
+    <p>
+      Esta página detalha exatamente como cada camada funciona ,  com detalhes técnicos suficientes para os curiosos,
+      mas escrita de forma que qualquer pessoa possa acompanhar. Seja você um desenvolvedor que deseja entender a
+      arquitetura ou um usuário comum que apenas quer saber por que o AdOff continua funcionando quando outros
+      bloqueadores desistem, você está no lugar certo.
+    </p>
+
+    <!-- ===================== CAMADA 1 ===================== -->
+    <h2>Camada 1 ,  Bloqueio de Rede</h2>
+    <span class="layer-badge">Ativo em todos os planos</span>
+
+    <p>
+      A primeira e mais eficiente camada opera no nível da rede, interrompendo requisições HTTP relacionadas a
+      anúncios <em>antes mesmo de serem baixadas</em> pelo seu navegador. Nenhum dado é obtido, nenhum script é
+      executado, nenhum pixel de rastreamento é carregado. O recurso simplesmente nunca é recuperado.
+    </p>
+
+    <div class="tech-card">
+      <h3>🔧 API do Chrome: declarativeNetRequest</h3>
+      <p>
+        O AdOff usa a API <strong>declarativeNetRequest</strong> do Chrome ,  a mesma API moderna utilizada por
+        ferramentas de segurança empresarial. Ao contrário da API mais antiga <code>webRequest</code>, a
+        declarativeNetRequest é avaliada nativamente pelo motor do navegador sem nenhuma sobrecarga de JavaScript.
+        As regras são compiladas uma vez na instalação e verificadas com custo de CPU quase zero para cada
+        requisição subsequente.
+      </p>
+    </div>
+
+    <h3>107+ Regras de Bloqueio de Precisão</h3>
+    <p>
+      O AdOff vem com <strong>107 regras de rede cuidadosamente curadas</strong> que visam a infraestrutura de
+      entrega de anúncios usada pelas redes publicitárias mais comuns. Em vez de manter uma enorme lista de
+      domínios individuais que exige manutenção constante, as regras do AdOff visam os padrões estruturais
+      da entrega de anúncios:
+    </p>
+    <ul>
+      <li><strong>Domínios de servidores de anúncios</strong> ,  os hostnames que servem banners, pré-rolls de vídeo e conteúdo patrocinado</li>
+      <li><strong>Endpoints de rastreamento e análise</strong> ,  pixels, beacons e coletores de eventos que traçam o perfil do seu comportamento</li>
+      <li><strong>Infraestrutura de retargeting</strong> ,  rastreadores entre sites que seguem você de site em site</li>
+      <li><strong>URLs de exchanges programáticas de anúncios</strong> ,  endpoints de leilão em tempo real que leiloam impressões de anúncios</li>
+      <li><strong>Caminhos de CDN usados exclusivamente para anúncios</strong> ,  padrões de entrega de conteúdo específicos para payloads de anúncios</li>
+    </ul>
+
+    <h3>Por Que o Bloqueio no Nível de Rede é Importante</h3>
+    <p>
+      Quando um anúncio é bloqueado na camada de rede, <strong>a página carrega mais rápido</strong>. Isso não é
+      apenas sobre remover um banner visível ,  significa que o navegador nunca precisa abrir conexões TCP com
+      servidores de anúncios, nunca realiza buscas DNS para domínios de rastreamento e nunca executa o JavaScript
+      de terceiros do qual os anúncios dependem para renderizar e medir a si mesmos.
+    </p>
+    <p>
+      Estudos em sites de notícias repletos de anúncios mostram consistentemente que o bloqueio em nível de rede
+      reduz os tempos de carregamento de página em 30–60%. Cada requisição de anúncio bloqueada é uma conexão que
+      nunca precisa ser aberta, um script que nunca precisa ser processado e um payload que nunca consome sua
+      largura de banda.
+    </p>
+
+    <div class="tech-card">
+      <h3>⚡ Vantagem de desempenho</h3>
+      <p>
+        Como as regras declarativeNetRequest são avaliadas pelo motor C++ do navegador ,  não por JavaScript , 
+        o AdOff adiciona <strong>zero sobrecarga de CPU</strong> durante a navegação normal. A verificação
+        acontece antes mesmo de a pilha de rede iniciar a requisição. Nenhum JavaScript é executado por página
+        e a extensão usa efetivamente zero memória quando ociosa.
+      </p>
+    </div>
+
+    <!-- ===================== CAMADA 2 ===================== -->
+    <h2>Camada 2 ,  Filtragem Cosmética</h2>
+    <span class="layer-badge">Ativo em todos os planos</span>
+
+    <p>
+      Nem todos os anúncios chegam por requisições de rede que podem ser pré-bloqueadas. Alguns anúncios são
+      renderizados diretamente no HTML da própria página, carregados do mesmo domínio que o conteúdo, ou injetados
+      por JavaScript de primeira parte. Para esses casos, o AdOff usa a <strong>filtragem cosmética</strong> , 
+      a técnica de ocultar elementos de anúncios do DOM usando CSS, sem prejudicar o layout ao redor.
+    </p>
+
+    <h3>Injeção de CSS no Mundo Isolado</h3>
+    <p>
+      O script de conteúdo do AdOff é executado no <strong>mundo ISOLADO</strong> do Chrome ,  um ambiente de
+      execução em sandbox completamente separado do JavaScript da própria página. Isso significa que a extensão
+      pode observar e modificar o DOM sem ser detectável pelos scripts da página, que não têm acesso ao escopo
+      ou às variáveis do mundo isolado.
+    </p>
+    <p>
+      O filtro cosmético injeta uma folha de estilo CSS que aplica regras <code>display: none</code> e
+      <code>visibility: hidden</code> a seletores de contêineres de anúncios conhecidos. Esses seletores são
+      cuidadosamente mantidos para cobrir os nomes de classes, IDs e padrões estruturais padrão usados por
+      espaços de anúncios em milhares de sites.
+    </p>
+
+    <div class="tech-card">
+      <h3>🎨 Sem deslocamento de layout ,  sem espaços em branco</h3>
+      <p>
+        Um problema comum com bloqueadores de anúncios ingênuos é que remover um elemento do DOM faz o conteúdo
+        ao redor saltar ou refluxar. As regras CSS do AdOff usam <code>display: none</code> com prioridade
+        <code>!important</code> e são aplicadas antes da primeira renderização do navegador sempre que possível,
+        evitando qualquer deslocamento de layout visível. O espaço que o anúncio teria ocupado simplesmente
+        não aparece.
+      </p>
+    </div>
+
+    <h3>Varredura do DOM e Injeção Dinâmica</h3>
+    <p>
+      Os sites modernos são altamente dinâmicos ,  carregam conteúdo após o HTML inicial ser processado, injetam
+      espaços de anúncios via JavaScript e atualizam o DOM continuamente. O script de conteúdo do AdOff monitora
+      o DOM em busca de elementos recém-inseridos que correspondam a padrões de anúncios e aplica regras de
+      ocultação imediatamente, geralmente dentro de um único quadro de animação. Você não verá anúncios
+      piscando brevemente antes de desaparecer.
+    </p>
+
+    <h3>Neutralização de Anúncios em Vídeo <span style="font-size:0.75rem;color:#f59e0b;">(Pro)</span></h3>
+    <p>
+      A maioria dos players de vídeo em plataformas de streaming depende de um SDK publicitário padrão para
+      gerenciar interrupções de anúncios pre-roll, mid-roll e post-roll. O AdOff substitui esse SDK por um
+      stub neutro que informa imediatamente ao player "sem anúncios para exibir" ,  o vídeo começa
+      diretamente sem nenhuma interrupção.
+    </p>
+    <p>
+      Isso funciona por meio de dois mecanismos complementares:
+    </p>
+    <ul>
+      <li><strong>Redirecionamento em nível de rede</strong> ,  as requisições para carregar o SDK publicitário são interceptadas e redirecionadas para um arquivo stub local incluído na extensão</li>
+      <li><strong>Injeção em nível de página</strong> ,  o stub é injetado antes que qualquer script do site seja executado, de forma que até players que incluem o SDK publicitário internamente encontrem primeiro a versão neutra</li>
+    </ul>
+    <p>
+      O stub implementa toda a superfície de API do SDK original, mas nunca veicula nenhum anúncio. Quando
+      o player chama <code>start()</code>, o stub dispara imediatamente o sinal de "anúncio concluído" ,  o
+      player retoma o vídeo como se o intervalo publicitário tivesse terminado naturalmente. Isso é universal:
+      funciona em qualquer site do mundo que utilize esse SDK, sem necessitar de uma lista manual de sites.
+    </p>
+    <p>
+      Nas principais plataformas de vídeo, um handler dedicado acelera a reprodução de anúncios em 16× e
+      clica automaticamente no botão de pular com temporização semelhante à humana.
+    </p>
+
+    <!-- ===================== CAMADA 3 ===================== -->
+    <h2>Camada 3 ,  Anti-Detecção Furtiva <span style="font-size:0.8rem;color:#f59e0b;">(Pro)</span></h2>
+    <span class="layer-badge pro-badge">Pro &amp; Trial</span>
+
+    <p>
+      É aqui que o AdOff se diferencia mais significativamente dos bloqueadores convencionais. Muitos sites agora
+      executam scripts ativos de <em>anti-adblock</em> ,  código cujo único propósito é detectar se você está
+      usando um bloqueador e, em caso positivo, interromper sua experiência com um muro, um aviso ou conteúdo
+      degradado.
+    </p>
+    <p>
+      A camada furtiva do AdOff, executada no <strong>mundo MAIN</strong> do Chrome, opera no mesmo nível que
+      o JavaScript da própria página. Ela neutraliza cirurgicamente a detecção anti-adblock antes que possa ser
+      executada. Veja como cada técnica funciona:
+    </p>
+
+    <div class="tech-card">
+      <h3>🪤 Spoofing de Isca</h3>
+      <p>
+        Scripts anti-adblock geralmente funcionam injetando um pequeno elemento de "isca" ,  um nó do DOM
+        estilizado para parecer um contêiner de anúncio ,  e então verificando se suas dimensões são zero ou
+        se foi removido por um bloqueador de anúncios. O spoofer de isca do AdOff preserva esses elementos no
+        DOM, reporta dimensões plausíveis quando sua geometria é consultada e garante que o script de detecção
+        receba o sinal de "tudo certo" que espera.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>📦 Spoofing de Variáveis</h3>
+      <p>
+        Redes de anúncios injetam variáveis e propriedades JavaScript globais no objeto <code>window</code>
+        para sinalizar sua presença. Scripts anti-adblock verificam a existência dessas variáveis para confirmar
+        que os anúncios foram carregados. O spoofer de variáveis do AdOff reconstrói o namespace global
+        esperado ,  criando objetos stub leves que passam nas verificações de presença ,  para que a página
+        acredite que os scripts de anúncios foram executados com sucesso, mesmo que nenhum conteúdo publicitário
+        real tenha sido entregue.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>🔌 Interceptação de Fetch / XHR</h3>
+      <p>
+        Alguns sistemas de detecção não dependem do DOM ,  eles fazem uma chamada direta <code>fetch()</code> ou
+        <code>XMLHttpRequest</code> para um endpoint de anúncio conhecido e medem o tempo de resposta ou o
+        código de status. Se a requisição foi bloqueada, ela falha instantaneamente, traindo a presença do
+        bloqueador. O AdOff envolve tanto <code>window.fetch</code> quanto <code>XMLHttpRequest</code> com
+        handlers proxy que detectam requisições para domínios de anúncios conhecidos e retornam respostas
+        sintéticas que imitam um carregamento bem-sucedido de anúncio.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>🛡️ Neutralizador de Scripts</h3>
+      <p>
+        Scripts anti-adblock conhecidos são identificados pelos seus padrões de URL e assinaturas de payload.
+        Quando o navegador tenta carregar um desses scripts, a camada furtiva intercepta a execução e substitui
+        a lógica do script por um stub inerte que satisfaz quaisquer callbacks de conclusão sem realizar nenhum
+        trabalho de detecção. O código da página recebe uma promise resolvida ou um callback sem operação, e
+        o caminho de detecção nunca é alcançado.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>👁️ MutationObserver ,  Defesa em Tempo Real</h3>
+      <p>
+        Sites podem injetar novos scripts de detecção a qualquer momento após o carregamento inicial da página , 
+        acionados por ações do usuário, profundidade de rolagem ou timers. O MutationObserver do AdOff monitora
+        continuamente a adição de novos elementos <code>&lt;script&gt;</code> ao documento. Quando um corresponde
+        a uma assinatura anti-adblock conhecida, a camada furtiva o neutraliza antes que sua primeira instrução
+        seja executada. Isso garante que a proteção se mantenha mesmo contra sistemas de detecção diferidos ou
+        carregados de forma lazy.
+      </p>
+    </div>
+
+    <!-- ===================== COMO FUNCIONAM JUNTAS ===================== -->
+    <h2>Como as Três Camadas Funcionam Juntas</h2>
+
+    <p>
+      Cada camada é independente ,  se uma for contornada ou não for aplicável, as outras continuam funcionando.
+      Mas o poder real está em como elas se complementam:
+    </p>
+
+    <ul>
+      <li>
+        <strong>O bloqueio de rede</strong> elimina a maioria dos payloads de anúncios antes que existam no
+        navegador, reduzindo a superfície de ataque para scripts de detecção que só podem detectar o que
+        foi bloqueado.
+      </li>
+      <li>
+        <strong>A filtragem cosmética</strong> lida com anúncios de primeira parte e quaisquer resquícios que
+        passem pela camada de rede, mantendo a experiência visual limpa sem deixar rastros no DOM.
+      </li>
+      <li>
+        <strong>A anti-detecção furtiva</strong> envolve as outras duas camadas em um manto de invisibilidade,
+        convencendo a página de que nenhum bloqueador está presente ,  para que o paywall anti-adblock
+        nunca seja ativado.
+      </li>
+    </ul>
+
+    <p>
+      O resultado é uma experiência de navegação que não é apenas livre de anúncios ,  é uma em que os sites
+      nunca sabem que você está usando um bloqueador. Sem avisos, sem paywalls, sem conteúdo degradado, sem
+      sobreposições de "por favor, desative seu bloqueador de anúncios".
+    </p>
+
+    <!-- ===================== PRIVACIDADE ===================== -->
+    <h2>Privacidade por Design</h2>
+
+    <p>
+      O AdOff processa tudo <strong>localmente no seu navegador</strong>. Não há servidores remotos analisando
+      seu histórico de navegação, nenhuma telemetria enviada para casa e nenhuma lista de URLs visitadas sai
+      jamais do seu dispositivo. A extensão solicita apenas as permissões de que genuinamente necessita:
+    </p>
+    <ul>
+      <li><strong>declarativeNetRequest</strong> ,  para aplicar regras de bloqueio de rede</li>
+      <li><strong>storage</strong> ,  para salvar suas preferências e o contador de anúncios localmente</li>
+      <li><strong>tabs</strong> ,  para exibir a contagem do badge por site</li>
+      <li><strong>scripting</strong> ,  para injetar filtros cosméticos e scripts furtivos</li>
+    </ul>
+    <p>
+      Sem permissão genérica de "leia todos os seus dados em todos os sites". Sem SDK de análise incluído
+      na extensão. O que acontece no seu navegador fica no seu navegador.
+    </p>
+
+    <!-- ===================== COMO INSTALAR ===================== -->
+    <h2>Comece em 3 Passos</h2>
+
+    <ol class="step-list">
+      <li>
+        <strong>Instale o AdOff</strong> pela Chrome Web Store ou baixe o <code>.zip</code> diretamente de
+        <a href="../install.html" style="color:#7c5cfc;">adoff.app/install</a>. O Chrome pedirá confirmação
+        de permissão ,  revise e aceite.
+      </li>
+      <li>
+        <strong>Fixe a extensão</strong> clicando no ícone de quebra-cabeça na barra de ferramentas do Chrome,
+        localizando o AdOff no dropdown e clicando no ícone de fixar. O escudo do AdOff aparecerá permanentemente
+        na sua barra de ferramentas.
+      </li>
+      <li>
+        <strong>Navegue normalmente.</strong> As três camadas são ativadas automaticamente em cada página que
+        você visita. Clique no ícone do AdOff a qualquer momento para ver quantos anúncios e requisições foram
+        bloqueados, ou para pausar a proteção em um site específico.
+      </li>
+    </ol>
+
+    <p>
+      Nenhuma configuração é necessária para a experiência padrão. Usuários avançados podem explorar a página
+      de opções para gerenciar a lista de permissões, ajustar o comportamento de bloqueio por site ou ativar
+      os recursos Pro furtivos durante o teste gratuito de 30 dias.
+    </p>
+
+    <!-- ===================== CTA ===================== -->
+    <div class="cta-box">
+      <h3>Pronto para sentir a diferença?</h3>
+      <p>Experimente as três camadas de proteção gratuitamente por 30 dias. Sem necessidade de cartão de crédito.</p>
+      <a href="../install.html" class="btn">Instalar o AdOff Grátis →</a>
+    </div>
+
+  </article>
+  
+  <script src="/adoff-footer.js?v=260602a"></script>
+  
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

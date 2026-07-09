@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panduan Lisensi AdOff - Cara Kerja Lisensi</title>
+  <meta name="description" content="Pelajari cara kerja lisensi AdOff: paket, perangkat, aktivasi, manajemen perangkat, dan FAQ lisensi Pro." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://adoff.app/id/license-guide.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Cara Kerja Lisensi AdOff - Transparan dan Sederhana" />
+  <meta property="og:description" content="Paket, perangkat, aktivasi dan FAQ. Semua yang Anda perlu ketahui tentang lisensi Pro AdOff." />
+  <meta property="og:url" content="https://adoff.app/id/license-guide.html" />
+  <meta property="og:site_name" content="AdOff" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Panduan Lisensi AdOff" />
+  <meta name="twitter:description" content="Cara kerja lisensi AdOff: paket, perangkat, aktivasi dan FAQ." />
+
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <style>
+    /* ============================================================
+       BASE + DARK THEME
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a1a;
+      --bg2:      #0f0f22;
+      --card:     #12122a;
+      --card2:    #1a1a35;
+      --border:   #2a2a4a;
+      --accent:   #7c5cfc;
+      --accent2:  #9b7ffe;
+      --text:     #e8e8f0;
+      --text2:    #9a9ab8;
+      --text3:    #6a6a88;
+      --green:    #22c55e;
+      --yellow:   #fbbf24;
+      --radius:   12px;
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ============================================================
+       LAYOUT
+    ============================================================ */
+    .page-wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+    .hero {
+      text-align: center;
+      padding: 80px 0 60px;
+    }
+
+    .hero__eyebrow {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      background: rgba(124,92,252,0.12);
+      border: 1px solid rgba(124,92,252,0.25);
+      border-radius: 999px;
+      padding: 6px 16px;
+      margin-bottom: 24px;
+    }
+
+    .hero__title {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+
+    .hero__sub {
+      font-size: 1.1rem;
+      color: var(--text2);
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ============================================================
+       SECTION HEADINGS
+    ============================================================ */
+    .section {
+      margin-bottom: 64px;
+    }
+
+    .section__label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 8px;
+    }
+
+    .section__title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .section__sub {
+      font-size: 1rem;
+      color: var(--text2);
+      margin-bottom: 32px;
+    }
+
+    /* ============================================================
+       PLAN CARDS
+    ============================================================ */
+    .plan-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .plan-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      position: relative;
+      transition: border-color .2s;
+    }
+
+    .plan-card:hover { border-color: var(--accent); }
+
+    .plan-card--popular {
+      border-color: var(--accent);
+      background: linear-gradient(160deg, #1a1a40 0%, var(--card) 100%);
+    }
+
+    .plan-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .plan-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+
+    .plan-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .plan-price-range {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent2);
+      margin-bottom: 4px;
+    }
+
+    .plan-price-note {
+      font-size: 0.82rem;
+      color: var(--text3);
+      margin-bottom: 16px;
+    }
+
+    .plan-features {
+      list-style: none;
+      font-size: 0.9rem;
+      color: var(--text2);
+    }
+
+    .plan-features li {
+      padding: 3px 0;
+    }
+
+    .plan-features li::before {
+      content: '\2713\a0';
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    /* ============================================================
+       DEVICE TIER TABLE
+    ============================================================ */
+    .tier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+    }
+
+    .tier-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      transition: border-color .2s;
+    }
+
+    .tier-card:hover { border-color: var(--accent); }
+
+    .tier-icon { font-size: 2rem; margin-bottom: 10px; }
+
+    .tier-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .tier-desc {
+      font-size: 0.85rem;
+      color: var(--text2);
+      margin-bottom: 14px;
+    }
+
+    .tier-prices {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .tier-price-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+    }
+
+    .tier-price-label { color: var(--text3); }
+    .tier-price-val { color: var(--text); font-weight: 600; }
+
+    /* ============================================================
+       STEPS
+    ============================================================ */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .step__num {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step__content {}
+
+    .step__title {
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .step__desc {
+      font-size: 0.9rem;
+      color: var(--text2);
+    }
+
+    .step__desc a {
+      color: var(--accent2);
+    }
+
+    /* ============================================================
+       DEVICE MANAGEMENT CALLOUT
+    ============================================================ */
+    .callout {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 20px;
+    }
+
+    .callout__title {
+      font-weight: 700;
+      color: #fff;
+      font-size: 1.05rem;
+      margin-bottom: 12px;
+    }
+
+    .callout__list {
+      list-style: none;
+      font-size: 0.92rem;
+      color: var(--text2);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .callout__list li::before {
+      content: '\25B6\a0';
+      color: var(--accent2);
+      font-size: 0.7rem;
+    }
+
+    /* ============================================================
+       FAQ
+    ============================================================ */
+    .faq {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .faq-q {
+      width: 100%;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 0.98rem;
+      font-weight: 600;
+      padding: 18px 20px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      transition: color .2s;
+    }
+
+    .faq-q:hover { color: var(--accent2); }
+
+    .faq-q__arrow {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--card2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      transition: transform .2s, background .2s;
+    }
+
+    .faq-item.open .faq-q__arrow {
+      transform: rotate(180deg);
+      background: var(--accent);
+    }
+
+    .faq-a {
+      display: none;
+      padding: 0 20px 18px;
+      font-size: 0.9rem;
+      color: var(--text2);
+      line-height: 1.65;
+      border-top: 1px solid var(--border);
+    }
+
+    .faq-item.open .faq-a { display: block; }
+
+    /* ============================================================
+       CTA SECTION
+    ============================================================ */
+    .cta-section {
+      text-align: center;
+      background: linear-gradient(135deg, rgba(124,92,252,0.15) 0%, rgba(10,10,26,0) 80%);
+      border: 1px solid rgba(124,92,252,0.25);
+      border-radius: 20px;
+      padding: 56px 32px;
+    }
+
+    .cta-section__title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .cta-section__sub {
+      font-size: 1rem;
+      color: var(--text2);
+      margin-bottom: 28px;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 14px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background .2s, transform .1s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    .cta-trial-note {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      color: var(--text3);
+    }
+
+    /* ============================================================
+       DIVIDER
+    ============================================================ */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 48px 0;
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 600px) {
+      .hero { padding: 56px 0 40px; }
+      .hero__title { font-size: 1.8rem; }
+      .plan-grid { grid-template-columns: 1fr; }
+      .tier-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script src="/adoff-i18n.js?v=260520-205323"></script>
+  </head>
+<body>
+
+  <!-- Shared nav injected by adoff-nav.js -->
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+
+  <div class="page-wrapper">
+
+    <!-- ============================================================
+         HERO
+    ============================================================ -->
+    <section class="hero">
+      <span class="hero__eyebrow">Lisensi</span>
+      <h1 class="hero__title">Cara Kerja Lisensi AdOff</h1>
+      <p class="hero__sub">Sederhana dan transparan. Tidak ada kejutan, tidak ada biaya tersembunyi. Pilih paket dan perangkat. Selesai.</p>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         PLANS OVERVIEW
+    ============================================================ -->
+    <section class="section">
+      <span class="section__label">Paket</span>
+      <h2 class="section__title">Pilih Paket Anda</h2>
+      <p class="section__sub">Setiap paket dilengkapi dengan uji coba Pro 30 hari gratis. Tidak perlu kartu kredit.</p>
+
+      <div class="plan-grid">
+        <div class="plan-card">
+          <div class="plan-icon">🎁</div>
+          <div class="plan-name">Gratis</div>
+          <div class="plan-price-range">€0</div>
+          <div class="plan-price-note">Selamanya</div>
+          <ul class="plan-features">
+            <li>Pemblokiran jaringan 138 aturan</li>
+            <li>Filter CSS visual</li>
+            <li>Penghitung iklan</li>
+            <li>Dukungan komunitas</li>
+          </ul>
+        </div>
+
+        <div class="plan-card plan-card--popular">
+          <div class="plan-badge">Paling Populer</div>
+          <div class="plan-icon">⭐</div>
+          <div class="plan-name">Pro</div>
+          <div class="plan-price-range">€2.69 - €5.99</div>
+          <div class="plan-price-note">per bulan (3-10 perangkat)</div>
+          <ul class="plan-features">
+            <li>Semua dari Gratis</li>
+            <li>Video tanpa iklan</li>
+            <li>Stealth anti-deteksi</li>
+            <li>Jeda berjadwal</li>
+            <li>Dukungan prioritas</li>
+          </ul>
+        </div>
+
+        <div class="plan-card">
+          <div class="plan-icon">🔓</div>
+          <div class="plan-name">Seumur Hidup</div>
+          <div class="plan-price-range">€67.90 - €129.90</div>
+          <div class="plan-price-note">Sekali bayar, selamanya</div>
+          <ul class="plan-features">
+            <li>Semua dari Pro</li>
+            <li>Tidak ada pembayaran berulang</li>
+            <li>Skalabilitas tanpa batas</li>
+            <li>Dukungan prioritas</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         DEVICE TIERS
+    ============================================================ -->
+    <section class="section">
+      <span class="section__label">Perangkat</span>
+      <h2 class="section__title">Tiga Tingkat Perangkat</h2>
+      <p class="section__sub">Pilih berapa banyak perangkat yang ingin Anda lindungi. Naikkan kapan saja.</p>
+
+      <div class="tier-grid">
+        <div class="tier-card">
+          <div class="tier-icon">1️⃣</div>
+          <div class="tier-name">3 Perangkat</div>
+          <div class="tier-desc">Smartphone, laptop, tablet</div>
+          <div class="tier-prices">
+            <div class="tier-price-row"><span class="tier-price-label">Bulanan:</span> <span class="tier-price-val">€2.69</span></div>
+            <div class="tier-price-row"><span class="tier-price-label">Tahunan:</span> <span class="tier-price-val">€29.59</span></div>
+            <div class="tier-price-row"><span class="tier-price-label">Seumur Hidup:</span> <span class="tier-price-val">€67.90</span></div>
+          </div>
+        </div>
+
+        <div class="tier-card">
+          <div class="tier-icon">2️⃣</div>
+          <div class="tier-name">5 Perangkat</div>
+          <div class="tier-desc">Keluarga kecil</div>
+          <div class="tier-prices">
+            <div class="tier-price-row"><span class="tier-price-label">Bulanan:</span> <span class="tier-price-val">€3.99</span></div>
+            <div class="tier-price-row"><span class="tier-price-label">Tahunan:</span> <span class="tier-price-val">€39.99</span></div>
+            <div class="tier-price-row"><span class="tier-price-label">Seumur Hidup:</span> <span class="tier-price-val">€89.90</span></div>
+          </div>
+        </div>
+
+        <div class="tier-card">
+          <div class="tier-icon">3️⃣</div>
+          <div class="tier-name">10 Perangkat</div>
+          <div class="tier-desc">Keluarga besar</div>
+          <div class="tier-prices">
+            <div class="tier-price-row"><span class="tier-price-label">Bulanan:</span> <span class="tier-price-val">€5.99</span></div>
+            <div class="tier-price-row"><span class="tier-price-label">Tahunan:</span> <span class="tier-price-val">€59.99</span></div>
+            <div class="tier-price-row"><span class="tier-price-label">Seumur Hidup:</span> <span class="tier-price-val">€129.90</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <div class="callout__title">Manajemen Perangkat Sederhana</div>
+        <ul class="callout__list">
+          <li>Akses Opsi > Lisensi untuk melihat perangkat yang terhubung</li>
+          <li>Hapus perangkat lama dengan satu klik</li>
+          <li>Berlangganan beberapa lisensi untuk kontrol lebih detail</li>
+          <li>Dukungan siap membantu jika Anda mencapai batas</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         ACTIVATION
+    ============================================================ -->
+    <section class="section">
+      <span class="section__label">Aktivasi</span>
+      <h2 class="section__title">Langkah-Langkah Aktivasi</h2>
+      <p class="section__sub">Masukkan kunci lisensi Anda di Opsi AdOff untuk mengaktifkan Pro.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step__num">1</div>
+          <div class="step__content">
+            <div class="step__title">Buka Opsi AdOff</div>
+            <div class="step__desc">Klik ikon AdOff → Opsi → tab Lisensi</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step__num">2</div>
+          <div class="step__content">
+            <div class="step__title">Masukkan Kunci Lisensi</div>
+            <div class="step__desc">Salin kunci dari email konfirmasi Anda dan tempel di kolom "Kunci Lisensi"</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step__num">3</div>
+          <div class="step__content">
+            <div class="step__title">Aktifkan</div>
+            <div class="step__desc">Klik tombol "Aktifkan". Status berubah menjadi "Pro Aktif" dalam beberapa detik</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step__num">4</div>
+          <div class="step__content">
+            <div class="step__title">Nikmati Fitur Pro</div>
+            <div class="step__desc">Iklan video diblokir, Stealth Mode diaktifkan, dan fitur lainnya tersedia sekarang</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         FAQ
+    ============================================================ -->
+    <section class="section">
+      <span class="section__label">Pertanyaan Umum</span>
+      <h2 class="section__title">Pertanyaan Lisensi</h2>
+
+      <div class="faq">
+        <div class="faq-item">
+          <button class="faq-q">
+            <span>Apa perbedaan antara Bulanan, Tahunan, dan Seumur Hidup?</span>
+            <span class="faq-q__arrow">▼</span>
+          </button>
+          <div class="faq-a">
+            Bulanan: Perpanjangan otomatis setiap bulan. Tahunan: Hemat 17% dibandingkan bulanan, perpanjangan tahunan. Seumur Hidup: Bayar sekali, gunakan selamanya tanpa perpanjangan. Pilih Seumur Hidup untuk nilai terbaik jika Anda berkomitmen untuk jangka panjang.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q">
+            <span>Bisakah saya menggunakan satu lisensi di 5 perangkat sekaligus?</span>
+            <span class="faq-q__arrow">▼</span>
+          </button>
+          <div class="faq-a">
+            Ya. Jika Anda membeli paket 5 Perangkat, Anda dapat mengaktifkan lisensi di hingga 5 perangkat berbeda secara bersamaan. Semua perangkat mendapatkan fitur Pro lengkap.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q">
+            <span>Apa yang terjadi ketika saya mencapai batas perangkat?</span>
+            <span class="faq-q__arrow">▼</span>
+          </button>
+          <div class="faq-a">
+            Jika Anda telah mengaktifkan lisensi di 3, 5, atau 10 perangkat (tergantung paket), Anda tidak dapat mengaktifkan di yang baru tanpa menghapus yang lama terlebih dahulu. Buka Opsi > Lisensi untuk mengelola perangkat Anda.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q">
+            <span>Bagaimana cara membatalkan lisensi bulanan?</span>
+            <span class="faq-q__arrow">▼</span>
+          </button>
+          <div class="faq-a">
+            Masuk ke akun Stripe Anda (tautan ada di email kwitansi) dan batalkan langganan. Atau hubungi dukungan kami. Akses Pro akan terus aktif hingga akhir periode pembayaran.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q">
+            <span>Dapatkah saya meningkatkan dari 3 ke 5 perangkat?</span>
+            <span class="faq-q__arrow">▼</span>
+          </button>
+          <div class="faq-a">
+            Ya. Batalkan paket 3 Perangkat Anda dan beli paket 5 Perangkat baru. Perbedaan harga pro-rata akan dikreditkan. Atau hubungi dukungan untuk bantuan upgrade.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q">
+            <span>Apakah lisensi Seumur Hidup benar-benar selamanya?</span>
+            <span class="faq-q__arrow">▼</span>
+          </button>
+          <div class="faq-a">
+            Ya. Tidak ada biaya pembayaran berulang. Selama kami menjalankan AdOff, lisensi Seumur Hidup Anda tetap berlaku. Jika kami berhenti mengembangkan AdOff, kami akan merilis kode sumber daripada meninggalkan pengguna tanpa akses.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q">
+            <span>Apakah uji coba Pro 30 hari gratis berlaku untuk semua orang?</span>
+            <span class="faq-q__arrow">▼</span>
+          </button>
+          <div class="faq-a">
+            Ya. Setiap instalasi baru mendapatkan uji coba Pro 30 hari gratis tanpa perlu memasukkan kartu kredit. Setelah 30 hari, Anda dapat terus menggunakan Gratis atau membeli lisensi Pro.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q">
+            <span>Apakah lisensi beroperasi lintas browser?</span>
+            <span class="faq-q__arrow">▼</span>
+          </button>
+          <div class="faq-a">
+            Setiap browser (Chrome, Firefox, Safari, Edge) adalah perangkat terpisah. Jika Anda ingin Pro di Chrome AND Firefox di laptop yang sama, itu menghitung sebagai 2 dari alokasi perangkat Anda.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         CTA
+    ============================================================ -->
+    <section class="cta-section">
+      <h2 class="cta-section__title">Siap untuk Upgrade?</h2>
+      <p class="cta-section__sub">Dapatkan 30 hari Pro gratis, tanpa kartu kredit.</p>
+      <a href="/id/install.html" class="btn-primary">Pasang Sekarang</a>
+      <p class="cta-trial-note">Pembayaran sepenuhnya opsional. Gunakan Gratis selamanya jika Anda lebih suka.</p>
+    </section>
+
+  </div>
+
+  <script src="/adoff-footer.js?v=260602a"></script>
+
+  <!-- FAQ accordion -->
+  <script>
+    document.querySelectorAll('.faq-q').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var item = this.closest('.faq-item');
+        item.classList.toggle('open');
+      });
+    });
+  </script>
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

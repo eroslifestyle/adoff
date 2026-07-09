@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ユーザーガイド — AdOff 広告ブロッカー | 完全セットアップガイド</title>
+  <meta name="description" content="AdOff完全ガイド：インストール、ポップアップ操作、サイト一時停止オプション、Proライセンス、紹介プログラム、プライバシー設定とトラブルシューティング。" />
+  <link rel="canonical" href="https://adoff.app/ja/guide.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="AdOff ユーザーガイド — 完全セットアップガイド" />
+  <meta property="og:description" content="AdOffについて知っておくべきすべて：セットアップ、機能、Proライセンス、紹介プログラム。" />
+  <meta property="og:url" content="https://adoff.app/ja/guide.html" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="it" href="https://adoff.app/guide.html" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/guide.html?lang=en" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/guide.html?lang=de" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/guide.html?lang=fr" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/guide.html?lang=es" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/guide.html?lang=pt" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/guide.html?lang=ru" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/guide.html?lang=ar" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/guide.html?lang=zh" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/guide.html?lang=hi" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/guide.html" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/guide.html?lang=ko" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/guide.html?lang=tr" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/guide.html?lang=id" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/guide.html?lang=pl" />
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/guide.html?lang=en" />
+  <link rel="stylesheet" href="style.css?v=260520-201526" />
+  <style>
+    /* ===== Guide page styles ===== */
+    .guide-page {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 60px 24px 100px;
+    }
+
+    .guide-page .guide-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .guide-page .guide-header h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .guide-page .guide-header .guide-version {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .guide-page .guide-header .guide-tagline {
+      font-size: 1.1rem;
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+
+    /* Table of contents */
+    .guide-toc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-bottom: 56px;
+    }
+
+    .guide-toc h2 {
+      font-size: 1.1rem;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .guide-toc ol {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      columns: 2;
+      column-gap: 32px;
+    }
+
+    @media (max-width: 600px) {
+      .guide-toc ol { columns: 1; }
+    }
+
+    .guide-toc li {
+      break-inside: avoid;
+      margin-bottom: 6px;
+    }
+
+    .guide-toc a {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      font-weight: 500;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 4px 0;
+      transition: color var(--transition);
+    }
+
+    .guide-toc a:hover { color: var(--primary-light); }
+
+    .guide-toc .toc-num {
+      color: var(--primary-light);
+      font-weight: 700;
+      font-size: 0.82rem;
+      min-width: 22px;
+    }
+
+    /* Sections */
+    .guide-section {
+      margin-bottom: 56px;
+      scroll-margin-top: 80px;
+    }
+
+    .guide-section h2 {
+      font-size: 1.4rem;
+      color: #fff;
+      margin-bottom: 8px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .guide-section h2 .sec-icon {
+      font-size: 1.3rem;
+    }
+
+    .guide-section h3 {
+      font-size: 1.05rem;
+      color: var(--primary-light);
+      margin: 24px 0 10px;
+    }
+
+    .guide-section p,
+    .guide-section li {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.75;
+      margin-bottom: 8px;
+    }
+
+    .guide-section ul,
+    .guide-section ol {
+      padding-left: 0;
+      list-style: none;
+      margin: 10px 0 16px;
+    }
+
+    .guide-section ul li::before {
+      content: "→ ";
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+
+    .guide-section ol {
+      counter-reset: steps;
+    }
+
+    .guide-section ol li {
+      counter-increment: steps;
+      padding-left: 28px;
+      position: relative;
+    }
+
+    .guide-section ol li::before {
+      content: counter(steps) ".";
+      position: absolute;
+      left: 0;
+      color: var(--primary-light);
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+
+    .guide-section strong {
+      color: var(--text);
+    }
+
+    .guide-section code {
+      background: rgba(124, 92, 252, 0.12);
+      color: var(--primary-light);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.88rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    /* Info boxes */
+    .guide-info {
+      background: rgba(124, 92, 252, 0.06);
+      border: 1px solid rgba(124, 92, 252, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin: 16px 0;
+    }
+
+    .guide-info p { margin-bottom: 0; }
+
+    .guide-info--green {
+      background: rgba(74, 222, 128, 0.06);
+      border-color: rgba(74, 222, 128, 0.2);
+    }
+
+    .guide-info--yellow {
+      background: rgba(251, 191, 36, 0.06);
+      border-color: rgba(251, 191, 36, 0.2);
+    }
+
+    /* Tables */
+    .guide-table-wrap {
+      overflow-x: auto;
+      margin: 16px 0;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .guide-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      min-width: 400px;
+    }
+
+    .guide-table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .guide-table td {
+      padding: 10px 16px;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .guide-table td:first-child {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .guide-table tr:last-child td { border-bottom: none; }
+    .guide-table tr:hover { background: var(--card-hover); }
+
+    .check { color: var(--success); font-weight: 700; }
+    .cross { color: var(--error); }
+
+    /* Back to top */
+    .guide-back-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .guide-back-top:hover { color: var(--primary-light); }
+  </style>
+  <script src="/adoff-i18n.js?v=260520-201526"></script>
+  </head>
+<body>
+
+  <!-- NAV -->
+  <div id="site-nav"></div>
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+
+  <main class="guide-page">
+
+    <!-- HEADER -->
+    <div class="guide-header">
+      <img src="/assets/icon128.png" alt="AdOff" style="width:64px;height:64px;border-radius:16px;margin:0 auto 16px;box-shadow:0 0 32px rgba(124,92,252,0.4);" />
+      <h1>ユーザーガイド</h1>
+      <p class="guide-version">AdOff v3.1.0 — 最終更新日：2026年4月19日</p>
+      <p class="guide-tagline">AdOffを最大限に活用するために知っておくべきすべてのこと。</p>
+    </div>
+
+    <!-- TABLE OF CONTENTS -->
+    <nav class="guide-toc" id="toc">
+      <h2>目次</h2>
+      <ol>
+        <li><a href="#s1"><span class="toc-num">1</span> AdOffとは</a></li>
+        <li><a href="#s2"><span class="toc-num">2</span> インストール</a></li>
+        <li><a href="#s3"><span class="toc-num">3</span> 初回起動</a></li>
+        <li><a href="#s4"><span class="toc-num">4</span> ポップアップ</a></li>
+        <li><a href="#s5"><span class="toc-num">5</span> サイト一時停止</a></li>
+        <li><a href="#s6"><span class="toc-num">6</span> オプションページ</a></li>
+        <li><a href="#s7"><span class="toc-num">7</span> 除外サイト</a></li>
+        <li><a href="#s8"><span class="toc-num">8</span> プランとライセンス</a></li>
+        <li><a href="#s9"><span class="toc-num">9</span> 紹介プログラム</a></li>
+        <li><a href="#s10"><span class="toc-num">10</span> 統計</a></li>
+        <li><a href="#s11"><span class="toc-num">11</span> 詳細設定</a></li>
+        <li><a href="#s12"><span class="toc-num">12</span> FAQ</a></li>
+        <li><a href="#s13"><span class="toc-num">13</span> 問題報告</a></li>
+        <li><a href="#s14"><span class="toc-num">14</span> 提案</a></li>
+        <li><a href="#s15"><span class="toc-num">15</span> 仕組み</a></li>
+        <li><a href="#s16"><span class="toc-num">16</span> トラブルシューティング</a></li>
+        <li><a href="#s17"><span class="toc-num">17</span> プライバシー</a></li>
+        <li><a href="#s18"><span class="toc-num">18</span> 対応言語</a></li>
+        <li><a href="#s19"><span class="toc-num">19</span> アンインストール</a></li>
+        <li><a href="#s20"><span class="toc-num">20</span> お問い合わせ</a></li>
+      </ol>
+    </nav>
+
+    <!-- ===== 1. ADOFFとは ===== -->
+    <div class="guide-section" id="s1">
+      <h2><span class="sec-icon">&#128736;</span> 1. AdOffとは</h2>
+      <p>AdOffはGoogle Chrome向けの拡張機能で、すべてのウェブサイト上の広告をブロックします。ネットワーク、ページ、動画広告の無効化（Pro/Trialのみ）、ステルス（Pro/Trialのみ）の4つのレベルで動作し、クリーンで高速なブラウジングを実現します。</p>
+      <ul>
+        <li>あらゆるサイトの広告をブロック；動画ストリーミングプラットフォームの動画広告を無効化 <strong>（Pro/Trial）</strong></li>
+        <li><strong>ステルスモード</strong>（Pro/Trial）：アドブロック対策サイトからAdOffを見えなくします</li>
+        <li><strong>超軽量</strong> — ネイティブ Manifest V3 設計</li>
+        <li>個人データを一切収集しません：すべてがローカルで動作します</li>
+        <li>6か国語：イタリア語、英語、ドイツ語、フランス語、スペイン語、ポルトガル語</li>
+        <li>4つの期間でサイトを一時停止：この訪問のみ、1時間、1日、永続</li>
+        <li>無料のProデイを獲得できる紹介システム</li>
+      </ul>
+    </div>
+
+    <!-- ===== 2. インストール ===== -->
+    <div class="guide-section" id="s2">
+      <h2><span class="sec-icon">&#128229;</span> 2. インストール</h2>
+
+      <h3>Chrome ウェブストアから</h3>
+      <ol>
+        <li>Chrome ウェブストアのAdOffページに移動します</li>
+        <li><strong>「Chromeに追加」</strong>をクリックします</li>
+        <li><strong>「拡張機能を追加」</strong>で確認します</li>
+        <li>AdOffがすぐに有効になります</li>
+      </ol>
+
+      <h3>ツールバーにアイコンをピン留め</h3>
+      <ol>
+        <li>ブラウザ右上の<strong>パズルピース</strong>アイコン（拡張機能）をクリックします</li>
+        <li>リストから <strong>AdOff</strong> を見つけます</li>
+        <li>AdOffの横にある<strong>ピン</strong>アイコンをクリックします</li>
+        <li>アイコンがツールバーに表示され、クイックアクセスが可能になります</li>
+      </ol>
+    </div>
+
+    <!-- ===== 3. 初回起動 ===== -->
+    <div class="guide-section" id="s3">
+      <h2><span class="sec-icon">&#127881;</span> 3. 初回起動</h2>
+      <p>AdOffを初めてインストールすると：</p>
+      <ul>
+        <li>アイコンをピン留めする手順を示す<strong>ウェルカムページ</strong>が開きます</li>
+        <li><strong>30日間のPro無料トライアル</strong>が自動的に有効になります</li>
+        <li><strong>ユニークな紹介コード</strong>が生成されます（形式：<code>ADO-XXXXX</code>）</li>
+        <li>AdOffがすぐに広告のブロックを開始します</li>
+        <li>2026年7月1日以前にインストールすると、永続的な<strong>創設メンバーバッジ</strong>を受け取ります</li>
+      </ul>
+    </div>
+
+    <!-- ===== 4. ポップアップ ===== -->
+    <div class="guide-section" id="s4">
+      <h2><span class="sec-icon">&#128444;</span> 4. ポップアップ</h2>
+      <p>ツールバーのAdOffアイコンをクリックしてポップアップを開きます。</p>
+
+      <h3>ヘッダー</h3>
+      <p>ロゴ、「AdOff」という名前、ライセンスバッジ（<strong>FREE</strong> / <strong>TRIAL X日</strong> / <strong>PRO</strong>）と <strong>FOUNDER</strong> バッジ（対象の場合）。</p>
+
+      <h3>グローバルトグル</h3>
+      <p>すべてのサイトでAdOffを有効・無効にするON/OFFスイッチ。紫バッジ = 有効、赤バッジ = 無効。</p>
+
+      <h3>カウンター</h3>
+      <ul>
+        <li><strong>ブロックされた広告</strong>：ページから削除された広告要素</li>
+        <li><strong>ブロックされたリクエスト</strong>：傍受された広告サーバーへのHTTPリクエスト</li>
+      </ul>
+      <p>数値は省略されます：1,500は「1.5K」、2,300,000は「2.3M」になります。</p>
+
+      <h3>現在のサイト</h3>
+      <p>現在訪問しているサイトのドメイン、<strong>「ここで一時停止」</strong>ボタン付き。</p>
+
+      <h3>ライセンスバナー</h3>
+      <p>Freeユーザー（「30日間無料Proトライアル」）とTrialユーザー（「トライアル有効中 — あとX日」）にのみ表示されます。Proユーザーには非表示。</p>
+
+      <h3>レビュープロンプト</h3>
+      <p>100件以上の広告をブロックし、インストールから5日以上経過した後に表示されます。最大3回表示され、間隔は14日です。3つの選択肢：「レビューを書く」「後で」「二度と表示しない」。</p>
+
+      <h3>変更履歴</h3>
+      <p>アップデート後、新機能を表示します。Xボタンで閉じます。</p>
+
+      <h3>フッターリンク</h3>
+      <p><strong>ヘルプ</strong>（オプションのFAQを開く）と<strong>オプション</strong>（完全なページを開く）。</p>
+    </div>
+
+    <!-- ===== 5. サイト一時停止 ===== -->
+    <div class="guide-section" id="s5">
+      <h2><span class="sec-icon">&#9208;</span> 5. サイト一時停止</h2>
+      <p>AdOff全体を無効にせずに、単一のサイトでAdOffを無効にします。</p>
+
+      <h3>一時停止する方法</h3>
+      <ol>
+        <li>サイトを訪問します</li>
+        <li>ツールバーのAdOffアイコンをクリックします</li>
+        <li><strong>「ここで一時停止」</strong>をクリックします</li>
+        <li>期間を選択します</li>
+      </ol>
+
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>オプション</th><th>動作内容</th></tr></thead>
+          <tbody>
+            <tr><td>この訪問のみ</td><td>タブを閉じると再有効化されます</td></tr>
+            <tr><td>1時間</td><td>60分後に再有効化されます</td></tr>
+            <tr><td>1日</td><td>24時間後に再有効化されます</td></tr>
+            <tr><td>常に（ホワイトリスト）</td><td>永続的に無効のままになります</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>再有効化する方法</h3>
+      <p>一時停止中のサイトを訪問し、AdOffアイコンをクリックすると「一時停止中 — [タイプ]」と表示されます。<strong>「再有効化」</strong>をクリックします。</p>
+
+      <div class="guide-info">
+        <p><strong>注意：</strong>期限切れの一時停止は自動的に削除されます。ブロックはサブドメインにも有効です：<code>example.com</code>を一時停止すると、<code>blog.example.com</code>も除外されます。</p>
+      </div>
+    </div>
+
+    <!-- ===== 6. オプションページ ===== -->
+    <div class="guide-section" id="s6">
+      <h2><span class="sec-icon">&#9881;</span> 6. オプションページ</h2>
+      <p>ポップアップの<strong>「オプション」</strong>をクリックするか、AdOffアイコンを右クリックして「オプション」を選択します。</p>
+
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>セクション</th><th>機能</th></tr></thead>
+          <tbody>
+            <tr><td>一般</td><td>ブロックトグル、バッジ、カウンター、言語</td></tr>
+            <tr><td>除外サイト</td><td>ホワイトリストの管理</td></tr>
+            <tr><td>プランとライセンス</td><td>プランの状態、価格、キーの有効化</td></tr>
+            <tr><td>統計</td><td>合計カウンターとリセット</td></tr>
+            <tr><td>友達を招待</td><td>紹介リンク、共有、履歴</td></tr>
+            <tr><td>詳細設定</td><td>バックアップのエクスポート/インポート、完全リセット</td></tr>
+            <tr><td>ヘルプ</td><td>FAQアシスタント + サイト報告</td></tr>
+            <tr><td>提案</td><td>機能、バグ、改善の提案</td></tr>
+            <tr><td>情報</td><td>バージョン、サイトリンク、プライバシー、サポート</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 7. 除外サイト ===== -->
+    <div class="guide-section" id="s7">
+      <h2><span class="sec-icon">&#128737;</span> 7. 除外サイト（ホワイトリスト）</h2>
+      <h3>サイトを追加する</h3>
+      <ol>
+        <li><strong>オプション > 除外サイト</strong>に移動します</li>
+        <li>ドメインを入力します（例：<code>example.com</code>）</li>
+        <li><strong>「追加」</strong>をクリックするかEnterキーを押します</li>
+      </ol>
+
+      <h3>エクスポートとインポート</h3>
+      <p><strong>エクスポート</strong>：ホワイトリストをJSONファイルとしてダウンロードします。<strong>インポート</strong>：JSONファイルを読み込みます。エントリは検証されます（ドメイン最大255文字、許可されたタイプ）。無効なものは無視されます。</p>
+    </div>
+
+    <!-- ===== 8. プランとライセンス ===== -->
+    <div class="guide-section" id="s8">
+      <h2><span class="sec-icon">&#10024;</span> 8. プランとライセンス</h2>
+
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>プラン</th><th>価格</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr><td>Free</td><td>永久無料</td><td>完全な広告ブロック、CSS要素非表示</td></tr>
+            <tr><td>Proトライアル</td><td>30日間無料</td><td>すべてのPro機能</td></tr>
+            <tr><td>Pro月額</td><td>2.99 EUR/月</td><td>Free + 動画広告無効化 + ステルスモード + 専用サポート</td></tr>
+            <tr><td>Pro年額</td><td>19.99 EUR/年</td><td>Founder価格を生涯ロック</td></tr>
+            <tr><td>Pro生涯</td><td>99 EUR</td><td>永久Pro</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>FreeとProの違い</h3>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>機能</th><th>Free</th><th>Pro</th></tr></thead>
+          <tbody>
+            <tr><td>すべてのサイトで広告をブロック</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>DOMから要素を非表示</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>広告ネットワークへのHTTPリクエストをブロック</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td><strong>動画広告の無効化</strong>（ストリーミング）</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td><strong>ステルスモード</strong>（アンチ検出）</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>優先アップデート</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>専用サポート</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="guide-info--green guide-info">
+        <p><strong>基本的な広告ブロックはFreeで機能します。</strong>Pro限定機能は：動画広告の無効化（ストリーミングプラットフォーム）とステルスモード（アンチ検出）です。ステルスモードなしでは、一部のサイトがアドブロッカーを検出する可能性があります。</p>
+      </div>
+
+      <h3>Proライセンスを有効化する</h3>
+      <ol>
+        <li><strong>adoff.app</strong>で購入します</li>
+        <li>メールでキーを受け取ります：<code>XXXX-XXXX-XXXX-XXXX</code></li>
+        <li><strong>オプション > プランとライセンス</strong>に移動します</li>
+        <li>キーを入力して<strong>「有効化」</strong>をクリックします</li>
+      </ol>
+    </div>
+
+    <!-- ===== 9. 紹介プログラム ===== -->
+    <div class="guide-section" id="s9">
+      <h2><span class="sec-icon">&#127873;</span> 9. 紹介システム</h2>
+      <p>友達を招待して無料のProデイを獲得しましょう。</p>
+      <ol>
+        <li>初回インストール時にユニークコードを受け取ります：<code>ADO-XXXXX</code></li>
+        <li>リンク <code>adoff.app/r/あなたのコード</code> を共有します</li>
+        <li>友達がProに移行すると、<strong>+15日間の無料Pro</strong>を獲得します</li>
+        <li>日数は無制限に蓄積されます</li>
+      </ol>
+      <p><strong>オプション > 友達を招待</strong>でリンク、クイック共有（WhatsApp、Telegram、メール）、紹介ダッシュボードを確認できます。</p>
+    </div>
+
+    <!-- ===== 10. 統計 ===== -->
+    <div class="guide-section" id="s10">
+      <h2><span class="sec-icon">&#128202;</span> 10. 統計</h2>
+      <p><strong>オプション > 統計</strong>では、ブロックされた広告と傍受されたリクエストの合計カウンターを確認できます。「統計をリセット」で消去できます（確認が必要）。</p>
+    </div>
+
+    <!-- ===== 11. 詳細設定 ===== -->
+    <div class="guide-section" id="s11">
+      <h2><span class="sec-icon">&#128295;</span> 11. 詳細設定</h2>
+      <ul>
+        <li><strong>設定のエクスポート</strong>：完全なJSONバックアップ（セキュリティのためライセンスデータを除く）</li>
+        <li><strong>設定のインポート</strong>：バックアップから復元します。ライセンスフィールドは自動的に無視されます</li>
+        <li><strong>すべてをリセット</strong>：ライセンスを含むすべてを削除します。元に戻せません。二重確認が必要です</li>
+      </ul>
+    </div>
+
+    <!-- ===== 12. FAQ ===== -->
+    <div class="guide-section" id="s12">
+      <h2><span class="sec-icon">&#128172;</span> 12. FAQアシスタント</h2>
+      <p><strong>オプション > ヘルプ</strong>には統合アシスタントがあります。質問を入力するか、12のトピックのクイックチップをクリックします：</p>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>トピック</th><th>例</th></tr></thead>
+          <tbody>
+            <tr><td>AdOffの仕組み</td><td>「仕組み」「何をするか」</td></tr>
+            <tr><td>サイトが動かない</td><td>「サイト壊れた」「白いページ」</td></tr>
+            <tr><td>動画広告</td><td>「動画広告」「プレロール」</td></tr>
+            <tr><td>サイトを除外</td><td>「ホワイトリスト」「一時停止」</td></tr>
+            <tr><td>FreeとPro</td><td>「free vs pro」「プラン」</td></tr>
+            <tr><td>プライバシー</td><td>「プライバシー」「トラッキング」</td></tr>
+            <tr><td>パフォーマンス</td><td>「遅い」「重い」</td></tr>
+            <tr><td>アドブロック検出</td><td>「検出された」「壁」</td></tr>
+            <tr><td>ライセンス</td><td>「ライセンス」「キー」</td></tr>
+            <tr><td>アンインストール</td><td>「アンインストール」「削除」</td></tr>
+            <tr><td>アップデート</td><td>「更新」「アップデート」</td></tr>
+            <tr><td>Cookieバナー</td><td>「cookie」「gdpr」</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 13. 問題報告 ===== -->
+    <div class="guide-section" id="s13">
+      <h2><span class="sec-icon">&#9888;</span> 13. 問題報告</h2>
+      <p>AdOffでサイトが機能しない場合は、<strong>オプション > ヘルプ > 問題を報告</strong>から報告してください。</p>
+      <ol>
+        <li><strong>サイトのURL</strong>を入力します（必須）</li>
+        <li><strong>タイプ</strong>を選択します：サイトが動かない / 広告が表示される / アドブロック検出 / その他</li>
+        <li><strong>説明</strong>と<strong>メールアドレス</strong>を追加します（任意）</li>
+        <li><strong>数学的なキャプチャ</strong>を解きます</li>
+        <li><strong>「報告を送信」</strong>をクリックします</li>
+      </ol>
+      <p>フォームにはボット対策が含まれています：ハニーポット、タイミング、キャプチャ、レート制限（最大3回/時間）、スパム対策、重複排除。</p>
+    </div>
+
+    <!-- ===== 14. 提案 ===== -->
+    <div class="guide-section" id="s14">
+      <h2><span class="sec-icon">&#128161;</span> 14. 提案</h2>
+      <p><strong>オプション > 提案</strong>では、機能の提案、バグの報告、改善案を送ることができます。タイトル（必須）、説明、メールアドレス（任意）を入力します。あなたの提案はフォームの下のリストに表示されます。</p>
+    </div>
+
+    <!-- ===== 15. 仕組み ===== -->
+    <div class="guide-section" id="s15">
+      <h2><span class="sec-icon">&#9881;</span> 15. AdOffの仕組み（技術的説明）</h2>
+
+      <h3>レベル1 — ネットワークブロック</h3>
+      <p>AdOffはChromeの <code>declarativeNetRequest</code> APIを使用して、<strong>ブラウザがダウンロードする前に</strong>広告サーバーへのHTTPリクエストをブロックします。120以上のルールが主要な広告ネットワークとその他多くの広告ネットワークをカバーします。</p>
+
+      <h3>レベル2 — コスメティックフィルタリング</h3>
+      <p>サイト自身のドメインから配信される広告については、AdOffはCSSとJavaScriptを使用して<strong>ページから非表示にします</strong>：精密なセレクター、動的コンテンツ用のMutationObserver、空のコンテナの折りたたみ。</p>
+
+      <h3>レベル3 — 動画広告の無効化（Pro/Trialのみ）<span style="background:rgba(124,92,252,0.18);color:#9d82fd;font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:100px;border:1px solid rgba(124,92,252,0.3);vertical-align:middle;margin-left:6px;">PRO</span></h3>
+      <p>ほとんどの動画プレイヤーは、割り込み広告（プレロール、ミッドロール、ポストロール）に標準的な広告SDKを使用しています。AdOffはそれを<strong>ニュートラルなバージョンに置き換え</strong>、プレイヤーに即座に「広告なし」を伝えます — 動画が広告なしで開始されます。世界中のあらゆるサイトで自動的に機能します。主要な動画プラットフォームでは：16倍速 + 「広告をスキップ」の自動クリック。<strong>Pro限定機能。</strong></p>
+
+      <h3>レベル4 — ステルスモード（Pro/Trialのみ）</h3>
+      <p>アドブロック対策の検出をインターセプトし、すべてが見えているかのようにサイトに信じ込ませます：</p>
+      <ul>
+        <li><strong>CSSスプーフィング</strong>：おとり要素のプロパティを偽装</li>
+        <li><strong>ネットワークインターセプション</strong>：検出スクリプトが空のレスポンスを受け取る</li>
+        <li><strong>変数シミュレーション</strong>：広告SDKを事前に設定</li>
+        <li><strong>スクリプトの無効化</strong>：アドブロック対策スクリプトを実行前にブロック</li>
+        <li><strong>スクロールロック対策</strong>：ウォールがスクロールをブロックするのを防止</li>
+      </ul>
+      <div class="guide-info">
+        <p>ステルスは主要なプラットフォーム（動画、ソーシャル、Eコマース）や干渉する可能性のある他の大規模サイトでは自動的に無効になります。</p>
+      </div>
+    </div>
+
+    <!-- ===== 16. トラブルシューティング ===== -->
+    <div class="guide-section" id="s16">
+      <h2><span class="sec-icon">&#128736;</span> 16. トラブルシューティング</h2>
+
+      <h3>サイトが機能しない</h3>
+      <ol>
+        <li>AdOffアイコンをクリックして<strong>「ここで一時停止」</strong>を使用します</li>
+        <li>ページをリロードします</li>
+        <li>一時停止中に機能する場合：サイトを報告してください</li>
+        <li>一時停止中も機能しない場合：問題はAdOffにはありません</li>
+      </ol>
+
+      <h3>まだ広告が表示される</h3>
+      <ol>
+        <li>AdOffが<strong>有効</strong>であることを確認します（紫バッジ）</li>
+        <li>サイトが<strong>ホワイトリスト</strong>にないことを確認します</li>
+        <li><strong>ページをリロード</strong>します</li>
+        <li>続く場合：サイトを報告してください</li>
+      </ol>
+
+      <h3>「広告ブロッカーを無効にしてください」</h3>
+      <ol>
+        <li><strong>ページをリロード</strong>します</li>
+        <li><strong>ProまたはTrial</strong>があることを確認します（ステルスモードが必要）</li>
+        <li>続く場合：「ここで一時停止」を使用して報告してください</li>
+      </ol>
+
+      <h3>AdOffが有効にならない</h3>
+      <p><code>chrome://extensions/</code>に移動し、有効になっていることを確認します。エラーがある場合は、削除して再インストールしてみてください。</p>
+    </div>
+
+    <!-- ===== 17. プライバシー ===== -->
+    <div class="guide-section" id="s17">
+      <h2><span class="sec-icon">&#128274;</span> 17. プライバシーとセキュリティ</h2>
+
+      <div class="guide-info--green guide-info">
+        <p><strong>AdOffは個人データを収集しません。あなたが訪問するサイトを追跡しません。テレメトリーを送信しません。第三者とデータを共有しません。広告を挿入しません。</strong></p>
+      </div>
+
+      <h3>権限とその理由</h3>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>権限</th><th>用途</th></tr></thead>
+          <tbody>
+            <tr><td><code>storage</code></td><td>設定とカウンターをローカルに保存する</td></tr>
+            <tr><td><code>declarativeNetRequest</code></td><td>広告ネットワークへのリクエストをブロックする</td></tr>
+            <tr><td><code>activeTab</code></td><td>サイト一時停止のためにドメインを知る</td></tr>
+            <tr><td><code>scripting</code></td><td>広告を非表示にするコンテンツスクリプトを注入する</td></tr>
+            <tr><td><code>webNavigation</code></td><td>適切なタイミングでブロックを有効化する</td></tr>
+            <tr><td><code>&lt;all_urls&gt;</code></td><td>すべてのウェブサイトで機能する</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>外部通信</h3>
+      <p>AdOffは<strong>あなたのアクションによってのみ</strong>外部サーバーと通信します：サイト報告、提案、ライセンスの有効化、自動再検証（Proは7日ごと）。通信はCloudflare Workerを経由します。</p>
+      <p><a href="/ja/privacy.html">完全なプライバシーポリシーを読む</a></p>
+    </div>
+
+    <!-- ===== 18. 対応言語 ===== -->
+    <div class="guide-section" id="s18">
+      <h2><span class="sec-icon">&#127760;</span> 18. 対応言語</h2>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>言語</th><th>コード</th><th>状態</th></tr></thead>
+          <tbody>
+            <tr><td>Italiano</td><td>it</td><td><span class="check">完全</span></td></tr>
+            <tr><td>English</td><td>en</td><td><span class="check">完全</span></td></tr>
+            <tr><td>Deutsch</td><td>de</td><td><span class="check">完全</span></td></tr>
+            <tr><td>Français</td><td>fr</td><td><span class="check">完全</span></td></tr>
+            <tr><td>Español</td><td>es</td><td><span class="check">完全</span></td></tr>
+            <tr><td>Português</td><td>pt</td><td><span class="check">完全</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>言語を変更するには：<strong>オプション > 一般 > 言語</strong>。「自動」ではブラウザの言語を使用します（フォールバック：英語）。</p>
+    </div>
+
+    <!-- ===== 19. アンインストール ===== -->
+    <div class="guide-section" id="s19">
+      <h2><span class="sec-icon">&#128465;</span> 19. アンインストール</h2>
+      <ol>
+        <li><code>chrome://extensions/</code>に移動します</li>
+        <li>AdOffを見つけて<strong>「削除」</strong>をクリックします</li>
+        <li>確認します</li>
+      </ol>
+      <p>ローカル設定は削除されます。ProライセンスはサーバーでHasで有効のままです。紹介コードは失われます。</p>
+
+      <div class="guide-info--yellow guide-info">
+        <p><strong>アンインストール前に</strong>、オプション > 詳細設定 > エクスポートから設定をエクスポートしてください。再インストール後、ファイルをインポートしてすべてを復元できます（ライセンスはキーで再有効化が必要です）。</p>
+      </div>
+    </div>
+
+    <!-- ===== 20. お問い合わせ ===== -->
+    <div class="guide-section" id="s20">
+      <h2><span class="sec-icon">&#128231;</span> 20. お問い合わせとサポート</h2>
+      <ul>
+        <li><strong>ウェブサイト</strong>：<a href="/index.html">adoff.app</a></li>
+        <li><strong>サポート</strong>：<a href="/support.html">adoff.app/support</a>（お問い合わせフォーム）</li>
+        <li><strong>サイト報告</strong>：拡張機能から（オプション > ヘルプ）</li>
+        <li><strong>提案</strong>：拡張機能から（オプション > 提案）</li>
+      </ul>
+      <p>Proライセンスの問題については、ライセンスキーを記載してサポートフォームをご利用ください。</p>
+    </div>
+
+    <a href="#toc" class="guide-back-top">&#8593; 目次に戻る</a>
+
+  </main>
+
+  <!-- FOOTER -->
+  <script src="/adoff-footer.js?v=260602a"></script>
+  
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

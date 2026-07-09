@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>撤回权 — AdOff 广告拦截器</title>
+  <meta name="description" content="AdOff 撤回权。欧盟消费者有 14 天撤回期。30天退款保证。无需解释原因。">
+  <link rel="canonical" href="https://adoff.app/zh/withdrawal.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="撤回权 — AdOff" />
+  <meta property="og:url" content="https://adoff.app/zh/withdrawal.html" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" type="image/png" href="/assets/icon128.png">
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="it" href="https://adoff.app/withdrawal.html" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/withdrawal.html?lang=en" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/withdrawal.html?lang=de" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/withdrawal.html?lang=fr" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/withdrawal.html?lang=es" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/withdrawal.html?lang=pt" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/withdrawal.html?lang=ru" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/withdrawal.html?lang=ar" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/withdrawal.html" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/withdrawal.html?lang=hi" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/withdrawal.html?lang=ja" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/withdrawal.html?lang=ko" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/withdrawal.html?lang=tr" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/withdrawal.html?lang=id" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/withdrawal.html?lang=pl" />
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/withdrawal.html?lang=en" />
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--bg:#0a0a1a;--card:#12122a;--border:#2a2a4a;--purple:#7c5cfc;--purple-dark:#4c3ad4;--purple-soft:#b8a9ff;--white:#fff;--gray:#8a8aaa}
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:#d4d4e8;line-height:1.75;overflow-x:hidden}
+    a{color:var(--purple-soft);text-decoration:none}
+    a:hover{color:var(--purple);text-decoration:underline}
+
+    /* LAYOUT */
+    .page-wrap{max-width:720px;margin:0 auto;padding:120px 24px 80px}
+
+    /* HEADER */
+    .page-header{margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--border)}
+    h1{font-size:clamp(28px,5vw,40px);font-weight:800;color:var(--white);margin-bottom:10px;letter-spacing:-1px;background:linear-gradient(135deg,var(--white) 40%,var(--purple-soft));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .meta{color:var(--gray);font-size:14px;line-height:2}
+    .meta strong{color:var(--purple-soft)}
+
+    /* SUMMARY BOX */
+    .summary-box{background:var(--card);border:1px solid rgba(124,92,252,0.35);border-radius:12px;padding:24px 28px;margin-bottom:40px}
+    .summary-box p{margin:0 0 8px;font-size:15px}
+    .summary-box p:last-child{margin-bottom:0}
+    .summary-box strong{color:var(--white)}
+
+    /* SECTION */
+    h2{font-size:19px;font-weight:700;color:var(--white);margin-top:40px;margin-bottom:14px;padding-left:12px;border-left:3px solid var(--purple)}
+    h3{font-size:15px;font-weight:700;color:var(--white);margin-top:20px;margin-bottom:8px}
+    p{margin-bottom:16px;font-size:15px}
+    ul,ol{margin-bottom:16px;padding-left:24px}
+    li{margin-bottom:8px;font-size:15px}
+    strong{color:var(--white)}
+    em{color:var(--gray);font-style:italic}
+    code{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:13px;color:var(--purple-soft);font-family:monospace}
+
+    /* HIGHLIGHT BOX */
+    .highlight-box{background:rgba(124,92,252,0.08);border:1px solid rgba(124,92,252,0.25);border-radius:10px;padding:18px 22px;margin-bottom:20px}
+    .highlight-box p{margin:0;font-size:14px}
+
+    /* WITHDRAWAL FORM BOX */
+    .form-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:22px 26px;margin-bottom:20px}
+    .form-box p{margin:0 0 10px;font-size:14px}
+    .form-box p:last-child{margin-bottom:0}
+    .form-box .form-title{font-size:13px;font-weight:700;color:var(--purple-soft);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px}
+    .form-field{color:var(--gray);font-size:13px;margin-bottom:6px;padding-left:12px;border-left:2px solid var(--border)}
+
+    /* STEPS */
+    .steps{counter-reset:step;margin-bottom:20px}
+    .step{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start}
+    .step-num{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:rgba(124,92,252,0.15);border:1px solid rgba(124,92,252,0.4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--purple-soft);margin-top:2px}
+    .step-text{font-size:15px}
+
+    /* LEGAL REF */
+    .legal-ref{font-size:12px;color:var(--gray);font-style:italic;margin-top:-10px;margin-bottom:16px}
+
+    /* DIVIDER */
+    .lang-divider{border:none;border-top:1px dashed var(--border);margin:24px 0}
+
+    /* APPENDIX LABEL */
+    .appendix-label{display:inline-block;background:rgba(124,92,252,0.12);border:1px solid rgba(124,92,252,0.3);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--purple-soft);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px}
+
+    /* FOOTER */
+    footer{border-top:1px solid var(--border);margin-top:64px;padding:32px 24px;text-align:center;color:var(--gray);font-size:13px}
+    footer a{color:var(--gray)}
+    footer a:hover{color:var(--white)}
+    .footer-links{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+
+    @media(max-width:600px){
+      .page-wrap{padding:100px 16px 60px}
+      .footer-links{gap:14px}
+    }
+  </style>
+  <script src="/adoff-i18n.js?v=260520-201526"></script>
+  </head>
+<body>
+
+<div id="site-nav"></div>
+<script src="/adoff-nav.js?v=260709-ga4b"></script>
+
+<div class="page-wrap">
+
+  <div class="page-header">
+    <h1>撤回权</h1>
+    <p class="meta">
+      <strong>AdOff</strong> &mdash; adoff.app<br>
+      联系方式：<a href="/support.html">支持页面</a><br>
+      最后更新：<strong>2026年4月</strong>
+    </p>
+  </div>
+
+  <div class="summary-box">
+    <p><strong>简单说明：</strong>如果您购买了 AdOff Pro 并改变了主意，您可以在购买后 <strong>30 天</strong>内获得全额退款——无需解释原因。欧盟法律至少给予您 14 天；我们给予您 30 天。请通过我们的<a href="/support.html">支持页面</a>联系我们。</p>
+  </div>
+
+  <h2>1. 撤回权 — 14个日历日</h2>
+  <p class="legal-ref">欧盟指令 2011/83/EU 第9-16条 &bull; 意大利消费者法典 D.Lgs. 206/2005 第52-59条</p>
+  <p>如果您是欧盟（或英国，视适用法律而定）居民<strong>消费者</strong>，您有权在合同订立（即购买日期）后 <strong>14个日历日</strong>内撤回购买 AdOff Pro 许可证的合同，无需说明任何原因，也不会产生任何罚款。</p>
+  <p>14天撤回期从合同订立之日开始计算。对于数字服务和许可证（如 AdOff Pro），这是您完成购买的当天，无论您何时首次使用该软件。</p>
+  <div class="highlight-box">
+    <p><strong>我们提供更多保障：</strong>AdOff 提供 <strong>30天退款保证</strong>——是欧盟法律最低要求的两倍以上。您有 30 天时间从购买日起申请全额退款，无需解释原因。</p>
+  </div>
+
+  <h2>2. 数字内容的例外情况——以及为何不适用于付费购买</h2>
+  <p class="legal-ref">欧盟指令 2011/83/EU 第16(m)条</p>
+  <p>根据指令 2011/83/EU 第16(m)条，在以下情况下，非有形媒介数字内容的撤回权<em>可能</em>丧失：</p>
+  <ul>
+    <li>在撤回期内已开始履行，<strong>且</strong></li>
+    <li>消费者明确同意，<strong>且</strong></li>
+    <li>消费者在履行开始前确认放弃撤回权。</li>
+  </ul>
+  <p><strong>对于 AdOff，此例外不适用于付费购买。</strong>AdOff 提供无需付款的 30 天免费试用。只有当您在试用后明确选择购买 Pro 许可证时才需付款，此时付款本身不会自动触发服务履行。因此，撤回权完全适用于所有付费 Pro 购买。</p>
+
+  <h2>3. 如何行使撤回权</h2>
+  <p>要行使撤回权，您必须在 14 天（或 30 天保证）期限到期前通知我们您的决定。您可以使用以下任一方式：</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text"><strong>联系我们</strong>，通过我们的<a href="/support.html">支持页面</a>，主题为：<code>撤回 - [您的订单ID或许可证密钥]</code></div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text"><strong>在邮件中包含以下信息</strong>：您的姓名、购买时使用的电子邮件地址、您的许可证密钥以及购买日期。</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text"><strong>或者</strong>，填写并提交本页第7条提供的标准欧盟撤回表格。</div>
+    </div>
+  </div>
+
+  <p>我们将立即通过电子邮件确认收到您的撤回通知。您无需退还任何实物——仅通知我们即可。</p>
+
+  <h2>4. 撤回的效力</h2>
+  <p>收到您的撤回通知后，将发生以下情况：</p>
+  <ul>
+    <li><strong>全额退款</strong> — 我们将在收到您的撤回通知后 <strong>14天</strong>内退还所有款项。</li>
+    <li><strong>退款方式</strong> — 退款将通过您购买时使用的相同支付方式（Stripe）发放。退款不收取任何手续费或罚款。</li>
+    <li><strong>许可证停用</strong> — 您的 Pro 许可证密钥将在处理退款时停用。届时 Pro 功能的访问权将终止。</li>
+    <li><strong>无罚款</strong> — 行使撤回权不会产生任何取消费、管理费或其他费用。</li>
+  </ul>
+
+  <h2>5. 订阅取消</h2>
+  <p class="legal-ref">欧盟指令 2023/2673（2026年6月生效）&bull; 欧盟指令 2011/83/EU</p>
+  <p>取消订阅与行使撤回权不同。您可以<strong>随时</strong>取消 AdOff Pro 订阅，无需说明原因，无需提前通知，也不会产生任何罚款。</p>
+  <ul>
+    <li><strong>如何取消：</strong>通过我们的<a href="/support.html">支持页面</a>联系我们，或使用购买确认邮件中提供的 Stripe 客户门户链接。</li>
+    <li><strong>取消效力：</strong>您的订阅将在当前计费周期结束时不再续订。您保留对已付费期间最后一天的 Pro 功能访问权。</li>
+    <li>未使用时间<strong>不予按比例退款</strong>，除非您在 30 天退款保证窗口期内（见第6条）。</li>
+  </ul>
+  <div class="highlight-box">
+    <p>根据欧盟指令 2023/2673，取消设计得尽可能简单——只需通过电子邮件联系我们。没有暗黑模式，没有障碍，没有挽留流程。</p>
+  </div>
+
+  <h2>6. 退款政策</h2>
+  <p>AdOff 的退款政策超过欧盟法律的最低要求：</p>
+  <ul>
+    <li><strong>30天退款保证</strong> — 所有 Pro 购买（月付、年付和终身版）均可在原始购买日期后 30 个日历日内申请全额退款。</li>
+    <li><strong>终身许可证</strong> — 可在购买日期后 30 天内申请全额退款。</li>
+    <li><strong>30天后</strong> — 超过 30 天窗口期通常不予退款。订阅仍可随时取消以防止未来扣费，但当前周期不退款。</li>
+    <li><strong>特殊情况</strong> — 我们会逐案审查 30 天后提出的申请。请通过我们的<a href="/support.html">支持页面</a>联系我们。</li>
+  </ul>
+
+  <h2>7. 标准欧盟撤回表格</h2>
+  <p>根据指令 2011/83/EU 附件I第B部分，您可以使用以下标准表格行使撤回权。填写此表格<strong>不是强制性的</strong>——任何明确表达撤回决定的书面声明同样有效。</p>
+
+  <h3>中文版本</h3>
+  <div class="form-box">
+    <p class="form-title">撤回表格范本</p>
+    <p class="form-field">致：AdOff — support [at] adoff [dot] app</p>
+    <p class="form-field">本人特此通知，本人撤回以下服务的合同：</p>
+    <p class="form-field"><em>AdOff Pro [订阅 / 终身许可证]</em></p>
+    <p class="form-field">订购日期：_________________________ （购买日期）</p>
+    <p class="form-field">消费者姓名：_________________________</p>
+    <p class="form-field">消费者电子邮件地址：_________________________</p>
+    <p class="form-field">许可证密钥：_________________________</p>
+    <p class="form-field">日期：_________________________</p>
+    <p class="form-field">签名（仅在以纸质形式提交本表格时）：_________________________</p>
+  </div>
+
+  <hr class="lang-divider">
+
+  <span class="appendix-label">法律附录 &mdash; 英文版本</span>
+  <h3>English Version</h3>
+  <div class="form-box">
+    <p class="form-title">Model Withdrawal Form</p>
+    <p class="form-field">To: AdOff — support [at] adoff [dot] app</p>
+    <p class="form-field">I hereby give notice that I withdraw from my contract for the provision of the following service:</p>
+    <p class="form-field"><em>AdOff Pro [subscription / lifetime license]</em></p>
+    <p class="form-field">Ordered on: _________________________ (date of purchase)</p>
+    <p class="form-field">Name of consumer: _________________________</p>
+    <p class="form-field">Email address of consumer: _________________________</p>
+    <p class="form-field">License key: _________________________</p>
+    <p class="form-field">Date: _________________________</p>
+    <p class="form-field">Signature (only if this form is notified on paper): _________________________</p>
+  </div>
+
+  <h2>8. 联系方式</h2>
+  <p>如需撤回申请、退款、取消订阅或对本政策有任何疑问，请联系我们：</p>
+  <ul>
+    <li><strong>支持：</strong><a href="/support.html">支持页面</a></li>
+    <li><strong>网站：</strong><a href="https://adoff.app">adoff.app</a></li>
+    <li><strong>响应时间：</strong>工作日 48 小时内</li>
+  </ul>
+
+  <h2>9. 适用法律</h2>
+  <p>本撤回权政策受以下法律的约束和解释：</p>
+  <ul>
+    <li><strong>欧盟指令 2011/83/EU</strong>关于消费者权利（撤回权，第9-16条）</li>
+    <li><strong>欧盟指令 2019/770</strong>关于数字内容和数字服务提供合同</li>
+    <li><strong>欧盟指令 2023/2673</strong>关于简便取消订阅（2026年6月生效）</li>
+    <li><strong>意大利消费者法典</strong>（D.Lgs. 206/2005 第52-59条）适用于意大利消费者</li>
+    <li><strong>法规 (EU) 2016/679 (GDPR)</strong>关于处理与撤回申请相关的个人数据</li>
+  </ul>
+  <p>如果您是欧盟消费者，本条款中的任何内容均不限制或排除适用强制性消费者保护法律下不可排除的权利。</p>
+
+</div>
+
+<script src="/adoff-footer.js?v=260602a"></script>
+
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

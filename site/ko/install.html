@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdOff 설치 · Chrome, Edge, Brave, Firefox, Safari 무료 광고 차단기</title>
+  <meta name="description" content="Chrome, Firefox, Safari, Edge, Opera, Brave에서 AdOff 광고 차단기를 다운로드하고 설치하세요. 무료 30일 Pro 평가판. 가볍고 30초 만에 설치 가능." />
+  <link rel="canonical" href="https://adoff.app/ko/install.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="AdOff 설치 · 무료 광고 차단기" />
+  <meta property="og:description" content="Chrome, Firefox, Safari, Edge, Opera, Brave용 AdOff를 다운로드하세요. 30일 Pro 평가판 포함." />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/ko/install.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AdOff 설치 · 무료 광고 차단기" />
+  <meta name="twitter:description" content="스텔스 탐지 회피 기능이 있는 광고 차단기. 30일 Pro 평가판, 신용카드 불필요." />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="icon" type="image/png" href="/assets/icon128.png">
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="it" href="https://adoff.app/install.html" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/install.html?lang=en" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/install.html?lang=de" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/install.html?lang=fr" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/install.html?lang=es" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/install.html?lang=pt" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/install.html?lang=ru" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/install.html?lang=ar" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/install.html?lang=zh" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/install.html?lang=hi" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/install.html?lang=ja" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/install.html" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/install.html?lang=tr" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/install.html?lang=id" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/install.html?lang=pl" />
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/install.html?lang=en" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <link rel="stylesheet" href="../style.css?v=260520-205323">
+  <style>
+    .install-page { max-width: 860px; margin: 0 auto; padding: 80px 24px 60px; }
+
+    .install-hero {
+      text-align: center; margin-bottom: 48px; padding: 40px 0;
+    }
+    .install-hero h1 { font-size: 32px; margin-bottom: 12px; }
+    .install-hero p { color: #8a8aaa; font-size: 16px; max-width: 560px; margin: 0 auto; }
+
+    /* Detected badge */
+    .detected-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(124,92,252,0.12); border: 1px solid rgba(124,92,252,0.3);
+      border-radius: 24px; padding: 8px 20px; margin-top: 16px;
+      font-size: 14px; color: #b0b0c8;
+    }
+    .detected-badge strong { color: #7c5cfc; }
+
+    /* Compatibility grid */
+    .compat-section { margin-bottom: 48px; }
+    .compat-title { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 8px; }
+    .compat-sub { color: #8a8aaa; font-size: 14px; text-align: center; margin-bottom: 24px; }
+    .compat-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px; margin-bottom: 16px;
+    }
+    .compat-card {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 12px;
+      padding: 20px 12px; text-align: center; transition: all 0.2s;
+    }
+    .compat-card:hover { border-color: #7c5cfc; transform: translateY(-2px); }
+    .compat-card.supported { border-color: rgba(74,222,128,0.3); }
+    .compat-card.partial { border-color: rgba(251,191,36,0.3); }
+    .compat-card.unsupported { border-color: rgba(244,63,94,0.2); opacity: 0.6; }
+    .compat-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+    .compat-name { font-size: 14px; font-weight: 600; color: #e2e2f0; margin-bottom: 4px; }
+    .compat-status { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .compat-status.full { color: #4ade80; }
+    .compat-status.partial { color: #fbbf24; }
+    .compat-status.no { color: #f43f5e; }
+
+    /* OS row */
+    .os-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 8px; margin-top: 16px;
+    }
+    .os-card {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 10px;
+      padding: 14px 8px; text-align: center; font-size: 13px; color: #b0b0c8;
+    }
+    .os-card .os-icon { font-size: 24px; display: block; margin-bottom: 6px; }
+    .os-card .os-name { font-weight: 600; color: #e2e2f0; }
+
+    /* Download boxes */
+    .download-section { margin-bottom: 48px; }
+    .download-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 600px) { .download-grid { grid-template-columns: 1fr; } }
+
+    .download-box {
+      background: #12122a; border: 2px solid #2a2a4a; border-radius: 16px;
+      padding: 28px 24px; text-align: center; transition: all 0.3s;
+      position: relative;
+    }
+    .download-box:hover { border-color: #7c5cfc; }
+    .download-box.recommended {
+      border-color: #7c5cfc;
+      background: linear-gradient(135deg, rgba(124,92,252,0.12), rgba(124,92,252,0.04));
+    }
+    .download-box .rec-badge {
+      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, #7c5cfc, #4c3ad4); color: #fff;
+      padding: 4px 16px; border-radius: 12px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .dl-browser-list { font-size: 13px; color: #8a8aaa; margin-bottom: 16px; line-height: 1.6; }
+    .dl-browser-list strong { color: #e2e2f0; }
+    .download-btn {
+      display: inline-block; background: linear-gradient(135deg, #7c5cfc, #4c3ad4);
+      color: #fff; padding: 14px 32px; border-radius: 12px; font-size: 16px;
+      font-weight: 700; text-decoration: none; transition: all 0.3s; border: none; cursor: pointer;
+      width: 100%; box-sizing: border-box;
+    }
+    .download-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.4); }
+    .download-btn.secondary {
+      background: transparent; border: 2px solid #7c5cfc; color: #7c5cfc;
+    }
+    .download-btn.secondary:hover { background: rgba(124,92,252,0.1); }
+    .download-info { font-size: 12px; color: #3a3a5a; margin-top: 10px; }
+
+    /* OFFICIAL STORES SECTION */
+    .stores-section { margin-bottom: 56px; }
+    .stores-title {
+      font-size: 28px; font-weight: 800; text-align: center;
+      margin-bottom: 10px; color: #fff;
+      background: linear-gradient(135deg, #fff 0%, #b8a9ff 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .stores-sub {
+      color: #8a8aaa; font-size: 15px; text-align: center;
+      margin-bottom: 32px;
+    }
+    .stores-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      max-width: 920px; margin: 0 auto;
+    }
+    @media (max-width: 1020px) { .stores-grid { grid-template-columns: repeat(2, 1fr); max-width: 620px; } }
+    @media (max-width: 760px) { .stores-grid { grid-template-columns: 1fr; } }
+    .store-card {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 14px; padding: 28px 20px;
+      background: #12122a; border: 2px solid #2a2a4a; border-radius: 16px;
+      color: #fff; text-decoration: none;
+      transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s, background 0.25s;
+      text-align: center; position: relative;
+    }
+    .store-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
+    .store-card--chrome:hover { border-color: #4285F4; background: linear-gradient(135deg, rgba(66,133,244,0.10), rgba(66,133,244,0.02)); }
+    .store-card--firefox:hover { border-color: #FF512F; background: linear-gradient(135deg, rgba(255,81,47,0.10), rgba(255,81,47,0.02)); }
+    .store-card--edge:hover { border-color: #0F88FF; background: linear-gradient(135deg, rgba(15,136,255,0.10), rgba(15,136,255,0.02)); }
+    .store-card--opera:hover { border-color: #FF1B2D; background: linear-gradient(135deg, rgba(255,27,45,0.10), rgba(255,27,45,0.02)); }
+    .store-card--safari:hover { border-color: #1B88CA; background: linear-gradient(135deg, rgba(27,136,202,0.10), rgba(27,136,202,0.02)); }
+    .store-card--soon { opacity: 0.85; }
+    .store-card--soon .store-card__cta { background: linear-gradient(135deg, #4a4a6a, #2a2a4a) !important; }
+    .store-card__badge {
+      position: absolute; top: 10px; right: 10px;
+      background: #2a2a4a; color: #b8a9ff;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+      padding: 4px 8px; border-radius: 6px; text-transform: uppercase;
+    }
+    .store-card__icon { width: 56px; height: 56px; flex-shrink: 0; }
+    .store-card__icon svg { width: 100%; height: 100%; }
+    .store-card__body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .store-card__label {
+      font-size: 13px; font-weight: 600; color: #b8a9ff;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .store-card__name { font-size: 20px; font-weight: 800; color: #fff; }
+    .store-card__browsers { font-size: 12px; color: #8a8aaa; margin-top: 2px; }
+    .store-card__cta {
+      width: 100%; padding: 12px 16px; margin-top: 8px;
+      background: linear-gradient(135deg, #7c5cfc, #4c3ad4);
+      color: #fff; border-radius: 10px; font-weight: 700; font-size: 14px;
+    }
+    .store-card--chrome .store-card__cta { background: linear-gradient(135deg, #4285F4, #1A73E8); }
+    .store-card--firefox .store-card__cta { background: linear-gradient(135deg, #FF512F, #DD2476); }
+    .store-card--edge .store-card__cta { background: linear-gradient(135deg, #0F88FF, #0A4DAB); }
+    .store-card--opera .store-card__cta { background: linear-gradient(135deg, #FF1B2D, #B30D1F); }
+    .store-card--safari .store-card__cta { background: linear-gradient(135deg, #1B88CA, #006CFF); }
+    .stores-trust {
+      margin-top: 24px; text-align: center;
+      font-size: 13px; color: #8a8aaa; line-height: 1.8;
+    }
+
+    /* ZIP FALLBACK */
+    .zip-fallback {
+      background: #0a0a1a; border: 1px solid #1a1a36; border-radius: 12px;
+      padding: 16px 20px;
+    }
+    .zip-fallback__summary {
+      cursor: pointer; color: #8a8aaa; font-size: 14px; font-weight: 600;
+      list-style: none; padding: 4px 0; outline: none;
+      transition: color 0.2s;
+    }
+    .zip-fallback__summary:hover { color: #7c5cfc; }
+    .zip-fallback__summary::-webkit-details-marker { display: none; }
+    .zip-fallback[open] .zip-fallback__summary { color: #7c5cfc; }
+    .zip-fallback__body { padding-top: 12px; }
+    .zip-fallback__body .download-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 760px) { .zip-fallback__body .download-grid { grid-template-columns: 1fr; } }
+    .zip-fallback__body .download-box { padding: 18px 14px; }
+
+    /* Browser tabs */
+    .browser-tabs { display: flex; gap: 4px; margin-bottom: 0; flex-wrap: wrap; }
+    .browser-tab {
+      padding: 12px 20px; background: #1a1a36; border: 1px solid #2a2a4a;
+      border-radius: 10px 10px 0 0; color: #8a8aaa; font-size: 13px;
+      font-weight: 600; cursor: pointer; border-bottom: none; transition: all 0.2s;
+    }
+    .browser-tab.active { background: #12122a; color: #7c5cfc; border-color: #7c5cfc; }
+
+    /* Steps container */
+    .steps-container {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 0 16px 16px 16px;
+      padding: 32px; display: none;
+    }
+    .steps-container.active { display: block; }
+
+    /* Step */
+    .step {
+      display: flex; gap: 20px; padding: 24px 0;
+      border-bottom: 1px solid #1a1a36;
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c5cfc, #4c3ad4);
+      color: #fff; font-size: 18px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .step-content { flex: 1; }
+    .step-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: #fff; }
+    .step-desc { font-size: 14px; color: #b0b0c8; line-height: 1.8; }
+    .step-desc strong { color: #fff; }
+    .step-desc code {
+      background: #1a1a36; border: 1px solid #2a2a4a; padding: 2px 8px;
+      border-radius: 4px; font-family: monospace; color: #7c5cfc; font-size: 13px;
+    }
+
+    /* Hint box */
+    .hint-box {
+      background: #0a0a1a; border: 1px solid #2a2a4a; border-radius: 8px;
+      padding: 14px 16px; margin-top: 12px; font-size: 13px; line-height: 1.6;
+    }
+    .hint-box .hint-icon { font-size: 16px; margin-right: 6px; }
+    .hint-box.warning { border-color: rgba(251,191,36,0.3); }
+    .hint-box.success { border-color: rgba(74,222,128,0.3); }
+    .hint-box.info { border-color: rgba(124,92,252,0.3); }
+
+    /* FAQ */
+    .faq-section { margin-top: 48px; }
+    .faq-title { font-size: 24px; font-weight: 700; margin-bottom: 20px; text-align: center; }
+    .faq-item {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 10px;
+      margin-bottom: 8px; overflow: hidden;
+    }
+    .faq-q {
+      padding: 16px 20px; font-size: 15px; font-weight: 600; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      transition: color 0.2s;
+    }
+    .faq-q:hover { color: #7c5cfc; }
+    .faq-q .arrow { transition: transform 0.3s; font-size: 12px; }
+    .faq-item.open .faq-q .arrow { transform: rotate(180deg); }
+    .faq-a {
+      padding: 0 20px; max-height: 0; overflow: hidden;
+      transition: max-height 0.3s, padding 0.3s;
+      font-size: 14px; color: #8a8aaa; line-height: 1.7;
+    }
+    .faq-item.open .faq-a { max-height: 400px; padding: 0 20px 16px; }
+
+    /* Help footer */
+    .help-footer {
+      text-align: center; margin-top: 48px; padding: 24px;
+      background: #12122a; border-radius: 12px; border: 1px solid #2a2a4a;
+    }
+    .help-footer p { color: #8a8aaa; font-size: 14px; margin-bottom: 12px; }
+    .help-footer a { color: #7c5cfc; text-decoration: none; font-weight: 600; }
+
+    /* OS-specific instructions */
+    .os-note { font-size: 13px; color: #8a8aaa; margin-top: 6px; font-style: italic; }
+  </style>
+  <script src="../adoff-i18n.js?v=260520-205323"></script>
+  </head>
+<body>
+  <div id="site-nav"></div>
+  <script src="../adoff-nav.js?v=260709-ga4b"></script>
+  <div class="install-page">
+
+    <!-- HERO -->
+    <div class="install-hero">
+      <img src="../assets/icon128.png" alt="AdOff" style="width:80px;margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(124,92,252,0.5))">
+      <h1>AdOff 설치</h1>
+      <p>단 몇 번의 클릭으로 광고 자유를 얻으세요. 2분 안에 설치 완료.</p>
+      <div class="detected-badge" id="detectedBadge">
+        <span id="detectedIcon"></span>
+        <span>감지됨:</span>
+        <strong id="detectedText"></strong>
+      </div>
+    </div>
+
+    <!-- TRIAL BANNER -->
+    <div style="max-width:680px;margin:0 auto 40px;background:linear-gradient(135deg,rgba(124,92,252,0.08),rgba(124,92,252,0.02));border:1px solid rgba(124,92,252,0.25);border-radius:14px;padding:24px 28px;text-align:center;">
+      <div style="font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:8px;">첫 설치: 30일 Pro 무료</div>
+      <p style="font-size:0.92rem;color:#8888aa;margin:0;">신용카드 불필요. 스텔스 모드, 스트리밍 플랫폼 동영상 광고 차단, 일시 중지 기능 등 모든 Pro 기능을 사용할 수 있습니다. 30일 후에는 계속 이용하거나 무료 플랜으로 전환할 수 있습니다(웹사이트 광고 차단).</p>
+    </div>
+
+    <!-- COMPATIBILITY SECTION -->
+    <div class="compat-section">
+      <h2 class="compat-title">모든 브라우저에서 사용 가능</h2>
+      <p class="compat-sub">Chrome, Firefox, Safari, Edge, Brave, Opera. Windows, macOS, Linux, Android에서 지원.</p>
+
+      <h3 style="font-size:14px;color:#8a8aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">브라우저</h3>
+      <div class="compat-grid">
+        <div class="compat-card supported">
+          <span class="compat-icon">&#127760;</span>
+          <div class="compat-name">Chrome</div>
+          <div class="compat-status full">&#10003; 100%</div>
+        </div>
+        <div class="compat-card supported">
+          <span class="compat-icon">&#128268;</span>
+          <div class="compat-name">Edge</div>
+          <div class="compat-status full">&#10003; 100%</div>
+        </div>
+        <div class="compat-card supported">
+          <span class="compat-icon">&#129409;</span>
+          <div class="compat-name">Brave</div>
+          <div class="compat-status full">&#10003; 100%</div>
+        </div>
+        <div class="compat-card supported">
+          <span class="compat-icon">&#127916;</span>
+          <div class="compat-name">Opera</div>
+          <div class="compat-status full">&#10003; 100%</div>
+        </div>
+        <div class="compat-card supported">
+          <span class="compat-icon">&#127912;</span>
+          <div class="compat-name">Vivaldi</div>
+          <div class="compat-status full">&#10003; 100%</div>
+        </div>
+        <div class="compat-card partial">
+          <span class="compat-icon">&#128293;</span>
+          <div class="compat-name">Firefox</div>
+          <div class="compat-status partial">&#9679; 95%</div>
+        </div>
+        <div class="compat-card partial">
+          <span class="compat-icon">&#129517;</span>
+          <div class="compat-name">Safari</div>
+          <div class="compat-status partial">&#9679; 95%</div>
+        </div>
+      </div>
+
+      <h3 style="font-size:14px;color:#8a8aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;margin-top:24px;">운영체제</h3>
+      <div class="os-grid">
+        <div class="os-card">
+          <span class="os-icon">&#128187;</span>
+          <div class="os-name">Windows</div>
+        </div>
+        <div class="os-card">
+          <span class="os-icon">&#127822;</span>
+          <div class="os-name">macOS</div>
+        </div>
+        <div class="os-card">
+          <span class="os-icon">&#128039;</span>
+          <div class="os-name">Linux</div>
+        </div>
+        <div class="os-card">
+          <span class="os-icon">&#128241;</span>
+          <div class="os-name">Android</div>
+        </div>
+        <div class="os-card">
+          <span class="os-icon">&#127823;</span>
+          <div class="os-name">ChromeOS</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OFFICIAL STORES SECTION (PRIMARY CTA) -->
+    <div class="stores-section">
+      <h2 class="stores-title">공식 스토어에서 바로 설치</h2>
+      <p class="stores-sub">한 번의 클릭. 자동 업데이트. 100% 안전.</p>
+
+      <div class="stores-grid">
+        <!-- Chrome Web Store -->
+        <a href="https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp" target="_blank" rel="noopener" class="store-card store-card--chrome">
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><circle cx="24" cy="24" r="20" fill="#fff"/><circle cx="24" cy="24" r="8" fill="#4285F4"/><path d="M24 4a20 20 0 0 1 17.32 10H24a10 10 0 0 0-8.66 5L6.68 14A20 20 0 0 1 24 4z" fill="#EA4335"/><path d="M41.32 14a20 20 0 0 1 0 20l-8.66-5a10 10 0 0 0 0-10z" fill="#FBBC04"/><path d="M24 44a20 20 0 0 1-17.32-10L15.34 29a10 10 0 0 0 8.66 5z" fill="#34A853"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Chrome Web Store</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Chrome &middot; Brave &middot; Opera &middot; Vivaldi</div>
+          </div>
+          <div class="store-card__cta">Chrome에 추가 →</div>
+        </a>
+
+        <!-- Firefox Add-ons -->
+        <a href="https://addons.mozilla.org/firefox/addon/adoff/" target="_blank" rel="noopener" class="store-card store-card--firefox">
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><defs><radialGradient id="ffg1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFCB6E"/><stop offset="100%" stop-color="#FF512F"/></radialGradient></defs><circle cx="24" cy="24" r="22" fill="url(#ffg1)"/><path d="M14 18c2-5 7-9 12-9 6 0 10 4 10 4s-4-1-7 1c5 0 8 5 8 9 0 8-7 14-15 14-9 0-15-6-15-14 0-4 2-7 4-9-1 4 1 7 3 7-1-1-1-2 0-3z" fill="#fff" opacity=".95"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Firefox 애드온</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Firefox 데스크톱 &middot; Firefox Android</div>
+          </div>
+          <div class="store-card__cta">Firefox에 추가 →</div>
+        </a>
+
+        <!-- Edge: 현재 Edge Add-ons을 통하지 않고 Chrome Web Store에서 설치 -->
+        <a href="https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp" target="_blank" rel="noopener" class="store-card store-card--edge">
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><defs><linearGradient id="edg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0F88FF"/><stop offset="100%" stop-color="#0A4DAB"/></linearGradient><linearGradient id="edg2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3CC8FF"/><stop offset="100%" stop-color="#0F88FF"/></linearGradient></defs><path d="M44 24c0 11-9 20-20 20-7 0-13-3-17-8 4 3 9 5 14 4 7-1 12-6 12-12 0-3-2-5-5-5h-9c-3 0-5 3-3 6-4-2-7-7-6-12 1-6 7-11 14-11 11 0 20 8 20 18z" fill="url(#edg1)"/><path d="M28 13c-7 0-13 5-14 11-1 5 2 10 6 12-2-3 0-6 3-6h9c3 0 5 2 5 5 0 6-5 11-12 12 8 1 17-3 19-12 2-12-7-22-16-22z" fill="url(#edg2)"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Edge 애드온</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Microsoft Edge 데스크톱</div>
+          </div>
+          <div class="store-card__cta">Edge에 추가 →</div>
+        </a>
+
+        <!-- Opera Add-ons -->
+        <a href="#zip-fallback" class="store-card store-card--opera store-card--soon">
+          <span class="store-card__badge">준비 중</span>
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><defs><linearGradient id="op1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FF1B2D"/><stop offset="100%" stop-color="#B30D1F"/></linearGradient></defs><circle cx="24" cy="24" r="22" fill="url(#op1)"/><ellipse cx="24" cy="24" rx="9" ry="14" fill="#fff"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Opera 애드온</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Opera 데스크톱 &middot; Opera GX</div>
+          </div>
+          <div class="store-card__cta">ZIP으로 설치 →</div>
+        </a>
+
+        <!-- Safari (Mac App Store) -->
+        <a href="#zip-fallback" class="store-card store-card--safari store-card--soon">
+          <span class="store-card__badge">준비 중</span>
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><defs><linearGradient id="sf1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1B88CA"/><stop offset="100%" stop-color="#006CFF"/></linearGradient></defs><circle cx="24" cy="24" r="22" fill="url(#sf1)"/><circle cx="24" cy="24" r="14" fill="#fff"/><circle cx="24" cy="24" r="2" fill="#1B88CA"/><path d="M24 11l3 11-3 2-3-2zM24 37l-3-11 3-2 3 2z" fill="#E53935"/><path d="M37 24l-11 3-2-3 2-3zM11 24l11-3 2 3-2 3z" fill="#1B88CA"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Mac App Store</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Safari macOS 13+</div>
+          </div>
+          <div class="store-card__cta">ZIP으로 설치 →</div>
+        </a>
+      </div>
+
+      <p class="stores-trust">
+        <span style="color:#7c5cfc;font-weight:700;">✓</span> 모든 릴리스 전 수동 코드 검토 &middot;
+        <span style="color:#7c5cfc;font-weight:700;">✓</span> 스토어를 통한 자동 업데이트 &middot;
+        <span style="color:#7c5cfc;font-weight:700;">✓</span> 검증 가능한 무결성 해시
+      </p>
+    </div>
+
+    <!-- ZIP FALLBACK SECTION (SECONDARY) -->
+    <div class="download-section" style="margin-top:48px;">
+      <details class="zip-fallback" id="zip-fallback">
+        <summary class="zip-fallback__summary">
+          수동으로 설치하고 싶으신가요? ZIP 다운로드 →
+        </summary>
+        <div class="zip-fallback__body">
+          <p style="color:#8a8aaa;font-size:13px;text-align:center;margin:16px 0 20px;">
+            개발자 설치/사이드로드를 원하거나 Safari용(Mac App Store 준비 중).
+          </p>
+          <div class="download-grid">
+            <div class="download-box" id="dlChromium">
+              <h3 style="font-size:16px;margin-bottom:6px;">Chromium ZIP</h3>
+              <p class="dl-browser-list">
+                <strong>Chrome</strong> &middot; <strong>Edge</strong> &middot; <strong>Brave</strong> &middot; <strong>Opera</strong>
+              </p>
+              <a href="../adoff-chrome.zip" download class="download-btn secondary" id="dlBtnChrome">
+                Chrome ZIP 다운로드
+              </a>
+              <p class="download-info">v3.4.6 &middot; 초경량 &middot; 모든 기능 포함</p>
+            </div>
+            <div class="download-box" id="dlFirefox">
+              <h3 style="font-size:16px;margin-bottom:6px;">Firefox ZIP</h3>
+              <p class="dl-browser-list">
+                <strong>Firefox</strong> 데스크톱 &middot; <strong>Firefox</strong> Android
+              </p>
+              <a href="../adoff-firefox.zip" download class="download-btn secondary" id="dlBtnFirefox">
+                Firefox ZIP 다운로드
+              </a>
+              <p class="download-info">v3.4.6 &middot; 초경량 &middot; 영구 설치</p>
+            </div>
+            <div class="download-box" id="dlSafari">
+              <h3 style="font-size:16px;margin-bottom:6px;">Safari ZIP</h3>
+              <p class="dl-browser-list">
+                <strong>Safari 16.4+</strong> &middot; macOS Ventura+
+              </p>
+              <a href="../adoff-safari.zip" download class="download-btn secondary" id="dlBtnSafari">
+                Safari 다운로드
+              </a>
+              <p class="download-info">v3.4.6 &middot; 초경량 &middot; Mac App Store 준비 중</p>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- BROWSER TABS -->
+    <h2 style="font-size:22px;font-weight:700;text-align:center;margin-bottom:8px;">단계 2: 설치</h2>
+    <p style="color:#8a8aaa;font-size:14px;text-align:center;margin-bottom:24px;">브라우저를 선택하여 지침을 확인하세요</p>
+
+    <div class="browser-tabs">
+      <div class="browser-tab active" data-browser="chrome">Chrome</div>
+      <div class="browser-tab" data-browser="edge">Edge</div>
+      <div class="browser-tab" data-browser="brave">Brave</div>
+      <div class="browser-tab" data-browser="opera">Opera</div>
+      <div class="browser-tab" data-browser="vivaldi">Vivaldi</div>
+      <div class="browser-tab" data-browser="firefox">Firefox</div>
+      <div class="browser-tab" data-browser="safari">Safari</div>
+      <div class="browser-tab" data-browser="android">모바일</div>
+    </div>
+
+    <!-- CHROME STEPS -->
+    <div class="steps-container active" id="steps-chrome">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">ZIP 파일 추출</div>
+          <div class="step-desc">
+            다운로드 폴더에서 <strong>adoff-chrome.zip</strong>을 찾으세요.<br><br>
+            <strong>Windows:</strong> 마우스 우클릭 → <strong>모두 추출</strong> → <strong>추출</strong><br>
+            <strong>Mac:</strong> ZIP 파일을 두 번 클릭합니다. 폴더가 자동으로 생성됩니다.<br>
+            <strong>Linux:</strong> 마우스 우클릭 → <strong>여기로 추출</strong> 또는 <code>unzip adoff-chrome.zip</code>
+            <div class="hint-box warning">
+              <span class="hint-icon">&#9888;</span>
+              <strong>중요:</strong> 설치 후 폴더를 삭제하지 마세요. 브라우저가 디스크에서 폴더를 읽어야 합니다. 안전한 장소(예: 문서)에 보관하세요.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Chrome 확장 프로그램 페이지 열기</div>
+          <div class="step-desc">
+            Chrome을 열고 주소 표시줄에 <code>chrome://extensions</code>을 입력한 후 <strong>Enter</strong>를 누르세요.<br><br>
+            설치된 모든 확장 프로그램을 보여주는 페이지가 열립니다.
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">개발자 모드 활성화</div>
+          <div class="step-desc">
+            페이지 우측 상단에서 <strong>개발자 모드</strong> 토글을 찾으세요.<br><br>
+            클릭하여 활성화하세요(파란색으로 변함).
+            <div class="hint-box info">
+              <span class="hint-icon">&#128161;</span>
+              <span>보이지 않으면 페이지 위로 스크롤하세요.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">확장 프로그램 로드</div>
+          <div class="step-desc">
+            개발자 모드를 활성화한 후 새 버튼들이 상단에 나타납니다.<br><br>
+            <strong>압축하지 않은 확장 프로그램 로드</strong>를 클릭하세요(왼쪽에서 첫 번째).<br><br>
+            폴더를 선택하는 창이 열립니다.
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">AdOff 폴더 선택</div>
+          <div class="step-desc">
+            1단계에서 추출한 폴더로 이동하세요.<br><br>
+            <strong>adoff-chrome</strong>을 선택하고 <strong>폴더 선택</strong>(Windows/Linux) 또는 <strong>열기</strong>(Mac)를 클릭하세요.
+            <div class="hint-box success">
+              <span class="hint-icon">&#9989;</span>
+              <strong>완료.</strong> AdOff가 설치되었습니다. Chrome 도구 모음에 아이콘이 표시됩니다.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <div class="step-title">도구 모음에 AdOff 고정(권장)</div>
+          <div class="step-desc">
+            AdOff를 항상 도구 모음에 표시하려면:<br><br>
+            1. 우측 상단의 <strong>퍼즐</strong> 아이콘(확장 프로그램) 클릭<br>
+            2. 목록에서 <strong>AdOff</strong> 찾기<br>
+            3. AdOff 옆의 <strong>핀</strong> 클릭<br><br>
+            이제 아이콘이 항상 표시됩니다.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDGE STEPS -->
+    <div class="steps-container" id="steps-edge">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">ZIP 파일 추출</div>
+          <div class="step-desc">
+            Chrome과 동일: 다운로드에서 <strong>adoff-chrome.zip</strong>을 찾고 마우스 우클릭 → <strong>모두 추출</strong>
+            <div class="hint-box warning">
+              <span class="hint-icon">&#9888;</span>
+              <strong>중요:</strong> 추출된 폴더를 컴퓨터에 계속 보관하세요. 삭제하지 마세요.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Edge 확장 프로그램 열기</div>
+          <div class="step-desc">주소 표시줄에 <code>edge://extensions</code>을 입력하고 <strong>Enter</strong>를 누르세요.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">개발자 모드 활성화</div>
+          <div class="step-desc">페이지 하단 좌측에서 <strong>개발자 모드</strong>를 활성화하세요.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">확장 프로그램 로드</div>
+          <div class="step-desc"><strong>압축하지 않은 확장 프로그램 로드</strong>를 클릭하고 추출된 폴더 <strong>adoff-chrome</strong>을 선택하세요.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">완료</div>
+          <div class="step-desc">
+            <div class="hint-box success">
+              <span class="hint-icon">&#9989;</span>
+              <span>AdOff가 Edge에 설치되었습니다. Chrome과 동일하게 작동합니다.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BRAVE STEPS -->
+    <div class="steps-container" id="steps-brave">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Chrome과 동일한 절차</div>
+          <div class="step-desc">
+            Brave는 Chrome과 동일한 시스템을 사용합니다. 동일한 단계를 따르세요:<br><br>
+            1. ZIP 추출<br>
+            2. <code>brave://extensions</code>로 이동<br>
+            3. 개발자 모드 활성화(우측 상단)<br>
+            4. 압축하지 않은 확장 프로그램 로드<br>
+            5. 폴더 선택
+            <div class="hint-box success">
+              <span class="hint-icon">&#9989;</span>
+              AdOff는 Brave의 내장 차단 기능과 완벽하게 작동합니다. 충돌이 없습니다.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPERA STEPS -->
+    <div class="steps-container" id="steps-opera">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Chrome과 동일한 절차</div>
+          <div class="step-desc">
+            Opera는 Chromium 엔진을 사용합니다. 동일한 단계를 따르세요:<br><br>
+            1. ZIP 추출<br>
+            2. <code>opera://extensions</code>로 이동<br>
+            3. 개발자 모드 활성화(우측 상단)<br>
+            4. 압축하지 않은 확장 프로그램 로드<br>
+            5. 폴더 선택
+            <div class="hint-box info">
+              <span class="hint-icon">&#128161;</span>
+              Opera가 타사 확장 프로그램 요청을 표시할 수 있습니다. 진행하려면 <strong>허용</strong>을 클릭하세요.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIVALDI STEPS -->
+    <div class="steps-container" id="steps-vivaldi">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Chrome과 동일한 절차</div>
+          <div class="step-desc">
+            Vivaldi는 Chromium 엔진을 사용합니다. 동일한 단계를 따르세요:<br><br>
+            1. ZIP 추출<br>
+            2. <code>vivaldi://extensions</code>로 이동<br>
+            3. 개발자 모드 활성화(우측 상단)<br>
+            4. 압축하지 않은 확장 프로그램 로드<br>
+            5. 폴더 선택
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIREFOX STEPS -->
+    <div class="steps-container" id="steps-firefox">
+      <div class="hint-box info" style="margin-bottom:20px;">
+        <span class="hint-icon">&#128293;</span>
+        <strong>Firefox 버전</strong>
+        <span>Chromium이 아닌 Firefox 버전(adoff-firefox.zip)을 다운로드했는지 확인하세요.</span>
+      </div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">ZIP 파일 추출</div>
+          <div class="step-desc">
+            다운로드에서 <strong>adoff-firefox.zip</strong>을 찾아 추출하세요.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Firefox 디버그 페이지 열기</div>
+          <div class="step-desc">주소 표시줄에 <code>about:debugging#/runtime/this-firefox</code>를 입력하고 <strong>Enter</strong>를 누르세요.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">임시 부가 기능 로드</div>
+          <div class="step-desc">
+            <strong>임시 부가 기능 로드</strong>를 클릭하세요<br><br>
+            추출된 폴더의 <strong>manifest.json</strong> 파일을 선택하세요.
+            <div class="hint-box warning">
+              <span class="hint-icon">&#9888;</span>
+              <span>Firefox에서 수동으로 로드된 확장 프로그램은 임시적입니다. Firefox를 닫으면 사라지고 매번 다시 로드해야 합니다. Firefox Add-ons Store에 게시하여 영구적으로 설치할 수 있도록 작업 중입니다.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAFARI STEPS -->
+    <div class="steps-container" id="steps-safari">
+      <div class="hint-box info" style="margin-bottom:20px;">
+        <span class="hint-icon">&#129517;</span>
+        <strong>시작하기 전에</strong>
+        <span>Safari는 다른 브라우저보다 더 엄격합니다. 확장 프로그램을 설치하려면 Xcode(Apple의 무료 프로그램)가 필요합니다. 처음에는 약 30분이 걸립니다. macOS Ventura 13 이상, Safari 16.4 이상 필요합니다. 터미널을 열어본 적이 없어도 걱정하지 마세요. 단계별로 안내해드리겠습니다.</span>
+      </div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">ZIP 파일 추출</div>
+          <div class="step-desc">
+            <strong>1.1</strong> <strong>Finder</strong>(하단 Dock의 웃는 아이콘)를 열기.<br>
+            <strong>1.2</strong> 왼쪽 사이드바에서 <strong>다운로드</strong> 클릭.<br>
+            <strong>1.3</strong> <strong>adoff-safari.zip</strong> 파일 찾기(방금 다운로드한 파일).<br>
+            <strong>1.4</strong> 파일을 <strong>두 번 클릭</strong>합니다. macOS가 자동으로 추출하고 ZIP 옆에 <code>adoff-safari</code> 폴더를 생성합니다.<br>
+            <strong>1.5</strong> 이 폴더를 <strong>이동하거나 이름을 바꾸지 마세요</strong>. 다운로드 폴더에 그대로 두세요.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Xcode 설치(무료, 약 10GB)</div>
+          <div class="step-desc">
+            <strong>2.1</strong> <strong>Mac App Store</strong> 열기(Dock의 흰색 "A" 파란색 아이콘 또는 Launchpad).<br>
+            <strong>2.2</strong> 좌측 상단 검색 표시줄에 <strong>Xcode</strong>를 입력하고 <strong>Return</strong> 누르기.<br>
+            <strong>2.3</strong> Xcode(Apple의 Apple 아이콘) 항목에서 <strong>다운로드</strong> 또는 <strong>설치</strong> 클릭.<br>
+            <strong>2.4</strong> 필요하면 Apple ID로 로그인(App Store와 동일한 계정).<br>
+            <strong>2.5</strong> 다운로드를 기다립니다. Xcode는 크기가 크며(약 10GB) 20~60분이 걸릴 수 있습니다.<br>
+            <strong>2.6</strong> 준비되면 Xcode를 한 번 이상 열기: Launchpad 또는 Applications에서 아이콘 클릭.<br>
+            <strong>2.7</strong> 라이센스 조건이 있는 창이 나타납니다. <strong>동의</strong>를 클릭하세요.<br>
+            <strong>2.8</strong> Xcode가 초기 설정을 마칠 때까지 기다립니다(1~2분). 완료되면 닫으세요(Cmd+Q).
+            <div class="hint-box info" style="margin-top:10px;">
+              <span class="hint-icon">&#128161;</span>
+              <span>Mac에 충분한 공간이 없으면 시작하기 전에 최소 15GB를 확보하세요.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">터미널을 열고 명령어 실행</div>
+          <div class="step-desc">
+            <strong>3.1</strong> <strong>Cmd + Space</strong>를 함께 누릅니다. 상단에 검색 표시줄(Spotlight)이 열립니다.<br>
+            <strong>3.2</strong> <strong>Terminal</strong>을 입력하고 <strong>Return</strong>을 누릅니다. 흰색/검은색 창(Terminal, 무섭지 않은 일반 Mac 프로그램)이 열립니다.<br>
+            <strong>3.3</strong> 이 명령어를 정확히 <strong>복사</strong>하세요(회색 상자를 클릭하여 선택한 후 Cmd+C):
+            <div style="margin:10px 0;padding:12px;background:rgba(124,92,252,0.1);border-radius:8px;border:1px solid rgba(124,92,252,0.3);">
+              <code style="word-break:break-all;font-size:13px;">xcrun safari-web-extension-converter ~/Downloads/adoff-safari</code>
+            </div>
+            <strong>3.4</strong> Terminal 창을 클릭하고 Cmd+V로 붙여 넣은 후 <strong>Return</strong>을 누르세요.<br>
+            <strong>3.5</strong> Terminal에 "Continue?"를 물어봅니다. <strong>y</strong>를 입력하고 <strong>Return</strong>을 누르세요.<br>
+            <strong>3.6</strong> 30~60초 기다립니다. Xcode가 자동으로 열리고 "AdOff" 프로젝트가 표시됩니다.<br>
+            <strong>3.7</strong> Xcode에서 좌측 상단의 <strong>▶ 재생</strong> 버튼을 클릭합니다(또는 Cmd+R).<br>
+            <strong>3.8</strong> 컴파일링: 1~3분 기다립니다. 작은 "AdOff" 창이 열릴 수 있습니다. 닫아도 됩니다(확장 프로그램이 이미 설치됨).
+            <div class="hint-box warning" style="margin-top:10px;">
+              <span class="hint-icon">&#9888;</span>
+              <span>"permission denied" 또는 "command not found"가 나타나면: Xcode 열기, 설정, 위치, Command Line Tools를 선택하고 최신 버전을 선택한 후 3.4단계를 다시 시도하세요.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Safari에서 개발 메뉴 활성화</div>
+          <div class="step-desc">
+            <strong>4.1</strong> <strong>Safari</strong>(Dock의 나침반 아이콘) 열기.<br>
+            <strong>4.2</strong> 상단 메뉴 표시줄에서 <strong>Safari</strong> → <strong>설정</strong>(또는 Cmd+,) 클릭.<br>
+            <strong>4.3</strong> 상단에 여러 탭이 있는 창이 열립니다. <strong>고급</strong> 클릭(마지막 탭, 톱니바퀴 아이콘).<br>
+            <strong>4.4</strong> 하단에서 <strong>웹 개발자 기능 표시</strong> 옵션 찾기(또는 이전 버전에서 "개발 메뉴 표시").<br>
+            <strong>4.5</strong> <strong>체크박스를 선택</strong>합니다. Safari 메뉴 표시줄에 새로운 <strong>개발</strong> 메뉴가 나타납니다.<br>
+            <strong>4.6</strong> 설정 창을 닫습니다.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">서명되지 않은 확장 프로그램 허용</div>
+          <div class="step-desc">
+            <strong>5.1</strong> Safari 메뉴 표시줄에서 새로운 <strong>개발</strong> 메뉴 클릭.<br>
+            <strong>5.2</strong> 메뉴를 스크롤하고 <strong>서명되지 않은 확장 프로그램 허용</strong> 클릭.<br>
+            <strong>5.3</strong> Safari가 <strong>Mac 암호</strong>(로그인할 때 사용하는 암호) 요청합니다. 입력하고 Return 누르세요.<br>
+            <strong>5.4</strong> 옵션이 이제 활성화됨(확인: 개발 메뉴를 다시 열면 "서명되지 않은 확장 프로그램 허용"에 체크 표시가 있음).
+            <div class="hint-box warning" style="margin-top:10px;">
+              <span class="hint-icon">&#9888;</span>
+              <span>중요: 이 옵션은 Safari를 다시 시작할 때마다 자동으로 비활성화됩니다. 매번 다시 활성화해야 합니다(단계 5.1~5.3) 시스템을 재시작할 때마다..</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <div class="step-title">AdOff 활성화</div>
+          <div class="step-desc">
+            <strong>6.1</strong> Safari 설정을 다시 열기: <strong>Safari</strong> → <strong>설정</strong>(또는 Cmd+,).<br>
+            <strong>6.2</strong> <strong>확장 프로그램</strong> 탭 클릭(퍼즐 아이콘).<br>
+            <strong>6.3</strong> 왼쪽 목록에 <strong>AdOff</strong>가 표시됩니다. 옆의 <strong>체크박스를 선택</strong>하세요.<br>
+            <strong>6.4</strong> 사이트 액세스 권한을 묻는 팝업이 나타납니다. <strong>모든 사이트에서 항상 허용</strong>을 클릭하세요(또는 "모든 사이트에서 허용").<br>
+            <strong>6.5</strong> 설정을 닫습니다. 광고가 있는 모든 사이트를 방문합니다(뉴스, 동영상 플랫폼, 포럼). 광고가 차단됩니다.<br>
+            <strong>6.6</strong> <strong>AdOff 아이콘</strong>(빨간색 오버레이가 있는 "A")이 자동으로 Safari 우측 상단 도구 모음에 나타납니다. 클릭하여 컨트롤 팝업을 열기.
+            <div class="hint-box info" style="margin-top:10px;">
+              <span class="hint-icon">&#9989;</span>
+              <span>완료. AdOff가 활성화되었습니다. 30일 Pro 평가판이 있습니다. 아이콘에 카운트다운이 표시됩니다.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hint-box warning" style="margin-top:20px;">
+        <span class="hint-icon">&#128274;</span>
+        <strong>설치를 영구적으로 만들기</strong>
+        <span>서명되지 않은 확장 프로그램은 Safari를 다시 시작할 때 비활성화됩니다. 매번 5단계를 반복하지 않고 AdOff를 계속 사용하려면 두 가지 옵션이 있습니다: (1) Apple Developer 프로그램($99/년)에 가입하고 확장 프로그램을 직접 서명하기 또는 (2) Mac App Store 출시를 기다리기. 곧 한 번의 클릭으로 자동 설치 가능..</span>
+      </div>
+    </div>
+
+    <!-- ANDROID STEPS -->
+    <div class="steps-container" id="steps-android">
+      <div class="hint-box info" style="margin-bottom:20px;">
+        <span class="hint-icon">&#128241;</span>
+        <strong>필요한 모바일 브라우저</strong>
+        <span>Android에서는 확장 프로그램을 지원하는 브라우저가 필요합니다. Kiwi 브라우저(무료) 또는 Firefox Android를 권장합니다.</span>
+      </div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Kiwi 브라우저 설치</div>
+          <div class="step-desc">
+            Play Store에서 <strong>Kiwi 브라우저</strong>를 다운로드하세요. 무료이며 Chrome 확장 프로그램을 기본적으로 지원합니다.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">AdOff 다운로드</div>
+          <div class="step-desc">
+            Kiwi 브라우저에서 이 페이지를 열고 <strong>adoff-chrome.zip</strong>을 다운로드합니다. 파일 관리자를 사용하여 ZIP을 추출합니다.
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">확장 프로그램 로드</div>
+          <div class="step-desc">
+            Kiwi 브라우저에서 <code>chrome://extensions</code>로 이동합니다<br><br>
+            <strong>개발자 모드</strong>를 활성화하고 <strong>압축하지 않은 확장 프로그램 로드</strong>(또는 <strong>"+(ZIP/CRX/.user.js에서)"</strong>)를 탭하고 추출된 폴더를 선택합니다.
+            <div class="hint-box success">
+              <span class="hint-icon">&#9989;</span>
+              AdOff가 이제 Android 기기에서 작동합니다.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FREE VS PRO COMPARISON -->
+    <div style="max-width:680px;margin:0 auto 48px;background:var(--card,#12122a);border:1px solid rgba(124,92,252,0.18);border-radius:14px;padding:28px;text-align:center;">
+      <h3 style="font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:16px;">Pro 평가판으로 잠금 해제할 수 있는 항목</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:left;font-size:0.9rem;">
+        <div>
+          <div style="font-weight:700;color:#8888aa;margin-bottom:8px;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;">무료 플랜(평가판 후)</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <span style="color:#4ade80;">✓ <span>네트워크 차단 138개 규칙</span></span>
+            <span style="color:#4ade80;">✓ <span>CSS 시각 필터</span></span>
+            <span style="color:#4ade80;">✓ <span>광고 카운터</span></span>
+            <span style="color:rgba(255,255,255,0.25);">✗ <span>동영상 광고 중립화</span></span>
+            <span style="color:rgba(255,255,255,0.25);">✗ <span>스텔스 모드</span></span>
+          </div>
+        </div>
+        <div>
+          <div style="font-weight:700;color:#7c5cfc;margin-bottom:8px;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;">Pro 플랜(평가판 30일 포함)</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <span style="color:#4ade80;">✓ <span>무료의 모든 기능</span></span>
+            <span style="color:#4ade80;">✓ <span>광고 없는 동영상</span></span>
+            <span style="color:#4ade80;">✓ <span>스텔스 탐지 회피</span></span>
+            <span style="color:#4ade80;">✓ <span>일시 중지 타이머</span></span>
+            <span style="color:#4ade80;">✓ <span>우선 지원</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <h2 class="faq-title">자주 묻는 질문</h2>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>컴퓨터에 폴더를 보관해야 합니까?</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">예. 브라우저가 폴더에서 확장 프로그램 파일을 읽습니다. 삭제하면 확장 프로그램이 작동하지 않습니다. 안전한 장소(예: 문서)에 보관하세요.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>개발자 모드를 활성화하는 것이 안전합니까?</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">예, 완전히 안전합니다. 개발자 모드는 스토어 대신 폴더에서 확장 프로그램을 설치할 수 있도록 할 뿐입니다. 브라우저의 다른 것은 변경하지 않습니다.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>브라우저에서 "개발자 확장 프로그램 비활성화" 메시지가 표시됩니다. 어떻게 해야 합니까?</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">일부 브라우저는 수동으로 설치된 확장 프로그램이 있을 때 시작할 때 경고를 표시합니다. 단순히 경고를 닫으세요. 확장 프로그램은 정상적으로 계속 작동합니다. AdOff가 공식 스토어에 출시되면 이 경고는 사라집니다.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>AdOff를 어떻게 업데이트합니까?</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">사이트에서 새 버전을 다운로드하고 같은 폴더에 ZIP을 추출한 후(파일 덮어쓰기) 브라우저의 확장 프로그램 페이지로 이동하여 AdOff의 "새로 고침" 화살표를 클릭합니다.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>모든 사이트에서 작동합니까?</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">예. AdOff는 모든 웹사이트의 광고를 차단합니다(배너, 팝업, 추적기, 소셜 미디어, 뉴스, 블로그). Pro/평가판에서는 스트리밍 플랫폼의 동영상 광고 차단을 사용할 수 있습니다. 필요한 경우 특정 사이트에서 차단을 일시 중지할 수도 있습니다.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>AdOff를 어떻게 제거합니까?</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">브라우저의 확장 프로그램 페이지로 이동하여 AdOff를 찾고 "제거"를 클릭합니다. 그 후 컴퓨터에서 폴더를 삭제할 수 있습니다.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>어떤 브라우저가 지원됩니까?</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">AdOff는 100% 기능 호환성이 있는 모든 Chromium 브라우저(Chrome, Edge, Brave, Opera, Vivaldi, Arc), 95%의 Firefox, macOS Ventura+ Safari 16.4+를 지원합니다(Xcode 필요, 95%). Android에서는 Kiwi 브라우저 또는 Firefox를 사용합니다. iOS 지원이 곧 출시될 예정입니다.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>모바일에서 작동합니까?</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">Android에서 Play Store의 무료 Kiwi 브라우저를 설치하면 확장 프로그램을 지원합니다. iOS에서는 브라우저 확장 프로그램이 아직 지원되지 않습니다. 현재 작업 중입니다.</div>
+      </div>
+    </div>
+
+    <!-- HELP FOOTER -->
+    <div class="help-footer">
+      <p>도움이 필요하신가요? 설치할 수 없으신가요?</p>
+      <a href="support.html">문의하기</a>
+    </div>
+
+  </div>
+
+  <script>
+    // ─── Auto-detect browser and OS ───
+    (function() {
+      var ua = navigator.userAgent;
+      var browser = 'chrome';
+      var browserName = 'Chrome';
+      var os = 'Windows';
+      var osIcon = '💻';
+
+      // Detect browser (order matters — more specific first)
+      if (ua.indexOf('Vivaldi') !== -1) { browser = 'vivaldi'; browserName = 'Vivaldi'; }
+      else if (ua.indexOf('OPR') !== -1 || ua.indexOf('Opera') !== -1) { browser = 'opera'; browserName = 'Opera'; }
+      else if (ua.indexOf('Brave') !== -1) { browser = 'brave'; browserName = 'Brave'; }
+      else if (ua.indexOf('Edg') !== -1) { browser = 'edge'; browserName = 'Edge'; }
+      else if (ua.indexOf('Firefox') !== -1) { browser = 'firefox'; browserName = 'Firefox'; }
+      else if (ua.indexOf('Chrome') !== -1 || ua.indexOf('Chromium') !== -1) { browser = 'chrome'; browserName = 'Chrome'; }
+      else if (ua.indexOf('Safari') !== -1) { browser = 'safari'; browserName = 'Safari'; }
+
+      // Detect OS
+      if (ua.indexOf('Android') !== -1) { os = 'Android'; osIcon = '📱'; }
+      else if (ua.indexOf('iPhone') !== -1 || ua.indexOf('iPad') !== -1) { os = 'iOS'; osIcon = '🍎'; }
+      else if (ua.indexOf('Mac') !== -1) { os = 'macOS'; osIcon = '🍎'; }
+      else if (ua.indexOf('Linux') !== -1) { os = 'Linux'; osIcon = '🐧'; }
+      else if (ua.indexOf('CrOS') !== -1) { os = 'ChromeOS'; osIcon = '🍏'; }
+      else { os = 'Windows'; osIcon = '💻'; }
+
+      // Update detected badge
+      document.getElementById('detectedIcon').textContent = osIcon;
+      document.getElementById('detectedText').textContent = os + ' + ' + browserName;
+
+      // Auto-select browser tab
+      var tabs = document.querySelectorAll('.browser-tab');
+      var containers = document.querySelectorAll('.steps-container');
+      var targetBrowser = browser;
+
+      // Android → show android tab
+      if (os === 'Android') targetBrowser = 'android';
+
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      containers.forEach(function(c) { c.classList.remove('active'); });
+
+      var targetTab = document.querySelector('[data-browser="' + targetBrowser + '"]');
+      var targetSteps = document.getElementById('steps-' + targetBrowser);
+      if (targetTab) targetTab.classList.add('active');
+      if (targetSteps) targetSteps.classList.add('active');
+
+      // Highlight recommended download
+      if (browser === 'firefox') {
+        var dlFF = document.getElementById('dlFirefox');
+        var dlCh = document.getElementById('dlChromium');
+        if (dlFF) { dlFF.classList.add('recommended'); }
+        if (dlCh) { dlCh.classList.remove('recommended'); }
+        var recBadge = document.getElementById('recBadge');
+        if (recBadge) recBadge.parentElement === dlCh ? recBadge.style.display = 'none' : null;
+        // Move rec badge to Firefox
+        if (dlFF && recBadge) {
+          recBadge.remove();
+          dlFF.insertBefore(recBadge, dlFF.firstChild);
+          recBadge.style.display = '';
+        }
+        // Swap button styles
+        var btnCh = document.getElementById('dlBtnChrome');
+        var btnFF = document.getElementById('dlBtnFirefox');
+        if (btnCh) { btnCh.classList.add('secondary'); }
+        if (btnFF) { btnFF.classList.remove('secondary'); }
+      }
+      if (browser === 'safari') {
+        var dlSf = document.getElementById('dlSafari');
+        var dlCh = document.getElementById('dlChromium');
+        if (dlSf) { dlSf.classList.add('recommended'); }
+        if (dlCh) { dlCh.classList.remove('recommended'); }
+        var recBadgeS = document.getElementById('recBadge');
+        if (dlSf && recBadgeS) {
+          recBadgeS.remove();
+          dlSf.insertBefore(recBadgeS, dlSf.firstChild);
+          recBadgeS.style.display = '';
+        }
+        var btnChS = document.getElementById('dlBtnChrome');
+        var btnSf = document.getElementById('dlBtnSafari');
+        if (btnChS) { btnChS.classList.add('secondary'); }
+        if (btnSf) { btnSf.classList.remove('secondary'); }
+      }
+    })();
+
+    // ─── Browser tab switching ───
+    document.querySelectorAll('.browser-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.browser-tab').forEach(function(t) { t.classList.remove('active'); });
+        document.querySelectorAll('.steps-container').forEach(function(s) { s.classList.remove('active'); });
+        tab.classList.add('active');
+        var steps = document.getElementById('steps-' + tab.dataset.browser);
+        if (steps) steps.classList.add('active');
+      });
+    });
+
+    // ─── FAQ accordion ───
+    document.querySelectorAll('.faq-item').forEach(function(item) {
+      item.querySelector('.faq-q').addEventListener('click', function() {
+        item.classList.toggle('open');
+      });
+    });
+
+    // ─── Auto-open ZIP fallback when arriving from Opera/Safari card ───
+    function openZipFallbackOnHash() {
+      if (location.hash === '#zip-fallback') {
+        var d = document.getElementById('zip-fallback');
+        if (d) {
+          d.open = true;
+          d.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    }
+    window.addEventListener('hashchange', openZipFallbackOnHash);
+    window.addEventListener('load', openZipFallbackOnHash);
+  </script>
+  <script src="../adoff-footer.js?v=260602a"></script>
+
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

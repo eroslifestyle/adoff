@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AdOff · Görünmez Reklam Engelleyici + Stealth</title>
+<meta content="AdOff Chrome, Edge, Brave, Firefox'ta tüm reklamları bloklar. 138 ağ kuralı, CSS gizlemesi, video reklam nötrleştirme, Stealth anti-adblock. 30 gün ücretsiz deneme." name="description"/>
+<meta content="index, follow, max-image-preview:large, max-snippet:-1" name="robots"/>
+<!-- Canonical -->
+<link href="https://adoff.app/tr/" rel="canonical"/>
+<!-- hreflang — 15 lingue -->
+<link href="https://adoff.app/" hreflang="it" rel="alternate"/>
+<link href="https://adoff.app/en/" hreflang="en" rel="alternate"/>
+<link href="https://adoff.app/de/" hreflang="de" rel="alternate"/>
+<link href="https://adoff.app/fr/" hreflang="fr" rel="alternate"/>
+<link href="https://adoff.app/es/" hreflang="es" rel="alternate"/>
+<link href="https://adoff.app/pt/" hreflang="pt" rel="alternate"/>
+<link href="https://adoff.app/ru/" hreflang="ru" rel="alternate"/>
+<link href="https://adoff.app/ar/" hreflang="ar" rel="alternate"/>
+<link href="https://adoff.app/zh/" hreflang="zh" rel="alternate"/>
+<link href="https://adoff.app/hi/" hreflang="hi" rel="alternate"/>
+<link href="https://adoff.app/ja/" hreflang="ja" rel="alternate"/>
+<link href="https://adoff.app/ko/" hreflang="ko" rel="alternate"/>
+<link href="https://adoff.app/tr/" hreflang="tr" rel="alternate"/>
+<link href="https://adoff.app/id/" hreflang="id" rel="alternate"/>
+<link href="https://adoff.app/pl/" hreflang="pl" rel="alternate"/>
+<link href="https://adoff.app/en/" hreflang="x-default" rel="alternate"/>
+<!-- Open Graph -->
+<meta content="website" property="og:type"/>
+<meta content="AdOff, 2026 En İyi Görünmez Reklam Engelleyici | Reklamlar + Stealth" property="og:title"/>
+<meta content="AdOff Chrome, Edge, Brave, Firefox'ta tüm reklamları bloklar. 138 ağ kuralı, CSS gizlemesi, video reklam nötrleştirme, Stealth anti-adblock. 30 gün ücretsiz deneme." property="og:description"/>
+<meta content="https://adoff.app/assets/og-image.png" property="og:image"/>
+<meta content="https://adoff.app/tr/" property="og:url"/>
+<meta content="AdOff" property="og:site_name"/>
+<meta content="tr_TR" property="og:locale"/>
+<meta content="en_US" property="og:locale:alternate"/>
+<meta content="de_DE" property="og:locale:alternate"/>
+<meta content="fr_FR" property="og:locale:alternate"/>
+<meta content="es_ES" property="og:locale:alternate"/>
+<meta content="pt_PT" property="og:locale:alternate"/>
+<meta content="ru_RU" property="og:locale:alternate"/>
+<meta content="ar_SA" property="og:locale:alternate"/>
+<meta content="zh_CN" property="og:locale:alternate"/>
+<meta content="hi_IN" property="og:locale:alternate"/>
+<meta content="ja_JP" property="og:locale:alternate"/>
+<meta content="ko_KR" property="og:locale:alternate"/>
+<meta content="tr_TR" property="og:locale:alternate"/>
+<meta content="id_ID" property="og:locale:alternate"/>
+<meta content="pl_PL" property="og:locale:alternate"/>
+<!-- Twitter Card -->
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="AdOff, 2026 En İyi Görünmez Reklam Engelleyici | Reklamlar + Stealth" name="twitter:title"/>
+<meta content="AdOff Chrome, Edge, Brave, Firefox'ta tüm reklamları bloklar. 138 ağ kuralı, CSS gizlemesi, video reklam nötrleştirme, Stealth anti-adblock. 30 gün ücretsiz deneme." name="twitter:description"/>
+<meta content="https://adoff.app/assets/og-image.png" name="twitter:image"/>
+<link href="/assets/logo.svg" rel="icon" type="image/svg+xml"/>
+<link href="/manifest.webmanifest" rel="manifest"/>
+<meta content="#0a0a1a" name="theme-color"/>
+<link href="/style.css?v=260520-205323" rel="stylesheet"/>
+<script src="/affiliate-tracking.js"></script>
+<style>
+    /* Page-specific overrides for index.html.
+       All design tokens, components and resets live in style.css.
+       Keep this block under 80 lines. */
+
+    /* Hero — kill leftover gradient text + halo (defensive) */
+    .hero__headline,
+    .final-cta__headline,
+    .solution__reveal,
+    .gradient-text {
+      background: none !important;
+      -webkit-background-clip: unset !important;
+      -webkit-text-fill-color: currentColor !important;
+      background-clip: unset !important;
+    }
+    .hero::before,
+    .final-cta::before { content: none !important; }
+
+    /* Distribution row replacing the "metric strip" cliché. */
+    .hero__distribution {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      align-items: center;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    .hero__distribution > strong {
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      margin-right: 4px;
+    }
+    .hero__distribution .store-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      color: var(--text-muted);
+      font-weight: 500;
+      text-decoration: none;
+      transition: border-color var(--t), color var(--t), transform var(--t);
+    }
+    .hero__distribution a.store-mark:hover { border-color: var(--accent-line); color: var(--accent); transform: translateY(-1px); }
+
+    /* HERO STORE BUTTONS — Installa direttamente dagli store ufficiali */
+    .hero__stores { margin-top: 2rem; }
+    .hero__stores-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .hero__stores-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      max-width: 760px;
+    }
+    @media (max-width: 720px) {
+      .hero__stores-grid { grid-template-columns: 1fr; }
+    }
+    .store-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: #12122a;
+      border: 1.5px solid #2a2a4a;
+      color: #fff;
+      text-decoration: none;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s, background 0.2s;
+      min-height: 64px;
+    }
+    .store-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .store-btn--chrome:hover { border-color: #4285F4; background: linear-gradient(135deg, rgba(66,133,244,0.12), rgba(66,133,244,0.04)); }
+    .store-btn--firefox:hover { border-color: #FF512F; background: linear-gradient(135deg, rgba(255,81,47,0.12), rgba(255,81,47,0.04)); }
+    .store-btn--edge:hover { border-color: #0F88FF; background: linear-gradient(135deg, rgba(15,136,255,0.12), rgba(15,136,255,0.04)); }
+    .store-btn__logo { flex-shrink: 0; }
+    .store-btn__text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+    .store-btn__small {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+    .store-btn__big {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 2px;
+    }
+    .hero__stores-secondary {
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+      color: var(--text-dim);
+    }
+    .hero__stores-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .hero__stores-link:hover { color: var(--accent); }
+    .hero__stores-sep { color: var(--border); }
+
+    /* Testimonial provenance lines: tone down */
+    .testi-card__role + .testi-card__role {
+      color: var(--text-dim) !important;
+      font-size: 0.74rem !important;
+      margin-top: 2px;
+      letter-spacing: 0.02em;
+    }
+
+    /* Free plan visual de-emphasis */
+    .plan-card--free { border-style: dashed; opacity: 0.92; }
+    .plan-card--free:hover { opacity: 1; }
+
+    /* "Strikethrough" muted feature in Free plan */
+    .plan-features li .x-mark + span { color: var(--text-dim); }
+
+    /* Section reveal headers — restrict line length on long titles */
+    .section-title { max-width: 22ch; margin-left: auto; margin-right: auto; }
+
+    /* Hide deprecated decorative dot in trust strip */
+    .hero__trust-strip { display: none; }
+
+    /* Compare table styling extracted to .compare-table in style.css */
+
+    /* Footer note links in plan cards */
+    .plan-note[style*="success"] { color: var(--accent) !important; }
+
+    /* IMPORTANT — kill yellow PRO chip leftover behind feature titles */
+    .feature-card__title span[style*="f59e0b"],
+    .feature-card__title span[style*="background"] {
+      background: transparent !important;
+      color: var(--accent) !important;
+      border: 1px solid var(--accent-line) !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.08em !important;
+      text-transform: uppercase !important;
+      font-size: 0.65rem !important;
+      padding: 2px 8px !important;
+      border-radius: 999px !important;
+    }
+
+    /* Mobile: tighten hero distribution */
+    @media (max-width: 540px) {
+      .hero__distribution { font-size: 0.78rem; }
+      .hero__distribution .store-mark { padding: 4px 10px; }
+    }
+  </style>
+<!-- JSON-LD Structured Data for AI Search & Rich Results -->
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AdOff",
+    "alternateName": "AdOff Ad Blocker",
+    "description": "Universal stealth ad blocker for Chrome, Edge, Brave, Firefox, Safari. Blocks all ads invisibly with anti-detection technology. Featherlight, ultrafast.",
+    "url": "https://adoff.app/",
+    "downloadUrl": "https://adoff.app/install.html",
+    "datePublished": "2025-01-01",
+    "dateModified": "2026-04-21",
+    "applicationCategory": "BrowserExtension",
+    "applicationSubCategory": "Ad Blocker",
+    "operatingSystem": "Windows, macOS, Linux, ChromeOS",
+    "browserRequirements": "Requires Chrome, Edge, Brave, Opera, Firefox, or Safari",
+    "fileSize": "Featherlight",
+    "softwareVersion": "3.4.6",
+    "inLanguage": ["en", "it", "de", "fr", "es", "pt", "ru", "ar", "zh", "hi", "ja", "ko", "tr", "id", "pl"],
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "Free",
+        "price": "0",
+        "priceCurrency": "EUR",
+        "description": "Network blocking, CSS hiding, basic video skip, whitelist"
+      },
+      {
+        "@type": "Offer",
+        "name": "Pro Monthly",
+        "price": "2.99",
+        "priceCurrency": "EUR",
+        "description": "Includes Stealth Mode, advanced video skip, anti-detection"
+      },
+      {
+        "@type": "Offer",
+        "name": "Pro Annual (Founder price for the first 100)",
+        "price": "19.99",
+        "priceCurrency": "EUR",
+        "description": "Founder price locked for life for the first 100 subscribers, then 24.99"
+      },
+      {
+        "@type": "Offer",
+        "name": "Founder Lifetime (limited launch offer)",
+        "price": "99",
+        "priceCurrency": "EUR"
+      }
+    ],
+    "featureList": [
+      "Universal ad blocking on all websites",
+      "Manifest V3 compliant",
+      "Stealth Mode anti-detection (Pro)",
+      "Video ad blocking on streaming platforms (Pro/Trial)",
+      "138 network blocking rules",
+      "Cosmetic filtering",
+      "Whitelist per site",
+      "Zero data collection",
+      "15 languages"
+    ]
+  }
+  </script>
+<script src="/adoff-i18n.js?v=260520-205323"></script>
+</head>
+<body>
+<a class="skip-link" data-i18n="a11y.skip" href="#main-content">Salta al contenuto principale</a>
+<!-- ======================== NAV ======================== -->
+<div id="site-nav"></div>
+<script src="/adoff-nav.js?v=260709-ga4b"></script>
+<main id="main-content">
+<!-- ======================== 1. HERO ======================== -->
+<section class="hero">
+<div class="container">
+<div class="hero__content">
+<div aria-label="AdOff" class="wordmark wordmark--hero reveal">
+<span class="wordmark__ad">Ad</span><span class="wordmark__off">Off</span><span class="wordmark__dot">.</span>
+</div>
+<div class="hero__eyebrow reveal reveal-delay-1">
+<span class="hero__eyebrow-dot"></span>
+<span data-i18n="hero.eyebrow">Reklamları, banner'ları ve video reklamları engelleyen Chrome reklam engelleyici, siteler tarafından görünmez</span>
+</div>
+<h1 class="hero__headline reveal reveal-delay-2" data-i18n-html="sl.hero.headline">Web gerçek hızda.<br/><em>Reklamsız</em>, videolarda da.</h1>
+<p class="hero__sub reveal reveal-delay-3" data-i18n-html="hero.sub">AdOff banner, pop-up ve izleyicileri yüklenmeden bloke eder. Ağ kuralları, CSS gizlemesi, video reklam nötrleştirme, anti-adblock stealth modu. 30 gün Pro ücretsiz deneme.</p>
+<div class="hero__stores reveal reveal-delay-4">
+<div class="hero__stores-label" data-i18n="hero.stores.label">Doğrudan resmi mağazalardan yükle</div>
+<div class="hero__stores-grid">
+<a class="store-btn store-btn--chrome" href="https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp" rel="noopener" target="_blank">
+<svg aria-hidden="true" class="store-btn__logo" height="28" viewbox="0 0 48 48" width="28"><circle cx="24" cy="24" fill="#fff" r="20"></circle><circle cx="24" cy="24" fill="#4285F4" r="8"></circle><path d="M24 4a20 20 0 0 1 17.32 10H24a10 10 0 0 0-8.66 5L6.68 14A20 20 0 0 1 24 4z" fill="#EA4335"></path><path d="M41.32 14a20 20 0 0 1 0 20l-8.66-5a10 10 0 0 0 0-10z" fill="#FBBC04"></path><path d="M24 44a20 20 0 0 1-17.32-10L15.34 29a10 10 0 0 0 8.66 5z" fill="#34A853"></path></svg>
+<span class="store-btn__text">
+<span class="store-btn__small" data-i18n="hero.stores.chrome.small">Yükle:</span>
+<span class="store-btn__big">Chrome Web Store</span>
+</span>
+</a>
+<a class="store-btn store-btn--firefox" href="https://addons.mozilla.org/firefox/addon/adoff/" rel="noopener" target="_blank">
+<svg aria-hidden="true" class="store-btn__logo" height="28" viewbox="0 0 48 48" width="28"><defs><radialgradient cx="50%" cy="50%" id="ffhero" r="50%"><stop offset="0%" stop-color="#FFCB6E"></stop><stop offset="100%" stop-color="#FF512F"></stop></radialgradient></defs><circle cx="24" cy="24" fill="url(#ffhero)" r="22"></circle><path d="M14 18c2-5 7-9 12-9 6 0 10 4 10 4s-4-1-7 1c5 0 8 5 8 9 0 8-7 14-15 14-9 0-15-6-15-14 0-4 2-7 4-9-1 4 1 7 3 7-1-1-1-2 0-3z" fill="#fff" opacity=".95"></path></svg>
+<span class="store-btn__text">
+<span class="store-btn__small" data-i18n="hero.stores.firefox.small">Yükle:</span>
+<span class="store-btn__big">Firefox Add-ons</span>
+</span>
+</a>
+<!-- Edge: nessuna pagina pubblica Edge Add-ons ancora -> install dal Chrome Web Store (Edge lo supporta nativamente), come install.html -->
+<a class="store-btn store-btn--edge" href="https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp" rel="noopener" target="_blank">
+<svg aria-hidden="true" class="store-btn__logo" height="28" viewbox="0 0 48 48" width="28"><defs><lineargradient id="edghero1" x1="0%" x2="100%" y1="0%" y2="100%"><stop offset="0%" stop-color="#0F88FF"></stop><stop offset="100%" stop-color="#0A4DAB"></stop></lineargradient><lineargradient id="edghero2" x1="0%" x2="100%" y1="0%" y2="0%"><stop offset="0%" stop-color="#3CC8FF"></stop><stop offset="100%" stop-color="#0F88FF"></stop></lineargradient></defs><path d="M44 24c0 11-9 20-20 20-7 0-13-3-17-8 4 3 9 5 14 4 7-1 12-6 12-12 0-3-2-5-5-5h-9c-3 0-5 3-3 6-4-2-7-7-6-12 1-6 7-11 14-11 11 0 20 8 20 18z" fill="url(#edghero1)"></path><path d="M28 13c-7 0-13 5-14 11-1 5 2 10 6 12-2-3 0-6 3-6h9c3 0 5 2 5 5 0 6-5 11-12 12 8 1 17-3 19-12 2-12-7-22-16-22z" fill="url(#edghero2)"></path></svg>
+<span class="store-btn__text">
+<span class="store-btn__small" data-i18n="hero.stores.edge.small">Yükle:</span>
+<span class="store-btn__big">Edge Add-ons</span>
+</span>
+</a>
+</div>
+<div class="hero__stores-secondary">
+<a class="hero__stores-link" data-i18n="hero.allbrowsers" href="install.html">Tüm tarayıcılar + Safari →</a>
+<span class="hero__stores-sep">·</span>
+<a class="hero__stores-link" data-i18n="hero.plans" href="#pricing">Planları gör</a>
+</div>
+</div>
+</div><!-- /.hero__content -->
+<div class="hero__media reveal reveal-delay-4">
+<div class="hero__shots">
+<img alt="La pagina Opzioni di AdOff: blocco ads, badge icona, contatore e selezione lingua, con menu laterale" class="hero__shots-main" decoding="async" fetchpriority="high" height="471" src="/assets/options.webp?v=3" width="1081"/>
+<img alt="Il popup di AdOff: blocco ads attivo, 2 ads e 109 richieste bloccate, trial Pro di 6 giorni rimasti" class="hero__shots-pop" decoding="async" height="406" src="/assets/popup.webp?v=4" width="299"/>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================== 2. SOCIAL PROOF ======================== -->
+<div class="social-proof reveal">
+<div class="container--wide">
+<div class="social-proof__inner">
+<div class="social-proof__stat">
+<strong>4</strong>
+<span data-i18n="sl.social.layers">Blokaj katmanları</span>
+</div>
+<div class="social-proof__divider"></div>
+<div class="social-proof__stat">
+<strong>138</strong>
+<span data-i18n="sl.social.rules">Ağ kuralları</span>
+</div>
+<div class="social-proof__divider"></div>
+<div class="social-proof__stat">
+<strong>5</strong>
+<span data-i18n="sl.social.browsers">Desteklenen tarayıcılar</span>
+</div>
+<div class="social-proof__divider"></div>
+<div class="social-proof__stat">
+<strong>15</strong>
+<span data-i18n="sl.social.languages">Dil seçenekleri</span>
+</div>
+</div>
+</div>
+</div>
+<!-- ======================== 2.5 PIATTAFORME COPERTE (super-USP) ======================== -->
+<section class="platforms" id="platforms">
+<div class="container">
+<div class="platforms__header reveal">
+<span class="section-label" data-i18n="platforms.label">Universal coverage</span>
+<h2 class="section-title" data-i18n-html="platforms.title">Works on <em>every site you use</em>.<br/>Without configuring anything.</h2>
+<p class="section-sub" data-i18n="platforms.sub">YouTube, Facebook, Instagram, TikTok, Twitch, Amazon, Google and every other website on the planet. One extension. One interface. Zero allow-lists to manage.</p>
+</div>
+<div class="platforms__grid">
+<div class="platforms-card reveal reveal-delay-1">
+<div class="platforms-card__cat" data-i18n="platforms.video.cat">VIDEO &amp; STREAMING</div>
+<h3 class="platforms-card__title" data-i18n="platforms.video.title">No pre-roll. No mid-roll.</h3>
+<p class="platforms-card__brands">YouTube · Twitch · Vimeo · Dailymotion · Hulu · Tubi · Pluto TV · Rai Play · Mediaset Infinity</p>
+<p class="platforms-card__note" data-i18n="platforms.video.note">The video ad SDK is replaced with a neutral stub: the player starts instantly. Available in Pro.</p>
+</div>
+<div class="platforms-card reveal reveal-delay-2">
+<div class="platforms-card__cat" data-i18n="platforms.social.cat">SOCIAL MEDIA</div>
+<h3 class="platforms-card__title" data-i18n="platforms.social.title">Feeds without sponsored posts</h3>
+<p class="platforms-card__brands">Facebook · Instagram · X (Twitter) · TikTok · Reddit · LinkedIn · Pinterest · Snapchat</p>
+<p class="platforms-card__note" data-i18n="platforms.social.note">Promoted posts, in-feed ads, "suggested" content and sponsored items hidden. Your scroll is yours again.</p>
+</div>
+<div class="platforms-card reveal reveal-delay-3">
+<div class="platforms-card__cat" data-i18n="platforms.search.cat">SEARCH &amp; SHOPPING</div>
+<h3 class="platforms-card__title" data-i18n="platforms.search.title">Only organic results</h3>
+<p class="platforms-card__brands">Google · Bing · Amazon · eBay · AliExpress</p>
+<p class="platforms-card__note" data-i18n="platforms.search.note">Sponsored results, shopping ads and promoted products removed before you even see them.</p>
+</div>
+<div class="platforms-card reveal reveal-delay-4">
+<div class="platforms-card__cat" data-i18n="platforms.news.cat">NEWS, BLOG &amp; ANTI-ADBLOCK WALLS</div>
+<h3 class="platforms-card__title" data-i18n="platforms.news.title">Article, not ad wall</h3>
+<p class="platforms-card__brands">Corriere · Repubblica · La7 · Sky TG24 · The Guardian · BBC · CNN · NYT</p>
+<p class="platforms-card__note" data-i18n="platforms.news.note">Sticky banners, popups, overlays and "disable your ad blocker" walls neutralized by Stealth Mode (Pro).</p>
+</div>
+<div class="platforms-card reveal reveal-delay-5">
+<div class="platforms-card__cat" data-i18n="platforms.music.cat">MÜZİK &amp; SES</div>
+<h3 class="platforms-card__title" data-i18n="platforms.music.title">Şarkılardan önce jingle yok</h3>
+<p class="platforms-card__brands">Spotify · SoundCloud · Apple Music · YouTube Music · Deezer · Tidal</p>
+<p class="platforms-card__note" data-i18n="platforms.music.note">Müzik akış servislerinde şarkılar arası sesli reklamlar ve tanıtım bannerları kaldırılır.</p>
+</div>
+<div class="platforms-card reveal reveal-delay-5">
+<div class="platforms-card__cat" data-i18n="platforms.cloud.cat">E-POSTA, BULUT &amp; İŞ</div>
+<h3 class="platforms-card__title" data-i18n="platforms.cloud.title">Temiz gelen kutusu, temiz çalışma alanı</h3>
+<p class="platforms-card__brands">Gmail · Outlook · Drive · Notion · Slack · Trello</p>
+<p class="platforms-card__note" data-i18n="platforms.cloud.note">Ücretsiz webmail reklamları, üretkenlik araçlarındaki promo pop-up'lar ve yükseltme katmanları etkisiz hale getirilir.</p>
+</div>
+</div>
+<p class="platforms__footnote reveal" data-i18n-html="platforms.footnote">+ <strong>any other website on Earth</strong>. AdOff has no closed list of supported domains: the combination of 138 network rules, universal cosmetic CSS and stealth anti-detection works everywhere, from day one.</p>
+</div>
+</section>
+<!-- ======================== 3. PROBLEMA ======================== -->
+<section class="problem">
+<div class="container">
+<div class="problem__header reveal">
+<span class="section-label" data-i18n="problem.label">Sorun</span>
+<h2 class="section-title" data-i18n-html="sl.problem.title">Web bir mayın tarlası haline geldi.<br/>Bu sana normal mi geliyor?</h2>
+<p class="section-sub" data-i18n="sl.problem.sub">Her video başında geri sayış. Her yerde banner. RAM'i şişiren izleyiciler. Engelleme blocker varken bile anti-adblock duvarı. İşte günlük tarayıcı deneyimin.</p>
+</div>
+<div class="problem__grid">
+<div class="pain-card reveal reveal-delay-1">
+<div class="pain-card__number">5s</div>
+<div class="pain-card__title" data-i18n="problem.stat1.title">Her video başında geri sayış</div>
+<p class="pain-card__desc" data-i18n="problem.stat1.desc">Beş, on, on beş saniye zorla bekleme video öncesinde. Saatlik dezavantaj: saat başına çoktan gidilen zaman.</p>
+</div>
+<div class="pain-card reveal reveal-delay-2">
+<div class="pain-card__number">847</div>
+<div class="pain-card__title" data-i18n="problem.stat2.title">Site başına izleyiciler</div>
+<p class="pain-card__desc" data-i18n="problem.stat2.desc">Ortalama tek bir sayfa 847 tracking script'ini yükler. Davranış profilin oluşturuluyor. Hiç satış, hiçbir kimi öğreniyorlar.</p>
+</div>
+<div class="pain-card reveal reveal-delay-3">
+<div class="pain-card__number">23%</div>
+<div class="pain-card__title" data-i18n="problem.stat3.title">Bandda reklam</div>
+<p class="pain-card__desc" data-i18n="problem.stat3.desc">İndirdiğin neredeyse dörtte bir MB reklam isteği. Reklam haber, sosyal ağ, her siteyi şişiriyor. Mobil'de: veri tüketimi, batarya.</p>
+</div>
+</div>
+<div class="problem__twist reveal">
+<h3 data-i18n="sl.problem.twist.title">Ve son darbe: standart engelleme blokker bulunuyor.</h3>
+<p data-i18n-html="sl.problem.twist.text">Reklam engelleme kurar, mantıklı çözüm. Site sana cevap veriyor: "Engelleme kapatın ya da git". En agresif blocker'lar bile yakalanıyor. Bıkıyor musun?</p>
+</div>
+</div>
+</section>
+<!-- ======================== 4. SOLUZIONE ======================== -->
+<section class="solution">
+<div class="container">
+<div class="section-divider reveal"></div>
+<div class="reveal">
+<p class="section-label" data-i18n="features.label">Devrim</p>
+<h2 class="solution__reveal" data-i18n-html="sl.solution.title">Arka planda çalışan görünmez bir filtre. <em>Sen gözat ederken.</em></h2>
+<p class="solution__intro" data-i18n-html="sl.solution.text1">AdOff modern Chrome uzantısıdır, reklamları, pop-up'ları, tracker'ları bloklar. 138 ağ kuralı, CSS gizlemesi, video reklam nötrleştirme, anti-adblock stealth modu.</p>
+<p class="solution__intro" data-i18n="sl.solution.text2">138 ağ blokaj kuralı. Kozmetik CSS filtreleri. Video reklamlarının kaynakta nötrleştirilmesi, herhangi bir streaming platformunda (Pro). Ve Sıfır Günlük Politikası: gezinti hakkında veri cihazdan ayrılmaz. Ultra hafif. Async. Tasarım gereği gizlilik öncelikli.</p>
+<div class="highlight-pill"><em>AdOff.</em> Ads? Off.</div>
+<div style="display:flex;flex-direction:column;gap:12px;max-width:480px;margin:24px auto 32px;text-align:left;">
+<div style="display:flex;align-items:center;gap:12px;font-size:1rem;">
+<span style="color:var(--success);font-size:1.2rem;">✓</span>
+<span data-i18n="sl.solution.bullet1">Ağ blokajı ve CSS filtresi herhangi bir sitede</span>
+</div>
+<div style="display:flex;align-items:center;gap:12px;font-size:1rem;">
+<span style="color:var(--success);font-size:1.2rem;">✓</span>
+<span data-i18n="sl.solution.bullet2">Video reklamları tüm platformlarda kaynakta nötrleştirilir</span>
+</div>
+<div style="display:flex;align-items:center;gap:12px;font-size:1rem;">
+<span style="color:var(--success);font-size:1.2rem;">✓</span>
+<span data-i18n="sl.solution.bullet3">Stealth anti-tespit: siteler eklentinin yüklü olduğunu bilmiyor (Pro)</span>
+</div>
+</div>
+<a class="btn btn--primary btn--lg" href="install.html"><span data-i18n="sl.solution.cta">AdOff'u Chrome'a ekle, ücretsiz →</span></a>
+</div>
+</div>
+</section>
+<!-- ======================== 5. FEATURES ======================== -->
+<section class="features" id="features">
+<div class="container">
+<div class="text-center reveal">
+<span class="section-label" data-i18n="how.label">AdOff'un gücü</span>
+<h2 class="section-title" data-i18n-html="sl.feat.title">Altı teknoloji. Bir hedef:<br/><em>temiz web</em>.</h2>
+</div>
+<div class="features__grid">
+<div class="feature-card reveal reveal-delay-1">
+<span aria-hidden="true" class="feature-card__icon">🚫</span>
+<div class="feature-card__title" data-i18n="features.ads.title">Tam ağ seviyesi blokaj</div>
+<div class="feature-card__benefit" data-i18n="features.ads.benefit">→ Daha hızlı sayfalar. Daha az veri tüketimi. Daha az izleyici seni takip ediyor.</div>
+<p class="feature-card__desc" data-i18n="features.ads.desc">138 ağ kuralı reklam isteklerini ve izleyicileri tarayıcıya ulaşmadan engeller. Banner, pop-up, yönlendirme, parmak izi: hiç yüklenmez. Sadece senin ilgini çeken içeriği görürsün.</p>
+</div>
+<div class="feature-card feature-card--stealth reveal reveal-delay-2">
+<span aria-hidden="true" class="feature-card__icon">🎬</span>
+<div class="feature-card__title" data-i18n-html="features.video.title">Video reklamları nötrleştiriliyor <span class="feature-card__pro-chip">Pro</span></div>
+<div class="feature-card__benefit" data-i18n="features.video.benefit">→ Videolar hemen başlar. Geri sayış yok, ara reklam yok.</div>
+<p class="feature-card__desc" data-i18n="features.video.desc">AdOff video platform reklam SDK'sını (IMA SDK) yerel bir stub ile değiştirir. Oyuncu hemen "reklam yok" mesajını alır. Hiçbir geri sayış, hiçbir ara reklam.</p>
+</div>
+<div class="feature-card feature-card--stealth reveal reveal-delay-3">
+<span aria-hidden="true" class="feature-card__icon">👻</span>
+<div class="feature-card__title" data-i18n-html="features.stealth.title">Stealth anti-tespit <span class="feature-card__pro-chip">Pro</span></div>
+<div class="feature-card__benefit" data-i18n="features.stealth.benefit">→ Asla "reklam engellemeyi kapatın". Hiçbir sitede.</div>
+<p class="feature-card__desc" data-i18n="features.stealth.desc">AdOff tarayıcının MAIN dünyasında çalışır, her izini gizler: JavaScript değişkenleri, test istekleri, sahte elemanlar. Anti-adblock sistemleri bunu tespit etmez. Kimse seni durdurmadan okumaya ve video izlemeye devam edersin.</p>
+</div>
+<div class="feature-card reveal reveal-delay-4">
+<span aria-hidden="true" class="feature-card__icon">⚡</span>
+<div class="feature-card__title" data-i18n="features.light.title">Ultra hafif mimari</div>
+<div class="feature-card__benefit" data-i18n="features.light.benefit">→ RAM ve pile sıfır etki. Yalnızca birkaç KB — birkaç MB'lik engelleyicilerin çok küçük bir kısmı.</div>
+<p class="feature-card__desc" data-i18n="features.light.desc">Diğer engelleyiciler 3-8 MB ağırlığında ve Chrome belleğini şişirirken, AdOff bunun sadece bir kısmı. Async filtreler, ana thread engellenmez. Çalıştığını hissetmezsin. Sadece tarayıcının hızlandığını hissedersin.</p>
+</div>
+<div class="feature-card reveal reveal-delay-5">
+<span aria-hidden="true" class="feature-card__icon">🍪</span>
+<div class="feature-card__title" data-i18n="features.cosmetic.title">Çerez banner'ları ve katmanlar yok oldu</div>
+<div class="feature-card__benefit" data-i18n="features.cosmetic.benefit">→ Her sitede 'çerezleri kabul et' yok artık. İlk yüklemeden itibaren temiz ekran.</div>
+<p class="feature-card__desc" data-i18n="features.cosmetic.desc">Kozmetik filtreler onay banner'larını, pop-up'ları, katmanları ve sponsorlu bölümleri DOM'dan kaldırır. Sayfa yüklenirken kaybolurlar, kapatmanız gereken bir şey olmaz. Okuma yine sizin olur.</p>
+</div>
+<div class="feature-card reveal reveal-delay-5">
+<span aria-hidden="true" class="feature-card__icon">🔒</span>
+<div class="feature-card__title" data-i18n="features.privacy.title">Tam gizlilik, sıfır kayıt</div>
+<div class="feature-card__benefit" data-i18n="features.privacy.benefit">→ Telemetri yok, profilleme yok. Ne yaptığınızı biz bile bilmiyoruz.</div>
+<p class="feature-card__desc" data-i18n="features.privacy.desc">Gezinmenizle ilgili hiçbir veri cihazınızdan çıkmaz. Sayaçlar, beyaz liste ve tercihler yerel kalır. Sunucularımıza tek bağlantı Pro lisans doğrulamasıdır. Zorunluluktan değil, tasarımdan gelen GDPR uyumu.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================== 6. STEALTH DEEP DIVE ======================== -->
+<section class="stealth" id="stealth">
+<div class="container">
+<div class="stealth__header reveal">
+<span class="section-label" data-i18n="sl.stealth.label">Stealth Modu</span>
+<h2 class="section-title" data-i18n-html="sl.stealth.title">Diğer blokkerler yakalanıyor.<br/>AdOff <em>hayır</em>.</h2>
+<p class="section-sub" data-i18n="sl.stealth.sub">En agresif siteler engelleme blocker'ı tanımlamak için altı farklı teknik kullanırlar: JavaScript değişkenleri, reklam sunucularına fetch, DOM'da sahte elemanlar, mutation observer, XHR kesintisi, parmak izi. Stealth Modu hepsi kandırır.</p>
+</div>
+<div class="stealth__visual reveal">
+<div class="stealth__col stealth__col--bad">
+<div class="stealth__col-title" data-i18n="sl.stealth.col.bad">❌ Standart Reklam Engelleyici</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row1">JS değişken tespiti</span>
+<span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Tespit Edildi</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row2">Ad-server fetch testi</span>
+<span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Tespit Edildi</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row3">Sahte eleman tespiti</span>
+<span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Tespit Edildi</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row4">DOM mutation observer</span>
+<span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Tespit Edildi</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row5">XHR kesintisi testi</span>
+<span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Tespit Edildi</span>
+</div>
+</div>
+<div class="stealth__arrow">→</div>
+<div class="stealth__col stealth__col--good">
+<div class="stealth__col-title" data-i18n="sl.stealth.col.good">✅ AdOff Stealth Modu</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row1">JS değişken tespiti</span>
+<span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden1">🟢 Gizli</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row2">Ad-server fetch testi</span>
+<span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden2">🟢 Kesildi</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row3">Sahte eleman tespiti</span>
+<span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden3">🟢 Taklit Edildi</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row4">DOM mutation observer</span>
+<span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden4">🟢 Maskelendi</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row5">XHR kesintisi testi</span>
+<span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden2">🟢 Kesildi</span>
+</div>
+</div>
+</div>
+<div class="stealth__how reveal">
+<div class="stealth__how-item">
+<span aria-hidden="true" class="stealth__how-icon">🧬</span>
+<div class="stealth__how-title" data-i18n="sl.stealth.how1.title">Değişken Taklit</div>
+<p class="stealth__how-desc" data-i18n="sl.stealth.how1.desc">Standart reklam değişkenlerini simüle eder. Site reklamlar yüklenmiş "görür", aslında yokken.</p>
+</div>
+<div class="stealth__how-item">
+<span aria-hidden="true" class="stealth__how-icon">🎭</span>
+<div class="stealth__how-title" data-i18n="sl.stealth.how2.title">Fetch Kesintisi</div>
+<p class="stealth__how-desc" data-i18n="sl.stealth.how2.desc">Tespit sunucularına fetch/XHR isteklerini yakalar. İkna edici sahte veriler ile cevap verir.</p>
+</div>
+<div class="stealth__how-item">
+<span aria-hidden="true" class="stealth__how-icon">🪄</span>
+<div class="stealth__how-title" data-i18n="sl.stealth.how3.title">Sahte Eleman Taklit</div>
+<p class="stealth__how-desc" data-i18n="sl.stealth.how3.desc">Engelleme blocker'ı tespit etmek için kullanılan "umpara" elemanlar tanınır ve taklit edilir.</p>
+</div>
+<div class="stealth__how-item">
+<span aria-hidden="true" class="stealth__how-icon">🌍</span>
+<div class="stealth__how-title" data-i18n="sl.stealth.how4.title">MAIN Dünya Yürütümü</div>
+<p class="stealth__how-desc" data-i18n="sl.stealth.how4.desc">Sayfanın ayrıcalıklı bağlamında çalışır. Standart uzantı izolasyonundan tespit edilemez.</p>
+</div>
+<div class="stealth__how-item">
+<span aria-hidden="true" class="stealth__how-icon">📺</span>
+<div class="stealth__how-title" data-i18n="sl.stealth.how5.title">IMA SDK Nötrleştirme</div>
+<p class="stealth__how-desc" data-i18n="sl.stealth.how5.desc">Video reklam SDK'sını nötr bir stub ile değiştirir. Oyuncu hemen "reklam yok" alır.</p>
+</div>
+<div class="stealth__how-item">
+<span aria-hidden="true" class="stealth__how-icon">🛡️</span>
+<div class="stealth__how-title" data-i18n="sl.stealth.how6.title">Anti-Parmak İzi</div>
+<p class="stealth__how-desc" data-i18n="sl.stealth.how6.desc">Uzantının izini DOM ve tarayıcı API'leri ile gizler. Sıfır tespit edilebilir parmak izi.</p>
+</div>
+</div>
+<div class="stealth__callout reveal" data-i18n-html="sl.stealth.callout"><strong>Sonuç:</strong> hiçbir site "Engelleme kapatın" duvarını göstermez. İster Free ister Pro (Stealth).</div>
+</div>
+</section>
+<!-- ======================== 7. BEFORE / AFTER ======================== -->
+<section class="before-after">
+<div class="container">
+<div class="text-center reveal">
+<span class="section-label" data-i18n="sl.ba.label">Önce ve sonra</span>
+<h2 class="section-title" data-i18n="sl.ba.title">AdOff'tan önce ve sonra</h2>
+</div>
+<div class="before-after__grid">
+<div class="ba-col ba-col--before reveal reveal-delay-1">
+<div class="ba-col__label" data-i18n="sl.ba.before.label">❌ AdOff'suz</div>
+<ul class="ba-list">
+<li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.1">Her video başında 5-15 saniye geri sayış</span></li>
+<li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.2">Video ortasında reklam, her zaman yanlış zamanda</span></li>
+<li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.3">Her yerde banner, email'in içinde bile</span></li>
+<li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.4">Her yeni site açtığında kapatılacak cookie banner</span></li>
+<li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.5">Yüzlerce izleme script'i tarafından yenen RAM ve pil</span></li>
+<li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.6">"Reklam engelleme kapatın" duvarı bir tane olsa da</span></li>
+<li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.7">Davranışsal profilin ilan vericilere satılması</span></li>
+</ul>
+</div>
+<div class="ba-col ba-col--after reveal reveal-delay-2">
+<div class="ba-col__label" data-i18n="sl.ba.after.label">✅ AdOff ile</div>
+<ul class="ba-list">
+<li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.1">Videolar hemen başlar, bekleme yok, kesinti yok</span></li>
+<li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.2">Kaynakta nötrleştirilen video reklamları tüm platformlarda</span></li>
+<li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.3">Banner çok yüklenmeden bloke ediliyor</span></li>
+<li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.4">Cookie banner'lar CSS filtreleri ile otomatik gizleniyor</span></li>
+<li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.5">RAM ve pil gerçekten ihtiyacın olanlar için serbest</span></li>
+<li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.6">Siteler engelleme blokker'ın kurlu olduğunu fark etmiyor</span></li>
+<li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.7">Sıfır günlük politikası: veri toplanmadı, bizden de değil</span></li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================== WORKS EVERYWHERE ======================== -->
+<section class="works" id="works">
+<div class="container">
+<div class="text-center reveal">
+<span class="section-label" data-i18n="sl.works.label">Uyumluluk</span>
+<h2 class="section-title" data-i18n="sl.works.title">Gezindiğin her yerde çalışır</h2>
+<p class="section-sub" data-i18n="sl.works.sub">AdOff ziyaret ettiğin her sitede reklamları engeller. İşte öne çıktığı bazı yerler.</p>
+</div>
+<div class="works__list reveal">
+<div class="works-row">
+<span class="works-row__cat" data-i18n="sl.works.cat.video">Video ve yayın</span>
+<span class="works-row__list">YouTube · Twitch · Vimeo · Dailymotion · Hulu</span>
+</div>
+<div class="works-row">
+<span class="works-row__cat" data-i18n="sl.works.cat.social">Sosyal ağlar</span>
+<span class="works-row__list">Facebook · Instagram · X (Twitter) · TikTok · Reddit · LinkedIn · Pinterest · Snapchat</span>
+</div>
+<div class="works-row">
+<span class="works-row__cat" data-i18n="sl.works.cat.search">Arama ve alışveriş</span>
+<span class="works-row__list">Google · Bing · Amazon · eBay · AliExpress</span>
+</div>
+<div class="works-row">
+<span class="works-row__cat" data-i18n="sl.works.cat.news">Haberler ve medya</span>
+<span class="works-row__list">CNN · BBC · Forbes · Medium · Yahoo</span>
+</div>
+<div class="works-row">
+<span class="works-row__cat" data-i18n="sl.works.cat.rest">Müzik, e-posta ve daha fazlası</span>
+<span class="works-row__list">Spotify · Gmail · Outlook · Wikipedia · Imgur</span>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================== FREE vs PRO ======================== -->
+<section class="freeVsPro" id="compare">
+<div class="container">
+<div class="text-center reveal">
+<span class="section-label" data-i18n="compare.label">Free vs Pro</span>
+<h2 class="section-title" data-i18n="compare.title">Her plan hangi özelliği içeriyor</h2>
+<p class="section-sub" data-i18n="compare.sub">Free reklam ve izleyici bloklar. Pro video nötrleştirme, Stealth anti-tespit ve öncelikli destek ekler.</p>
+</div>
+<div class="reveal compare-table-wrap">
+<table class="compare-table">
+<thead>
+<tr>
+<th data-i18n="compare.feature">Özellik</th>
+<th data-i18n="compare.free">Free</th>
+<th class="compare-table__pro">Pro ✨</th>
+</tr>
+</thead>
+<tbody>
+<tr><td data-i18n="compare.r1">Ağ blokajı (138 kural)</td><td class="compare-yes">✓</td><td class="compare-yes">✓</td></tr>
+<tr><td data-i18n="compare.r2">Görsel CSS filtreleri</td><td class="compare-yes">✓</td><td class="compare-yes">✓</td></tr>
+<tr><td data-i18n="compare.r3">Engellenen reklamlar sayacı</td><td class="compare-yes">✓</td><td class="compare-yes">✓</td></tr>
+<tr><td data-i18n="compare.r4">Favori sitelerin beyaz listesi</td><td class="compare-yes">✓</td><td class="compare-yes">✓</td></tr>
+<tr class="is-pro"><td data-i18n="compare.r4b">Temel video reklam blokajı (ağ)</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+<tr class="is-pro"><td data-i18n="compare.r5">Video nötrleştirme (IMA stub, Pro)</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+<tr class="is-pro"><td data-i18n="compare.r6">Stealth Mode anti-tespit</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+<tr class="is-pro"><td data-i18n="compare.r7">Değişken taklit + fetch kesintisi</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+<tr class="is-pro"><td data-i18n="compare.r8">Site başına zamanlanmış duraklat (4 seçenek)</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+<tr class="is-pro"><td data-i18n="compare.r9">Öncelikli destek</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+</tbody>
+</table>
+</div>
+<div class="text-center reveal" style="margin-top:32px;">
+<p data-i18n="compare.note" style="color:var(--text-muted);font-size:0.95rem;margin-bottom:20px;">Free planı banner ve izleyicilerden koruyor, tüm sitelerde. Pro video nötrleştirme, Stealth anti-tespit ve öncelikli destek ekler.</p>
+<a class="btn btn--primary btn--lg" href="#pricing"><span data-i18n="compare.cta">30 gün Pro ücretsiz dene →</span></a>
+</div>
+</div>
+</section>
+<!-- ======================== 8. FOUNDER NOTE (honest social proof) ======================== -->
+<section class="founder-note">
+<div class="container">
+<div class="founder-note__card reveal" style="max-width:760px;margin:0 auto;text-align:center;">
+<img alt="Eros, founder di AdOff" decoding="async" height="128" loading="lazy" src="/assets/eros.webp" style="width:128px;height:128px;border-radius:50%;object-fit:cover;margin:0 auto 1.2rem;display:block;box-shadow:0 4px 20px rgba(0,0,0,.12);" width="128"/>
+<span class="section-label" data-i18n="founder.note.label">AdOff'un arkasında gerçek bir insan var</span>
+<h2 class="section-title" data-i18n="founder.note.title">Şişirilmiş yorumlar yok. Sadece gerçek emek.</h2>
+<p class="founder-note__body" data-i18n-html="founder.note.body" style="font-size:1.12rem;line-height:1.7;color:var(--text2);margin:1.2rem auto 1.6rem;max-width:640px;">Merhaba, ben <strong>Eros</strong>, Sicilya'dan. Ömrüm boyunca anahtar ve güvenlik sattım — evleri ve dükkânları korurum. AdOff'u tek başıma, verilerin için aynısını yapmak üzere geliştirdim — çünkü senin (ve çocuklarının) çok uluslu şirketlerin bankamatiği olmanı istemiyorum. Sıfır kayıt, satılan veri yok: sadece olması gerektiği gibi bir internet.</p>
+<p class="founder-note__honest" data-i18n="founder.note.honest" style="font-size:0.95rem;color:var(--text3);margin-bottom:1.4rem;">AdOff yeni çıktı: uydurma sayılar yok, sahte yorumlar yok. İlk gerçek kullanıcıları arıyorum — ücretsiz sürümü dene ve işe yararsa mağazada dürüst bir yorum bırak.</p>
+<div class="founder-note__badges" style="display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.6rem;">
+<span class="founder-badge" data-i18n="founder.badge.zerolog" style="font-size:0.85rem;padding:0.35rem 0.8rem;border:1px solid var(--border);border-radius:999px;color:var(--text2);">🔒 Sıfır kayıt</span>
+<span class="founder-badge" data-i18n="founder.badge.public" style="font-size:0.85rem;padding:0.35rem 0.8rem;border:1px solid var(--border);border-radius:999px;color:var(--text2);">🛠️ Herkesin gözü önünde geliştiriliyor</span>
+<span class="founder-badge" data-i18n="founder.badge.solo" style="font-size:0.85rem;padding:0.35rem 0.8rem;border:1px solid var(--border);border-radius:999px;color:var(--text2);">👤 Tek kurucu, sürekli güncelleniyor</span>
+</div>
+<a class="founder-note__cta" data-i18n="founder.note.cta" href="chi-sono.html" style="font-weight:600;color:var(--primary);text-decoration:none;">→ Hikâyemi oku</a>
+</div>
+</div>
+</section>
+<!-- ======================== 9. PRICING ======================== -->
+<section class="pricing" id="pricing">
+<div class="container">
+<div class="text-center reveal">
+<span class="section-label" data-i18n="pricing.label">Planlar</span>
+<h2 class="section-title" data-i18n="pricing.title">Planını seç</h2>
+<p class="section-sub" data-i18n="pricing.sub">Ücretsiz başla, kredi kartı yok. 30 gün Pro dahil: istediğin zaman etkinleştirebilirsin.</p>
+</div>
+<!-- Founder seats counter (shown only when backend confirms seats are live) -->
+<div class="reveal" id="founderBanner" style="display:none;text-align:center;margin:0 auto 32px;padding:14px 22px;border:1px solid var(--primary);border-radius:14px;max-width:580px;background:rgba(124,92,252,.08);">
+<strong style="color:var(--primary-light);">🚀 <span data-i18n="pricing.founder.title">Founder fiyatı</span></strong>
+        — <span data-i18n="pricing.founder.seatsLabel">Kalan yer:</span> <strong id="founderSeats">100/100</strong>
+<div data-i18n="pricing.founder.seatsNote" style="font-size:0.88rem;color:var(--text-muted);margin-top:4px;">Yıllık 19,99 € — ilk 100 için ömür boyu sabit. Sonra 24,99 €.</div>
+</div>
+<div class="pricing__grid">
+<!-- ROW 1: FREE + MONTHLY -->
+<!-- FREE -->
+<div class="plan-card plan-card--free reveal reveal-delay-1">
+<div class="plan-name" data-i18n="pricing.free.name">Free</div>
+<div class="plan-price">
+<span class="plan-price__amount" data-i18n="pricing.free.amount" style="font-size:2.2rem">Ücretsiz</span>
+</div>
+<p class="plan-micro" data-i18n="pricing.free.micro">Sonsuza dek · Kart yok</p>
+<ul class="plan-features">
+<li><span class="check">✓</span> <span data-i18n="pricing.free.f1">Tam ağ blokajı (138 kural)</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.free.f3">Görsel CSS filtreleri</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.free.f5">Site beyaz listesi</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.free.f5b">Video reklam engelleme (sadece Pro)</span></li>
+<li><span class="x-mark">–</span> <span data-i18n="pricing.free.f6" style="opacity:0.5;">Beyaz liste ve zamanlanmış duraklat</span></li>
+</ul>
+<a class="btn btn--ghost" data-i18n="pricing.free.btn" href="install.html">Ücretsiz başla</a>
+</div>
+<!-- MONTHLY -->
+<div class="plan-card reveal reveal-delay-2">
+<div class="plan-name" data-i18n="pricing.monthly.name">Aylık</div>
+<div class="plan-price">
+<span class="plan-price__currency">€</span>
+<span class="plan-price__amount" id="priceMonthly">2<small style="font-size:1.6rem">.99</small></span>
+<span class="plan-price__period" data-i18n="pricing.monthly.period.short">/ ay</span>
+</div>
+<p class="plan-micro" data-i18n="pricing.monthly.micro">Ayda bir kahveden az</p>
+<ul class="plan-features">
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f1">Tüm ağ blokajı + CSS</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f2">Stealth Mode anti-tespit</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f5">Gelişmiş video reklam nötrleştirme (IMA stub)</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f9">Favori sitelerin beyaz listesi</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f11">Chat'ten destek</span></li>
+</ul>
+<button class="btn btn--outline" data-i18n="pricing.monthly.btn" onclick="checkout('monthly')">30 gün ücretsiz başla</button>
+<p class="plan-note" data-i18n="pricing.refundNote">30 gün iade · soru sorulmaz</p>
+<p class="plan-note" data-i18n="pricing.cancelAnytime">İstediğin zaman iptal</p>
+</div>
+<!-- ROW 2: ANNUAL (POPULAR) + LIFETIME -->
+<!-- ANNUAL — POPULAR -->
+<div class="plan-card plan-card--popular reveal reveal-delay-3">
+<div class="plan-badge" data-i18n="pricing.annual.badge">En Popüler</div>
+<div class="plan-name" data-i18n="pricing.annual.name">Yıllık</div>
+<div class="plan-price">
+<span class="plan-price__currency">€</span>
+<span class="plan-price__amount" id="priceAnnual">19<small style="font-size:1.6rem">.99</small></span>
+<span class="plan-price__period" data-i18n="pricing.annual.period.short">/ yıl</span>
+</div>
+<p class="plan-micro"><span id="priceAnnualEff">= €1,67/mese</span> <span data-i18n="pricing.annual.founderSuffix" id="annualEffSuffix">· Founder fiyatı ömür boyu sabit</span></p>
+<ul class="plan-features">
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f1">Tüm ağ blokajı + CSS</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f2">Stealth Mode anti-tespit</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f5">Gelişmiş video reklam nötrleştirme (IMA stub)</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f9">Favori sitelerin beyaz listesi</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f10">Site başına duraklat (4 seçenek)</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f7">Öncelikli destek</span></li>
+</ul>
+<button class="btn btn--primary" data-i18n="pricing.annual.btn" onclick="checkout('annual')">30 gün ücretsiz başla</button>
+<p class="plan-note" data-i18n="pricing.refundNote">30 gün iade · soru sorulmaz</p>
+<p class="plan-note" data-i18n="pricing.cancelAnytime">İstediğin zaman iptal</p>
+</div>
+<!-- FOUNDER LIFETIME (limited launch offer) -->
+<div class="plan-card reveal reveal-delay-4" id="lifetimeCard">
+<div class="plan-name" data-i18n="pricing.lifetime.name">Founder Lifetime</div>
+<div class="plan-price">
+<span class="plan-price__currency">€</span>
+<span class="plan-price__amount" id="priceLifetime">99</span>
+</div>
+<p class="plan-micro" data-i18n="pricing.lifetime.micro">Sınırlı Founder teklifi · tek seferlik, sonsuza dek, güncellemeler dahil.</p>
+<ul class="plan-features">
+<li><span class="check">✓</span> <span data-i18n="pricing.lifetime.f1">Pro'daki her şey, sınır yok</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f2">Stealth Mode anti-tespit</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f5">Gelişmiş video reklam nötrleştirme (IMA stub)</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f7alt">Yaşam boyu güncellemeler dahil</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f8">Destek önceliği</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.lifetime.founder">Özel Kurucu rozeti</span></li>
+</ul>
+<button class="btn btn--ghost" data-i18n="pricing.lifetime.btn" onclick="checkout('lifetime')">Bir kez satın al, sonsuza dek kullan</button>
+<p class="plan-note" data-i18n="pricing.refundNote">30 gün iade · soru sorulmaz</p>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================== 10. GARANZIA ======================== -->
+<section class="guarantee">
+<div class="container">
+<div class="guarantee__box reveal">
+<span aria-hidden="true" class="guarantee__icon" data-i18n="sl.guarantee.label">Garanti</span>
+<h2 class="guarantee__title" data-i18n="sl.guarantee.title">Sıfır Risk. Üç Garanti.</h2>
+<p class="guarantee__sub" data-i18n="sl.guarantee.sub">AdOff Pro'yu bugün hiçbir endişe olmadan denemek için somut üç sebep.</p>
+<ul class="guarantee__list">
+<li>
+<span class="g-check">✓</span>
+<div data-i18n-html="sl.guarantee.1"><strong>30 gün tamamen ücretsiz Pro.</strong> Kart gerekmez. Hassasiyet yok.</div>
+</li>
+<li>
+<span class="g-check">✓</span>
+<div data-i18n-html="sl.guarantee.2"><strong>30 gün içinde tam geri ödeme, ilk ödeme sonrası.</strong> Memnun değilsen, soru yok.</div>
+</li>
+<li>
+<span class="g-check">✓</span>
+<div data-i18n-html="sl.guarantee.3"><strong>Free planı sonsuza dek, zaman sınırı yok.</strong> Gerçek ücretsiz.</div>
+</li>
+</ul>
+<div class="trust-badges">
+<span class="trust-badge">🔐 Stripe Payments</span>
+<span class="trust-badge">🔒 SSL / HTTPS</span>
+<span class="trust-badge">🇪🇺 GDPR Compliant</span>
+<span class="trust-badge">👁️ <span data-i18n="trust.badge.nodata">Veri toplama yok</span></span>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================== 11. FAQ ======================== -->
+<section class="faq" id="faq">
+<div class="container">
+<div class="text-center reveal">
+<span class="section-label" data-i18n="faq.label">S.S.S.</span>
+<h2 class="section-title" data-i18n="sl.faq.title">Sıkça Sorulan Sorular</h2>
+</div>
+<div class="faq__list reveal">
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q10">Chrome'da reklamları engellemek için en iyi uzantı hangisi?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a10">AdOff, 2026'da Chrome için en iyi reklam engelleyici uzantılardan biridir: ağ düzeyinde engelleme (138 kural), CSS kozmetik filtreleme ve anti-adblock duvarlarını aşan gizli (stealth) tespit önleme teknolojisini bir araya getirir. Banner'ları, pop-up'ları, izleyicileri ve video reklamları engeller, alternatiflerden çok daha hafiftir ve ücretsizdir, kredi kartı gerektirmeyen 30 günlük Pro deneme ile.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q1">AdOff gerçekten ücretsiz mi? Gizli maliyetler var mı?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a1">Evet, gerçekten. Free planı sonsuza dek ücretsiz, zaman sınırı yok ve kredi kartı gerekmez. 30 günlük Pro de ücretsiz: ödeme verisi istemiyoruz. Son gülmeden sonra Pro'ya geçmezsen otomatik olarak Free'ye geri dönersin. Gizli maliyet yok, istenmeyen otomatik yenileme yok.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q2">Video reklamları için gerçekten çalışıyor mu?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a2">Evet, IMA standart reklamını kullanan streaming platformlarında, yani neredeyse hepsi. AdOff Pro reklam SDK'sını nötr bir stub ile değiştirir: oynatıcı 'reklam yok' mesajını alır ve video başlar. Geri sayım yok, mid-roll yok. Video reklam engellemesi AdOff Pro gerektirir, 30 günlük ücretsiz denemeye dahil.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q3">AdOff anti-adblock sistemlerini nasıl atlatıyor?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a3">Stealth Mode ile (deneme sürümü ve Pro plana dahil), AdOff tarayıcının MAIN dünyasında çalışır ve her izini gizler. Engelleme blocker tespit etmek için kullanılan JavaScript değişkenlerini taklit eder, reklam sunucularına test isteklerini yakalar ve siteler tarafından beklenen sahte elemanları simüle eder. Sonuç: anti-adblock sistemleri etkin bir uzantının sinyalini almaz. Free plan Stealth'i içermez, bu yüzden daha agresif siteler yine de tespit edebilir.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q5">Gezinti geçmişim güvende mi?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n-html="faq.a5">Evet. <strong>Sıfır Günlük Politikası</strong>: AdOff gezinti hakkında hiç veri toplamaz. Hangi siteleri ziyaret ettiğini, ne aradığını, bir sayfada ne kadar kaldığını bilmiyoruz. Sayaçlar, beyaz listeler ve tercihler cihazında kalır, <code>chrome.storage.local</code> içinde. Sunucularımız ile tek iletişim Pro lisans doğrulamasıdır (anahtar + e-posta). Kod kurulumdan önce incelenebilir. Tasarım gereği GDPR uyumlu, zorunluluk değil.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q4">Founder Lifetime nasıl çalışır?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a4">Founder Lifetime sınırlı sayıda bir lansman teklifidir: tek seferde 99 € ve AdOff Pro'yu sonsuza dek, tüm gelecek güncellemeler dahil, tüm kişisel cihazlarında kullanırsın. Yıllık yenileme yok, sürpriz yok, Founder rozeti dahil. Founder yerleri bitince teklif kaldırılır.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="sl.faq.q6">AdOff'u çoklu tarayıcıda kullanabilir miyim?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="sl.faq.a6">Evet. AdOff Chrome, Firefox, Edge, Opera ve Brave için mevcut (Safari yakında). Pro lisansın tüm kişisel cihazlarında geçerli: her kuruluma aynı lisans anahtarını gir, yeter. Sayaçlar gizlilik için her tarayıcıda yerel kalır.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q7">AdOff Chrome'u yavaşlatıyor mu ya da RAM tüketiyor?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a7">Hayır, tam tersi: daha hızlı yapıyor. AdOff ultra hafif, asenkron çalışır, ana thread'i hiç bloke etmez. Diğer engelleyiciler 3-8 MB ağırlığındadır; AdOff bunun bir kısmı. Daha az izleyici = daha az bellek ve pil tüketimi.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q8">AdOff'u yüklemek güvenli mi?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a8">Evet. AdOff Chrome Web Store, Firefox Add-ons ve Mac App Store resmi kanallarında yayınlanmıştır. Kod, herkese açık ve incelenebilir. Gezinti verisi hiçbir zaman sunuculara gitmez, Sıfır Günlük Politikası.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q9">Tüm web sitelerinde çalışıyor mu?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a9">Evet. Free: ağ blokajı ve cosmetik filtreler tüm sitelerde çalışır. Pro: video reklam nötrleştirme (IMA SDK stub) standart SDK kullanan streaming platformlarında ve Stealth Mode (anti-deteksi) anti-adblock sistemine sahip sitelerde.</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================== 12. FINAL CTA ======================== -->
+<section class="final-cta">
+<div class="container">
+<div class="final-cta__urgency reveal" data-i18n="sl.cta.urgency">Beklediğin her dakika, yüzlerce izleyici veri topluyor.</div>
+<h2 class="final-cta__headline reveal" data-i18n-html="sl.cta.title">Tarayıcını Geri Al.<br/><em>Şimdi.</em></h2>
+<p class="final-cta__sub reveal" data-i18n-html="sl.cta.sub">Chrome, Firefox, Edge, Opera'da mevcuttur. 2 dakikada yükle.</p>
+<div class="reveal">
+<a class="btn btn--primary btn--xl" href="install.html">
+<span data-i18n="sl.cta.btn">AdOff'u Chrome'a ekle, ücretsiz →</span>
+</a>
+</div>
+<div class="final-cta__micro reveal">
+<span><span data-i18n="sl.cta.micro1">Ultra-hafif</span></span>
+<span>·</span>
+<span><span data-i18n="cta.micro.install">10 saniyede kur</span></span>
+<span>·</span>
+<span><span data-i18n="cta.micro.nocard">Kart gerekmez</span></span>
+<span>·</span>
+<span><span data-i18n="sl.cta.micro3">İstediğin zaman iptal et</span></span>
+</div>
+</div>
+</section>
+</main>
+<!-- ======================== SCHEMA MARKUP ======================== -->
+<script type="application/ld+json">{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+        {
+            "@type": "Question",
+            "name": "Chrome'da reklamları engellemek için en iyi uzantı hangisi?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "AdOff, 2026'da Chrome için en iyi reklam engelleyici uzantılardan biridir: ağ düzeyinde engelleme (138 kural), CSS kozmetik filtreleme ve anti-adblock duvarlarını aşan gizli (stealth) tespit önleme teknolojisini bir araya getirir. Banner'ları, pop-up'ları, izleyicileri ve video reklamları engeller, alternatiflerden çok daha hafiftir ve ücretsizdir, kredi kartı gerektirmeyen 30 günlük Pro deneme ile."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "AdOff gerçekten ücretsiz mi? Gizli maliyetler var mı?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Evet, gerçekten. Free planı sonsuza dek ücretsiz, zaman sınırı yok ve kredi kartı gerekmez. 30 günlük Pro de ücretsiz: ödeme verisi istemiyoruz. Son gülmeden sonra Pro'ya geçmezsen otomatik olarak Free'ye geri dönersin. Gizli maliyet yok, istenmeyen otomatik yenileme yok."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Video reklamları için gerçekten çalışıyor mu?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Evet, IMA standart reklamını kullanan streaming platformlarında, yani neredeyse hepsi. AdOff Pro reklam SDK'sını nötr bir stub ile değiştirir: oynatıcı 'reklam yok' mesajını alır ve video başlar. Geri sayım yok, mid-roll yok. Video reklam engellemesi AdOff Pro gerektirir, 30 günlük ücretsiz denemeye dahil."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "AdOff anti-adblock sistemlerini nasıl atlatıyor?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Stealth Mode ile (deneme sürümü ve Pro plana dahil), AdOff tarayıcının MAIN dünyasında çalışır ve her izini gizler. Engelleme blocker tespit etmek için kullanılan JavaScript değişkenlerini taklit eder, reklam sunucularına test isteklerini yakalar ve siteler tarafından beklenen sahte elemanları simüle eder. Sonuç: anti-adblock sistemleri etkin bir uzantının sinyalini almaz. Free plan Stealth'i içermez, bu yüzden daha agresif siteler yine de tespit edebilir."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Gezinti geçmişim güvende mi?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Evet. Sıfır Günlük Politikası: AdOff gezinti hakkında hiç veri toplamaz. Hangi siteleri ziyaret ettiğini, ne aradığını, bir sayfada ne kadar kaldığını bilmiyoruz. Sayaçlar, beyaz listeler ve tercihler cihazında kalır, chrome.storage.local içinde. Sunucularımız ile tek iletişim Pro lisans doğrulamasıdır (anahtar + e-posta). Kod kurulumdan önce incelenebilir. Tasarım gereği GDPR uyumlu, zorunluluk değil."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Founder Lifetime nasıl çalışır?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Founder Lifetime sınırlı sayıda bir lansman teklifidir: tek seferde 99 € ve AdOff Pro'yu sonsuza dek, tüm gelecek güncellemeler dahil, tüm kişisel cihazlarında kullanırsın. Yıllık yenileme yok, sürpriz yok, Founder rozeti dahil. Founder yerleri bitince teklif kaldırılır."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "AdOff'u çoklu tarayıcıda kullanabilir miyim?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Evet. AdOff Chrome, Firefox, Edge, Opera ve Brave için mevcut (Safari yakında). Pro lisansın tüm kişisel cihazlarında geçerli: her kuruluma aynı lisans anahtarını gir, yeter. Sayaçlar gizlilik için her tarayıcıda yerel kalır."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "AdOff Chrome'u yavaşlatıyor mu ya da RAM tüketiyor?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Hayır, tam tersi: daha hızlı yapıyor. AdOff ultra hafif, asenkron çalışır, ana thread'i hiç bloke etmez. Diğer engelleyiciler 3-8 MB ağırlığındadır; AdOff bunun bir kısmı. Daha az izleyici = daha az bellek ve pil tüketimi."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "AdOff'u yüklemek güvenli mi?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Evet. AdOff Chrome Web Store, Firefox Add-ons ve Mac App Store resmi kanallarında yayınlanmıştır. Kod, herkese açık ve incelenebilir. Gezinti verisi hiçbir zaman sunuculara gitmez, Sıfır Günlük Politikası."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Tüm web sitelerinde çalışıyor mu?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Evet. Free: ağ blokajı ve cosmetik filtreler tüm sitelerde çalışır. Pro: video reklam nötrleştirme (IMA SDK stub) standart SDK kullanan streaming platformlarında ve Stealth Mode (anti-deteksi) anti-adblock sistemine sahip sitelerde."
+            }
+        }
+    ]
+}</script>
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "AdOff",
+    "url": "https://adoff.app",
+    "logo": "https://adoff.app/assets/icon128.png",
+    "description": "Privacy-first ad blocker with stealth anti-detection technology",
+    "foundingDate": "2025",
+    "sameAs": [
+      "https://github.com/eroslifestyle/adoff",
+      "https://t.me/adoffapp"
+    ]
+  }
+  </script>
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://adoff.app/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Installa AdOff",
+        "item": "https://adoff.app/install.html"
+      }
+    ]
+  }
+  </script>
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "AdOff · Miglior Ad Blocker Invisibile 2026",
+    "url": "https://adoff.app/",
+    "description": "AdOff blocca tutta la pubblicita' su Chrome, inclusa quella video. Stealth anti-detection avanzata: i siti non riescono a rilevare il tuo ad blocker.",
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "Piani AdOff",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "AdOff Free",
+          "description": "Piano gratuito con blocco rete completo e filtri CSS"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "AdOff Pro Mensile",
+          "description": "Piano Pro da €2,99/mese con Stealth Mode e neutralizzazione video ads"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "AdOff Pro Annuale",
+          "description": "Piano Pro annuale: prezzo Founder €19,99/anno bloccato a vita per i primi 100, poi €24,99"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "AdOff Founder Lifetime",
+          "description": "Offerta Founder a tiratura limitata: €99 una volta sola, per sempre, aggiornamenti inclusi"
+        }
+      ]
+    }
+  }
+  </script>
+<!-- ======================== JS ======================== -->
+<script src="/adoff-footer.js?v=260602a"></script>
+<script>
+    // ============================================================
+    // SCROLL REVEAL (safe: defaults to visible if observer unavailable)
+    // ============================================================
+    (function () {
+      if (!('IntersectionObserver' in window)) return;
+      document.documentElement.classList.add('js-reveal');
+
+      var observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.05, rootMargin: '0px 0px 80px 0px' }
+      );
+
+      document.querySelectorAll('.reveal').forEach(function (el) {
+        // Pre-mark elements already in viewport as visible so they paint immediately.
+        var rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+          el.classList.add('visible');
+        } else {
+          observer.observe(el);
+        }
+      });
+    })();
+
+    // ============================================================
+    // FOUNDER PRICING \u2014 real seats from backend (no fake counters)
+    // ============================================================
+    var API_URL = 'https://api.adoff.app';
+
+    function formatPrice(p) {
+      var parts = Number(p).toFixed(2).split('.');
+      return parts[1] === '00'
+        ? parts[0]
+        : parts[0] + '<small style="font-size:1.6rem">.' + parts[1] + '</small>';
+    }
+
+    // s = { active, taken, remaining, total, annual_price, annual_standard }
+    function applyFounderState(s) {
+      var annualEl   = document.getElementById('priceAnnual');
+      var effEl      = document.getElementById('priceAnnualEff');
+      var suffixEl   = document.getElementById('annualEffSuffix');
+      var banner     = document.getElementById('founderBanner');
+      var seatsEl    = document.getElementById('founderSeats');
+      var lifetime   = document.getElementById('lifetimeCard');
+
+      var founderActive = !!(s && s.active && s.remaining > 0);
+      var annual = founderActive
+        ? (s.annual_price || 19.99)
+        : ((s && s.annual_standard) || 24.99);
+
+      if (annualEl) annualEl.innerHTML = formatPrice(annual);
+      if (effEl) effEl.textContent = '= \u20ac' + (annual / 12).toFixed(2).replace('.', ',') + '/mese';
+
+      if (founderActive) {
+        if (banner) banner.style.display = 'block';
+        if (seatsEl) seatsEl.textContent = s.remaining + '/' + (s.total || 100);
+        if (lifetime) lifetime.style.display = '';
+      } else {
+        // Founder seats gone (or unverifiable): standard price, retire the limited offers.
+        if (banner) banner.style.display = 'none';
+        if (suffixEl) suffixEl.style.display = 'none';
+        if (lifetime) lifetime.style.display = 'none';
+      }
+    }
+
+    (function loadFounderStatus() {
+      fetch(API_URL + '/founder-status', { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(applyFounderState)
+        .catch(function () { applyFounderState({ active: false }); }); // conservative: standard price
+    })();
+
+    // ============================================================
+    // STRIPE CHECKOUT
+    // ============================================================
+    function checkout(plan) {
+      var btn = event.target;
+      var originalText = btn.textContent;
+      btn.textContent = 'Caricamento...';
+      btn.disabled = true;
+      var affiliateCode = (function() {
+        var nameEQ = "adoff_aff=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+          var c = ca[i];
+          while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+          if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+      })();
+      fetch(API_URL + '/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: plan,
+          lang: document.documentElement.lang || 'auto',
+          affiliate: affiliateCode
+        })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert('Errore: ' + (data.error || 'Riprova tra poco.'));
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
+      })
+      .catch(function() {
+        alert('Errore di connessione. Riprova.');
+        btn.textContent = originalText;
+        btn.disabled = false;
+      });
+    }
+
+    // ============================================================
+    // FAQ ACCORDION
+    // ============================================================
+    (function () {
+      document.querySelectorAll('.faq-question').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var item = this.closest('.faq-item');
+          var answer = item.querySelector('.faq-answer');
+          var isOpen = item.classList.contains('open');
+
+          // Close all
+          document.querySelectorAll('.faq-item').forEach(function (i) {
+            i.classList.remove('open');
+            i.querySelector('.faq-answer').style.maxHeight = '0';
+            i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+          });
+
+          // Open clicked if was closed
+          if (!isOpen) {
+            item.classList.add('open');
+            answer.style.maxHeight = answer.scrollHeight + 'px';
+            btn.setAttribute('aria-expanded', 'true');
+          }
+        });
+      });
+    })();
+  </script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

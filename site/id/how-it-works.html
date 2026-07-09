@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cara Kerja AdOff: Teknologi di Balik Pemblokiran Iklan Stealth</title>
+  <meta name="description" content="Temukan cara AdOff memblokir iklan menggunakan tiga lapisan perlindungan yang kuat: pemblokiran jaringan, pemfilteran kosmetik, dan stealth anti-deteksi. Penjelasan teknis lengkap." />
+  <link rel="canonical" href="https://adoff.app/id/how-it-works.html" />
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/how-it-works.html" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/how-it-works.html" />
+  <link rel="alternate" hreflang="it" href="https://adoff.app/it/how-it-works.html" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/de/how-it-works.html" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/fr/how-it-works.html" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/es/how-it-works.html" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/pt/how-it-works.html" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/ru/how-it-works.html" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/ar/how-it-works.html" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/how-it-works.html" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/hi/how-it-works.html" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/how-it-works.html" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/how-it-works.html" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/tr/how-it-works.html" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/id/how-it-works.html" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/pl/how-it-works.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Cara Kerja AdOff: Teknologi di Balik Pemblokiran Iklan Stealth" />
+  <meta property="og:description" content="Temukan cara AdOff memblokir iklan menggunakan tiga lapisan perlindungan yang kuat: pemblokiran jaringan, pemfilteran kosmetik, dan stealth anti-deteksi. Penjelasan teknis lengkap." />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/id/how-it-works.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Cara Kerja AdOff: Teknologi di Balik Pemblokiran Iklan Stealth" />
+  <meta name="twitter:description" content="Temukan cara AdOff memblokir iklan menggunakan tiga lapisan perlindungan yang kuat: pemblokiran jaringan, pemfilteran kosmetik, dan stealth anti-deteksi. Penjelasan teknis lengkap." />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <link rel="stylesheet" href="style.css?v=260520-201526" />
+  <style>
+    .article-page { max-width: 780px; margin: 0 auto; padding: 80px 24px 100px; }
+    .article-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: #fff; margin-bottom: 12px; }
+    .article-page .meta { font-size: 0.88rem; color: #8888aa; margin-bottom: 40px; }
+    .article-page h2 { font-size: 1.5rem; color: #fff; margin: 48px 0 16px; }
+    .article-page h3 { font-size: 1.2rem; color: #e2e2f0; margin: 32px 0 12px; }
+    .article-page p { color: #b0b0c8; line-height: 1.8; margin-bottom: 16px; }
+    .article-page ul, .article-page ol { color: #b0b0c8; margin: 0 0 20px 24px; line-height: 1.8; }
+    .article-page li { margin-bottom: 8px; }
+    .article-page strong { color: #fff; }
+    .article-page .highlight { color: #4ade80; font-weight: 700; }
+    .tech-card { background: #12122a; border: 1px solid #2a2a4a; border-radius: 14px; padding: 24px; margin: 20px 0; }
+    .tech-card h3 { color: #7c5cfc; margin: 0 0 12px; font-size: 1.1rem; }
+    .tech-card p { margin-bottom: 0; }
+    .comp-table { width: 100%; border-collapse: collapse; margin: 24px 0 32px; }
+    .comp-table th, .comp-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #2a2a4a; }
+    .comp-table th { color: #8888aa; font-size: 0.85rem; text-transform: uppercase; }
+    .comp-table td { color: #b0b0c8; }
+    .comp-table .check { color: #4ade80; font-weight: 700; }
+    .comp-table .cross { color: #f43f5e; }
+    .comp-table .partial { color: #fbbf24; }
+    .cta-box { background: #12122a; border: 1px solid rgba(124,92,252,0.3); border-radius: 14px; padding: 32px; text-align: center; margin: 48px 0; }
+    .cta-box h3 { color: #fff; margin: 0 0 12px; }
+    .cta-box p { color: #8888aa; margin-bottom: 20px; }
+    .cta-box .btn { display: inline-block; background: linear-gradient(135deg,#7c5cfc,#4c3ad4); color: #fff; padding: 12px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; transition: all 0.2s; }
+    .cta-box .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.3); }
+    .layer-badge { display: inline-block; background: linear-gradient(135deg,#7c5cfc,#4c3ad4); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .pro-badge { background: linear-gradient(135deg,#f59e0b,#d97706); }
+    .step-list { counter-reset: steps; list-style: none; margin: 0 0 20px 0; padding: 0; }
+    .step-list li { counter-increment: steps; position: relative; padding-left: 44px; margin-bottom: 14px; color: #b0b0c8; line-height: 1.7; }
+    .step-list li::before { content: counter(steps); position: absolute; left: 0; top: 0; width: 28px; height: 28px; background: linear-gradient(135deg,#7c5cfc,#4c3ad4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #fff; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "Cara Memasang dan Menggunakan Pemblokir Iklan AdOff di Chrome",
+    "description": "Pasang AdOff dalam tiga langkah dan nikmati pengalaman menjelajah bebas iklan yang didukung tiga lapisan perlindungan.",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "name": "Pasang AdOff dari Chrome Web Store",
+        "text": "Kunjungi Chrome Web Store dan cari AdOff, atau unduh ekstensi langsung dari adoff.app. Klik 'Tambahkan ke Chrome' dan konfirmasi instalasi.",
+        "position": 1
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Pin ekstensi untuk akses cepat",
+        "text": "Klik ikon puzzle di toolbar Chrome Anda, temukan AdOff dalam daftar, dan klik ikon pin agar ikon AdOff selalu terlihat.",
+        "position": 2
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Jelajahi web bebas iklan",
+        "text": "AdOff aktif secara otomatis. Pemblokiran jaringan, pemfilteran kosmetik, dan perlindungan stealth semuanya bekerja diam-diam di latar belakang. Tidak diperlukan konfigurasi.",
+        "position": 3
+      }
+    ],
+    "tool": [
+      {
+        "@type": "HowToTool",
+        "name": "Browser Chrome"
+      }
+    ]
+  }
+  </script>
+  <script src="/adoff-i18n.js?v=260520-201526"></script>
+  </head>
+<body>
+  <div id="site-nav"></div>
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+  <article class="article-page">
+
+    <h1>Cara Kerja AdOff: Teknologi di Balik Pemblokiran Iklan Stealth</h1>
+    <p class="meta">Diperbarui April 2026 &nbsp;·&nbsp; 8 menit baca &nbsp;·&nbsp; Penjelasan teknis mendalam</p>
+
+    <p>
+      Sebagian besar pemblokir iklan beroperasi dengan satu alat tumpul: daftar URL yang diblokir. Mereka melakukan pekerjaan sampai situs web mengetahui keberadaan mereka — dan kemudian perlombaan senjata dimulai. AdOff dibangun secara berbeda dari awal, menggunakan <strong>tiga lapisan perlindungan yang independen</strong> yang bekerja sama untuk menghadirkan pengalaman menjelajah yang benar-benar tak terlihat dan bebas gangguan.
+    </p>
+    <p>
+      Halaman ini menguraikan dengan tepat cara kerja setiap lapisan — dengan detail teknis yang cukup untuk pengguna yang penasaran, tetapi ditulis sehingga siapa pun dapat mengikutinya. Baik Anda seorang pengembang yang ingin memahami arsitekturnya atau pengguna biasa yang bertanya-tanya mengapa AdOff terus bekerja saat pemblokir lain menyerah, Anda berada di tempat yang tepat.
+    </p>
+
+    <!-- ===================== LAPISAN 1 ===================== -->
+    <h2>Lapisan 1 — Pemblokiran Jaringan</h2>
+    <span class="layer-badge">Aktif di semua paket</span>
+
+    <p>
+      Lapisan pertama dan paling efisien beroperasi di level jaringan, menghentikan permintaan HTTP terkait iklan <em>sebelum bahkan diunduh</em> oleh browser Anda. Tidak ada data yang diambil, tidak ada skrip yang dieksekusi, tidak ada piksel pelacakan yang dimuat. Sumber daya tersebut tidak pernah diambil sama sekali.
+    </p>
+
+    <div class="tech-card">
+      <h3>🔧 API Chrome: declarativeNetRequest</h3>
+      <p>
+        AdOff menggunakan API <strong>declarativeNetRequest</strong> Chrome — API modern yang sama yang digunakan oleh alat keamanan enterprise. Tidak seperti API <code>webRequest</code> yang lebih lama, declarativeNetRequest dievaluasi secara native oleh mesin browser tanpa overhead JavaScript apa pun. Aturan dikompilasi sekali saat instalasi dan dicocokkan dengan biaya CPU mendekati nol untuk setiap permintaan berikutnya.
+      </p>
+    </div>
+
+    <h3>107+ Aturan Pemblokiran Presisi</h3>
+    <p>
+      AdOff dilengkapi dengan <strong>107 aturan jaringan yang dikurasi dengan tangan</strong> yang menargetkan infrastruktur pengiriman iklan yang digunakan oleh jaringan periklanan paling umum. Alih-alih memelihara daftar panjang domain individual yang memerlukan pemeliharaan konstan, aturan AdOff menargetkan pola struktural pengiriman iklan:
+    </p>
+    <ul>
+      <li><strong>Domain server iklan</strong> — hostname yang menyajikan iklan banner, pre-roll video, dan konten bersponsor</li>
+      <li><strong>Endpoint pelacakan dan analitik</strong> — piksel, beacon, dan pengumpul acara yang memprofilkan perilaku Anda</li>
+      <li><strong>Infrastruktur retargeting</strong> — pelacak lintas situs yang mengikuti Anda dari situs ke situs</li>
+      <li><strong>URL pertukaran iklan programatik</strong> — endpoint penawaran real-time yang melelang tayangan iklan</li>
+      <li><strong>Jalur CDN yang digunakan eksklusif untuk iklan</strong> — pola pengiriman konten khusus untuk muatan iklan</li>
+    </ul>
+
+    <h3>Mengapa Pemblokiran di Level Jaringan Penting</h3>
+    <p>
+      Ketika iklan diblokir di lapisan jaringan, <strong>halaman dimuat lebih cepat</strong>. Ini bukan hanya tentang menghapus banner yang terlihat — ini berarti browser tidak perlu membuka koneksi TCP ke server iklan, tidak melakukan pencarian DNS untuk domain pelacakan, dan tidak mengeksekusi JavaScript pihak ketiga yang diandalkan iklan untuk merender dan mengukur diri mereka sendiri.
+    </p>
+    <p>
+      Studi pada situs berita yang berat iklan secara konsisten menunjukkan bahwa pemblokiran tingkat jaringan mengurangi waktu muat halaman sebesar 30–60%. Setiap permintaan iklan yang diblokir adalah koneksi yang tidak perlu dibuka, skrip yang tidak perlu diurai, dan muatan yang tidak mengonsumsi bandwidth Anda.
+    </p>
+
+    <div class="tech-card">
+      <h3>⚡ Keunggulan performa</h3>
+      <p>
+        Karena aturan declarativeNetRequest dievaluasi oleh mesin C++ browser — bukan oleh JavaScript — AdOff menambahkan <strong>nol overhead CPU</strong> selama penjelajahan normal. Pencocokan terjadi sebelum tumpukan jaringan bahkan memulai permintaan. Tidak ada JavaScript yang dieksekusi per halaman, dan ekstensi menggunakan memori yang secara efektif tidak ada saat idle.
+      </p>
+    </div>
+
+    <!-- ===================== LAPISAN 2 ===================== -->
+    <h2>Lapisan 2 — Pemfilteran Kosmetik</h2>
+    <span class="layer-badge">Aktif di semua paket</span>
+
+    <p>
+      Tidak semua iklan tiba melalui permintaan jaringan yang dapat diblokir sebelumnya. Beberapa iklan dirender langsung di dalam HTML halaman sendiri, dimuat dari domain yang sama dengan konten, atau disuntikkan oleh JavaScript pihak pertama. Untuk ini, AdOff menggunakan <strong>pemfilteran kosmetik</strong> — teknik menyembunyikan elemen iklan dari DOM menggunakan CSS, tanpa mengganggu tata letak sekitarnya.
+    </p>
+
+    <h3>Injeksi CSS di Dunia Terisolasi</h3>
+    <p>
+      Skrip konten AdOff berjalan di <strong>dunia TERISOLASI</strong> Chrome — lingkungan eksekusi tersandbox yang sepenuhnya terpisah dari JavaScript halaman sendiri. Ini berarti ekstensi dapat mengamati dan memodifikasi DOM tanpa dapat dideteksi oleh skrip halaman, yang tidak memiliki akses ke cakupan atau variabel dunia terisolasi.
+    </p>
+    <p>
+      Filter kosmetik menyuntikkan stylesheet CSS yang menerapkan aturan <code>display: none</code> dan <code>visibility: hidden</code> ke selektor kontainer iklan yang dikenal. Selektor-selektor ini dipelihara dengan cermat untuk mencakup nama kelas, ID, dan pola struktural standar yang digunakan oleh slot iklan di ribuan situs web.
+    </p>
+
+    <div class="tech-card">
+      <h3>🎨 Tidak ada pergeseran tata letak — tidak ada ruang kosong</h3>
+      <p>
+        Masalah umum dengan pemblokir iklan yang naif adalah bahwa menghapus elemen dari DOM menyebabkan konten sekitarnya melompat atau mengalir ulang. Aturan CSS AdOff menggunakan <code>display: none</code> dengan prioritas <code>!important</code> dan diterapkan sebelum render pertama browser jika memungkinkan, mencegah pergeseran tata letak yang terlihat. Ruang yang ditempati iklan tidak pernah muncul.
+      </p>
+    </div>
+
+    <h3>Pemindaian DOM dan Injeksi Dinamis</h3>
+    <p>
+      Situs web modern sangat dinamis — mereka memuat konten setelah HTML awal diurai, menyuntikkan slot iklan melalui JavaScript, dan memperbarui DOM secara terus-menerus. Skrip konten AdOff memantau DOM untuk elemen yang baru disisipkan yang cocok dengan pola iklan dan segera menerapkan aturan penyembunyian, biasanya dalam satu frame animasi. Anda tidak akan melihat iklan berkedip sebentar sebelum menghilang.
+    </p>
+
+    <h3>Netralisasi Iklan Video <span style="font-size:0.75rem;color:#f59e0b;">(Pro)</span></h3>
+    <p>
+      Di platform streaming video, sebagian besar pemutar bergantung pada SDK iklan standar untuk mengelola
+      iklan video (pre-roll, mid-roll, post-roll). Fitur ini tersedia hanya untuk pengguna Pro dan memungkinkan
+      penggantian SDK standar dengan stub netral — video langsung diputar tanpa interupsi apa pun.
+    </p>
+    <p>
+      Ini bekerja melalui dua mekanisme yang saling melengkapi:
+    </p>
+    <ul>
+      <li><strong>Pengalihan di tingkat jaringan</strong> — permintaan untuk memuat SDK iklan dicegat dan dialihkan ke file stub lokal yang dibundel dengan ekstensi</li>
+      <li><strong>Injeksi di tingkat halaman</strong> — stub disuntikkan sebelum skrip situs mana pun berjalan, sehingga bahkan pemutar yang menyertakan SDK iklan secara internal menemukan versi netral terlebih dahulu</li>
+    </ul>
+    <p>
+      Stub mengimplementasikan seluruh permukaan API SDK asli tetapi tidak pernah menayangkan iklan apa pun.
+      Ketika pemutar memanggil <code>start()</code>, stub segera mengirim sinyal "iklan selesai" — pemutar
+      melanjutkan video seolah jeda iklan telah berakhir secara alami. Ini bersifat universal: berfungsi di
+      situs web mana pun di seluruh dunia yang menggunakan SDK ini, tanpa memerlukan daftar situs secara manual.
+    </p>
+    <p>
+      Pada platform video utama, handler khusus mempercepat pemutaran iklan pada kecepatan 16× dan secara
+      otomatis mengklik tombol lewati dengan timing seperti manusia.
+    </p>
+
+    <!-- ===================== LAPISAN 3 ===================== -->
+    <h2>Lapisan 3 — Stealth Anti-Deteksi <span style="font-size:0.8rem;color:#f59e0b;">(Pro)</span></h2>
+    <span class="layer-badge pro-badge">Pro &amp; Uji Coba</span>
+
+    <p>
+      Di sinilah AdOff paling signifikan berbeda dari pemblokir iklan konvensional. Banyak situs web sekarang menjalankan skrip <em>anti-adblock</em> aktif — kode yang satu-satunya tujuannya adalah mendeteksi apakah Anda menjalankan pemblokir dan, jika ya, mengganggu pengalaman Anda dengan dinding, peringatan, atau konten yang terdegradasi.
+    </p>
+    <p>
+      Lapisan stealth AdOff, yang berjalan di <strong>MAIN world</strong> Chrome, beroperasi pada level yang sama dengan JavaScript halaman sendiri. Ia secara bedah menetralisir deteksi anti-adblock sebelum dapat berjalan. Berikut cara kerja setiap teknik:
+    </p>
+
+    <div class="tech-card">
+      <h3>🪤 Pemalsuan Umpan (Bait Spoofing)</h3>
+      <p>
+        Skrip anti-adblock umumnya bekerja dengan menyuntikkan elemen "umpan" kecil — node DOM yang ditata agar terlihat seperti kontainer iklan — dan kemudian memeriksa apakah dimensinya nol, atau apakah ia dihapus oleh pemblokir iklan. Pemalsuan umpan AdOff mempertahankan elemen-elemen ini di DOM, melaporkan dimensi yang masuk akal saat geometrinya ditanyakan, dan memastikan skrip deteksi menerima sinyal "semua aman" yang diharapkannya.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>📦 Pemalsuan Variabel (Variable Spoofing)</h3>
+      <p>
+        Jaringan iklan menyuntikkan variabel dan properti JavaScript global ke objek <code>window</code> untuk memberi sinyal kehadiran mereka. Skrip anti-adblock memeriksa keberadaan variabel-variabel ini untuk mengkonfirmasi bahwa iklan dimuat. Pemalsuan variabel AdOff merekonstruksi namespace global yang diharapkan — menciptakan objek stub ringan yang lulus pemeriksaan kehadiran — sehingga halaman percaya bahwa skrip iklan berhasil berjalan meskipun tidak ada konten iklan nyata yang dikirimkan.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>🔌 Intersepsi Fetch / XHR</h3>
+      <p>
+        Beberapa sistem deteksi tidak mengandalkan DOM sama sekali — mereka membuat panggilan <code>fetch()</code> atau <code>XMLHttpRequest</code> langsung ke endpoint iklan yang dikenal dan mengukur waktu respons atau kode status. Jika permintaan diblokir, ia gagal secara instan, mengkhianati keberadaan pemblokir. AdOff membungkus <code>window.fetch</code> dan <code>XMLHttpRequest</code> dengan pengendali proxy yang mendeteksi permintaan ke domain iklan yang dikenal dan mengembalikan respons sintetis yang meniru pemuatan iklan yang sukses.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>🛡️ Penetral Skrip</h3>
+      <p>
+        Skrip anti-adblock yang dikenal diidentifikasi berdasarkan pola URL dan tanda muatan mereka. Ketika browser mencoba memuat salah satu skrip ini, lapisan stealth mencegat eksekusi dan menggantikan logika skrip dengan stub inert yang memenuhi callback penyelesaian apa pun tanpa melakukan pekerjaan deteksi apa pun. Kode halaman menerima promise yang diselesaikan atau callback no-op, dan jalur deteksi tidak pernah dicapai.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>👁️ MutationObserver — Pertahanan Real-Time</h3>
+      <p>
+        Situs web dapat menyuntikkan skrip deteksi baru kapan saja setelah pemuatan halaman awal — dipicu oleh tindakan pengguna, kedalaman scroll, atau timer. MutationObserver AdOff terus memantau elemen <code>&lt;script&gt;</code> baru yang ditambahkan ke dokumen. Ketika salah satu cocok dengan tanda anti-adblock yang dikenal, lapisan stealth menetralisirnya sebelum instruksi pertamanya dieksekusi. Ini memastikan perlindungan bertahan bahkan terhadap sistem deteksi yang ditunda atau dimuat secara lazy.
+      </p>
+    </div>
+
+    <!-- ===================== CARA KERJA BERSAMA ===================== -->
+    <h2>Cara Ketiga Lapisan Bekerja Bersama</h2>
+
+    <p>
+      Setiap lapisan independen — jika satu dilewati atau tidak berlaku, yang lain terus bekerja. Tetapi kekuatan nyata mereka ada dalam cara mereka saling melengkapi:
+    </p>
+
+    <ul>
+      <li>
+        <strong>Pemblokiran jaringan</strong> menghilangkan sebagian besar muatan iklan sebelum ada di browser, mengurangi permukaan serangan untuk skrip deteksi yang hanya dapat mendeteksi apa yang diblokir.
+      </li>
+      <li>
+        <strong>Pemfilteran kosmetik</strong> menangani iklan pihak pertama dan sisa apa pun yang lolos dari lapisan jaringan, menjaga pengalaman visual tetap bersih tanpa meninggalkan petunjuk di DOM.
+      </li>
+      <li>
+        <strong>Stealth anti-deteksi</strong> membungkus dua lapisan lainnya dalam jubah ketidaktampakan, meyakinkan halaman bahwa tidak ada pemblokir yang ada sama sekali — sehingga paywall anti-adblock tidak pernah terpicu.
+      </li>
+    </ul>
+
+    <p>
+      Hasilnya adalah pengalaman menjelajah yang bukan hanya bebas iklan — ini adalah pengalaman di mana situs web tidak pernah tahu Anda menggunakan pemblokir iklan. Tidak ada peringatan, tidak ada paywall, tidak ada konten yang terdegradasi, tidak ada overlay "mohon nonaktifkan pemblokir iklan Anda".
+    </p>
+
+    <!-- ===================== PRIVASI ===================== -->
+    <h2>Privasi berdasarkan Desain</h2>
+
+    <p>
+      AdOff memproses segalanya <strong>secara lokal di browser Anda</strong>. Tidak ada server jarak jauh yang menganalisis riwayat penjelajahan Anda, tidak ada telemetri yang dikirim ke rumah, dan tidak ada daftar URL yang dikunjungi yang pernah meninggalkan perangkat Anda. Ekstensi hanya meminta izin yang benar-benar diperlukan:
+    </p>
+    <ul>
+      <li><strong>declarativeNetRequest</strong> — untuk menegakkan aturan pemblokiran jaringan</li>
+      <li><strong>storage</strong> — untuk menyimpan preferensi dan penghitung iklan Anda secara lokal</li>
+      <li><strong>tabs</strong> — untuk menampilkan hitungan badge per situs</li>
+      <li><strong>scripting</strong> — untuk menyuntikkan filter kosmetik dan skrip stealth</li>
+    </ul>
+    <p>
+      Tidak ada tangkap-semua "baca semua data Anda di semua situs web". Tidak ada SDK analitik yang dibundel di dalam ekstensi. Apa yang terjadi di browser Anda tetap ada di browser Anda.
+    </p>
+
+    <!-- ===================== CARA MEMULAI ===================== -->
+    <h2>Mulai dalam 3 Langkah</h2>
+
+    <ol class="step-list">
+      <li>
+        <strong>Pasang AdOff</strong> dari Chrome Web Store atau unduh <code>.zip</code> langsung dari <a href="../install.html" style="color:#7c5cfc;">adoff.app/install</a>. Chrome akan meminta konfirmasi izin — tinjau dan terima.
+      </li>
+      <li>
+        <strong>Pin ekstensi</strong> dengan mengklik ikon puzzle di toolbar Chrome Anda, menemukan AdOff di dropdown, dan mengklik ikon pin. Perisai AdOff akan muncul secara permanen di toolbar Anda.
+      </li>
+      <li>
+        <strong>Jelajahi seperti biasa.</strong> Ketiga lapisan aktif secara otomatis di setiap halaman yang Anda kunjungi. Klik ikon AdOff kapan saja untuk melihat berapa banyak iklan dan permintaan yang telah diblokir, atau untuk menjeda perlindungan di situs tertentu.
+      </li>
+    </ol>
+
+    <p>
+      Tidak diperlukan konfigurasi untuk pengalaman default. Pengguna tingkat lanjut dapat menjelajahi halaman opsi untuk mengelola whitelist, menyesuaikan perilaku pemblokiran per situs, atau mengaktifkan fitur Pro stealth selama uji coba gratis 30 hari.
+    </p>
+
+    <!-- ===================== CTA ===================== -->
+    <div class="cta-box">
+      <h3>Siap merasakan perbedaannya?</h3>
+      <p>Coba ketiga lapisan perlindungan secara gratis selama 30 hari. Tidak perlu kartu kredit.</p>
+      <a href="../install.html" class="btn">Pasang AdOff Gratis →</a>
+    </div>
+
+  </article>
+  
+  <script src="/adoff-footer.js?v=260602a"></script>
+  
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

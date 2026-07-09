@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>安装 AdOff · 适用于 Chrome、Edge、Brave、Firefox、Safari 的免费广告拦截器</title>
+  <meta name="description" content="在 Chrome、Firefox、Safari、Edge、Opera 和 Brave 上下载并安装 AdOff 广告拦截器。享受免费 30 天专业版试用。超轻量，30 秒内安装完成。" />
+  <link rel="canonical" href="https://adoff.app/zh/install.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="安装 AdOff · 免费广告拦截器" />
+  <meta property="og:description" content="在 Chrome、Firefox、Safari、Edge、Opera 和 Brave 上安装 AdOff。包含 30 天专业版试用。" />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/zh/install.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="安装 AdOff · 免费广告拦截器" />
+  <meta name="twitter:description" content="具有隐身反检测的广告拦截器。30 天专业版试用，无需信用卡。" />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="icon" type="image/png" href="/assets/icon128.png">
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="it" href="https://adoff.app/install.html" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/install.html?lang=en" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/install.html?lang=de" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/install.html?lang=fr" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/install.html?lang=es" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/install.html?lang=pt" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/install.html?lang=ru" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/install.html?lang=ar" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/install.html" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/install.html?lang=hi" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/install.html?lang=ja" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/install.html?lang=ko" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/install.html?lang=tr" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/install.html?lang=id" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/install.html?lang=pl" />
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/install.html?lang=en" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <link rel="stylesheet" href="../style.css?v=260520-205323">
+  <style>
+    .install-page { max-width: 860px; margin: 0 auto; padding: 80px 24px 60px; }
+
+    .install-hero {
+      text-align: center; margin-bottom: 48px; padding: 40px 0;
+    }
+    .install-hero h1 { font-size: 32px; margin-bottom: 12px; }
+    .install-hero p { color: #8a8aaa; font-size: 16px; max-width: 560px; margin: 0 auto; }
+
+    /* Detected badge */
+    .detected-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(124,92,252,0.12); border: 1px solid rgba(124,92,252,0.3);
+      border-radius: 24px; padding: 8px 20px; margin-top: 16px;
+      font-size: 14px; color: #b0b0c8;
+    }
+    .detected-badge strong { color: #7c5cfc; }
+
+    /* Compatibility grid */
+    .compat-section { margin-bottom: 48px; }
+    .compat-title { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 8px; }
+    .compat-sub { color: #8a8aaa; font-size: 14px; text-align: center; margin-bottom: 24px; }
+    .compat-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px; margin-bottom: 16px;
+    }
+    .compat-card {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 12px;
+      padding: 20px 12px; text-align: center; transition: all 0.2s;
+    }
+    .compat-card:hover { border-color: #7c5cfc; transform: translateY(-2px); }
+    .compat-card.supported { border-color: rgba(74,222,128,0.3); }
+    .compat-card.partial { border-color: rgba(251,191,36,0.3); }
+    .compat-card.unsupported { border-color: rgba(244,63,94,0.2); opacity: 0.6; }
+    .compat-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+    .compat-name { font-size: 14px; font-weight: 600; color: #e2e2f0; margin-bottom: 4px; }
+    .compat-status { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .compat-status.full { color: #4ade80; }
+    .compat-status.partial { color: #fbbf24; }
+    .compat-status.no { color: #f43f5e; }
+
+    /* OS row */
+    .os-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 8px; margin-top: 16px;
+    }
+    .os-card {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 10px;
+      padding: 14px 8px; text-align: center; font-size: 13px; color: #b0b0c8;
+    }
+    .os-card .os-icon { font-size: 24px; display: block; margin-bottom: 6px; }
+    .os-card .os-name { font-weight: 600; color: #e2e2f0; }
+
+    /* Download boxes */
+    .download-section { margin-bottom: 48px; }
+    .download-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 600px) { .download-grid { grid-template-columns: 1fr; } }
+
+    .download-box {
+      background: #12122a; border: 2px solid #2a2a4a; border-radius: 16px;
+      padding: 28px 24px; text-align: center; transition: all 0.3s;
+      position: relative;
+    }
+    .download-box:hover { border-color: #7c5cfc; }
+    .download-box.recommended {
+      border-color: #7c5cfc;
+      background: linear-gradient(135deg, rgba(124,92,252,0.12), rgba(124,92,252,0.04));
+    }
+    .download-box .rec-badge {
+      position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, #7c5cfc, #4c3ad4); color: #fff;
+      padding: 4px 16px; border-radius: 12px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .dl-browser-list { font-size: 13px; color: #8a8aaa; margin-bottom: 16px; line-height: 1.6; }
+    .dl-browser-list strong { color: #e2e2f0; }
+    .download-btn {
+      display: inline-block; background: linear-gradient(135deg, #7c5cfc, #4c3ad4);
+      color: #fff; padding: 14px 32px; border-radius: 12px; font-size: 16px;
+      font-weight: 700; text-decoration: none; transition: all 0.3s; border: none; cursor: pointer;
+      width: 100%; box-sizing: border-box;
+    }
+    .download-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.4); }
+    .download-btn.secondary {
+      background: transparent; border: 2px solid #7c5cfc; color: #7c5cfc;
+    }
+    .download-btn.secondary:hover { background: rgba(124,92,252,0.1); }
+    .download-info { font-size: 12px; color: #3a3a5a; margin-top: 10px; }
+
+    /* OFFICIAL STORES SECTION */
+    .stores-section { margin-bottom: 56px; }
+    .stores-title {
+      font-size: 28px; font-weight: 800; text-align: center;
+      margin-bottom: 10px; color: #fff;
+      background: linear-gradient(135deg, #fff 0%, #b8a9ff 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .stores-sub {
+      color: #8a8aaa; font-size: 15px; text-align: center;
+      margin-bottom: 32px;
+    }
+    .stores-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      max-width: 920px; margin: 0 auto;
+    }
+    @media (max-width: 1020px) { .stores-grid { grid-template-columns: repeat(2, 1fr); max-width: 620px; } }
+    @media (max-width: 760px) { .stores-grid { grid-template-columns: 1fr; } }
+    .store-card {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 14px; padding: 28px 20px;
+      background: #12122a; border: 2px solid #2a2a4a; border-radius: 16px;
+      color: #fff; text-decoration: none;
+      transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s, background 0.25s;
+      text-align: center; position: relative;
+    }
+    .store-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
+    .store-card--chrome:hover { border-color: #4285F4; background: linear-gradient(135deg, rgba(66,133,244,0.10), rgba(66,133,244,0.02)); }
+    .store-card--firefox:hover { border-color: #FF512F; background: linear-gradient(135deg, rgba(255,81,47,0.10), rgba(255,81,47,0.02)); }
+    .store-card--edge:hover { border-color: #0F88FF; background: linear-gradient(135deg, rgba(15,136,255,0.10), rgba(15,136,255,0.02)); }
+    .store-card--opera:hover { border-color: #FF1B2D; background: linear-gradient(135deg, rgba(255,27,45,0.10), rgba(255,27,45,0.02)); }
+    .store-card--safari:hover { border-color: #1B88CA; background: linear-gradient(135deg, rgba(27,136,202,0.10), rgba(27,136,202,0.02)); }
+    .store-card--soon { opacity: 0.85; }
+    .store-card--soon .store-card__cta { background: linear-gradient(135deg, #4a4a6a, #2a2a4a) !important; }
+    .store-card__badge {
+      position: absolute; top: 10px; right: 10px;
+      background: #2a2a4a; color: #b8a9ff;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+      padding: 4px 8px; border-radius: 6px; text-transform: uppercase;
+    }
+    .store-card__icon { width: 56px; height: 56px; flex-shrink: 0; }
+    .store-card__icon svg { width: 100%; height: 100%; }
+    .store-card__body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .store-card__label {
+      font-size: 13px; font-weight: 600; color: #b8a9ff;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .store-card__name { font-size: 20px; font-weight: 800; color: #fff; }
+    .store-card__browsers { font-size: 12px; color: #8a8aaa; margin-top: 2px; }
+    .store-card__cta {
+      width: 100%; padding: 12px 16px; margin-top: 8px;
+      background: linear-gradient(135deg, #7c5cfc, #4c3ad4);
+      color: #fff; border-radius: 10px; font-weight: 700; font-size: 14px;
+    }
+    .store-card--chrome .store-card__cta { background: linear-gradient(135deg, #4285F4, #1A73E8); }
+    .store-card--firefox .store-card__cta { background: linear-gradient(135deg, #FF512F, #DD2476); }
+    .store-card--edge .store-card__cta { background: linear-gradient(135deg, #0F88FF, #0A4DAB); }
+    .store-card--opera .store-card__cta { background: linear-gradient(135deg, #FF1B2D, #B30D1F); }
+    .store-card--safari .store-card__cta { background: linear-gradient(135deg, #1B88CA, #006CFF); }
+    .stores-trust {
+      margin-top: 24px; text-align: center;
+      font-size: 13px; color: #8a8aaa; line-height: 1.8;
+    }
+
+    /* ZIP FALLBACK */
+    .zip-fallback {
+      background: #0a0a1a; border: 1px solid #1a1a36; border-radius: 12px;
+      padding: 16px 20px;
+    }
+    .zip-fallback__summary {
+      cursor: pointer; color: #8a8aaa; font-size: 14px; font-weight: 600;
+      list-style: none; padding: 4px 0; outline: none;
+      transition: color 0.2s;
+    }
+    .zip-fallback__summary:hover { color: #7c5cfc; }
+    .zip-fallback__summary::-webkit-details-marker { display: none; }
+    .zip-fallback[open] .zip-fallback__summary { color: #7c5cfc; }
+    .zip-fallback__body { padding-top: 12px; }
+    .zip-fallback__body .download-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 760px) { .zip-fallback__body .download-grid { grid-template-columns: 1fr; } }
+    .zip-fallback__body .download-box { padding: 18px 14px; }
+
+    /* Browser tabs */
+    .browser-tabs { display: flex; gap: 4px; margin-bottom: 0; flex-wrap: wrap; }
+    .browser-tab {
+      padding: 12px 20px; background: #1a1a36; border: 1px solid #2a2a4a;
+      border-radius: 10px 10px 0 0; color: #8a8aaa; font-size: 13px;
+      font-weight: 600; cursor: pointer; border-bottom: none; transition: all 0.2s;
+    }
+    .browser-tab.active { background: #12122a; color: #7c5cfc; border-color: #7c5cfc; }
+
+    /* Steps container */
+    .steps-container {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 0 16px 16px 16px;
+      padding: 32px; display: none;
+    }
+    .steps-container.active { display: block; }
+
+    /* Step */
+    .step {
+      display: flex; gap: 20px; padding: 24px 0;
+      border-bottom: 1px solid #1a1a36;
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c5cfc, #4c3ad4);
+      color: #fff; font-size: 18px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .step-content { flex: 1; }
+    .step-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: #fff; }
+    .step-desc { font-size: 14px; color: #b0b0c8; line-height: 1.8; }
+    .step-desc strong { color: #fff; }
+    .step-desc code {
+      background: #1a1a36; border: 1px solid #2a2a4a; padding: 2px 8px;
+      border-radius: 4px; font-family: monospace; color: #7c5cfc; font-size: 13px;
+    }
+
+    /* Hint box */
+    .hint-box {
+      background: #0a0a1a; border: 1px solid #2a2a4a; border-radius: 8px;
+      padding: 14px 16px; margin-top: 12px; font-size: 13px; line-height: 1.6;
+    }
+    .hint-box .hint-icon { font-size: 16px; margin-right: 6px; }
+    .hint-box.warning { border-color: rgba(251,191,36,0.3); }
+    .hint-box.success { border-color: rgba(74,222,128,0.3); }
+    .hint-box.info { border-color: rgba(124,92,252,0.3); }
+
+    /* FAQ */
+    .faq-section { margin-top: 48px; }
+    .faq-title { font-size: 24px; font-weight: 700; margin-bottom: 20px; text-align: center; }
+    .faq-item {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 10px;
+      margin-bottom: 8px; overflow: hidden;
+    }
+    .faq-q {
+      padding: 16px 20px; font-size: 15px; font-weight: 600; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      transition: color 0.2s;
+    }
+    .faq-q:hover { color: #7c5cfc; }
+    .faq-q .arrow { transition: transform 0.3s; font-size: 12px; }
+    .faq-item.open .faq-q .arrow { transform: rotate(180deg); }
+    .faq-a {
+      padding: 0 20px; max-height: 0; overflow: hidden;
+      transition: max-height 0.3s, padding 0.3s;
+      font-size: 14px; color: #8a8aaa; line-height: 1.7;
+    }
+    .faq-item.open .faq-a { max-height: 400px; padding: 0 20px 16px; }
+
+    /* Help footer */
+    .help-footer {
+      text-align: center; margin-top: 48px; padding: 24px;
+      background: #12122a; border-radius: 12px; border: 1px solid #2a2a4a;
+    }
+    .help-footer p { color: #8a8aaa; font-size: 14px; margin-bottom: 12px; }
+    .help-footer a { color: #7c5cfc; text-decoration: none; font-weight: 600; }
+
+    /* OS-specific instructions */
+    .os-note { font-size: 13px; color: #8a8aaa; margin-top: 6px; font-style: italic; }
+  </style>
+  <script src="/adoff-i18n.js?v=260520-205323"></script>
+  </head>
+<body>
+  <div id="site-nav"></div>
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+  <div class="install-page">
+
+    <!-- HERO -->
+    <div class="install-hero">
+      <img src="../assets/icon128.png" alt="AdOff" style="width:80px;margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(124,92,252,0.5))">
+      <h1>安装 AdOff</h1>
+      <p>仅需几次点击，远离广告困扰。安装只需不到 2 分钟。</p>
+      <div class="detected-badge" id="detectedBadge">
+        <span id="detectedIcon"></span>
+        <span>检测到：</span>
+        <strong id="detectedText"></strong>
+      </div>
+    </div>
+
+    <!-- TRIAL BANNER -->
+    <div style="max-width:680px;margin:0 auto 40px;background:linear-gradient(135deg,rgba(124,92,252,0.08),rgba(124,92,252,0.02));border:1px solid rgba(124,92,252,0.25);border-radius:14px;padding:24px 28px;text-align:center;">
+      <div style="font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:8px;">首次安装：30 天免费专业版</div>
+      <p style="font-size:0.92rem;color:#8888aa;margin:0;">无需信用卡。解锁隐身模式、流媒体平台视频广告拦截、定时暂停等所有专业功能。30 天后，您可以选择继续使用或降级到免费版本（仅网站广告拦截）。</p>
+    </div>
+
+    <!-- COMPATIBILITY SECTION -->
+    <div class="compat-section">
+      <h2 class="compat-title">通用，适用于所有浏览器</h2>
+      <p class="compat-sub">Chrome、Firefox、Safari、Edge、Brave、Opera。Windows、macOS、Linux、Android 系统。</p>
+
+      <h3 style="font-size:14px;color:#8a8aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">浏览器</h3>
+      <div class="compat-grid">
+        <div class="compat-card supported">
+          <span class="compat-icon">&#127760;</span>
+          <div class="compat-name">Chrome</div>
+          <div class="compat-status full">&#10003; 100%</div>
+        </div>
+        <div class="compat-card supported">
+          <span class="compat-icon">&#128268;</span>
+          <div class="compat-name">Edge</div>
+          <div class="compat-status full">&#10003; 100%</div>
+        </div>
+        <div class="compat-card supported">
+          <span class="compat-icon">&#129409;</span>
+          <div class="compat-name">Brave</div>
+          <div class="compat-status full">&#10003; 100%</div>
+        </div>
+        <div class="compat-card supported">
+          <span class="compat-icon">&#127916;</span>
+          <div class="compat-name">Opera</div>
+          <div class="compat-status full">&#10003; 100%</div>
+        </div>
+        <div class="compat-card supported">
+          <span class="compat-icon">&#127912;</span>
+          <div class="compat-name">Vivaldi</div>
+          <div class="compat-status full">&#10003; 100%</div>
+        </div>
+        <div class="compat-card partial">
+          <span class="compat-icon">&#128293;</span>
+          <div class="compat-name">Firefox</div>
+          <div class="compat-status partial">&#9679; 95%</div>
+        </div>
+        <div class="compat-card partial">
+          <span class="compat-icon">&#129517;</span>
+          <div class="compat-name">Safari</div>
+          <div class="compat-status partial">&#9679; 95%</div>
+        </div>
+      </div>
+
+      <h3 style="font-size:14px;color:#8a8aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;margin-top:24px;">操作系统</h3>
+      <div class="os-grid">
+        <div class="os-card">
+          <span class="os-icon">&#128187;</span>
+          <div class="os-name">Windows</div>
+        </div>
+        <div class="os-card">
+          <span class="os-icon">&#127822;</span>
+          <div class="os-name">macOS</div>
+        </div>
+        <div class="os-card">
+          <span class="os-icon">&#128039;</span>
+          <div class="os-name">Linux</div>
+        </div>
+        <div class="os-card">
+          <span class="os-icon">&#128241;</span>
+          <div class="os-name">Android</div>
+        </div>
+        <div class="os-card">
+          <span class="os-icon">&#127823;</span>
+          <div class="os-name">ChromeOS</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OFFICIAL STORES SECTION (PRIMARY CTA) -->
+    <div class="stores-section">
+      <h2 class="stores-title">直接从官方商店安装</h2>
+      <p class="stores-sub">一次点击。自动更新。100% 安全。</p>
+
+      <div class="stores-grid">
+        <!-- Chrome Web Store -->
+        <a href="https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp" target="_blank" rel="noopener" class="store-card store-card--chrome">
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><circle cx="24" cy="24" r="20" fill="#fff"/><circle cx="24" cy="24" r="8" fill="#4285F4"/><path d="M24 4a20 20 0 0 1 17.32 10H24a10 10 0 0 0-8.66 5L6.68 14A20 20 0 0 1 24 4z" fill="#EA4335"/><path d="M41.32 14a20 20 0 0 1 0 20l-8.66-5a10 10 0 0 0 0-10z" fill="#FBBC04"/><path d="M24 44a20 20 0 0 1-17.32-10L15.34 29a10 10 0 0 0 8.66 5z" fill="#34A853"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Chrome Web Store</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Chrome · Brave · Opera · Vivaldi</div>
+          </div>
+          <div class="store-card__cta">添加到 Chrome →</div>
+        </a>
+
+        <!-- Firefox Add-ons -->
+        <a href="https://addons.mozilla.org/firefox/addon/adoff/" target="_blank" rel="noopener" class="store-card store-card--firefox">
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><defs><radialGradient id="ffg1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFCB6E"/><stop offset="100%" stop-color="#FF512F"/></radialGradient></defs><circle cx="24" cy="24" r="22" fill="url(#ffg1)"/><path d="M14 18c2-5 7-9 12-9 6 0 10 4 10 4s-4-1-7 1c5 0 8 5 8 9 0 8-7 14-15 14-9 0-15-6-15-14 0-4 2-7 4-9-1 4 1 7 3 7-1-1-1-2 0-3z" fill="#fff" opacity=".95"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Firefox Add-ons</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Firefox 桌面版 · Firefox 安卓版</div>
+          </div>
+          <div class="store-card__cta">添加到 Firefox →</div>
+        </a>
+
+        <!-- Edge: 从 Chrome Web Store 安装 -->
+        <a href="https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp" target="_blank" rel="noopener" class="store-card store-card--edge">
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><defs><linearGradient id="edg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0F88FF"/><stop offset="100%" stop-color="#0A4DAB"/></linearGradient><linearGradient id="edg2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3CC8FF"/><stop offset="100%" stop-color="#0F88FF"/></linearGradient></defs><path d="M44 24c0 11-9 20-20 20-7 0-13-3-17-8 4 3 9 5 14 4 7-1 12-6 12-12 0-3-2-5-5-5h-9c-3 0-5 3-3 6-4-2-7-7-6-12 1-6 7-11 14-11 11 0 20 8 20 18z" fill="url(#edg1)"/><path d="M28 13c-7 0-13 5-14 11-1 5 2 10 6 12-2-3 0-6 3-6h9c3 0 5 2 5 5 0 6-5 11-12 12 8 1 17-3 19-12 2-12-7-22-16-22z" fill="url(#edg2)"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Edge Add-ons</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Microsoft Edge 桌面版</div>
+          </div>
+          <div class="store-card__cta">添加到 Edge →</div>
+        </a>
+
+        <!-- Opera Add-ons -->
+        <a href="#zip-fallback" class="store-card store-card--opera store-card--soon">
+          <span class="store-card__badge">即将推出</span>
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><defs><linearGradient id="op1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#FF1B2D"/><stop offset="100%" stop-color="#B30D1F"/></linearGradient></defs><circle cx="24" cy="24" r="22" fill="url(#op1)"/><ellipse cx="24" cy="24" rx="9" ry="14" fill="#fff"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Opera Add-ons</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Opera 桌面版 · Opera GX</div>
+          </div>
+          <div class="store-card__cta">通过 ZIP 安装 →</div>
+        </a>
+
+        <!-- Safari (Mac App Store) -->
+        <a href="#zip-fallback" class="store-card store-card--safari store-card--soon">
+          <span class="store-card__badge">即将推出</span>
+          <div class="store-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" width="48" height="48"><defs><linearGradient id="sf1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1B88CA"/><stop offset="100%" stop-color="#006CFF"/></linearGradient></defs><circle cx="24" cy="24" r="22" fill="url(#sf1)"/><circle cx="24" cy="24" r="14" fill="#fff"/><circle cx="24" cy="24" r="2" fill="#1B88CA"/><path d="M24 11l3 11-3 2-3-2zM24 37l-3-11 3-2 3 2z" fill="#E53935"/><path d="M37 24l-11 3-2-3 2-3zM11 24l11-3 2 3-2 3z" fill="#1B88CA"/></svg>
+          </div>
+          <div class="store-card__body">
+            <div class="store-card__label">Mac App Store</div>
+            <div class="store-card__name">AdOff</div>
+            <div class="store-card__browsers">Safari macOS 13+</div>
+          </div>
+          <div class="store-card__cta">通过 ZIP 安装 →</div>
+        </a>
+      </div>
+
+      <p class="stores-trust">
+        <span style="color:#7c5cfc;font-weight:700;">✓</span> 每次发布前都经过手动代码审查 ·
+        <span style="color:#7c5cfc;font-weight:700;">✓</span> 通过商店自动更新 ·
+        <span style="color:#7c5cfc;font-weight:700;">✓</span> 可验证的完整性哈希
+      </p>
+    </div>
+
+    <!-- ZIP FALLBACK SECTION (SECONDARY) -->
+    <div class="download-section" style="margin-top:48px;">
+      <details class="zip-fallback" id="zip-fallback">
+        <summary class="zip-fallback__summary">
+          更喜欢手动安装？下载 ZIP →
+        </summary>
+        <div class="zip-fallback__body">
+          <p style="color:#8a8aaa;font-size:13px;text-align:center;margin:16px 0 20px;">
+            适用于想要开发者安装/旁加载的用户，或 Safari（Mac App Store 即将推出）。
+          </p>
+          <div class="download-grid">
+            <div class="download-box" id="dlChromium">
+              <h3 style="font-size:16px;margin-bottom:6px;">Chromium ZIP</h3>
+              <p class="dl-browser-list">
+                <strong>Chrome</strong> · <strong>Edge</strong> · <strong>Brave</strong> · <strong>Opera</strong>
+              </p>
+              <a href="../adoff-chrome.zip" download class="download-btn secondary" id="dlBtnChrome">
+                下载 Chrome ZIP
+              </a>
+              <p class="download-info">v3.4.6 · 超轻量 · 所有功能</p>
+            </div>
+            <div class="download-box" id="dlFirefox">
+              <h3 style="font-size:16px;margin-bottom:6px;">Firefox ZIP</h3>
+              <p class="dl-browser-list">
+                <strong>Firefox</strong> 桌面版 · <strong>Firefox</strong> 安卓版
+              </p>
+              <a href="../adoff-firefox.zip" download class="download-btn secondary" id="dlBtnFirefox">
+                下载 Firefox ZIP
+              </a>
+              <p class="download-info">v3.4.6 · 超轻量 · 永久安装</p>
+            </div>
+            <div class="download-box" id="dlSafari">
+              <h3 style="font-size:16px;margin-bottom:6px;">Safari ZIP</h3>
+              <p class="dl-browser-list">
+                <strong>Safari 16.4+</strong> · macOS Ventura+
+              </p>
+              <a href="../adoff-safari.zip" download class="download-btn secondary" id="dlBtnSafari">
+                下载 Safari 版本
+              </a>
+              <p class="download-info">v3.4.6 · 超轻量 · Mac App Store 即将推出</p>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- BROWSER TABS -->
+    <h2 style="font-size:22px;font-weight:700;text-align:center;margin-bottom:8px;">第 2 步：安装</h2>
+    <p style="color:#8a8aaa;font-size:14px;text-align:center;margin-bottom:24px;">选择您的浏览器以查看说明</p>
+
+    <div class="browser-tabs">
+      <div class="browser-tab active" data-browser="chrome">Chrome</div>
+      <div class="browser-tab" data-browser="edge">Edge</div>
+      <div class="browser-tab" data-browser="brave">Brave</div>
+      <div class="browser-tab" data-browser="opera">Opera</div>
+      <div class="browser-tab" data-browser="vivaldi">Vivaldi</div>
+      <div class="browser-tab" data-browser="firefox">Firefox</div>
+      <div class="browser-tab" data-browser="safari">Safari</div>
+      <div class="browser-tab" data-browser="android">移动版</div>
+    </div>
+
+    <!-- CHROME STEPS -->
+    <div class="steps-container active" id="steps-chrome">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">解压 ZIP 文件</div>
+          <div class="step-desc">
+            在下载文件夹中找到 <strong>adoff-chrome.zip</strong>。<br><br>
+            <strong>Windows：</strong> 右键点击 → <strong>全部解压</strong> → <strong>解压</strong><br>
+            <strong>Mac：</strong> 双击 ZIP 文件。会自动创建一个文件夹。<br>
+            <strong>Linux：</strong> 右键点击 → <strong>在此解压</strong> 或运行 <code>unzip adoff-chrome.zip</code>
+            <div class="hint-box warning">
+              <span class="hint-icon">&#9888;</span>
+              <strong>重要：</strong> 解压后不要删除该文件夹。浏览器需要从磁盘读取它。放在安全的地方（如文档文件夹）。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">打开 Chrome 扩展程序页面</div>
+          <div class="step-desc">
+            打开 Chrome，在地址栏中输入 <code>chrome://extensions</code>，然后按 <strong>Enter</strong>。<br><br>
+            会打开所有已安装扩展程序的页面。
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">启用开发者模式</div>
+          <div class="step-desc">
+            在页面右上角，找到 <strong>开发者模式</strong> 开关。<br><br>
+            点击打开它（会变成蓝色）。
+            <div class="hint-box info">
+              <span class="hint-icon">&#128161;</span>
+              <span>如果看不到，请向上滚动页面。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">加载扩展程序</div>
+          <div class="step-desc">
+            启用开发者模式后，会在顶部出现新按钮。<br><br>
+            点击 <strong>加载未打包的扩展程序</strong>（左边第一个）。<br><br>
+            会打开一个选择文件夹的窗口。
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">选择 AdOff 文件夹</div>
+          <div class="step-desc">
+            找到第 1 步解压的文件夹。<br><br>
+            选择 <strong>adoff-chrome</strong> 并点击 <strong>选择文件夹</strong>（Windows/Linux）或 <strong>打开</strong>（Mac）。
+            <div class="hint-box success">
+              <span class="hint-icon">&#9989;</span>
+              <strong>完成。</strong> AdOff 已安装。您会在 Chrome 工具栏中看到该图标。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <div class="step-title">将 AdOff 固定到工具栏（推荐）</div>
+          <div class="step-desc">
+            为了始终在工具栏中看到 AdOff：<br><br>
+            1. 点击右上角的 <strong>拼图</strong> 图标（扩展程序）<br>
+            2. 在列表中找到 <strong>AdOff</strong><br>
+            3. 点击 AdOff 旁边的 <strong>固定</strong><br><br>
+            图标现在始终可见。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDGE STEPS -->
+    <div class="steps-container" id="steps-edge">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">解压 ZIP 文件</div>
+          <div class="step-desc">
+            与 Chrome 相同：找到下载文件夹中的 <strong>adoff-chrome.zip</strong>，右键点击 → <strong>全部解压</strong>
+            <div class="hint-box warning">
+              <span class="hint-icon">&#9888;</span>
+              <strong>重要：</strong> 保留解压后的文件夹。不要删除它。
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">打开 Edge 扩展程序页面</div>
+          <div class="step-desc">
+            在地址栏中输入：<code>edge://extensions</code> 然后按 <strong>Enter</strong>。
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">启用开发者模式</div>
+          <div class="step-desc">在页面左下角，启用 <strong>开发者模式</strong>。</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">加载扩展程序</div>
+          <div class="step-desc">点击 <strong>加载未打包的扩展程序</strong> 并选择解压的文件夹 <strong>adoff-chrome</strong>。</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">完成</div>
+          <div class="step-desc">
+            <div class="hint-box success">
+              <span class="hint-icon">&#9989;</span>
+              <span>AdOff 在 Edge 上已安装。功能与 Chrome 相同。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BRAVE STEPS -->
+    <div class="steps-container" id="steps-brave">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">与 Chrome 相同的步骤</div>
+          <div class="step-desc">
+            Brave 使用与 Chrome 相同的系统。遵循相同的步骤：<br><br>
+            1. 解压 ZIP<br>
+            2. 转到 <code>brave://extensions</code><br>
+            3. 启用开发者模式（右上角）<br>
+            4. 加载未打包的扩展程序<br>
+            5. 选择文件夹
+            <div class="hint-box success">
+              <span class="hint-icon">&#9989;</span>
+              AdOff 与 Brave 的内置阻止程序完美配合。没有冲突。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPERA STEPS -->
+    <div class="steps-container" id="steps-opera">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">与 Chrome 相同的步骤</div>
+          <div class="step-desc">
+            Opera 使用 Chromium 引擎。遵循相同的步骤：<br><br>
+            1. 解压 ZIP<br>
+            2. 转到 <code>opera://extensions</code><br>
+            3. 启用开发者模式（右上角）<br>
+            4. 加载未打包的扩展程序<br>
+            5. 选择文件夹
+            <div class="hint-box info">
+              <span class="hint-icon">&#128161;</span>
+              Opera 可能会显示第三方扩展程序的请求。点击 <strong>允许</strong> 继续。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIVALDI STEPS -->
+    <div class="steps-container" id="steps-vivaldi">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">与 Chrome 相同的步骤</div>
+          <div class="step-desc">
+            Vivaldi 使用 Chromium 引擎。遵循相同的步骤：<br><br>
+            1. 解压 ZIP<br>
+            2. 转到 <code>vivaldi://extensions</code><br>
+            3. 启用开发者模式（右上角）<br>
+            4. 加载未打包的扩展程序<br>
+            5. 选择文件夹
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIREFOX STEPS -->
+    <div class="steps-container" id="steps-firefox">
+      <div class="hint-box info" style="margin-bottom:20px;">
+        <span class="hint-icon">&#128293;</span>
+        <strong>Firefox 版本</strong>
+        <span>确保您下载了 Firefox 版本（adoff-firefox.zip），而不是 Chromium 版本。</span>
+      </div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">解压 ZIP 文件</div>
+          <div class="step-desc">
+            在下载文件夹中找到 <strong>adoff-firefox.zip</strong> 并解压。
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">打开 Firefox 调试页面</div>
+          <div class="step-desc">在地址栏中输入：<code>about:debugging#/runtime/this-firefox</code> 然后按 <strong>Enter</strong>。</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">加载临时附加组件</div>
+          <div class="step-desc">
+            点击 <strong>加载临时附加组件</strong><br><br>
+            在解压的文件夹中选择 <strong>manifest.json</strong> 文件。
+            <div class="hint-box warning">
+              <span class="hint-icon">&#9888;</span>
+              <span>在 Firefox 上，手动加载的扩展程序是临时的。关闭 Firefox 后会消失，您需要每次都重新加载。我们正在努力在 Firefox Add-ons Store 上发布以进行永久安装。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAFARI STEPS -->
+    <div class="steps-container" id="steps-safari">
+      <div class="hint-box info" style="margin-bottom:20px;">
+        <span class="hint-icon">&#129517;</span>
+        <strong>开始之前</strong>
+        <span>Safari 比其他浏览器更严格。需要 Xcode（Apple 免费程序）来安装扩展程序。此过程首次需要约 30 分钟。需要 macOS Ventura 13 或更高版本，Safari 16.4 或更高版本。如果您从未打开过终端，我会逐步指导您。</span>
+      </div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">解压 ZIP 文件</div>
+          <div class="step-desc">
+            <strong>1.1</strong> 打开 <strong>Finder</strong>（底部 Dock 中的笑脸图标）。<br>
+            <strong>1.2</strong> 在左边栏中，点击 <strong>下载</strong>。<br>
+            <strong>1.3</strong> 找到刚下载的 <strong>adoff-safari.zip</strong> 文件。<br>
+            <strong>1.4</strong> <strong>双击</strong> 该文件。macOS 会自动解压它，并在 ZIP 文件旁创建一个 <code>adoff-safari</code> 文件夹。<br>
+            <strong>1.5</strong> <strong>不要移动或重命名</strong> 此文件夹。将其留在下载文件夹中。
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">安装 Xcode（免费，约 10 GB）</div>
+          <div class="step-desc">
+            <strong>2.1</strong> 打开 <strong>Mac App Store</strong>（蓝色图标，白色"A"，在 Dock 或 Launchpad 中）。<br>
+            <strong>2.2</strong> 在左上角的搜索栏中，输入 <strong>Xcode</strong> 并按 <strong>Return</strong>。<br>
+            <strong>2.3</strong> 点击 Xcode 条目（Apple 图标，来自 Apple）上的 <strong>下载</strong> 或 <strong>安装</strong>。<br>
+            <strong>2.4</strong> 如果需要，用您的 Apple ID 登录（与 App Store 相同的 ID）。<br>
+            <strong>2.5</strong> 等待下载。Xcode 很大（约 10 GB），可能需要 20-60 分钟。<br>
+            <strong>2.6</strong> 准备好后，<strong>至少打开一次 Xcode</strong>：在 Launchpad 或应用程序中点击图标。<br>
+            <strong>2.7</strong> 会出现一个包含许可条款的窗口。点击 <strong>同意</strong>。<br>
+            <strong>2.8</strong> 等待 Xcode 完成初始设置（1-2 分钟），然后关闭它（Cmd+Q）。
+            <div class="hint-box info" style="margin-top:10px;">
+              <span class="hint-icon">&#128161;</span>
+              <span>如果您的 Mac 空间不足，在开始之前至少释放 15 GB。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">打开终端并运行命令</div>
+          <div class="step-desc">
+            <strong>3.1</strong> 同时按 <strong>Cmd + Space</strong>。会在顶部打开搜索栏（Spotlight）。<br>
+            <strong>3.2</strong> 输入 <strong>Terminal</strong> 并按 <strong>Return</strong>。会打开一个黑白窗口（终端，没有什么可怕的，这是一个普通的 Mac 程序）。<br>
+            <strong>3.3</strong> <strong>精确复制</strong> 这个命令（点击灰色框选中，然后 Cmd+C）：
+            <div style="margin:10px 0;padding:12px;background:rgba(124,92,252,0.1);border-radius:8px;border:1px solid rgba(124,92,252,0.3);">
+              <code style="word-break:break-all;font-size:13px;">xcrun safari-web-extension-converter ~/Downloads/adoff-safari</code>
+            </div>
+            <strong>3.4</strong> 在终端窗口中点击，用 <strong>Cmd+V</strong> 粘贴，然后按 <strong>Return</strong>。<br>
+            <strong>3.5</strong> 终端会询问"Continue?"。输入 <strong>y</strong> 并按 <strong>Return</strong>。<br>
+            <strong>3.6</strong> 等待 30-60 秒。Xcode 会自动打开一个"AdOff"项目。<br>
+            <strong>3.7</strong> 在 Xcode 中，点击左上角的 <strong>▶ Play</strong> 按钮（或 Cmd+R）。<br>
+            <strong>3.8</strong> 编译：等待 1-3 分钟。可能会打开一个小"AdOff"窗口。您可以关闭它（扩展程序已安装）。
+            <div class="hint-box warning" style="margin-top:10px;">
+              <span class="hint-icon">&#9888;</span>
+              <span>如果收到"permission denied"或"command not found"错误：打开 Xcode，打开偏好设置，位置，命令行工具，选择最新版本。然后重试第 3.4 步。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">在 Safari 中启用开发菜单</div>
+          <div class="step-desc">
+            <strong>4.1</strong> 打开 <strong>Safari</strong>（Dock 中的指南针图标）。<br>
+            <strong>4.2</strong> 在顶部菜单栏中，点击 <strong>Safari</strong> → <strong>偏好设置</strong>（或 Cmd+,）。<br>
+            <strong>4.3</strong> 会打开一个包含多个选项卡的窗口。点击 <strong>高级</strong>（最后一个，齿轮图标）。<br>
+            <strong>4.4</strong> 在底部，找到选项 <strong>显示开发 web 功能</strong>（或旧版本中的"显示开发菜单"）。<br>
+            <strong>4.5</strong> <strong>勾选复选框</strong>。Safari 菜单栏中会出现一个新的 <strong>开发</strong> 菜单。<br>
+            <strong>4.6</strong> 关闭偏好设置窗口。
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">允许未签名的扩展程序</div>
+          <div class="step-desc">
+            <strong>5.1</strong> 在 Safari 菜单栏中，点击新的 <strong>开发</strong> 菜单。<br>
+            <strong>5.2</strong> 向下滚动菜单，点击 <strong>允许未签名的扩展</strong>。<br>
+            <strong>5.3</strong> Safari 会要求您输入 <strong>Mac 密码</strong>（您用来登录的密码）。输入并按 Return。<br>
+            <strong>5.4</strong> 该选项现已激活（您可以验证：重新打开开发菜单，"允许未签名的扩展"有一个复选标记）。
+            <div class="hint-box warning" style="margin-top:10px;">
+              <span class="hint-icon">&#9888;</span>
+              <span>重要：每次重启 Safari 时，此选项会自动禁用。您需要在每次系统重启时重新启用它（步骤 5.1-5.3）。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <div class="step-title">启用 AdOff</div>
+          <div class="step-desc">
+            <strong>6.1</strong> 重新打开 Safari 偏好设置：<strong>Safari</strong> → <strong>偏好设置</strong>（或 Cmd+,）。<br>
+            <strong>6.2</strong> 点击 <strong>扩展程序</strong> 选项卡（拼图图标）。<br>
+            <strong>6.3</strong> 在左边的列表中，您应该看到 <strong>AdOff</strong>。<strong>勾选旁边的复选框</strong>。<br>
+            <strong>6.4</strong> 会出现一个弹出窗口，询问网站访问权限。点击 <strong>始终允许在所有网站上</strong>（或"在所有网站上允许"）。<br>
+            <strong>6.5</strong> 关闭偏好设置。访问任何包含广告的网站（新闻、视频平台、论坛）。广告被拦截。<br>
+            <strong>6.6</strong> <strong>AdOff 图标</strong>（带有红色覆盖的"A"）会自动出现在右上角的 Safari 工具栏中。点击以打开带有控制的弹出窗口。
+            <div class="hint-box info" style="margin-top:10px;">
+              <span class="hint-icon">&#9989;</span>
+              <span>完成。AdOff 处于活动状态。您有 30 天的免费专业版试用。图标显示倒计时。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hint-box warning" style="margin-top:20px;">
+        <span class="hint-icon">&#128274;</span>
+        <strong>使安装永久化</strong>
+        <span>未签名的扩展在 Safari 重启时会禁用。为了永久使用 AdOff 而无需每次都重复第 5 步，您有两个选项：(1) 订阅 Apple Developer 计划（每年 99 美元）并自己签署扩展程序，或 (2) 等待 Mac App Store 发布。很快，一次点击自动安装。</span>
+      </div>
+    </div>
+
+    <!-- ANDROID STEPS -->
+    <div class="steps-container" id="steps-android">
+      <div class="hint-box info" style="margin-bottom:20px;">
+        <span class="hint-icon">&#128241;</span>
+        <strong>需要移动浏览器</strong>
+        <span>在 Android 上，您需要支持扩展程序的浏览器。我们推荐 Kiwi Browser（免费）或 Firefox Android。</span>
+      </div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">安装 Kiwi 浏览器</div>
+          <div class="step-desc">
+            从 Play Store 下载 <strong>Kiwi Browser</strong>。它是免费的，原生支持 Chrome 扩展程序。
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">下载 AdOff</div>
+          <div class="step-desc">
+            在 Kiwi 浏览器中打开此页面并下载 <strong>adoff-chrome.zip</strong>。用您的文件管理器解压 ZIP。
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">加载扩展程序</div>
+          <div class="step-desc">
+            在 Kiwi 浏览器中，转到 <code>chrome://extensions</code><br><br>
+            启用 <strong>开发者模式</strong>，点击 <strong>加载未打包的扩展程序</strong>（或 <strong>"+(来自 .zip/.crx/.user.js)"</strong>），然后选择解压的文件夹。
+            <div class="hint-box success">
+              <span class="hint-icon">&#9989;</span>
+              AdOff 现在在您的 Android 设备上工作。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FREE VS PRO COMPARISON -->
+    <div style="max-width:680px;margin:0 auto 48px;background:var(--card,#12122a);border:1px solid rgba(124,92,252,0.18);border-radius:14px;padding:28px;text-align:center;">
+      <h3 style="font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:16px;">通过试用专业版解锁的功能</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:left;font-size:0.9rem;">
+        <div>
+          <div style="font-weight:700;color:#8888aa;margin-bottom:8px;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;">免费计划（试用后）</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <span style="color:#4ade80;">✓ <span>网络拦截 138 条规则</span></span>
+            <span style="color:#4ade80;">✓ <span>视觉 CSS 过滤器</span></span>
+            <span style="color:#4ade80;">✓ <span>广告计数器</span></span>
+            <span style="color:rgba(255,255,255,0.25);">✗ <span>视频广告中立化</span></span>
+            <span style="color:rgba(255,255,255,0.25);">✗ <span>隐身模式</span></span>
+          </div>
+        </div>
+        <div>
+          <div style="font-weight:700;color:#7c5cfc;margin-bottom:8px;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;">专业计划（包括 30 天试用）</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <span style="color:#4ade80;">✓ <span>免费版的一切</span></span>
+            <span style="color:#4ade80;">✓ <span>无视频广告</span></span>
+            <span style="color:#4ade80;">✓ <span>隐身反检测</span></span>
+            <span style="color:#4ade80;">✓ <span>定时暂停</span></span>
+            <span style="color:#4ade80;">✓ <span>优先支持</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <h2 class="faq-title">常见问题</h2>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>我需要在计算机上保留该文件夹吗？</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">是的。浏览器从文件夹中读取扩展程序文件。如果删除它，扩展程序将停止工作。将其放在安全的地方（例如文档文件夹）。</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>启用开发者模式是否安全？</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">是的，完全安全。开发者模式只允许从文件夹而不是从商店安装扩展程序。它不会改变浏览器中的其他任何东西。</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>浏览器说"禁用开发者扩展" — 我该怎么办？</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">某些浏览器在启动时会在您手动安装扩展程序时显示警告。只需关闭警告。扩展程序将继续正常工作。当 AdOff 在官方商店上时，此警告将消失。</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>如何更新 AdOff？</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">从网站下载新版本，在同一文件夹中解压 ZIP（覆盖文件），然后转到浏览器的扩展程序页面，点击 AdOff 上的"重新加载"箭头。</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>它适用于所有网站吗？</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">是的。AdOff 在所有网站上拦截广告（横幅、弹出窗口、跟踪器、社交媒体、新闻、博客）。流媒体平台上的视频广告拦截在专业版/试用版中可用。您也可以在特定网站上暂停拦截（如果需要）。</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>如何卸载 AdOff？</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">转到浏览器的扩展程序页面，找到 AdOff，点击"删除"。然后您可以从计算机中删除该文件夹。</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>支持哪些浏览器？</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">AdOff 支持所有 Chromium 浏览器（Chrome、Edge、Brave、Opera、Vivaldi、Arc），功能兼容性为 100%；Firefox 为 95%；Safari 16.4+ macOS Ventura+ 为 95%（需要 Xcode）。在 Android 上使用 Kiwi 浏览器或 Firefox。iOS 支持即将推出。</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q"><span>它在移动设备上工作吗？</span> <span class="arrow">&#9660;</span></div>
+        <div class="faq-a">在 Android 上，安装支持扩展程序的 Kiwi 浏览器（从 Play Store 免费提供）。在 iOS 上，浏览器扩展程序还不受支持。我们正在处理这个问题。</div>
+      </div>
+    </div>
+
+    <!-- HELP FOOTER -->
+    <div class="help-footer">
+      <p>需要帮助？无法安装？</p>
+      <a href="../support.html">联系我们</a>
+    </div>
+
+  </div>
+
+  <script>
+    // ─── Auto-detect browser and OS ───
+    (function() {
+      var ua = navigator.userAgent;
+      var browser = 'chrome';
+      var browserName = 'Chrome';
+      var os = 'Windows';
+      var osIcon = '💻';
+
+      // Detect browser (order matters — more specific first)
+      if (ua.indexOf('Vivaldi') !== -1) { browser = 'vivaldi'; browserName = 'Vivaldi'; }
+      else if (ua.indexOf('OPR') !== -1 || ua.indexOf('Opera') !== -1) { browser = 'opera'; browserName = 'Opera'; }
+      else if (ua.indexOf('Brave') !== -1) { browser = 'brave'; browserName = 'Brave'; }
+      else if (ua.indexOf('Edg') !== -1) { browser = 'edge'; browserName = 'Edge'; }
+      else if (ua.indexOf('Firefox') !== -1) { browser = 'firefox'; browserName = 'Firefox'; }
+      else if (ua.indexOf('Chrome') !== -1 || ua.indexOf('Chromium') !== -1) { browser = 'chrome'; browserName = 'Chrome'; }
+      else if (ua.indexOf('Safari') !== -1) { browser = 'safari'; browserName = 'Safari'; }
+
+      // Detect OS
+      if (ua.indexOf('Android') !== -1) { os = 'Android'; osIcon = '📱'; }
+      else if (ua.indexOf('iPhone') !== -1 || ua.indexOf('iPad') !== -1) { os = 'iOS'; osIcon = '🍎'; }
+      else if (ua.indexOf('Mac') !== -1) { os = 'macOS'; osIcon = '🍎'; }
+      else if (ua.indexOf('Linux') !== -1) { os = 'Linux'; osIcon = '🐧'; }
+      else if (ua.indexOf('CrOS') !== -1) { os = 'ChromeOS'; osIcon = '🍏'; }
+      else { os = 'Windows'; osIcon = '💻'; }
+
+      // Update detected badge
+      document.getElementById('detectedIcon').textContent = osIcon;
+      document.getElementById('detectedText').textContent = os + ' + ' + browserName;
+
+      // Auto-select browser tab
+      var tabs = document.querySelectorAll('.browser-tab');
+      var containers = document.querySelectorAll('.steps-container');
+      var targetBrowser = browser;
+
+      // Android → show android tab
+      if (os === 'Android') targetBrowser = 'android';
+
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      containers.forEach(function(c) { c.classList.remove('active'); });
+
+      var targetTab = document.querySelector('[data-browser="' + targetBrowser + '"]');
+      var targetSteps = document.getElementById('steps-' + targetBrowser);
+      if (targetTab) targetTab.classList.add('active');
+      if (targetSteps) targetSteps.classList.add('active');
+
+      // Highlight recommended download
+      if (browser === 'firefox') {
+        var dlFF = document.getElementById('dlFirefox');
+        var dlCh = document.getElementById('dlChromium');
+        if (dlFF) { dlFF.classList.add('recommended'); }
+        if (dlCh) { dlCh.classList.remove('recommended'); }
+        var recBadge = document.getElementById('recBadge');
+        if (recBadge) recBadge.parentElement === dlCh ? recBadge.style.display = 'none' : null;
+        // Move rec badge to Firefox
+        if (dlFF && recBadge) {
+          recBadge.remove();
+          dlFF.insertBefore(recBadge, dlFF.firstChild);
+          recBadge.style.display = '';
+        }
+        // Swap button styles
+        var btnCh = document.getElementById('dlBtnChrome');
+        var btnFF = document.getElementById('dlBtnFirefox');
+        if (btnCh) { btnCh.classList.add('secondary'); }
+        if (btnFF) { btnFF.classList.remove('secondary'); }
+      }
+      if (browser === 'safari') {
+        var dlSf = document.getElementById('dlSafari');
+        var dlCh = document.getElementById('dlChromium');
+        if (dlSf) { dlSf.classList.add('recommended'); }
+        if (dlCh) { dlCh.classList.remove('recommended'); }
+        var recBadgeS = document.getElementById('recBadge');
+        if (dlSf && recBadgeS) {
+          recBadgeS.remove();
+          dlSf.insertBefore(recBadgeS, dlSf.firstChild);
+          recBadgeS.style.display = '';
+        }
+        var btnChS = document.getElementById('dlBtnChrome');
+        var btnSf = document.getElementById('dlBtnSafari');
+        if (btnChS) { btnChS.classList.add('secondary'); }
+        if (btnSf) { btnSf.classList.remove('secondary'); }
+      }
+    })();
+
+    // ─── Browser tab switching ───
+    document.querySelectorAll('.browser-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.browser-tab').forEach(function(t) { t.classList.remove('active'); });
+        document.querySelectorAll('.steps-container').forEach(function(s) { s.classList.remove('active'); });
+        tab.classList.add('active');
+        var steps = document.getElementById('steps-' + tab.dataset.browser);
+        if (steps) steps.classList.add('active');
+      });
+    });
+
+    // ─── FAQ accordion ───
+    document.querySelectorAll('.faq-item').forEach(function(item) {
+      item.querySelector('.faq-q').addEventListener('click', function() {
+        item.classList.toggle('open');
+      });
+    });
+
+    // ─── Auto-open ZIP fallback when arriving from Opera/Safari card ───
+    function openZipFallbackOnHash() {
+      if (location.hash === '#zip-fallback') {
+        var d = document.getElementById('zip-fallback');
+        if (d) {
+          d.open = true;
+          d.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    }
+    window.addEventListener('hashchange', openZipFallbackOnHash);
+    window.addEventListener('load', openZipFallbackOnHash);
+  </script>
+  <script src="/adoff-footer.js?v=260602a"></script>
+
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>라이선스 안내서 - AdOff 라이선스 작동 원리</title>
+  <meta name="description" content="AdOff 라이선스가 어떻게 작동하는지 알아보세요. 요금제, 기기, 활성화, 기기 관리 및 Pro 라이선스 FAQ." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://adoff.app/ko/license-guide.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="AdOff 라이선스가 작동하는 방식 - 투명하고 간단" />
+  <meta property="og:description" content="요금제, 기기, 활성화 및 FAQ. AdOff Pro 라이선스에 대해 알아야 할 모든 것." />
+  <meta property="og:url" content="https://adoff.app/ko/license-guide.html" />
+  <meta property="og:site_name" content="AdOff" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="AdOff 라이선스 안내서" />
+  <meta name="twitter:description" content="AdOff 라이선스 작동 원리: 요금제, 기기, 활성화 및 FAQ." />
+
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <style>
+    /* ============================================================
+       BASE + DARK THEME
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a1a;
+      --bg2:      #0f0f22;
+      --card:     #12122a;
+      --card2:    #1a1a35;
+      --border:   #2a2a4a;
+      --accent:   #7c5cfc;
+      --accent2:  #9b7ffe;
+      --text:     #e8e8f0;
+      --text2:    #9a9ab8;
+      --text3:    #6a6a88;
+      --green:    #22c55e;
+      --yellow:   #fbbf24;
+      --radius:   12px;
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ============================================================
+       LAYOUT
+    ============================================================ */
+    .page-wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+    .hero {
+      text-align: center;
+      padding: 80px 0 60px;
+    }
+
+    .hero__eyebrow {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      background: rgba(124,92,252,0.12);
+      border: 1px solid rgba(124,92,252,0.25);
+      border-radius: 999px;
+      padding: 6px 16px;
+      margin-bottom: 24px;
+    }
+
+    .hero__title {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+
+    .hero__sub {
+      font-size: 1.1rem;
+      color: var(--text2);
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ============================================================
+       SECTION HEADINGS
+    ============================================================ */
+    .section {
+      margin-bottom: 64px;
+    }
+
+    .section__label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 8px;
+    }
+
+    .section__title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .section__sub {
+      font-size: 1rem;
+      color: var(--text2);
+      margin-bottom: 32px;
+    }
+
+    /* ============================================================
+       PLAN CARDS
+    ============================================================ */
+    .plan-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .plan-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      position: relative;
+      transition: border-color .2s;
+    }
+
+    .plan-card:hover { border-color: var(--accent); }
+
+    .plan-card--popular {
+      border-color: var(--accent);
+      background: linear-gradient(160deg, #1a1a40 0%, var(--card) 100%);
+    }
+
+    .plan-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .plan-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+
+    .plan-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .plan-price-range {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent2);
+      margin-bottom: 4px;
+    }
+
+    .plan-price-note {
+      font-size: 0.82rem;
+      color: var(--text3);
+      margin-bottom: 16px;
+    }
+
+    .plan-features {
+      list-style: none;
+      font-size: 0.9rem;
+      color: var(--text2);
+    }
+
+    .plan-features li {
+      padding: 3px 0;
+    }
+
+    .plan-features li::before {
+      content: '\2713\a0';
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    /* ============================================================
+       DEVICE TIER TABLE
+    ============================================================ */
+    .tier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+    }
+
+    .tier-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      transition: border-color .2s;
+    }
+
+    .tier-card:hover { border-color: var(--accent); }
+
+    .tier-icon { font-size: 2rem; margin-bottom: 10px; }
+
+    .tier-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .tier-desc {
+      font-size: 0.85rem;
+      color: var(--text2);
+      margin-bottom: 14px;
+    }
+
+    .tier-prices {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .tier-price-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+    }
+
+    .tier-price-label { color: var(--text3); }
+    .tier-price-val { color: var(--text); font-weight: 600; }
+
+    /* ============================================================
+       STEPS
+    ============================================================ */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .step__num {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step__content {}
+
+    .step__title {
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .step__desc {
+      font-size: 0.9rem;
+      color: var(--text2);
+    }
+
+    .step__desc a {
+      color: var(--accent2);
+    }
+
+    /* ============================================================
+       DEVICE MANAGEMENT CALLOUT
+    ============================================================ */
+    .callout {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 20px;
+    }
+
+    .callout__title {
+      font-weight: 700;
+      color: #fff;
+      font-size: 1.05rem;
+      margin-bottom: 12px;
+    }
+
+    .callout__list {
+      list-style: none;
+      font-size: 0.92rem;
+      color: var(--text2);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .callout__list li::before {
+      content: '\25B6\a0';
+      color: var(--accent2);
+      font-size: 0.7rem;
+    }
+
+    /* ============================================================
+       FAQ
+    ============================================================ */
+    .faq {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .faq-q {
+      width: 100%;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 0.98rem;
+      font-weight: 600;
+      padding: 18px 20px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      transition: color .2s;
+    }
+
+    .faq-q:hover { color: var(--accent2); }
+
+    .faq-q__arrow {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--card2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      transition: transform .2s, background .2s;
+    }
+
+    .faq-item.open .faq-q__arrow {
+      transform: rotate(180deg);
+      background: var(--accent);
+    }
+
+    .faq-a {
+      display: none;
+      padding: 0 20px 18px;
+      font-size: 0.9rem;
+      color: var(--text2);
+      line-height: 1.65;
+      border-top: 1px solid var(--border);
+    }
+
+    .faq-item.open .faq-a { display: block; }
+
+    /* ============================================================
+       CTA SECTION
+    ============================================================ */
+    .cta-section {
+      text-align: center;
+      background: linear-gradient(135deg, rgba(124,92,252,0.15) 0%, rgba(10,10,26,0) 80%);
+      border: 1px solid rgba(124,92,252,0.25);
+      border-radius: 20px;
+      padding: 56px 32px;
+    }
+
+    .cta-section__title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .cta-section__sub {
+      font-size: 1rem;
+      color: var(--text2);
+      margin-bottom: 28px;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 14px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background .2s, transform .1s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    .cta-trial-note {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      color: var(--text3);
+    }
+
+    /* ============================================================
+       DIVIDER
+    ============================================================ */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 48px 0;
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 600px) {
+      .hero { padding: 56px 0 40px; }
+      .hero__title { font-size: 1.8rem; }
+      .plan-grid { grid-template-columns: 1fr; }
+      .tier-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script src="/adoff-i18n.js?v=260520-205323"></script>
+  </head>
+<body>
+
+  <!-- Shared nav injected by adoff-nav.js -->
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+
+  <div class="page-wrapper">
+
+    <!-- ============================================================
+         HERO
+    ============================================================ -->
+    <section class="hero">
+      <span class="hero__eyebrow">라이선스</span>
+      <h1 class="hero__title">AdOff 라이선스가 작동하는 방식</h1>
+      <p class="hero__sub">간단하고 투명합니다. 숨겨진 비용 없음, 깜짝 요금 없음. 요금제와 기기를 선택하세요. 끝!</p>
+    </section>
+
+    <!-- ============================================================
+         PLANS
+    ============================================================ -->
+    <section class="section">
+      <div class="section__label">요금제</div>
+      <h2 class="section__title">청구 주기 선택하기</h2>
+      <p class="section__sub">모든 Pro 요금제는 모든 기능을 포함합니다: 눈에 띄지 않는 안티바이패스 기술, 비디오 광고 제거 및 우선 지원.</p>
+
+      <div class="plan-grid">
+
+        <!-- Monthly -->
+        <div class="plan-card">
+          <div class="plan-icon">&#128197;</div>
+          <div class="plan-name">Pro 월간</div>
+          <div class="plan-price-range">€2.69~5.99<span style="font-size:1rem;font-weight:400;color:var(--text3)">/월</span></div>
+          <div class="plan-price-note">매월 청구됨, 언제든지 취소 가능</div>
+          <ul class="plan-features">
+            <li>모든 Pro 기능</li>
+            <li>30일 무료 체험 포함</li>
+            <li>만료 전 취소, 추가 요금 없음</li>
+          </ul>
+        </div>
+
+        <!-- Annual -->
+        <div class="plan-card plan-card--popular">
+          <span class="plan-badge">&#11088; 가장 추천</span>
+          <div class="plan-icon">&#127882;</div>
+          <div class="plan-name">Pro 연간</div>
+          <div class="plan-price-range">€29.59~59.99<span style="font-size:1rem;font-weight:400;color:var(--text3)">/년</span></div>
+          <div class="plan-price-note">11개월 가격, 1개월 무료</div>
+          <ul class="plan-features">
+            <li>모든 Pro 기능</li>
+            <li>월간 대비 절약</li>
+            <li>1개월 무료 포함</li>
+            <li>30일 무료 체험 포함</li>
+          </ul>
+        </div>
+
+        <!-- Lifetime -->
+        <div class="plan-card">
+          <div class="plan-icon">&#9889;</div>
+          <div class="plan-name">Pro 평생</div>
+          <div class="plan-price-range">€67.90~129.90</div>
+          <div class="plan-price-note">일회 결제, 영구적</div>
+          <ul class="plan-features">
+            <li>모든 Pro 기능</li>
+            <li>모든 향후 업데이트 포함</li>
+            <li>반복 결제 없음</li>
+            <li>확립자 배지</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         DEVICE TIERS
+    ============================================================ -->
+    <section class="section">
+      <div class="section__label">기기 등급</div>
+      <h2 class="section__title">몇 개의 기기가 필요하신가요?</h2>
+      <p class="section__sub">모든 기기에서 활성 브라우저는 하나의 슬롯으로 계산됩니다. 제한 범위 내에서 자유롭게 브라우저와 컴퓨터를 혼합하세요.</p>
+
+      <div class="tier-grid">
+
+        <!-- 3 Devices -->
+        <div class="tier-card">
+          <div class="tier-icon">&#128187;</div>
+          <div class="tier-name">3개 기기 - 개인용</div>
+          <div class="tier-desc">데스크톱, 노트북 및 모바일 브라우저에 완벽. 대부분의 개인 사용자를 커버합니다.</div>
+          <div class="tier-prices">
+            <div class="tier-price-row">
+              <span class="tier-price-label">월간</span>
+              <span class="tier-price-val">€2.69/월</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-price-label">연간</span>
+              <span class="tier-price-val">€29.59/년</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-price-label">평생</span>
+              <span class="tier-price-val">€67.90</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5 Devices -->
+        <div class="tier-card">
+          <div class="tier-icon">&#128106;</div>
+          <div class="tier-name">5개 기기 - 가족</div>
+          <div class="tier-desc">함께 사는 사람들과 공유하세요. 가족의 주요 기기에 충분합니다.</div>
+          <div class="tier-prices">
+            <div class="tier-price-row">
+              <span class="tier-price-label">월간</span>
+              <span class="tier-price-val">€3.99/월</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-price-label">연간</span>
+              <span class="tier-price-val">€39.99/년</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-price-label">평생</span>
+              <span class="tier-price-val">€89.90</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 10 Devices -->
+        <div class="tier-card">
+          <div class="tier-icon">&#127970;</div>
+          <div class="tier-name">10개 기기 - 팀</div>
+          <div class="tier-desc">소규모 사무실 또는 많은 환경의 파워 사용자. 모든 사용자에게 한 라이선스.</div>
+          <div class="tier-prices">
+            <div class="tier-price-row">
+              <span class="tier-price-label">월간</span>
+              <span class="tier-price-val">€5.99/월</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-price-label">연간</span>
+              <span class="tier-price-val">€59.99/년</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-price-label">평생</span>
+              <span class="tier-price-val">€129.90</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         HOW IT WORKS
+    ============================================================ -->
+    <section class="section">
+      <div class="section__label">활성화</div>
+      <h2 class="section__title">시작하기</h2>
+      <p class="section__sub">구매부터 활성 보호까지 2분 이내.</p>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step__num">1</div>
+          <div class="step__content">
+            <div class="step__title">요금제와 기기 등급 선택</div>
+            <div class="step__desc">월간, 연간 또는 평생을 선택한 후 필요한 기기 등급을 선택하세요(3, 5 또는 10). 나중에 지원팀에 문의하여 업그레이드할 수 있습니다.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step__num">2</div>
+          <div class="step__content">
+            <div class="step__title">Stripe를 통해 결제 완료(안전함)</div>
+            <div class="step__desc">결제는 온라인 결제의 업계 표준인 Stripe에서 처리합니다. AdOff는 절대 카드 세부 정보를 저장하지 않습니다. 모든 거래는 256비트 SSL로 암호화됩니다.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step__num">3</div>
+          <div class="step__content">
+            <div class="step__title">이메일로 라이선스 키 받기</div>
+            <div class="step__desc">결제 후 라이선스 키(형식: <code style="background:var(--card2);padding:2px 6px;border-radius:4px;font-size:0.85rem">ADOFF-XXXX-XXXX-XXXX</code>)가 즉시 받은편지함에 도착합니다.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step__num">4</div>
+          <div class="step__content">
+            <div class="step__title">AdOff 설정에서 키 입력</div>
+            <div class="step__desc">AdOff 확장 프로그램 열기 → 아이콘 클릭 → 옵션 → 요금제 및 라이선스 → 라이선스 활성화로 이동하세요. 키를 붙여넣고 활성화를 클릭합니다.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step__num">5</div>
+          <div class="step__content">
+            <div class="step__title">완료. 이 기기에서 Pro가 활성화됨</div>
+            <div class="step__desc">눈에 띄지 않는 안티바이패스 기술과 비디오 광고 제거가 이제 활성화되었습니다. 보호하려는 다른 기기에서 4단계를 반복합니다.</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         DEVICE MANAGEMENT
+    ============================================================ -->
+    <section class="section">
+      <div class="section__label">기기 관리</div>
+      <h2 class="section__title">스트리밍 서비스처럼 기기 관리하기</h2>
+      <p class="section__sub">요금제는 설치할 수 있는 기기 수를 제한하지 않고, <em>동시에 활성 상태인</em> 기기의 수를 제한합니다.</p>
+
+      <div class="callout">
+        <div class="callout__title">&#128272; 기기 슬롯 작동 방식</div>
+        <ul class="callout__list">
+          <li>원하는 만큼 많은 브라우저에 AdOff를 설치하세요, 제한 없음</li>
+          <li>요금제는 활성 기기 수를 제한합니다(언제든지 3, 5 또는 10)</li>
+          <li>각 브라우저는 같은 컴퓨터에서도 하나의 기기로 계산됩니다</li>
+          <li><a href="https://adoff.app/account" target="_blank" rel="noopener noreferrer">adoff.app/account</a>에서 활성 기기를 관리하세요</li>
+          <li>언제든지 이전 기기를 제거하여 슬롯을 확보하세요</li>
+          <li>기기 제거 최대 3개/일(악용 방지)</li>
+        </ul>
+      </div>
+
+      <div class="callout" style="border-left-color: var(--yellow);">
+        <div class="callout__title">&#9888;&#65039; 제한에 도달하면</div>
+        <ul class="callout__list">
+          <li>AdOff는 기기 제한에 도달했음을 알리는 알림을 표시합니다</li>
+          <li><a href="https://adoff.app/account" target="_blank" rel="noopener noreferrer">adoff.app/account</a>를 방문하여 이전 기기를 제거하세요</li>
+          <li>기기 제거는 즉시 이루어지며, 해제된 슬롯은 바로 사용 가능합니다</li>
+          <li>더 많은 기기가 필요하신가요? 지원팀에 문의하여 등급을 업그레이드하세요</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         FAQ
+    ============================================================ -->
+    <section class="section">
+      <div class="section__label">자주 묻는 질문</div>
+      <h2 class="section__title">자주 묻는 질문</h2>
+      <p class="section__sub">일반적인 라이선스 질문에 대한 빠른 답변.</p>
+
+      <div class="faq">
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            기기 제한에 도달하면 어떻게 되나요?
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            확장 프로그램에 메시지가 표시됩니다. <a href="https://adoff.app/account" target="_blank" rel="noopener noreferrer">adoff.app/account</a>로 가서 더 이상 사용하지 않는 기기를 제거하면 슬롯이 즉시 해제됩니다. 하루에 최대 3개 기기를 제거할 수 있습니다.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            같은 컴퓨터의 다른 브라우저에서 같은 라이선스를 사용할 수 있나요?
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            가능하지만 각 브라우저는 별도의 기기로 계산됩니다. 예를 들어, 같은 컴퓨터의 Chrome과 Firefox는 두 개의 슬롯을 사용합니다. 따라서 계획을 세워야 합니다: 3개 기기 요금제는 3개의 브라우저 설치를 커버합니다.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            브라우저를 재설치하거나 컴퓨터를 재설정하면 어떻게 되나요?
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            기기 ID는 브라우저 프로필에 저장됩니다. 재설치 후 손실되면 새 기기로 등록될 수 있습니다. 계정 페이지를 방문하여 이전 기기 항목을 제거하고 슬롯을 해제하세요.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            기기 등급을 업그레이드할 수 있나요?
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            가능합니다. <a href="https://adoff.app/support.html">지원 양식</a>을 통해 문의하시면 요금제를 조정해 드리겠습니다. 갱신의 경우, 비례 차액을 청구합니다. 평생의 경우, 가격 차액을 결제합니다.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            무료 및 Pro 버전의 차이점은 무엇인가요?
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            무료 요금제에는 네트워크 수준의 광고 차단(138개 규칙) 및 모든 사이트의 CSS 미용 숨김이 포함됩니다. Pro는 다음을 추가합니다: <strong>눈에 띄지 않는 안티바이패스 기술</strong>(안티바이패스 시스템에 눈에 띄지 않음), <strong>스트리밍 플랫폼의 SDK 수준 비디오 광고 제거</strong>(자동 실행 전 및 중간 광고 없음) 및 상세 통계.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            무료 체험판이 있나요?
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            있습니다. 모든 새 설치는 자동으로 3개 기기에서 모든 Pro 기능이 포함된 <strong>30일 무료 체험</strong>을 시작합니다. 신용카드가 필요하지 않습니다. 30일 후 요금제를 구매하지 않으면 확장 프로그램은 자동으로 무료 등급으로 계속됩니다.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            환불을 받을 수 있나요?
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            있습니다. 전체 환불 보장 30일을 제공합니다. 질문 없음. <a href="https://adoff.app/support.html">지원 양식</a>을 통해 구매 후 30일 이내에 문의하세요.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            내 결제 정보는 안전한가요?
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            모든 결제는 Stripe(PCI DSS 레벨 1 인증)에서 처리합니다. AdOff는 카드 번호에 접근할 수 없습니다. 이메일은 라이선스 키를 보내고 중요한 계정 업데이트를 알리기 위해서만 사용됩니다.
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         CTA
+    ============================================================ -->
+    <section class="cta-section">
+      <h2 class="cta-section__title">광고 없는 삶을 살 준비가 되셨나요?</h2>
+      <p class="cta-section__sub">30일 무료 체험을 시작하세요. 신용카드 필요 없음.</p>
+      <a href="https://adoff.app/#pricing" class="btn-primary">가격 요금제 보기 →</a>
+      <p class="cta-trial-note">30일 무료 · 30일 환불 보장 · 언제든지 취소 가능</p>
+    </section>
+
+  </div><!-- /page-wrapper -->
+
+  <!-- Shared footer injected by adoff-footer.js -->
+  <script src="/adoff-footer.js?v=260602a"></script>
+
+
+  <script>
+    // ============================================================
+    // FAQ ACCORDION
+    // ============================================================
+    function toggleFaq(btn) {
+      var item = btn.closest('.faq-item');
+      var isOpen = item.classList.contains('open');
+      // close all
+      document.querySelectorAll('.faq-item.open').forEach(function(el) {
+        el.classList.remove('open');
+      });
+      // open this one if it was closed
+      if (!isOpen) {
+        item.classList.add('open');
+      }
+    }
+  </script>
+
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

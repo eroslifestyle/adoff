@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Co czyni AdOff unikatową: 5 technologii, których nie ma żaden inny bloker reklam</title>
+  <meta name="description" content="AdOff to jedyny bloker reklam na świecie z natywnym anty-SABR-backoff, odzyskiwaniem pozycji treści, uniwersalnym stubem IMA SDK, natychmiastowym pominięciem ze stanem i zintegrowanym stealth — wszystko wbudowane, nie pożyczone z list filtrów." />
+  <link rel="canonical" href="https://adoff.app/pl/unique-tech.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Co czyni AdOff unikatową: 5 technologii, których nie ma żaden inny bloker reklam" />
+  <meta property="og:description" content="Natywny anty-SABR-backoff, odzyskiwanie pozycji treści, uniwersalny stub IMA SDK: AdOff to jedyny bloker reklam na świecie z tymi pięcioma technologiami jako wbudowanymi funkcjami." />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/pl/unique-tech.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Co czyni AdOff unikatową: 5 technologii, których nie ma żaden inny bloker reklam" />
+  <meta name="twitter:description" content="Natywny anty-SABR-backoff, odzyskiwanie pozycji treści, uniwersalny stub IMA SDK: AdOff to jedyny bloker reklam na świecie z tymi pięcioma technologiami jako wbudowanymi funkcjami." />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/unique-tech.html" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/unique-tech.html" />
+  <link rel="alternate" hreflang="it" href="https://adoff.app/it/unique-tech.html" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/de/unique-tech.html" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/fr/unique-tech.html" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/es/unique-tech.html" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/pt/unique-tech.html" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/ru/unique-tech.html" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/ar/unique-tech.html" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/unique-tech.html" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/hi/unique-tech.html" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/unique-tech.html" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/unique-tech.html" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/tr/unique-tech.html" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/id/unique-tech.html" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/pl/unique-tech.html" />
+  <link rel="stylesheet" href="style.css?v=260520-201526" />
+  <style>
+    .article-page { max-width: 880px; margin: 0 auto; padding: 80px 24px 100px; }
+    .article-page h1 { font-size: clamp(2rem, 5vw, 3rem); color: #fff; margin-bottom: 16px; line-height: 1.15; }
+    .article-page .lede { font-size: 1.15rem; color: #b0b0c8; line-height: 1.7; margin-bottom: 48px; }
+    .article-page h2 { font-size: 1.6rem; color: #fff; margin: 56px 0 18px; }
+    .article-page h3 { font-size: 1.25rem; color: #e2e2f0; margin: 32px 0 12px; }
+    .article-page p { color: #b0b0c8; line-height: 1.8; margin-bottom: 16px; }
+    .article-page ul, .article-page ol { color: #b0b0c8; margin: 0 0 20px 24px; line-height: 1.8; }
+    .article-page strong { color: #fff; }
+    .badge-unique { display: inline-block; background: linear-gradient(135deg, #7c5cfc, #4f46e5); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-left: 10px; vertical-align: middle; letter-spacing: 0.5px; text-transform: uppercase; }
+    .feature-card { background: #12122a; border: 1px solid #2a2a4a; border-radius: 16px; padding: 32px; margin: 32px 0; position: relative; }
+    .feature-card.unique { border-color: rgba(124, 92, 252, 0.45); box-shadow: 0 0 0 1px rgba(124, 92, 252, 0.1); }
+    .feature-card .icon-row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+    .feature-card .icon-circle { width: 44px; height: 44px; border-radius: 12px; background: rgba(124, 92, 252, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+    .feature-card h3 { color: #fff; margin: 0; font-size: 1.3rem; }
+    .feature-card .problem-tag { color: #f43f5e; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+    .feature-card .solution-tag { color: #4ade80; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 18px 0 6px; display: block; }
+    .feature-card p { margin-bottom: 12px; }
+    .feature-card .meta-row { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 18px; padding-top: 18px; border-top: 1px solid #2a2a4a; font-size: 0.85rem; color: #8888aa; }
+    .feature-card .meta-row strong { color: #b0b0c8; }
+    .comp-table { width: 100%; border-collapse: collapse; margin: 32px 0 40px; font-size: 0.95rem; }
+    .comp-table th, .comp-table td { padding: 14px 12px; text-align: center; border-bottom: 1px solid #2a2a4a; }
+    .comp-table th { color: #fff; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; background: #0e0e22; }
+    .comp-table th:first-child, .comp-table td:first-child { text-align: left; color: #e2e2f0; font-weight: 500; }
+    .comp-table td { color: #b0b0c8; }
+    .comp-table .check { color: #4ade80; font-weight: 800; font-size: 1.1rem; }
+    .comp-table .cross { color: #f43f5e; font-weight: 800; font-size: 1.1rem; }
+    .comp-table .partial { color: #fbbf24; font-weight: 800; font-size: 1.1rem; }
+    .comp-table th:nth-child(6), .comp-table td:nth-child(6) { background: rgba(124, 92, 252, 0.08); border-left: 1px solid rgba(124, 92, 252, 0.25); border-right: 1px solid rgba(124, 92, 252, 0.25); }
+    .comp-table th:nth-child(6) { color: #7c5cfc; }
+    .promise-list { background: #12122a; border-left: 4px solid #7c5cfc; padding: 24px 28px; border-radius: 8px; margin: 32px 0; }
+    .promise-list ul { margin: 12px 0 0 20px; }
+    .promise-list li { margin-bottom: 10px; }
+    .cta-box { background: linear-gradient(135deg, #12122a, #1a1a3a); border: 1px solid rgba(124,92,252,0.4); border-radius: 18px; padding: 40px; text-align: center; margin: 56px 0 24px; }
+    .cta-box h3 { color: #fff; margin: 0 0 12px; font-size: 1.5rem; }
+    .cta-box p { color: #8888aa; margin-bottom: 24px; }
+    .citation { color: #6c6c85; font-size: 0.82rem; margin-top: 6px; }
+    .citation a { color: #7c5cfc; text-decoration: none; }
+    .citation a:hover { text-decoration: underline; }
+  </style>
+  <script src="/adoff-i18n.js?v=260520-201526"></script>
+  </head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="brand"><img src="/assets/icon128.png" alt="AdOff" class="brand-logo" /><span class="brand-name">AdOff</span></a>
+      <nav class="topbar-nav" id="topbarNav"></nav>
+    </div>
+  </header>
+
+  <article class="article-page">
+
+    <h1>5 technologii, których nie ma żaden inny bloker reklam na świecie</h1>
+    <p class="lede">
+      Większość blokerów reklam przestaje tam, gdzie robi się trudno. AdOff idzie dalej — dzięki pięciu
+      zastrzeżonym technologiom anty-reklamowym, które rozwiązują problemy, które żaden konkurent nie
+      rozwiązuje. Poniżej znajduje się szczera, techniczna, możliwa do zweryfikowania analiza.
+    </p>
+
+    <!-- ============== COMPARISON TABLE ============== -->
+    <h2>Uczciwe porównanie</h2>
+
+    <p>
+      Każde twierdzenie na tej stronie można zweryfikować, czytając publiczny kod źródłowy konkurentów
+      i naszą udostępnioną wersję. Oto porównanie obok siebie:
+    </p>
+
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Funkcja</th>
+          <th>uBlock Origin</th>
+          <th>AdBlock Plus</th>
+          <th>AdGuard</th>
+          <th>Ghostery</th>
+          <th>AdOff</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Blokowanie sieci (declarativeNetRequest)</td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td>Filtr kosmetyczny (ukrywanie CSS)</td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td>Stealth anty-detekcji (natywny, w produkcie)</td>
+          <td><span class="partial">poprzez filtry</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="partial">poprzez filtry</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>Anty SABR-backoff (likwiduje fake-buffering)</strong></td>
+          <td><span class="partial">filtr społeczności</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>Odzyskiwanie pozycji treści</strong></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>Uniwersalny stub IMA SDK (na poziomie okna)</strong></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>Pominięcie reklam wideo ze stanem</strong></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="font-size: 0.88rem; color: #8888aa;">
+      Legenda: <span class="check" style="font-size: 0.9rem;">✓</span> = funkcja natywna, wbudowana &middot;
+      <span class="partial" style="font-size: 0.9rem;">poprzez filtry</span> = polega na utrzymywanych przez społeczność listach filtrów (może się zepsuć wraz z aktualizacjami platformy) &middot;
+      <span class="cross" style="font-size: 0.9rem;">✗</span> = nie zaimplementowano
+    </p>
+
+    <!-- ============== FEATURE 1: SABR ============== -->
+    <h2>1. Anty SABR-backoff <span class="badge-unique">Pierwszy na świecie</span></h2>
+
+    <div class="feature-card unique">
+      <div class="icon-row">
+        <div class="icon-circle">⏱️</div>
+        <h3>Brak przerw na czarnym ekranie 10-20 sekund</h3>
+      </div>
+
+      <span class="problem-tag">Problem</span>
+      <p>
+        Nowoczesne platformy wideo uruchamiają zastrzeżony protokół transmisji zwany <strong>SABR</strong>
+        (Server Adaptive Bit Rate). Gdy SABR wykryje aktywny bloker reklam,
+        <em>sam serwer</em> wstrzykuje sztuczną pauzę w strumień wideo — około 80% czasu trwania reklamy.
+        Jeśli zaplanowano 15-sekundową reklamę, będziesz patrzeć na czarny ekran przez 12 sekund przed wznowieniem treści. <strong>Nawet jeśli reklama została doskonale zablokowana.</strong>
+      </p>
+      <p>
+        To opóźnienie jest kryptograficznie podpisane w adresie URL strumienia przez serwer. Tradycyjne
+        blokery reklam nie mogą go usunąć, ponieważ działają tylko w przeglądarce, po wydaniu adresu URL.
+      </p>
+
+      <span class="solution-tag">Jak AdOff to rozwiązuje</span>
+      <p>
+        Zanim żądanie odtwarzacza opuści Twoją przeglądarkę, AdOff wstrzykuje specjalny parametr
+        (<code>isInlinePlaybackNoAd: true</code>) w treść żądania. To mówi backendowi platformy:
+        „nie planuj żadnych reklam w odpowiedzi". Bez zaplanowanych reklam serwer nie ma powodu
+        do kodowania backoff w adresie URL strumienia. <strong>Przerwa nigdy nie jest tworzona w pierwszej kolejności.</strong>
+      </p>
+      <p>
+        AdOff przechwytuje zarówno <code>fetch</code> jak i <code>XMLHttpRequest</code>, aby pokryć każdą ścieżkę kodu, którą
+        odtwarzacz może używać, i stosuje wstrzyknięcie poprzez dopasowanie wzorca na poziomie ciągu, aby ominąć
+        ochronę tamper-protection platformy na <code>JSON.stringify</code>.
+      </p>
+
+      <div class="meta-row">
+        <span><strong>Aktywne w</strong>: AdOff 3.3.1+</span>
+        <span><strong>Warstwa</strong>: 5 z 7</span>
+        <span><strong>Plan</strong>: Pro / Trial</span>
+      </div>
+      <div class="citation">
+        Odniesienie: <a href="https://iter.ca/post/yt-adblock" target="_blank" rel="noopener">iter.ca analiza techniczna</a>,
+        Relacja SecurityOnline
+      </div>
+    </div>
+
+    <!-- ============== FEATURE 2: POSITION RECOVERY ============== -->
+    <h2>2. Odzyskiwanie pozycji treści <span class="badge-unique">Pierwszy na świecie</span></h2>
+
+    <div class="feature-card unique">
+      <div class="icon-row">
+        <div class="icon-circle">↩️</div>
+        <h3>Wideo wznawia się dokładnie w miejscu, w którym je zostawiłeś — zawsze</h3>
+      </div>
+
+      <span class="problem-tag">Problem</span>
+      <p>
+        Platformy wideo ponownie używają tego samego elementu HTML5 <code>&lt;video&gt;</code> zarówno dla reklam, jak i treści,
+        zmieniając źródło poprzez Media Source Extensions. Gdy reklama zostanie wymuszona do pominięcia, odtwarzacz
+        może stracić ślad pozycji treści podczas zamiany źródła. Wideo może
+        zacząć się od początku lub przeskoczyć o 30-50 sekund do materiału, który nigdy nie widziałeś.
+        To jest udokumentowana usterka samych platform — potwierdzona przez Android Authority i
+        PiunikaWeb w kwietniu 2026, gdzie wpłynęła nawet na użytkowników bez blokerów reklam.
+      </p>
+
+      <span class="solution-tag">Jak AdOff to rozwiązuje</span>
+      <p>
+        Co 500 milisekund AdOff rejestruje bieżącą pozycję wideo treści do pamięci lokalnej
+        (nigdy nigdzie się nie wysyła). Gdy reklama się kończy, watchdog działa przez 3 sekundy, sprawdzając,
+        czy pozycja po reklamie jest zgodna z pozycją przed reklamą. Jeśli odtwarzacz wylądował więcej niż
+        5 sekund od celu — do przodu lub do tyłu — AdOff wymusza pozycję z powrotem do miejsca, w którym faktycznie byłeś.
+      </p>
+      <p>
+        Odzyskiwanie jest inteligentne: toleruje małe naturalne wyszukiwania, zatrzymuje się, jeśli nowa reklama się zaczyna,
+        i porzuca się wdzięcznie, jeśli odtwarzacz agresywnie go zastępuje. <strong>Zawsze kontynuujesz
+        z dokładnej sekundy, którą oglądałeś.</strong>
+      </p>
+
+      <div class="meta-row">
+        <span><strong>Aktywne w</strong>: AdOff 3.3.0+</span>
+        <span><strong>Warstwa</strong>: 6 z 7</span>
+        <span><strong>Plan</strong>: Pro / Trial</span>
+      </div>
+      <div class="citation">
+        Odniesienie: Android Authority,
+        PiunikaWeb 2026-04-22
+      </div>
+    </div>
+
+    <!-- ============== FEATURE 3: IMA SDK STUB ============== -->
+    <h2>3. Uniwersalny stub IMA SDK <span class="badge-unique">Pierwszy na świecie</span></h2>
+
+    <div class="feature-card unique">
+      <div class="icon-row">
+        <div class="icon-circle">🔌</div>
+        <h3>Zero reklam wideo na każdej stronie, która używa standardowego SDK reklam</h3>
+      </div>
+
+      <span class="problem-tag">Problem</span>
+      <p>
+        Większość stron wideo i nadawców używa jednego standardowego SDK branżowego do odtwarzania przerw reklamowych
+        (pre-roll, mid-roll, post-roll). Tradycyjne blokery reklam próbują zablokować SDK na warstwie
+        sieci — ale jeśli odtwarzacz ma SDK <strong>zbudowany w swoim własnym JavaScripcie</strong>
+        (bez żądania sieciowego), blok się nie powiedzie. Użytkownicy i tak widzą reklamy. Dlatego Twój
+        bloker reklam działający tylko na sieci wciąż pokazuje Ci reklamy na niektórych stronach streamingowych.
+      </p>
+
+      <span class="solution-tag">Jak AdOff to rozwiązuje</span>
+      <p>
+        AdOff wstrzykuje kompletny, w pełni funkcjonalny stub SDK reklam bezpośrednio do
+        <code>window.google.ima</code> <em>zanim jakikolwiek skrypt witryny się uruchomi</em>. Stub wdrażuje
+        całe publiczne API — ponad 30 klas, 60+ zdarzeń, 200+ metod — aby każdy odtwarzacz, który
+        wzywa SDK, otrzymał działający obiekt. Gdy odtwarzacz prosi o reklamę, stub natychmiast aktywuje
+        cztery zdarzenia cyklu życia (<code>CONTENT_PAUSE_REQUESTED</code>, <code>STARTED</code>,
+        <code>COMPLETE</code>, <code>CONTENT_RESUME_REQUESTED</code>) w ciągu 16 milisekund. Odtwarzacz uważa,
+        że reklama została odtworzona i zakończona. Użytkownik nic nie widzi.
+      </p>
+      <p>
+        <strong>Działa na każdej platformie wideo na świecie, która używa tego SDK</strong>, bez list domen,
+        bez reguł ręcznych i bez wymaganych aktualizacji. Witryny, które zbudowują SDK lokalnie, są
+        pokryte dokładnie tak samo jak witryny, które ładują je z sieci.
+      </p>
+
+      <div class="meta-row">
+        <span><strong>Aktywne w</strong>: AdOff 3.0+</span>
+        <span><strong>Warstwa</strong>: 7 z 7</span>
+        <span><strong>Plan</strong>: Pro / Trial</span>
+      </div>
+    </div>
+
+    <!-- ============== FEATURE 4: STEALTH ============== -->
+    <h2>4. Natywny Stealth anty-detekcji <span class="badge-unique">W produkcie</span></h2>
+
+    <div class="feature-card">
+      <div class="icon-row">
+        <div class="icon-circle">🥷</div>
+        <h3>Ściany anty-blokera nigdy się nie aktywują — bo jesteś niewidoczny</h3>
+      </div>
+
+      <span class="problem-tag">Problem</span>
+      <p>
+        Wiele witryn wykrywa blokery reklam, tworząc elementy „przynęty" (divy z nazwami klas, takimi jak
+        <code>ad-banner</code>) i sprawdzając, czy zostały ukryte, lub sondując istnienie globalnych zmiennych SDK reklam.
+        Po wykryciu pokazują ściany „wyłącz bloker reklam" lub odmawiają załadowania treści. Alguns konkurenci
+        obsługują to tylko poprzez listy filtrów społeczności — które łamią się
+        za każdym razem, gdy platformy aktualizują swoją detekcję.
+      </p>
+
+      <span class="solution-tag">Jak AdOff to rozwiązuje</span>
+      <p>
+        Stealth jest wbudowany w kod źródłowy AdOff, utrzymywany we własnym zakresie i aktualizowany z każdym
+        wydaniem. Pięć technik pracuje razem:
+      </p>
+      <ul>
+        <li><strong>Spoofing CSS</strong>: <code>display</code>, <code>visibility</code>, <code>opacity</code>, <code>width</code>, <code>height</code> na elementach przynęty zgłaszają fałszywe wartości</li>
+        <li><strong>Spoofing zmiennych</strong>: globalne SDK reklam są wstępnie wypełnione realistycznymi stubami</li>
+        <li><strong>Neutralizacja sieci</strong>: znane adresy URL skryptów detekcji otrzymują puste odpowiedzi 200</li>
+        <li><strong>Neutralizacja skryptów</strong>: skrypty anty-blokera są przechwytywane przed wykonaniem</li>
+        <li><strong>Anty scroll-lock</strong>: uniemożliwia ścianom anty-blokera zamrożenie przewijania strony</li>
+      </ul>
+      <p>
+        Kod detekcji witryny uruchamia się do końca i zwraca „nie znaleziono blokera reklam". <strong>Ściana nigdy się nie pojawia.</strong>
+      </p>
+
+      <div class="meta-row">
+        <span><strong>Aktywne w</strong>: AdOff 2.0+</span>
+        <span><strong>Warstwa</strong>: 4 z 7</span>
+        <span><strong>Plan</strong>: Pro / Trial</span>
+      </div>
+    </div>
+
+    <!-- ============== FEATURE 5: STATE-PRESERVING SKIP ============== -->
+    <h2>5. Natychmiastowe pominięcie ze stanem <span class="badge-unique">Pierwszy na świecie</span></h2>
+
+    <div class="feature-card unique">
+      <div class="icon-row">
+        <div class="icon-circle">⏩</div>
+        <h3>Pomiń reklamy w milisekundach bez uszkodzenia odtwarzacza</h3>
+      </div>
+
+      <span class="problem-tag">Problem</span>
+      <p>
+        Najprostszy sposób pominięcia reklamy wideo to ustawienie <code>currentTime</code> wideo na jego
+        <code>duration</code>, kończąc je natychmiast. Większość zakładek do pomijania reklam i wiele rozszerzeń
+        używa tego triku. <strong>Psuje odtwarzacz.</strong> Ponieważ reklama i treść dzielą
+        ten sam element wideo, wyszukiwanie psuje wewnętrzny stan odtwarzacza, a wideo treści
+        zaczyna się od złej pozycji po wznowieniu.
+      </p>
+
+      <span class="solution-tag">Jak AdOff to rozwiązuje</span>
+      <p>
+        AdOff nigdy nie wyszukuje wideo reklamy. Zamiast tego ustawia szybkość odtwarzania na 16x — reklama działa do
+        jej naturalnego końca w około 2 sekundy bez uszkodzenia stanu. Jednocześnie przycisk pominięcia
+        jest automatycznie klikany w momencie pojawienia się (sondowanie co 50 ms). Wewnętrzna księgowość odtwarzacza
+        pozostaje doskonała, a wszystkie zdarzenia anty-detekcji obserwujące <code>ratechange</code>
+        są maskowane podczas pomijania poprzez owinięty detektor zdarzeń.
+      </p>
+      <p>
+        W połączeniu z warstwą odzyskiwania pozycji (#2 powyżej), oznacza to: <strong>reklamy znikają w
+        około 2 sekundy, wideo treści wznawia się z dokładnej klatki, na której byłeś, a odtwarzacz
+        nigdy nie wie, że coś się stało.</strong>
+      </p>
+
+      <div class="meta-row">
+        <span><strong>Aktywne w</strong>: AdOff 3.3.0+</span>
+        <span><strong>Warstwa</strong>: B (Instant Skip)</span>
+        <span><strong>Plan</strong>: Pro / Trial</span>
+      </div>
+    </div>
+
+    <!-- ============== PROMISES ============== -->
+    <h2>Obietnice, które spełniamy</h2>
+
+    <div class="promise-list">
+      <p><strong>Pięć gwarancji, których żaden inny bloker reklam nie może dać:</strong></p>
+      <ul>
+        <li><strong>Brak fake-buffering czarnych ekranów.</strong> Nie będziesz czekać 10-20 sekund na start treści — serwer platformy nie planuje reklam w pierwszej kolejności.</li>
+        <li><strong>Wideo wznawia się dokładnie w miejscu, w którym je zostawiłeś.</strong> Zawsze. Nawet gdy platforma ma błędy.</li>
+        <li><strong>Działa na każdej stronie korzystającej ze standardowego SDK reklam branżowych.</strong> Bez list domen. Bez reguł ręcznych. Bez paniki z aktualizacjami.</li>
+        <li><strong>Aktualizacje w dni, nie miesiące.</strong> Gdy platformy wysyłają nowy kontrzmiar, wysyłamy poprawkę w następnym wydaniu — nie „gdy opiekun listy filtrów do tego dojdzie".</li>
+        <li><strong>Zerowa kolekcja danych.</strong> Brak telemetrii. Bez śledzenia. Wszystko działa lokalnie w Twojej przeglądarce. Na zawsze.</li>
+      </ul>
+    </div>
+
+    <!-- ============== WHY UNIQUE ============== -->
+    <h2>Dlaczego to trudne do skopiowania</h2>
+
+    <p>
+      Warstwy 5, 6 i 7 — anty-SABR-backoff, odzyskiwanie pozycji treści i uniwersalny stub IMA SDK
+      — są wynikiem miesięcy reverse-engineeringu nowoczesnych zachowań odtwarzacza wideo. Nie są to jednorazowe triki:
+      są to architektury, które obsługują setki przypadków granicznych (dynamiczne zamiany źródeł, anty-tamper proxy
+      na globalne funkcje, zablokowany <code>JSON.stringify</code>, odtwarzacze leniwego ładowania, streamy premium SSAI, które
+      potrzebują prawdziwego SDK, i tak dalej).
+    </p>
+    <p>
+      Konkurent, który chce dorównać AdOff, nie musi pisać 500 linii kodu. Musi reverse-engineerować te same
+      systemy, które robiliśmy, zweryfikować setki implementacji odtwarzaczy i utrzymywać rezultat
+      za każdym razem, gdy platformy aktualizują — za darmo, w swoim projekcie open-source, jednocześnie
+      nadążając za swoim zestawem funkcji podstawowych. <strong>Dlatego żaden popularny bloker reklam nie wysłał
+      tych funkcji jako wbudowanych możliwości produktu.</strong> I dlatego sądzimy, że nie będą, przynajmniej niedługo.
+    </p>
+
+    <!-- ============== CTA ============== -->
+    <div class="cta-box">
+      <h3>Spróbuj jedynego blokera reklam z wszystkimi 7 warstwami</h3>
+      <p>30 dni pełnego dostępu Pro. Bez karty kredytowej. Anuluj w dowolnym momencie.</p>
+      <a href="/install.html" class="btn">Zainstaluj AdOff gratis →</a>
+    </div>
+
+  </article>
+
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+  <script src="/adoff-footer.js?v=260602a"></script>
+  
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

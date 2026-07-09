@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AdOff - Ad Blocker Anti-Deteksi untuk Chrome &amp; Firefox</title>
+<meta content="AdOff memblokir semua iklan di Chrome, Edge, Firefox, Safari, Opera. Gratis + Pro dengan Stealth Mode anti-antiblock. Uji coba 30 hari gratis, tanpa kartu." name="description"/>
+<meta content="index, follow, max-image-preview:large, max-snippet:-1" name="robots"/>
+<!-- Canonical -->
+<link href="https://adoff.app/id/" rel="canonical"/>
+<!-- hreflang — 15 lingue -->
+<link href="https://adoff.app/" hreflang="it" rel="alternate"/>
+<link href="https://adoff.app/en/" hreflang="en" rel="alternate"/>
+<link href="https://adoff.app/de/" hreflang="de" rel="alternate"/>
+<link href="https://adoff.app/fr/" hreflang="fr" rel="alternate"/>
+<link href="https://adoff.app/es/" hreflang="es" rel="alternate"/>
+<link href="https://adoff.app/pt/" hreflang="pt" rel="alternate"/>
+<link href="https://adoff.app/ru/" hreflang="ru" rel="alternate"/>
+<link href="https://adoff.app/ar/" hreflang="ar" rel="alternate"/>
+<link href="https://adoff.app/zh/" hreflang="zh" rel="alternate"/>
+<link href="https://adoff.app/hi/" hreflang="hi" rel="alternate"/>
+<link href="https://adoff.app/ja/" hreflang="ja" rel="alternate"/>
+<link href="https://adoff.app/ko/" hreflang="ko" rel="alternate"/>
+<link href="https://adoff.app/tr/" hreflang="tr" rel="alternate"/>
+<link href="https://adoff.app/id/" hreflang="id" rel="alternate"/>
+<link href="https://adoff.app/pl/" hreflang="pl" rel="alternate"/>
+<link href="https://adoff.app/en/" hreflang="x-default" rel="alternate"/>
+<!-- Open Graph -->
+<meta content="website" property="og:type"/>
+<meta content="AdOff, Ad Blocker Anti-Deteksi Terbaik 2026 | Blokir Semua Iklan" property="og:title"/>
+<meta content="AdOff memblokir semua iklan di Chrome, Edge, Brave, Firefox. Stealth Mode anti-antiblock. Uji coba Pro 30 hari gratis, tanpa kartu." property="og:description"/>
+<meta content="https://adoff.app/assets/og-image.png" property="og:image"/>
+<meta content="https://adoff.app/id/" property="og:url"/>
+<meta content="AdOff" property="og:site_name"/>
+<meta content="id_ID" property="og:locale"/>
+<meta content="en_US" property="og:locale:alternate"/>
+<meta content="de_DE" property="og:locale:alternate"/>
+<meta content="fr_FR" property="og:locale:alternate"/>
+<meta content="es_ES" property="og:locale:alternate"/>
+<meta content="pt_PT" property="og:locale:alternate"/>
+<meta content="ru_RU" property="og:locale:alternate"/>
+<meta content="ar_SA" property="og:locale:alternate"/>
+<meta content="zh_CN" property="og:locale:alternate"/>
+<meta content="hi_IN" property="og:locale:alternate"/>
+<meta content="ja_JP" property="og:locale:alternate"/>
+<meta content="ko_KR" property="og:locale:alternate"/>
+<meta content="tr_TR" property="og:locale:alternate"/>
+<meta content="id_ID" property="og:locale:alternate"/>
+<meta content="pl_PL" property="og:locale:alternate"/>
+<!-- Twitter Card -->
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="AdOff, Ad Blocker Anti-Deteksi Terbaik 2026 | Blokir Semua Iklan" name="twitter:title"/>
+<meta content="AdOff memblokir semua iklan di Chrome, Edge, Brave, Firefox. Stealth Mode anti-antiblock. Uji coba Pro 30 hari gratis, tanpa kartu." name="twitter:description"/>
+<meta content="https://adoff.app/assets/og-image.png" name="twitter:image"/>
+<link href="/assets/logo.svg" rel="icon" type="image/svg+xml"/>
+<link href="/manifest.webmanifest" rel="manifest"/>
+<meta content="#0a0a1a" name="theme-color"/>
+<link href="/style.css?v=260520-205323" rel="stylesheet"/>
+<script src="/affiliate-tracking.js"></script>
+<style>
+    /* Page-specific overrides for index.html.
+       All design tokens, components and resets live in style.css.
+       Keep this block under 80 lines. */
+
+    /* Hero — kill leftover gradient text + halo (defensive) */
+    .hero__headline,
+    .final-cta__headline,
+    .solution__reveal,
+    .gradient-text {
+      background: none !important;
+      -webkit-background-clip: unset !important;
+      -webkit-text-fill-color: currentColor !important;
+      background-clip: unset !important;
+    }
+    .hero::before,
+    .final-cta::before { content: none !important; }
+
+    /* Distribution row replacing the "metric strip" cliché. */
+    .hero__distribution {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      align-items: center;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    .hero__distribution > strong {
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      margin-right: 4px;
+    }
+    .hero__distribution .store-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      color: var(--text-muted);
+      font-weight: 500;
+      text-decoration: none;
+      transition: border-color var(--t), color var(--t), transform var(--t);
+    }
+    .hero__distribution a.store-mark:hover { border-color: var(--accent-line); color: var(--accent); transform: translateY(-1px); }
+
+    /* HERO STORE BUTTONS — Installa direttamente dagli store ufficiali */
+    .hero__stores { margin-top: 2rem; }
+    .hero__stores-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .hero__stores-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      max-width: 760px;
+    }
+    @media (max-width: 720px) {
+      .hero__stores-grid { grid-template-columns: 1fr; }
+    }
+    .store-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: #12122a;
+      border: 1.5px solid #2a2a4a;
+      color: #fff;
+      text-decoration: none;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s, background 0.2s;
+      min-height: 64px;
+    }
+    .store-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .store-btn--chrome:hover { border-color: #4285F4; background: linear-gradient(135deg, rgba(66,133,244,0.12), rgba(66,133,244,0.04)); }
+    .store-btn--firefox:hover { border-color: #FF512F; background: linear-gradient(135deg, rgba(255,81,47,0.12), rgba(255,81,47,0.04)); }
+    .store-btn--edge:hover { border-color: #0F88FF; background: linear-gradient(135deg, rgba(15,136,255,0.12), rgba(15,136,255,0.04)); }
+    .store-btn__logo { flex-shrink: 0; }
+    .store-btn__text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
+    .store-btn__small {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+    .store-btn__big {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 2px;
+    }
+    .hero__stores-secondary {
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+      color: var(--text-dim);
+    }
+    .hero__stores-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .hero__stores-link:hover { color: var(--accent); }
+    .hero__stores-sep { color: var(--border); }
+
+    /* Testimonial provenance lines: tone down */
+    .testi-card__role + .testi-card__role {
+      color: var(--text-dim) !important;
+      font-size: 0.74rem !important;
+      margin-top: 2px;
+      letter-spacing: 0.02em;
+    }
+
+    /* Free plan visual de-emphasis */
+    .plan-card--free { border-style: dashed; opacity: 0.92; }
+    .plan-card--free:hover { opacity: 1; }
+
+    /* "Strikethrough" muted feature in Free plan */
+    .plan-features li .x-mark + span { color: var(--text-dim); }
+
+    /* Section reveal headers — restrict line length on long titles */
+    .section-title { max-width: 22ch; margin-left: auto; margin-right: auto; }
+
+    /* Hide deprecated decorative dot in trust strip */
+    .hero__trust-strip { display: none; }
+
+    /* Compare table styling extracted to .compare-table in style.css */
+
+    /* Footer note links in plan cards */
+    .plan-note[style*="success"] { color: var(--accent) !important; }
+
+    /* IMPORTANT — kill yellow PRO chip leftover behind feature titles */
+    .feature-card__title span[style*="f59e0b"],
+    .feature-card__title span[style*="background"] {
+      background: transparent !important;
+      color: var(--accent) !important;
+      border: 1px solid var(--accent-line) !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.08em !important;
+      text-transform: uppercase !important;
+      font-size: 0.65rem !important;
+      padding: 2px 8px !important;
+      border-radius: 999px !important;
+    }
+
+    /* Mobile: tighten hero distribution */
+    @media (max-width: 540px) {
+      .hero__distribution { font-size: 0.78rem; }
+      .hero__distribution .store-mark { padding: 4px 10px; }
+    }
+  </style>
+<!-- JSON-LD Structured Data for AI Search & Rich Results -->
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AdOff",
+    "alternateName": "AdOff Ad Blocker",
+    "description": "Universal stealth ad blocker for Chrome, Edge, Brave, Firefox, Safari. Blocks all ads invisibly with anti-detection technology. Featherlight, ultrafast.",
+    "url": "https://adoff.app/",
+    "downloadUrl": "https://adoff.app/install.html",
+    "datePublished": "2025-01-01",
+    "dateModified": "2026-04-21",
+    "applicationCategory": "BrowserExtension",
+    "applicationSubCategory": "Ad Blocker",
+    "operatingSystem": "Windows, macOS, Linux, ChromeOS",
+    "browserRequirements": "Requires Chrome, Edge, Brave, Opera, Firefox, or Safari",
+    "fileSize": "Featherlight",
+    "softwareVersion": "3.4.6",
+    "inLanguage": ["en", "it", "de", "fr", "es", "pt", "ru", "ar", "zh", "hi", "ja", "ko", "tr", "id", "pl"],
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "Free",
+        "price": "0",
+        "priceCurrency": "EUR",
+        "description": "Network blocking, CSS hiding, basic video skip, whitelist"
+      },
+      {
+        "@type": "Offer",
+        "name": "Pro Monthly",
+        "price": "2.99",
+        "priceCurrency": "EUR",
+        "description": "Includes Stealth Mode, advanced video skip, anti-detection"
+      },
+      {
+        "@type": "Offer",
+        "name": "Pro Annual (Founder price for the first 100)",
+        "price": "19.99",
+        "priceCurrency": "EUR",
+        "description": "Founder price locked for life for the first 100 subscribers, then 24.99"
+      },
+      {
+        "@type": "Offer",
+        "name": "Founder Lifetime (limited launch offer)",
+        "price": "99",
+        "priceCurrency": "EUR"
+      }
+    ],
+    "featureList": [
+      "Universal ad blocking on all websites",
+      "Manifest V3 compliant",
+      "Stealth Mode anti-detection (Pro)",
+      "Video ad blocking on streaming platforms (Pro/Trial)",
+      "138 network blocking rules",
+      "Cosmetic filtering",
+      "Whitelist per site",
+      "Zero data collection",
+      "15 languages"
+    ]
+  }
+  </script>
+<script src="/adoff-i18n.js?v=260520-205323"></script>
+</head>
+<body>
+<a class="skip-link" data-i18n="a11y.skip" href="#main-content">Salta al contenuto principale</a>
+<!-- ======================== NAV ======================== -->
+<div id="site-nav"></div>
+<script src="/adoff-nav.js?v=260709-ga4b"></script>
+<main id="main-content">
+<!-- ======================== 1. HERO ======================== -->
+<section class="hero">
+<div class="container">
+<div class="hero__content">
+<div aria-label="AdOff" class="wordmark wordmark--hero reveal">
+<span class="wordmark__ad">Ad</span><span class="wordmark__off">Off</span><span class="wordmark__dot">.</span>
+</div>
+<div class="hero__eyebrow reveal reveal-delay-1">
+<span class="hero__eyebrow-dot"></span>
+<span data-i18n="hero.eyebrow">Pemblokir iklan untuk Chrome yang memblokir iklan, banner, dan iklan video, tak terdeteksi situs</span>
+</div>
+<h1 class="hero__headline reveal reveal-delay-2" data-i18n-html="sl.hero.headline">Web dengan kecepatan nyata.<br/><em>Tanpa iklan.</em></h1>
+<p class="hero__sub reveal reveal-delay-3" data-i18n-html="hero.sub">AdOff memblokir spanduk, pop-up, dan pelacak sebelum mereka memuat di browser Anda. Tanpa konfigurasi, tanpa izin berbahaya.</p>
+<div class="hero__stores reveal reveal-delay-4">
+<div class="hero__stores-label" data-i18n="hero.stores.label">Pasang langsung dari toko resmi</div>
+<div class="hero__stores-grid">
+<a class="store-btn store-btn--chrome" href="https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp" rel="noopener" target="_blank">
+<svg aria-hidden="true" class="store-btn__logo" height="28" viewbox="0 0 48 48" width="28"><circle cx="24" cy="24" fill="#fff" r="20"></circle><circle cx="24" cy="24" fill="#4285F4" r="8"></circle><path d="M24 4a20 20 0 0 1 17.32 10H24a10 10 0 0 0-8.66 5L6.68 14A20 20 0 0 1 24 4z" fill="#EA4335"></path><path d="M41.32 14a20 20 0 0 1 0 20l-8.66-5a10 10 0 0 0 0-10z" fill="#FBBC04"></path><path d="M24 44a20 20 0 0 1-17.32-10L15.34 29a10 10 0 0 0 8.66 5z" fill="#34A853"></path></svg>
+<span class="store-btn__text">
+<span class="store-btn__small" data-i18n="hero.stores.chrome.small">Pasang dari</span>
+<span class="store-btn__big">Chrome Web Store</span>
+</span>
+</a>
+<a class="store-btn store-btn--firefox" href="https://addons.mozilla.org/firefox/addon/adoff/" rel="noopener" target="_blank">
+<svg aria-hidden="true" class="store-btn__logo" height="28" viewbox="0 0 48 48" width="28"><defs><radialgradient cx="50%" cy="50%" id="ffhero" r="50%"><stop offset="0%" stop-color="#FFCB6E"></stop><stop offset="100%" stop-color="#FF512F"></stop></radialgradient></defs><circle cx="24" cy="24" fill="url(#ffhero)" r="22"></circle><path d="M14 18c2-5 7-9 12-9 6 0 10 4 10 4s-4-1-7 1c5 0 8 5 8 9 0 8-7 14-15 14-9 0-15-6-15-14 0-4 2-7 4-9-1 4 1 7 3 7-1-1-1-2 0-3z" fill="#fff" opacity=".95"></path></svg>
+<span class="store-btn__text">
+<span class="store-btn__small" data-i18n="hero.stores.firefox.small">Pasang dari</span>
+<span class="store-btn__big">Firefox Add-ons</span>
+</span>
+</a>
+<!-- Edge: nessuna pagina pubblica Edge Add-ons ancora -> install dal Chrome Web Store (Edge lo supporta nativamente), come install.html -->
+<a class="store-btn store-btn--edge" href="https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp" rel="noopener" target="_blank">
+<svg aria-hidden="true" class="store-btn__logo" height="28" viewbox="0 0 48 48" width="28"><defs><lineargradient id="edghero1" x1="0%" x2="100%" y1="0%" y2="100%"><stop offset="0%" stop-color="#0F88FF"></stop><stop offset="100%" stop-color="#0A4DAB"></stop></lineargradient><lineargradient id="edghero2" x1="0%" x2="100%" y1="0%" y2="0%"><stop offset="0%" stop-color="#3CC8FF"></stop><stop offset="100%" stop-color="#0F88FF"></stop></lineargradient></defs><path d="M44 24c0 11-9 20-20 20-7 0-13-3-17-8 4 3 9 5 14 4 7-1 12-6 12-12 0-3-2-5-5-5h-9c-3 0-5 3-3 6-4-2-7-7-6-12 1-6 7-11 14-11 11 0 20 8 20 18z" fill="url(#edghero1)"></path><path d="M28 13c-7 0-13 5-14 11-1 5 2 10 6 12-2-3 0-6 3-6h9c3 0 5 2 5 5 0 6-5 11-12 12 8 1 17-3 19-12 2-12-7-22-16-22z" fill="url(#edghero2)"></path></svg>
+<span class="store-btn__text">
+<span class="store-btn__small" data-i18n="hero.stores.edge.small">Pasang dari</span>
+<span class="store-btn__big">Edge Add-ons</span>
+</span>
+</a>
+</div>
+<div class="hero__stores-secondary">
+<a class="hero__stores-link" data-i18n="hero.allbrowsers" href="install.html">Semua browser + Safari →</a>
+<span class="hero__stores-sep">·</span>
+<a class="hero__stores-link" data-i18n="hero.plans" href="#pricing">Lihat paket</a>
+</div>
+</div>
+</div><!-- /.hero__content -->
+<div class="hero__media reveal reveal-delay-4">
+<div class="hero__shots">
+<img alt="La pagina Opzioni di AdOff: blocco ads, badge icona, contatore e selezione lingua, con menu laterale" class="hero__shots-main" decoding="async" fetchpriority="high" height="471" src="/assets/options.webp?v=3" width="1081"/>
+<img alt="Il popup di AdOff: blocco ads attivo, 2 ads e 109 richieste bloccate, trial Pro di 6 giorni rimasti" class="hero__shots-pop" decoding="async" height="406" src="/assets/popup.webp?v=4" width="299"/>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================== 2. SOCIAL PROOF ======================== -->
+<div class="social-proof reveal">
+<div class="container--wide">
+<div class="social-proof__inner">
+<div class="social-proof__stat">
+<strong>4</strong>
+<span data-i18n="sl.social.layers">Lapisan pemblokiran</span>
+</div>
+<div class="social-proof__divider"></div>
+<div class="social-proof__stat">
+<strong>138</strong>
+<span data-i18n="sl.social.rules">Aturan jaringan</span>
+</div>
+<div class="social-proof__divider"></div>
+<div class="social-proof__stat">
+<strong>5</strong>
+<span data-i18n="sl.social.browsers">Browser yang didukung</span>
+</div>
+<div class="social-proof__divider"></div>
+<div class="social-proof__stat">
+<strong>15</strong>
+<span data-i18n="sl.social.languages">Bahasa yang tersedia</span>
+</div>
+</div>
+</div>
+</div>
+<!-- ======================== 2.5 PIATTAFORME COPERTE (super-USP) ======================== -->
+<section class="platforms" id="platforms">
+<div class="container">
+<div class="platforms__header reveal">
+<span class="section-label" data-i18n="platforms.label">Universal coverage</span>
+<h2 class="section-title" data-i18n-html="platforms.title">Works on <em>every site you use</em>.<br/>Without configuring anything.</h2>
+<p class="section-sub" data-i18n="platforms.sub">YouTube, Facebook, Instagram, TikTok, Twitch, Amazon, Google and every other website on the planet. One extension. One interface. Zero allow-lists to manage.</p>
+</div>
+<div class="platforms__grid">
+<div class="platforms-card reveal reveal-delay-1">
+<div class="platforms-card__cat" data-i18n="platforms.video.cat">VIDEO &amp; STREAMING</div>
+<h3 class="platforms-card__title" data-i18n="platforms.video.title">No pre-roll. No mid-roll.</h3>
+<p class="platforms-card__brands">YouTube · Twitch · Vimeo · Dailymotion · Hulu · Tubi · Pluto TV · Rai Play · Mediaset Infinity</p>
+<p class="platforms-card__note" data-i18n="platforms.video.note">The video ad SDK is replaced with a neutral stub: the player starts instantly. Available in Pro.</p>
+</div>
+<div class="platforms-card reveal reveal-delay-2">
+<div class="platforms-card__cat" data-i18n="platforms.social.cat">SOCIAL MEDIA</div>
+<h3 class="platforms-card__title" data-i18n="platforms.social.title">Feeds without sponsored posts</h3>
+<p class="platforms-card__brands">Facebook · Instagram · X (Twitter) · TikTok · Reddit · LinkedIn · Pinterest · Snapchat</p>
+<p class="platforms-card__note" data-i18n="platforms.social.note">Promoted posts, in-feed ads, "suggested" content and sponsored items hidden. Your scroll is yours again.</p>
+</div>
+<div class="platforms-card reveal reveal-delay-3">
+<div class="platforms-card__cat" data-i18n="platforms.search.cat">SEARCH &amp; SHOPPING</div>
+<h3 class="platforms-card__title" data-i18n="platforms.search.title">Only organic results</h3>
+<p class="platforms-card__brands">Google · Bing · Amazon · eBay · AliExpress</p>
+<p class="platforms-card__note" data-i18n="platforms.search.note">Sponsored results, shopping ads and promoted products removed before you even see them.</p>
+</div>
+<div class="platforms-card reveal reveal-delay-4">
+<div class="platforms-card__cat" data-i18n="platforms.news.cat">NEWS, BLOG &amp; ANTI-ADBLOCK WALLS</div>
+<h3 class="platforms-card__title" data-i18n="platforms.news.title">Article, not ad wall</h3>
+<p class="platforms-card__brands">Corriere · Repubblica · La7 · Sky TG24 · The Guardian · BBC · CNN · NYT</p>
+<p class="platforms-card__note" data-i18n="platforms.news.note">Sticky banners, popups, overlays and "disable your ad blocker" walls neutralized by Stealth Mode (Pro).</p>
+</div>
+<div class="platforms-card reveal reveal-delay-5">
+<div class="platforms-card__cat" data-i18n="platforms.music.cat">MUSIK &amp; AUDIO</div>
+<h3 class="platforms-card__title" data-i18n="platforms.music.title">Tanpa iklan sebelum lagu</h3>
+<p class="platforms-card__brands">Spotify · SoundCloud · Apple Music · YouTube Music · Deezer · Tidal</p>
+<p class="platforms-card__note" data-i18n="platforms.music.note">Iklan audio antar lagu dan banner promosi dihapus di layanan streaming musik.</p>
+</div>
+<div class="platforms-card reveal reveal-delay-5">
+<div class="platforms-card__cat" data-i18n="platforms.cloud.cat">EMAIL, CLOUD &amp; KERJA</div>
+<h3 class="platforms-card__title" data-i18n="platforms.cloud.title">Inbox bersih, workspace bersih</h3>
+<p class="platforms-card__brands">Gmail · Outlook · Drive · Notion · Slack · Trello</p>
+<p class="platforms-card__note" data-i18n="platforms.cloud.note">Iklan di webmail gratis, pop-up promosi di tool produktivitas, dan overlay upgrade dinetralkan.</p>
+</div>
+</div>
+<p class="platforms__footnote reveal" data-i18n-html="platforms.footnote">+ <strong>any other website on Earth</strong>. AdOff has no closed list of supported domains: the combination of 138 network rules, universal cosmetic CSS and stealth anti-detection works everywhere, from day one.</p>
+</div>
+</section>
+<!-- ======================== 3. PROBLEMA ======================== -->
+<section class="problem">
+<div class="container">
+<div class="problem__header reveal">
+<span class="section-label" data-i18n="problem.label">Masalahnya</span>
+<h2 class="section-title" data-i18n-html="sl.problem.title">Web telah menjadi medan ranjau.<br/>Terasa seperti itu untuk Anda juga?</h2>
+<p class="section-sub" data-i18n="sl.problem.sub">Hitungan mundur pada setiap video. Spanduk di mana-mana.</p>
+</div>
+<div class="problem__grid">
+<div class="pain-card reveal reveal-delay-1">
+<div class="pain-card__number">5s</div>
+<div class="pain-card__title" data-i18n="problem.stat1.title">Hitungan mundur di setiap video</div>
+<p class="pain-card__desc" data-i18n="problem.stat1.desc">Lima, sepuluh, lima belas detik menunggu dipaksa sebelum setiap video.</p>
+</div>
+<div class="pain-card reveal reveal-delay-2">
+<div class="pain-card__number">847</div>
+<div class="pain-card__title" data-i18n="problem.stat2.title">Pelacak per halaman</div>
+<p class="pain-card__desc" data-i18n="problem.stat2.desc">Halaman tunggal memuat rata-rata 847 skrip yang melacak setiap klik, gerakan mouse, dan waktu yang Anda habiskan.</p>
+</div>
+<div class="pain-card reveal reveal-delay-3">
+<div class="pain-card__number">23%</div>
+<div class="pain-card__title" data-i18n="problem.stat3.title">Bandwidth dibuang untuk iklan</div>
+<p class="pain-card__desc" data-i18n="problem.stat3.desc">Hampir seperempat dari setiap MB yang Anda unduh adalah permintaan iklan. Beberapa pelanggan bercerita tentang penghematan data hingga 40%.</p>
+</div>
+</div>
+<div class="problem__twist reveal">
+<h3 data-i18n="sl.problem.twist.title">Dan pukulan terakhir: blocker standar ditemukan.</h3>
+<p data-i18n-html="sl.problem.twist.text">Anda menginstal ad blocker, solusi logis. Situs mendeteksinya, meminta Anda menonaktifkannya. Anda menonaktifkannya. Iklan kembali.</p>
+</div>
+</div>
+</section>
+<!-- ======================== 4. SOLUZIONE ======================== -->
+<section class="solution">
+<div class="container">
+<div class="section-divider reveal"></div>
+<div class="reveal">
+<p class="section-label" data-i18n="features.label">Terobosan</p>
+<h2 class="solution__reveal" data-i18n-html="sl.solution.title">Filter tak terlihat yang bekerja di latar belakang. <em>Untuk Anda.</em></h2>
+<p class="solution__intro" data-i18n-html="sl.solution.text1">AdOff adalah ekstensi modern untuk Chrome yang memblokir semua iklan, pelacak, dan pop-up.</p>
+<p class="solution__intro" data-i18n="sl.solution.text2">138 aturan pemblokiran jaringan. Filter CSS cosmetic. Stealth anti-deteksi yang membuat sistem anti-adblock tidak akan pernah mendeteksi Anda.</p>
+<div class="highlight-pill"><em>AdOff.</em> Ads? Off.</div>
+<div style="display:flex;flex-direction:column;gap:12px;max-width:480px;margin:24px auto 32px;text-align:left;">
+<div style="display:flex;align-items:center;gap:12px;font-size:1rem;">
+<span style="color:var(--success);font-size:1.2rem;">✓</span>
+<span data-i18n="sl.solution.bullet1">138 aturan pemblokiran jaringan</span>
+</div>
+<div style="display:flex;align-items:center;gap:12px;font-size:1rem;">
+<span style="color:var(--success);font-size:1.2rem;">✓</span>
+<span data-i18n="sl.solution.bullet2">Filter CSS cosmetic</span>
+</div>
+<div style="display:flex;align-items:center;gap:12px;font-size:1rem;">
+<span style="color:var(--success);font-size:1.2rem;">✓</span>
+<span data-i18n="sl.solution.bullet3">Stealth anti-deteksi: situs tidak tahu Anda memiliki blocker</span>
+</div>
+</div>
+<a class="btn btn--primary btn--lg" href="install.html"><span data-i18n="sl.solution.cta">Tambahkan AdOff ke Chrome, gratis →</span></a>
+</div>
+</div>
+</section>
+<!-- ======================== 5. FEATURES ======================== -->
+<section class="features" id="features">
+<div class="container">
+<div class="text-center reveal">
+<span class="section-label" data-i18n="how.label">Kekuatan AdOff</span>
+<h2 class="section-title" data-i18n-html="sl.feat.title">Enam teknologi. Satu tujuan:<br/><em>web yang Anda kontrol</em></h2>
+</div>
+<div class="features__grid">
+<div class="feature-card reveal reveal-delay-1">
+<span aria-hidden="true" class="feature-card__icon">🚫</span>
+<div class="feature-card__title" data-i18n="features.ads.title">Pemblokiran jaringan lengkap</div>
+<div class="feature-card__benefit" data-i18n="features.ads.benefit">Halaman lebih cepat. Konsumsi data lebih sedikit. Lebih sedikit pelacak yang memprofilkan Anda.</div>
+<p class="feature-card__desc" data-i18n="features.ads.desc">138 aturan jaringan menghilangkan permintaan iklan dan pelacak sebelum sampai ke browser. Spanduk, pop-up, pengalihan, fingerprinting: tidak dimuat sama sekali. Anda hanya melihat konten yang Anda inginkan.</p>
+</div>
+<div class="feature-card feature-card--stealth reveal reveal-delay-2">
+<span aria-hidden="true" class="feature-card__icon">🎬</span>
+<div class="feature-card__title" data-i18n-html="features.video.title">Iklan video dinetralkan <span class="feature-card__pro-chip">Pro</span></div>
+<div class="feature-card__benefit" data-i18n="features.video.benefit">Video dimulai langsung. Tidak ada hitungan mundur, tidak ada iklan di tengah clip.</div>
+<p class="feature-card__desc" data-i18n="features.video.desc">AdOff menggantikan SDK periklanan platform video dengan versi netral yang mengatakan "tidak ada iklan tersedia" ke pemutar. Hasilnya: video dimulai segera tanpa jeda.</p>
+</div>
+<div class="feature-card feature-card--stealth reveal reveal-delay-3">
+<span aria-hidden="true" class="feature-card__icon">👻</span>
+<div class="feature-card__title" data-i18n-html="features.stealth.title">Stealth anti-deteksi <span class="feature-card__pro-chip">Pro</span></div>
+<div class="feature-card__benefit" data-i18n="features.stealth.benefit">Tidak pernah lagi "nonaktifkan ad blocker Anda". Di situs mana pun.</div>
+<p class="feature-card__desc" data-i18n="features.stealth.desc">AdOff beroperasi di MAIN world browser, menyamarkan setiap jejak: variabel JavaScript, fetch pengujian, elemen umpan. Sistem anti-adblock tidak mendeteksinya. Anda terus membaca dan menonton video tanpa ada yang menghentikan Anda.</p>
+</div>
+<div class="feature-card reveal reveal-delay-4">
+<span aria-hidden="true" class="feature-card__icon">⚡</span>
+<div class="feature-card__title" data-i18n="features.light.title">Arsitektur ultra-ringan</div>
+<div class="feature-card__benefit" data-i18n="features.light.benefit">→ Nol dampak pada RAM dan baterai. Hanya beberapa KB — sebagian kecil dari pemblokir berukuran beberapa MB.</div>
+<p class="feature-card__desc" data-i18n="features.light.desc">Sementara blocker lain berbobot 3-8 MB dan membengkak memori Chrome, AdOff adalah sebagian kecil dari berat itu. Filter asinkron, tanpa pemblokiran thread utama. Anda tidak merasakannya berjalan. Anda hanya merasakan browser kembali cepat.</p>
+</div>
+<div class="feature-card reveal reveal-delay-5">
+<span aria-hidden="true" class="feature-card__icon">🍪</span>
+<div class="feature-card__title" data-i18n="features.cosmetic.title">Banner cookie dan overlay, lenyap</div>
+<div class="feature-card__benefit" data-i18n="features.cosmetic.benefit">→ Tidak ada lagi 'terima cookie' di setiap situs. Layar bersih sejak pemuatan pertama.</div>
+<p class="feature-card__desc" data-i18n="features.cosmetic.desc">Filter kosmetik menghapus banner persetujuan, pop-up, overlay, dan bagian bersponsor dari DOM. Semuanya hilang saat halaman dimuat, tanpa perlu Anda tutup. Membaca kembali menjadi milik Anda.</p>
+</div>
+<div class="feature-card reveal reveal-delay-5">
+<span aria-hidden="true" class="feature-card__icon">🔒</span>
+<div class="feature-card__title" data-i18n="features.privacy.title">Privasi penuh, nol log</div>
+<div class="feature-card__benefit" data-i18n="features.privacy.benefit">→ Tanpa telemetri, tanpa pembuatan profil. Kami pun tidak tahu apa yang Anda lakukan.</div>
+<p class="feature-card__desc" data-i18n="features.privacy.desc">Tidak ada data penjelajahan yang keluar dari perangkat Anda. Penghitung, daftar putih, dan preferensi tetap lokal. Satu-satunya koneksi ke server kami adalah validasi lisensi Pro. GDPR by design, bukan karena kewajiban.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================== 6. STEALTH DEEP DIVE ======================== -->
+<section class="stealth" id="stealth">
+<div class="container">
+<div class="stealth__header reveal">
+<span class="section-label" data-i18n="sl.stealth.label">Stealth Mode</span>
+<h2 class="section-title" data-i18n-html="sl.stealth.title">Blocker lain ditemukan.<br/>AdOff <em>tidak.</em></h2>
+<p class="section-sub" data-i18n="sl.stealth.sub">Situs paling agresif menggunakan enam teknik berbeda untuk mendeteksi blocker.</p>
+</div>
+<div class="stealth__visual reveal">
+<div class="stealth__col stealth__col--bad">
+<div class="stealth__col-title" data-i18n="sl.stealth.col.bad">❌ Ad Blocker standar</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row1">Deteksi variabel JS</span>
+<span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Terdeteksi</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row2">Fetch pengujian ad-server</span>
+<span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Terdeteksi</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row3">Deteksi elemen umpan</span>
+<span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Terdeteksi</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row4">Observer mutasi DOM</span>
+<span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Terdeteksi</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row5">Tes intersepsi XHR</span>
+<span class="stealth__badge stealth__badge--detected" data-i18n="sl.stealth.detected">🔴 Terdeteksi</span>
+</div>
+</div>
+<div class="stealth__arrow">→</div>
+<div class="stealth__col stealth__col--good">
+<div class="stealth__col-title" data-i18n="sl.stealth.col.good">✅ AdOff Stealth Mode</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row1">Deteksi variabel JS</span>
+<span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden1">🟢 Tersembunyi</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row2">Fetch pengujian ad-server</span>
+<span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden2">🟢 Dicegat</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row3">Deteksi elemen umpan</span>
+<span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden3">🟢 Dispoofed</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row4">Observer mutasi DOM</span>
+<span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden4">🟢 Tersamarkan</span>
+</div>
+<div class="stealth__row">
+<span class="stealth__row-label" data-i18n="sl.stealth.row5">Tes intersepsi XHR</span>
+<span class="stealth__badge stealth__badge--hidden" data-i18n="sl.stealth.hidden2">🟢 Dicegat</span>
+</div>
+</div>
+</div>
+<div class="stealth__how reveal">
+<div class="stealth__how-item">
+<span aria-hidden="true" class="stealth__how-icon">🧬</span>
+<div class="stealth__how-title" data-i18n="sl.stealth.how1.title">Spoofing Variabel</div>
+<p class="stealth__how-desc" data-i18n="sl.stealth.how1.desc">Mensimulasikan variabel periklanan standar. Situs "percaya" bahwa tidak ada blocker yang diinstal.</p>
+</div>
+<div class="stealth__how-item">
+<span aria-hidden="true" class="stealth__how-icon">🎭</span>
+<div class="stealth__how-title" data-i18n="sl.stealth.how2.title">Intersepsi Fetch</div>
+<p class="stealth__how-desc" data-i18n="sl.stealth.how2.desc">Mencegat permintaan fetch/XHR ke server deteksi. Seolah-olah tidak ada yang terjadi.</p>
+</div>
+<div class="stealth__how-item">
+<span aria-hidden="true" class="stealth__how-icon">🪄</span>
+<div class="stealth__how-title" data-i18n="sl.stealth.how3.title">Bait Spoofing</div>
+<p class="stealth__how-desc" data-i18n="sl.stealth.how3.desc">Elemen "umpan" yang digunakan untuk mendeteksi ad blocker disimulasikan. Sistem tidak melihat perbedaan.</p>
+</div>
+<div class="stealth__how-item">
+<span aria-hidden="true" class="stealth__how-icon">🌍</span>
+<div class="stealth__how-title" data-i18n="sl.stealth.how4.title">Eksekusi MAIN World</div>
+<p class="stealth__how-desc" data-i18n="sl.stealth.how4.desc">Beroperasi dalam konteks istimewa halaman. Tidak ada tanda-tanda dalam DOM atau event listener.</p>
+</div>
+<div class="stealth__how-item">
+<span aria-hidden="true" class="stealth__how-icon">📺</span>
+<div class="stealth__how-title" data-i18n="sl.stealth.how5.title">Netralisasi SDK IMA</div>
+<p class="stealth__how-desc" data-i18n="sl.stealth.how5.desc">Menggantikan SDK periklanan video dengan stub netral. Pemutar tidak tahu perbedaannya.</p>
+</div>
+<div class="stealth__how-item">
+<span aria-hidden="true" class="stealth__how-icon">🛡️</span>
+<div class="stealth__how-title" data-i18n="sl.stealth.how6.title">Anti-Fingerprinting</div>
+<p class="stealth__how-desc" data-i18n="sl.stealth.how6.desc">Menyamarkan jejak ekstensi di DOM dan dalam event listeners. Seolah-olah kami tidak ada.</p>
+</div>
+</div>
+<div class="stealth__callout reveal" data-i18n-html="sl.stealth.callout"><strong>Hasilnya:</strong> tidak ada situs yang menunjukkan pesan "nonaktifkan ad blocker Anda".</div>
+</div>
+</section>
+<!-- ======================== 7. BEFORE / AFTER ======================== -->
+<section class="before-after">
+<div class="container">
+<div class="text-center reveal">
+<span class="section-label" data-i18n="sl.ba.label">Sebelum dan sesudah</span>
+<h2 class="section-title" data-i18n="sl.ba.title">Sebelum dan sesudah AdOff</h2>
+</div>
+<div class="before-after__grid">
+<div class="ba-col ba-col--before reveal reveal-delay-1">
+<div class="ba-col__label" data-i18n="sl.ba.before.label">❌ Tanpa AdOff</div>
+<ul class="ba-list">
+<li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.1">Hitungan mundur 5-15 detik sebelum setiap video.</span></li>
+<li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.2">Iklan di tengah video, selalu di saat yang salah.</span></li>
+<li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.3">Spanduk di mana-mana, bahkan di dalam email.</span></li>
+<li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.4">Cookie banner untuk ditutup setiap kali Anda membuka situs.</span></li>
+<li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.5">RAM dan baterai dimakan oleh ratusan skrip pelacak.</span></li>
+<li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.6">Dinding "nonaktifkan ad blocker Anda" bahkan jika Anda tidak memilikinya.</span></li>
+<li><span class="ba-icon">✗</span> <span data-i18n="sl.ba.before.7">Profil perilaku Anda dijual kembali ke pengiklan.</span></li>
+</ul>
+</div>
+<div class="ba-col ba-col--after reveal reveal-delay-2">
+<div class="ba-col__label" data-i18n="sl.ba.after.label">✅ Dengan AdOff</div>
+<ul class="ba-list">
+<li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.1">Tidak ada spanduk. Tidak ada pop-up.</span></li>
+<li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.2">Tidak ada hitungan mundur.</span></li>
+<li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.3">Tidak ada tracking.</span></li>
+<li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.4">Tidak ada fingerprinting.</span></li>
+<li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.5">Tidak ada feed iklan.</span></li>
+<li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.6">Situs tidak tahu Anda memiliki blocker yang diinstal.</span></li>
+<li><span class="ba-icon">✓</span> <span data-i18n="sl.ba.after.7">Zero log policy: tidak ada data dikumpulkan, bahkan dari kami.</span></li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================== WORKS EVERYWHERE ======================== -->
+<section class="works" id="works">
+<div class="container">
+<div class="text-center reveal">
+<span class="section-label" data-i18n="sl.works.label">Kompatibilitas</span>
+<h2 class="section-title" data-i18n="sl.works.title">Berfungsi di mana pun Anda menjelajah</h2>
+<p class="section-sub" data-i18n="sl.works.sub">AdOff memblokir iklan di setiap situs yang Anda kunjungi. Berikut beberapa tempat di mana ia paling andal.</p>
+</div>
+<div class="works__list reveal">
+<div class="works-row">
+<span class="works-row__cat" data-i18n="sl.works.cat.video">Video &amp; streaming</span>
+<span class="works-row__list">YouTube · Twitch · Vimeo · Dailymotion · Hulu</span>
+</div>
+<div class="works-row">
+<span class="works-row__cat" data-i18n="sl.works.cat.social">Jejaring sosial</span>
+<span class="works-row__list">Facebook · Instagram · X (Twitter) · TikTok · Reddit · LinkedIn · Pinterest · Snapchat</span>
+</div>
+<div class="works-row">
+<span class="works-row__cat" data-i18n="sl.works.cat.search">Pencarian &amp; belanja</span>
+<span class="works-row__list">Google · Bing · Amazon · eBay · AliExpress</span>
+</div>
+<div class="works-row">
+<span class="works-row__cat" data-i18n="sl.works.cat.news">Berita &amp; media</span>
+<span class="works-row__list">CNN · BBC · Forbes · Medium · Yahoo</span>
+</div>
+<div class="works-row">
+<span class="works-row__cat" data-i18n="sl.works.cat.rest">Musik, email &amp; lainnya</span>
+<span class="works-row__list">Spotify · Gmail · Outlook · Wikipedia · Imgur</span>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================== FREE vs PRO ======================== -->
+<section class="freeVsPro" id="compare">
+<div class="container">
+<div class="text-center reveal">
+<span class="section-label" data-i18n="compare.label">Gratis vs Pro</span>
+<h2 class="section-title" data-i18n="compare.title">Apa yang ada di setiap paket</h2>
+<p class="section-sub" data-i18n="compare.sub">Gratis menghilangkan spanduk dan pelacak. Pro menambahkan netralisasi video, Stealth anti-deteksi, dan dukungan prioritas.</p>
+</div>
+<div class="reveal compare-table-wrap">
+<table class="compare-table">
+<thead>
+<tr>
+<th data-i18n="compare.feature">Fitur</th>
+<th data-i18n="compare.free">Gratis</th>
+<th class="compare-table__pro">Pro ✨</th>
+</tr>
+</thead>
+<tbody>
+<tr><td data-i18n="compare.r1">Pemblokiran jaringan (138 aturan)</td><td class="compare-yes">✓</td><td class="compare-yes">✓</td></tr>
+<tr><td data-i18n="compare.r2">Filter CSS visual</td><td class="compare-yes">✓</td><td class="compare-yes">✓</td></tr>
+<tr><td data-i18n="compare.r3">Penghitung iklan yang diblokir</td><td class="compare-yes">✓</td><td class="compare-yes">✓</td></tr>
+<tr><td data-i18n="compare.r4">Whitelist situs pilihan</td><td class="compare-yes">✓</td><td class="compare-yes">✓</td></tr>
+<tr class="is-pro"><td data-i18n="compare.r4b">Skip iklan video dasar (jaringan)</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+<tr class="is-pro"><td data-i18n="compare.r5">Netralisasi video lanjutan (stub IMA)</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+<tr class="is-pro"><td data-i18n="compare.r6">Stealth Mode anti-deteksi</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+<tr class="is-pro"><td data-i18n="compare.r7">Spoofing variabel + intersepsi fetch</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+<tr class="is-pro"><td data-i18n="compare.r8">Jeda berjangka untuk situs (4 opsi)</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+<tr class="is-pro"><td data-i18n="compare.r9">Dukungan prioritas</td><td class="compare-no">✗</td><td class="compare-yes">✓</td></tr>
+</tbody>
+</table>
+</div>
+<div class="text-center reveal" style="margin-top:32px;">
+<p data-i18n="compare.note" style="color:var(--text-muted);font-size:0.95rem;margin-bottom:20px;">Paket Gratis melindungi dari spanduk dan pelacak, di setiap situs. Paket Pro menambahkan netralisasi video, Stealth anti-deteksi, dan dukungan prioritas.</p>
+<a class="btn btn--primary btn--lg" href="#pricing"><span data-i18n="compare.cta">Coba Pro gratis selama 30 hari →</span></a>
+</div>
+</div>
+</section>
+<!-- ======================== 8. FOUNDER NOTE (honest social proof) ======================== -->
+<section class="founder-note">
+<div class="container">
+<div class="founder-note__card reveal" style="max-width:760px;margin:0 auto;text-align:center;">
+<img alt="Eros, founder di AdOff" decoding="async" height="128" loading="lazy" src="/assets/eros.webp" style="width:128px;height:128px;border-radius:50%;object-fit:cover;margin:0 auto 1.2rem;display:block;box-shadow:0 4px 20px rgba(0,0,0,.12);" width="128"/>
+<span class="section-label" data-i18n="founder.note.label">Ada orang sungguhan di balik AdOff</span>
+<h2 class="section-title" data-i18n="founder.note.title">Tanpa ulasan yang dibesar-besarkan. Hanya kerja nyata.</h2>
+<p class="founder-note__body" data-i18n-html="founder.note.body" style="font-size:1.12rem;line-height:1.7;color:var(--text2);margin:1.2rem auto 1.6rem;max-width:640px;">Hai, saya <strong>Eros</strong>, dari Sisilia. Seumur hidup saya menjual kunci dan keamanan — saya melindungi rumah dan toko. Saya membangun AdOff sendirian untuk melakukan hal yang sama bagi datamu — karena saya tidak mau kamu (dan anak-anakmu) menjadi mesin ATM perusahaan multinasional. Nol log, tidak ada data yang dijual: hanya web sebagaimana mestinya.</p>
+<p class="founder-note__honest" data-i18n="founder.note.honest" style="font-size:0.95rem;color:var(--text3);margin-bottom:1.4rem;">AdOff baru saja diluncurkan: tanpa angka karangan, tanpa ulasan palsu. Saya mencari pengguna nyata pertama — coba versi gratisnya, dan jika berfungsi, tinggalkan ulasan jujur di store.</p>
+<div class="founder-note__badges" style="display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.6rem;">
+<span class="founder-badge" data-i18n="founder.badge.zerolog" style="font-size:0.85rem;padding:0.35rem 0.8rem;border:1px solid var(--border);border-radius:999px;color:var(--text2);">🔒 Nol log</span>
+<span class="founder-badge" data-i18n="founder.badge.public" style="font-size:0.85rem;padding:0.35rem 0.8rem;border:1px solid var(--border);border-radius:999px;color:var(--text2);">🛠️ Dibangun secara terbuka</span>
+<span class="founder-badge" data-i18n="founder.badge.solo" style="font-size:0.85rem;padding:0.35rem 0.8rem;border:1px solid var(--border);border-radius:999px;color:var(--text2);">👤 Satu founder, terus diperbarui</span>
+</div>
+<a class="founder-note__cta" data-i18n="founder.note.cta" href="chi-sono.html" style="font-weight:600;color:var(--primary);text-decoration:none;">→ Baca kisah saya</a>
+</div>
+</div>
+</section>
+<!-- ======================== 9. PRICING ======================== -->
+<section class="pricing" id="pricing">
+<div class="container">
+<div class="text-center reveal">
+<span class="section-label" data-i18n="pricing.label">Paket</span>
+<h2 class="section-title" data-i18n="pricing.title">Pilih paket Anda</h2>
+<p class="section-sub" data-i18n="pricing.sub">Mulai gratis, tanpa kartu kredit. 30 hari Pro sudah termasuk: Anda dapat mengaktifkannya kapan saja.</p>
+</div>
+<!-- Founder seats counter (shown only when backend confirms seats are live) -->
+<div class="reveal" id="founderBanner" style="display:none;text-align:center;margin:0 auto 32px;padding:14px 22px;border:1px solid var(--primary);border-radius:14px;max-width:580px;background:rgba(124,92,252,.08);">
+<strong style="color:var(--primary-light);">🚀 <span data-i18n="pricing.founder.title">Harga Founder</span></strong>
+        — <span data-i18n="pricing.founder.seatsLabel">Sisa kuota:</span> <strong id="founderSeats">100/100</strong>
+<div data-i18n="pricing.founder.seatsNote" style="font-size:0.88rem;color:var(--text-muted);margin-top:4px;">Tahunan 19,99 € — terkunci seumur hidup untuk 100 pertama. Setelah itu 24,99 €.</div>
+</div>
+<div class="pricing__grid">
+<!-- ROW 1: FREE + MONTHLY -->
+<!-- FREE -->
+<div class="plan-card plan-card--free reveal reveal-delay-1">
+<div class="plan-name" data-i18n="pricing.free.name">Gratis</div>
+<div class="plan-price">
+<span class="plan-price__amount" data-i18n="pricing.free.amount" style="font-size:2.2rem">Gratis</span>
+</div>
+<p class="plan-micro" data-i18n="pricing.free.micro">Selamanya · Tidak ada kartu</p>
+<ul class="plan-features">
+<li><span class="check">✓</span> <span data-i18n="pricing.free.f1">Pemblokiran jaringan lengkap (138 aturan)</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.free.f3">Filter CSS visual</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.free.f5">Whitelist situs</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.free.f5b">Pemblokiran iklan video (hanya Pro)</span></li>
+<li><span class="x-mark">–</span> <span data-i18n="pricing.free.f6" style="opacity:0.5;">Stealth Mode</span></li>
+</ul>
+<a class="btn btn--ghost" data-i18n="pricing.free.btn" href="install.html">Mulai gratis</a>
+</div>
+<!-- MONTHLY -->
+<div class="plan-card reveal reveal-delay-2">
+<div class="plan-name" data-i18n="pricing.monthly.name">Bulanan</div>
+<div class="plan-price">
+<span class="plan-price__currency">€</span>
+<span class="plan-price__amount" id="priceMonthly">2<small style="font-size:1.6rem">.99</small></span>
+<span class="plan-price__period" data-i18n="pricing.monthly.period.short">/ bulan</span>
+</div>
+<p class="plan-micro" data-i18n="pricing.monthly.micro">Kurang dari segelas kopi per bulan</p>
+<ul class="plan-features">
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f1">Semua pemblokiran jaringan + CSS</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f2">Stealth Mode anti-deteksi</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f5">Netralisasi video lanjutan (stub IMA)</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f9">Whitelist situs pilihan</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f11">Dukungan melalui chat</span></li>
+</ul>
+<button class="btn btn--outline" data-i18n="pricing.monthly.btn" onclick="checkout('monthly')">Mulai uji coba 30 hari gratis</button>
+<p class="plan-note" data-i18n="pricing.refundNote">Pengembalian 30 hari · tanpa pertanyaan</p>
+<p class="plan-note" data-i18n="pricing.cancelAnytime">Batalkan kapan saja</p>
+</div>
+<!-- ROW 2: ANNUAL (POPULAR) + LIFETIME -->
+<!-- ANNUAL — POPULAR -->
+<div class="plan-card plan-card--popular reveal reveal-delay-3">
+<div class="plan-badge" data-i18n="pricing.annual.badge">Paling Populer</div>
+<div class="plan-name" data-i18n="pricing.annual.name">Tahunan</div>
+<div class="plan-price">
+<span class="plan-price__currency">€</span>
+<span class="plan-price__amount" id="priceAnnual">19<small style="font-size:1.6rem">.99</small></span>
+<span class="plan-price__period" data-i18n="pricing.annual.period.short">/ tahun</span>
+</div>
+<p class="plan-micro"><span id="priceAnnualEff">= €1,67/mese</span> <span data-i18n="pricing.annual.founderSuffix" id="annualEffSuffix">· harga Founder terkunci seumur hidup</span></p>
+<ul class="plan-features">
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f1">Semua pemblokiran jaringan + CSS</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f2">Stealth Mode anti-deteksi</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f5">Netralisasi video lanjutan (stub IMA)</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f9">Whitelist situs pilihan</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f10">Jeda untuk situs (4 opsi)</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f7">Dukungan prioritas</span></li>
+</ul>
+<button class="btn btn--primary" data-i18n="pricing.annual.btn" onclick="checkout('annual')">Mulai uji coba 30 hari gratis</button>
+<p class="plan-note" data-i18n="pricing.refundNote">Pengembalian 30 hari · tanpa pertanyaan</p>
+<p class="plan-note" data-i18n="pricing.cancelAnytime">Batalkan kapan saja</p>
+</div>
+<!-- FOUNDER LIFETIME (limited launch offer) -->
+<div class="plan-card reveal reveal-delay-4" id="lifetimeCard">
+<div class="plan-name" data-i18n="pricing.lifetime.name">Founder Lifetime</div>
+<div class="plan-price">
+<span class="plan-price__currency">€</span>
+<span class="plan-price__amount" id="priceLifetime">99</span>
+</div>
+<p class="plan-micro" data-i18n="pricing.lifetime.micro">Penawaran Founder terbatas · sekali bayar, selamanya, pembaruan termasuk.</p>
+<ul class="plan-features">
+<li><span class="check">✓</span> <span data-i18n="pricing.lifetime.f1">Semua Pro, tanpa kedaluwarsa</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f2">Stealth Mode anti-deteksi</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f5">Netralisasi video lanjutan (stub IMA)</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f7alt">Update seumur hidup termasuk</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.pro.f8">Prioritas dalam dukungan</span></li>
+<li><span class="check">✓</span> <span data-i18n="pricing.lifetime.founder">Lencana Founder eksklusif</span></li>
+</ul>
+<button class="btn btn--ghost" data-i18n="pricing.lifetime.btn" onclick="checkout('lifetime')">Beli sekali untuk selamanya</button>
+<p class="plan-note" data-i18n="pricing.refundNote">Pengembalian 30 hari · tanpa pertanyaan</p>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================== 10. GARANZIA ======================== -->
+<section class="guarantee">
+<div class="container">
+<div class="guarantee__box reveal">
+<span aria-hidden="true" class="guarantee__icon" data-i18n="sl.guarantee.label">Jaminan</span>
+<h2 class="guarantee__title" data-i18n="sl.guarantee.title">Nol risiko. Tiga jaminan.</h2>
+<p class="guarantee__sub" data-i18n="sl.guarantee.sub">Tiga alasan konkret untuk mencoba Pro AdOff hari ini.</p>
+<ul class="guarantee__list">
+<li>
+<span class="g-check">✓</span>
+<div data-i18n-html="sl.guarantee.1"><strong>30 hari Pro sepenuhnya gratis.</strong> Tidak ada kartu, tidak ada komitmen.</div>
+</li>
+<li>
+<span class="g-check">✓</span>
+<div data-i18n-html="sl.guarantee.2"><strong>Pengembalian uang penuh dalam 30 hari</strong> dari pembelian pertama.</div>
+</li>
+<li>
+<span class="g-check">✓</span>
+<div data-i18n-html="sl.guarantee.3"><strong>Paket Gratis selamanya, tanpa batasan waktu.</strong></div>
+</li>
+</ul>
+<div class="trust-badges">
+<span class="trust-badge">🔐 Stripe Payments</span>
+<span class="trust-badge">🔒 SSL / HTTPS</span>
+<span class="trust-badge">🇪🇺 GDPR Compliant</span>
+<span class="trust-badge">👁️ <span data-i18n="trust.badge.nodata">Nol pengumpulan data</span></span>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================== 11. FAQ ======================== -->
+<section class="faq" id="faq">
+<div class="container">
+<div class="text-center reveal">
+<span class="section-label" data-i18n="faq.label">FAQ</span>
+<h2 class="section-title" data-i18n="sl.faq.title">Pertanyaan yang Sering Diajukan</h2>
+</div>
+<div class="faq__list reveal">
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q10">Apa ekstensi terbaik untuk memblokir iklan di Chrome?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a10">AdOff adalah salah satu ekstensi pemblokir iklan terbaik untuk Chrome pada 2026: menggabungkan pemblokiran tingkat jaringan (138 aturan), penyaringan kosmetik CSS, dan teknologi stealth anti-deteksi yang melewati dinding anti-adblock. Memblokir banner, pop-up, pelacak, dan iklan video, jauh lebih ringan daripada alternatif lain, dan gratis, dengan uji coba Pro 30 hari tanpa kartu kredit.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q1">Apakah AdOff benar-benar gratis? Apakah ada biaya tersembunyi?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a1">Ya, benar-benar. Paket Gratis gratis selamanya, tanpa batasan waktu dan tanpa kartu kredit. Bahkan 30 hari Pro gratis: kami tidak meminta data pembayaran. Saat berakhir, jika Anda tidak memilih untuk beralih ke Pro, Anda secara otomatis kembali ke paket Gratis. Tidak ada biaya tersembunyi, tidak ada perpanjangan otomatis yang tidak diinginkan.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q2">Apakah benar-benar berhasil untuk iklan video?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a2">Ya, di semua platform streaming yang menggunakan standar iklan IMA. AdOff Pro mengganti SDK iklan dengan stub netral: pemutar menerima 'tidak ada iklan tersedia' dan video dimulai. Tanpa hitungan mundur, tanpa mid-roll. Pemblokiran iklan video memerlukan AdOff Pro, termasuk dalam uji coba gratis 30 hari.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q3">Bagaimana AdOff membypass sistem anti-adblock?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a3">Dengan Stealth Mode (termasuk dalam uji coba dan paket Pro), AdOff beroperasi di MAIN world browser dan menyamarkan setiap jejak. Mempalsukan variabel JavaScript yang digunakan untuk mendeteksi blocker, mencegat fetch pengujian ke server periklanan dan mensimulasikan elemen umpan yang diharapkan oleh situs. Hasilnya: sistem anti-adblock tidak menerima sinyal ekstensi aktif. Paket Gratis tidak menyertakan Stealth, jadi situs yang lebih agresif mungkin masih mendeteksinya.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q5">Apakah riwayat penelusuran saya aman?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n-html="faq.a5">Ya. <strong>Zero Log Policy</strong>: AdOff tidak mengumpulkan data tentang penelusuran Anda. Kami tidak tahu situs mana yang Anda kunjungi, apa yang Anda cari, berapa lama Anda berada di halaman. Penghitung, whitelist, dan preferensi tetap di perangkat Anda, dalam <code>chrome.storage.local</code>. Satu-satunya komunikasi dengan server kami adalah validasi lisensi Pro (kunci + email). Kodenya dapat diperiksa sebelum instalasi. Kami GDPR compliant by design, bukan demi keharusan.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q4">Bagaimana cara kerja Founder Lifetime?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a4">Founder Lifetime adalah penawaran peluncuran terbatas: 99 € sekali bayar dan kamu memakai AdOff Pro selamanya, termasuk semua pembaruan mendatang, di semua perangkat pribadimu. Tanpa perpanjangan tahunan, tanpa kejutan, lencana Founder termasuk. Saat kuota Founder habis, penawaran ditarik.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="sl.faq.q6">Bisakah saya menggunakan AdOff di lebih dari satu browser?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="6 9 12 15 18 9"></polyline>
+</svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="sl.faq.a6">Ya. AdOff tersedia untuk Chrome, Firefox, Edge, Opera, dan Brave (Safari segera hadir). Lisensi Pro-mu berlaku di semua perangkat pribadimu: cukup masukkan kunci lisensi yang sama di tiap instalasi. Penghitung tetap lokal di tiap browser, demi privasi.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q7">Apakah AdOff memperlambat Chrome atau mengonsumsi RAM?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a7">Tidak, sebaliknya: itu membuatnya lebih cepat. AdOff sangat ringan (sebagian kecil dari berat blocker lain) dan menggunakan filter asinkron yang tidak memblokir thread utama browser. Anda bahkan mungkin memperhatikan peningkatan kecepatan.</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q8">Apakah aman menginstal AdOff?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a8">Ya. AdOff dipublikasikan di saluran resmi (Chrome Web Store, Firefox Add-ons, Safari App Store, Edge Add-ons) dan menjalani tinjauan keamanan sebelum dirilis. Sebelum instalasi, Anda dapat memeriksa kodenya di GitHub (repositori publik).</div>
+</div>
+</div>
+<div class="faq-item">
+<button aria-expanded="false" class="faq-question">
+<span data-i18n="faq.q9">Apakah berfungsi di semua situs web?</span>
+<svg class="faq-chevron" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+</button>
+<div class="faq-answer">
+<div class="faq-answer-inner" data-i18n="faq.a9">Ya. Free: pemblokiran jaringan dan filter kosmetik bekerja di setiap situs. Pro: netralisasi video bekerja di platform streaming yang menggunakan SDK standar, dan Stealth Mode (anti-deteksi) tersedia di situs dengan sistem anti-adblock.</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ======================== 12. FINAL CTA ======================== -->
+<section class="final-cta">
+<div class="container">
+<div class="final-cta__urgency reveal" data-i18n="sl.cta.urgency">Setiap menit yang Anda tunda, ratusan pelacak mengumpulkan profil Anda.</div>
+<h2 class="final-cta__headline reveal" data-i18n-html="sl.cta.title">Ambil kembali browser Anda.<br/><em>Sekarang.</em></h2>
+<p class="final-cta__sub reveal" data-i18n-html="sl.cta.sub">Tersedia di Chrome, Firefox, Edge, dan Opera</p>
+<div class="reveal">
+<a class="btn btn--primary btn--xl" href="install.html">
+<span data-i18n="sl.cta.btn">Instal AdOff di Chrome, gratis →</span>
+</a>
+</div>
+<div class="final-cta__micro reveal">
+<span><span data-i18n="sl.cta.micro1">Ultra-ringan</span></span>
+<span>·</span>
+<span><span data-i18n="cta.micro.install">Instal dalam 10 detik</span></span>
+<span>·</span>
+<span><span data-i18n="cta.micro.nocard">Tidak perlu kartu kredit</span></span>
+<span>·</span>
+<span><span data-i18n="sl.cta.micro3">Uninstal kapan saja</span></span>
+</div>
+</div>
+</section>
+</main>
+<!-- ======================== SCHEMA MARKUP ======================== -->
+<script type="application/ld+json">{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+        {
+            "@type": "Question",
+            "name": "Apa ekstensi terbaik untuk memblokir iklan di Chrome?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "AdOff adalah salah satu ekstensi pemblokir iklan terbaik untuk Chrome pada 2026: menggabungkan pemblokiran tingkat jaringan (138 aturan), penyaringan kosmetik CSS, dan teknologi stealth anti-deteksi yang melewati dinding anti-adblock. Memblokir banner, pop-up, pelacak, dan iklan video, jauh lebih ringan daripada alternatif lain, dan gratis, dengan uji coba Pro 30 hari tanpa kartu kredit."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Apakah AdOff benar-benar gratis? Apakah ada biaya tersembunyi?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Ya, benar-benar. Paket Gratis gratis selamanya, tanpa batasan waktu dan tanpa kartu kredit. Bahkan 30 hari Pro gratis: kami tidak meminta data pembayaran. Saat berakhir, jika Anda tidak memilih untuk beralih ke Pro, Anda secara otomatis kembali ke paket Gratis. Tidak ada biaya tersembunyi, tidak ada perpanjangan otomatis yang tidak diinginkan."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Apakah benar-benar berhasil untuk iklan video?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Ya, di semua platform streaming yang menggunakan standar iklan IMA. AdOff Pro mengganti SDK iklan dengan stub netral: pemutar menerima 'tidak ada iklan tersedia' dan video dimulai. Tanpa hitungan mundur, tanpa mid-roll. Pemblokiran iklan video memerlukan AdOff Pro, termasuk dalam uji coba gratis 30 hari."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Bagaimana AdOff membypass sistem anti-adblock?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Dengan Stealth Mode (termasuk dalam uji coba dan paket Pro), AdOff beroperasi di MAIN world browser dan menyamarkan setiap jejak. Mempalsukan variabel JavaScript yang digunakan untuk mendeteksi blocker, mencegat fetch pengujian ke server periklanan dan mensimulasikan elemen umpan yang diharapkan oleh situs. Hasilnya: sistem anti-adblock tidak menerima sinyal ekstensi aktif. Paket Gratis tidak menyertakan Stealth, jadi situs yang lebih agresif mungkin masih mendeteksinya."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Apakah riwayat penelusuran saya aman?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Ya. Zero Log Policy: AdOff tidak mengumpulkan data tentang penelusuran Anda. Kami tidak tahu situs mana yang Anda kunjungi, apa yang Anda cari, berapa lama Anda berada di halaman. Penghitung, whitelist, dan preferensi tetap di perangkat Anda, dalam chrome.storage.local. Satu-satunya komunikasi dengan server kami adalah validasi lisensi Pro (kunci + email). Kodenya dapat diperiksa sebelum instalasi. Kami GDPR compliant by design, bukan demi keharusan."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Bagaimana cara kerja Founder Lifetime?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Founder Lifetime adalah penawaran peluncuran terbatas: 99 € sekali bayar dan kamu memakai AdOff Pro selamanya, termasuk semua pembaruan mendatang, di semua perangkat pribadimu. Tanpa perpanjangan tahunan, tanpa kejutan, lencana Founder termasuk. Saat kuota Founder habis, penawaran ditarik."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Bisakah saya menggunakan AdOff di lebih dari satu browser?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Ya. AdOff tersedia untuk Chrome, Firefox, Edge, Opera, dan Brave (Safari segera hadir). Lisensi Pro-mu berlaku di semua perangkat pribadimu: cukup masukkan kunci lisensi yang sama di tiap instalasi. Penghitung tetap lokal di tiap browser, demi privasi."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Apakah AdOff memperlambat Chrome atau mengonsumsi RAM?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Tidak, sebaliknya: itu membuatnya lebih cepat. AdOff sangat ringan (sebagian kecil dari berat blocker lain) dan menggunakan filter asinkron yang tidak memblokir thread utama browser. Anda bahkan mungkin memperhatikan peningkatan kecepatan."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Apakah aman menginstal AdOff?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Ya. AdOff dipublikasikan di saluran resmi (Chrome Web Store, Firefox Add-ons, Safari App Store, Edge Add-ons) dan menjalani tinjauan keamanan sebelum dirilis. Sebelum instalasi, Anda dapat memeriksa kodenya di GitHub (repositori publik)."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Apakah berfungsi di semua situs web?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Ya. Free: pemblokiran jaringan dan filter kosmetik bekerja di setiap situs. Pro: netralisasi video bekerja di platform streaming yang menggunakan SDK standar, dan Stealth Mode (anti-deteksi) tersedia di situs dengan sistem anti-adblock."
+            }
+        }
+    ]
+}</script>
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "AdOff",
+    "url": "https://adoff.app",
+    "logo": "https://adoff.app/assets/icon128.png",
+    "description": "Privacy-first ad blocker with stealth anti-detection technology",
+    "foundingDate": "2025",
+    "sameAs": [
+      "https://github.com/eroslifestyle/adoff",
+      "https://t.me/adoffapp"
+    ]
+  }
+  </script>
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://adoff.app/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Installa AdOff",
+        "item": "https://adoff.app/install.html"
+      }
+    ]
+  }
+  </script>
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "AdOff · Miglior Ad Blocker Invisibile 2026",
+    "url": "https://adoff.app/",
+    "description": "AdOff blocca tutta la pubblicita' su Chrome, inclusa quella video. Stealth anti-detection avanzata: i siti non riescono a rilevare il tuo ad blocker.",
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "Piani AdOff",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "AdOff Free",
+          "description": "Piano gratuito con blocco rete completo e filtri CSS"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "AdOff Pro Mensile",
+          "description": "Piano Pro da €2,99/mese con Stealth Mode e neutralizzazione video ads"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "AdOff Pro Annuale",
+          "description": "Piano Pro annuale: prezzo Founder €19,99/anno bloccato a vita per i primi 100, poi €24,99"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "AdOff Founder Lifetime",
+          "description": "Offerta Founder a tiratura limitata: €99 una volta sola, per sempre, aggiornamenti inclusi"
+        }
+      ]
+    }
+  }
+  </script>
+<!-- ======================== JS ======================== -->
+<script src="/adoff-footer.js?v=260602a"></script>
+<script>
+    // ============================================================
+    // SCROLL REVEAL (safe: defaults to visible if observer unavailable)
+    // ============================================================
+    (function () {
+      if (!('IntersectionObserver' in window)) return;
+      document.documentElement.classList.add('js-reveal');
+
+      var observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.05, rootMargin: '0px 0px 80px 0px' }
+      );
+
+      document.querySelectorAll('.reveal').forEach(function (el) {
+        // Pre-mark elements already in viewport as visible so they paint immediately.
+        var rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+          el.classList.add('visible');
+        } else {
+          observer.observe(el);
+        }
+      });
+    })();
+
+    // ============================================================
+    // FOUNDER PRICING \u2014 real seats from backend (no fake counters)
+    // ============================================================
+    var API_URL = 'https://api.adoff.app';
+
+    function formatPrice(p) {
+      var parts = Number(p).toFixed(2).split('.');
+      return parts[1] === '00'
+        ? parts[0]
+        : parts[0] + '<small style="font-size:1.6rem">.' + parts[1] + '</small>';
+    }
+
+    // s = { active, taken, remaining, total, annual_price, annual_standard }
+    function applyFounderState(s) {
+      var annualEl   = document.getElementById('priceAnnual');
+      var effEl      = document.getElementById('priceAnnualEff');
+      var suffixEl   = document.getElementById('annualEffSuffix');
+      var banner     = document.getElementById('founderBanner');
+      var seatsEl    = document.getElementById('founderSeats');
+      var lifetime   = document.getElementById('lifetimeCard');
+
+      var founderActive = !!(s && s.active && s.remaining > 0);
+      var annual = founderActive
+        ? (s.annual_price || 19.99)
+        : ((s && s.annual_standard) || 24.99);
+
+      if (annualEl) annualEl.innerHTML = formatPrice(annual);
+      if (effEl) effEl.textContent = '= \u20ac' + (annual / 12).toFixed(2).replace('.', ',') + '/mese';
+
+      if (founderActive) {
+        if (banner) banner.style.display = 'block';
+        if (seatsEl) seatsEl.textContent = s.remaining + '/' + (s.total || 100);
+        if (lifetime) lifetime.style.display = '';
+      } else {
+        // Founder seats gone (or unverifiable): standard price, retire the limited offers.
+        if (banner) banner.style.display = 'none';
+        if (suffixEl) suffixEl.style.display = 'none';
+        if (lifetime) lifetime.style.display = 'none';
+      }
+    }
+
+    (function loadFounderStatus() {
+      fetch(API_URL + '/founder-status', { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(applyFounderState)
+        .catch(function () { applyFounderState({ active: false }); }); // conservative: standard price
+    })();
+
+    // ============================================================
+    // STRIPE CHECKOUT
+    // ============================================================
+    function checkout(plan) {
+      var btn = event.target;
+      var originalText = btn.textContent;
+      btn.textContent = 'Caricamento...';
+      btn.disabled = true;
+      var affiliateCode = (function() {
+        var nameEQ = "adoff_aff=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+          var c = ca[i];
+          while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+          if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+      })();
+      fetch(API_URL + '/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: plan,
+          lang: document.documentElement.lang || 'auto',
+          affiliate: affiliateCode
+        })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert('Errore: ' + (data.error || 'Riprova tra poco.'));
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }
+      })
+      .catch(function() {
+        alert('Errore di connessione. Riprova.');
+        btn.textContent = originalText;
+        btn.disabled = false;
+      });
+    }
+
+    // ============================================================
+    // FAQ ACCORDION
+    // ============================================================
+    (function () {
+      document.querySelectorAll('.faq-question').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var item = this.closest('.faq-item');
+          var answer = item.querySelector('.faq-answer');
+          var isOpen = item.classList.contains('open');
+
+          // Close all
+          document.querySelectorAll('.faq-item').forEach(function (i) {
+            i.classList.remove('open');
+            i.querySelector('.faq-answer').style.maxHeight = '0';
+            i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+          });
+
+          // Open clicked if was closed
+          if (!isOpen) {
+            item.classList.add('open');
+            answer.style.maxHeight = answer.scrollHeight + 'px';
+            btn.setAttribute('aria-expanded', 'true');
+          }
+        });
+      });
+    })();
+  </script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

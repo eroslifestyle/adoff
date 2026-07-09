@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Руководство пользователя — AdOff блокировщик рекламы | Полное руководство по настройке</title>
+  <meta name="description" content="Полное руководство по AdOff: установка, управление через всплывающее окно, пауза для сайтов, лицензия Pro, реферальная программа, настройки конфиденциальности и устранение неполадок." />
+  <link rel="canonical" href="https://adoff.app/ru/guide" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Руководство пользователя AdOff — Полное руководство по настройке" />
+  <meta property="og:description" content="Всё, что нужно знать об AdOff: настройка, функции, лицензия Pro, реферальная программа." />
+  <meta property="og:url" content="https://adoff.app/ru/guide" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="it" href="https://adoff.app/guide.html" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/guide.html?lang=en" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/de/guide" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/fr/guide" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/es/guide" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/pt/guide" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/ru/guide" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/ar/guide" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/guide" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/hi/guide" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/guide" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/guide" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/tr/guide" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/id/guide" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/pl/guide" />
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/guide.html?lang=en" />
+  <link rel="stylesheet" href="style.css?v=260520-201526" />
+  <style>
+    /* ===== Guide page styles ===== */
+    .guide-page {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 60px 24px 100px;
+    }
+
+    .guide-page .guide-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .guide-page .guide-header h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .guide-page .guide-header .guide-version {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .guide-page .guide-header .guide-tagline {
+      font-size: 1.1rem;
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+
+    /* Table of contents */
+    .guide-toc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-bottom: 56px;
+    }
+
+    .guide-toc h2 {
+      font-size: 1.1rem;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .guide-toc ol {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      columns: 2;
+      column-gap: 32px;
+    }
+
+    @media (max-width: 600px) {
+      .guide-toc ol { columns: 1; }
+    }
+
+    .guide-toc li {
+      break-inside: avoid;
+      margin-bottom: 6px;
+    }
+
+    .guide-toc a {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      font-weight: 500;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 4px 0;
+      transition: color var(--transition);
+    }
+
+    .guide-toc a:hover { color: var(--primary-light); }
+
+    .guide-toc .toc-num {
+      color: var(--primary-light);
+      font-weight: 700;
+      font-size: 0.82rem;
+      min-width: 22px;
+    }
+
+    /* Sections */
+    .guide-section {
+      margin-bottom: 56px;
+      scroll-margin-top: 80px;
+    }
+
+    .guide-section h2 {
+      font-size: 1.4rem;
+      color: #fff;
+      margin-bottom: 8px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .guide-section h2 .sec-icon {
+      font-size: 1.3rem;
+    }
+
+    .guide-section h3 {
+      font-size: 1.05rem;
+      color: var(--primary-light);
+      margin: 24px 0 10px;
+    }
+
+    .guide-section p,
+    .guide-section li {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.75;
+      margin-bottom: 8px;
+    }
+
+    .guide-section ul,
+    .guide-section ol {
+      padding-left: 0;
+      list-style: none;
+      margin: 10px 0 16px;
+    }
+
+    .guide-section ul li::before {
+      content: "→ ";
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+
+    .guide-section ol {
+      counter-reset: steps;
+    }
+
+    .guide-section ol li {
+      counter-increment: steps;
+      padding-left: 28px;
+      position: relative;
+    }
+
+    .guide-section ol li::before {
+      content: counter(steps) ".";
+      position: absolute;
+      left: 0;
+      color: var(--primary-light);
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+
+    .guide-section strong {
+      color: var(--text);
+    }
+
+    .guide-section code {
+      background: rgba(124, 92, 252, 0.12);
+      color: var(--primary-light);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.88rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    /* Info boxes */
+    .guide-info {
+      background: rgba(124, 92, 252, 0.06);
+      border: 1px solid rgba(124, 92, 252, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin: 16px 0;
+    }
+
+    .guide-info p { margin-bottom: 0; }
+
+    .guide-info--green {
+      background: rgba(74, 222, 128, 0.06);
+      border-color: rgba(74, 222, 128, 0.2);
+    }
+
+    .guide-info--yellow {
+      background: rgba(251, 191, 36, 0.06);
+      border-color: rgba(251, 191, 36, 0.2);
+    }
+
+    /* Tables */
+    .guide-table-wrap {
+      overflow-x: auto;
+      margin: 16px 0;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .guide-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      min-width: 400px;
+    }
+
+    .guide-table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .guide-table td {
+      padding: 10px 16px;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .guide-table td:first-child {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .guide-table tr:last-child td { border-bottom: none; }
+    .guide-table tr:hover { background: var(--card-hover); }
+
+    .check { color: var(--success); font-weight: 700; }
+    .cross { color: var(--error); }
+
+    /* Back to top */
+    .guide-back-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .guide-back-top:hover { color: var(--primary-light); }
+  </style>
+  <script src="/adoff-i18n.js?v=260520-201526"></script>
+  </head>
+<body>
+
+  <!-- NAV -->
+  <div id="site-nav"></div>
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+
+  <main class="guide-page">
+
+    <!-- HEADER -->
+    <div class="guide-header">
+      <img src="/assets/icon128.png" alt="AdOff" style="width:64px;height:64px;border-radius:16px;margin:0 auto 16px;box-shadow:0 0 32px rgba(124,92,252,0.4);" />
+      <h1>Руководство пользователя</h1>
+      <p class="guide-version">AdOff v3.1.0 — Последнее обновление: 19 апреля 2026 г.</p>
+      <p class="guide-tagline">Всё, что нужно знать для максимально эффективного использования AdOff.</p>
+    </div>
+
+    <!-- TABLE OF CONTENTS -->
+    <nav class="guide-toc" id="toc">
+      <h2>Содержание</h2>
+      <ol>
+        <li><a href="#s1"><span class="toc-num">1</span> Что такое AdOff</a></li>
+        <li><a href="#s2"><span class="toc-num">2</span> Установка</a></li>
+        <li><a href="#s3"><span class="toc-num">3</span> Первый запуск</a></li>
+        <li><a href="#s4"><span class="toc-num">4</span> Всплывающее окно</a></li>
+        <li><a href="#s5"><span class="toc-num">5</span> Пауза для сайта</a></li>
+        <li><a href="#s6"><span class="toc-num">6</span> Страница настроек</a></li>
+        <li><a href="#s7"><span class="toc-num">7</span> Исключённые сайты</a></li>
+        <li><a href="#s8"><span class="toc-num">8</span> План и лицензия</a></li>
+        <li><a href="#s9"><span class="toc-num">9</span> Реферальная программа</a></li>
+        <li><a href="#s10"><span class="toc-num">10</span> Статистика</a></li>
+        <li><a href="#s11"><span class="toc-num">11</span> Расширенные настройки</a></li>
+        <li><a href="#s12"><span class="toc-num">12</span> Помощник FAQ</a></li>
+        <li><a href="#s13"><span class="toc-num">13</span> Сообщение о проблемах</a></li>
+        <li><a href="#s14"><span class="toc-num">14</span> Предложения</a></li>
+        <li><a href="#s15"><span class="toc-num">15</span> Как работает AdOff</a></li>
+        <li><a href="#s16"><span class="toc-num">16</span> Устранение неполадок</a></li>
+        <li><a href="#s17"><span class="toc-num">17</span> Конфиденциальность</a></li>
+        <li><a href="#s18"><span class="toc-num">18</span> Языки</a></li>
+        <li><a href="#s19"><span class="toc-num">19</span> Удаление</a></li>
+        <li><a href="#s20"><span class="toc-num">20</span> Контакты</a></li>
+      </ol>
+    </nav>
+
+    <!-- ===== 1. ЧТО ТАКОЕ ADOFF ===== -->
+    <div class="guide-section" id="s1">
+      <h2><span class="sec-icon">&#128736;</span> 1. Что такое AdOff</h2>
+      <p>AdOff — расширение для Google Chrome, блокирующее рекламу на всех сайтах. Работает на четырёх уровнях — сеть, страница, нейтрализация видеорекламы (только Pro/Пробный) и скрытность (только Pro/Пробный) — обеспечивая чистый и быстрый просмотр.</p>
+      <ul>
+        <li>Блокирует рекламу на любом сайте; нейтрализация видеорекламы на стриминговых платформах <strong>(Pro/Пробный)</strong></li>
+        <li><strong>Режим скрытности</strong> (Pro/Пробный): делает AdOff невидимым для систем антиблокировки</li>
+        <li><strong>Сверхлёгкий</strong> — значительно меньше конкурентов</li>
+        <li>Не собирает никаких личных данных: всё работает локально</li>
+        <li>6 языков: итальянский, английский, немецкий, французский, испанский, португальский</li>
+        <li>Пауза для сайта с 4 вариантами длительности: на время посещения, на 1 час, на 1 день, навсегда</li>
+        <li>Реферальная система для получения бесплатных дней Pro</li>
+      </ul>
+    </div>
+
+    <!-- ===== 2. УСТАНОВКА ===== -->
+    <div class="guide-section" id="s2">
+      <h2><span class="sec-icon">&#128229;</span> 2. Установка</h2>
+
+      <h3>Из Chrome Web Store</h3>
+      <ol>
+        <li>Перейдите на страницу AdOff в Chrome Web Store</li>
+        <li>Нажмите <strong>«Добавить в Chrome»</strong></li>
+        <li>Подтвердите нажатием <strong>«Добавить расширение»</strong></li>
+        <li>AdOff сразу готов к работе</li>
+      </ol>
+
+      <h3>Закрепление значка на панели инструментов</h3>
+      <ol>
+        <li>Нажмите значок <strong>пазла</strong> (Расширения) в правом верхнем углу браузера</li>
+        <li>Найдите <strong>AdOff</strong> в списке</li>
+        <li>Нажмите <strong>кнопку булавки</strong> рядом с AdOff</li>
+        <li>Значок появится на панели инструментов для быстрого доступа</li>
+      </ol>
+    </div>
+
+    <!-- ===== 3. ПЕРВЫЙ ЗАПУСК ===== -->
+    <div class="guide-section" id="s3">
+      <h2><span class="sec-icon">&#127881;</span> 3. Первый запуск</h2>
+      <p>При первой установке AdOff:</p>
+      <ul>
+        <li>Открывается <strong>страница приветствия</strong> с инструкцией по закреплению значка</li>
+        <li><strong>15-дневный пробный период Pro</strong> активируется автоматически</li>
+        <li>Генерируется <strong>уникальный реферальный код</strong> (формат: <code>ADO-XXXXX</code>)</li>
+        <li>AdOff немедленно начинает блокировать рекламу</li>
+        <li>Если вы установите расширение до 1 июля 2026 г., получите постоянный значок <strong>Founding Member</strong></li>
+      </ul>
+    </div>
+
+    <!-- ===== 4. ВСПЛЫВАЮЩЕЕ ОКНО ===== -->
+    <div class="guide-section" id="s4">
+      <h2><span class="sec-icon">&#128444;</span> 4. Всплывающее окно</h2>
+      <p>Нажмите значок AdOff на панели инструментов, чтобы открыть всплывающее окно.</p>
+
+      <h3>Заголовок</h3>
+      <p>Логотип, название «AdOff», значок лицензии (<strong>FREE</strong> / <strong>TRIAL Xд</strong> / <strong>PRO</strong>) и значок <strong>FOUNDER</strong> (при наличии права).</p>
+
+      <h3>Глобальный переключатель</h3>
+      <p>Кнопка ВКЛ/ВЫКЛ для включения или отключения AdOff на всех сайтах. Фиолетовый значок = активен, красный = отключён.</p>
+
+      <h3>Счётчики</h3>
+      <ul>
+        <li><strong>Заблокировано рекламы</strong>: рекламные элементы, удалённые со страниц</li>
+        <li><strong>Заблокировано запросов</strong>: HTTP-запросы к рекламным серверам, перехваченные расширением</li>
+      </ul>
+      <p>Числа сокращаются: 1 500 → «1.5K», 2 300 000 → «2.3M».</p>
+
+      <h3>Текущий сайт</h3>
+      <p>Домен сайта, который вы посещаете, с кнопкой <strong>«Пауза здесь»</strong>.</p>
+
+      <h3>Баннер лицензии</h3>
+      <p>Виден только для пользователей Free («Попробуйте Pro 30 дней бесплатно») и Пробного периода («Пробный период активен — осталось X дней»). Скрыт для пользователей Pro.</p>
+
+      <h3>Запрос отзыва</h3>
+      <p>Появляется после блокировки 100+ объявлений и через 5+ дней после установки. Не более 3 раз с паузой в 14 дней. Три варианта: «Оставить отзыв», «Не сейчас», «Больше не показывать».</p>
+
+      <h3>Журнал изменений</h3>
+      <p>После обновления отображаются новые возможности. Закрывается крестиком.</p>
+
+      <h3>Ссылки внизу</h3>
+      <p><strong>Помощь</strong> (открывает FAQ в настройках) и <strong>Настройки</strong> (открывает полную страницу).</p>
+    </div>
+
+    <!-- ===== 5. ПАУЗА ДЛЯ САЙТА ===== -->
+    <div class="guide-section" id="s5">
+      <h2><span class="sec-icon">&#9208;</span> 5. Пауза для сайта</h2>
+      <p>Отключите AdOff на одном сайте, не выключая его везде.</p>
+
+      <h3>Как поставить на паузу</h3>
+      <ol>
+        <li>Посетите сайт</li>
+        <li>Нажмите значок AdOff на панели инструментов</li>
+        <li>Нажмите <strong>«Пауза здесь»</strong></li>
+        <li>Выберите длительность</li>
+      </ol>
+
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>Вариант</th><th>Что происходит</th></tr></thead>
+          <tbody>
+            <tr><td>Только это посещение</td><td>Повторно включается при закрытии вкладки</td></tr>
+            <tr><td>1 час</td><td>Повторно включается через 60 минут</td></tr>
+            <tr><td>1 день</td><td>Повторно включается через 24 часа</td></tr>
+            <tr><td>Всегда (белый список)</td><td>Остаётся отключённым постоянно</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Как снова включить</h3>
+      <p>Посетите сайт на паузе, нажмите значок AdOff, вы увидите «На паузе — [тип]», нажмите <strong>«Включить»</strong>.</p>
+
+      <div class="guide-info">
+        <p><strong>Примечание:</strong> истёкшие паузы удаляются автоматически. Блокировка распространяется также на поддомены: если поставить на паузу <code>example.com</code>, исключается и <code>blog.example.com</code>.</p>
+      </div>
+    </div>
+
+    <!-- ===== 6. СТРАНИЦА НАСТРОЕК ===== -->
+    <div class="guide-section" id="s6">
+      <h2><span class="sec-icon">&#9881;</span> 6. Страница настроек</h2>
+      <p>Нажмите <strong>«Настройки»</strong> во всплывающем окне или щёлкните правой кнопкой мыши по значку AdOff > «Настройки».</p>
+
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>Раздел</th><th>Что делает</th></tr></thead>
+          <tbody>
+            <tr><td>Основные</td><td>Переключатель блокировки, значок, счётчик, язык</td></tr>
+            <tr><td>Исключённые сайты</td><td>Управление белым списком</td></tr>
+            <tr><td>План и лицензия</td><td>Статус плана, цены, активация ключа</td></tr>
+            <tr><td>Статистика</td><td>Общие счётчики и сброс</td></tr>
+            <tr><td>Пригласить друзей</td><td>Реферальная ссылка, быстрый шеринг, история</td></tr>
+            <tr><td>Расширенные</td><td>Экспорт/импорт резервной копии, полный сброс</td></tr>
+            <tr><td>Помощь</td><td>Помощник FAQ + сообщение о проблемах</td></tr>
+            <tr><td>Предложения</td><td>Предложите функцию, сообщите об ошибке или улучшении</td></tr>
+            <tr><td>О расширении</td><td>Версия, ссылка на сайт, конфиденциальность, поддержка</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 7. ИСКЛЮЧЁННЫЕ САЙТЫ ===== -->
+    <div class="guide-section" id="s7">
+      <h2><span class="sec-icon">&#128737;</span> 7. Исключённые сайты (Белый список)</h2>
+      <h3>Добавление сайта</h3>
+      <ol>
+        <li>Перейдите в <strong>Настройки > Исключённые сайты</strong></li>
+        <li>Введите домен (например, <code>example.com</code>)</li>
+        <li>Нажмите <strong>«Добавить»</strong> или Enter</li>
+      </ol>
+
+      <h3>Экспорт и импорт</h3>
+      <p><strong>Экспорт</strong>: скачайте белый список в виде JSON-файла. <strong>Импорт</strong>: загрузите JSON-файл. Записи проверяются (домен до 255 символов, допустимый тип). Недействительные записи игнорируются.</p>
+    </div>
+
+    <!-- ===== 8. ПЛАН И ЛИЦЕНЗИЯ ===== -->
+    <div class="guide-section" id="s8">
+      <h2><span class="sec-icon">&#10024;</span> 8. План и лицензия</h2>
+
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>План</th><th>Цена</th><th>Включает</th></tr></thead>
+          <tbody>
+            <tr><td>Free</td><td>Бесплатно навсегда</td><td>Полная блокировка рекламы, скрытие элементов CSS</td></tr>
+            <tr><td>Пробный Pro</td><td>Бесплатно 30 дней</td><td>Все функции Pro</td></tr>
+            <tr><td>Pro Ежемесячный</td><td>2,99 EUR/мес.</td><td>Free + Нейтрализация видеорекламы + Режим скрытности + Приоритетная поддержка</td></tr>
+            <tr><td>Pro Годовой</td><td>19,99 EUR/год</td><td>Цена Founder зафиксирована навсегда</td></tr>
+            <tr><td>Pro Пожизненный</td><td>99 EUR</td><td>Pro навсегда</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Free vs Pro: в чём разница</h3>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>Функция</th><th>Free</th><th>Pro</th></tr></thead>
+          <tbody>
+            <tr><td>Блокировка рекламы на всех сайтах</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>Скрытие элементов из DOM</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>Блокировка HTTP-запросов к рекламным сетям</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td><strong>Нейтрализация видеорекламы</strong> (стриминг)</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td><strong>Режим скрытности</strong> (анти-обнаружение)</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>Приоритетные обновления</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>Приоритетная поддержка</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="guide-info--green guide-info">
+        <p><strong>Базовая блокировка рекламы работает в Free.</strong> Эксклюзивные функции Pro: нейтрализация видеорекламы (стриминговые платформы) и режим скрытности (анти-обнаружение). Без режима скрытности некоторые сайты могут обнаружить блокировщик рекламы.</p>
+      </div>
+
+      <h3>Активация лицензии Pro</h3>
+      <ol>
+        <li>Купите на <strong>adoff.app</strong></li>
+        <li>Получите ключ по электронной почте: <code>XXXX-XXXX-XXXX-XXXX</code></li>
+        <li>Перейдите в <strong>Настройки > План и лицензия</strong></li>
+        <li>Введите ключ и нажмите <strong>«Активировать»</strong></li>
+      </ol>
+    </div>
+
+    <!-- ===== 9. РЕФЕРАЛЬНАЯ ПРОГРАММА ===== -->
+    <div class="guide-section" id="s9">
+      <h2><span class="sec-icon">&#127873;</span> 9. Реферальная программа</h2>
+      <p>Зарабатывайте бесплатные дни Pro, приглашая друзей.</p>
+      <ol>
+        <li>При первой установке вы получаете уникальный код: <code>ADO-XXXXX</code></li>
+        <li>Поделитесь ссылкой <code>adoff.app/r/ВАШ-КОД</code></li>
+        <li>Когда друг переходит на Pro, вы получаете <strong>+15 бесплатных дней Pro</strong></li>
+        <li>Дни накапливаются без ограничений</li>
+      </ol>
+      <p>Перейдите в <strong>Настройки > Пригласить друзей</strong>, чтобы получить ссылку, быстро поделиться (WhatsApp, Telegram, Email) и просмотреть реферальный дашборд.</p>
+    </div>
+
+    <!-- ===== 10. СТАТИСТИКА ===== -->
+    <div class="guide-section" id="s10">
+      <h2><span class="sec-icon">&#128202;</span> 10. Статистика</h2>
+      <p>В разделе <strong>Настройки > Статистика</strong> отображаются общие счётчики заблокированной рекламы и перехваченных запросов. Можно сбросить кнопкой «Сбросить статистику» (требует подтверждения).</p>
+    </div>
+
+    <!-- ===== 11. РАСШИРЕННЫЕ НАСТРОЙКИ ===== -->
+    <div class="guide-section" id="s11">
+      <h2><span class="sec-icon">&#128295;</span> 11. Расширенные настройки</h2>
+      <ul>
+        <li><strong>Экспорт настроек</strong>: полная резервная копия JSON (данные лицензии исключены из соображений безопасности)</li>
+        <li><strong>Импорт настроек</strong>: восстановление из резервной копии. Поля лицензии игнорируются автоматически</li>
+        <li><strong>Сбросить всё</strong>: удаляет всё, включая лицензию. Необратимо. Требует двойного подтверждения</li>
+      </ul>
+    </div>
+
+    <!-- ===== 12. ПОМОЩНИК FAQ ===== -->
+    <div class="guide-section" id="s12">
+      <h2><span class="sec-icon">&#128172;</span> 12. Помощник FAQ</h2>
+      <p>В разделе <strong>Настройки > Помощь</strong> есть встроенный помощник. Введите вопрос или нажмите быстрый чип среди 12 доступных тем:</p>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>Тема</th><th>Пример</th></tr></thead>
+          <tbody>
+            <tr><td>Как работает AdOff</td><td>«как работает», «что делает»</td></tr>
+            <tr><td>Сайт не работает</td><td>«сайт сломан», «белая страница»</td></tr>
+            <tr><td>Видеореклама</td><td>«видеореклама», «преролл»</td></tr>
+            <tr><td>Исключить сайт</td><td>«белый список», «пауза»</td></tr>
+            <tr><td>Free vs Pro</td><td>«free vs pro», «план»</td></tr>
+            <tr><td>Конфиденциальность</td><td>«конфиденциальность», «отслеживание»</td></tr>
+            <tr><td>Производительность</td><td>«медленно», «тормозит»</td></tr>
+            <tr><td>Антиблокировка</td><td>«обнаружен», «стена»</td></tr>
+            <tr><td>Лицензия</td><td>«лицензия», «ключ»</td></tr>
+            <tr><td>Удаление</td><td>«удалить», «убрать»</td></tr>
+            <tr><td>Обновление</td><td>«обновить», «update»</td></tr>
+            <tr><td>Баннер cookie</td><td>«cookie», «gdpr»</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 13. СООБЩЕНИЕ О ПРОБЛЕМАХ ===== -->
+    <div class="guide-section" id="s13">
+      <h2><span class="sec-icon">&#9888;</span> 13. Сообщение о проблемах</h2>
+      <p>Если сайт не работает с AdOff, сообщите об этом в <strong>Настройки > Помощь > Сообщить о проблеме</strong>.</p>
+      <ol>
+        <li>Введите <strong>URL сайта</strong> (обязательно)</li>
+        <li>Выберите <strong>тип</strong>: Сайт не работает / Реклама видна / Антиблокировка / Другое</li>
+        <li>Добавьте <strong>описание</strong> и <strong>email</strong> (необязательно)</li>
+        <li>Решите <strong>математическую капчу</strong></li>
+        <li>Нажмите <strong>«Отправить»</strong></li>
+      </ol>
+      <p>Форма содержит защиту от ботов: honeypot, таймер, капча, ограничение скорости (не более 3/час), антиспам, дедупликация.</p>
+    </div>
+
+    <!-- ===== 14. ПРЕДЛОЖЕНИЯ ===== -->
+    <div class="guide-section" id="s14">
+      <h2><span class="sec-icon">&#128161;</span> 14. Предложения</h2>
+      <p>В разделе <strong>Настройки > Предложения</strong> вы можете предложить функции, сообщить об ошибках или улучшениях. Заполните заголовок (обязательно), описание и email (необязательно). Ваши предложения появляются в списке под формой.</p>
+    </div>
+
+    <!-- ===== 15. КАК РАБОТАЕТ ===== -->
+    <div class="guide-section" id="s15">
+      <h2><span class="sec-icon">&#9881;</span> 15. Как работает AdOff (технически)</h2>
+
+      <h3>Уровень 1 — Блокировка на уровне сети</h3>
+      <p>AdOff использует API Chrome <code>declarativeNetRequest</code> для блокировки HTTP-запросов к рекламным серверам <strong>до их загрузки браузером</strong>. Более 120 правил охватывают основные рекламные сети и многие другие.</p>
+
+      <h3>Уровень 2 — Косметическая фильтрация</h3>
+      <p>Для рекламы, доставляемой с того же домена, что и сайт, AdOff использует CSS и JavaScript, чтобы <strong>скрыть её со страницы</strong>: точные селекторы, MutationObserver для динамического контента, свёртывание пустых контейнеров.</p>
+
+      <h3>Уровень 3 — Нейтрализация видеорекламы (только Pro/Пробный) <span style="background:rgba(124,92,252,0.18);color:#9d82fd;font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:100px;border:1px solid rgba(124,92,252,0.3);vertical-align:middle;margin-left:6px;">PRO</span></h3>
+      <p>Большинство видеоплееров используют стандартный рекламный SDK для показа рекламных вставок (пре-ролл, мид-ролл, пост-ролл). AdOff <strong>заменяет его нейтральной версией</strong>, которая немедленно сообщает плееру «реклама отсутствует» — видео воспроизводится без прерываний. Работает автоматически на любом сайте в мире. На основных видеоплатформах: ускорение до 16x + автоматическое нажатие «Пропустить рекламу». <strong>Эксклюзивная функция Pro.</strong></p>
+
+      <h3>Уровень 4 — Режим скрытности (только Pro/Пробный)</h3>
+      <p>Перехватывает проверки антиблокировки и заставляет сайт думать, что всё видно:</p>
+      <ul>
+        <li><strong>Подмена CSS</strong>: свойства элементов-приманок подделываются</li>
+        <li><strong>Перехват сети</strong>: скрипты обнаружения получают пустые ответы</li>
+        <li><strong>Симуляция переменных</strong>: рекламные SDK предварительно заполнены</li>
+        <li><strong>Нейтрализация скриптов</strong>: антиблокировочные скрипты блокируются до выполнения</li>
+        <li><strong>Антиблокировка прокрутки</strong>: предотвращает блокировку прокрутки стенами</li>
+      </ul>
+      <div class="guide-info">
+        <p>Режим скрытности автоматически отключается на основных платформах (видео, социальные сети, интернет-магазины) и других крупных сайтах, где он может мешать.</p>
+      </div>
+    </div>
+
+    <!-- ===== 16. УСТРАНЕНИЕ НЕПОЛАДОК ===== -->
+    <div class="guide-section" id="s16">
+      <h2><span class="sec-icon">&#128736;</span> 16. Устранение неполадок</h2>
+
+      <h3>Сайт не работает</h3>
+      <ol>
+        <li>Нажмите значок AdOff и используйте <strong>«Пауза здесь»</strong></li>
+        <li>Перезагрузите страницу</li>
+        <li>Если работает на паузе: сообщите нам об этом сайте</li>
+        <li>Если не работает и на паузе: проблема не в AdOff</li>
+      </ol>
+
+      <h3>Реклама всё ещё видна</h3>
+      <ol>
+        <li>Убедитесь, что AdOff <strong>активен</strong> (фиолетовый значок)</li>
+        <li>Убедитесь, что сайт не в <strong>белом списке</strong></li>
+        <li><strong>Перезагрузите страницу</strong></li>
+        <li>Если проблема сохраняется: сообщите нам об этом сайте</li>
+      </ol>
+
+      <h3>«Отключите блокировщик рекламы»</h3>
+      <ol>
+        <li><strong>Перезагрузите страницу</strong></li>
+        <li>Убедитесь, что у вас <strong>Pro или Пробный период</strong> (требуется режим скрытности)</li>
+        <li>Если не помогает: используйте «Пауза здесь» и сообщите нам</li>
+      </ol>
+
+      <h3>AdOff не активируется</h3>
+      <p>Перейдите в <code>chrome://extensions/</code>, убедитесь, что расширение включено. При наличии ошибок попробуйте удалить и переустановить.</p>
+    </div>
+
+    <!-- ===== 17. КОНФИДЕНЦИАЛЬНОСТЬ ===== -->
+    <div class="guide-section" id="s17">
+      <h2><span class="sec-icon">&#128274;</span> 17. Конфиденциальность и безопасность</h2>
+
+      <div class="guide-info--green guide-info">
+        <p><strong>AdOff НЕ собирает личные данные, НЕ отслеживает посещаемые сайты, НЕ отправляет телеметрию, НЕ передаёт данные третьим лицам, НЕ внедряет рекламу.</strong></p>
+      </div>
+
+      <h3>Разрешения и их назначение</h3>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>Разрешение</th><th>Для чего используется</th></tr></thead>
+          <tbody>
+            <tr><td><code>storage</code></td><td>Сохранение настроек и счётчиков локально</td></tr>
+            <tr><td><code>declarativeNetRequest</code></td><td>Блокировка запросов к рекламным сетям</td></tr>
+            <tr><td><code>activeTab</code></td><td>Определение домена для паузы на сайте</td></tr>
+            <tr><td><code>scripting</code></td><td>Внедрение контент-скриптов для скрытия рекламы</td></tr>
+            <tr><td><code>webNavigation</code></td><td>Активация блокировки в нужный момент</td></tr>
+            <tr><td><code>&lt;all_urls&gt;</code></td><td>Работа на всех сайтах</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Внешние коммуникации</h3>
+      <p>AdOff взаимодействует с внешними серверами <strong>только по вашему действию</strong>: сообщение о сайте, предложение, активация лицензии, автоматическая повторная проверка (каждые 7 дней для Pro). Коммуникации проходят через Cloudflare Worker.</p>
+      <p><a href="/ru/privacy">Читать полную политику конфиденциальности</a></p>
+    </div>
+
+    <!-- ===== 18. ЯЗЫКИ ===== -->
+    <div class="guide-section" id="s18">
+      <h2><span class="sec-icon">&#127760;</span> 18. Поддерживаемые языки</h2>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>Язык</th><th>Код</th><th>Статус</th></tr></thead>
+          <tbody>
+            <tr><td>Italiano</td><td>it</td><td><span class="check">Полный</span></td></tr>
+            <tr><td>English</td><td>en</td><td><span class="check">Полный</span></td></tr>
+            <tr><td>Deutsch</td><td>de</td><td><span class="check">Полный</span></td></tr>
+            <tr><td>Francais</td><td>fr</td><td><span class="check">Полный</span></td></tr>
+            <tr><td>Espanol</td><td>es</td><td><span class="check">Полный</span></td></tr>
+            <tr><td>Portugues</td><td>pt</td><td><span class="check">Полный</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Для смены языка: <strong>Настройки > Основные > Язык</strong>. При выборе «Автоматически» используется язык браузера (резерв: английский).</p>
+    </div>
+
+    <!-- ===== 19. УДАЛЕНИЕ ===== -->
+    <div class="guide-section" id="s19">
+      <h2><span class="sec-icon">&#128465;</span> 19. Удаление</h2>
+      <ol>
+        <li>Перейдите в <code>chrome://extensions/</code></li>
+        <li>Найдите AdOff и нажмите <strong>«Удалить»</strong></li>
+        <li>Подтвердите</li>
+      </ol>
+      <p>Локальные настройки будут удалены. Лицензия Pro остаётся действительной на сервере. Реферальный код будет утерян.</p>
+
+      <div class="guide-info--yellow guide-info">
+        <p><strong>Перед удалением</strong> экспортируйте настройки через Настройки > Расширенные > Экспорт. После переустановки импортируйте файл для восстановления всего (лицензию нужно будет повторно активировать ключом).</p>
+      </div>
+    </div>
+
+    <!-- ===== 20. КОНТАКТЫ ===== -->
+    <div class="guide-section" id="s20">
+      <h2><span class="sec-icon">&#128231;</span> 20. Контакты и поддержка</h2>
+      <ul>
+        <li><strong>Сайт</strong>: <a href="/index.html">adoff.app</a></li>
+        <li><strong>Поддержка</strong>: <a href="/support.html">adoff.app/support</a> (форма обратной связи)</li>
+        <li><strong>Сообщение о проблемах с сайтами</strong>: из расширения (Настройки > Помощь)</li>
+        <li><strong>Предложения</strong>: из расширения (Настройки > Предложения)</li>
+      </ul>
+      <p>При проблемах с лицензией Pro используйте форму поддержки, указав свой лицензионный ключ.</p>
+    </div>
+
+    <a href="#toc" class="guide-back-top">&#8593; Вернуться к содержанию</a>
+
+  </main>
+
+  <!-- FOOTER -->
+
+  <script src="/adoff-footer.js?v=260602a"></script>
+  
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

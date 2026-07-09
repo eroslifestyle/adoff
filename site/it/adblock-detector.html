@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test rilevamento ad blocker — Il tuo ad blocker è rilevabile? | AdOff</title>
+  <meta name="description" content="Test gratuito e privacy-first: scopri in 5 secondi se i siti riescono a rilevare il tuo ad blocker. La maggior parte dei blocker ferma le pubblicità ma lascia tracce rilevabili — verifica il tuo. Gira al 100% nel browser, nessun dato raccolto." />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <link rel="canonical" href="https://adoff.app/it/adblock-detector" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Test rilevamento ad blocker — Il tuo ad blocker è rilevabile?" />
+  <meta property="og:description" content="Test gratuito: scopri se i siti riescono a rilevare il tuo ad blocker. Gira tutto nel browser, non raccoglie nulla." />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/it/adblock-detector" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Test rilevamento ad blocker — Il tuo ad blocker è rilevabile?" />
+  <meta name="twitter:description" content="Test gratuito: i siti riescono a rilevare il tuo ad blocker? Gira nel browser, non raccoglie nulla." />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="en" href="https://adoff.app/adblock-detector" />
+  <link rel="alternate" hreflang="it" href="https://adoff.app/it/adblock-detector" />
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/adblock-detector" />
+
+  <link rel="stylesheet" href="/style.css?v=260520-205323" />
+  <style>
+    .tool { max-width: 760px; margin: 0 auto; padding: 96px 24px 100px; }
+    .tool__eyebrow { display:inline-flex; align-items:center; gap:8px; font-size:0.78rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:#7c5cfc; margin-bottom:16px; }
+    .tool h1 { font-size: clamp(1.9rem, 4.5vw, 2.7rem); color:#fff; line-height:1.15; margin-bottom:14px; }
+    .tool__lead { font-size:1.05rem; color:#b0b0c8; line-height:1.7; margin-bottom:8px; }
+    .tool__privacy { font-size:0.85rem; color:#6f6f8e; margin-bottom:36px; }
+    .tool__privacy strong { color:#4ade80; }
+
+    .runbtn { display:inline-flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:18px 24px; font-size:1.05rem; font-weight:700; color:#fff; background:linear-gradient(135deg,#7c5cfc,#5b3fd6); border:none; border-radius:14px; cursor:pointer; transition:transform .15s, box-shadow .2s; }
+    .runbtn:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(124,92,252,.35); }
+    .runbtn:disabled { opacity:.6; cursor:wait; transform:none; }
+
+    .result { margin-top:36px; opacity:0; transform:translateY(8px); transition:opacity .4s, transform .4s; }
+    .result.show { opacity:1; transform:none; }
+    .verdict { border-radius:16px; padding:28px; border:1.5px solid #2a2a4a; background:#12122a; margin-bottom:24px; }
+    .verdict__title { font-size:1.4rem; font-weight:800; margin:0 0 8px; }
+    .verdict__sub { color:#b0b0c8; line-height:1.7; margin:0; }
+    .verdict--bad { border-color:#f87171; }
+    .verdict--bad .verdict__title { color:#f87171; }
+    .verdict--warn { border-color:#fbbf24; }
+    .verdict--warn .verdict__title { color:#fbbf24; }
+    .verdict--good { border-color:#4ade80; }
+    .verdict--good .verdict__title { color:#4ade80; }
+
+    .checks { list-style:none; margin:0 0 28px; padding:0; }
+    .checks li { display:flex; align-items:flex-start; gap:12px; padding:14px 0; border-bottom:1px solid #1f1f3a; color:#cfcfe2; font-size:0.96rem; }
+    .checks li:last-child { border-bottom:none; }
+    .checks .ic { flex-shrink:0; width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:800; margin-top:1px; }
+    .ic--block { background:rgba(74,222,128,.15); color:#4ade80; }
+    .ic--pass { background:rgba(248,113,113,.15); color:#f87171; }
+    .ic--pending { background:#1f1f3a; color:#6f6f8e; }
+    .checks .det { display:block; font-size:0.82rem; color:#8888aa; margin-top:2px; }
+
+    .cta-box { background:linear-gradient(135deg,rgba(124,92,252,.12),rgba(124,92,252,.03)); border:1px solid #2a2a4a; border-radius:16px; padding:28px; text-align:center; }
+    .cta-box h2 { color:#fff; font-size:1.3rem; margin:0 0 10px; }
+    .cta-box p { color:#b0b0c8; line-height:1.7; margin:0 0 20px; }
+    .cta-box .btn { display:inline-block; padding:14px 28px; background:#fff; color:#0a0a1a; font-weight:700; border-radius:12px; text-decoration:none; transition:transform .15s; }
+    .cta-box .btn:hover { transform:translateY(-2px); }
+
+    .explainer { margin-top:56px; }
+    .explainer h2 { color:#fff; font-size:1.4rem; margin:0 0 14px; }
+    .explainer p { color:#b0b0c8; line-height:1.8; margin-bottom:14px; }
+    .explainer strong { color:#fff; }
+    .faq-q { color:#fff; font-weight:700; margin:24px 0 6px; font-size:1.02rem; }
+    .faq-a { color:#b0b0c8; line-height:1.7; }
+
+    #bait-zone { position:absolute; left:-9999px; top:-9999px; width:1px; height:1px; overflow:hidden; }
+  </style>
+</head>
+<body>
+
+  <script src="/adoff-i18n.js?v=260520-205323"></script>
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+
+  <main class="tool">
+    <span class="tool__eyebrow"><span>●</span> Strumento gratuito per la privacy</span>
+    <h1>Il tuo ad blocker è rilevabile?</h1>
+    <p class="tool__lead">La maggior parte degli ad blocker blocca le pubblicità — ma il blocco stesso è <strong style="color:#fff">visibile</strong> ai siti. I sistemi anti-adblock sfruttano questa visibilità per rilevarti e poi nascondono i contenuti o ti chiedono di disattivare il blocker. Questo test verifica, nel tuo browser, se la tua configurazione lascia tracce rilevabili.</p>
+    <p class="tool__privacy"><strong>100% privato:</strong> ogni controllo gira localmente nel tuo browser. Niente viene inviato a nessun server, niente viene salvato. Non sappiamo nemmeno che l'hai eseguito.</p>
+
+    <button class="runbtn" id="run">Avvia il test di rilevamento →</button>
+
+    <div class="result" id="result" aria-live="polite">
+      <div class="verdict" id="verdict">
+        <h3 class="verdict__title" id="verdict-title"></h3>
+        <p class="verdict__sub" id="verdict-sub"></p>
+      </div>
+
+      <ul class="checks" id="checks"></ul>
+
+      <div class="cta-box">
+        <h2 id="cta-title">Blocca le pubblicità senza essere rilevato</h2>
+        <p id="cta-sub">AdOff blocca banner, pop-up, tracker e pubblicità video — e la sua tecnologia Stealth nasconde il blocco, così i siti non possono accorgersi che usi un ad blocker. Niente muri anti-adblock, niente messaggi insistenti.</p>
+        <a class="btn" href="/install.html">Installa AdOff — gratis →</a>
+      </div>
+    </div>
+
+    <section class="explainer">
+      <h2>Bloccare le pubblicità non significa essere invisibili</h2>
+      <p>Ci sono due cose molto diverse che un ad blocker può fare. La prima è <strong>bloccare</strong>: impedire alle pubblicità di caricarsi o nasconderle nella pagina. Quasi tutti i blocker lo fanno. La seconda è <strong>restare invisibili</strong>: assicurarsi che il sito non possa accorgersi che è avvenuto un blocco. Pochissimi blocker lo fanno.</p>
+      <p>Il test qui sopra esegue lo stesso tipo di sonde usate dagli script anti-adblock: inserisce un elemento pubblicitario esca nella pagina e controlla se viene nascosto, e prova a caricare risorse note di reti pubblicitarie e controlla se vengono fermate. Se il tuo blocker reagisce a queste sonde in modo misurabile, un sito può rilevarlo — ed è esattamente ciò che fa scattare i muri "disattiva il tuo ad blocker".</p>
+      <p>La <strong>modalità Stealth</strong> di AdOff fa l'opposto. Blocca a livello di rete e cosmetico <em>e</em> falsifica i segnali che i sistemi anti-adblock cercano, così le sonde tornano indietro perfettamente normali. Le pubblicità spariscono; il sito non vede nulla di anomalo.</p>
+
+      <div class="faq-q">Questo test invia i miei dati da qualche parte?</div>
+      <p class="faq-a">No. Ogni controllo gira interamente nel tuo browser tramite sonde locali su DOM e rete. Nessun risultato, nessun IP, niente viene trasmesso o salvato. La pagina funziona allo stesso modo anche offline.</p>
+
+      <div class="faq-q">Perché il mio ad blocker risulta "rilevabile"?</div>
+      <p class="faq-a">Perché blocca le pubblicità in modo visibile: rimuove gli elementi esca e ferma le richieste pubblicitarie, e i siti possono misurare entrambe le cose. È normale per la maggior parte dei blocker — è il compromesso tra bloccare ed essere invisibili. I blocker con capacità stealth evitano di lasciare queste tracce.</p>
+
+      <div class="faq-q">Qual è il miglior ad blocker che evita il rilevamento?</div>
+      <p class="faq-a">AdOff è costruito apposta per questo: blocco a livello di rete più uno strato stealth che supera i muri anti-adblock, così blocchi le pubblicità senza che i siti lo sappiano. È leggerissimo, privacy-first e gratis con prova Pro di 30 giorni.</p>
+    </section>
+  </main>
+
+  <div id="bait-zone" aria-hidden="true"></div>
+
+  <script src="/adoff-footer.js?v=260602a"></script>
+
+  <!-- Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Test rilevamento ad blocker di AdOff",
+    "url": "https://adoff.app/it/adblock-detector",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Qualsiasi (browser web)",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "description": "Test gratuito e privacy-first che verifica se i siti riescono a rilevare il tuo ad blocker. Gira interamente lato client, non raccoglie dati."
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Questo test sull'ad blocker invia i miei dati da qualche parte?", "acceptedAnswer": { "@type": "Answer", "text": "No. Ogni controllo gira interamente nel tuo browser tramite sonde locali su DOM e rete. Nessun risultato, IP o dato viene trasmesso o salvato." } },
+      { "@type": "Question", "name": "Perché il mio ad blocker risulta rilevabile?", "acceptedAnswer": { "@type": "Answer", "text": "Perché blocca le pubblicità in modo visibile: rimuove gli elementi esca e ferma le richieste pubblicitarie, e i siti possono misurarle. È normale per la maggior parte dei blocker. I blocker con capacità stealth evitano di lasciare queste tracce." } },
+      { "@type": "Question", "name": "Qual è il miglior ad blocker che evita il rilevamento?", "acceptedAnswer": { "@type": "Answer", "text": "AdOff è costruito per questo: blocco a livello di rete più uno strato stealth che supera i muri anti-adblock, così blocchi le pubblicità senza che i siti lo sappiano. È leggerissimo, privacy-first e gratis con prova Pro di 30 giorni." } }
+    ]
+  }
+  </script>
+
+  <script>
+  (function () {
+    "use strict";
+    var AD_CLASSES = "ad-banner ads adsbox ad-placement sponsor-ad adsbygoogle banner_ad";
+    var AD_SCRIPT = "https://static.doubleclick.net/instream/ad_status.js";
+    var AD_PIXEL = "https://securepubads.g.doubleclick.net/favicon.ico";
+
+    function makeBait() {
+      var z = document.getElementById("bait-zone");
+      var d = document.createElement("div");
+      d.className = AD_CLASSES; d.id = "ad-banner"; d.innerHTML = "&nbsp;";
+      d.style.cssText = "width:300px;height:250px;position:absolute;left:-9999px;";
+      z.appendChild(d);
+      var d2 = document.createElement("div");
+      d2.id = "ad-placement-1"; d2.className = "pub_300x250"; d2.innerHTML = "&nbsp;";
+      d2.style.cssText = "width:300px;height:250px;position:absolute;left:-9999px;";
+      z.appendChild(d2);
+      return { byClass: d, byId: d2 };
+    }
+    function isHidden(el) {
+      if (!el) return true;
+      if (el.offsetParent === null && el.offsetHeight === 0) return true;
+      var cs = window.getComputedStyle(el);
+      return el.offsetHeight === 0 || el.clientHeight === 0 || cs.display === "none" || cs.visibility === "hidden" || cs.opacity === "0";
+    }
+    function probeFetch(url) {
+      return new Promise(function (resolve) {
+        var done = false;
+        var to = setTimeout(function () { if (!done) { done = true; resolve(true); } }, 2500);
+        fetch(url, { method: "HEAD", mode: "no-cors", cache: "no-store" })
+          .then(function () { if (!done) { done = true; clearTimeout(to); resolve(false); } })
+          .catch(function () { if (!done) { done = true; clearTimeout(to); resolve(true); } });
+      });
+    }
+    function probeImage(url) {
+      return new Promise(function (resolve) {
+        var img = new Image(); var done = false;
+        var to = setTimeout(function () { if (!done) { done = true; resolve(true); } }, 2500);
+        img.onload = function () { if (!done) { done = true; clearTimeout(to); resolve(false); } };
+        img.onerror = function () { if (!done) { done = true; clearTimeout(to); resolve(true); } };
+        img.src = url + "?_=" + Date.now();
+      });
+    }
+    function row(label, blocked) {
+      var li = document.createElement("li");
+      var ic = document.createElement("span");
+      ic.className = "ic " + (blocked ? "ic--block" : "ic--pass");
+      ic.textContent = blocked ? "✓" : "—";
+      var txt = document.createElement("span");
+      txt.innerHTML = "<strong style='color:#fff'>" + label + "</strong><span class='det'>" + (blocked ? "bloccato — e il blocco è misurabile" : "caricato normalmente") + "</span>";
+      li.appendChild(ic); li.appendChild(txt);
+      return li;
+    }
+    document.getElementById("run").addEventListener("click", function () {
+      var btn = this; btn.disabled = true; btn.textContent = "Test in corso…";
+      var bait = makeBait();
+      setTimeout(function () {
+        var cosmeticBlocked = isHidden(bait.byClass);
+        var cosmeticIdBlocked = isHidden(bait.byId);
+        Promise.all([probeFetch(AD_SCRIPT), probeImage(AD_PIXEL)]).then(function (r) {
+          var checks = [
+            ["Elemento pubblicitario esca (per classe)", cosmeticBlocked],
+            ["Elemento pubblicitario (per ID)", cosmeticIdBlocked],
+            ["Richiesta script rete pubblicitaria", r[0]],
+            ["Richiesta pixel di tracciamento", r[1]]
+          ];
+          var blockedCount = checks.filter(function (c) { return c[1]; }).length;
+          var ul = document.getElementById("checks"); ul.innerHTML = "";
+          checks.forEach(function (c) { ul.appendChild(row(c[0], c[1])); });
+          var verdict = document.getElementById("verdict");
+          var vt = document.getElementById("verdict-title");
+          var vs = document.getElementById("verdict-sub");
+          verdict.className = "verdict";
+          if (blockedCount === 0) {
+            verdict.classList.add("verdict--warn");
+            vt.textContent = "Nessun ad blocker rilevato";
+            vs.textContent = "Nessuna delle sonde è stata bloccata. Stai vedendo le pubblicità — e così ogni tracker. Installare un blocker le fermerebbe, idealmente uno che resti anche invisibile ai muri anti-adblock.";
+            document.getElementById("cta-title").textContent = "Blocca le pubblicità — e resta invisibile";
+          } else {
+            verdict.classList.add("verdict--bad");
+            vt.textContent = "Il tuo ad blocker è rilevabile";
+            vs.innerHTML = "Il tuo blocker ha fermato <strong style='color:#fff'>" + blockedCount + " sonde su 4</strong> — bene. Ma ogni blocco eseguito è <strong style='color:#f87171'>misurabile</strong>, quindi i sistemi anti-adblock possono rilevarti e far scattare i muri \"disattiva l'ad blocker\".";
+          }
+          document.getElementById("result").classList.add("show");
+          btn.style.display = "none";
+          var z = document.getElementById("bait-zone"); if (z) z.innerHTML = "";
+        });
+      }, 700);
+    });
+  })();
+  </script>
+
+</body>
+</html>

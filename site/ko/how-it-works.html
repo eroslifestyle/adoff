@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdOff 작동 원리: 스텔스 광고 차단 기술</title>
+  <meta name="description" content="AdOff가 세 가지 강력한 레이어로 광고를 차단하는 방법을 알아보세요: 네트워크 차단, 코스메틱 필터링, 스텔스 안티-감지. 완전한 기술적 분석." />
+  <link rel="canonical" href="https://adoff.app/ko/how-it-works.html" />
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/how-it-works.html" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/how-it-works.html" />
+  <link rel="alternate" hreflang="it" href="https://adoff.app/it/how-it-works.html" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/de/how-it-works.html" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/fr/how-it-works.html" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/es/how-it-works.html" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/pt/how-it-works.html" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/ru/how-it-works.html" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/ar/how-it-works.html" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/how-it-works.html" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/hi/how-it-works.html" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/how-it-works.html" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/how-it-works.html" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/tr/how-it-works.html" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/id/how-it-works.html" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/pl/how-it-works.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="AdOff 작동 원리: 스텔스 광고 차단 기술" />
+  <meta property="og:description" content="AdOff가 세 가지 강력한 레이어로 광고를 차단하는 방법을 알아보세요: 네트워크 차단, 코스메틱 필터링, 스텔스 안티-감지. 완전한 기술적 분석." />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/ko/how-it-works.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AdOff 작동 원리: 스텔스 광고 차단 기술" />
+  <meta name="twitter:description" content="AdOff가 세 가지 강력한 레이어로 광고를 차단하는 방법을 알아보세요: 네트워크 차단, 코스메틱 필터링, 스텔스 안티-감지. 완전한 기술적 분석." />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <link rel="stylesheet" href="style.css?v=260520-201526" />
+  <style>
+    .article-page { max-width: 780px; margin: 0 auto; padding: 80px 24px 100px; }
+    .article-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: #fff; margin-bottom: 12px; }
+    .article-page .meta { font-size: 0.88rem; color: #8888aa; margin-bottom: 40px; }
+    .article-page h2 { font-size: 1.5rem; color: #fff; margin: 48px 0 16px; }
+    .article-page h3 { font-size: 1.2rem; color: #e2e2f0; margin: 32px 0 12px; }
+    .article-page p { color: #b0b0c8; line-height: 1.8; margin-bottom: 16px; }
+    .article-page ul, .article-page ol { color: #b0b0c8; margin: 0 0 20px 24px; line-height: 1.8; }
+    .article-page li { margin-bottom: 8px; }
+    .article-page strong { color: #fff; }
+    .article-page .highlight { color: #4ade80; font-weight: 700; }
+    .tech-card { background: #12122a; border: 1px solid #2a2a4a; border-radius: 14px; padding: 24px; margin: 20px 0; }
+    .tech-card h3 { color: #7c5cfc; margin: 0 0 12px; font-size: 1.1rem; }
+    .tech-card p { margin-bottom: 0; }
+    .comp-table { width: 100%; border-collapse: collapse; margin: 24px 0 32px; }
+    .comp-table th, .comp-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #2a2a4a; }
+    .comp-table th { color: #8888aa; font-size: 0.85rem; text-transform: uppercase; }
+    .comp-table td { color: #b0b0c8; }
+    .comp-table .check { color: #4ade80; font-weight: 700; }
+    .comp-table .cross { color: #f43f5e; }
+    .comp-table .partial { color: #fbbf24; }
+    .cta-box { background: #12122a; border: 1px solid rgba(124,92,252,0.3); border-radius: 14px; padding: 32px; text-align: center; margin: 48px 0; }
+    .cta-box h3 { color: #fff; margin: 0 0 12px; }
+    .cta-box p { color: #8888aa; margin-bottom: 20px; }
+    .cta-box .btn { display: inline-block; background: linear-gradient(135deg,#7c5cfc,#4c3ad4); color: #fff; padding: 12px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; transition: all 0.2s; }
+    .cta-box .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.3); }
+    .layer-badge { display: inline-block; background: linear-gradient(135deg,#7c5cfc,#4c3ad4); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .pro-badge { background: linear-gradient(135deg,#f59e0b,#d97706); }
+    .step-list { counter-reset: steps; list-style: none; margin: 0 0 20px 0; padding: 0; }
+    .step-list li { counter-increment: steps; position: relative; padding-left: 44px; margin-bottom: 14px; color: #b0b0c8; line-height: 1.7; }
+    .step-list li::before { content: counter(steps); position: absolute; left: 0; top: 0; width: 28px; height: 28px; background: linear-gradient(135deg,#7c5cfc,#4c3ad4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #fff; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "크롬에서 AdOff 광고 차단기를 설치하고 사용하는 방법",
+    "description": "3단계로 AdOff를 설치하고 세 가지 보호 레이어로 구동되는 완전한 광고 없는 브라우징 경험을 누리세요.",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "name": "크롬 웹 스토어에서 AdOff 설치",
+        "text": "크롬 웹 스토어를 방문하여 AdOff를 검색하거나 adoff.app에서 직접 확장 프로그램을 다운로드하세요. 'Chrome에 추가'를 클릭하고 설치를 확인하세요.",
+        "position": 1
+      },
+      {
+        "@type": "HowToStep",
+        "name": "빠른 접근을 위해 확장 프로그램 고정",
+        "text": "크롬 툴바의 퍼즐 조각 아이콘을 클릭하고, 목록에서 AdOff를 찾아 핀 아이콘을 클릭하여 AdOff 아이콘이 항상 보이도록 하세요.",
+        "position": 2
+      },
+      {
+        "@type": "HowToStep",
+        "name": "광고 없는 웹 탐색",
+        "text": "AdOff가 자동으로 활성화됩니다. 네트워크 차단, 코스메틱 필터링, 스텔스 보호가 모두 백그라운드에서 조용히 작동합니다. 설정이 필요하지 않습니다.",
+        "position": 3
+      }
+    ],
+    "tool": [
+      {
+        "@type": "HowToTool",
+        "name": "크롬 브라우저"
+      }
+    ]
+  }
+  </script>
+  <script src="/adoff-i18n.js?v=260520-201526"></script>
+  </head>
+<body>
+  <div id="site-nav"></div>
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+  <article class="article-page">
+
+    <h1>AdOff 작동 원리: 스텔스 광고 차단 기술</h1>
+    <p class="meta">2026년 4월 업데이트 &nbsp;·&nbsp; 8분 읽기 &nbsp;·&nbsp; 기술 심층 분석</p>
+
+    <p>
+      대부분의 광고 차단기는 단 하나의 무딘 도구로 작동합니다. 차단할 URL 목록입니다. 웹사이트가 그 존재를 알아차릴 때까지는 잘 작동합니다 — 그리고 나서 군비 경쟁이 시작됩니다. AdOff는 처음부터 다르게 구축되었습니다.
+      진정으로 보이지 않고 방해 없는 브라우징 경험을 제공하기 위해 함께 작동하는 <strong>세 가지 독립적인 보호 레이어</strong>를 사용합니다.
+    </p>
+    <p>
+      이 페이지는 각 레이어가 정확히 어떻게 작동하는지를 분석합니다 — 궁금한 분들을 위한 충분한 기술적 세부 사항과 함께 누구나 따라갈 수 있도록 작성되었습니다. 아키텍처를 이해하고 싶은 개발자이든, 다른 차단기들이 포기할 때 AdOff가 계속 작동하는 이유가 궁금한 일반 사용자이든, 올바른 곳에 계십니다.
+    </p>
+
+    <!-- ===================== LAYER 1 ===================== -->
+    <h2>레이어 1 — 네트워크 차단</h2>
+    <span class="layer-badge">모든 플랜에서 활성화</span>
+
+    <p>
+      첫 번째이자 가장 효율적인 레이어는 네트워크 수준에서 작동하여 광고 관련 HTTP 요청을 브라우저가 <em>다운로드하기도 전에</em> 차단합니다. 데이터가 가져와지지 않고, 스크립트가 실행되지 않으며, 추적 픽셀이 로드되지 않습니다. 리소스는 단순히 검색되지 않습니다.
+    </p>
+
+    <div class="tech-card">
+      <h3>🔧 크롬 API: declarativeNetRequest</h3>
+      <p>
+        AdOff는 엔터프라이즈 보안 도구에서도 사용되는 동일한 최신 API인 크롬의 <strong>declarativeNetRequest</strong> API를 사용합니다. 이전 <code>webRequest</code> API와 달리 declarativeNetRequest는 JavaScript 오버헤드 없이 브라우저 엔진에 의해 네이티브로 평가됩니다. 규칙은 설치 시 한 번 컴파일되고 이후의 모든 요청에 대해 거의 제로 CPU 비용으로 매칭됩니다.
+      </p>
+    </div>
+
+    <h3>107개 이상의 정밀 차단 규칙</h3>
+    <p>
+      AdOff는 가장 일반적인 광고 네트워크에서 사용하는 광고 전달 인프라를 대상으로 하는 <strong>107개의 수작업으로 엄선된 네트워크 규칙</strong>을 탑재합니다. 지속적인 유지 관리가 필요한 방대한 개별 도메인 목록을 유지하는 대신 AdOff의 규칙은 광고 전달의 구조적 패턴을 대상으로 합니다:
+    </p>
+    <ul>
+      <li><strong>광고 서버 도메인</strong> — 배너 광고, 동영상 프리롤, 스폰서 콘텐츠를 제공하는 호스트명</li>
+      <li><strong>추적 및 분석 엔드포인트</strong> — 사용자 행동을 프로파일링하는 픽셀, 비콘, 이벤트 수집기</li>
+      <li><strong>리타겟팅 인프라</strong> — 사이트에서 사이트로 사용자를 추적하는 크로스 사이트 추적기</li>
+      <li><strong>프로그래매틱 광고 교환 URL</strong> — 광고 노출을 경매하는 실시간 입찰 엔드포인트</li>
+      <li><strong>광고 전용으로 사용되는 CDN 경로</strong> — 광고 페이로드에 특정한 콘텐츠 전달 패턴</li>
+    </ul>
+
+    <h3>네트워크 수준에서 차단이 중요한 이유</h3>
+    <p>
+      광고가 네트워크 레이어에서 차단되면 <strong>페이지가 더 빠르게 로드됩니다</strong>. 이것은 단지 보이는 배너를 제거하는 것이 아닙니다 — 브라우저가 광고 서버에 TCP 연결을 열 필요가 없고, 추적 도메인에 대한 DNS 조회를 수행할 필요가 없으며, 광고가 렌더링하고 스스로를 측정하는 데 의존하는 서드파티 JavaScript를 실행할 필요가 없다는 것을 의미합니다.
+    </p>
+    <p>
+      광고가 많은 뉴스 사이트에 대한 연구들은 네트워크 수준 차단이 페이지 로드 시간을 30-60% 줄인다는 것을 지속적으로 보여줍니다. 차단된 각 광고 요청은 열릴 필요가 없는 연결이고, 파싱될 필요가 없는 스크립트이며, 대역폭을 소비하지 않는 페이로드입니다.
+    </p>
+
+    <div class="tech-card">
+      <h3>⚡ 성능 이점</h3>
+      <p>
+        declarativeNetRequest 규칙이 JavaScript가 아닌 브라우저의 C++ 엔진에 의해 평가되기 때문에 AdOff는 일반 탐색 중에 <strong>제로 CPU 오버헤드</strong>를 추가합니다. 매칭은 네트워크 스택이 요청을 시작하기도 전에 이루어집니다. 페이지당 JavaScript가 실행되지 않으며 확장 프로그램은 유휴 상태에서 사실상 메모리를 사용하지 않습니다.
+      </p>
+    </div>
+
+    <!-- ===================== LAYER 2 ===================== -->
+    <h2>레이어 2 — 코스메틱 필터링</h2>
+    <span class="layer-badge">모든 플랜에서 활성화</span>
+
+    <p>
+      모든 광고가 미리 차단될 수 있는 네트워크 요청을 통해 도달하지는 않습니다. 일부 광고는 페이지 자체 HTML에 직접 렌더링되거나, 콘텐츠와 동일한 도메인에서 로드되거나, 퍼스트파티 JavaScript에 의해 삽입됩니다. 이를 위해 AdOff는 주변 레이아웃을 방해하지 않고 CSS를 사용하여 DOM에서 광고 요소를 숨기는 기술인 <strong>코스메틱 필터링</strong>을 사용합니다.
+    </p>
+
+    <h3>격리된 세계에서 CSS 삽입</h3>
+    <p>
+      AdOff의 콘텐츠 스크립트는 크롬의 <strong>ISOLATED 세계</strong>에서 실행됩니다 — 페이지 자체 JavaScript와 완전히 분리된 샌드박스 실행 환경입니다. 이는 확장 프로그램이 페이지의 스크립트에 의해 감지될 수 없이 DOM을 관찰하고 수정할 수 있음을 의미합니다. 페이지의 스크립트는 격리된 세계의 범위나 변수에 접근할 수 없습니다.
+    </p>
+    <p>
+      코스메틱 필터는 수천 개의 웹사이트에 걸쳐 광고 슬롯이 사용하는 표준 클래스 이름, ID, 구조적 패턴을 커버하도록 신중하게 관리되는 알려진 광고 컨테이너 선택자에 <code>display: none</code> 및 <code>visibility: hidden</code> 규칙을 적용하는 CSS 스타일시트를 삽입합니다.
+    </p>
+
+    <div class="tech-card">
+      <h3>🎨 레이아웃 이동 없음 — 빈 공간 없음</h3>
+      <p>
+        단순한 광고 차단기의 일반적인 문제는 DOM에서 요소를 제거하면 주변 콘텐츠가 갑자기 이동하거나 재배치된다는 것입니다. AdOff의 CSS 규칙은 가능한 경우 브라우저의 첫 번째 페인트 전에 <code>!important</code> 우선순위와 함께 <code>display: none</code>을 사용하고 적용되어 눈에 보이는 레이아웃 이동을 방지합니다. 광고가 차지했을 공간은 단순히 나타나지 않습니다.
+      </p>
+    </div>
+
+    <h3>DOM 스캔 및 동적 삽입</h3>
+    <p>
+      현대 웹사이트는 매우 동적입니다 — 초기 HTML이 파싱된 후 콘텐츠를 로드하고, JavaScript를 통해 광고 슬롯을 삽입하며, DOM을 지속적으로 업데이트합니다. AdOff의 콘텐츠 스크립트는 광고 패턴과 일치하는 새로 삽입된 요소에 대해 DOM을 모니터링하고 일반적으로 단일 애니메이션 프레임 내에 즉시 숨기기 규칙을 적용합니다. 광고가 잠깐 나타났다가 사라지는 것을 볼 수 없습니다.
+    </p>
+
+    <h3>동영상 광고 무력화 <span style="font-size:0.75rem;color:#f59e0b;">(Pro)</span></h3>
+    <p>
+      스트리밍 플랫폼의 대부분의 동영상 플레이어는 프리롤, 미드롤, 포스트롤 광고 중단을 관리하기 위해 표준 광고 SDK에 의존합니다. AdOff는 이 SDK를 중립 스텁으로 교체하여 플레이어에게 즉시 "표시할 광고 없음"을 알립니다 — 동영상이 어떤 중단도 없이 바로 시작됩니다.
+    </p>
+    <p>
+      이것은 두 가지 보완적인 메커니즘을 통해 작동합니다:
+    </p>
+    <ul>
+      <li><strong>네트워크 레벨 리다이렉트</strong> — 광고 SDK를 로드하는 요청이 가로채어 확장 프로그램에 번들된 로컬 스텁 파일로 리다이렉트됩니다</li>
+      <li><strong>페이지 레벨 주입</strong> — 스텁은 사이트 스크립트가 실행되기 전에 주입되므로, 광고 SDK를 내부적으로 번들하는 플레이어도 먼저 중립 버전을 찾습니다</li>
+    </ul>
+    <p>
+      스텁은 원래 SDK의 전체 API 표면을 구현하지만 어떤 광고도 제공하지 않습니다. 플레이어가 <code>start()</code>를 호출하면 스텁은 즉시 "광고 완료" 신호를 발송합니다 — 플레이어는 광고 중단이 자연스럽게 끝난 것처럼 동영상을 재개합니다. 이것은 보편적입니다: 이 SDK를 사용하는 전 세계 모든 웹사이트에서 수동 사이트 목록 없이 작동합니다.
+    </p>
+    <p>
+      주요 동영상 플랫폼에서는 전용 핸들러가 광고 재생을 16× 속도로 가속하고 인간과 유사한 타이밍으로 건너뛰기 버튼을 자동으로 클릭합니다.
+    </p>
+
+    <!-- ===================== LAYER 3 ===================== -->
+    <h2>레이어 3 — 스텔스 안티-감지 <span style="font-size:0.8rem;color:#f59e0b;">(Pro)</span></h2>
+    <span class="layer-badge pro-badge">Pro &amp; 체험</span>
+
+    <p>
+      이것이 AdOff가 일반적인 광고 차단기와 가장 크게 다른 부분입니다. 이제 많은 웹사이트가 능동적인 <em>광고차단기 감지</em> 스크립트를 실행합니다 — 차단기를 사용하는지 감지하고, 그렇다면 벽, 경고, 또는 저하된 콘텐츠로 경험을 방해하는 것이 유일한 목적인 코드입니다.
+    </p>
+    <p>
+      크롬의 <strong>MAIN 세계</strong>에서 실행되는 AdOff의 스텔스 레이어는 페이지 자체 JavaScript와 동일한 수준에서 작동합니다. 각 기술이 어떻게 작동하는지 설명합니다:
+    </p>
+
+    <div class="tech-card">
+      <h3>🪤 미끼 위장</h3>
+      <p>
+        광고차단기 감지 스크립트는 일반적으로 작은 "미끼" 요소 — 광고 컨테이너처럼 보이도록 스타일링된 DOM 노드 — 를 삽입하고 나서 치수가 0인지 또는 광고 차단기에 의해 제거되었는지 확인함으로써 작동합니다. AdOff의 미끼 위장기는 DOM에 이러한 요소를 보존하고, 지오메트리가 조회될 때 그럴듯한 치수를 보고하며, 감지 스크립트가 기대하는 "이상 없음" 신호를 받도록 합니다.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>📦 변수 위장</h3>
+      <p>
+        광고 네트워크는 자신의 존재를 알리기 위해 전역 JavaScript 변수와 속성을 <code>window</code> 객체에 삽입합니다. 광고차단기 감지 스크립트는 이러한 변수의 존재를 확인하여 광고가 로드되었는지 확인합니다. AdOff의 변수 위장기는 예상되는 전역 네임스페이스를 재구성합니다 — 존재 확인을 통과하는 경량 스텁 객체를 생성합니다 — 실제 광고 콘텐츠가 전달되지 않아도 페이지가 광고 스크립트가 성공적으로 실행되었다고 믿게 합니다.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>🔌 Fetch / XHR 가로채기</h3>
+      <p>
+        일부 감지 시스템은 DOM에 전혀 의존하지 않습니다 — 알려진 광고 엔드포인트에 직접 <code>fetch()</code> 또는 <code>XMLHttpRequest</code> 호출을 하고 응답 시간이나 상태 코드를 측정합니다. 요청이 차단되면 즉시 실패하여 차단기의 존재를 드러냅니다. AdOff는 알려진 광고 도메인에 대한 요청을 감지하고 성공적인 광고 로드를 모방하는 합성 응답을 반환하는 프록시 핸들러로 <code>window.fetch</code>와 <code>XMLHttpRequest</code> 모두를 래핑합니다.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>🛡️ 스크립트 무력화</h3>
+      <p>
+        알려진 광고차단기 감지 스크립트는 URL 패턴 및 페이로드 서명으로 식별됩니다. 브라우저가 이러한 스크립트 중 하나를 로드하려 할 때 스텔스 레이어가 실행을 가로채고 감지 작업을 수행하지 않고 완료 콜백을 충족하는 불활성 스텁으로 스크립트의 로직을 교체합니다. 페이지의 코드는 해결된 프로미스 또는 no-op 콜백을 받고, 감지 경로는 도달되지 않습니다.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>👁️ MutationObserver — 실시간 방어</h3>
+      <p>
+        웹사이트는 초기 페이지 로드 후 언제든지 새로운 감지 스크립트를 삽입할 수 있습니다 — 사용자 동작, 스크롤 깊이, 또는 타이머에 의해 트리거됩니다. AdOff의 MutationObserver는 문서에 새 <code>&lt;script&gt;</code> 요소가 추가되는 것을 지속적으로 감시합니다. 알려진 광고차단기 감지 서명과 일치하는 것이 있으면 스텔스 레이어가 첫 번째 명령이 실행되기 전에 무력화합니다. 이것은 지연되거나 지연 로드된 감지 시스템에 대해서도 보호가 유지되도록 합니다.
+      </p>
+    </div>
+
+    <!-- ===================== HOW THEY WORK TOGETHER ===================== -->
+    <h2>세 레이어가 함께 작동하는 방법</h2>
+
+    <p>
+      각 레이어는 독립적입니다 — 하나가 우회되거나 적용되지 않아도 나머지가 계속 작동합니다. 하지만 진정한 힘은 서로를 보완하는 방식에 있습니다:
+    </p>
+
+    <ul>
+      <li>
+        <strong>네트워크 차단</strong>은 브라우저에 존재하기 전에 대부분의 광고 페이로드를 제거하여 차단된 것만 감지할 수 있는 감지 스크립트의 공격 면을 줄입니다.
+      </li>
+      <li>
+        <strong>코스메틱 필터링</strong>은 퍼스트파티 광고와 네트워크 레이어를 통해 빠져나간 잔재물을 처리하여 DOM에 흔적을 남기지 않고 시각적 경험을 깨끗하게 유지합니다.
+      </li>
+      <li>
+        <strong>스텔스 안티-감지</strong>는 다른 두 레이어를 보이지 않음의 망토로 감싸 페이지가 차단기가 전혀 존재하지 않는다고 확신하게 합니다 — 그래서 광고차단기 페이월이 절대 트리거되지 않습니다.
+      </li>
+    </ul>
+
+    <p>
+      결과는 단순히 광고 없는 브라우징 경험이 아닙니다 — 웹사이트가 광고 차단기를 사용하고 있다는 것을 절대 알지 못하는 경험입니다. 경고도, 페이월도, 저하된 콘텐츠도, "광고 차단기를 비활성화해 주세요" 오버레이도 없습니다.
+    </p>
+
+    <!-- ===================== PRIVACY ===================== -->
+    <h2>설계에 의한 개인정보 보호</h2>
+
+    <p>
+      AdOff는 모든 것을 <strong>브라우저에서 로컬로</strong> 처리합니다. 브라우징 기록을 분석하는 원격 서버도 없고, 원격 측정 전송도 없으며, 방문한 URL 목록이 기기를 절대 떠나지 않습니다. 확장 프로그램은 진정으로 필요한 권한만 요청합니다:
+    </p>
+    <ul>
+      <li><strong>declarativeNetRequest</strong> — 네트워크 차단 규칙 적용</li>
+      <li><strong>storage</strong> — 환경 설정 및 광고 카운터를 로컬에 저장</li>
+      <li><strong>tabs</strong> — 사이트별 배지 카운트 표시</li>
+      <li><strong>scripting</strong> — 코스메틱 필터 및 스텔스 스크립트 삽입</li>
+    </ul>
+    <p>
+      "모든 웹사이트의 모든 데이터 읽기" 포괄적 권한 없음. 확장 프로그램 내부에 번들된 분석 SDK 없음. 브라우저에서 일어나는 것은 브라우저에 남습니다.
+    </p>
+
+    <!-- ===================== HOW TO INSTALL ===================== -->
+    <h2>3단계로 시작하기</h2>
+
+    <ol class="step-list">
+      <li>
+        크롬 웹 스토어에서 <strong>AdOff를 설치</strong>하거나 <a href="../install.html" style="color:#7c5cfc;">adoff.app/install</a>에서 <code>.zip</code> 파일을 직접 다운로드하세요. 크롬이 권한 확인을 요청합니다 — 검토하고 수락하세요.
+      </li>
+      <li>
+        크롬 툴바의 퍼즐 조각 아이콘을 클릭하고, 드롭다운에서 AdOff를 찾아 핀 아이콘을 클릭하여 <strong>확장 프로그램을 고정</strong>하세요. AdOff 방패가 툴바에 영구적으로 나타납니다.
+      </li>
+      <li>
+        <strong>정상적으로 탐색하세요.</strong> 방문하는 모든 페이지에서 세 레이어가 자동으로 활성화됩니다. 차단된 광고 및 요청 수를 확인하거나 특정 사이트에서 보호를 일시정지하려면 언제든지 AdOff 아이콘을 클릭하세요.
+      </li>
+    </ol>
+
+    <p>
+      기본 경험에는 설정이 필요하지 않습니다. 고급 사용자는 옵션 페이지에서 화이트리스트 관리, 사이트별 차단 동작 조정, 또는 30일 무료 체험 기간 동안 스텔스 Pro 기능 활성화를 탐색할 수 있습니다.
+    </p>
+
+    <!-- ===================== CTA ===================== -->
+    <div class="cta-box">
+      <h3>차이를 경험할 준비가 되셨나요?</h3>
+      <p>30일 동안 세 가지 보호 레이어를 무료로 체험하세요. 신용카드 불필요.</p>
+      <a href="../install.html" class="btn">AdOff 무료 설치 →</a>
+    </div>
+
+  </article>
+  
+  <script src="/adoff-footer.js?v=260602a"></script>
+  
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

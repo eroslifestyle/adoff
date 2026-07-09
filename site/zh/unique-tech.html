@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>是什么让AdOff独特：其他广告拦截器都没有的5项技术</title>
+  <meta name="description" content="AdOff 是世界上唯一一款拥有原生 anti-SABR-backoff、内容位置恢复、通用 IMA SDK 存根、状态保留即时跳过和集成隐形功能的广告拦截器——所有功能都内置，不是借用过滤列表。" />
+  <link rel="canonical" href="https://adoff.app/zh/unique-tech.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="是什么让AdOff独特：其他广告拦截器都没有的5项技术" />
+  <meta property="og:description" content="原生 anti-SABR-backoff、内容位置恢复、通用 IMA SDK 存根：AdOff 是世界上唯一一款具有这五项技术的内置功能的广告拦截器。" />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/zh/unique-tech.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="是什么让AdOff独特：其他广告拦截器都没有的5项技术" />
+  <meta name="twitter:description" content="原生 anti-SABR-backoff、内容位置恢复、通用 IMA SDK 存根：AdOff 是世界上唯一一款具有这五项技术的内置功能的广告拦截器。" />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/unique-tech.html" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/unique-tech.html" />
+  <link rel="alternate" hreflang="it" href="https://adoff.app/it/unique-tech.html" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/de/unique-tech.html" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/fr/unique-tech.html" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/es/unique-tech.html" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/pt/unique-tech.html" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/ru/unique-tech.html" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/ar/unique-tech.html" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/unique-tech.html" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/hi/unique-tech.html" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/unique-tech.html" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/unique-tech.html" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/tr/unique-tech.html" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/id/unique-tech.html" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/pl/unique-tech.html" />
+  <link rel="stylesheet" href="style.css?v=260520-201526" />
+  <style>
+    .article-page { max-width: 880px; margin: 0 auto; padding: 80px 24px 100px; }
+    .article-page h1 { font-size: clamp(2rem, 5vw, 3rem); color: #fff; margin-bottom: 16px; line-height: 1.15; }
+    .article-page .lede { font-size: 1.15rem; color: #b0b0c8; line-height: 1.7; margin-bottom: 48px; }
+    .article-page h2 { font-size: 1.6rem; color: #fff; margin: 56px 0 18px; }
+    .article-page h3 { font-size: 1.25rem; color: #e2e2f0; margin: 32px 0 12px; }
+    .article-page p { color: #b0b0c8; line-height: 1.8; margin-bottom: 16px; }
+    .article-page ul, .article-page ol { color: #b0b0c8; margin: 0 0 20px 24px; line-height: 1.8; }
+    .article-page strong { color: #fff; }
+    .badge-unique { display: inline-block; background: linear-gradient(135deg, #7c5cfc, #4f46e5); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-left: 10px; vertical-align: middle; letter-spacing: 0.5px; text-transform: uppercase; }
+    .feature-card { background: #12122a; border: 1px solid #2a2a4a; border-radius: 16px; padding: 32px; margin: 32px 0; position: relative; }
+    .feature-card.unique { border-color: rgba(124, 92, 252, 0.45); box-shadow: 0 0 0 1px rgba(124, 92, 252, 0.1); }
+    .feature-card .icon-row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+    .feature-card .icon-circle { width: 44px; height: 44px; border-radius: 12px; background: rgba(124, 92, 252, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+    .feature-card h3 { color: #fff; margin: 0; font-size: 1.3rem; }
+    .feature-card .problem-tag { color: #f43f5e; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+    .feature-card .solution-tag { color: #4ade80; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 18px 0 6px; display: block; }
+    .feature-card p { margin-bottom: 12px; }
+    .feature-card .meta-row { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 18px; padding-top: 18px; border-top: 1px solid #2a2a4a; font-size: 0.85rem; color: #8888aa; }
+    .feature-card .meta-row strong { color: #b0b0c8; }
+    .comp-table { width: 100%; border-collapse: collapse; margin: 32px 0 40px; font-size: 0.95rem; }
+    .comp-table th, .comp-table td { padding: 14px 12px; text-align: center; border-bottom: 1px solid #2a2a4a; }
+    .comp-table th { color: #fff; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; background: #0e0e22; }
+    .comp-table th:first-child, .comp-table td:first-child { text-align: left; color: #e2e2f0; font-weight: 500; }
+    .comp-table td { color: #b0b0c8; }
+    .comp-table .check { color: #4ade80; font-weight: 800; font-size: 1.1rem; }
+    .comp-table .cross { color: #f43f5e; font-weight: 800; font-size: 1.1rem; }
+    .comp-table .partial { color: #fbbf24; font-weight: 800; font-size: 1.1rem; }
+    .comp-table th:nth-child(6), .comp-table td:nth-child(6) { background: rgba(124, 92, 252, 0.08); border-left: 1px solid rgba(124, 92, 252, 0.25); border-right: 1px solid rgba(124, 92, 252, 0.25); }
+    .comp-table th:nth-child(6) { color: #7c5cfc; }
+    .promise-list { background: #12122a; border-left: 4px solid #7c5cfc; padding: 24px 28px; border-radius: 8px; margin: 32px 0; }
+    .promise-list ul { margin: 12px 0 0 20px; }
+    .promise-list li { margin-bottom: 10px; }
+    .cta-box { background: linear-gradient(135deg, #12122a, #1a1a3a); border: 1px solid rgba(124,92,252,0.4); border-radius: 18px; padding: 40px; text-align: center; margin: 56px 0 24px; }
+    .cta-box h3 { color: #fff; margin: 0 0 12px; font-size: 1.5rem; }
+    .cta-box p { color: #8888aa; margin-bottom: 24px; }
+    .citation { color: #6c6c85; font-size: 0.82rem; margin-top: 6px; }
+    .citation a { color: #7c5cfc; text-decoration: none; }
+    .citation a:hover { text-decoration: underline; }
+  </style>
+  <script src="/adoff-i18n.js?v=260520-201526"></script>
+  </head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="brand"><img src="/assets/icon128.png" alt="AdOff" class="brand-logo" /><span class="brand-name">AdOff</span></a>
+      <nav class="topbar-nav" id="topbarNav"></nav>
+    </div>
+  </header>
+
+  <article class="article-page">
+
+    <h1>其他广告拦截器都没有的5项技术</h1>
+    <p class="lede">
+      大多数广告拦截器在困难的地方就停止了。AdOff 进一步发展——配备五项专有的反广告技术，可以解决竞争对手都未涉及的问题。以下是诚实、技术性、可核实的详细分析。
+    </p>
+
+    <!-- ============== COMPARISON TABLE ============== -->
+    <h2>诚实的比较</h2>
+
+    <p>
+      本页面上的每项声明都可以通过阅读竞争对手和我们自己的公开源代码来验证。以下是并排对比：
+    </p>
+
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>功能</th>
+          <th>uBlock Origin</th>
+          <th>AdBlock Plus</th>
+          <th>AdGuard</th>
+          <th>Ghostery</th>
+          <th>AdOff</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>网络拦截 (declarativeNetRequest)</td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td>外观过滤 (CSS 隐藏)</td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td>反检测隐形 (原生、内置)</td>
+          <td><span class="partial">通过过滤器</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="partial">通过过滤器</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>Anti SABR-backoff (消除假缓冲)</strong></td>
+          <td><span class="partial">社区过滤器</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>内容位置恢复</strong></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>通用 IMA SDK 存根 (窗口级)</strong></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+        <tr>
+          <td><strong>状态保留视频广告跳过</strong></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="cross">✗</span></td>
+          <td><span class="check">✓</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="font-size: 0.88rem; color: #8888aa;">
+      图例：<span class="check" style="font-size: 0.9rem;">✓</span> = 原生功能、内置 &middot;
+      <span class="partial" style="font-size: 0.9rem;">通过过滤器</span> = 依赖社区维护的过滤列表（可能随平台更新而中断） &middot;
+      <span class="cross" style="font-size: 0.9rem;">✗</span> = 未实现
+    </p>
+
+    <!-- ============== FEATURE 1: SABR ============== -->
+    <h2>1. Anti SABR-backoff <span class="badge-unique">世界第一</span></h2>
+
+    <div class="feature-card unique">
+      <div class="icon-row">
+        <div class="icon-circle">⏱️</div>
+        <h3>不再有 10-20 秒的黑屏暂停</h3>
+      </div>
+
+      <span class="problem-tag">问题所在</span>
+      <p>
+        现代视频平台运行一种专有流媒体协议，称为 <strong>SABR</strong>
+        (Server Adaptive Bit Rate，服务器自适应比特率)。当 SABR 检测到广告拦截器处于活动状态时，
+        <em>服务器本身</em>会在视频流中注入人工暂停——大约是广告将要持续时间的 80%。因此，如果计划播放 15 秒的广告，您会盯着黑屏看 12 秒，然后内容才继续。<strong>即使广告已完全被拦截。</strong>
+      </p>
+      <p>
+        这个延迟被以密码学方式签署到服务器发出的流 URL 中。传统的广告拦截器无法删除它，因为它们只在浏览器内部运行，在 URL 发出后。
+      </p>
+
+      <span class="solution-tag">AdOff 如何解决</span>
+      <p>
+        在播放器请求离开您的浏览器之前，AdOff 会在请求体中注入一个特殊参数
+        (<code>isInlinePlaybackNoAd: true</code>)。这告诉平台的后端："不要在响应中计划任何广告"。没有计划的广告，服务器就没有理由将 backoff 编码到流 URL 中。<strong>暂停从一开始就不会被创建。</strong>
+      </p>
+      <p>
+        AdOff 同时挂钩 <code>fetch</code> 和 <code>XMLHttpRequest</code>，以覆盖播放器可能使用的每条代码路径，并通过字符串级别的模式匹配来应用注入，从而绕过平台对 <code>JSON.stringify</code> 的防篡改保护。
+      </p>
+
+      <div class="meta-row">
+        <span><strong>活动于</strong>: AdOff 3.3.1+</span>
+        <span><strong>层级</strong>: 5 / 7</span>
+        <span><strong>计划</strong>: Pro / 试用版</span>
+      </div>
+      <div class="citation">
+        参考文献：<a href="https://iter.ca/post/yt-adblock" target="_blank" rel="noopener">iter.ca 技术文章</a>、
+        SecurityOnline 报道
+      </div>
+    </div>
+
+    <!-- ============== FEATURE 2: POSITION RECOVERY ============== -->
+    <h2>2. 内容位置恢复 <span class="badge-unique">世界第一</span></h2>
+
+    <div class="feature-card unique">
+      <div class="icon-row">
+        <div class="icon-circle">↩️</div>
+        <h3>视频恢复到您离开的确切位置——始终如此</h3>
+      </div>
+
+      <span class="problem-tag">问题所在</span>
+      <p>
+        视频平台会针对广告和内容重复使用同一个 HTML5 <code>&lt;video&gt;</code> 元素，通过 Media Source Extensions 切换源。当强行跳过广告时，播放器可能会在源交换期间丢失内容的位置。视频可能会从头开始重放，或者跳到您从未看过的 30-50 秒后的内容。这是平台本身的已知 bug——由 Android Authority 和 PiunikaWeb 在 2026 年 4 月确认，甚至影响了没有广告拦截器的用户。
+      </p>
+
+      <span class="solution-tag">AdOff 如何解决</span>
+      <p>
+        每 500 毫秒，AdOff 会将内容视频的当前位置记录到本地内存（永远不会发送到任何地方）。当广告结束时，监视程序会运行 3 秒，检查广告后的位置是否与广告前的位置一致。如果播放器偏离超过 5 秒——无论前进还是后退——AdOff 都会强制将位置恢复到您实际所在的位置。
+      </p>
+      <p>
+        恢复是智能的：它能容忍小的自然搜索，如果新广告开始就停止，如果播放器主动覆盖它就会优雅地放弃。<strong>您总是从您正在观看的确切秒数继续。</strong>
+      </p>
+
+      <div class="meta-row">
+        <span><strong>活动于</strong>: AdOff 3.3.0+</span>
+        <span><strong>层级</strong>: 6 / 7</span>
+        <span><strong>计划</strong>: Pro / 试用版</span>
+      </div>
+      <div class="citation">
+        参考文献：Android Authority、
+        PiunikaWeb 2026-04-22
+      </div>
+    </div>
+
+    <!-- ============== FEATURE 3: IMA SDK STUB ============== -->
+    <h2>3. 通用 IMA SDK 存根 <span class="badge-unique">世界第一</span></h2>
+
+    <div class="feature-card unique">
+      <div class="icon-row">
+        <div class="icon-circle">🔌</div>
+        <h3>任何使用标准广告 SDK 的网站上都没有视频广告</h3>
+      </div>
+
+      <span class="problem-tag">问题所在</span>
+      <p>
+        大多数视频网站和广播商使用一个单一的行业标准 SDK 来播放广告插播（前置、中间、后置）。传统的广告拦截器试图在网络层阻止 SDK——但如果播放器在其自有 JavaScript 中已经<strong>捆绑了 SDK</strong>（无网络请求），则阻止会失败。用户依然看到广告。这就是为什么您的仅网络广告拦截器在某些流媒体网站上仍然会显示广告。
+      </p>
+
+      <span class="solution-tag">AdOff 如何解决</span>
+      <p>
+        AdOff 在任何网站脚本运行<em>之前</em>，将一个完整、功能完善的广告 SDK 存根直接注入到
+        <code>window.google.ima</code>。该存根实现了整个公共 API——超过 30 个类、60+ 个事件、200+ 个方法——因此任何调用 SDK 的播放器都会获得一个工作对象。当播放器请求广告时，存根在 16 毫秒内立即触发四个生命周期事件 (<code>CONTENT_PAUSE_REQUESTED</code>、<code>STARTED</code>、
+        <code>COMPLETE</code>、<code>CONTENT_RESUME_REQUESTED</code>)。播放器认为广告已播放并完成。用户什么都看不到。
+      </p>
+      <p>
+        <strong>对世界上任何使用此 SDK 的视频平台都有效</strong>，无需任何按域名规则，无需手动规则，无需更新抢夺。在本地捆绑 SDK 的网站与从网络加载 SDK 的网站的覆盖效果完全相同。
+      </p>
+
+      <div class="meta-row">
+        <span><strong>活动于</strong>: AdOff 3.0+</span>
+        <span><strong>层级</strong>: 7 / 7</span>
+        <span><strong>计划</strong>: Pro / 试用版</span>
+      </div>
+    </div>
+
+    <!-- ============== FEATURE 4: STEALTH ============== -->
+    <h2>4. 原生隐形反检测 <span class="badge-unique">内置产品</span></h2>
+
+    <div class="feature-card">
+      <div class="icon-row">
+        <div class="icon-circle">🥷</div>
+        <h3>反广告拦截墙从不触发——因为您是隐形的</h3>
+      </div>
+
+      <span class="problem-tag">问题所在</span>
+      <p>
+        许多网站通过创建"诱饵"元素（具有类似 <code>ad-banner</code> 的类名的 div）并检查它们是否被隐藏，或通过轮询广告 SDK 全局变量的存在来检测广告拦截器。当检测到时，它们显示"请禁用您的广告拦截器"墙或拒绝加载内容。某些竞争对手只能通过社区过滤列表来处理这个问题——这些列表每次平台更新时都会中断。
+      </p>
+
+      <span class="solution-tag">AdOff 如何解决</span>
+      <p>
+        隐形功能内置在 AdOff 的源代码中，由内部维护，并在每次发布时更新。五项技术共同作用：
+      </p>
+      <ul>
+        <li><strong>CSS 欺骗</strong>: <code>display</code>、<code>visibility</code>、<code>opacity</code>、<code>width</code>、<code>height</code> 在诱饵元素上报告虚假值</li>
+        <li><strong>变量欺骗</strong>: 广告 SDK 全局变量预先填充了逼真的存根</li>
+        <li><strong>网络中和</strong>: 已知检测脚本 URL 获得空 200 响应</li>
+        <li><strong>脚本中和</strong>: 反广告拦截脚本在执行前被拦截</li>
+        <li><strong>反滚动锁定</strong>: 防止反广告拦截墙冻结页面滚动</li>
+      </ul>
+      <p>
+        网站的检测代码运行完成并返回"未找到广告拦截器"。<strong>墙从不出现。</strong>
+      </p>
+
+      <div class="meta-row">
+        <span><strong>活动于</strong>: AdOff 2.0+</span>
+        <span><strong>层级</strong>: 4 / 7</span>
+        <span><strong>计划</strong>: Pro / 试用版</span>
+      </div>
+    </div>
+
+    <!-- ============== FEATURE 5: STATE-PRESERVING SKIP ============== -->
+    <h2>5. 状态保留即时跳过 <span class="badge-unique">世界第一</span></h2>
+
+    <div class="feature-card unique">
+      <div class="icon-row">
+        <div class="icon-circle">⏩</div>
+        <h3>在毫秒内跳过广告，无需破坏播放器</h3>
+      </div>
+
+      <span class="problem-tag">问题所在</span>
+      <p>
+        最简单的跳过视频广告的方法是将视频的 <code>currentTime</code> 设置为其
+        <code>duration</code>，立即结束它。大多数广告跳过小书签和许多扩展程序都使用这个技巧。<strong>它会破坏播放器。</strong>因为广告和内容共享同一个视频元素，该搜索会破坏播放器的内部状态，内容视频恢复时会从错误的位置开始。
+      </p>
+
+      <span class="solution-tag">AdOff 如何解决</span>
+      <p>
+        AdOff 从不搜索广告视频。相反，它将播放速率设置为 16 倍——广告在约 2 秒内自然结束，不会出现状态损坏。同时，跳过按钮在出现的瞬间被自动点击（50 毫秒轮询）。播放器的内部记账保持完全完整，任何监视 <code>ratechange</code> 的反检测事件都会通过包装事件侦听器在跳过期间被掩盖。
+      </p>
+      <p>
+        结合位置恢复层（上面的 #2），这意味着：<strong>广告在约 2 秒内消失，内容视频从您所在的确切帧恢复，播放器永远不知道发生过任何事。</strong>
+      </p>
+
+      <div class="meta-row">
+        <span><strong>活动于</strong>: AdOff 3.3.0+</span>
+        <span><strong>层级</strong>: B (即时跳过)</span>
+        <span><strong>计划</strong>: Pro / 试用版</span>
+      </div>
+    </div>
+
+    <!-- ============== PROMISES ============== -->
+    <h2>我们坚守的承诺</h2>
+
+    <div class="promise-list">
+      <p><strong>五个没有其他广告拦截器可以做出的保证：</strong></p>
+      <ul>
+        <li><strong>没有假缓冲黑屏。</strong>您不会等待 10-20 秒让内容开始——平台服务器首先就不会计划任何广告。</li>
+        <li><strong>视频恢复到您离开的确切位置。</strong>始终如此。即使平台有 bug。</li>
+        <li><strong>对任何使用行业标准广告 SDK 的网站都有效。</strong>没有域名列表。没有手动规则。没有更新抢夺。</li>
+        <li><strong>更新以天而不是月计。</strong>当平台发布新的对抗措施时，我们会在下一个版本中发布修复——不是"当过滤列表维护者有时间时"。</li>
+        <li><strong>零数据收集。</strong>没有遥测。没有跟踪。一切都在您的浏览器中本地运行。永远。</li>
+      </ul>
+    </div>
+
+    <!-- ============== WHY UNIQUE ============== -->
+    <h2>为什么这很难复制</h2>
+
+    <p>
+      第 5、6 和 7 层——anti-SABR-backoff、内容位置恢复和通用 IMA SDK 存根——是数月反向工程现代视频播放器行为的结果。它们不是一次性的技巧：它们是处理数百个边界情况的架构（动态源交换、全局函数上的防篡改代理、锁定的 <code>JSON.stringify</code>、延迟加载的播放器、需要真正 SDK 的优质 SSAI 流等）。
+    </p>
+    <p>
+      想要匹配 AdOff 的竞争对手不需要写 500 行代码。他们需要反向工程我们所做的相同系统，验证数百个播放器实现，并在平台每次更新时继续维护结果——免费在他们的开源项目中，同时也要跟上他们的核心功能集。<strong>这就是为什么没有主流广告拦截器将这些功能作为内置产品功能发布的原因。</strong>这也是我们认为他们不会，至少在不久的将来不会这样做的原因。
+    </p>
+
+    <!-- ============== CTA ============== -->
+    <div class="cta-box">
+      <h3>尝试唯一具有全部 7 层的广告拦截器</h3>
+      <p>30 天完整 Pro 访问权限。无需信用卡。随时取消。</p>
+      <a href="/install.html" class="btn">免费安装 AdOff →</a>
+    </div>
+
+  </article>
+
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+  <script src="/adoff-footer.js?v=260602a"></script>
+  
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

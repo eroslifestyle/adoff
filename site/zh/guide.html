@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用户指南 — AdOff 广告拦截器 | 完整使用指南</title>
+  <meta name="description" content="AdOff 完整指南：安装、弹窗控制、网站暂停选项、Pro 许可证、推荐计划、隐私设置和故障排查。" />
+  <link rel="canonical" href="https://adoff.app/zh/guide.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="AdOff 用户指南 — 完整使用指南" />
+  <meta property="og:description" content="关于 AdOff 的一切：设置、功能、Pro 许可证、推荐计划。" />
+  <meta property="og:url" content="https://adoff.app/zh/guide.html" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <!-- hreflang -->
+  <link rel="alternate" hreflang="it" href="https://adoff.app/guide.html" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/guide.html?lang=en" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/guide.html?lang=de" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/guide.html?lang=fr" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/guide.html?lang=es" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/guide.html?lang=pt" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/guide.html?lang=ru" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/guide.html?lang=ar" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/guide.html" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/guide.html?lang=hi" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/guide.html?lang=ja" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/guide.html?lang=ko" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/guide.html?lang=tr" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/guide.html?lang=id" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/guide.html?lang=pl" />
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/guide.html?lang=en" />
+  <link rel="stylesheet" href="style.css?v=260520-201526" />
+  <style>
+    /* ===== Guide page styles ===== */
+    .guide-page {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 60px 24px 100px;
+    }
+
+    .guide-page .guide-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .guide-page .guide-header h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .guide-page .guide-header .guide-version {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .guide-page .guide-header .guide-tagline {
+      font-size: 1.1rem;
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+
+    /* Table of contents */
+    .guide-toc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-bottom: 56px;
+    }
+
+    .guide-toc h2 {
+      font-size: 1.1rem;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .guide-toc ol {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      columns: 2;
+      column-gap: 32px;
+    }
+
+    @media (max-width: 600px) {
+      .guide-toc ol { columns: 1; }
+    }
+
+    .guide-toc li {
+      break-inside: avoid;
+      margin-bottom: 6px;
+    }
+
+    .guide-toc a {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      font-weight: 500;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 4px 0;
+      transition: color var(--transition);
+    }
+
+    .guide-toc a:hover { color: var(--primary-light); }
+
+    .guide-toc .toc-num {
+      color: var(--primary-light);
+      font-weight: 700;
+      font-size: 0.82rem;
+      min-width: 22px;
+    }
+
+    /* Sections */
+    .guide-section {
+      margin-bottom: 56px;
+      scroll-margin-top: 80px;
+    }
+
+    .guide-section h2 {
+      font-size: 1.4rem;
+      color: #fff;
+      margin-bottom: 8px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .guide-section h2 .sec-icon {
+      font-size: 1.3rem;
+    }
+
+    .guide-section h3 {
+      font-size: 1.05rem;
+      color: var(--primary-light);
+      margin: 24px 0 10px;
+    }
+
+    .guide-section p,
+    .guide-section li {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.75;
+      margin-bottom: 8px;
+    }
+
+    .guide-section ul,
+    .guide-section ol {
+      padding-left: 0;
+      list-style: none;
+      margin: 10px 0 16px;
+    }
+
+    .guide-section ul li::before {
+      content: "→ ";
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+
+    .guide-section ol {
+      counter-reset: steps;
+    }
+
+    .guide-section ol li {
+      counter-increment: steps;
+      padding-left: 28px;
+      position: relative;
+    }
+
+    .guide-section ol li::before {
+      content: counter(steps) ".";
+      position: absolute;
+      left: 0;
+      color: var(--primary-light);
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+
+    .guide-section strong {
+      color: var(--text);
+    }
+
+    .guide-section code {
+      background: rgba(124, 92, 252, 0.12);
+      color: var(--primary-light);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.88rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    /* Info boxes */
+    .guide-info {
+      background: rgba(124, 92, 252, 0.06);
+      border: 1px solid rgba(124, 92, 252, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin: 16px 0;
+    }
+
+    .guide-info p { margin-bottom: 0; }
+
+    .guide-info--green {
+      background: rgba(74, 222, 128, 0.06);
+      border-color: rgba(74, 222, 128, 0.2);
+    }
+
+    .guide-info--yellow {
+      background: rgba(251, 191, 36, 0.06);
+      border-color: rgba(251, 191, 36, 0.2);
+    }
+
+    /* Tables */
+    .guide-table-wrap {
+      overflow-x: auto;
+      margin: 16px 0;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .guide-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      min-width: 400px;
+    }
+
+    .guide-table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .guide-table td {
+      padding: 10px 16px;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .guide-table td:first-child {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .guide-table tr:last-child td { border-bottom: none; }
+    .guide-table tr:hover { background: var(--card-hover); }
+
+    .check { color: var(--success); font-weight: 700; }
+    .cross { color: var(--error); }
+
+    /* Back to top */
+    .guide-back-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .guide-back-top:hover { color: var(--primary-light); }
+  </style>
+  <script src="/adoff-i18n.js?v=260520-201526"></script>
+  </head>
+<body>
+
+  <!-- NAV -->
+  <div id="site-nav"></div>
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+
+  <main class="guide-page">
+
+    <!-- HEADER -->
+    <div class="guide-header">
+      <img src="/assets/icon128.png" alt="AdOff" style="width:64px;height:64px;border-radius:16px;margin:0 auto 16px;box-shadow:0 0 32px rgba(124,92,252,0.4);" />
+      <h1>用户指南</h1>
+      <p class="guide-version">AdOff v3.1.0 — 最后更新：2026年4月19日</p>
+      <p class="guide-tagline">掌握 AdOff 全部功能所需的一切知识。</p>
+    </div>
+
+    <!-- TABLE OF CONTENTS -->
+    <nav class="guide-toc" id="toc">
+      <h2>目录</h2>
+      <ol>
+        <li><a href="#s1"><span class="toc-num">1</span> 什么是 AdOff</a></li>
+        <li><a href="#s2"><span class="toc-num">2</span> 安装</a></li>
+        <li><a href="#s3"><span class="toc-num">3</span> 首次启动</a></li>
+        <li><a href="#s4"><span class="toc-num">4</span> 弹出窗口</a></li>
+        <li><a href="#s5"><span class="toc-num">5</span> 网站暂停</a></li>
+        <li><a href="#s6"><span class="toc-num">6</span> 选项页面</a></li>
+        <li><a href="#s7"><span class="toc-num">7</span> 排除网站</a></li>
+        <li><a href="#s8"><span class="toc-num">8</span> 套餐与许可证</a></li>
+        <li><a href="#s9"><span class="toc-num">9</span> 推荐计划</a></li>
+        <li><a href="#s10"><span class="toc-num">10</span> 统计数据</a></li>
+        <li><a href="#s11"><span class="toc-num">11</span> 高级设置</a></li>
+        <li><a href="#s12"><span class="toc-num">12</span> 常见问题</a></li>
+        <li><a href="#s13"><span class="toc-num">13</span> 问题反馈</a></li>
+        <li><a href="#s14"><span class="toc-num">14</span> 建议</a></li>
+        <li><a href="#s15"><span class="toc-num">15</span> 工作原理</a></li>
+        <li><a href="#s16"><span class="toc-num">16</span> 故障排查</a></li>
+        <li><a href="#s17"><span class="toc-num">17</span> 隐私</a></li>
+        <li><a href="#s18"><span class="toc-num">18</span> 语言</a></li>
+        <li><a href="#s19"><span class="toc-num">19</span> 卸载</a></li>
+        <li><a href="#s20"><span class="toc-num">20</span> 联系我们</a></li>
+      </ol>
+    </nav>
+
+    <!-- ===== 1. 什么是 ADOFF ===== -->
+    <div class="guide-section" id="s1">
+      <h2><span class="sec-icon">&#128736;</span> 1. 什么是 AdOff</h2>
+      <p>AdOff 是一款适用于 Google Chrome 的扩展程序，可在所有网站上拦截广告。它从四个层面运作——网络层、页面层、视频广告中性化（仅限 Pro/试用版）和隐身模式（仅限 Pro/试用版）——让您获得干净、快速的浏览体验。</p>
+      <ul>
+        <li>拦截任何网站上的广告；在流媒体平台上中性化视频广告 <strong>（Pro/试用版）</strong></li>
+        <li><strong>隐身模式</strong>（Pro/试用版）：让 AdOff 对反广告拦截系统不可见</li>
+        <li><strong>超轻量</strong> — 原生 Manifest V3 设计</li>
+        <li>不收集任何个人数据：一切在本地运行</li>
+        <li>支持 6 种语言：意大利语、英语、德语、法语、西班牙语、葡萄牙语</li>
+        <li>网站暂停功能，提供 4 种时长：本次访问、1小时、1天、永久</li>
+        <li>推荐系统，可免费获得 Pro 天数</li>
+      </ul>
+    </div>
+
+    <!-- ===== 2. 安装 ===== -->
+    <div class="guide-section" id="s2">
+      <h2><span class="sec-icon">&#128229;</span> 2. 安装</h2>
+
+      <h3>从 Chrome 网上应用店安装</h3>
+      <ol>
+        <li>前往 Chrome 网上应用店中的 AdOff 页面</li>
+        <li>点击 <strong>"添加到 Chrome"</strong></li>
+        <li>点击 <strong>"添加扩展程序"</strong> 确认</li>
+        <li>AdOff 立即生效</li>
+      </ol>
+
+      <h3>将图标固定到工具栏</h3>
+      <ol>
+        <li>点击浏览器右上角的 <strong>拼图</strong> 图标（扩展程序）</li>
+        <li>在列表中找到 <strong>AdOff</strong></li>
+        <li>点击 AdOff 旁边的 <strong>图钉</strong> 图标</li>
+        <li>图标将显示在工具栏中，方便快速访问</li>
+      </ol>
+    </div>
+
+    <!-- ===== 3. 首次启动 ===== -->
+    <div class="guide-section" id="s3">
+      <h2><span class="sec-icon">&#127881;</span> 3. 首次启动</h2>
+      <p>首次安装 AdOff 时：</p>
+      <ul>
+        <li>将打开一个 <strong>欢迎页面</strong>，提供固定图标的说明</li>
+        <li><strong>30天 Pro 试用</strong>自动激活</li>
+        <li>生成一个 <strong>唯一推荐码</strong>（格式：<code>ADO-XXXXX</code>）</li>
+        <li>AdOff 立即开始拦截广告</li>
+        <li>如果在 2026年7月1日之前安装，您将获得永久 <strong>创始会员徽章</strong></li>
+      </ul>
+    </div>
+
+    <!-- ===== 4. 弹出窗口 ===== -->
+    <div class="guide-section" id="s4">
+      <h2><span class="sec-icon">&#128444;</span> 4. 弹出窗口</h2>
+      <p>点击工具栏中的 AdOff 图标以打开弹出窗口。</p>
+
+      <h3>顶部区域</h3>
+      <p>Logo、名称 "AdOff"、许可证徽章（<strong>免费版</strong> / <strong>试用版 X天</strong> / <strong>PRO</strong>）和 <strong>创始人</strong>徽章（如果有资格）。</p>
+
+      <h3>全局开关</h3>
+      <p>用于在所有网站上启用或停用 AdOff 的开关。紫色徽章 = 已启用，红色 = 已停用。</p>
+
+      <h3>计数器</h3>
+      <ul>
+        <li><strong>已拦截广告</strong>：从页面中移除的广告元素</li>
+        <li><strong>已拦截请求</strong>：拦截的对广告服务器的 HTTP 请求</li>
+      </ul>
+      <p>数字会缩写：1,500 显示为 "1.5K"，2,300,000 显示为 "2.3M"。</p>
+
+      <h3>当前网站</h3>
+      <p>您正在访问的网站域名，以及 <strong>"在此暂停"</strong> 按钮。</p>
+
+      <h3>许可证横幅</h3>
+      <p>仅对免费用户（"免费试用 Pro 30天"）和试用用户（"试用版已激活 — 剩余 X 天"）可见。Pro 用户不显示。</p>
+
+      <h3>评价提示</h3>
+      <p>在拦截 100+ 个广告且安装满 5+ 天后显示。最多出现 3 次，每次间隔 14 天。三个选项："留下评价"、"稍后"、"不再显示"。</p>
+
+      <h3>更新日志</h3>
+      <p>更新后显示新功能。点击 X 关闭。</p>
+
+      <h3>底部链接</h3>
+      <p><strong>帮助</strong>（在选项中打开常见问题）和 <strong>选项</strong>（打开完整设置页面）。</p>
+    </div>
+
+    <!-- ===== 5. 网站暂停 ===== -->
+    <div class="guide-section" id="s5">
+      <h2><span class="sec-icon">&#9208;</span> 5. 网站暂停</h2>
+      <p>在单个网站上停用 AdOff，而不影响其他网站。</p>
+
+      <h3>如何暂停</h3>
+      <ol>
+        <li>访问该网站</li>
+        <li>点击工具栏中的 AdOff 图标</li>
+        <li>点击 <strong>"在此暂停"</strong></li>
+        <li>选择时长</li>
+      </ol>
+
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>选项</th><th>效果</th></tr></thead>
+          <tbody>
+            <tr><td>仅本次访问</td><td>关闭标签页时重新激活</td></tr>
+            <tr><td>1小时</td><td>60分钟后重新激活</td></tr>
+            <tr><td>1天</td><td>24小时后重新激活</td></tr>
+            <tr><td>始终（白名单）</td><td>永久停用</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>如何重新激活</h3>
+      <p>访问已暂停的网站，点击 AdOff 图标，您将看到"已暂停 — [类型]"，点击 <strong>"重新激活"</strong>。</p>
+
+      <div class="guide-info">
+        <p><strong>注意：</strong>过期的暂停会自动移除。拦截对子域名同样有效：如果您暂停 <code>example.com</code>，则 <code>blog.example.com</code> 也会被排除。</p>
+      </div>
+    </div>
+
+    <!-- ===== 6. 选项页面 ===== -->
+    <div class="guide-section" id="s6">
+      <h2><span class="sec-icon">&#9881;</span> 6. 选项页面</h2>
+      <p>在弹出窗口中点击 <strong>"选项"</strong>，或右键点击 AdOff 图标 > "选项"。</p>
+
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>部分</th><th>功能</th></tr></thead>
+          <tbody>
+            <tr><td>常规</td><td>拦截开关、徽章、计数器、语言</td></tr>
+            <tr><td>排除的网站</td><td>白名单管理</td></tr>
+            <tr><td>套餐与许可证</td><td>套餐状态、定价、密钥激活</td></tr>
+            <tr><td>统计数据</td><td>总计数器和重置</td></tr>
+            <tr><td>邀请好友</td><td>推荐链接、分享、历史记录</td></tr>
+            <tr><td>高级</td><td>导出/导入备份、完全重置</td></tr>
+            <tr><td>帮助</td><td>常见问题助手 + 网站反馈</td></tr>
+            <tr><td>建议</td><td>提交功能建议、Bug、改进意见</td></tr>
+            <tr><td>关于</td><td>版本、网站链接、隐私、支持</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 7. 排除网站 ===== -->
+    <div class="guide-section" id="s7">
+      <h2><span class="sec-icon">&#128737;</span> 7. 排除的网站（白名单）</h2>
+      <h3>添加网站</h3>
+      <ol>
+        <li>前往 <strong>选项 > 排除的网站</strong></li>
+        <li>输入域名（例如 <code>example.com</code>）</li>
+        <li>点击 <strong>"添加"</strong> 或按回车键</li>
+      </ol>
+
+      <h3>导出和导入</h3>
+      <p><strong>导出</strong>：将白名单下载为 JSON 文件。<strong>导入</strong>：加载 JSON 文件。条目会经过验证（域名最长 255 个字符，允许的类型）。无效条目将被忽略。</p>
+    </div>
+
+    <!-- ===== 8. 套餐与许可证 ===== -->
+    <div class="guide-section" id="s8">
+      <h2><span class="sec-icon">&#10024;</span> 8. 套餐与许可证</h2>
+
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>套餐</th><th>价格</th><th>包含内容</th></tr></thead>
+          <tbody>
+            <tr><td>免费版</td><td>永久免费</td><td>完整广告拦截、CSS 元素隐藏</td></tr>
+            <tr><td>Pro 试用版</td><td>免费 30 天</td><td>全部 Pro 功能</td></tr>
+            <tr><td>Pro 月付</td><td>2.99 欧元/月</td><td>免费版 + 视频广告中性化 + 隐身模式 + 专属支持</td></tr>
+            <tr><td>Pro 年付</td><td>19.99 欧元/年</td><td>Founder 价格终身锁定</td></tr>
+            <tr><td>Pro 终身版</td><td>99 欧元</td><td>永久 Pro</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>免费版与 Pro 版的区别</h3>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>功能</th><th>免费版</th><th>Pro</th></tr></thead>
+          <tbody>
+            <tr><td>在所有网站上拦截广告</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>从 DOM 中隐藏元素</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>拦截广告网络 HTTP 请求</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td><strong>视频广告中性化</strong>（流媒体）</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td><strong>隐身模式</strong>（反检测）</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>优先更新</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>专属支持</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="guide-info--green guide-info">
+        <p><strong>基本广告拦截在免费版中可用。</strong> Pro 专属功能包括：视频广告中性化（流媒体平台）和隐身模式（反检测）。没有隐身模式，某些网站可能会检测到广告拦截器。</p>
+      </div>
+
+      <h3>激活 Pro 许可证</h3>
+      <ol>
+        <li>在 <strong>adoff.app</strong> 购买</li>
+        <li>通过电子邮件收到密钥：<code>XXXX-XXXX-XXXX-XXXX</code></li>
+        <li>前往 <strong>选项 > 套餐与许可证</strong></li>
+        <li>输入密钥并点击 <strong>"激活"</strong></li>
+      </ol>
+    </div>
+
+    <!-- ===== 9. 推荐计划 ===== -->
+    <div class="guide-section" id="s9">
+      <h2><span class="sec-icon">&#127873;</span> 9. 推荐计划</h2>
+      <p>邀请好友，赚取免费 Pro 天数。</p>
+      <ol>
+        <li>首次安装时获得唯一推荐码：<code>ADO-XXXXX</code></li>
+        <li>分享链接 <code>adoff.app/r/您的推荐码</code></li>
+        <li>当好友升级到 Pro 时，您获得 <strong>+15 天免费 Pro</strong></li>
+        <li>天数无限累积</li>
+      </ol>
+      <p>前往 <strong>选项 > 邀请好友</strong> 获取链接、快速分享（WhatsApp、Telegram、邮件）和推荐仪表板。</p>
+    </div>
+
+    <!-- ===== 10. 统计数据 ===== -->
+    <div class="guide-section" id="s10">
+      <h2><span class="sec-icon">&#128202;</span> 10. 统计数据</h2>
+      <p>在 <strong>选项 > 统计数据</strong> 中查看已拦截广告和已拦截请求的总计数器。可点击"重置统计数据"清零（需要确认）。</p>
+    </div>
+
+    <!-- ===== 11. 高级设置 ===== -->
+    <div class="guide-section" id="s11">
+      <h2><span class="sec-icon">&#128295;</span> 11. 高级设置</h2>
+      <ul>
+        <li><strong>导出设置</strong>：完整的 JSON 备份（出于安全考虑，不含许可证数据）</li>
+        <li><strong>导入设置</strong>：从备份恢复。许可证字段会自动忽略</li>
+        <li><strong>重置全部</strong>：清除所有内容，包括许可证。不可逆。需要双重确认</li>
+      </ul>
+    </div>
+
+    <!-- ===== 12. 常见问题 ===== -->
+    <div class="guide-section" id="s12">
+      <h2><span class="sec-icon">&#128172;</span> 12. 常见问题助手</h2>
+      <p>在 <strong>选项 > 帮助</strong> 中有一个内置助手。输入问题或点击 12 个可用主题中的快速标签：</p>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>主题</th><th>示例</th></tr></thead>
+          <tbody>
+            <tr><td>AdOff 如何运作</td><td>"如何工作"、"有什么功能"</td></tr>
+            <tr><td>网站无法使用</td><td>"网站损坏"、"白页"</td></tr>
+            <tr><td>视频广告</td><td>"视频广告"、"前贴片广告"</td></tr>
+            <tr><td>排除网站</td><td>"白名单"、"暂停"</td></tr>
+            <tr><td>免费版与 Pro</td><td>"免费版 vs pro"、"套餐"</td></tr>
+            <tr><td>隐私</td><td>"隐私"、"追踪"</td></tr>
+            <tr><td>性能</td><td>"慢"、"变慢"</td></tr>
+            <tr><td>反广告拦截检测</td><td>"detected"、"拦截墙"</td></tr>
+            <tr><td>许可证</td><td>"许可证"、"密钥"</td></tr>
+            <tr><td>卸载</td><td>"卸载"、"移除"</td></tr>
+            <tr><td>更新</td><td>"更新"、"update"</td></tr>
+            <tr><td>Cookie 横幅</td><td>"cookie"、"gdpr"</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 13. 问题反馈 ===== -->
+    <div class="guide-section" id="s13">
+      <h2><span class="sec-icon">&#9888;</span> 13. 问题反馈</h2>
+      <p>如果某个网站在使用 AdOff 时出现问题，请在 <strong>选项 > 帮助 > 反馈问题</strong> 中报告。</p>
+      <ol>
+        <li>输入 <strong>网站 URL</strong>（必填）</li>
+        <li>选择 <strong>类型</strong>：网站无法使用 / 广告仍可见 / 反广告拦截检测 / 其他</li>
+        <li>添加 <strong>描述</strong> 和 <strong>电子邮件</strong>（可选）</li>
+        <li>完成 <strong>数学验证码</strong></li>
+        <li>点击 <strong>"提交反馈"</strong></li>
+      </ol>
+      <p>表单包含反机器人保护：蜜罐、计时、验证码、速率限制（最多 3次/小时）、防垃圾、去重。</p>
+    </div>
+
+    <!-- ===== 14. 建议 ===== -->
+    <div class="guide-section" id="s14">
+      <h2><span class="sec-icon">&#128161;</span> 14. 建议</h2>
+      <p>在 <strong>选项 > 建议</strong> 中，您可以提交功能建议、报告 Bug 或提出改进意见。填写标题（必填）、描述和电子邮件（可选）。您的建议将显示在表单下方的列表中。</p>
+    </div>
+
+    <!-- ===== 15. 工作原理 ===== -->
+    <div class="guide-section" id="s15">
+      <h2><span class="sec-icon">&#9881;</span> 15. AdOff 工作原理（技术说明）</h2>
+
+      <h3>第1层 — 网络拦截</h3>
+      <p>AdOff 使用 Chrome 的 <code>declarativeNetRequest</code> API，在浏览器下载广告之前就拦截对广告服务器的 HTTP 请求。超过 120 条规则涵盖主要广告网络和众多其他广告网络。</p>
+
+      <h3>第2层 — 视觉过滤</h3>
+      <p>对于由网站自身域名提供的广告，AdOff 使用 CSS 和 JavaScript <strong>将其从页面中隐藏</strong>：精确选择器、用于动态内容的 MutationObserver、折叠空容器。</p>
+
+      <h3>第3层 — 视频广告中性化（仅限 Pro/试用版）<span style="background:rgba(124,92,252,0.18);color:#9d82fd;font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:100px;border:1px solid rgba(124,92,252,0.3);vertical-align:middle;margin-left:6px;">PRO</span></h3>
+      <p>大多数视频播放器使用标准广告 SDK 进行插播广告（前贴片、中贴片、后贴片）。AdOff 用一个中性版本<strong>替换该 SDK</strong>，立即告知播放器"没有广告"——视频无中断播放。适用于全球任何网站。在主要视频平台上：加速至 16 倍 + 自动点击"跳过广告"。<strong>Pro 专属功能。</strong></p>
+
+      <h3>第4层 — 隐身模式（仅限 Pro/试用版）</h3>
+      <p>拦截反广告拦截检测，让网站相信一切正常可见：</p>
+      <ul>
+        <li><strong>CSS 欺骗</strong>：诱饵元素属性被伪造</li>
+        <li><strong>网络拦截</strong>：检测脚本收到空响应</li>
+        <li><strong>变量模拟</strong>：预填充广告 SDK</li>
+        <li><strong>脚本中性化</strong>：反广告拦截脚本在执行前被阻止</li>
+        <li><strong>反滚动锁定</strong>：阻止广告墙锁定页面滚动</li>
+      </ul>
+      <div class="guide-info">
+        <p>隐身模式在主要平台（视频、社交媒体、电商）和其他可能产生干扰的大型网站上自动停用。</p>
+      </div>
+    </div>
+
+    <!-- ===== 16. 故障排查 ===== -->
+    <div class="guide-section" id="s16">
+      <h2><span class="sec-icon">&#128736;</span> 16. 故障排查</h2>
+
+      <h3>某个网站无法使用</h3>
+      <ol>
+        <li>点击 AdOff 图标并使用 <strong>"在此暂停"</strong></li>
+        <li>重新加载页面</li>
+        <li>如果暂停后正常：请告知我们该网站</li>
+        <li>如果暂停后仍不正常：问题与 AdOff 无关</li>
+      </ol>
+
+      <h3>仍然看到广告</h3>
+      <ol>
+        <li>确认 AdOff <strong>已启用</strong>（紫色徽章）</li>
+        <li>确认该网站不在 <strong>白名单</strong> 中</li>
+        <li><strong>重新加载页面</strong></li>
+        <li>如果问题持续：请告知我们该网站</li>
+      </ol>
+
+      <h3>"请关闭您的广告拦截器"</h3>
+      <ol>
+        <li><strong>重新加载页面</strong></li>
+        <li>确认您拥有 <strong>Pro 或试用版</strong>（需要隐身模式）</li>
+        <li>如果继续出现：使用"在此暂停"并告知我们</li>
+      </ol>
+
+      <h3>AdOff 无法激活</h3>
+      <p>前往 <code>chrome://extensions/</code>，确认已启用。如果出现错误，尝试移除并重新安装。</p>
+    </div>
+
+    <!-- ===== 17. 隐私 ===== -->
+    <div class="guide-section" id="s17">
+      <h2><span class="sec-icon">&#128274;</span> 17. 隐私与安全</h2>
+
+      <div class="guide-info--green guide-info">
+        <p><strong>AdOff 不收集个人数据，不追踪您访问的网站，不发送遥测数据，不与第三方共享数据，不注入广告。</strong></p>
+      </div>
+
+      <h3>权限及其用途</h3>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>权限</th><th>用途</th></tr></thead>
+          <tbody>
+            <tr><td><code>storage</code></td><td>在本地保存设置和计数器</td></tr>
+            <tr><td><code>declarativeNetRequest</code></td><td>拦截对广告网络的请求</td></tr>
+            <tr><td><code>activeTab</code></td><td>了解域名以暂停特定网站</td></tr>
+            <tr><td><code>scripting</code></td><td>注入内容脚本以隐藏广告</td></tr>
+            <tr><td><code>webNavigation</code></td><td>在适当时机激活拦截</td></tr>
+            <tr><td><code>&lt;all_urls&gt;</code></td><td>在所有网站上运行</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>外部通信</h3>
+      <p>AdOff 仅在您主动操作时才与外部服务器通信：网站反馈、建议、许可证激活、自动重新验证（Pro 用户每 7 天一次）。通信通过 Cloudflare Worker 进行。</p>
+      <p><a href="/zh/privacy.html">阅读完整隐私政策</a></p>
+    </div>
+
+    <!-- ===== 18. 语言 ===== -->
+    <div class="guide-section" id="s18">
+      <h2><span class="sec-icon">&#127760;</span> 18. 支持的语言</h2>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>语言</th><th>代码</th><th>状态</th></tr></thead>
+          <tbody>
+            <tr><td>意大利语</td><td>it</td><td><span class="check">完整</span></td></tr>
+            <tr><td>英语</td><td>en</td><td><span class="check">完整</span></td></tr>
+            <tr><td>德语</td><td>de</td><td><span class="check">完整</span></td></tr>
+            <tr><td>法语</td><td>fr</td><td><span class="check">完整</span></td></tr>
+            <tr><td>西班牙语</td><td>es</td><td><span class="check">完整</span></td></tr>
+            <tr><td>葡萄牙语</td><td>pt</td><td><span class="check">完整</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>更改语言：<strong>选项 > 常规 > 语言</strong>。设为"自动"时使用浏览器语言（后备：英语）。</p>
+    </div>
+
+    <!-- ===== 19. 卸载 ===== -->
+    <div class="guide-section" id="s19">
+      <h2><span class="sec-icon">&#128465;</span> 19. 卸载</h2>
+      <ol>
+        <li>前往 <code>chrome://extensions/</code></li>
+        <li>找到 AdOff 并点击 <strong>"移除"</strong></li>
+        <li>确认</li>
+      </ol>
+      <p>本地设置将被删除。Pro 许可证在服务器上仍然有效。推荐码将丢失。</p>
+
+      <div class="guide-info--yellow guide-info">
+        <p><strong>卸载前</strong>，请从"选项 > 高级 > 导出"导出设置。重新安装后，导入文件以恢复所有内容（许可证需要用密钥重新激活）。</p>
+      </div>
+    </div>
+
+    <!-- ===== 20. 联系我们 ===== -->
+    <div class="guide-section" id="s20">
+      <h2><span class="sec-icon">&#128231;</span> 20. 联系与支持</h2>
+      <ul>
+        <li><strong>网站</strong>：<a href="/index.html">adoff.app</a></li>
+        <li><strong>支持</strong>：<a href="/support.html">adoff.app/support</a>（联系表单）</li>
+        <li><strong>网站反馈</strong>：通过扩展程序（选项 > 帮助）</li>
+        <li><strong>建议</strong>：通过扩展程序（选项 > 建议）</li>
+      </ul>
+      <p>如遇 Pro 许可证问题，请通过支持表单联系我们，并提供您的许可证密钥。</p>
+    </div>
+
+    <a href="#toc" class="guide-back-top">&#8593; 返回目录</a>
+
+  </main>
+
+  <!-- FOOTER -->
+  <script src="/adoff-footer.js?v=260602a"></script>
+  
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

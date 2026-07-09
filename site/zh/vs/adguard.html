@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdOff vs AdGuard 2026：浏览器扩展 vs 桌面应用</title>
+  <meta name="description" content="AdOff vs AdGuard 2026 对比。扩展轻量方案 vs 桌面应用复杂度。隐身反检测、定价（67.90 欧元 vs $79.99）与实际拦截效果全面比较。" />
+  <link rel="canonical" href="https://adoff.app/zh/vs/adguard.html" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="AdOff vs AdGuard 2026：浏览器扩展 vs 桌面应用" />
+  <meta property="og:description" content="AdOff vs AdGuard 2026 对比。扩展轻量方案 vs 桌面应用复杂度。隐身反检测、定价与实际拦截效果全面比较。" />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/zh/vs/adguard.html" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AdOff vs AdGuard 2026：浏览器扩展 vs 桌面应用" />
+  <meta name="twitter:description" content="AdOff vs AdGuard 2026 对比。隐身反检测、定价（67.90 欧元 vs $79.99 终身版）与拦截效果全面比较。" />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <link rel="stylesheet" href="style.css?v=260520-201526" />
+  <style>
+    .article-page { max-width: 780px; margin: 0 auto; padding: 80px 24px 100px; }
+    .article-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: #fff; margin-bottom: 12px; }
+    .article-page .meta { font-size: 0.88rem; color: #8888aa; margin-bottom: 40px; }
+    .article-page h2 { font-size: 1.5rem; color: #fff; margin: 48px 0 16px; }
+    .article-page h3 { font-size: 1.2rem; color: #e2e2f0; margin: 32px 0 12px; }
+    .article-page p { color: #b0b0c8; line-height: 1.8; margin-bottom: 16px; }
+    .article-page ul, .article-page ol { color: #b0b0c8; margin: 0 0 20px 24px; line-height: 1.8; }
+    .article-page strong { color: #fff; }
+    .article-page .highlight { color: #4ade80; font-weight: 700; }
+    .article-page .negative { color: #f43f5e; }
+    .comp-table { width: 100%; border-collapse: collapse; margin: 24px 0 32px; }
+    .comp-table th, .comp-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #2a2a4a; }
+    .comp-table th { color: #8888aa; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .comp-table td { color: #b0b0c8; }
+    .comp-table .check { color: #4ade80; font-weight: 700; }
+    .comp-table .cross { color: #f43f5e; }
+    .comp-table .partial { color: #fbbf24; }
+    .cta-box { background: #12122a; border: 1px solid rgba(124,92,252,0.3); border-radius: 14px; padding: 32px; text-align: center; margin: 48px 0; }
+    .cta-box h3 { color: #fff; margin: 0 0 12px; }
+    .cta-box p { color: #8888aa; margin-bottom: 20px; }
+    .cta-box .btn { display: inline-block; background: linear-gradient(135deg,#7c5cfc,#4c3ad4); color: #fff; padding: 12px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; transition: all 0.2s; }
+    .cta-box .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.3); }
+    .info-box { background: rgba(124,92,252,0.07); border: 1px solid rgba(124,92,252,0.25); border-radius: 12px; padding: 20px 24px; margin: 28px 0; }
+    .info-box p { color: #c8c0f0; margin: 0; }
+    .price-compare { display: flex; gap: 20px; margin: 24px 0; flex-wrap: wrap; }
+    .price-card { flex: 1; min-width: 200px; background: #0e0e22; border: 1px solid #2a2a4a; border-radius: 12px; padding: 20px; }
+    .price-card .product { font-size: 0.85rem; color: #8888aa; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .price-card .amount { font-size: 1.8rem; font-weight: 700; color: #fff; }
+    .price-card .period { font-size: 0.9rem; color: #8888aa; }
+    .price-card.adoff-card { border-color: rgba(124,92,252,0.4); }
+    .price-card.adoff-card .amount { color: #a78bfa; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "AdOff vs AdGuard 2026：浏览器扩展 vs 桌面应用",
+    "description": "2026 年 AdOff 与 AdGuard 的详细对比，涵盖隐身反检测差异、桌面应用需求、定价（67.90 欧元 vs $79.99 终身版）以及哪款产品适合哪类用户。",
+    "datePublished": "2026-01-01",
+    "dateModified": "2026-04-20",
+    "publisher": {
+      "@type": "Organization",
+      "name": "AdOff",
+      "url": "https://adoff.app"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://adoff.app/zh/vs/adguard.html"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "AdOff vs AdGuard — 功能对比",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "隐身模式用途", "description": "AdGuard 的隐身模式拦截 WebRTC 泄漏和指纹追踪，用于隐私保护。AdOff 的隐身层专门规避网站上的反广告拦截检测脚本。" },
+      { "@type": "ListItem", "position": 2, "name": "安装复杂度", "description": "AdOff 几秒钟内即可作为 Chrome 扩展安装完成。AdGuard 的完整功能需要安装桌面应用程序。" },
+      { "@type": "ListItem", "position": 3, "name": "终身定价", "description": "AdOff 终身版为 67.90 欧元。AdGuard 桌面终身版为 $79.99 每台设备。" },
+      { "@type": "ListItem", "position": 4, "name": "可接受广告", "description": "AdOff 和 AdGuard 均无"可接受广告"计划。两者均无条件拦截广告，无付费广告商例外。" },
+      { "@type": "ListItem", "position": 5, "name": "试用期", "description": "AdOff 提供 30 天 Pro 完整功能免费试用。AdGuard 为桌面应用提供 14 天免费试用。" }
+    ]
+  }
+  </script>
+  <script src="/adoff-i18n.js?v=260520-201526"></script>
+  </head>
+<body>
+  <div id="site-nav"></div>
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+  <article class="article-page">
+
+    <h1>AdOff vs AdGuard 2026：浏览器扩展 vs 桌面应用</h1>
+    <p class="meta">更新于 2026 年 4 月 &nbsp;·&nbsp; 阅读约 9 分钟 &nbsp;·&nbsp; Chrome 扩展与桌面应用</p>
+
+    <p>
+      AdGuard 是广告拦截领域最受尊重的品牌之一。与大多数纯粹作为浏览器扩展运行的竞争对手不同，AdGuard 提供了一套全面的产品体系：桌面应用程序、浏览器扩展、基于 DNS 的拦截服务以及移动端应用。这种广度既是其优势，也是将它与 AdOff 这类专注型浏览器扩展进行比较时最常见的混淆来源。
+    </p>
+    <p>
+      本次对比具体而实用。我们比较的是<strong>AdGuard 的浏览器扩展和 Windows/macOS 桌面应用程序</strong>与<strong>AdOff 的 Chrome 扩展</strong>。两者在隐身能力、定价、复杂度和使用场景上的差异是显著的——本指南将清晰地呈现这些差异。
+    </p>
+
+    <h2>理解 AdGuard 的产品架构</h2>
+    <p>
+      在深入比较功能之前，了解 AdGuard 的工作方式很重要，因为它不是一款单一产品：
+    </p>
+    <ul>
+      <li><strong>AdGuard 浏览器扩展</strong>——一款免费、轻量的扩展，可用于大多数浏览器。这是基础层级，在 Chrome 上运行时与其他浏览器扩展一样受到 MV3 限制。</li>
+      <li><strong>AdGuard for Windows / macOS</strong>——一款在系统层面运行的桌面应用程序，拦截<em>所有</em>应用程序的流量，不仅限于浏览器。这是高级产品，每台设备终身许可证售价 $79.99。</li>
+      <li><strong>AdGuard DNS</strong>——一种在 DNS 解析层面拦截广告的网络级服务，单独提供。</li>
+    </ul>
+    <p>
+      让 AdGuard 真正令人印象深刻的功能——系统级拦截、HTTPS 过滤、应用级广告移除——几乎全部集中在<strong>桌面应用程序</strong>中。浏览器扩展是一款有能力但相对标准的工具。这一区别对任何有意义的比较都至关重要。
+    </p>
+
+    <h2>隐身模式：两种截然不同的功能</h2>
+    <p>
+      AdGuard 和 AdOff 都有"隐身"功能，但它们解决的是完全不同的问题。这是本次对比中最重要的区别之一。
+    </p>
+
+    <h3>AdGuard 的隐身模式：隐私保护</h3>
+    <p>
+      AdGuard 的隐身模式是一种<strong>以隐私为导向的功能</strong>，专注于：
+    </p>
+    <ul>
+      <li>拦截 WebRTC 泄漏（防止在使用 VPN 时暴露真实 IP）</li>
+      <li>从 URL 中删除追踪参数（UTM 标签、fbclid 等）</li>
+      <li>向第三方网站隐藏来源（referrer）标头</li>
+      <li>拦截构建独特浏览器画像的指纹追踪脚本</li>
+      <li>禁用第三方 Cookie 并限制第一方 Cookie 的生命周期</li>
+    </ul>
+    <p>
+      这些都是出色的隐私保护措施。它们可以阻止基于监控的追踪，防止你的浏览行为被画像分析。然而，它们<strong>并不能对抗反广告拦截检测</strong>。网站的反广告拦截脚本不关心你的 WebRTC 设置或 Cookie 生命周期。它检查广告资源是否已加载、特定 DOM 元素是否存在，以及广告相关 JavaScript 是否成功运行。AdGuard 的隐身模式不会伪造这些信号。
+    </p>
+
+    <h3>AdOff 的隐身层：反广告拦截检测规避</h3>
+    <p>
+      AdOff 的隐身层针对一个不同的问题：<strong>让页面相信没有广告拦截器在运行</strong>。它在 MAIN world JavaScript 上下文（与页面自身脚本相同的环境）中运行，并：
+    </p>
+    <ul>
+      <li>欺骗反广告拦截脚本探测的诱饵变量</li>
+      <li>拦截发往广告测量和验证端点的 fetch 和 XHR 调用</li>
+      <li>向反广告拦截检测例程返回令人信服的响应</li>
+      <li>通过 MutationObserver 监控 DOM，在视频广告序列出现时将其跳过</li>
+    </ul>
+    <p>
+      结果是：那些原本会检测到 AdGuard 扩展并显示"请禁用你的广告拦截器"警告的网站，在 AdOff 运行时往往检测不到任何东西。反广告拦截系统看到的是一个正常的、未被拦截的浏览会话。
+    </p>
+
+    <div class="info-box">
+      <p><strong>总结：</strong>AdGuard 隐身模式 = 隐私保护（向追踪器隐藏你的身份）。AdOff 隐身 = 反检测规避（向网站隐藏广告拦截器的存在）。这两个目标是互补的，而非竞争关系——但对于被反广告拦截墙困扰的用户，只有 AdOff 的方法能解决这个问题。</p>
+    </div>
+
+    <h2>安装复杂度：扩展 vs 桌面应用</h2>
+    <p>
+      <strong>AdOff</strong> 的安装与任何 Chrome 扩展一样：打开 Chrome 网上应用店，点击"添加至 Chrome"，30 秒内即可完成。无需系统级权限，无后台服务，无需管理员权限。
+    </p>
+    <p>
+      <strong>AdGuard 的完整功能集</strong>需要安装桌面应用程序。在 Windows 上，这意味着下载可执行文件、以管理员权限运行安装程序，并允许系统服务在后台运行。在 macOS 上，该过程包括授予网络扩展权限，以及可能需要系统内核扩展。
+    </p>
+    <p>
+      对于大多数用户来说，AdGuard 桌面产品的安装复杂性本身并不是障碍——这是一次性过程。但这确实意味着：
+    </p>
+    <ul>
+      <li>你需要在自己的设备上拥有管理员权限（公司电脑上并非总能获得）</li>
+      <li>该应用程序作为后台服务持续运行</li>
+      <li>更新比浏览器扩展自动更新需要更多操作</li>
+      <li>卸载需要通过操作系统的标准应用移除流程</li>
+      <li>产品无法随浏览器配置文件迁移到共用或借用的电脑上</li>
+    </ul>
+    <p>
+      AdOff 纯扩展的方式意味着它能在 Chrome 运行的任何地方运行。安装一次，随你的 Chrome 配置文件同步，在你登录 Chrome 的任何设备上都能使用，完全不需要系统级权限。
+    </p>
+
+    <h2>定价：直接比较</h2>
+
+    <div class="price-compare">
+      <div class="price-card adoff-card">
+        <div class="product">AdOff</div>
+        <div class="amount">€2.69</div>
+        <div class="period">每月</div>
+        <p style="color:#8888aa;font-size:0.85rem;margin-top:12px;">或 €29.59/年 · 或 <strong style="color:#a78bfa;">€67.90 终身版</strong></p>
+      </div>
+      <div class="price-card">
+        <div class="product">AdGuard 浏览器扩展</div>
+        <div class="amount">免费</div>
+        <div class="period">开源</div>
+        <p style="color:#8888aa;font-size:0.85rem;margin-top:12px;">功能有限，无桌面级拦截</p>
+      </div>
+      <div class="price-card">
+        <div class="product">AdGuard for Windows/Mac</div>
+        <div class="amount">$79.99</div>
+        <div class="period">终身版 · 每台设备</div>
+        <p style="color:#8888aa;font-size:0.85rem;margin-top:12px;">完整系统级拦截，14 天试用</p>
+      </div>
+    </div>
+
+    <p>
+      定价比较在很大程度上取决于你实际比较的是哪款 AdGuard 产品。AdGuard 的浏览器扩展免费且开源——但它缺乏桌面应用程序的高级功能。AdGuard 桌面应用程序的终身许可证每台设备 $79.99，而 AdOff 的完整 Pro 功能终身版为 €67.90。
+    </p>
+    <p>
+      如果你想要完整功能的 AdGuard，你需要支付<strong>每台设备 $79.99</strong>。一个家庭有两台电脑，那就是 $159.98。AdOff 的终身许可证覆盖你所有设备上的 Chrome 配置文件，无每台设备限制，总价 <strong>€67.90</strong>。
+    </p>
+    <p>
+      两款产品都没有"可接受广告"计划，都无条件拦截广告。定价差异反映了各自产品的范围：AdGuard 桌面应用跨所有应用程序在系统范围内拦截广告；AdOff 专注于 Chrome 浏览，并以最大隐身能力为核心。
+    </p>
+
+    <h2>系统级拦截：AdGuard 的真正优势</h2>
+    <p>
+      忽视 AdGuard 最强大的能力是不诚实的：其桌面应用程序可以在<strong>整个操作系统范围内</strong>拦截广告和追踪，而不仅仅是在浏览器中。这包括：
+    </p>
+    <ul>
+      <li>桌面应用程序中的广告（新闻阅读器、音乐流媒体软件等）</li>
+      <li>非浏览器应用中的追踪</li>
+      <li>使用自有证书的 HTTPS 流量检测</li>
+      <li>针对各个程序的应用程序专属规则</li>
+    </ul>
+    <p>
+      AdOff 不具备这些功能。AdOff 是一款 Chrome 扩展，仅在 Chrome 浏览器内运行。如果你主要关心在 Chrome 浏览时拦截广告，这个区别影响不大。如果你想要覆盖电脑上每个应用程序的系统级保护，AdGuard 的桌面产品在浏览器扩展领域没有等价物。
+    </p>
+
+    <h2>无"可接受广告"：共同的原则</h2>
+    <p>
+      AdOff 和 AdGuard 有一个共同点：<strong>两者都没有"可接受广告"计划</strong>。两者都无条件拦截广告，没有向广告商收费的白名单。这是与该领域某些竞争对手的一个有意义的区别，值得认可。
+    </p>
+    <p>
+      在"产品服务谁的利益"这一根本问题上，AdOff 和 AdGuard 给出相同的答案：用户的利益。两家公司都不通过允许某些广告商的广告通过来赚取收入。
+    </p>
+
+    <h2>功能逐项对比</h2>
+
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>功能</th>
+          <th>AdOff（扩展）</th>
+          <th>AdGuard 扩展</th>
+          <th>AdGuard 桌面版</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>浏览器广告拦截</td>
+          <td class="check">✔ 支持</td>
+          <td class="check">✔ 支持</td>
+          <td class="check">✔ 支持</td>
+        </tr>
+        <tr>
+          <td>系统级拦截</td>
+          <td class="cross">✘ 仅浏览器</td>
+          <td class="cross">✘ 仅浏览器</td>
+          <td class="check">✔ 所有应用</td>
+        </tr>
+        <tr>
+          <td>反广告拦截检测规避</td>
+          <td class="check">✔ MAIN world 隐身</td>
+          <td class="cross">✘ 无</td>
+          <td class="cross">✘ 无</td>
+        </tr>
+        <tr>
+          <td>隐身 / 隐私模式</td>
+          <td class="partial">⚠ 仅反检测</td>
+          <td class="check">✔ WebRTC、指纹、Cookie</td>
+          <td class="check">✔ 完整隐私套件</td>
+        </tr>
+        <tr>
+          <td>可接受广告计划</td>
+          <td class="check">✔ 无</td>
+          <td class="check">✔ 无</td>
+          <td class="check">✔ 无</td>
+        </tr>
+        <tr>
+          <td>视频广告跳过</td>
+          <td class="check">✔ SDK层级中和 (Pro)</td>
+          <td class="partial">⚠ 通过过滤列表</td>
+          <td class="check">✔ 支持</td>
+        </tr>
+        <tr>
+          <td>HTTPS 流量检测</td>
+          <td class="cross">✘ 无</td>
+          <td class="cross">✘ 无</td>
+          <td class="check">✔ 支持（需安装证书）</td>
+        </tr>
+        <tr>
+          <td>DNS 级拦截</td>
+          <td class="cross">✘ 无</td>
+          <td class="cross">✘ 无</td>
+          <td class="check">✔ 支持</td>
+        </tr>
+        <tr>
+          <td>安装需求</td>
+          <td class="check">✔ 仅扩展</td>
+          <td class="check">✔ 仅扩展</td>
+          <td class="cross">✘ 桌面应用 + 管理员权限</td>
+        </tr>
+        <tr>
+          <td>可在共用设备上使用</td>
+          <td class="check">✔ 支持（通过 Chrome 配置文件）</td>
+          <td class="check">✔ 支持</td>
+          <td class="cross">✘ 需在每台设备上安装</td>
+        </tr>
+        <tr>
+          <td>扩展体积</td>
+          <td class="check">✔ 超轻量</td>
+          <td class="partial">⚠ 大型</td>
+          <td class="partial">⚠ 桌面应用（大型）</td>
+        </tr>
+        <tr>
+          <td>终身价格</td>
+          <td class="highlight">€67.90（所有设备）</td>
+          <td class="check">免费</td>
+          <td class="partial">$79.99 每台设备</td>
+        </tr>
+        <tr>
+          <td>免费试用</td>
+          <td class="check">✔ 30 天 Pro 版</td>
+          <td class="check">✔ 免费版</td>
+          <td class="partial">14 天</td>
+        </tr>
+        <tr>
+          <td>推荐计划</td>
+          <td class="check">✔ 赚取免费 Pro 天数</td>
+          <td class="cross">✘ 无</td>
+          <td class="cross">✘ 无</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>实际使用中的隐身差距</h2>
+    <p>
+      即使是 AdGuard 的桌面应用——拥有完整的系统级能力——也不包含与 AdOff 等效的专用反广告拦截检测规避层。AdGuard 以隐私为重点的隐身模式是一种解决不同问题的独立工具。
+    </p>
+    <p>
+      实际上，这意味着在具有激进反广告拦截检测的网站上，AdGuard 的扩展<em>和</em>桌面应用都可能被检测到。网站可能会显示警告、限制内容或降低用户体验。AdOff 的 MAIN world 隐身脚本直接解决了这个问题。
+    </p>
+    <p>
+      如果你的主要困扰是流媒体平台、新闻网站或设置了反广告拦截屏障的内容发布者，AdOff 有针对性的隐身能力能够解决 AdGuard——尽管功能更全面——也无法完全应对的问题。
+    </p>
+    <p>
+      AdOff Pro是唯一在SDK级别中和视频广告的浏览器扩展（Pro功能）。AdOff Pro不是阻止广告URL或跳过广告，而是用中性版本替换视频广告SDK。播放器立即收到"无广告"信号，内容直接开始播放。这在全球任何流媒体平台上都能通用运行。没有其他广告拦截器提供此功能。
+    </p>
+
+    <h2>谁应该使用 AdGuard</h2>
+    <p>以下情况适合选择 AdGuard：</p>
+    <ul>
+      <li>你想要跨所有应用程序的<strong>系统级广告拦截</strong>，而不仅仅是浏览器</li>
+      <li>你担心<strong>指纹追踪和高级追踪</strong>，超出浏览器扩展所能处理的范围</li>
+      <li>你使用显示广告的非浏览器应用程序，并希望将其拦截</li>
+      <li>你需要跨所有应用的 HTTPS 流量检测</li>
+      <li>你可以接受以管理员权限安装和维护桌面应用程序</li>
+      <li>你想要一款没有高级功能的免费浏览器扩展（AdGuard 扩展）</li>
+    </ul>
+
+    <h2>谁应该使用 AdOff</h2>
+    <p>以下情况适合选择 AdOff：</p>
+    <ul>
+      <li>你主要在 Chrome 浏览，想要<strong>最佳的浏览器内广告拦截</strong></li>
+      <li>你经常在视频平台和内容网站上被反广告拦截检测所阻</li>
+      <li>你想要<strong>零安装方案</strong>——无桌面应用，无管理员权限，无后台服务</li>
+      <li>你想要<strong>一次性终身购买</strong>覆盖所有 Chrome 设备，而非按设备计费</li>
+      <li>你想在决定前<strong>免费试用 30 天</strong>完整功能</li>
+      <li>你想要尽可能小的扩展体积</li>
+    </ul>
+
+    <div class="cta-box">
+      <h3>免费试用 AdOff 30 天</h3>
+      <p>完整 Pro 功能。隐身反检测。视频广告跳过。超轻量设计。无需安装桌面应用。无"可接受广告"。Chrome 能运行的地方它就能运行。</p>
+      <a href="../../install.html" class="btn">免费获取 AdOff →</a>
+    </div>
+
+    <h2>最终结论</h2>
+    <p>
+      AdGuard 是一款经过精心工程设计、具有真实深度的严肃产品——尤其是其桌面应用程序。如果你想要能够覆盖浏览器以外范围的系统级拦截，AdGuard 桌面产品在其类别中无可匹敌。
+    </p>
+    <p>
+      但对于广告拦截需求以浏览器为中心的用户，AdOff 提供了 AdGuard 所没有的东西：一款专为 Chrome 打造、内置主动反广告拦截规避功能的扩展。能检测到 AdGuard 的网站，往往检测不到 AdOff。这个隐身层改变了动态平衡，尤其是在已投入检测技术的视频流媒体平台和付费内容网站上。
+    </p>
+    <p>
+      定价也值得关注：AdOff 的终身许可证（€67.90 覆盖所有设备）比 AdGuard 桌面版每台设备的终身价格（$79.99）略便宜，而且 AdOff 根本不需要安装任何桌面程序。
+    </p>
+    <p>
+      两款产品都无条件拦截，都没有"可接受广告"利益冲突。选择取决于使用范围：如果你需要 Chrome 专属加隐身功能，选 AdOff；如果你需要系统级全覆盖，选 AdGuard 桌面版；如果你想要免费的基础方案，AdGuard 浏览器扩展仍然是不错的选择。
+    </p>
+
+  </article>
+  
+  <script src="/adoff-footer.js?v=260602a"></script>
+  
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

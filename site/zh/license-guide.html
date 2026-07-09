@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdOff 许可证指南 — 许可证如何工作</title>
+  <meta name="description" content="了解 AdOff 许可证如何工作：计划、设备、激活、设备管理和专业版许可证常见问题。" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://adoff.app/zh/license-guide.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="AdOff 许可证如何工作 — 透明且简单" />
+  <meta property="og:description" content="计划、设备、激活和常见问题。关于 AdOff 专业版许可证的所有信息。" />
+  <meta property="og:url" content="https://adoff.app/zh/license-guide.html" />
+  <meta property="og:site_name" content="AdOff" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="AdOff 许可证指南" />
+  <meta name="twitter:description" content="AdOff 许可证如何工作：计划、设备、激活和常见问题。" />
+
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <style>
+    /* ============================================================
+       BASE + DARK THEME
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a1a;
+      --bg2:      #0f0f22;
+      --card:     #12122a;
+      --card2:    #1a1a35;
+      --border:   #2a2a4a;
+      --accent:   #7c5cfc;
+      --accent2:  #9b7ffe;
+      --text:     #e8e8f0;
+      --text2:    #9a9ab8;
+      --text3:    #6a6a88;
+      --green:    #22c55e;
+      --yellow:   #fbbf24;
+      --radius:   12px;
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ============================================================
+       LAYOUT
+    ============================================================ */
+    .page-wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+    .hero {
+      text-align: center;
+      padding: 80px 0 60px;
+    }
+
+    .hero__eyebrow {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      background: rgba(124,92,252,0.12);
+      border: 1px solid rgba(124,92,252,0.25);
+      border-radius: 999px;
+      padding: 6px 16px;
+      margin-bottom: 24px;
+    }
+
+    .hero__title {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+
+    .hero__sub {
+      font-size: 1.1rem;
+      color: var(--text2);
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ============================================================
+       SECTION HEADINGS
+    ============================================================ */
+    .section {
+      margin-bottom: 64px;
+    }
+
+    .section__label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 8px;
+    }
+
+    .section__title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .section__sub {
+      font-size: 1rem;
+      color: var(--text2);
+      margin-bottom: 32px;
+    }
+
+    /* ============================================================
+       PLAN CARDS
+    ============================================================ */
+    .plan-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .plan-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      position: relative;
+      transition: border-color .2s;
+    }
+
+    .plan-card:hover { border-color: var(--accent); }
+
+    .plan-card--popular {
+      border-color: var(--accent);
+      background: linear-gradient(160deg, #1a1a40 0%, var(--card) 100%);
+    }
+
+    .plan-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .plan-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+
+    .plan-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .plan-price-range {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent2);
+      margin-bottom: 4px;
+    }
+
+    .plan-price-note {
+      font-size: 0.82rem;
+      color: var(--text3);
+      margin-bottom: 16px;
+    }
+
+    .plan-features {
+      list-style: none;
+      font-size: 0.9rem;
+      color: var(--text2);
+    }
+
+    .plan-features li {
+      padding: 3px 0;
+    }
+
+    .plan-features li::before {
+      content: '\2713\a0';
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    /* ============================================================
+       DEVICE TIER TABLE
+    ============================================================ */
+    .tier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+    }
+
+    .tier-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      transition: border-color .2s;
+    }
+
+    .tier-card:hover { border-color: var(--accent); }
+
+    .tier-icon { font-size: 2rem; margin-bottom: 10px; }
+
+    .tier-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .tier-desc {
+      font-size: 0.85rem;
+      color: var(--text2);
+      margin-bottom: 14px;
+    }
+
+    .tier-prices {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .tier-price-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+    }
+
+    .tier-price-label { color: var(--text3); }
+    .tier-price-val { color: var(--text); font-weight: 600; }
+
+    /* ============================================================
+       STEPS
+    ============================================================ */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .step__num {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step__content {}
+
+    .step__title {
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .step__desc {
+      font-size: 0.9rem;
+      color: var(--text2);
+    }
+
+    .step__desc a {
+      color: var(--accent2);
+    }
+
+    /* ============================================================
+       DEVICE MANAGEMENT CALLOUT
+    ============================================================ */
+    .callout {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 20px;
+    }
+
+    .callout__title {
+      font-weight: 700;
+      color: #fff;
+      font-size: 1.05rem;
+      margin-bottom: 12px;
+    }
+
+    .callout__list {
+      list-style: none;
+      font-size: 0.92rem;
+      color: var(--text2);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .callout__list li::before {
+      content: '\25B6\a0';
+      color: var(--accent2);
+      font-size: 0.7rem;
+    }
+
+    /* ============================================================
+       FAQ
+    ============================================================ */
+    .faq {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .faq-q {
+      width: 100%;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 0.98rem;
+      font-weight: 600;
+      padding: 18px 20px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      transition: color .2s;
+    }
+
+    .faq-q:hover { color: var(--accent2); }
+
+    .faq-q__arrow {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--card2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      transition: transform .2s, background .2s;
+    }
+
+    .faq-item.open .faq-q__arrow {
+      transform: rotate(180deg);
+      background: var(--accent);
+    }
+
+    .faq-a {
+      display: none;
+      padding: 0 20px 18px;
+      font-size: 0.9rem;
+      color: var(--text2);
+      line-height: 1.65;
+      border-top: 1px solid var(--border);
+    }
+
+    .faq-item.open .faq-a { display: block; }
+
+    /* ============================================================
+       CTA SECTION
+    ============================================================ */
+    .cta-section {
+      text-align: center;
+      background: linear-gradient(135deg, rgba(124,92,252,0.15) 0%, rgba(10,10,26,0) 80%);
+      border: 1px solid rgba(124,92,252,0.25);
+      border-radius: 20px;
+      padding: 56px 32px;
+    }
+
+    .cta-section__title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .cta-section__sub {
+      font-size: 1rem;
+      color: var(--text2);
+      margin-bottom: 28px;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 14px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background .2s, transform .1s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    .cta-trial-note {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      color: var(--text3);
+    }
+
+    /* ============================================================
+       DIVIDER
+    ============================================================ */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 48px 0;
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 600px) {
+      .hero { padding: 56px 0 40px; }
+      .hero__title { font-size: 1.8rem; }
+      .plan-grid { grid-template-columns: 1fr; }
+      .tier-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script src="/adoff-i18n.js?v=260520-205323"></script>
+  </head>
+<body>
+
+  <!-- Shared nav injected by adoff-nav.js -->
+  <script src="/adoff-nav.js?v=260709-ga4b"></script>
+
+  <div class="page-wrapper">
+
+    <!-- ============================================================
+         HERO
+    ============================================================ -->
+    <section class="hero">
+      <span class="hero__eyebrow">许可证</span>
+      <h1 class="hero__title">AdOff 许可证如何工作</h1>
+      <p class="hero__sub">简单透明。没有意外，没有隐藏费用。选择您的计划和设备。完成。</p>
+    </section>
+
+    <!-- ============================================================
+         PLANS
+    ============================================================ -->
+    <section class="section">
+      <div class="section__label">计划</div>
+      <h2 class="section__title">选择您的计费周期</h2>
+      <p class="section__sub">所有专业版计划都包括每个功能：隐形反检测、视频广告中立化和优先支持。</p>
+
+      <div class="plan-grid">
+
+        <!-- Monthly -->
+        <div class="plan-card">
+          <div class="plan-icon">&#128197;</div>
+          <div class="plan-name">专业月度</div>
+          <div class="plan-price-range">&#8364;2.69&ndash;5.99<span style="font-size:1rem;font-weight:400;color:var(--text3)">/月</span></div>
+          <div class="plan-price-note">每月计费，随时取消</div>
+          <ul class="plan-features">
+            <li>所有专业功能</li>
+            <li>包括 30 天免费试用</li>
+            <li>在到期前取消，无需收费</li>
+          </ul>
+        </div>
+
+        <!-- Annual -->
+        <div class="plan-card plan-card--popular">
+          <span class="plan-badge">&#11088; 最受推荐</span>
+          <div class="plan-icon">&#127882;</div>
+          <div class="plan-name">专业年度</div>
+          <div class="plan-price-range">&#8364;29.59&ndash;59.99<span style="font-size:1rem;font-weight:400;color:var(--text3)">/年</span></div>
+          <div class="plan-price-note">相当于 11 个月，1 个月免费</div>
+          <ul class="plan-features">
+            <li>所有专业功能</li>
+            <li>比月度更便宜</li>
+            <li>免费包括 1 个月</li>
+            <li>包括 30 天免费试用</li>
+          </ul>
+        </div>
+
+        <!-- Lifetime -->
+        <div class="plan-card">
+          <div class="plan-icon">&#9889;</div>
+          <div class="plan-name">专业终身</div>
+          <div class="plan-price-range">&#8364;67.90&ndash;129.90</div>
+          <div class="plan-price-note">一次性付款，永久使用</div>
+          <ul class="plan-features">
+            <li>所有专业功能</li>
+            <li>包括所有未来更新</li>
+            <li>永远没有循环费用</li>
+            <li>扩展中的创始人徽章</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         DEVICE TIERS
+    ============================================================ -->
+    <section class="section">
+      <div class="section__label">设备层级</div>
+      <h2 class="section__title">您需要多少台设备？</h2>
+      <p class="section__sub">任何设备上的每个活跃浏览器都计为一个槽位。在您的限制范围内自由混合浏览器和计算机。</p>
+
+      <div class="tier-grid">
+
+        <!-- 3 Devices -->
+        <div class="tier-card">
+          <div class="tier-icon">&#128187;</div>
+          <div class="tier-name">3 台设备 — 个人</div>
+          <div class="tier-desc">完美用于桌面、笔记本和移动浏览器。覆盖大多数个人用户。</div>
+          <div class="tier-prices">
+            <div class="tier-price-row">
+              <span class="tier-price-label">月度</span>
+              <span class="tier-price-val">&#8364;2.69/月</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-price-label">年度</span>
+              <span class="tier-price-val">&#8364;29.59/年</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-price-label">终身</span>
+              <span class="tier-price-val">&#8364;67.90</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5 Devices -->
+        <div class="tier-card">
+          <div class="tier-icon">&#128106;</div>
+          <div class="tier-name">5 台设备 — 家庭</div>
+          <div class="tier-desc">与与您同住的人分享。足以为整个家庭的主要设备使用。</div>
+          <div class="tier-prices">
+            <div class="tier-price-row">
+              <span class="tier-price-label">月度</span>
+              <span class="tier-price-val">&#8364;3.99/月</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-price-label">年度</span>
+              <span class="tier-price-val">&#8364;39.99/年</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-price-label">终身</span>
+              <span class="tier-price-val">&#8364;89.90</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 10 Devices -->
+        <div class="tier-card">
+          <div class="tier-icon">&#127970;</div>
+          <div class="tier-name">10 台设备 — 团队</div>
+          <div class="tier-desc">小办公室或有许多环境的超级用户。一个许可证适合所有人。</div>
+          <div class="tier-prices">
+            <div class="tier-price-row">
+              <span class="tier-price-label">月度</span>
+              <span class="tier-price-val">&#8364;5.99/月</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-price-label">年度</span>
+              <span class="tier-price-val">&#8364;59.99/年</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-price-label">终身</span>
+              <span class="tier-price-val">&#8364;129.90</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         HOW IT WORKS
+    ============================================================ -->
+    <section class="section">
+      <div class="section__label">激活</div>
+      <h2 class="section__title">如何开始</h2>
+      <p class="section__sub">从购买到活跃保护不到两分钟。</p>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step__num">1</div>
+          <div class="step__content">
+            <div class="step__title">选择您的计划和设备层级</div>
+            <div class="step__desc">选择月度、年度或终身，然后选择您需要的设备层级（3、5 或 10）。您可以稍后通过联系支持进行升级。</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step__num">2</div>
+          <div class="step__content">
+            <div class="step__title">通过 Stripe 完成付款（安全）</div>
+            <div class="step__desc">付款由 Stripe 处理，这是在线支付的行业标准。AdOff 从不存储您的卡片详情。每项交易都使用 SSL 256 位加密。</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step__num">3</div>
+          <div class="step__content">
+            <div class="step__title">通过电子邮件接收您的许可证密钥</div>
+            <div class="step__desc">支付后，您的许可证密钥（格式为：<code style="background:var(--card2);padding:2px 6px;border-radius:4px;font-size:0.85rem">ADOFF-XXXX-XXXX-XXXX</code>）立即到达您的收件箱。</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step__num">4</div>
+          <div class="step__content">
+            <div class="step__title">在 AdOff 设置中输入密钥</div>
+            <div class="step__desc">打开 AdOff 扩展 → 点击图标 → 转到 <strong>选项 → 计划和许可证 → 激活许可证</strong>。粘贴您的密钥并点击激活。</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step__num">5</div>
+          <div class="step__content">
+            <div class="step__title">完成。此设备上的专业版处于活跃状态</div>
+            <div class="step__desc">隐形反检测和视频广告中立化现已激活。在您想保护的任何其他设备上重复第 4 步。</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         DEVICE MANAGEMENT
+    ============================================================ -->
+    <section class="section">
+      <div class="section__label">设备管理</div>
+      <h2 class="section__title">像流媒体服务一样管理设备</h2>
+      <p class="section__sub">您的计划限制有多少设备可以<em>同时活跃</em>，而不是您可以安装多少。</p>
+
+      <div class="callout">
+        <div class="callout__title">&#128272; 设备槽位如何工作</div>
+        <ul class="callout__list">
+          <li>在任意多个浏览器上安装 AdOff，没有限制</li>
+          <li>您的计划限制活跃设备（任何时刻 3、5 或 10 个）</li>
+          <li>每个浏览器都计为一个设备，即使在同一台计算机上也是如此</li>
+          <li>在 <a href="https://adoff.app/account" target="_blank" rel="noopener noreferrer">adoff.app/account</a> 上管理您的活跃设备</li>
+          <li>随时删除旧设备以释放槽位</li>
+          <li>每天最多删除 3 个设备（反滥用限制）</li>
+        </ul>
+      </div>
+
+      <div class="callout" style="border-left-color: var(--yellow);">
+        <div class="callout__title">&#9888;&#65039; 如果您达到限制会发生什么</div>
+        <ul class="callout__list">
+          <li>AdOff 显示一条通知，表示您已达到设备限制</li>
+          <li>访问 <a href="https://adoff.app/account" target="_blank" rel="noopener noreferrer">adoff.app/account</a> 删除旧设备</li>
+          <li>删除设备是即时的，释放的槽位立即可用</li>
+          <li>需要更多设备？通过联系支持来升级您的层级</li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         FAQ
+    ============================================================ -->
+    <section class="section">
+      <div class="section__label">常见问题</div>
+      <h2 class="section__title">常见问题</h2>
+      <p class="section__sub">有关许可证的最常见问题的快速答案。</p>
+
+      <div class="faq">
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            如果我达到设备限制会发生什么？
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            您会在扩展中看到一条消息。转到 <a href="https://adoff.app/account" target="_blank" rel="noopener noreferrer">adoff.app/account</a>，删除一个不再使用的设备，槽位将立即释放。您每天最多可以删除 3 个设备。
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            我可以在同一台计算机上的不同浏览器上使用同一许可证吗？
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            可以，但每个浏览器都计为一个单独的设备。例如，同一台计算机上的 Chrome 和 Firefox 使用两个槽位。相应地规划：3 台设备计划涵盖三个浏览器安装总数。
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            如果我重新安装浏览器或重置计算机会发生什么？
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            设备 ID 存储在浏览器配置文件中。如果在重新安装后丢失，您可能会看到一个新的已注册设备。只需访问您的账户页面删除旧设备条目并释放槽位。
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            我可以升级我的设备层级吗？
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            可以。通过 <a href="https://adoff.app/support.html">支持表单</a> 与我们联系，我们会调整您的计划。对于续订，我们会按比例收取差价。对于终身版，您支付价格差异。
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            免费版和专业版之间有什么区别？
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            免费计划包括网络级别的广告拦截（138 条规则）以及所有网站上的 CSS 隐藏。专业版增加了：<strong>隐形反检测</strong>（对反广告拦截系统不可见）、<strong>视频广告拦截</strong>（在流媒体平台上的 SDK 级别，零前置广告和中置广告）和详细统计。
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            有免费试用吗？
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            有的。每个新安装会自动启动<strong>30 天免费试用</strong>，包括所有专业功能在 3 台设备上。无需信用卡。30 天后，如果您不购买计划，扩展会自动继续使用免费级别。
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            我可以获得退款吗？
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            可以。我们提供 30 天全额退款保证。无需提问。在购买后 30 天内通过 <a href="https://adoff.app/support.html">支持表单</a> 与我们联系。
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFaq(this)">
+            我的付款信息安全吗？
+            <span class="faq-q__arrow">&#9660;</span>
+          </button>
+          <div class="faq-a">
+            所有付款都由 Stripe（PCI DSS 第 1 级认证）处理。AdOff 永远无法访问您的卡号。您的电子邮件仅用于向您发送许可证密钥和重要账户更新。
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ============================================================
+         CTA
+    ============================================================ -->
+    <section class="cta-section">
+      <h2 class="cta-section__title">准备好摆脱广告了吗？</h2>
+      <p class="cta-section__sub">从 30 天免费试用开始。无需信用卡。</p>
+      <a href="https://adoff.app/#pricing" class="btn-primary">查看定价计划 →</a>
+      <p class="cta-trial-note">30 天免费 · 30 天退款保证 · 随时取消</p>
+    </section>
+
+  </div><!-- /page-wrapper -->
+
+  <!-- Shared footer injected by adoff-footer.js -->
+  <script src="/adoff-footer.js?v=260602a"></script>
+
+
+  <script>
+    // ============================================================
+    // FAQ ACCORDION
+    // ============================================================
+    function toggleFaq(btn) {
+      var item = btn.closest('.faq-item');
+      var isOpen = item.classList.contains('open');
+      // close all
+      document.querySelectorAll('.faq-item.open').forEach(function(el) {
+        el.classList.remove('open');
+      });
+      // open this one if it was closed
+      if (!isOpen) {
+        item.classList.add('open');
+      }
+    }
+  </script>
+
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>
