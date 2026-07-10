@@ -3441,6 +3441,18 @@ async function handleUninstall(request, env) {
   const browser = parseBrowser(request.headers.get("User-Agent") || "");
   const today = getDateStr();
 
+  // Opt-in domain: accettato SOLO con consenso esplicito
+  let problemDomain = "";
+  if (body.consent === true && typeof body.problem_domain === "string" && body.problem_domain.length > 0) {
+    try {
+      const u = new URL(body.problem_domain);
+      problemDomain = u.hostname.replace(/^www\./, "").toLowerCase();
+    } catch {
+      problemDomain = body.problem_domain.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0].toLowerCase();
+    }
+    problemDomain = problemDomain.slice(0, 253); // max domain length
+  }
+
   await incrementCounter(env, "stats:uninstalls");
   await incrementCounter(env, `stats:uninstalls:${today}`);
   await incrementCounter(env, `stats:uninstalls:reason:${reason}`);
@@ -3448,6 +3460,7 @@ async function handleUninstall(request, env) {
 
   await appendToLog(env, "uninstalls:log", {
     ts: Date.now(), reason, comment, version, wasPro, country, browser,
+    ...(problemDomain ? { problemDomain } : {}),
   }, 1000);
 
   // Notifica Telegram solo se c'è un commento testuale (segnale ad alto valore,
@@ -3464,8 +3477,9 @@ async function handleUninstall(request, env) {
     const text =
       `🗑️ <b>Disinstallazione</b>\n` +
       `Motivo: ${reasonLabel}\n` +
-      `Browser: ${browser} · Paese: ${country} · v${version || "?"}${wasPro ? " · Pro/Trial" : ""}\n` +
-      `Commento: ${comment.replace(/[<>&]/g, "")}`;
+      `Browser: ${browser} · Paese: ${country} · v${version || "?"}${wasPro ? " · Pro/Trial" : ""}` +
+      (problemDomain ? `\nDominio: ${problemDomain}` : "") +
+      (comment ? `\nCommento: ${comment.replace(/[<>&]/g, "")}` : "");
     await notifyTelegram(text, env, TELEGRAM_SUPPORT_THREAD);
   }
 
@@ -3481,6 +3495,18 @@ async function handleUninstall(request, env) {
 
       // Rimuovi dalla heartbeat table (device non più attivo)
       await env.DB.prepare(`DELETE FROM device_heartbeat WHERE device_id = ?`).bind(hashedId).run();
+
+      // Adleak opt-in report (solo se dominio + consenso)
+      if (problemDomain) {
+        try {
+          await env.DB.prepare(`
+            INSERT INTO adleak_reports (device_id, uninstall_ts, reason, problem_domain, version, was_pro, country)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+          `).bind(hashedId, Date.now(), reason, problemDomain, version, wasPro ? 1 : 0, country).run();
+        } catch (e) {
+          console.error("D1 adleak report error:", e.message);
+        }
+      }
     } catch (e) {
       console.error("D1 uninstall error:", e.message);
     }
@@ -5973,6 +5999,21 @@ export default {
           version TEXT,
           was_pro INTEGER DEFAULT 0,
           country TEXT
+        )
+      `).run();
+
+      // adleak_reports: domain opt-in per survey uninstall
+      await env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS adleak_reports (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          device_id TEXT,
+          uninstall_ts INTEGER NOT NULL,
+          reason TEXT,
+          problem_domain TEXT,
+          version TEXT,
+          was_pro INTEGER DEFAULT 0,
+          country TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `).run();
 

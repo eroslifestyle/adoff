@@ -93,6 +93,8 @@
     }
     .thanks .check svg { width: 32px; height: 32px; color: var(--success); }
     .hidden { display: none !important; }
+    #domainSection { animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
   </style>
 </head>
 <body>
@@ -117,6 +119,16 @@
       </div>
 
       <textarea id="comment" maxlength="500" data-ph="Vuoi dirci di più? (facoltativo — es. quale sito non funzionava)"></textarea>
+
+      <!-- Domain field: mostra SOLO per ads_visible e broken_site -->
+      <div id="domainSection" class="hidden" style="margin-bottom: 14px;">
+        <label style="display:block; font-size:13px; color:var(--text-muted); margin-bottom:6px;" id="t_domain_label">Su quale sito hai ancora visto pubblicità?</label>
+        <input type="url" id="problemDomain" placeholder="https://example.com" style="width:100%; padding:10px 12px; background:rgba(0,0,0,0.25); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:14px; font-family:inherit;" />
+        <label style="display:flex; align-items:flex-start; gap:10px; margin-top:10px; cursor:pointer;">
+          <input type="checkbox" id="consentCheckbox" style="margin-top:3px; accent-color:var(--primary);" />
+          <span style="font-size:12px; color:var(--text-muted); line-height:1.5;" id="t_consent_text">Sì, invia questo indirizzo per aiutarci a migliorare. Nessun altro dato viene raccolto. Puoi richiedere la cancellazione in qualsiasi momento.</span>
+        </label>
+      </div>
 
       <!-- Honeypot anti-bot -->
       <input type="text" id="hp_website" class="hp" name="website" tabindex="-1" autocomplete="off" value="" />
@@ -144,22 +156,28 @@
     const I18N = {
       it: { title:"Ci dispiace vederti andare", sub:"Una domanda veloce: perché hai disinstallato AdOff? Ci aiuta a migliorare.",
             broken_site:"Un sito non funzionava più", ads_visible:"Vedevo ancora le pubblicità", confusing:"Troppo complicato / non capivo Free vs Pro", performance:"Rallentava il browser", found_better:"Ho trovato un'alternativa migliore", other:"Altro motivo",
-            ph:"Vuoi dirci di più? (facoltativo — es. quale sito non funzionava)", submit:"Invia feedback", reinstall:"Cambiato idea? ", reinstall_link:"Reinstalla AdOff", thanks:"Grazie!", thanks_sub:"Il tuo feedback ci aiuta a rendere AdOff migliore per tutti." },
+            ph:"Vuoi dirci di più? (facoltativo — es. quale sito non funzionava)", submit:"Invia feedback", reinstall:"Cambiato idea? ", reinstall_link:"Reinstalla AdOff", thanks:"Grazie!", thanks_sub:"Il tuo feedback ci aiuta a rendere AdOff migliore per tutti.",
+            domain_label:"Su quale sito hai ancora visto pubblicità?", consent_text:"Sì, invia questo indirizzo per aiutarci a migliorare. Nessun altro dato viene raccolto. Puoi richiedere la cancellazione in qualsiasi momento." },
       en: { title:"Sorry to see you go", sub:"Quick question: why did you uninstall AdOff? It helps us improve.",
             broken_site:"A website stopped working", ads_visible:"I still saw ads", confusing:"Too confusing / didn't get Free vs Pro", performance:"It slowed my browser down", found_better:"I found a better alternative", other:"Another reason",
-            ph:"Want to tell us more? (optional — e.g. which site broke)", submit:"Send feedback", reinstall:"Changed your mind? ", reinstall_link:"Reinstall AdOff", thanks:"Thank you!", thanks_sub:"Your feedback helps us make AdOff better for everyone." },
+            ph:"Want to tell us more? (optional — e.g. which site broke)", submit:"Send feedback", reinstall:"Changed your mind? ", reinstall_link:"Reinstall AdOff", thanks:"Thank you!", thanks_sub:"Your feedback helps us make AdOff better for everyone.",
+            domain_label:"On which site did you still see ads?", consent_text:"Yes, send this address to help us improve. No other data is collected. You can request deletion at any time." },
       de: { title:"Schade, dass du gehst", sub:"Kurze Frage: Warum hast du AdOff deinstalliert? Das hilft uns.",
             broken_site:"Eine Website funktionierte nicht mehr", ads_visible:"Ich sah weiterhin Werbung", confusing:"Zu kompliziert / Free vs Pro unklar", performance:"Es hat den Browser verlangsamt", found_better:"Ich fand eine bessere Alternative", other:"Anderer Grund",
-            ph:"Mehr dazu? (optional — z. B. welche Seite kaputt war)", submit:"Feedback senden", reinstall:"Doch geblieben? ", reinstall_link:"AdOff neu installieren", thanks:"Danke!", thanks_sub:"Dein Feedback macht AdOff für alle besser." },
+            ph:"Mehr dazu? (optional — z. B. welche Seite kaputt war)", submit:"Feedback senden", reinstall:"Doch geblieben? ", reinstall_link:"AdOff neu installieren", thanks:"Danke!", thanks_sub:"Dein Feedback macht AdOff für alle besser.",
+            domain_label:"Auf welcher Website hast du noch Werbung gesehen?", consent_text:"Ja, sende diese Adresse, um uns zu helfen. Keine anderen Daten werden erhoben. Du kannst die Löschung jederzeit anfordern." },
       fr: { title:"Désolé de te voir partir", sub:"Une question rapide : pourquoi as-tu désinstallé AdOff ? Ça nous aide.",
             broken_site:"Un site ne marchait plus", ads_visible:"Je voyais encore des pubs", confusing:"Trop compliqué / Free vs Pro pas clair", performance:"Ça ralentissait le navigateur", found_better:"J'ai trouvé une meilleure alternative", other:"Autre raison",
-            ph:"Tu veux en dire plus ? (facultatif — ex. quel site)", submit:"Envoyer", reinstall:"Changé d'avis ? ", reinstall_link:"Réinstaller AdOff", thanks:"Merci !", thanks_sub:"Ton retour rend AdOff meilleur pour tout le monde." },
+            ph:"Tu veux en dire plus ? (facultatif — ex. quel site)", submit:"Envoyer", reinstall:"Changé d'avis ? ", reinstall_link:"Réinstaller AdOff", thanks:"Merci !", thanks_sub:"Ton retour rend AdOff meilleur pour tout le monde.",
+            domain_label:"Sur quel site voyiez-vous encore des pubs ?", consent_text:"Oui, envoyez cette adresse pour nous aider à améliorer. Aucune autre donnée n'est collectée. Vous pouvez demander la suppression à tout moment." },
       es: { title:"Lamentamos que te vayas", sub:"Una pregunta rápida: ¿por qué desinstalaste AdOff? Nos ayuda a mejorar.",
             broken_site:"Una web dejó de funcionar", ads_visible:"Seguía viendo anuncios", confusing:"Muy complicado / no entendí Free vs Pro", performance:"Ralentizaba el navegador", found_better:"Encontré una alternativa mejor", other:"Otro motivo",
-            ph:"¿Quieres contarnos más? (opcional — p. ej. qué web)", submit:"Enviar", reinstall:"¿Cambiaste de idea? ", reinstall_link:"Reinstalar AdOff", thanks:"¡Gracias!", thanks_sub:"Tu opinión hace AdOff mejor para todos." },
+            ph:"¿Quieres contarnos más? (opcional — p. ej. qué web)", submit:"Enviar", reinstall:"¿Cambiaste de idea? ", reinstall_link:"Reinstalar AdOff", thanks:"¡Gracias!", thanks_sub:"Tu opinión hace AdOff mejor para todos.",
+            domain_label:"¿En qué sitio seguías viendo anuncios?", consent_text:"Sí, envía esta dirección para ayudarnos a mejorar. No se recopilan otros datos. Puedes solicitar la eliminación en cualquier momento." },
       pt: { title:"Que pena ver você partir", sub:"Pergunta rápida: por que desinstalou o AdOff? Isso nos ajuda.",
             broken_site:"Um site parou de funcionar", ads_visible:"Eu ainda via anúncios", confusing:"Complicado demais / Free vs Pro", performance:"Deixava o navegador lento", found_better:"Achei uma alternativa melhor", other:"Outro motivo",
-            ph:"Quer contar mais? (opcional — ex. qual site)", submit:"Enviar", reinstall:"Mudou de ideia? ", reinstall_link:"Reinstalar AdOff", thanks:"Obrigado!", thanks_sub:"Seu feedback torna o AdOff melhor para todos." },
+            ph:"Quer contar mais? (opcional — ex. qual site)", submit:"Enviar", reinstall:"Mudou de ideia? ", reinstall_link:"Reinstalar AdOff", thanks:"Obrigado!", thanks_sub:"Seu feedback torna o AdOff melhor para todos.",
+            domain_label:"Em qual site você ainda via anúncios?", consent_text:"Sim, envie este endereço para nos ajudar a melhorar. Nenhum outro dado é coletado. Você pode solicitar a exclusão a qualquer momento." },
     };
 
     function pickLang() {
@@ -185,6 +203,8 @@
     document.getElementById("t_thanks_sub").textContent = t.thanks_sub;
     document.querySelectorAll('[data-k="reinstall_link"]').forEach(el => el.textContent = t.reinstall_link);
     document.getElementById("t_reinstall").innerHTML = t.reinstall + '<a href="/install.html">' + t.reinstall_link + '</a>';
+    document.getElementById("t_domain_label").textContent = t.domain_label || "On which site did you still see ads?";
+    document.getElementById("t_consent_text").textContent = t.consent_text || "Yes, send this address to help us improve. No other data is collected.";
 
     // Stato selezione
     let selectedReason = null;
@@ -195,6 +215,13 @@
         btn.classList.add("selected");
         selectedReason = btn.getAttribute("data-reason");
         submitBtn.disabled = false;
+        // Mostra domain section solo per ads_visible e broken_site
+        const domainSection = document.getElementById("domainSection");
+        if (["ads_visible", "broken_site"].includes(selectedReason)) {
+          domainSection.classList.remove("hidden");
+        } else {
+          domainSection.classList.add("hidden");
+        }
       });
     });
 
@@ -214,6 +241,12 @@
         wasPro: wasPro,
         website: document.getElementById("hp_website").value, // honeypot
       };
+      const domainField = document.getElementById("problemDomain");
+      const consentCheckbox = document.getElementById("consentCheckbox");
+      if (domainField && consentCheckbox && consentCheckbox.checked && domainField.value.trim()) {
+        payload.problem_domain = domainField.value.trim();
+        payload.consent = true;
+      }
       try {
         const ctrl = new AbortController();
         const tid = setTimeout(() => ctrl.abort(), 8000);
