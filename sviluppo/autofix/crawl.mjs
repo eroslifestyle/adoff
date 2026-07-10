@@ -4,7 +4,7 @@
  * Uso: node crawl.mjs [--limit N] [--date YYYY-MM-DD] [--dry-run]
  * Output: findings/{date}.json
  */
-import { chromium } from 'playwright';
+import { chromium } from 'playwright-core';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
