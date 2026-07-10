@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /**
- * canary_runner.mjs - Verifica regression su canary sites.
+ * canary_runner.mjs - Verifica regression su canary sites CON candidate rules applicate.
+ * Inietta le candidate rules nel DNR via service worker, poi naviga i canary.
  * Uso: node canary_runner.mjs [--candidates file.json] [--date YYYY-MM-DD] [--dry-run]
  */
 import { chromium } from 'playwright-core';
-import { readFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -33,20 +34,75 @@ async function runCanary() {
     console.error('canary.json non trovato'); process.exit(1);
   }
   const canaries = JSON.parse(readFileSync(CANARY_FILE, 'utf8')).canary_sites;
-  console.log(`\n=== Canary Regression Suite ===`);
-  console.log(`Sites: ${canaries.length}  Candidates: ${CANDIDATES_FILE}`);
 
-  const browser = await chromium.launch({
+  let candidates = [];
+  if (existsSync(CANDIDATES_FILE)) {
+    candidates = JSON.parse(readFileSync(CANDIDATES_FILE, 'utf8')).candidates || [];
+  }
+  console.log(`\n=== Canary Regression Suite ===`);
+  console.log(`Sites: ${canaries.length}  Candidates: ${candidates.length}  File: ${CANDIDATES_FILE}`);
+
+  if (DRY_RUN) {
+    console.log('DRY-RUN: nessun browser, mostra solo candidate rules');
+    candidates.forEach(c => console.log(`  [${c.id}] ${c.condition?.urlFilter} domains=${JSON.stringify(c.condition?.domains)}`));
+    return true;
+  }
+
+  // launchPersistentContext required for MV3 extension with service worker
+  const context = await chromium.launchPersistentContext('', {
     executablePath: CHROMIUM_PATH,
     headless: false,
     args: [`--disable-extensions-except=${EXT_PATH}`,`--load-extension=${EXT_PATH}`,
       `--no-sandbox`,`--disable-setuid-sandbox`,`--disable-dev-shm-usage`]
   });
 
+  // Wait for service worker to be available
+  console.log('Attendo service worker...');
+  let sw = context.serviceWorkers()[0];
+  if (!sw) {
+    try { sw = await context.waitForEvent('serviceworker', { timeout: 8000 }); }
+    catch { console.error('Service worker non disponibile'); await context.close(); process.exit(1); }
+  }
+  await sleep(2000);
+
+  // Inject candidate rules into DNR via the service worker.
+  // Remap IDs to a temporary range (65000+) to avoid collision with the
+  // remote feed rules (60000+) that the extension already loaded.
+  const CANARY_BASE_ID = 65000;
+  const remapped = candidates.map((c, i) => ({
+    ...c,
+    id: CANARY_BASE_ID + i,
+  }));
+
+  if (remapped.length > 0) {
+    console.log(`Inietto ${remapped.length} candidate rules nel DNR (range 65000+)...`);
+    const injectResult = await sw.evaluate(async (rules) => {
+      return new Promise((resolve) => {
+        try {
+          chrome.declarativeNetRequest.updateDynamicRules({ addRules: rules }, () => {
+            if (chrome.runtime.lastError) {
+              resolve({ ok: false, error: chrome.runtime.lastError.message });
+            } else {
+              chrome.declarativeNetRequest.getDynamicRules((all) => {
+                const injected = all.filter(r => r.id >= 65000).length;
+                resolve({ ok: true, injected, total: all.length });
+              });
+            }
+          });
+        } catch (e) { resolve({ ok: false, error: e.message }); }
+      });
+    }, remapped);
+    console.log(`  Inject result: ${JSON.stringify(injectResult)}`);
+    if (!injectResult.ok) {
+      console.error(`  ERRORE iniezione candidate rules: ${injectResult.error}`);
+      await context.close();
+      process.exit(1);
+    }
+  }
+
   const results = [];
   for (const site of canaries) {
     console.log(`\n[canary] ${site.domain}`);
-    const context = await browser.newContext({ viewport:{width:1280,height:800} });
     const page = await context.newPage();
     const leaks = [];
 
@@ -57,17 +113,17 @@ async function runCanary() {
     });
 
     try {
-      await page.goto(`https://${site.domain}`, { waitUntil: 'networkidle', timeout: 25000 });
+      await page.goto(`https://${site.domain}`, { waitUntil: 'domcontentloaded', timeout: 25000 });
       await sleep(1500);
     } catch (e) { console.log(`  Nav error: ${e.message.slice(0,60)}`); }
-    await context.close();
+    await page.close();
 
     const status = leaks.length > 0 ? 'LEAK' : 'PASS';
-    console.log(`  ${status}: ${leaks.length} requests bloccate`);
+    console.log(`  ${status}: ${leaks.length} ad-network requests`);
     results.push({ domain: site.domain, status, leaks: leaks.length });
   }
 
-  await browser.close();
+  await context.close();
 
   const passed = results.filter(r => r.status === 'PASS').length;
   const failed = results.filter(r => r.status === 'LEAK').length;
@@ -82,3 +138,4 @@ async function runCanary() {
 runCanary()
   .then(ok => { process.exit(ok ? 0 : 1); })
   .catch(e => { console.error(e); process.exit(1); });
+
