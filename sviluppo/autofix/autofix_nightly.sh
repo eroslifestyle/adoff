@@ -55,7 +55,27 @@ fi
 if [[ "$SHADOW_MODE" == "0" ]]; then
   log "[5/5] deploy rules-feed..."
   bash "$BASE/snapshot.sh" snapshot >> "$LOG" 2>&1 || true
-  log "DEPLOY: TODO - implementa merge rules"
+  # Merge new candidates into site/rules-feed.json
+  node -e "
+const fs=require('fs');
+const feed=JSON.parse(fs.readFileSync('$BASE/../site/rules-feed.json','utf8'));
+const cand=JSON.parse(fs.readFileSync('$CANDIDATES','utf8'));
+const existing=new Set(feed.rules.map(r=>r.condition.urlFilter));
+let added=0;
+for(const c of cand.candidates||[]){
+  if(existing.has(c.condition.urlFilter))continue;
+  const rule={priority:c.priority||1,action:c.action,condition:{urlFilter:c.condition.urlFilter,resourceTypes:c.condition.resourceTypes||['script','xmlhttprequest','image','sub_frame']}};
+  if(c.condition.domains)rule.condition.domains=c.condition.domains;
+  feed.rules.push(rule); existing.add(rule.condition.urlFilter); added++;
+}
+feed._autofix={date:new Date().toISOString(),candidates_added:added};
+feed.updated=new Date().toISOString().slice(0,10);
+fs.writeFileSync('$BASE/../site/rules-feed.json',JSON.stringify(feed,null,2));
+console.log('Merged '+added+' new rules ('+feed.rules.length+' total)');
+" >> "$LOG" 2>&1
+  log "Deploying to CF Pages (branch main = Production)..."
+  source ~/.secrets/adoff-stores.env 2>/dev/null
+  wrangler pages deploy "$BASE/../site/" --project-name adoff-site --branch main --commit-dirty=true >> "$LOG" 2>&1
 else
   log "[5/5] SHADOW MODE - no deploy"
 fi
