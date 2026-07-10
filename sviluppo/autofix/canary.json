@@ -1,12 +1,11 @@
 {
-  "version": 1,
-  "description": "Canary regression suite — siti noti funzionanti con AdOff",
-  "canaries": [
-    {"domain": "repubblica.it", "category": "news", "site_type": "article", "expected_leaks": 0},
-    {"domain": "ansa.it", "category": "news", "site_type": "article", "expected_leaks": 0},
-    {"domain": "bbc.com", "category": "news", "site_type": "article", "expected_leaks": 0},
-    {"domain": "amazon.it", "category": "ecommerce", "site_type": "product", "expected_leaks": 0},
-    {"domain": "reddit.com", "category": "forum", "site_type": "thread", "expected_leaks": 0}
-  ],
-  "updated": "2026-07-10T00:00:00Z"
+  "_comment": "Canary regression suite — domini CRITICI zero-ads che DEVONO restare funzionanti dopo l'applicazione di candidate rules. Se una rule rompe questi (request a ad-network non bloccata = blocco rotto), deploy si ferma. NOTA: Amazon/e-commerce hanno ads legittimi — testati dal crawler, NON dal canary.",
+  "canary_sites": [
+    { "domain": "poste.it", "category": "banking", "note": "Zero ads, solo servizi" },
+    { "domain": "ing.it", "category": "banking", "note": "Zero ads, solo servizi" },
+    { "domain": "wikipedia.org", "category": "reference", "note": "Zero ads, reference" },
+    { "domain": "github.com", "category": "developer", "note": "Zero ads, deve funzionare" },
+    { "domain": "stackoverflow.com", "category": "developer", "note": "Zero ads, reference" },
+    { "domain": "agenziadelleentrate.gov.it", "category": "public", "note": "Zero ads, servizi pubblici" }
+  ]
 }

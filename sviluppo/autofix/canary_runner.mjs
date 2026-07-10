@@ -32,7 +32,7 @@ async function runCanary() {
   if (!existsSync(CANARY_FILE)) {
     console.error('canary.json non trovato'); process.exit(1);
   }
-  const canaries = JSON.parse(readFileSync(CANARY_FILE, 'utf8')).canaries;
+  const canaries = JSON.parse(readFileSync(CANARY_FILE, 'utf8')).canary_sites;
   console.log(`\n=== Canary Regression Suite ===`);
   console.log(`Sites: ${canaries.length}  Candidates: ${CANDIDATES_FILE}`);
 

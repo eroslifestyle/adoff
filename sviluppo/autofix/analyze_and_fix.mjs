@@ -49,7 +49,8 @@ const AD_NETWORKS_PATTERNS = [
   { net: 'adcolony', tld: 'adcolony.com' },
 ];
 
-const VALID_RESOURCE_TYPES = ['main_frame','sub_frame','stylesheet','script','image','font','raw','svg','media','websocket','ping','fetch','text','other'];
+// Chrome DNR valid resourceTypes — xmlhttprequest confirmed in production rules
+const VALID_RESOURCE_TYPES = ['main_frame','sub_frame','stylesheet','script','image','font','xmlhttprequest','media','websocket','ping','object','other'];
 const VALID_ACTION_TYPES = ['block','allow'];
 
 // === HELPERS ===
@@ -83,7 +84,40 @@ function extractDomain(url) {
   } catch { return url; }
 }
 
-function validateRule(rule) {
+// Common second-level TLDs (public suffixes). Taking the last 2 labels would
+// yield "co.uk" for foo.bar.co.uk — catastrophic if used as urlFilter.
+const MULTI_PART_TLDS = new Set([
+  'co.uk','org.uk','ac.uk','gov.uk','net.uk','sch.uk','nhs.uk',
+  'com.au','net.au','org.au','edu.au','gov.au',
+  'co.nz','net.nz','org.nz','govt.nz',
+  'co.jp','or.jp','ne.jp','ac.jp','go.jp',
+  'co.kr','or.kr','ne.kr','go.kr',
+  'com.br','net.br','org.br','gov.br','edu.br',
+  'co.in','net.in','org.in','gov.in','ac.in',
+  'com.cn','net.cn','org.cn','gov.cn',
+  'com.hk','net.hk','org.hk','gov.hk',
+  'com.tw','net.tw','org.tw',
+  'com.mx','org.mx','gob.mx',
+  'co.za','net.za','org.za','web.za',
+  'co.il','org.il','net.il','ac.il',
+  'com.ar','com.tr','com.sg','com.my','com.ph','com.vn','com.id',
+  'eu.org','pp.ru',
+]);
+
+/** Extract the registrable (eTLD+1) domain, handling multi-part TLDs. */
+function registrableDomain(hostname) {
+  if (!hostname) return null;
+  const host = hostname.toLowerCase().replace(/^www\./, '');
+  const parts = host.split('.');
+  if (parts.length >= 3) {
+    const lastTwo = parts.slice(-2).join('.');
+    if (MULTI_PART_TLDS.has(lastTwo)) return parts.slice(-3).join('.');
+  }
+  if (parts.length >= 2) return parts.slice(-2).join('.');
+  return host;
+}
+
+function validateRule(rule, domains) {
   const errors = [];
   if (!rule.id || rule.id < 60000) errors.push(`id must be >= 60000, got ${rule.id}`);
   if (!rule.priority || rule.priority < 1) errors.push('priority must be >= 1');
@@ -94,26 +128,47 @@ function validateRule(rule) {
   if (rule.condition.urlFilter && rule.condition.urlFilter.includes(' ')) {
     errors.push('urlFilter cannot contain spaces');
   }
+  // SAFETY GUARDRAIL: reject overly-broad urlFilters (pure TLDs, public suffixes)
+  if (rule.condition && rule.condition.urlFilter) {
+    const core = rule.condition.urlFilter.replace(/[\^|*]/g, '').trim();
+    const coreParts = core.split('.');
+    const isMultiPartTld = coreParts.length <= 2 && (
+      MULTI_PART_TLDS.has(core) ||                       // "co.uk"
+      MULTI_PART_TLDS.has(coreParts.slice(-2).join('.')) // "foo.co.uk" handled by registrable, "co.uk" leaks
+    );
+    const looksLikeTld = coreParts.length < 2 ||         // "com" alone
+      (coreParts.length === 1 && core.length <= 4);
+    if (isMultiPartTld || looksLikeTld) {
+      errors.push(`UNSAFE urlFilter too broad: "${rule.condition.urlFilter}" (would block a TLD)`);
+    }
+  }
   if (rule.condition && rule.condition.resourceTypes) {
     const invalid = rule.condition.resourceTypes.filter(t => !VALID_RESOURCE_TYPES.includes(t));
     if (invalid.length) errors.push(`invalid resourceTypes: ${invalid.join(',')}`);
   }
+  if (domains && domains.length > 0) {
+    if (!Array.isArray(domains)) errors.push('domains must be an array');
+    else if (!domains.every(d => typeof d === 'string' && d.length > 0)) errors.push('domains must be non-empty strings');
+  }
   return errors;
 }
 
+/**
+ * Generate a DNR urlFilter for the ad network domain (eTLD+1 aware).
+ * The sourceDomain goes into the `domains` condition field, NOT urlFilter.
+ */
 function generateUrlFilter(adNetwork, sourceDomain, blockedUrl) {
   const adHost = extractDomain(blockedUrl);
-  if (adHost) {
-    const parts = adHost.split('.');
-    if (parts.length >= 2) {
-      const baseDomain = parts.slice(-2).join('.');
-      if (sourceDomain) {
-        return `||${baseDomain}^|${sourceDomain}`;
-      }
-      return `||${baseDomain}^`;
-    }
-  }
+  const baseDomain = adHost ? registrableDomain(adHost) : null;
+  if (baseDomain) return `||${baseDomain}^`;
   return `||${adNetwork}^`;
+}
+
+/** Build the full rule condition, adding domains[] when sourceDomain is given. */
+function buildRuleCondition(urlFilter, sourceDomain) {
+  const cond = { urlFilter, resourceTypes: ['script', 'xmlhttprequest', 'image', 'sub_frame'] };
+  if (sourceDomain) cond.domains = [sourceDomain];
+  return cond;
 }
 
 // === MAIN ===
@@ -165,18 +220,24 @@ async function analyze() {
           continue;
         }
 
-        const urlFilter = generateUrlFilter(adNet, finding.domain, req.url);
+        // Skip if the blocked URL is the same domain as the source page (first-party)
+        const adHost = extractDomain(req.url);
+        const sourceDomain = finding.domain;
+        const skipFirstParty = adHost && (adHost === sourceDomain || adHost.endsWith('.' + sourceDomain));
+        if (skipFirstParty) {
+          if (VERBOSE) console.log(`  SKIP first-party: ${adHost} == ${sourceDomain}`);
+          continue;
+        }
+
+        const urlFilter = generateUrlFilter(adNet, sourceDomain, req.url);
         const rule = {
           id: nextId,
           priority: 1,
           action: { type: 'block' },
-          condition: {
-            urlFilter,
-            resourceTypes: ['script', 'xmlhttprequest', 'image', 'sub_frame']
-          }
+          condition: buildRuleCondition(urlFilter, finding.domain)
         };
 
-        const errors = validateRule(rule);
+        const errors = validateRule(rule, [finding.domain]);
         if (errors.length) {
           if (VERBOSE) console.log(`  ERRORE validazione: ${errors.join(', ')}`);
           validationErrors.push({ fingerprint, errors, rule });
