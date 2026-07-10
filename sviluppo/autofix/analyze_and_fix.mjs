@@ -117,6 +117,31 @@ function registrableDomain(hostname) {
   return host;
 }
 
+// Map of brand root -> domains owned by the same organization.
+// If source and ad host share a root, it's first-party, not a third-party leak.
+// NOTE: Google is intentionally EXCLUDED — doubleclick/googlesyndication serve
+// real third-party ads even on Google-owned properties (youtube.com).
+const ORG_DOMAINS = {
+  bbc: ['bbc.co.uk','bbc.com','bbci.co.uk','bbci'],
+  amazon: ['amazon.com','amazon.it','amazon.co.uk','amazon-adsystem.com'],
+};
+
+/** Build reverse lookup: domain -> org root */
+const DOMAIN_TO_ORG = {};
+for (const [org, doms] of Object.entries(ORG_DOMAINS)) {
+  for (const d of doms) DOMAIN_TO_ORG[d] = org;
+}
+
+/** True if adHost and sourceDomain belong to the same known organization. */
+function isSameOrganization(adHost, sourceDomain) {
+  if (!adHost || !sourceDomain) return false;
+  const adReg = registrableDomain(adHost);
+  const srcReg = registrableDomain(sourceDomain);
+  const adOrg = DOMAIN_TO_ORG[adReg];
+  const srcOrg = DOMAIN_TO_ORG[srcReg];
+  return !!(adOrg && srcOrg && adOrg === srcOrg);
+}
+
 function validateRule(rule, domains) {
   const errors = [];
   if (!rule.id || rule.id < 60000) errors.push(`id must be >= 60000, got ${rule.id}`);
@@ -153,14 +178,31 @@ function validateRule(rule, domains) {
   return errors;
 }
 
+// Core domains that must NEVER be blocked at eTLD+1 level (would nuke a whole
+// search engine / marketplace / publisher). For these we fall back to the
+// specific subdomain the ad request came from.
+const BROAD_DOMAINS = new Set([
+  'bing.com','google.com','google.it','amazon.com','amazon.it','amazon.co.uk',
+  'ebay.com','ebay.it','facebook.com','apple.com','microsoft.com',
+  'bbc.co.uk','bbc.com','yahoo.com','yandex.com','baidu.com',
+]);
+
 /**
  * Generate a DNR urlFilter for the ad network domain (eTLD+1 aware).
  * The sourceDomain goes into the `domains` condition field, NOT urlFilter.
+ * For BROAD_DOMAINS, use the full subdomain to avoid blocking whole services.
  */
 function generateUrlFilter(adNetwork, sourceDomain, blockedUrl) {
   const adHost = extractDomain(blockedUrl);
-  const baseDomain = adHost ? registrableDomain(adHost) : null;
-  if (baseDomain) return `||${baseDomain}^`;
+  if (adHost) {
+    const baseDomain = registrableDomain(adHost);
+    // If the eTLD+1 is a core service, target the specific subdomain instead
+    if (BROAD_DOMAINS.has(baseDomain)) {
+      const cleanHost = adHost.toLowerCase().replace(/^www\./, '');
+      return `||${cleanHost}^`;
+    }
+    if (baseDomain) return `||${baseDomain}^`;
+  }
   return `||${adNetwork}^`;
 }
 
@@ -226,6 +268,14 @@ async function analyze() {
         const skipFirstParty = adHost && (adHost === sourceDomain || adHost.endsWith('.' + sourceDomain));
         if (skipFirstParty) {
           if (VERBOSE) console.log(`  SKIP first-party: ${adHost} == ${sourceDomain}`);
+          continue;
+        }
+
+        // Skip same-organization (e.g. bbc.com requesting bbci.co.uk, or
+        // amazon.it requesting amazon-adsystem.com): not a third-party ad leak.
+        const skipSameOrg = isSameOrganization(adHost, sourceDomain);
+        if (skipSameOrg) {
+          if (VERBOSE) console.log(`  SKIP same-org: ${adHost} ~ ${sourceDomain}`);
           continue;
         }
 
