@@ -5897,6 +5897,27 @@ async function handleAdminSeoExport(request, env) {
 }
 
 /**
+ * GET /admin/autofix/status — ritorna lo stato del sistema autofix dal file statico.
+ * Legge /autofix-status.json (scritto da autofix_nightly.sh, servito da CF Pages).
+ */
+async function handleAdminAutofixStatus(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: 'Unauthorized' }, 401);
+  }
+  try {
+    const resp = await fetch("https://adoff.app/autofix-status.json");
+    if (!resp.ok) {
+      return jsonResponse({ ok: false, error: "Status file unavailable" }, 502);
+    }
+    const status = await resp.json();
+    return jsonResponse({ ok: true, ...status });
+  } catch (e) {
+    return jsonResponse({ ok: false, error: e.message }, 500);
+  }
+}
+
+/**
  * GET /admin/edge/status — verifica le credenziali dell'Edge Add-ons API v1.1.
  *
  * NB (doc ufficiale Microsoft): l'API v1.1 NON espone alcun GET su /products/{id},
@@ -6142,6 +6163,7 @@ export default {
       if (path === "/admin/seo") return withCors(handleAdminSeo(request, env));
       if (path === "/admin/seo/export") return withCors(handleAdminSeoExport(request, env));
       if (path === "/admin/seo-reply") return withCors(handleAdminSeoReply(request, env));
+      if (path === "/admin/autofix/status") return withCors(handleAdminAutofixStatus(request, env));
       if (path === "/admin/edge/status") return withCors(handleAdminEdgeStatus(request, env));
       if (path === "/success") return withCors(handleSuccess(request, env));
       if (path === "/portal") return withCors(handlePortalSession(request, env));

@@ -468,6 +468,7 @@ tr:hover td{background:rgba(124,92,252,.04)}
         <button class="stat-tab" data-tab="biz" onclick="switchStatsTab('biz')">💰 Business</button>
         <button class="stat-tab" data-tab="seo" onclick="switchStatsTab('seo')">🔍 SEO / AEO</button>
         <button class="stat-tab" data-tab="edge" onclick="switchStatsTab('edge')">🟣 Edge</button>
+        <button class="stat-tab" data-tab="autofix" onclick="switchStatsTab('autofix')">🔧 Autofix</button>
       </div>
 
       <!-- Tab: Panoramica -->
@@ -856,6 +857,15 @@ tr:hover td{background:rgba(124,92,252,.04)}
   <div id="edge-results"><div style="color:var(--muted);font-size:13px">Clicca "Verifica API" per testare le credenziali Edge</div></div>
 </div>
 
+<div class="stat-panel" data-panel="autofix">
+  <div style="margin-bottom:16px">
+    <div style="font-size:14px;font-weight:600;margin-bottom:8px">🔧 Autofix — Ad Leak Blocker</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Stato notturno del sistema di blocco leak automatizzato</div>
+    <button class="btn btn-sm btn-accent" onclick="loadAutofix()">↻ Aggiorna</button>
+  </div>
+  <div id="autofix-results"><div style="color:var(--muted);font-size:13px">Clicca "Aggiorna" per caricare lo stato</div></div>
+</div>
+
 <script>
 "use strict";
 
@@ -1040,6 +1050,7 @@ function switchStatsTab(name) {
   // Chart.js non calcola le dimensioni quando il canvas è in display:none → ridimensiona ora che è visibile
   ["stNetChart", "stRevenueChart", "stPlanChart"].forEach(id => { if (charts[id] && charts[id].resize) charts[id].resize(); });
   if (name === "seo") { loadSeo(); return; }
+  if (name === "autofix") { loadAutofix(); return; }
 if (name === "edge") { loadEdgeStatus(); return; }
 }
 
@@ -2025,6 +2036,38 @@ async function loadSeo(force = false) {
 
 // ── Edge Add-ons API Status ───────────────────────────────────
 let edgeLoaded = false;
+
+async function loadAutofix(force = false) {
+  const resultsEl = document.getElementById("autofix-results");
+  resultsEl.innerHTML = '<div class="loading-center"><div class="loader"></div></div>';
+  try {
+    const data = await api("/admin/autofix/status");
+    if (!data.ok) {
+      resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">' + (data.error || "Errore") + '</div>';
+      return;
+    }
+    const sm = data.shadow_mode;
+    const modeColor = sm ? "#ffbc6b" : "#16a766";
+    const modeIcon  = sm ? "⚠"  : "✓";
+    const modeLabel = sm ? "Shadow Mode (nessun deploy)" : "Attivo (deploy automatico)";
+    const totalRules = data.total_rules != null ? data.total_rules : "—";
+    resultsEl.innerHTML =
+      '<div style="display:flex;align-items:center;gap:12px;padding:16px;background:var(--input);border-radius:8px;border-left:4px solid ' + modeColor + ';margin-bottom:12px">' +
+        '<span style="background:' + modeColor + ';color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">' + modeIcon + '</span>' +
+        '<div><div style="font-weight:600;font-size:14px;margin-bottom:2px">Modalità: ' + modeLabel + '</div>' +
+        '<div style="font-size:12px;color:var(--muted)">Ultimo run: ' + (data.date ? new Date(data.date).toLocaleString("it-IT") : "—") + '</div></div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:12px">' +
+        '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--accent)">' + (data.candidates_added || 0) + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Nuove regole</div></div>' +
+        '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700">' + totalRules + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Regole totali</div></div>' +
+        '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:#16a766">' + (data.open_leaks || 0) + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Leak aperti</div></div>' +
+        '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700">' + (data.fixed_leaks || 0) + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Leak fixati</div></div>' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--muted);padding:8px 0">Dati dal file statico <code>autofix-status.json</code> — aggiornato ogni notte dal job <code>autofix_nightly.sh</code></div>';
+  } catch(e) {
+    resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">Errore: ' + e.message + '</div>';
+  }
+}
 
 async function loadEdgeStatus() {
   const resultsEl = document.getElementById("edge-results");

@@ -72,12 +72,30 @@ feed._autofix={date:new Date().toISOString(),candidates_added:added};
 feed.updated=new Date().toISOString().slice(0,10);
 fs.writeFileSync('$BASE/../site/rules-feed.json',JSON.stringify(feed,null,2));
 console.log('Merged '+added+' new rules ('+feed.rules.length+' total)');
+// Write admin status file (served by /admin/autofix/status endpoint)
+const state=JSON.parse(fs.readFileSync('$BASE/logs/state.json','utf8'));
+const open=Object.values(state.leaks||{}).filter(l=>l.status==='open').length;
+const fixed=Object.values(state.leaks||{}).filter(l=>l.status==='fixed').length;
+const status={date:new Date().toISOString(),candidates_added:added,total_rules:feed.rules.length,open_leaks:open,fixed_leaks:fixed,shadow_mode:false};
+fs.writeFileSync('$BASE/../site/autofix-status.json',JSON.stringify(status));
+console.log('autofix-status.json written: '+open+' open, '+fixed+' fixed');
 " >> "$LOG" 2>&1
   log "Deploying to CF Pages (branch main = Production)..."
   source ~/.secrets/adoff-stores.env 2>/dev/null
   wrangler pages deploy "$BASE/../site/" --project-name adoff-site --branch main --commit-dirty=true >> "$LOG" 2>&1
 else
   log "[5/5] SHADOW MODE - no deploy"
+  # Write shadow-mode status for admin tab (no feed merge)
+  node -e "
+const fs=require('fs');
+const state=JSON.parse(fs.readFileSync('$BASE/logs/state.json','utf8'));
+const cand=JSON.parse(fs.readFileSync('$CANDIDATES','utf8'));
+const open=Object.values(state.leaks||{}).filter(l=>l.status==='open').length;
+const fixed=Object.values(state.leaks||{}).filter(l=>l.status==='fixed').length;
+const status={date:new Date().toISOString(),candidates_added:cand.new_candidates||0,total_rules:null,open_leaks:open,fixed_leaks:fixed,shadow_mode:true};
+fs.writeFileSync('$BASE/../site/autofix-status.json',JSON.stringify(status));
+console.log('autofix-status.json written (shadow): '+cand.new_candidates+' new candidates, '+open+' open');
+" >> "$LOG" 2>&1
 fi
 
 # 6. Report
