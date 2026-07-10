@@ -1,0 +1,108 @@
+# AdOff — robots.txt
+# https://adoff.app
+
+User-agent: *
+Allow: /
+
+Disallow: /*.json$
+Disallow: /adoff-chrome.zip
+Disallow: /adoff-firefox.zip
+Disallow: /adoff-safari.zip
+Disallow: /admin.html
+Disallow: /mgmt-9f4a/
+Disallow: /account.html
+Disallow: /account/
+Disallow: /success.html
+
+# ── AI / LLM crawlers — explicitly allowed ──
+# We want AdOff to be discoverable in AI assistants and AI search engines.
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: Diffbot
+Allow: /
+
+User-agent: ImagesiftBot
+Allow: /
+
+# ── Aggressive / SEO-only bots — slow them down ──
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: MJ12bot
+Crawl-delay: 10
+
+User-agent: DotBot
+Crawl-delay: 10
+
+# ── Sitemaps ──
+
+Sitemap: https://adoff.app/sitemap.xml

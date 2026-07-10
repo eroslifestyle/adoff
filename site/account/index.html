@@ -1,0 +1,2014 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdOff — Account</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Gestisci il tuo account AdOff e i tuoi dispositivi.">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.adoff.app https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; img-src 'self' data:;">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:       #0a0a1a;
+      --surface:  #12122a;
+      --surface2: #1a1a35;
+      --border:   #2a2a4a;
+      --accent:   #7c5cfc;
+      --accent2:  #4c3ad4;
+      --text:     #ffffff;
+      --muted:    #8a8aaa;
+      --danger:   #f43f5e;
+      --success:  #4ade80;
+      --warn:     #f59e0b;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 48px;
+    }
+
+    /* ── Logo ── */
+    .logo {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--accent); }
+    .logo-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+    }
+    .card h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: var(--text);
+    }
+
+    /* ── OAuth buttons ── */
+    .btn-google {
+      background: #fff;
+      color: #3c4043;
+      border: 1px solid #dadce0;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 11px 24px;
+      border-radius: 8px;
+      width: 100%;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+      transition: background 0.15s;
+      margin-bottom: 10px;
+    }
+    .btn-google:hover { background: #f8f9fa; }
+    .btn-google svg   { width: 20px; height: 20px; flex-shrink: 0; }
+
+    .btn-microsoft {
+      background: #2f2f2f;
+      color: #fff;
+      border: 1px solid #3a3a3a;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 11px 24px;
+      border-radius: 8px;
+      width: 100%;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+      transition: background 0.15s;
+      margin-bottom: 4px;
+    }
+    .btn-microsoft:hover { background: #3a3a3a; }
+    .btn-microsoft svg   { width: 20px; height: 20px; flex-shrink: 0; }
+
+    /* ── Divider ── */
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .or-divider::before,
+    .or-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .tab {
+      flex: 1;
+      padding: 9px 12px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tab.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 14px; }
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
+    }
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      font-family: inherit;
+    }
+    .btn:active  { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      width: 100%;
+      padding: 12px 20px;
+      font-size: 15px;
+      margin-top: 6px;
+    }
+    .btn-primary:hover:not(:disabled) { opacity: 0.9; }
+
+    .btn-danger {
+      background: rgba(244, 63, 94, 0.12);
+      color: var(--danger);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+    .btn-danger:hover:not(:disabled) { background: rgba(244, 63, 94, 0.22); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover:not(:disabled) { color: var(--text); border-color: var(--muted); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      width: 100%;
+      padding: 11px 20px;
+      margin-top: 6px;
+    }
+    .btn-outline:hover:not(:disabled) { background: rgba(124, 92, 252, 0.1); }
+
+    /* ── License key expander ── */
+    .key-expander {
+      margin-top: 16px;
+    }
+    .key-toggle {
+      width: 100%;
+      background: transparent;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color 0.2s, color 0.2s;
+      text-align: left;
+    }
+    .key-toggle:hover { border-color: var(--accent); color: var(--accent); }
+    .key-body {
+      margin-top: 12px;
+      display: none;
+    }
+    .key-body.open { display: block; }
+
+    /* ── Free note ── */
+    .free-note {
+      margin-top: 20px;
+      padding: 12px 14px;
+      background: rgba(124, 92, 252, 0.07);
+      border: 1px solid rgba(124, 92, 252, 0.18);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .free-note strong { color: var(--text); }
+
+    /* ── Forgot password link ── */
+    .forgot-link {
+      display: block;
+      text-align: right;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .forgot-link:hover { color: var(--accent); }
+
+    /* ── Alerts ── */
+    .alert {
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+      line-height: 1.5;
+    }
+    .alert.show { display: block; }
+    .alert-error   { background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.3); color: #fb7185; }
+    .alert-success { background: rgba(74, 222, 128, 0.08); border: 1px solid rgba(74, 222, 128, 0.3); color: var(--success); }
+    .alert-info    { background: rgba(124, 92, 252, 0.08); border: 1px solid rgba(124, 92, 252, 0.25); color: #a78bfa; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 14px;
+      color: var(--text);
+      z-index: 9999;
+      transition: transform 0.3s cubic-bezier(.16,1,.3,1), opacity 0.3s;
+      opacity: 0;
+      white-space: nowrap;
+      max-width: 90vw;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.success { border-color: rgba(74,222,128,0.4); color: var(--success); }
+    .toast.error   { border-color: rgba(244,63,94,0.4); color: #fb7185; }
+
+    /* ── Separator ── */
+    .separator { height: 1px; background: var(--border); margin: 20px 0; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+    }
+    .spinner.dark {
+      border-color: rgba(60,64,67,0.3);
+      border-top-color: #3c4043;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Plan badge ── */
+    .plan-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .plan-monthly  { background: rgba(124,92,252,0.2); color: var(--accent); border: 1px solid rgba(124,92,252,0.4); }
+    .plan-annual   { background: rgba(74,222,128,0.1); color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
+    .plan-lifetime { background: rgba(245,158,11,0.1); color: var(--warn); border: 1px solid rgba(245,158,11,0.3); }
+    .plan-trial    { background: rgba(124,92,252,0.1); color: #a78bfa; border: 1px solid rgba(124,92,252,0.3); }
+    .plan-pro      { background: rgba(124,92,252,0.2); color: var(--accent); border: 1px solid rgba(124,92,252,0.4); }
+
+    /* ── Dashboard header ── */
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .dashboard-header h2 { margin-bottom: 0; }
+    .plan-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .expiry-text { font-size: 12px; color: var(--muted); }
+
+    /* ── Profile info ── */
+    .profile-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+    .profile-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-email {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .profile-provider {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    /* ── Device counter ── */
+    .device-counter { margin-bottom: 20px; }
+    .counter-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .counter-label span:first-child { font-size: 13px; color: var(--muted); }
+    .counter-label strong { font-size: 14px; color: var(--text); }
+    .progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transition: width 0.4s ease;
+    }
+    .progress-fill.warning { background: linear-gradient(90deg, var(--warn), #d97706); }
+    .progress-fill.full    { background: linear-gradient(90deg, var(--danger), #be123c); }
+
+    /* ── Device list ── */
+    .device-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .device-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      gap: 10px;
+    }
+    .device-icon { font-size: 20px; flex-shrink: 0; width: 30px; text-align: center; }
+    .device-info { flex: 1; min-width: 0; }
+    .device-name {
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .device-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .device-empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 24px 0;
+    }
+
+    /* ── No-license panel ── */
+    .no-license-panel {
+      background: var(--bg);
+      border: 1px dashed rgba(124,92,252,0.4);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .no-license-panel p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    .no-license-panel .or-small {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 12px 0;
+    }
+
+    /* ── Footer actions ── */
+    .footer-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .rate-limit-note { font-size: 11px; color: var(--muted); }
+
+    /* ── Logout row ── */
+    .logout-row { text-align: center; margin-top: 16px; }
+
+    /* ── Link ── */
+    .link {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .link:hover { text-decoration: underline; }
+
+    /* ── Verification banner ── */
+    .verify-banner {
+      max-width: 480px;
+      width: 100%;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+    }
+    .verify-banner .icon { font-size: 48px; margin-bottom: 12px; }
+    .verify-banner h3 { font-size: 18px; margin-bottom: 8px; }
+    .verify-banner p { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
+
+    /* ── Multiple licenses section ── */
+    .multi-license-section { margin-bottom: 20px; }
+    .multi-license-section h3 {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    .license-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .license-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .license-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      cursor: pointer;
+    }
+    .license-card-header:hover { opacity: 0.9; }
+    .license-card-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .license-card-title .plan-badge { font-size: 11px; }
+    .license-card-key {
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .license-card-meta {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .license-card-devices {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .license-card-devices .device-counter { margin-bottom: 10px; }
+    .license-card-devices .device-list { margin-bottom: 10px; }
+    .license-card .footer-actions { margin-top: 10px; }
+    .license-card-toggle {
+      font-size: 12px;
+      color: var(--accent);
+      cursor: pointer;
+    }
+
+    /* ── License key panel ── */
+    .license-key-panel {
+      background: rgba(124,92,252,0.08);
+      border: 1px solid rgba(124,92,252,0.25);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .license-key-box {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 15px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: var(--text);
+      letter-spacing: 1px;
+      word-break: break-all;
+      user-select: all;
+    }
+    .license-key-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 10px;
+      margin-bottom: 0;
+    }
+    .btn-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.15s;
+    }
+    .btn-copy:hover { opacity: 0.85; }
+    .btn-copy.copied { background: var(--success); }
+
+    /* ── Affiliate panel ── */
+    .aff-nav {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .aff-nav-btn {
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .aff-nav-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .aff-stat-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .aff-stat {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+    .aff-stat .val {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .aff-stat .lbl {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .mono {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      word-break: break-all;
+      user-select: all;
+    }
+    .copy-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .copy-row .mono { flex: 1; }
+
+    /* ── Hidden ── */
+    [hidden] { display: none !important; }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .card { padding: 20px; }
+      .device-item { flex-wrap: wrap; }
+      .footer-actions { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="logo">Ad<span>Off</span></div>
+<div class="logo-sub" id="logoSub">Gestisci i tuoi dispositivi</div>
+
+<!-- ═══════════════════════════════════════
+     LOGIN CARD
+════════════════════════════════════════ -->
+<div class="card" id="loginCard">
+
+  <div class="alert alert-error" id="loginError"></div>
+
+  <!-- OAuth -->
+  <button class="btn-google" id="btnGoogle" onclick="loginGoogle()">
+    <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      <path fill="none" d="M0 0h48v48H0z"/>
+    </svg>
+    Accedi con Google
+  </button>
+
+  <div class="or-divider">oppure</div>
+
+  <!-- Email/password tabs -->
+  <div class="tabs">
+    <button class="tab active" id="tabLogin" onclick="switchTab('login')">Accedi</button>
+    <button class="tab" id="tabRegister" onclick="switchTab('register')">Registrati</button>
+  </div>
+
+  <!-- Login form -->
+  <div id="formLogin">
+    <div class="form-group">
+      <label for="loginEmail">Email</label>
+      <input type="email" id="loginEmail" placeholder="email@esempio.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label for="loginPassword">Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+      <a class="forgot-link" onclick="showForgotForm()">Password dimenticata?</a>
+    </div>
+    <div class="cf-turnstile" data-sitekey="0x4AAAAAADAtLsfOV1PCgWx_" data-callback="onTurnstileLoginDone" style="margin-top:12px;"></div>
+    <button class="btn btn-primary" id="btnLoginEmail" onclick="loginEmail()">Accedi</button>
+  </div>
+
+  <!-- Register form -->
+  <div id="formRegister" hidden>
+    <div class="form-group">
+      <label for="regEmail">Email</label>
+      <input type="email" id="regEmail" placeholder="email@esempio.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label for="regPassword">Password</label>
+      <input type="password" id="regPassword" placeholder="Min. 8 caratteri" autocomplete="new-password">
+    </div>
+    <div class="form-group">
+      <label for="regConfirm">Conferma password</label>
+      <input type="password" id="regConfirm" placeholder="Ripeti la password" autocomplete="new-password">
+    </div>
+    <div class="cf-turnstile" data-sitekey="0x4AAAAAADAtLsfOV1PCgWx_" data-callback="onTurnstileRegisterDone" style="margin-top:12px;"></div>
+    <button class="btn btn-primary" id="btnRegister" onclick="registerEmail()">Registrati</button>
+  </div>
+
+  <!-- Forgot password form -->
+  <div id="formForgot" hidden>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+      Inserisci la tua email. Ti invieremo un link per reimpostare la password.
+    </p>
+    <div class="form-group">
+      <label for="forgotEmail">Email</label>
+      <input type="email" id="forgotEmail" placeholder="email@esempio.com" autocomplete="email">
+    </div>
+    <div class="cf-turnstile" data-sitekey="0x4AAAAAADAtLsfOV1PCgWx_" data-callback="onTurnstileForgotDone" style="margin-top:12px;"></div>
+    <button class="btn btn-primary" id="btnForgot" onclick="sendForgot()">Invia link di reset</button>
+    <button class="btn btn-ghost" style="width:100%;margin-top:8px;" onclick="backToLogin()">Torna al login</button>
+  </div>
+
+  <!-- License key expander -->
+  <div class="key-expander" id="keyExpanderBlock">
+    <button class="key-toggle" onclick="toggleKeyPanel()">
+      Accedi con License Key →
+    </button>
+    <div class="key-body" id="keyPanelBody">
+      <div class="form-group" style="margin-top:12px;">
+        <label for="keyInput">License Key</label>
+        <input type="text" id="keyInput" placeholder="ADOFF-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="form-group">
+        <label for="keyEmail">Email di acquisto</label>
+        <input type="email" id="keyEmail" placeholder="email@esempio.com" autocomplete="email">
+      </div>
+      <button class="btn btn-outline" id="btnKeyLogin" onclick="loginWithKey()">Accedi con licenza</button>
+    </div>
+  </div>
+
+  <!-- Free note -->
+  <div class="free-note">
+    <strong>La versione Free funziona senza registrazione.</strong><br>
+    L'account serve solo per gestire le licenze Pro e i dispositivi autorizzati.
+  </div>
+
+</div><!-- /loginCard -->
+
+<!-- ═══════════════════════════════════════
+     RESET PASSWORD CARD
+════════════════════════════════════════ -->
+<div class="card" id="resetCard" hidden>
+  <h2>Nuova password</h2>
+  <div class="alert alert-error" id="resetError"></div>
+  <div class="alert alert-success" id="resetSuccess"></div>
+  <div class="form-group">
+    <label for="resetPassword">Nuova password</label>
+    <input type="password" id="resetPassword" placeholder="Min. 8 caratteri" autocomplete="new-password">
+  </div>
+  <div class="form-group">
+    <label for="resetConfirm">Conferma password</label>
+    <input type="password" id="resetConfirm" placeholder="Ripeti la password" autocomplete="new-password">
+  </div>
+  <button class="btn btn-primary" id="btnResetSave" onclick="doResetPassword()">Salva nuova password</button>
+</div>
+
+<!-- ═══════════════════════════════════════
+     EMAIL VERIFICATION CARD
+════════════════════════════════════════ -->
+<div class="verify-banner card" id="verifyCard" hidden>
+  <div class="icon" id="verifyIcon">⏳</div>
+  <h3 id="verifyTitle">Verifica in corso…</h3>
+  <p id="verifyMsg">Stiamo verificando la tua email.</p>
+  <button class="btn btn-primary" onclick="backToLogin()" hidden id="verifyBackBtn">Vai al login</button>
+</div>
+
+<!-- ═══════════════════════════════════════
+     DASHBOARD CARD
+════════════════════════════════════════ -->
+<div class="card" id="dashCard" hidden>
+
+  <!-- Header row -->
+  <div class="dashboard-header">
+    <h2>Account</h2>
+    <button class="btn btn-ghost" style="padding:6px 14px;font-size:13px;" onclick="doLogout()">Logout</button>
+  </div>
+
+  <div class="alert alert-error"   id="dashError"></div>
+  <div class="alert alert-success" id="dashSuccess"></div>
+
+  <!-- Profile -->
+  <div class="profile-row" id="profileRow">
+    <div class="profile-avatar" id="profileAvatar">?</div>
+    <div class="profile-info">
+      <div class="profile-email" id="profileEmail">—</div>
+      <div class="profile-provider" id="profileProvider"></div>
+    </div>
+    <span class="plan-badge" id="planBadge"></span>
+  </div>
+
+  <!-- Section nav -->
+  <div class="aff-nav" id="dashNav">
+    <button class="aff-nav-btn active" id="navLicenza" onclick="showDashSection('licenza')">Licenza</button>
+    <button class="aff-nav-btn" id="navAffiliato" onclick="showDashSection('affiliato')">Affiliato</button>
+  </div>
+
+  <!-- ── LICENZA SECTION ── -->
+  <div id="sectionLicenza">
+
+  <!-- Plan details (single license mode) -->
+  <div id="singleLicenseSection">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <span class="expiry-text" id="expiryText"></span>
+    </div>
+    <button class="btn btn-outline" id="manageSubscriptionBtn" style="margin-bottom:20px;display:none;" onclick="">
+      ⚙️ Gestisci Abbonamento
+    </button>
+
+    <!-- Device counter -->
+    <div class="device-counter">
+    <div class="counter-label">
+      <span>Dispositivi attivi</span>
+      <strong id="counterLabel">0 / 3</strong>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="device-list" id="deviceList"></div>
+
+  <div class="footer-actions">
+    <button class="btn btn-danger" id="removeAllBtn" onclick="removeAll()">Rimuovi tutti i dispositivi</button>
+    <span class="rate-limit-note">Max 3 rimozioni al giorno</span>
+  </div>
+  </div><!-- /singleLicenseSection -->
+
+  <!-- Multiple licenses section (shown when user has 2+ licenses) -->
+  <div id="multiLicenseSection" hidden>
+    <h3>Le tue licenze</h3>
+    <div id="licensesContainer"></div>
+  </div>
+
+  <!-- License key panel (shown when user has a license) -->
+  <div id="licenseKeyPanel" hidden>
+    <div class="separator"></div>
+    <div class="license-key-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <label style="margin:0;">La tua License Key</label>
+        <button class="btn-copy" id="copyKeyBtn" onclick="copyLicenseKey()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copia
+        </button>
+      </div>
+      <div class="license-key-box" id="licenseKeyBox">—</div>
+      <p class="license-key-hint">Copia questa chiave e incollala nell'estensione AdOff per attivare Pro.</p>
+    </div>
+  </div>
+
+  <!-- No-license panel (shown when user has no license linked) -->
+  <div id="noLicensePanel" hidden>
+    <div class="separator"></div>
+    <div class="no-license-panel">
+      <p>Non hai ancora una licenza Pro collegata.<br>Collega una licenza esistente oppure acquista AdOff Pro.</p>
+      <div class="form-group">
+        <label for="linkKeyInput">License Key</label>
+        <input type="text" id="linkKeyInput" placeholder="ADOFF-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false">
+      </div>
+      <button class="btn btn-primary" id="btnLinkKey" onclick="linkLicense()">Collega licenza</button>
+      <div class="or-small">oppure</div>
+      <a href="https://adoff.app/#pricing" class="link">Acquista AdOff Pro →</a>
+    </div>
+  </div>
+
+  </div><!-- /sectionLicenza -->
+
+  <!-- ── AFFILIATO SECTION ── -->
+  <div id="sectionAffiliato" hidden>
+
+    <!-- State A: not registered -->
+    <div id="affStateA">
+      <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px;">
+        Diventa Partner Affiliato di AdOff.<br>
+        Per ogni amico che acquista AdOff Pro tramite il tuo link, ricevi <strong style="color:var(--text)">30 giorni Pro gratis</strong>.
+      </p>
+      <button class="btn btn-primary" id="btnBecomeAffiliate" onclick="registerAffiliate()">Diventa Partner Affiliato</button>
+    </div>
+
+    <!-- State B: registered -->
+    <div id="affStateB" hidden>
+      <div style="margin-bottom:20px;">
+        <label style="margin-bottom:8px;display:block;">Il tuo ID Affiliato</label>
+        <div class="copy-row">
+          <div class="mono" id="affIdBox">—</div>
+          <button class="btn-copy" onclick="copyAffText('affIdBox', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copia
+          </button>
+        </div>
+        <label style="margin-bottom:8px;display:block;">Il tuo link affiliato</label>
+        <div class="copy-row">
+          <div class="mono" id="affLinkBox">—</div>
+          <button class="btn-copy" onclick="copyAffText('affLinkBox', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copia
+          </button>
+        </div>
+      </div>
+      <div class="aff-stat-row" id="affStats">
+        <div class="aff-stat">
+          <div class="val" id="affSaleCount">—</div>
+          <div class="lbl">Vendite totali</div>
+        </div>
+        <div class="aff-stat">
+          <div class="val" id="affDaysEarned">—</div>
+          <div class="lbl">Giorni accreditati</div>
+        </div>
+      </div>
+      <div class="free-note">
+        Per ogni amico che acquista AdOff Pro tramite il tuo link, ricevi <strong>30 giorni Pro gratis</strong>.
+      </div>
+    </div>
+
+  </div><!-- /sectionAffiliato -->
+
+</div><!-- /dashCard -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ═══════════════════════════════════════
+     CONFIG
+  ════════════════════════════════════════ */
+  const API_PRIMARY  = "https://api.adoff.app";
+  const API_FALLBACK = "https://api.adoff.app";
+  const SESSION_KEY  = "adoff_account_token";
+
+  let _api     = API_PRIMARY;
+  let _token   = "";
+  let _devices = [];
+  let _maxDev  = 3;
+  let _hasLic  = false;
+  let _licKey  = "";
+  let _licenses = [];
+  let _activeLicenseRaw = "";
+  let _resetToken = "";
+  let _affLoaded  = false;
+
+  /* Turnstile tokens — one per form, reset after use */
+  let _tsLogin    = "";
+  let _tsRegister = "";
+  let _tsForgot   = "";
+
+  window.onTurnstileLoginDone    = t => { _tsLogin    = t; };
+  window.onTurnstileRegisterDone = t => { _tsRegister = t; };
+  window.onTurnstileForgotDone   = t => { _tsForgot   = t; };
+
+  /* ═══════════════════════════════════════
+     HELPERS
+  ════════════════════════════════════════ */
+  const $ = id => document.getElementById(id);
+
+  function show(id) { $(id).removeAttribute("hidden"); }
+  function hide(id) { $(id).setAttribute("hidden", ""); }
+
+  function escHtml(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function relativeTime(isoStr) {
+    if (!isoStr) return "mai";
+    const diff = Date.now() - new Date(isoStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 2)  return "poco fa";
+    if (mins < 60) return mins + " min fa";
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24)  return hrs + (hrs === 1 ? " ora" : " ore") + " fa";
+    const days = Math.floor(hrs / 24);
+    if (days < 30) return days + (days === 1 ? " giorno" : " giorni") + " fa";
+    return new Date(isoStr).toLocaleDateString("it-IT");
+  }
+
+  function deviceIcon(name) {
+    const n = (name || "").toLowerCase();
+    if (n.includes("firefox")) return "🦊";
+    if (n.includes("edge"))    return "🌐";
+    if (n.includes("opera"))   return "🅾️";
+    if (n.includes("safari"))  return "🧭";
+    if (n.includes("chrome"))  return "🌀";
+    if (n.includes("android") || n.includes("ios")) return "📱";
+    return "💻";
+  }
+
+  function planLabel(plan) {
+    return { monthly:"Pro Mensile", annual:"Pro Annuale", lifetime:"Pro Lifetime", trial:"Trial", pro:"Pro" }[plan] || "Pro";
+  }
+  function planClass(plan) {
+    return "plan-badge " + (["monthly","annual","lifetime","trial"].includes(plan) ? "plan-"+plan : "plan-pro");
+  }
+
+  /* ── Token helpers ── */
+  function getToken()   { return sessionStorage.getItem(SESSION_KEY); }
+  function saveToken(t) { _token = t; sessionStorage.setItem(SESSION_KEY, t); }
+  function dropToken()  { _token = ""; sessionStorage.removeItem(SESSION_KEY); }
+
+  /* ── Loading state ── */
+  function setBtnLoading(btnId, loading, label) {
+    const b = $(btnId);
+    b.disabled = loading;
+    b.innerHTML = loading ? '<span class="spinner"></span> ' + label + '…' : label;
+  }
+
+  /* ── Toast ── */
+  let _toastTimer = null;
+  function toast(msg, type = "info") {
+    const el = $("toast");
+    el.textContent = msg;
+    el.className = "toast " + type + " show";
+    if (_toastTimer) clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => { el.className = "toast"; }, 3200);
+  }
+
+  /* ── Inline alert ── */
+  function showAlert(id, msg, type = "error") {
+    const el = $(id);
+    el.textContent = msg;
+    el.className = "alert alert-" + type + " show";
+  }
+  function clearAlert(id) { $(id).className = "alert"; }
+
+  /* ═══════════════════════════════════════
+     API
+  ════════════════════════════════════════ */
+  async function apiFetch(path, opts = {}) {
+    const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+    if (_token) headers["X-Account-Token"] = _token;
+    const base = { ...opts, headers };
+
+    try {
+      const r = await fetch(API_PRIMARY + path, base);
+      _api = API_PRIMARY;
+      return r;
+    } catch (_) {
+      try {
+        const r = await fetch(API_FALLBACK + path, base);
+        _api = API_FALLBACK;
+        return r;
+      } catch (e) {
+        throw new Error("network");
+      }
+    }
+  }
+
+  async function apiJSON(path, opts = {}) {
+    const r = await apiFetch(path, opts);
+    return r.json();
+  }
+
+  /* ═══════════════════════════════════════
+     URL PARAMS ON LOAD
+  ════════════════════════════════════════ */
+  function handleUrlParams() {
+    const p = new URLSearchParams(location.search);
+
+    if (p.get("token")) {
+      // OAuth callback
+      saveToken(p.get("token"));
+      history.replaceState({}, "", location.pathname);
+      loadDashboard();
+      return true;
+    }
+    if (p.get("verify")) {
+      history.replaceState({}, "", location.pathname);
+      verifyEmail(p.get("verify"));
+      return true;
+    }
+    if (p.get("reset")) {
+      _resetToken = p.get("reset");
+      history.replaceState({}, "", location.pathname);
+      showResetCard();
+      return true;
+    }
+    if (p.get("error")) {
+      const msg = decodeURIComponent(p.get("error"));
+      history.replaceState({}, "", location.pathname);
+      showAlert("loginError", msg);
+    }
+    // link_referral: handled after login — stored for post-auth use
+    if (p.get("link_referral")) {
+      sessionStorage.setItem("adoff_pending_referral", p.get("link_referral"));
+    }
+    return false;
+  }
+
+  /* ═══════════════════════════════════════
+     SCREEN SWITCHERS
+  ════════════════════════════════════════ */
+  function showLoginCard() {
+    show("loginCard");
+    hide("dashCard");
+    hide("resetCard");
+    hide("verifyCard");
+    show("logoSub");
+    $("logoSub").textContent = "Gestisci i tuoi dispositivi";
+  }
+
+  function showDashCard() {
+    hide("loginCard");
+    show("dashCard");
+    hide("resetCard");
+    hide("verifyCard");
+    $("logoSub").textContent = "";
+  }
+
+  function showResetCard() {
+    hide("loginCard");
+    hide("dashCard");
+    show("resetCard");
+    hide("verifyCard");
+    $("logoSub").textContent = "Imposta una nuova password";
+  }
+
+  function showVerifyCard() {
+    hide("loginCard");
+    hide("dashCard");
+    hide("resetCard");
+    show("verifyCard");
+    $("logoSub").textContent = "";
+  }
+
+  /* ── Login form tabs ── */
+  window.switchTab = function (tab) {
+    const isLogin = tab === "login";
+    $("tabLogin").className    = "tab" + (isLogin ? " active" : "");
+    $("tabRegister").className = "tab" + (!isLogin ? " active" : "");
+    isLogin ? show("formLogin") : hide("formLogin");
+    !isLogin ? show("formRegister") : hide("formRegister");
+    hide("formForgot");
+    show("keyExpanderBlock");
+    clearAlert("loginError");
+  };
+
+  window.showForgotForm = function () {
+    hide("formLogin");
+    hide("formRegister");
+    hide("keyExpanderBlock");
+    show("formForgot");
+    clearAlert("loginError");
+    $("tabLogin").className    = "tab";
+    $("tabRegister").className = "tab";
+  };
+
+  window.backToLogin = function () {
+    showLoginCard();
+    switchTab("login");
+  };
+
+  window.toggleKeyPanel = function () {
+    const body = $("keyPanelBody");
+    const open = body.classList.contains("open");
+    body.classList.toggle("open", !open);
+  };
+
+  /* ═══════════════════════════════════════
+     AUTH — OAUTH
+  ════════════════════════════════════════ */
+  window.loginGoogle = function () {
+    window.location.href = API_PRIMARY + "/oauth/google/start";
+  };
+
+  window.loginMicrosoft = function () {
+    window.location.href = API_PRIMARY + "/oauth/microsoft/start";
+  };
+
+  /* ═══════════════════════════════════════
+     AUTH — EMAIL + PASSWORD
+  ════════════════════════════════════════ */
+  window.loginEmail = async function () {
+    const email    = $("loginEmail").value.trim();
+    const password = $("loginPassword").value;
+    clearAlert("loginError");
+
+    if (!email || !password) {
+      showAlert("loginError", "Inserisci email e password."); return;
+    }
+    if (!_tsLogin) {
+      showAlert("loginError", "Completa la verifica anti-bot."); return;
+    }
+
+    const tsToken = _tsLogin;
+    _tsLogin = "";
+
+    setBtnLoading("btnLoginEmail", true, "Accedi");
+    try {
+      const data = await apiJSON("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password, turnstileToken: tsToken }),
+      });
+      if (!data.ok) { showAlert("loginError", data.error || "Credenziali non valide."); return; }
+      saveToken(data.token);
+      loadDashboard();
+    } catch (_) {
+      showAlert("loginError", "Errore di rete. Controlla la connessione.");
+    } finally {
+      setBtnLoading("btnLoginEmail", false, "Accedi");
+    }
+  };
+
+  window.registerEmail = async function () {
+    const email    = $("regEmail").value.trim();
+    const password = $("regPassword").value;
+    const confirm  = $("regConfirm").value;
+    clearAlert("loginError");
+
+    if (!email || !password || !confirm) {
+      showAlert("loginError", "Compila tutti i campi."); return;
+    }
+    if (password.length < 8) {
+      showAlert("loginError", "La password deve essere di almeno 8 caratteri."); return;
+    }
+    if (password !== confirm) {
+      showAlert("loginError", "Le password non coincidono."); return;
+    }
+    if (!_tsRegister) {
+      showAlert("loginError", "Completa la verifica anti-bot."); return;
+    }
+
+    const tsToken = _tsRegister;
+    _tsRegister = "";
+
+    setBtnLoading("btnRegister", true, "Registrati");
+    try {
+      const data = await apiJSON("/auth/register", {
+        method: "POST",
+        body: JSON.stringify({ email, password, turnstileToken: tsToken }),
+      });
+      if (!data.ok) { showAlert("loginError", data.error || "Registrazione fallita."); return; }
+      showAlert("loginError", data.message || "Controlla la tua email per la verifica.", "success");
+    } catch (_) {
+      showAlert("loginError", "Errore di rete. Controlla la connessione.");
+    } finally {
+      setBtnLoading("btnRegister", false, "Registrati");
+    }
+  };
+
+  window.sendForgot = async function () {
+    const email = $("forgotEmail").value.trim();
+    clearAlert("loginError");
+
+    if (!email) { showAlert("loginError", "Inserisci la tua email."); return; }
+    if (!_tsForgot) {
+      showAlert("loginError", "Completa la verifica anti-bot."); return;
+    }
+
+    const tsToken = _tsForgot;
+    _tsForgot = "";
+
+    setBtnLoading("btnForgot", true, "Invia link di reset");
+    try {
+      const data = await apiJSON("/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email, turnstileToken: tsToken }),
+      });
+      if (!data.ok) { showAlert("loginError", data.error || "Errore durante l'invio."); return; }
+      showAlert("loginError", "Link inviato! Controlla la tua email.", "success");
+    } catch (_) {
+      showAlert("loginError", "Errore di rete. Controlla la connessione.");
+    } finally {
+      setBtnLoading("btnForgot", false, "Invia link di reset");
+    }
+  };
+
+  /* ═══════════════════════════════════════
+     AUTH — LICENSE KEY
+  ════════════════════════════════════════ */
+  window.loginWithKey = async function () {
+    const key   = $("keyInput").value.trim();
+    const email = $("keyEmail").value.trim();
+    clearAlert("loginError");
+
+    if (!key || !email) {
+      showAlert("loginError", "Inserisci license key ed email."); return;
+    }
+
+    setBtnLoading("btnKeyLogin", true, "Accedi con licenza");
+    try {
+      const data = await apiJSON("/account/login", {
+        method: "POST",
+        body: JSON.stringify({ key, email }),
+      });
+      if (!data.ok) { showAlert("loginError", data.error || "Credenziali non valide."); return; }
+      saveToken(data.token);
+      loadDashboard();
+    } catch (_) {
+      showAlert("loginError", "Errore di rete. Controlla la connessione.");
+    } finally {
+      setBtnLoading("btnKeyLogin", false, "Accedi con licenza");
+    }
+  };
+
+  /* ═══════════════════════════════════════
+     EMAIL VERIFICATION
+  ════════════════════════════════════════ */
+  async function verifyEmail(verifyToken) {
+    showVerifyCard();
+    try {
+      const data = await apiJSON("/auth/verify-email", {
+        method: "POST",
+        body: JSON.stringify({ token: verifyToken }),
+      });
+      if (data.ok) {
+        $("verifyIcon").textContent  = "✅";
+        $("verifyTitle").textContent = "Email verificata!";
+        $("verifyMsg").textContent   = "Il tuo account è stato confermato. Puoi ora accedere.";
+      } else {
+        $("verifyIcon").textContent  = "❌";
+        $("verifyTitle").textContent = "Verifica fallita";
+        $("verifyMsg").textContent   = data.error || "Il link non è valido o è scaduto.";
+      }
+    } catch (_) {
+      $("verifyIcon").textContent  = "⚠️";
+      $("verifyTitle").textContent = "Errore di rete";
+      $("verifyMsg").textContent   = "Impossibile completare la verifica. Riprova.";
+    }
+    show("verifyBackBtn");
+  }
+
+  /* ═══════════════════════════════════════
+     RESET PASSWORD
+  ════════════════════════════════════════ */
+  window.doResetPassword = async function () {
+    const password = $("resetPassword").value;
+    const confirm  = $("resetConfirm").value;
+    clearAlert("resetError");
+    clearAlert("resetSuccess");
+
+    if (!password || !confirm) {
+      showAlert("resetError", "Compila tutti i campi."); return;
+    }
+    if (password.length < 8) {
+      showAlert("resetError", "La password deve essere di almeno 8 caratteri."); return;
+    }
+    if (password !== confirm) {
+      showAlert("resetError", "Le password non coincidono."); return;
+    }
+
+    setBtnLoading("btnResetSave", true, "Salva nuova password");
+    try {
+      const data = await apiJSON("/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ token: _resetToken, password }),
+      });
+      if (!data.ok) { showAlert("resetError", data.error || "Reset fallito."); return; }
+      showAlert("resetSuccess", "Password aggiornata. Puoi ora accedere.", "success");
+      setTimeout(() => {
+        showLoginCard();
+        switchTab("login");
+      }, 2000);
+    } catch (_) {
+      showAlert("resetError", "Errore di rete. Controlla la connessione.");
+    } finally {
+      setBtnLoading("btnResetSave", false, "Salva nuova password");
+    }
+  };
+
+  /* ═══════════════════════════════════════
+     DASHBOARD
+  ════════════════════════════════════════ */
+  async function loadDashboard() {
+    showDashCard();
+    clearAlert("dashError");
+    clearAlert("dashSuccess");
+
+    try {
+      // Load profile + devices in parallel
+      const [profileData, devicesData] = await Promise.all([
+        apiJSON("/account/profile").catch(() => null),
+        apiJSON("/account/devices"),
+      ]);
+
+      if (!devicesData.ok) {
+        // Token invalid
+        dropToken();
+        showLoginCard();
+        showAlert("loginError", devicesData.error || "Sessione scaduta. Accedi di nuovo.");
+        return;
+      }
+
+      renderProfile(profileData);
+      renderDashboard(devicesData);
+      handlePendingReferral();
+      handleHashNav();
+
+    } catch (_) {
+      showAlert("dashError", "Errore di rete. Riprova tra qualche istante.");
+    }
+  }
+
+  function renderProfile(data) {
+    if (!data) return;
+    const email = data.email || "";
+    const provider = data.provider || "email";
+    const letter = email ? email[0].toUpperCase() : "?";
+
+    $("profileAvatar").textContent = letter;
+    $("profileEmail").textContent  = email;
+
+    const providerLabels = { google: "Google", microsoft: "Microsoft", email: "Email + password", key: "License Key" };
+    $("profileProvider").textContent = providerLabels[provider] || provider;
+  }
+
+  function renderDashboard(data) {
+    _licenses = data.licenses || [];
+    _hasLic = data.hasLicense;
+
+    // Check if user has multiple licenses
+    if (_licenses.length > 1) {
+      renderMultipleLicenses(data);
+      return;
+    }
+
+    // Single license mode (default)
+    show("singleLicenseSection");
+    hide("multiLicenseSection");
+
+    // Plan badge
+    const badge = $("planBadge");
+    badge.textContent = planLabel(data.plan);
+    badge.className   = planClass(data.plan);
+
+    // Expiry
+    const et = $("expiryText");
+    if (data.expiresHuman === "LIFETIME") {
+      et.textContent = "Scadenza: mai";
+    } else if (data.expiresHuman) {
+      et.textContent = "Scade: " + data.expiresHuman;
+    } else {
+      et.textContent = "";
+    }
+
+    // Subscription management button (show if user has a Stripe subscription)
+    const manageBtn = $("manageSubscriptionBtn");
+    if (manageBtn) {
+      if (data.stripeCustomerId) {
+        manageBtn.style.display = "";
+        manageBtn.onclick = () => {
+          window.location.href = "https://api.adoff.app/portal?customer_id=" + data.stripeCustomerId;
+        };
+      } else {
+        manageBtn.style.display = "none";
+      }
+    }
+
+    // Devices
+    _maxDev  = data.maxDevices || 3;
+    _devices = data.devices    || [];
+    _licKey  = data.licenseKey || null;
+    _activeLicenseRaw = _licenses[0]?.rawKey || "";
+
+    renderDeviceList();
+
+    // License key panel (show if license exists and key is available)
+    if (_hasLic && _licKey) {
+      $("licenseKeyBox").textContent = _licKey;
+      show("licenseKeyPanel");
+      hide("noLicensePanel");
+    } else if (_hasLic) {
+      hide("licenseKeyPanel");
+      hide("noLicensePanel");
+    } else {
+      hide("licenseKeyPanel");
+      show("noLicensePanel");
+    }
+  }
+
+  function renderMultipleLicenses(data) {
+    hide("singleLicenseSection");
+    show("multiLicenseSection");
+    hide("licenseKeyPanel");
+    hide("noLicensePanel");
+
+    // Plan badge - show the best plan
+    const badge = $("planBadge");
+    const bestPlan = _licenses.find(l => l.plan === "lifetime")?.plan
+      || _licenses.find(l => l.plan === "annual")?.plan
+      || _licenses[0]?.plan || "pro";
+    badge.textContent = planLabel(bestPlan) + " (" + _licenses.length + " licenze)";
+    badge.className = planClass(bestPlan);
+
+    const container = $("licensesContainer");
+    container.innerHTML = _licenses.map((lic, idx) => `
+      <div class="license-card" data-raw="${escHtml(lic.rawKey)}">
+        <div class="license-card-header">
+          <div class="license-card-title" onclick="toggleLicenseCard(${idx})" style="cursor:pointer;flex:1;">
+            <span class="plan-badge ${planClass(lic.plan)}">${planLabel(lic.plan)}</span>
+            <span class="license-card-key">${escHtml(lic.key || "***")}</span>
+          </div>
+          <button class="btn-copy" onclick="copyKey('${escHtml(lic.key)}', this)" style="margin-left:10px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copia
+          </button>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">
+          ${lic.expiresHuman === "LIFETIME" ? "Scadenza: mai" : "Scade: " + lic.expiresHuman}
+          ${lic.isExpired ? " <span style='color:#e74c3c'>(Scaduta)</span>" : ""}
+        </div>
+        <div class="license-card-devices" id="licDevices${idx}">
+          <div class="device-counter">
+            <div class="counter-label">
+              <span>Dispositivi</span>
+              <strong>${lic.devices.length} / ${lic.maxDevices}</strong>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill${lic.devices.length >= lic.maxDevices ? " full" : ""}" style="width:${Math.min(100, (lic.devices.length / lic.maxDevices) * 100)}%"></div>
+            </div>
+          </div>
+          <div class="device-list">
+            ${lic.devices.length === 0 ? '<div class="device-empty">Nessun dispositivo</div>' : lic.devices.map(d => `
+              <div class="device-item" data-id="${escHtml(d.id)}">
+                <div class="device-icon">${deviceIcon(d.name)}</div>
+                <div class="device-info">
+                  <div class="device-name">${escHtml(d.name || "Dispositivo sconosciuto")}</div>
+                  <div class="device-meta">
+                    Visto ${relativeTime(d.lastSeen)}
+                    ${d.ipPrefix ? " &middot; " + escHtml(d.ipPrefix) : ""}
+                  </div>
+                </div>
+                <button class="btn btn-danger" onclick="removeDeviceFromLicense('${escHtml(d.id)}', '${escHtml(lic.rawKey)}', this)">Rimuovi</button>
+              </div>
+            `).join("")}
+          </div>
+          <div class="footer-actions" style="margin-top:10px;">
+            <button class="btn btn-danger" ${lic.devices.length === 0 ? "disabled" : ""} onclick="removeAllFromLicense('${escHtml(lic.rawKey)}')">Rimuovi tutti</button>
+          </div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  window.toggleLicenseCard = function(idx) {
+    const devSection = $("licDevices" + idx);
+    if (devSection) {
+      devSection.style.display = devSection.style.display === "none" ? "block" : "none";
+    }
+  };
+
+  function renderDeviceList() {
+    const cnt = _devices.length;
+    $("counterLabel").textContent = cnt + " / " + _maxDev;
+
+    const pct  = _maxDev > 0 ? Math.min(100, (cnt / _maxDev) * 100) : 0;
+    const fill = $("progressFill");
+    fill.style.width = pct + "%";
+    fill.className   = "progress-fill" + (pct >= 100 ? " full" : pct >= 67 ? " warning" : "");
+
+    const list = $("deviceList");
+    $("removeAllBtn").disabled = cnt === 0;
+
+    if (cnt === 0) {
+      list.innerHTML = '<div class="device-empty">Nessun dispositivo registrato</div>';
+      return;
+    }
+
+    list.innerHTML = _devices.map(d => `
+      <div class="device-item" data-id="${escHtml(d.id)}">
+        <div class="device-icon">${deviceIcon(d.name)}</div>
+        <div class="device-info">
+          <div class="device-name">${escHtml(d.name || "Dispositivo sconosciuto")}</div>
+          <div class="device-meta">
+            Visto ${relativeTime(d.lastSeen)}
+            ${d.ipPrefix ? " &middot; " + escHtml(d.ipPrefix) : ""}
+          </div>
+        </div>
+        <button class="btn btn-danger" onclick="removeDevice('${escHtml(d.id)}', this)">Rimuovi</button>
+      </div>
+    `).join("");
+  }
+
+  /* ═══════════════════════════════════════
+     DEVICE ACTIONS
+  ════════════════════════════════════════ */
+  window.removeDevice = async function (deviceId, btnEl) {
+    // Conferma prima di rimuovere
+    const confirmed = confirm(
+      "Sei sicuro di voler rimuovere questo dispositivo?\n\n" +
+      "⚠️ Per riattivare AdOff Pro su questo dispositivo, dovrai reinserire il codice licenza nell'estensione."
+    );
+    if (!confirmed) return;
+
+    clearAlert("dashError");
+    clearAlert("dashSuccess");
+    btnEl.disabled    = true;
+    btnEl.innerHTML   = '<span class="spinner"></span>';
+
+    try {
+      const data = await apiJSON("/account/remove-device", {
+        method: "POST",
+        body: JSON.stringify({ deviceId }),
+      });
+      if (!data.ok) {
+        const errorMsg = data.error === "Device not found"
+          ? "Dispositivo non trovato. Ricarica la pagina."
+          : (data.error || "Errore durante la rimozione.");
+        toast(errorMsg, "error");
+        btnEl.disabled  = false;
+        btnEl.textContent = "Rimuovi";
+        return;
+      }
+      _devices = _devices.filter(d => d.id !== deviceId);
+      renderDeviceList();
+      toast("Dispositivo rimosso con successo.", "success");
+    } catch (_) {
+      toast("Errore di rete. Riprova.", "error");
+      btnEl.disabled    = false;
+      btnEl.textContent = "Rimuovi";
+    }
+  };
+
+  window.removeAll = async function () {
+    if (_devices.length === 0) return;
+
+    // Conferma prima di rimuovere tutti
+    const confirmed = confirm(
+      "Sei sicuro di voler rimuovere TUTTI i dispositivi?\n\n" +
+      "⚠️ Per riattivare AdOff Pro su ciascun dispositivo, dovrai reinserire il codice licenza nell'estensione."
+    );
+    if (!confirmed) return;
+
+    clearAlert("dashError");
+    clearAlert("dashSuccess");
+
+    setBtnLoading("removeAllBtn", true, "Rimuovi tutti i dispositivi");
+    try {
+      const data = await apiJSON("/account/remove-all", {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+      if (!data.ok) {
+        toast(data.error || "Errore durante la rimozione.", "error");
+        return;
+      }
+      _devices = [];
+      renderDeviceList();
+      toast("Tutti i dispositivi rimossi con successo.", "success");
+    } catch (_) {
+      toast("Errore di rete. Riprova.", "error");
+    } finally {
+      setBtnLoading("removeAllBtn", false, "Rimuovi tutti i dispositivi");
+    }
+  };
+
+  /* ═══════════════════════════════════════
+     MULTI-LICENSE DEVICE ACTIONS
+  ════════════════════════════════════════ */
+  window.removeDeviceFromLicense = async function (deviceId, licenseRaw, btnEl) {
+    const confirmed = confirm(
+      "Sei sicuro di voler rimuovere questo dispositivo?\n\n" +
+      "⚠️ Per riattivare AdOff Pro su questo dispositivo, dovrai reinserire il codice licenza nell'estensione."
+    );
+    if (!confirmed) return;
+
+    btnEl.disabled = true;
+    btnEl.innerHTML = '<span class="spinner"></span>';
+
+    try {
+      const data = await apiJSON("/account/remove-device", {
+        method: "POST",
+        body: JSON.stringify({ deviceId, licenseKey: licenseRaw }),
+      });
+      if (!data.ok) {
+        const errorMsg = data.error === "Device not found"
+          ? "Dispositivo non trovato. Ricarica la pagina."
+          : (data.error || "Errore durante la rimozione.");
+        toast(errorMsg, "error");
+        btnEl.disabled = false;
+        btnEl.textContent = "Rimuovi";
+        return;
+      }
+      // Aggiorna la licenza nell'array locale
+      const lic = _licenses.find(l => l.rawKey === licenseRaw);
+      if (lic) {
+        lic.devices = lic.devices.filter(d => d.id !== deviceId);
+      }
+      // Ri-renderizza
+      renderMultipleLicenses({ licenses: _licenses, hasLicense: true });
+      toast("Dispositivo rimosso con successo.", "success");
+    } catch (_) {
+      toast("Errore di rete. Riprova.", "error");
+      btnEl.disabled = false;
+      btnEl.textContent = "Rimuovi";
+    }
+  };
+
+  window.removeAllFromLicense = async function (licenseRaw) {
+    const lic = _licenses.find(l => l.rawKey === licenseRaw);
+    if (!lic || lic.devices.length === 0) return;
+
+    const confirmed = confirm(
+      "Sei sicuro di voler rimuovere TUTTI i dispositivi da questa licenza?\n\n" +
+      "⚠️ Per riattivare AdOff Pro su ciascun dispositivo, dovrai reinserire il codice licenza nell'estensione."
+    );
+    if (!confirmed) return;
+
+    try {
+      const data = await apiJSON("/account/remove-all", {
+        method: "POST",
+        body: JSON.stringify({ licenseKey: licenseRaw }),
+      });
+      if (!data.ok) {
+        toast(data.error || "Errore durante la rimozione.", "error");
+        return;
+      }
+      lic.devices = [];
+      renderMultipleLicenses({ licenses: _licenses, hasLicense: true });
+      toast("Tutti i dispositivi rimossi con successo.", "success");
+    } catch (_) {
+      toast("Errore di rete. Riprova.", "error");
+    }
+  };
+
+  /* ═══════════════════════════════════════
+     LINK LICENSE (no-license panel)
+  ════════════════════════════════════════ */
+  window.linkLicense = async function () {
+    const key = $("linkKeyInput").value.trim();
+    if (!key) { toast("Inserisci la license key.", "error"); return; }
+
+    setBtnLoading("btnLinkKey", true, "Collega licenza");
+    try {
+      const data = await apiJSON("/account/link-license", {
+        method: "POST",
+        body: JSON.stringify({ key }),
+      });
+      if (!data.ok) { toast(data.error || "Licenza non valida.", "error"); return; }
+      toast("Licenza collegata!", "success");
+      loadDashboard();
+    } catch (_) {
+      toast("Errore di rete.", "error");
+    } finally {
+      setBtnLoading("btnLinkKey", false, "Collega licenza");
+    }
+  };
+
+  /* ═══════════════════════════════════════
+     COPY LICENSE KEY
+  ════════════════════════════════════════ */
+  window.copyLicenseKey = function () {
+    if (!_licKey) return;
+    navigator.clipboard.writeText(_licKey).then(() => {
+      const btn = $("copyKeyBtn");
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copiato!`;
+      btn.classList.add("copied");
+      toast("License key copiata!", "success");
+      setTimeout(() => {
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copia`;
+        btn.classList.remove("copied");
+      }, 2000);
+    }).catch(() => {
+      toast("Impossibile copiare.", "error");
+    });
+  };
+
+  window.copyKey = function (key, btnEl) {
+    if (!key) return;
+    navigator.clipboard.writeText(key).then(() => {
+      btnEl.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copiato!`;
+      btnEl.classList.add("copied");
+      toast("License key copiata!", "success");
+      setTimeout(() => {
+        btnEl.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copia`;
+        btnEl.classList.remove("copied");
+      }, 2000);
+    }).catch(() => {
+      toast("Impossibile copiare.", "error");
+    });
+  };
+
+  /* ═══════════════════════════════════════
+     DASH SECTION SWITCHER
+  ════════════════════════════════════════ */
+  window.showDashSection = function (section) {
+    const isAff = section === "affiliato";
+    $("sectionLicenza").hidden  = isAff;
+    $("sectionAffiliato").hidden = !isAff;
+    $("navLicenza").classList.toggle("active", !isAff);
+    $("navAffiliato").classList.toggle("active", isAff);
+    if (isAff) loadAffiliateSection();
+  };
+
+  function handleHashNav() {
+    if (location.hash === "#affiliate") {
+      showDashSection("affiliato");
+    }
+  }
+
+  /* ═══════════════════════════════════════
+     AFFILIATE SECTION
+  ════════════════════════════════════════ */
+  async function loadAffiliateSection(forceReload = false) {
+    if (!_token) return;
+    if (_affLoaded && !forceReload) return;
+    try {
+      const data = await apiJSON("/affiliate/me");
+      if (!data.ok) { toast("Errore caricamento affiliato.", "error"); return; }
+      _affLoaded = true;
+      if (data.registered) {
+        showAffStateB(data.affiliate_id);
+        loadAffStats(data.affiliate_id);
+      } else {
+        show("affStateA");
+        hide("affStateB");
+      }
+    } catch (_) {
+      toast("Errore di rete.", "error");
+    }
+  }
+
+  function showAffStateB(affId) {
+    hide("affStateA");
+    show("affStateB");
+    $("affIdBox").textContent = affId;
+    $("affLinkBox").textContent = "https://adoff.app/?ref=" + affId;
+  }
+
+  async function loadAffStats(affId) {
+    try {
+      const data = await apiJSON("/affiliate/stats?id=" + encodeURIComponent(affId));
+      if (data.ok) {
+        $("affSaleCount").textContent = data.sales ?? 0;
+        $("affDaysEarned").textContent = (data.daysEarned ?? 0) + "gg";
+      }
+    } catch (_) { /* non-fatal */ }
+  }
+
+  window.registerAffiliate = async function () {
+    setBtnLoading("btnBecomeAffiliate", true, "Diventa Partner Affiliato");
+    try {
+      const data = await apiJSON("/affiliate/register", { method: "POST" });
+      if (!data.ok) { toast(data.error || "Registrazione fallita.", "error"); return; }
+      toast("Benvenuto tra i partner affiliati!", "success");
+      _affLoaded = false; // Reset so loadAffiliateSection re-renders state B.
+      showAffStateB(data.affiliate_id);
+      loadAffStats(data.affiliate_id);
+    } catch (_) {
+      toast("Errore di rete.", "error");
+    } finally {
+      setBtnLoading("btnBecomeAffiliate", false, "Diventa Partner Affiliato");
+    }
+  };
+
+  window.copyAffText = function (boxId, btnEl) {
+    const text = $(boxId).textContent.trim();
+    if (!text || text === "—") return;
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btnEl.innerHTML;
+      btnEl.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copiato!`;
+      btnEl.classList.add("copied");
+      toast("Copiato!", "success");
+      setTimeout(() => { btnEl.innerHTML = orig; btnEl.classList.remove("copied"); }, 2000);
+    }).catch(() => toast("Impossibile copiare.", "error"));
+  };
+
+  /* ═══════════════════════════════════════
+     PENDING REFERRAL LINK HANDLER
+  ════════════════════════════════════════ */
+  async function handlePendingReferral() {
+    const code = sessionStorage.getItem("adoff_pending_referral");
+    if (!code || !_token) return;
+    try {
+      const data = await apiJSON("/referral/register-code", {
+        method: "POST",
+        body: JSON.stringify({ code }),
+      });
+      if (data.ok) {
+        sessionStorage.removeItem("adoff_pending_referral");
+        history.replaceState({}, "", location.pathname);
+        toast("Codice referral collegato!", "success");
+      } else {
+        toast(data.error || "Impossibile collegare il codice.", "error");
+      }
+    } catch (_) {
+      // Leave sessionStorage intact so user can retry by reloading.
+      toast("Errore di rete nel collegamento referral.", "error");
+    }
+  }
+
+  /* ═══════════════════════════════════════
+     LOGOUT
+  ════════════════════════════════════════ */
+  window.doLogout = function () {
+    dropToken();
+    _devices = [];
+    _hasLic  = false;
+    showLoginCard();
+    switchTab("login");
+    clearAlert("loginError");
+  };
+
+  /* ═══════════════════════════════════════
+     KEYBOARD SHORTCUTS
+  ════════════════════════════════════════ */
+  function onEnter(id, fn) {
+    $(id).addEventListener("keydown", e => { if (e.key === "Enter") fn(); });
+  }
+  onEnter("loginEmail",    () => $("loginPassword").focus());
+  onEnter("loginPassword", () => window.loginEmail());
+  onEnter("regEmail",      () => $("regPassword").focus());
+  onEnter("regPassword",   () => $("regConfirm").focus());
+  onEnter("regConfirm",    () => window.registerEmail());
+  onEnter("forgotEmail",   () => window.sendForgot());
+  onEnter("keyInput",      () => $("keyEmail").focus());
+  onEnter("keyEmail",      () => window.loginWithKey());
+
+  /* ═══════════════════════════════════════
+     INIT
+  ════════════════════════════════════════ */
+  (async function init() {
+    // 1. Check URL params first
+    if (handleUrlParams()) return;
+
+    // 2. Try to restore session
+    const saved = getToken();
+    if (!saved) return; // Show login as-is
+
+    _token = saved;
+    try {
+      const [profileData, devicesData] = await Promise.all([
+        apiJSON("/account/profile").catch(() => null),
+        apiJSON("/account/devices"),
+      ]);
+      if (!devicesData.ok) { dropToken(); return; }
+      showDashCard();
+      renderProfile(profileData);
+      renderDashboard(devicesData);
+      handleHashNav();
+    } catch (_) {
+      // Network error — keep token, show login with retry option
+      showAlert("loginError", "Impossibile raggiungere il server. Riprova.", "info");
+    }
+  })();
+
+})();
+</script>
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

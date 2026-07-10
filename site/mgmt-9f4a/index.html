@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>AdOff Admin</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#0a0a1a;color:#fff;min-height:100vh}
+    .login-gate{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at top,#12122a 0%,#0a0a1a 70%)}
+    .login-box{background:#12122a;border:1px solid #2a2a4a;border-radius:16px;padding:40px;width:400px;text-align:center}
+    .login-box h1{font-size:24px;margin-bottom:4px}
+    .login-box h1 span{color:#7c5cfc}
+    .login-box p{font-size:13px;color:#6a6a8a;margin-bottom:24px}
+    .login-box input{width:100%;background:#1a1a36;border:1px solid #2a2a4a;border-radius:8px;padding:12px 16px;color:#fff;font-size:14px;outline:none;margin-bottom:12px}
+    .login-box input:focus{border-color:#7c5cfc}
+    .login-box .err{color:#f43f5e;font-size:12px;margin-bottom:12px;display:none}
+    .login-box .link{color:#7c5cfc;font-size:12px;cursor:pointer;margin-top:8px;display:inline-block}
+    .login-box .link:hover{text-decoration:underline}
+    .login-box .success{color:#4ade80;font-size:12px;margin-bottom:12px;display:none}
+    .hide{display:none!important}
+    .dashboard{display:none}
+    .dashboard.show{display:block}
+    .header{background:#12122a;border-bottom:1px solid #2a2a4a;padding:14px 32px;display:flex;align-items:center;justify-content:space-between}
+    .header h1{font-size:18px}
+    .header h1 span{color:#7c5cfc}
+    .header-right{display:flex;gap:12px;align-items:center}
+    .status{font-size:11px;padding:4px 10px;border-radius:20px}
+    .status.ok{background:rgba(74,222,128,.15);color:#4ade80}
+    .status.err{background:rgba(244,63,94,.15);color:#f43f5e}
+    .container{max-width:1200px;margin:0 auto;padding:24px}
+    .stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px}
+    .stat-card{background:#12122a;border:1px solid #2a2a4a;border-radius:10px;padding:16px;text-align:center}
+    .stat-card .value{font-size:28px;font-weight:700;color:#7c5cfc}
+    .stat-card .label{font-size:11px;color:#6a6a8a;margin-top:2px}
+    .stat-card.green .value{color:#4ade80}
+    .stat-card.red .value{color:#f43f5e}
+    .stat-card.gold .value{color:#fbbf24}
+    .tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid #2a2a4a}
+    .tab{padding:10px 20px;color:#6a6a8a;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+    .tab:hover{color:#aaa}
+    .tab.active{color:#7c5cfc;border-bottom-color:#7c5cfc}
+    .panel{display:none}
+    .panel.active{display:block}
+    .form-row{background:#12122a;border:1px solid #2a2a4a;border-radius:10px;padding:16px;display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
+    .field{display:flex;flex-direction:column;gap:4px}
+    .field label{font-size:11px;color:#6a6a8a;font-weight:600;text-transform:uppercase}
+    .field input,.field select{background:#1a1a36;border:1px solid #2a2a4a;border-radius:6px;padding:8px 12px;color:#fff;font-size:13px;outline:none;min-width:140px}
+    .field input:focus,.field select:focus{border-color:#7c5cfc}
+    .btn{padding:8px 18px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+    .btn-primary{background:#7c5cfc;color:#fff}
+    .btn-primary:hover{background:#6a4ce0}
+    .btn-danger{background:#f43f5e;color:#fff}
+    .btn-danger:hover{background:#dc2626}
+    .btn-sm{font-size:11px;padding:4px 10px}
+    .btn-ghost{background:transparent;color:#6a6a8a;border:1px solid #2a2a4a}
+    .btn-ghost:hover{color:#fff;border-color:#7c5cfc}
+    .btn-full{width:100%;padding:12px}
+    .result-box{background:#0f1a0f;border:1px solid #2d5a2d;border-radius:10px;padding:16px;margin-top:12px;display:none}
+    .result-box.show{display:block}
+    .result-key{font-size:22px;font-weight:700;color:#4ade80;font-family:monospace;letter-spacing:2px;margin:8px 0}
+    .result-raw{font-size:11px;color:#6a6a8a;word-break:break-all;background:#1a1a36;padding:8px;border-radius:4px;margin-top:8px}
+    .result-meta{font-size:12px;color:#6a6a8a;margin-top:8px}
+    .table-wrap{background:#12122a;border:1px solid #2a2a4a;border-radius:10px;overflow:hidden}
+    .table-bar{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a2a4a}
+    .table-bar .count{font-size:12px;color:#6a6a8a}
+    .filters{display:flex;gap:8px}
+    .filters select{background:#1a1a36;border:1px solid #2a2a4a;border-radius:6px;padding:4px 8px;color:#fff;font-size:12px;outline:none}
+    table{width:100%;border-collapse:collapse}
+    th{background:#1a1a36;padding:10px 14px;text-align:left;font-size:11px;color:#6a6a8a;font-weight:600;text-transform:uppercase}
+    td{padding:10px 14px;font-size:13px;border-bottom:1px solid #1a1a36}
+    tr:hover td{background:rgba(124,92,252,.04)}
+    .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+    .badge-pro{background:rgba(124,92,252,.2);color:#b8a9ff}
+    .badge-lifetime{background:rgba(74,222,128,.2);color:#4ade80}
+    .badge-monthly{background:rgba(96,165,250,.2);color:#60a5fa}
+    .badge-annual{background:rgba(251,191,36,.2);color:#fbbf24}
+    .badge-active{background:rgba(74,222,128,.15);color:#4ade80}
+    .badge-expired{background:rgba(251,191,36,.2);color:#fbbf24}
+    .badge-revoked{background:rgba(244,63,94,.2);color:#f43f5e}
+    .empty-msg{text-align:center;padding:40px;color:#3a3a5a;font-size:14px}
+    .toast{position:fixed;bottom:20px;right:20px;background:#4ade80;color:#0a0a1a;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;transform:translateY(100px);opacity:0;transition:all .3s;z-index:999}
+    .toast.show{transform:translateY(0);opacity:1}
+    .toast.error{background:#f43f5e;color:#fff}
+    .loader{display:inline-block;width:14px;height:14px;border:2px solid #3a3a5a;border-top-color:#7c5cfc;border-radius:50%;animation:spin .6s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .settings-section{background:#12122a;border:1px solid #2a2a4a;border-radius:10px;padding:20px;margin-bottom:16px}
+    .settings-section h3{font-size:14px;margin-bottom:12px;color:#8a8aaa}
+    @media(max-width:900px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr)}.form-row{flex-direction:column}}
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-gate" id="loginGate">
+  <div class="login-box">
+    <h1><span>AdOff</span> Admin</h1>
+    <p>License Management Dashboard</p>
+    <div class="err" id="loginErr"></div>
+    <div class="success" id="loginSuccess"></div>
+
+    <!-- Login form -->
+    <div id="formLogin">
+      <input type="text" id="inUser" placeholder="Username" autocomplete="username">
+      <input type="password" id="inPass" placeholder="Password" autocomplete="current-password">
+      <button class="btn btn-primary btn-full" id="btnLogin">Accedi</button>
+      <div class="link" id="showReset">Password dimenticata?</div>
+    </div>
+
+    <!-- Reset form -->
+    <div id="formReset" class="hide">
+      <input type="email" id="inResetEmail" placeholder="Email associata all'account">
+      <button class="btn btn-primary btn-full" id="btnReset">Invia link di reset</button>
+      <div class="link" id="showLogin">Torna al login</div>
+    </div>
+
+    <!-- Reset confirm form (shown via ?reset=TOKEN) -->
+    <div id="formResetConfirm" class="hide">
+      <p style="margin-bottom:16px;color:#fbbf24;">Imposta la nuova password</p>
+      <input type="password" id="inNewPass" placeholder="Nuova password (min 8 caratteri)">
+      <input type="password" id="inNewPass2" placeholder="Conferma password">
+      <button class="btn btn-primary btn-full" id="btnResetConfirm">Salva nuova password</button>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <div class="header">
+    <h1><span>AdOff</span> Admin</h1>
+    <div class="header-right">
+      <div class="status ok" id="connStatus">Connesso</div>
+      <button class="btn btn-ghost btn-sm" id="btnRefresh">Refresh</button>
+      <button class="btn btn-ghost btn-sm" id="btnLogout">Logout</button>
+    </div>
+  </div>
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="value" id="sTotal">-</div><div class="label">Totali</div></div>
+      <div class="stat-card green"><div class="value" id="sActive">-</div><div class="label">Attive</div></div>
+      <div class="stat-card gold"><div class="value" id="sLifetime">-</div><div class="label">Lifetime</div></div>
+      <div class="stat-card red"><div class="value" id="sExpired">-</div><div class="label">Scadute</div></div>
+      <div class="stat-card red"><div class="value" id="sRevoked">-</div><div class="label">Revocate</div></div>
+      <div class="stat-card"><div class="value" id="sDevices">-</div><div class="label">Dispositivi</div></div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-tab="licenses">Licenze</div>
+      <div class="tab" data-tab="generate">Genera</div>
+      <div class="tab" data-tab="validate">Valida</div>
+      <div class="tab" data-tab="settings">Impostazioni</div>
+    </div>
+    <!-- Licenses -->
+    <div class="panel active" id="tab-licenses">
+      <div class="table-wrap">
+        <div class="table-bar">
+          <div class="count" id="licCount">Caricamento...</div>
+          <div class="filters">
+            <select id="filterPlan"><option value="">Tutti i piani</option><option value="pro">Pro</option><option value="lifetime">Lifetime</option><option value="monthly">Monthly</option><option value="annual">Annual</option></select>
+            <select id="filterStatus"><option value="">Tutti gli stati</option><option value="active">Attive</option><option value="expired">Scadute</option><option value="revoked">Revocate</option></select>
+          </div>
+        </div>
+        <table><thead><tr><th>Key</th><th>Email</th><th>Piano</th><th>Scadenza</th><th>Device</th><th>Stato</th><th>Azioni</th></tr></thead>
+        <tbody id="licBody"><tr><td colspan="7" class="empty-msg"><span class="loader"></span></td></tr></tbody></table>
+      </div>
+    </div>
+    <!-- Generate -->
+    <div class="panel" id="tab-generate">
+      <div class="form-row">
+        <div class="field"><label>Piano</label><select id="genPlan"><option value="pro">Pro</option><option value="lifetime">Lifetime</option><option value="monthly">Monthly</option><option value="annual">Annual</option></select></div>
+        <div class="field"><label>Mesi</label><input type="number" id="genMonths" value="1" min="1" max="120"></div>
+        <div class="field"><label>Email</label><input type="email" id="genEmail" placeholder="user@example.com" style="min-width:220px"></div>
+        <div class="field"><label>Max Device</label><input type="number" id="genDevices" value="3" min="1" max="10"></div>
+        <button class="btn btn-primary" id="btnGen">Genera Key</button>
+      </div>
+      <div class="result-box" id="genResult">
+        <div style="font-size:12px;color:#6a6a8a">License Key generata:</div>
+        <div class="result-key" id="genKey"></div>
+        <button class="btn btn-ghost btn-sm" id="btnCopyKey">Copia</button>
+        <div class="result-raw" id="genRaw"></div>
+        <div class="result-meta" id="genMeta"></div>
+      </div>
+    </div>
+    <!-- Validate -->
+    <div class="panel" id="tab-validate">
+      <div class="form-row">
+        <div class="field" style="flex:2"><label>License Key (raw o display)</label><input type="text" id="valKey" placeholder="ADOFF-XXXX-XXXX-XXXX o raw key..." style="width:100%"></div>
+        <button class="btn btn-primary" id="btnVal">Valida</button>
+      </div>
+      <div class="result-box" id="valResult"></div>
+    </div>
+    <!-- Settings -->
+    <div class="panel" id="tab-settings">
+      <div class="settings-section">
+        <h3>Cambia Password</h3>
+        <div class="form-row">
+          <div class="field"><label>Password attuale</label><input type="password" id="setCurPass"></div>
+          <div class="field"><label>Nuova password</label><input type="password" id="setNewPass"></div>
+          <div class="field"><label>Conferma</label><input type="password" id="setNewPass2"></div>
+          <button class="btn btn-primary" id="btnChgPass">Cambia</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3>Email di recupero</h3>
+        <div class="form-row">
+          <div class="field" style="flex:2"><label>Email</label><input type="email" id="setEmail" placeholder="email@example.com" style="width:100%"></div>
+          <button class="btn btn-primary" id="btnSetEmail">Salva</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const API = "https://api.adoff.app";
+let token = "";
+
+function toast(msg, err) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = "toast show" + (err ? " error" : "");
+  setTimeout(() => t.className = "toast", 3000);
+}
+function showErr(msg) { const e = document.getElementById("loginErr"); e.textContent = msg; e.style.display = "block"; }
+function hideErr() { document.getElementById("loginErr").style.display = "none"; }
+function showSuccess(msg) { const e = document.getElementById("loginSuccess"); e.textContent = msg; e.style.display = "block"; }
+
+async function api(path, opts = {}) {
+  const h = { "Content-Type": "application/json", ...opts.headers || {} };
+  if (token) h["X-Admin-Token"] = token;
+  const r = await fetch(API + path, { ...opts, headers: h });
+  return r.json();
+}
+
+// ---- Login ----
+async function doLogin() {
+  hideErr();
+  const username = document.getElementById("inUser").value.trim();
+  const password = document.getElementById("inPass").value;
+  if (!username || !password) { showErr("Inserisci username e password"); return; }
+  try {
+    const data = await api("/admin/login", { method: "POST", body: JSON.stringify({ username, password }) });
+    if (data.ok) {
+      token = data.token;
+      sessionStorage.setItem("adoff_session", token);
+      document.getElementById("loginGate").classList.add("hide");
+      document.getElementById("dashboard").classList.add("show");
+      loadDashboard();
+    } else {
+      showErr(data.error || "Login fallito");
+    }
+  } catch (e) { showErr("API non raggiungibile: " + e.message); }
+}
+
+document.getElementById("btnLogin").addEventListener("click", doLogin);
+document.getElementById("inPass").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+
+// Auto-restore session
+const savedSession = sessionStorage.getItem("adoff_session");
+if (savedSession) {
+  token = savedSession;
+  api("/admin/stats").then(d => {
+    if (d.ok) {
+      document.getElementById("loginGate").classList.add("hide");
+      document.getElementById("dashboard").classList.add("show");
+      loadDashboard();
+    } else { token = ""; sessionStorage.removeItem("adoff_session"); }
+  }).catch(() => { token = ""; sessionStorage.removeItem("adoff_session"); });
+}
+
+// Toggle login/reset forms
+document.getElementById("showReset").addEventListener("click", () => {
+  document.getElementById("formLogin").classList.add("hide");
+  document.getElementById("formReset").classList.remove("hide");
+  hideErr();
+});
+document.getElementById("showLogin").addEventListener("click", () => {
+  document.getElementById("formReset").classList.add("hide");
+  document.getElementById("formLogin").classList.remove("hide");
+  hideErr();
+});
+
+// Reset password
+document.getElementById("btnReset").addEventListener("click", async () => {
+  hideErr();
+  const email = document.getElementById("inResetEmail").value.trim();
+  if (!email) { showErr("Inserisci la tua email"); return; }
+  try {
+    const data = await api("/admin/reset-password", { method: "POST", body: JSON.stringify({ email }) });
+    showSuccess(data.message || "Se l'email e' registrata, riceverai un link di reset.");
+    document.getElementById("loginErr").style.display = "none";
+  } catch (e) { showErr("Errore: " + e.message); }
+});
+
+// Handle ?reset=TOKEN in URL
+const urlParams = new URLSearchParams(window.location.search);
+const resetToken = urlParams.get("reset");
+if (resetToken) {
+  document.getElementById("formLogin").classList.add("hide");
+  document.getElementById("formResetConfirm").classList.remove("hide");
+}
+
+document.getElementById("btnResetConfirm").addEventListener("click", async () => {
+  hideErr();
+  const p1 = document.getElementById("inNewPass").value;
+  const p2 = document.getElementById("inNewPass2").value;
+  if (!p1 || p1.length < 8) { showErr("Password min 8 caratteri"); return; }
+  if (p1 !== p2) { showErr("Le password non coincidono"); return; }
+  try {
+    const data = await api("/admin/reset-confirm", { method: "POST", body: JSON.stringify({ resetToken, newPassword: p1 }) });
+    if (data.ok) {
+      showSuccess("Password resettata! Ora puoi fare login.");
+      document.getElementById("formResetConfirm").classList.add("hide");
+      document.getElementById("formLogin").classList.remove("hide");
+      window.history.replaceState({}, "", window.location.pathname);
+    } else { showErr(data.error || "Errore"); }
+  } catch (e) { showErr("Errore: " + e.message); }
+});
+
+// Logout
+document.getElementById("btnLogout").addEventListener("click", () => {
+  sessionStorage.removeItem("adoff_session");
+  token = "";
+  document.getElementById("loginGate").classList.remove("hide");
+  document.getElementById("dashboard").classList.remove("show");
+  document.getElementById("inUser").value = "";
+  document.getElementById("inPass").value = "";
+});
+
+// ---- Dashboard ----
+async function loadDashboard() { await Promise.all([loadStats(), loadLicenses()]); }
+document.getElementById("btnRefresh").addEventListener("click", loadDashboard);
+
+async function loadStats() {
+  try {
+    const d = await api("/admin/stats");
+    if (!d.ok) return;
+    document.getElementById("sTotal").textContent = d.licenses.total;
+    document.getElementById("sActive").textContent = d.licenses.active;
+    document.getElementById("sLifetime").textContent = d.licenses.lifetime;
+    document.getElementById("sExpired").textContent = d.licenses.expired;
+    document.getElementById("sRevoked").textContent = d.licenses.revoked;
+    document.getElementById("sDevices").textContent = d.devices.total;
+    document.getElementById("connStatus").className = "status ok";
+    document.getElementById("connStatus").textContent = "Connesso";
+  } catch (_) {
+    document.getElementById("connStatus").className = "status err";
+    document.getElementById("connStatus").textContent = "Offline";
+  }
+}
+
+let allLicenses = [];
+// Pending newly-created licenses kept until KV list catches up (eventual consistency)
+const pendingNewLicenses = new Map(); // key -> {license, expiresAt}
+const PENDING_TTL_MS = 90000;
+
+async function loadLicenses() {
+  const p = document.getElementById("filterPlan").value;
+  const s = document.getElementById("filterStatus").value;
+  let qs = "?limit=200";
+  if (p) qs += "&plan=" + p;
+  if (s) qs += "&status=" + s;
+  // Don't show loader if we already have data (refresh-in-place)
+  if (!allLicenses.length) {
+    document.getElementById("licBody").innerHTML = '<tr><td colspan="7" class="empty-msg"><span class="loader"></span></td></tr>';
+  }
+  try {
+    const d = await api("/admin/licenses" + qs);
+    if (!d.ok) return;
+    let merged = d.licenses || [];
+    const now = Date.now();
+    for (const [pk, entry] of [...pendingNewLicenses]) {
+      if (entry.expiresAt < now) { pendingNewLicenses.delete(pk); continue; }
+      const lic = entry.license;
+      const seenByServer = merged.some(l => l.key === lic.key || l.raw === lic.raw);
+      if (seenByServer) { pendingNewLicenses.delete(pk); continue; }
+      if (p && lic.plan !== p) continue;
+      if (s && lic.status !== s) continue;
+      merged = [lic, ...merged];
+    }
+    allLicenses = merged;
+    renderLicenses();
+    document.getElementById("licCount").textContent = allLicenses.length + " licenze" + (d.hasMore ? " (altri disponibili)" : "");
+  } catch (_) {
+    document.getElementById("licBody").innerHTML = '<tr><td colspan="7" class="empty-msg">Errore caricamento</td></tr>';
+  }
+}
+
+function renderLicenses() {
+  const tbody = document.getElementById("licBody");
+  if (!allLicenses.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty-msg">Nessuna licenza</td></tr>'; return; }
+  tbody.innerHTML = allLicenses.map((l, i) => {
+    const plan = l.plan || "pro";
+    const bc = plan === "lifetime" ? "lifetime" : plan === "annual" ? "annual" : plan === "monthly" ? "monthly" : "pro";
+    const st = l.status || "active";
+    const stLabel = st === "active" ? "ATTIVA" : st === "expired" ? "SCADUTA" : "REVOCATA";
+    return `<tr>
+      <td style="font-family:monospace;font-size:12px">${l.key || "\u2014"}</td>
+      <td>${l.email || "\u2014"}</td>
+      <td><span class="badge badge-${bc}">${plan.toUpperCase()}</span></td>
+      <td>${l.expiresHuman || "\u2014"}</td>
+      <td>${typeof l.devices === "number" ? l.devices + "/" + (l.maxDevices || 3) : "\u2014"}</td>
+      <td><span class="badge badge-${st}">${stLabel}</span></td>
+      <td>${st !== "revoked" ? '<button class="btn btn-danger btn-sm" onclick="doRevoke(' + i + ')">Revoca</button>' : "\u2014"}</td></tr>`;
+  }).join("");
+}
+
+document.getElementById("filterPlan").addEventListener("change", loadLicenses);
+document.getElementById("filterStatus").addEventListener("change", loadLicenses);
+
+window.doRevoke = async function(i) {
+  if (!confirm("Revocare questa licenza?")) return;
+  const l = allLicenses[i];
+  const raw = l.rawFull || l.raw || "";
+  if (!raw || raw.endsWith("...")) { toast("Raw troncata, usa tab Valida", true); return; }
+  try {
+    const d = await api("/revoke", { method: "POST", body: JSON.stringify({ key: raw }) });
+    if (d.ok) { toast("Revocata!"); loadDashboard(); } else toast("Errore: " + (d.error || ""), true);
+  } catch (e) { toast(e.message, true); }
+};
+
+// Tabs
+document.querySelectorAll(".tab").forEach(t => {
+  t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(x => x.classList.remove("active"));
+    t.classList.add("active");
+    document.getElementById("tab-" + t.dataset.tab).classList.add("active");
+    if (t.dataset.tab === "licenses") loadLicenses();
+  });
+});
+
+// Generate
+document.getElementById("genPlan").addEventListener("change", () => {
+  const life = document.getElementById("genPlan").value === "lifetime";
+  document.getElementById("genMonths").disabled = life;
+  if (life) document.getElementById("genMonths").value = "0";
+});
+document.getElementById("btnGen").addEventListener("click", async () => {
+  const plan = document.getElementById("genPlan").value;
+  const months = parseInt(document.getElementById("genMonths").value) || 1;
+  const email = document.getElementById("genEmail").value;
+  const devices = parseInt(document.getElementById("genDevices").value) || 3;
+  try {
+    const d = await api("/admin/generate-key", { method: "POST", body: JSON.stringify({ plan, months, email, devices, deviceLimit: devices }) });
+    if (!d.ok) { toast(d.error || "Errore", true); return; }
+    document.getElementById("genKey").textContent = d.key;
+    document.getElementById("genRaw").textContent = "Raw: " + (d.raw || "");
+    document.getElementById("genMeta").textContent = "Piano: " + (d.plan || plan) + " | Email: " + (d.email || email || "\u2014") + " | Scadenza: " + (d.expiresHuman || "\u2014") + " | Max " + devices + " device";
+    document.getElementById("genResult").classList.add("show");
+    toast("Key generata!");
+
+    // Add new license to local cache immediately (KV list has eventual consistency)
+    const newLic = {
+      raw: d.raw,
+      key: d.key,
+      email: email || "",
+      plan: d.plan || plan,
+      status: "active",
+      expires: null,
+      expiresHuman: d.expiresHuman || (plan === "lifetime" ? "LIFETIME" : "\u2014"),
+      devices: 0,
+      maxDevices: devices,
+      createdAt: Date.now(),
+    };
+    // Track as pending so refreshes keep it visible until server catches up
+    pendingNewLicenses.set(d.key, { license: newLic, expiresAt: Date.now() + PENDING_TTL_MS });
+    allLicenses = [newLic, ...allLicenses];
+    renderLicenses();
+
+    // Refresh stats + retry list (merge with pending keeps new license visible)
+    loadStats();
+    setTimeout(loadLicenses, 1500);
+    setTimeout(loadLicenses, 5000);
+    setTimeout(loadLicenses, 15000);
+  } catch (e) { toast(e.message, true); }
+});
+document.getElementById("btnCopyKey").addEventListener("click", () => {
+  navigator.clipboard.writeText(document.getElementById("genKey").textContent).then(() => toast("Copiata!"));
+});
+
+// Validate
+document.getElementById("btnVal").addEventListener("click", async () => {
+  const key = document.getElementById("valKey").value.trim();
+  if (!key) { toast("Inserisci una key", true); return; }
+  const el = document.getElementById("valResult");
+  try {
+    const d = await api("/validate", { method: "POST", body: JSON.stringify({ key }) });
+    el.innerHTML = '<pre style="color:' + (d.valid ? "#4ade80" : "#f43f5e") + ';font-size:13px;white-space:pre-wrap">' + JSON.stringify(d, null, 2) + "</pre>";
+    el.classList.add("show");
+  } catch (e) { el.innerHTML = '<pre style="color:#f43f5e">Errore: ' + e.message + "</pre>"; el.classList.add("show"); }
+});
+
+// Settings: Change password
+document.getElementById("btnChgPass").addEventListener("click", async () => {
+  const cur = document.getElementById("setCurPass").value;
+  const np = document.getElementById("setNewPass").value;
+  const np2 = document.getElementById("setNewPass2").value;
+  if (!cur) { toast("Inserisci la password attuale", true); return; }
+  if (!np || np.length < 8) { toast("Min 8 caratteri", true); return; }
+  if (np !== np2) { toast("Le password non coincidono", true); return; }
+  try {
+    const d = await api("/admin/change-password", { method: "POST", body: JSON.stringify({ currentPassword: cur, newPassword: np }) });
+    if (d.ok) { toast("Password cambiata!"); document.getElementById("setCurPass").value = ""; document.getElementById("setNewPass").value = ""; document.getElementById("setNewPass2").value = ""; }
+    else toast(d.error || "Errore", true);
+  } catch (e) { toast(e.message, true); }
+});
+
+// Settings: Set recovery email
+document.getElementById("btnSetEmail").addEventListener("click", async () => {
+  const email = document.getElementById("setEmail").value.trim();
+  if (!email) { toast("Inserisci un'email", true); return; }
+  try {
+    const d = await api("/admin/change-password", { method: "POST", body: JSON.stringify({ email }) });
+    if (d.ok) toast("Email salvata!");
+    else toast(d.error || "Errore", true);
+  } catch (e) { toast(e.message, true); }
+});
+</script>
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

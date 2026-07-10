@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdOff — Ci dispiace vederti andare</title>
+  <meta name="description" content="Aiutaci a migliorare AdOff: dicci perché l'hai disinstallato." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <style>
+    :root {
+      --primary: #7c5cfc;
+      --primary-light: #9d82fd;
+      --primary-dark: #5a3de8;
+      --bg: #0a0a1a;
+      --card: #12122a;
+      --success: #4ade80;
+      --text: #e2e2f0;
+      --text-muted: #8888aa;
+      --border: rgba(124, 92, 252, 0.18);
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 32px; text-decoration: none;
+    }
+    .logo img { width: 40px; height: 40px; }
+    .logo span { font-family: 'Lexend', sans-serif; font-weight: 700; font-size: 24px; color: var(--text); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+      max-width: 520px;
+      width: 100%;
+      box-shadow: var(--shadow);
+    }
+    h1 { font-family: 'Lexend', sans-serif; font-size: 24px; margin-bottom: 8px; text-align: center; }
+    .subtitle { color: var(--text-muted); margin-bottom: 28px; font-size: 15px; line-height: 1.5; text-align: center; }
+    .reasons { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+    .reason-btn {
+      display: flex; align-items: center; gap: 12px;
+      width: 100%; padding: 15px 18px;
+      background: rgba(124, 92, 252, 0.06);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text); font-size: 15px; text-align: left;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .reason-btn:hover { border-color: var(--primary); background: rgba(124, 92, 252, 0.12); }
+    .reason-btn.selected { border-color: var(--primary); background: rgba(124, 92, 252, 0.18); box-shadow: 0 0 0 1px var(--primary); }
+    .reason-btn .ico { font-size: 18px; line-height: 1; }
+    textarea {
+      width: 100%; min-height: 84px; resize: vertical;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-size: 14px; font-family: inherit;
+      padding: 12px 14px; margin-bottom: 18px;
+    }
+    textarea:focus { outline: none; border-color: var(--primary); }
+    .submit-btn {
+      width: 100%; padding: 15px 20px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .submit-btn:hover { filter: brightness(1.1); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .reinstall { text-align: center; margin-top: 18px; font-size: 13px; color: var(--text-muted); }
+    .reinstall a { color: var(--primary-light); }
+    .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+    .thanks { text-align: center; }
+    .thanks .check {
+      width: 64px; height: 64px; margin: 0 auto 20px;
+      background: rgba(74, 222, 128, 0.15); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .thanks .check svg { width: 32px; height: 32px; color: var(--success); }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <a href="/" class="logo">
+    <img src="assets/logo.svg" alt="AdOff" />
+    <span>AdOff</span>
+  </a>
+
+  <div class="card">
+    <!-- Survey -->
+    <div id="surveyState">
+      <h1 id="t_title">Ci dispiace vederti andare</h1>
+      <p class="subtitle" id="t_sub">Una domanda veloce: perché hai disinstallato AdOff? Ci aiuta a migliorare.</p>
+
+      <div class="reasons" id="reasons">
+        <button type="button" class="reason-btn" data-reason="broken_site"><span class="ico">🧩</span><span class="lbl" data-k="broken_site">Un sito non funzionava più</span></button>
+        <button type="button" class="reason-btn" data-reason="ads_visible"><span class="ico">👀</span><span class="lbl" data-k="ads_visible">Vedevo ancora le pubblicità</span></button>
+        <button type="button" class="reason-btn" data-reason="confusing"><span class="ico">😕</span><span class="lbl" data-k="confusing">Troppo complicato / non capivo Free vs Pro</span></button>
+        <button type="button" class="reason-btn" data-reason="performance"><span class="ico">🐌</span><span class="lbl" data-k="performance">Rallentava il browser</span></button>
+        <button type="button" class="reason-btn" data-reason="found_better"><span class="ico">🔀</span><span class="lbl" data-k="found_better">Ho trovato un'alternativa migliore</span></button>
+        <button type="button" class="reason-btn" data-reason="other"><span class="ico">❔</span><span class="lbl" data-k="other">Altro motivo</span></button>
+      </div>
+
+      <textarea id="comment" maxlength="500" data-ph="Vuoi dirci di più? (facoltativo — es. quale sito non funzionava)"></textarea>
+
+      <!-- Honeypot anti-bot -->
+      <input type="text" id="hp_website" class="hp" name="website" tabindex="-1" autocomplete="off" value="" />
+
+      <button type="button" class="submit-btn" id="submitBtn" disabled data-k="submit">Invia feedback</button>
+
+      <p class="reinstall" id="t_reinstall">Cambiato idea? <a href="/install.html">Reinstalla AdOff</a></p>
+    </div>
+
+    <!-- Thank you -->
+    <div id="thanksState" class="hidden thanks">
+      <div class="check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+      <h1 id="t_thanks">Grazie!</h1>
+      <p class="subtitle" id="t_thanks_sub">Il tuo feedback ci aiuta a rendere AdOff migliore per tutti.</p>
+      <p class="reinstall">Cambiato idea? <a href="/install.html" data-k="reinstall_link">Reinstalla AdOff</a></p>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "https://api.adoff.app";
+
+    // i18n leggero — fallback EN. Chiavi = data-k dei bottoni + testi fissi.
+    const I18N = {
+      it: { title:"Ci dispiace vederti andare", sub:"Una domanda veloce: perché hai disinstallato AdOff? Ci aiuta a migliorare.",
+            broken_site:"Un sito non funzionava più", ads_visible:"Vedevo ancora le pubblicità", confusing:"Troppo complicato / non capivo Free vs Pro", performance:"Rallentava il browser", found_better:"Ho trovato un'alternativa migliore", other:"Altro motivo",
+            ph:"Vuoi dirci di più? (facoltativo — es. quale sito non funzionava)", submit:"Invia feedback", reinstall:"Cambiato idea? ", reinstall_link:"Reinstalla AdOff", thanks:"Grazie!", thanks_sub:"Il tuo feedback ci aiuta a rendere AdOff migliore per tutti." },
+      en: { title:"Sorry to see you go", sub:"Quick question: why did you uninstall AdOff? It helps us improve.",
+            broken_site:"A website stopped working", ads_visible:"I still saw ads", confusing:"Too confusing / didn't get Free vs Pro", performance:"It slowed my browser down", found_better:"I found a better alternative", other:"Another reason",
+            ph:"Want to tell us more? (optional — e.g. which site broke)", submit:"Send feedback", reinstall:"Changed your mind? ", reinstall_link:"Reinstall AdOff", thanks:"Thank you!", thanks_sub:"Your feedback helps us make AdOff better for everyone." },
+      de: { title:"Schade, dass du gehst", sub:"Kurze Frage: Warum hast du AdOff deinstalliert? Das hilft uns.",
+            broken_site:"Eine Website funktionierte nicht mehr", ads_visible:"Ich sah weiterhin Werbung", confusing:"Zu kompliziert / Free vs Pro unklar", performance:"Es hat den Browser verlangsamt", found_better:"Ich fand eine bessere Alternative", other:"Anderer Grund",
+            ph:"Mehr dazu? (optional — z. B. welche Seite kaputt war)", submit:"Feedback senden", reinstall:"Doch geblieben? ", reinstall_link:"AdOff neu installieren", thanks:"Danke!", thanks_sub:"Dein Feedback macht AdOff für alle besser." },
+      fr: { title:"Désolé de te voir partir", sub:"Une question rapide : pourquoi as-tu désinstallé AdOff ? Ça nous aide.",
+            broken_site:"Un site ne marchait plus", ads_visible:"Je voyais encore des pubs", confusing:"Trop compliqué / Free vs Pro pas clair", performance:"Ça ralentissait le navigateur", found_better:"J'ai trouvé une meilleure alternative", other:"Autre raison",
+            ph:"Tu veux en dire plus ? (facultatif — ex. quel site)", submit:"Envoyer", reinstall:"Changé d'avis ? ", reinstall_link:"Réinstaller AdOff", thanks:"Merci !", thanks_sub:"Ton retour rend AdOff meilleur pour tout le monde." },
+      es: { title:"Lamentamos que te vayas", sub:"Una pregunta rápida: ¿por qué desinstalaste AdOff? Nos ayuda a mejorar.",
+            broken_site:"Una web dejó de funcionar", ads_visible:"Seguía viendo anuncios", confusing:"Muy complicado / no entendí Free vs Pro", performance:"Ralentizaba el navegador", found_better:"Encontré una alternativa mejor", other:"Otro motivo",
+            ph:"¿Quieres contarnos más? (opcional — p. ej. qué web)", submit:"Enviar", reinstall:"¿Cambiaste de idea? ", reinstall_link:"Reinstalar AdOff", thanks:"¡Gracias!", thanks_sub:"Tu opinión hace AdOff mejor para todos." },
+      pt: { title:"Que pena ver você partir", sub:"Pergunta rápida: por que desinstalou o AdOff? Isso nos ajuda.",
+            broken_site:"Um site parou de funcionar", ads_visible:"Eu ainda via anúncios", confusing:"Complicado demais / Free vs Pro", performance:"Deixava o navegador lento", found_better:"Achei uma alternativa melhor", other:"Outro motivo",
+            ph:"Quer contar mais? (opcional — ex. qual site)", submit:"Enviar", reinstall:"Mudou de ideia? ", reinstall_link:"Reinstalar AdOff", thanks:"Obrigado!", thanks_sub:"Seu feedback torna o AdOff melhor para todos." },
+    };
+
+    function pickLang() {
+      const q = new URLSearchParams(location.search).get("lang");
+      const cand = (q || navigator.language || "en").slice(0, 2).toLowerCase();
+      return I18N[cand] ? cand : "en";
+    }
+
+    const lang = pickLang();
+    const t = I18N[lang];
+    document.documentElement.lang = lang;
+
+    // Applica traduzioni
+    document.getElementById("t_title").textContent = t.title;
+    document.getElementById("t_sub").textContent = t.sub;
+    document.querySelectorAll(".reason-btn .lbl").forEach(el => {
+      const k = el.getAttribute("data-k"); if (t[k]) el.textContent = t[k];
+    });
+    const commentEl = document.getElementById("comment");
+    commentEl.placeholder = t.ph;
+    document.getElementById("submitBtn").textContent = t.submit;
+    document.getElementById("t_thanks").textContent = t.thanks;
+    document.getElementById("t_thanks_sub").textContent = t.thanks_sub;
+    document.querySelectorAll('[data-k="reinstall_link"]').forEach(el => el.textContent = t.reinstall_link);
+    document.getElementById("t_reinstall").innerHTML = t.reinstall + '<a href="/install.html">' + t.reinstall_link + '</a>';
+
+    // Stato selezione
+    let selectedReason = null;
+    const submitBtn = document.getElementById("submitBtn");
+    document.querySelectorAll(".reason-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".reason-btn").forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        selectedReason = btn.getAttribute("data-reason");
+        submitBtn.disabled = false;
+      });
+    });
+
+    const params = new URLSearchParams(location.search);
+    const version = params.get("v") || "";
+    const wasPro = params.get("pro") === "1";
+
+    let sent = false;
+    async function submit() {
+      if (sent || !selectedReason) return;
+      sent = true;
+      submitBtn.disabled = true;
+      const payload = {
+        reason: selectedReason,
+        comment: commentEl.value.trim().slice(0, 500),
+        version: version,
+        wasPro: wasPro,
+        website: document.getElementById("hp_website").value, // honeypot
+      };
+      try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 8000);
+        await fetch(API_URL + "/track/uninstall", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: ctrl.signal,
+        });
+        clearTimeout(tid);
+      } catch (_) { /* best-effort: mostriamo comunque il grazie */ }
+      document.getElementById("surveyState").classList.add("hidden");
+      document.getElementById("thanksState").classList.remove("hidden");
+    }
+    submitBtn.addEventListener("click", submit);
+  </script>
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acquisto completato - AdOff</title>
+  <meta name="description" content="Acquisto completato, attiva il tuo account" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <style>
+    :root {
+      --primary: #7c5cfc;
+      --primary-light: #9d82fd;
+      --primary-dark: #5a3de8;
+      --bg: #0a0a1a;
+      --card: #12122a;
+      --success: #4ade80;
+      --error: #f43f5e;
+      --text: #e2e2f0;
+      --text-muted: #8888aa;
+      --border: rgba(124, 92, 252, 0.18);
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 40px;
+      text-decoration: none;
+    }
+    .logo img { width: 40px; height: 40px; }
+    .logo span { font-family: 'Lexend', sans-serif; font-weight: 700; font-size: 24px; color: var(--text); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      background: rgba(74, 222, 128, 0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+    .success-icon svg {
+      width: 36px;
+      height: 36px;
+      color: var(--success);
+    }
+    h1 {
+      font-family: 'Lexend', sans-serif;
+      font-size: 26px;
+      margin-bottom: 8px;
+      color: var(--success);
+    }
+    .subtitle {
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    .license-card {
+      background: rgba(124, 92, 252, 0.1);
+      border: 1px solid var(--primary);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    .license-card .label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .license-card .key {
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+      font-size: 14px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 14px 16px;
+      border-radius: 8px;
+      word-break: break-all;
+      user-select: all;
+      color: var(--primary-light);
+    }
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px 20px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { filter: brightness(1.1); }
+    .copy-btn.copied { background: var(--success); }
+    .copy-btn svg { width: 18px; height: 18px; }
+    .instructions {
+      text-align: left;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .instructions ol {
+      padding-left: 20px;
+    }
+    .instructions li {
+      margin-bottom: 8px;
+    }
+    .instructions a {
+      color: var(--primary-light);
+    }
+    .error-card {
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px solid var(--error);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+    }
+    .error-card h2 {
+      color: var(--error);
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    .error-card p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <a href="/" class="logo">
+    <img src="assets/logo.svg" alt="AdOff" />
+    <span>AdOff</span>
+  </a>
+
+  <div class="card">
+    <!-- Loading State -->
+    <div id="loadingState" class="loading">
+      <div class="spinner"></div>
+      <p>Elaborazione...</p>
+    </div>
+
+    <!-- Success State -->
+    <div id="successState" class="hidden">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <h1>Acquisto confermato</h1>
+      <p class="subtitle">Ti abbiamo inviato un'email con il link di attivazione.</p>
+
+      <div class="license-card" style="background: rgba(74, 222, 128, 0.1); border-color: var(--success);">
+        <div class="label" style="color: var(--success);">Email inviata a</div>
+        <div style="font-size: 15px; color: var(--text); line-height: 1.6;">
+          <strong id="userEmail"></strong>
+        </div>
+      </div>
+
+      <div class="instructions">
+        <strong>Prossimi passi:</strong>
+        <ol>
+          <li>Apri l'email di attivazione</li>
+          <li>Imposta una password</li>
+          <li>Accedi all'estensione AdOff</li>
+          <li>Usa la tua licenza su fino a 3 dispositivi</li>
+        </ol>
+        <p style="margin-top: 16px; color: var(--text-muted); font-size: 13px;">
+          Non vedi l'email? Controlla spam oppure <a href="/support.html" style="color: var(--primary-light);">contattaci</a>.
+        </p>
+        <p style="margin-top: 8px;"><a href="/install.html">Installa l'estensione</a></p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="hidden">
+      <div class="error-card">
+        <h2>Errore</h2>
+        <p id="errorMessage">Verifica il tuo ordine.</p>
+      </div>
+      <a href="/account.html" class="btn btn-primary" style="margin-top: 20px; text-decoration: none; display: inline-block;">
+        Vai all'account
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "https://api.adoff.app";
+    const loadingState = document.getElementById("loadingState");
+    const successState = document.getElementById("successState");
+    const errorState = document.getElementById("errorState");
+    const userEmailEl = document.getElementById("userEmail");
+    const errorMessage = document.getElementById("errorMessage");
+
+    async function fetchSessionInfo(sessionId) {
+      const ctrl = new AbortController();
+      const tid = setTimeout(() => ctrl.abort(), 15000);
+      try {
+        const res = await fetch(API_URL + "/success?session_id=" + encodeURIComponent(sessionId), { signal: ctrl.signal });
+        clearTimeout(tid);
+        if (res.status === 402) { showPending(); return; }
+        if (!res.ok) { showError("Errore " + res.status + ". Controlla email."); return; }
+        const d = await res.json();
+        if (d.pending) { showPending(); return; }
+        showSuccess(d.email || "la tua email");
+      } catch (e) {
+        clearTimeout(tid);
+        if (e.name === "AbortError") { showError("Timeout. Controlla email."); }
+        else { showError("Errore connessione. Controlla email."); }
+      }
+    }
+
+    function showSuccess(email) {
+      loadingState.classList.add("hidden");
+      successState.classList.remove("hidden");
+      userEmailEl.textContent = email;
+      window.history.replaceState({}, "", "/success.html");
+    }
+
+    function showPending() {
+      loadingState.classList.add("hidden");
+      successState.classList.add("hidden");
+      errorState.classList.remove("hidden");
+      errorMessage.textContent = "Pagamento in elaborazione. Email di attivazione fra pochi minuti.";
+    }
+
+    function showError(message) {
+      loadingState.classList.add("hidden");
+      errorState.classList.remove("hidden");
+      errorMessage.textContent = message;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    if (!sessionId) {
+      showError("Link non valido.");
+    } else {
+      fetchSessionInfo(sessionId);
+    }
+  </script>
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+# AdOff — Universal Stealth Ad Blocker (Full Documentation)
+
+> AdOff is a Manifest V3 browser extension (Chrome, Edge, Brave, Opera, Firefox, Safari) that blocks ads on every website while staying invisible to anti-adblock detection. It combines 138 network rules, native CSS hiding, a universal IMA SDK stub for video ad neutralization, and dedicated Stealth Mode anti-detection (Pro). Featherlight — a tiny fraction of the size of uBlock Origin and AdBlock Plus.
+
+## Quick Facts
+
+- **Version**: 3.3.6
+- **Size**: featherlight, zero runtime dependencies
+- **License Model**: Freemium (Free tier + Pro tiers)
+- **Trial**: 30 days full Pro access included
+- **Money-back Guarantee**: 30 days
+- **Plan**: single Pro plan, covers your personal devices
+- **Languages**: 15 (English, Italian, German, French, Spanish, Portuguese, Russian, Arabic, Chinese, Hindi, Japanese, Korean, Turkish, Indonesian, Polish)
+- **Data Collection**: Zero (no telemetry, no tracking, no user data beyond license validation)
+
+## Core Technology
+
+### Network Blocking (Layer 1)
+- 130+ declarativeNetRequest rules blocking ad networks, trackers, and video pre-roll endpoints
+- IMA SDK requests redirected to a local, lightweight stub
+- Real-time ad request counter (badge displays only real ads, excludes 23 tracking/analytics rule IDs)
+- Granular per-domain rules for targeted blocking
+
+### Cosmetic Filtering (Layer 2)
+- CSS-based hiding of ad slots, banners, paywalls, cookie walls, injected containers
+- Content-isolated script (no MAIN world access) prevents code injection
+- DOM scanning and mutation observer for dynamically injected ads
+- Universal selectors work across 99% of websites
+
+### Video Ad Neutralization (Layer 3) — Pro/Trial
+- **Universal IMA SDK stub**: injected in MAIN world, works on any video player using Google IMA SDK
+- When player calls `adsManager.start()`, stub fires `CONTENT_RESUME_REQUESTED` immediately
+- Zero ads, fully functional player (no re-buffering, no quality drops)
+- Works for externally-loaded IMA SDK (via redirect in Layer 1) and bundled IMA SDK in custom players
+- Supports DASH, HLS, and progressive video streaming
+
+### Stealth Mode Anti-Detection (Layer 4) — Pro/Trial
+- MAIN-world script defeating anti-adblock systems
+- **Bait spoofing**: fake ad slots that appear to block, hide detection triggers
+- **Variable spoofing**: masks adblocker-detection variable names (replaces `.adsbygoogle`, `adslot`, etc.)
+- **Fetch/XHR interception**: intercepts ad network calls before they fail, returns success responses
+- **DOM mutation observation**: detects and prevents anti-adblock scripts from running
+- Sites that detect uBlock Origin or AdBlock Plus do not detect AdOff
+- Transparent to end user — zero configuration
+
+### Whitelist (Per-Site Control)
+- 4 pause modes:
+  - **1 hour**: pause until next navigation
+  - **1 day**: pause for 24 hours
+  - **Until next visit**: pause permanently until manual re-enable
+  - **Permanent**: always off on this site (saved to whitelist storage)
+- Easy one-click toggle in popup
+- Visual indicator in popup showing paused sites
+
+### Counter & Badges
+- **Real ads blocked**: cosmetic + video ads skipped (displayed in badge)
+- **Network requests blocked**: tracked separately (not in badge, visible in options)
+- **Excludes from count**: 23 rule IDs for Google Analytics, Facebook Pixel, Hotjar, Mixpanel, Segment, Amplitude, NewRelic, Sentry, Moat, DoubleVerify, IAS, ScoreCard, Quantserve, Twitter/TikTok analytics, Gemius, AddThis
+- Reset available in Options → Statistics
+
+## What Makes AdOff Different
+
+5 proprietary technologies no other ad blocker has:
+
+1. **Anti-SABR-backoff** — defeats Server-side Adaptive Bitrate ad-injection without quality loss
+   - Problem: some platforms inject ads server-side and reduce quality to force ad revenue
+   - Solution: AdOff monitors bitrate, forces quality reset when ads are injected
+   - Result: no quality penalty even on platforms with aggressive monetization
+
+2. **Content-position recovery** — preserves seek/playback state across stealth ad-skip
+   - Problem: skipping video ads often resets playback position or loses buffered content
+   - Solution: AdOff preserves `currentTime`, buffer state, and playback state during skip
+   - Result: seamless playback, no re-buffering
+
+3. **Universal IMA SDK stub** — works on any video player using Google IMA SDK
+   - Covers all major streaming platforms and 10,000+ custom video websites
+   - Not platform-specific like other blockers
+   - One stub covers all IMA SDK players (Pro/Trial only)
+
+4. **State-preserving instant skip** — skip without re-buffering or quality drop
+   - Skip happens in milliseconds, not seconds
+   - Quality maintained throughout skip
+   - Playback position preserved exactly
+
+5. **Integrated Stealth Mode** — anti-detection built-in, not a third-party module
+   - No external dependencies
+   - Tightly integrated with blocking layers
+   - Less detectable surface (smaller code footprint)
+
+## Pricing
+
+### Pro (single plan — covers your personal devices)
+- **Monthly**: €2.99/month (cancel anytime)
+- **Annual — Founder**: €19.99/year (first 100 Founders, price locked for life)
+- **Annual — standard**: €24.99/year (after the first 100 Founders)
+- **Founder Lifetime**: €99 one-time (limited offer)
+
+### Terms
+- **Free Tier**: 30-day full Pro trial (includes Stealth Mode, video skip, anti-detection)
+- **Trial Coverage**: full Pro for 30 days
+- **Money-back Guarantee**: 30 days from purchase, full refund no questions asked
+- **Refund Method**: Original payment method (Stripe handles processing)
+- **EU Rights**: 14-day cooling-off period + right to withdrawal (automatic refund)
+- **Payment Methods**: Credit/debit card (Visa, Mastercard, Amex, Diners, Discover)
+
+## FAQ
+
+### Compatibility & Installation
+**Q: Which browsers does AdOff support?**
+A: Chrome, Edge, Brave, Opera (all Chromium-based), Firefox, and Safari (macOS 16.4+).
+
+**Q: Does AdOff work on mobile?**
+A: iOS and Android versions are in development. Currently desktop/laptop only.
+
+**Q: How do I install AdOff?**
+A: Visit https://adoff.app/install for step-by-step guides for each browser.
+
+### Features
+**Q: What's the difference between Free and Pro?**
+A: Free: network blocking and cosmetic filtering on all websites. Pro adds Stealth Mode (anti-detection) and video ad blocking on streaming platforms and TV services.
+
+**Q: How many ads does AdOff block?**
+A: Varies by site. Average 30-50 ads per page. Heavy ad sites: 100+.
+
+**Q: Does AdOff block video ads on streaming platforms?**
+A: Yes — AdOff Pro blocks video ads on all streaming platforms and TV services. The free version blocks ads on websites (banners, popups, trackers) but not on video streaming platforms. Video ad blocking is Pro/Trial only.
+
+**Q: Does the Stealth Mode work on all sites?**
+A: Stealth Mode defeats 99% of anti-adblock detection. A few premium anti-adblock services (Admiral, Sourcepoint at highest tier) may still detect it, but no public list exists.
+
+### Privacy & Security
+**Q: Does AdOff collect my data?**
+A: No. Zero data collection. Only license validation (device ID + subscription status sent to our server, never stored, processed once per 30 days).
+
+**Q: Does AdOff track my browsing?**
+A: No. No analytics, no telemetry, no tracking cookies, no remote logging.
+
+**Q: Is AdOff safe to use?**
+A: Yes. Code is auditable (open-source components available on GitHub). No remote code execution, no auto-updates, no sketchy permissions.
+
+**Q: How do you validate licenses?**
+A: HMAC-SHA256 signature verification. Your license key is signed by our backend. We verify the signature on your device. No phone-home required.
+
+### Performance
+**Q: Will AdOff slow down my browser?**
+A: No. Featherlight footprint, minimal memory overhead, no constant scanning.
+
+**Q: Can I disable AdOff on specific sites?**
+A: Yes, via the whitelist in the popup (4 pause modes).
+
+**Q: Does AdOff have a performance mode?**
+A: Yes, in Options → Advanced: toggle "aggressive CSS matching" for battery optimization.
+
+### Refunds & Returns
+**Q: What's the refund policy?**
+A: 30-day money-back guarantee. File a refund request via https://adoff.app/support, receive full refund to original payment method within 5 business days.
+
+**Q: Can I switch device tiers?**
+A: Yes, contact support and we'll prorate the cost.
+
+**Q: Does the trial require a payment method?**
+A: No. 30-day trial is free, no credit card needed.
+
+## System Requirements
+
+### Chrome/Edge/Brave/Opera
+- Chrome 88+, Edge 88+, Brave 1.30+, Opera 74+
+- Windows 7+, macOS 10.13+, Linux (most distributions)
+- Minimal disk space
+
+### Firefox
+- Firefox 110+
+- Windows 7+, macOS 10.13+, Linux (most distributions)
+- 145 KB disk space
+
+### Safari
+- Safari 16.4+ (macOS Ventura 13.0+)
+- Intel and Apple Silicon Macs
+- 148 KB disk space
+
+## Documentation & Support
+
+- [Homepage](https://adoff.app/): product overview, pricing, FAQ
+- [How it works](https://adoff.app/how-it-works): technical deep-dive on the 4-layer architecture
+- [Why AdOff is unique](https://adoff.app/unique-tech): the 5 differentiating technologies
+- [Comparison: AdOff vs uBlock Origin](https://adoff.app/vs/ublock-origin)
+- [Comparison: AdOff vs AdBlock Plus](https://adoff.app/vs/adblock-plus)
+- [Comparison: AdOff vs AdGuard](https://adoff.app/vs/adguard)
+- [Best ad blocker 2026](https://adoff.app/best-ad-blocker-2026)
+- [Installation guide](https://adoff.app/install): step-by-step for all browsers
+- [User community & support](https://adoff.app/community)
+- [Press kit](https://adoff.app/press)
+- [Pricing & licensing guide](https://adoff.app/license-guide)
+- [Support form](https://adoff.app/support): anti-bot, captcha-protected
+
+## Languages
+
+Full UI translation in 15 languages:
+
+- **European**: English, Italian, German, French, Spanish, Portuguese
+- **Eastern European**: Russian, Polish
+- **Middle East/Asia**: Arabic, Chinese (Simplified)
+- **South/East Asia**: Hindi, Japanese, Korean
+- **Southeast Asia**: Turkish, Indonesian
+
+## Legal & Compliance
+
+- [Privacy Policy](https://adoff.app/privacy): zero tracking, GDPR-compliant, explicit CCPA disclosure
+- [Terms of Service](https://adoff.app/terms): usage rights, limitations, liability disclaimers
+- [Right of Withdrawal (EU)](https://adoff.app/withdrawal): 14-day cooling-off + 30-day refund guarantee
+- [Trademark & Brand Guidelines](https://adoff.app/brand): use of AdOff name in comparisons and reviews
+
+## Contact & Support
+
+- **Support Form**: https://adoff.app/support (anti-bot, rate-limited)
+- **Email**: Contact via form only (no direct email to prevent spam exposure)
+- **Response Time**: 24-48 hours typical
+
+## Distribution
+
+- **Chrome Web Store**: under review
+- **Microsoft Edge Add-ons**: under review
+- **Mozilla Add-ons (Firefox)**: under review
+- **Mac App Store (Safari)**: under review
+- **Direct Download**: https://adoff.app/install (always latest version)

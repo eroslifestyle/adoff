@@ -1,0 +1,64 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://challenges.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.adoff.app https://api.stripe.com https://challenges.cloudflare.com; frame-src https://js.stripe.com https://challenges.cloudflare.com; base-uri 'self'; form-action 'self'; manifest-src 'self'
+  X-XSS-Protection: 1; mode=block
+  Access-Control-Allow-Origin: https://adoff.app
+  Cache-Control: public, max-age=300, must-revalidate
+
+# Admin / management pages — never cache (must always be fresh)
+/admin
+  Cache-Control: no-store
+/admin.html
+  Cache-Control: no-store
+/mgmt-9f4a/*
+  Cache-Control: no-store
+
+# Hashed/versioned assets: 1 year immutable
+/assets/fonts/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+/assets/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*.png
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+
+/i18n/*.json
+  Cache-Control: public, max-age=604800
+
+# CSS/JS with ?v= are versioned, safe to cache long
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+# Service worker MUST NOT cache (allow updates)
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  Service-Worker-Allowed: /
+
+# Web app manifest
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+  Cache-Control: public, max-age=86400
+
+/sitemap.xml
+  Cache-Control: public, max-age=86400
+  Content-Type: application/xml
+
+/robots.txt
+  Cache-Control: public, max-age=86400
+
+# ZIP extension downloads
+/adoff-*.zip
+  Cache-Control: public, max-age=3600
+  Content-Disposition: attachment

@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdOff Admin — Gestione Licenze</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: #0a0a1a; color: #fff; min-height: 100vh;
+    }
+    .header {
+      background: #12122a; border-bottom: 1px solid #2a2a4a;
+      padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .header h1 { font-size: 20px; font-weight: 700; }
+    .header h1 span { color: #7c5cfc; }
+    .header .status { font-size: 12px; color: #4ade80; }
+    .header .status.offline { color: #f43f5e; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+    /* Config bar */
+    .config-bar {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 10px;
+      padding: 16px; margin-bottom: 24px; display: flex; gap: 12px; align-items: end; flex-wrap: wrap;
+    }
+    .config-field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 200px; }
+    .config-field label { font-size: 11px; color: #8a8aaa; font-weight: 600; text-transform: uppercase; }
+    .config-field input {
+      background: #1a1a36; border: 1px solid #2a2a4a; border-radius: 6px;
+      padding: 8px 12px; color: #fff; font-size: 13px; outline: none;
+    }
+    .config-field input:focus { border-color: #7c5cfc; }
+    .btn {
+      padding: 8px 18px; border: none; border-radius: 6px; font-size: 13px;
+      font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-primary { background: #7c5cfc; color: #fff; }
+    .btn-primary:hover { background: #6a4ce0; }
+    .btn-danger { background: #f43f5e; color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-secondary { background: #1a1a36; color: #8a8aaa; border: 1px solid #2a2a4a; }
+    .btn-secondary:hover { color: #fff; border-color: #7c5cfc; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; }
+    .tab {
+      padding: 10px 20px; background: #12122a; border: 1px solid #2a2a4a;
+      border-radius: 8px 8px 0 0; color: #8a8aaa; font-size: 13px;
+      font-weight: 600; cursor: pointer; border-bottom: none;
+    }
+    .tab.active { background: #1a1a36; color: #7c5cfc; border-color: #7c5cfc; border-bottom: 2px solid #7c5cfc; }
+
+    /* Panels */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* Generate section */
+    .gen-form {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 10px;
+      padding: 20px; display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .gen-field { display: flex; flex-direction: column; gap: 4px; }
+    .gen-field label { font-size: 11px; color: #8a8aaa; font-weight: 600; }
+    .gen-field input, .gen-field select {
+      background: #1a1a36; border: 1px solid #2a2a4a; border-radius: 6px;
+      padding: 8px 12px; color: #fff; font-size: 13px; outline: none;
+    }
+
+    /* Result box */
+    .result-box {
+      background: #0f1a0f; border: 1px solid #2d5a2d; border-radius: 10px;
+      padding: 16px; margin-top: 16px; display: none;
+    }
+    .result-box.show { display: block; }
+    .result-key {
+      font-size: 20px; font-weight: 700; color: #4ade80;
+      font-family: monospace; letter-spacing: 2px; margin: 8px 0;
+    }
+    .result-raw {
+      font-size: 11px; color: #8a8aaa; word-break: break-all;
+      background: #1a1a36; padding: 8px; border-radius: 4px; margin-top: 8px;
+    }
+    .result-meta { font-size: 12px; color: #8a8aaa; margin-top: 8px; }
+
+    /* Table */
+    .table-wrap {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 10px;
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      background: #1a1a36; padding: 10px 14px; text-align: left;
+      font-size: 11px; color: #8a8aaa; font-weight: 600; text-transform: uppercase;
+      border-bottom: 1px solid #2a2a4a;
+    }
+    td {
+      padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #1a1a36;
+    }
+    tr:hover td { background: rgba(124, 92, 252, 0.05); }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: 10px; font-weight: 700;
+    }
+    .badge-pro { background: rgba(124, 92, 252, 0.2); color: #b8a9ff; }
+    .badge-lifetime { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
+    .badge-revoked { background: rgba(244, 63, 94, 0.2); color: #f43f5e; }
+    .badge-active { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: #12122a; border: 1px solid #2a2a4a; border-radius: 10px;
+      padding: 20px; text-align: center;
+    }
+    .stat-card .value { font-size: 32px; font-weight: 700; color: #7c5cfc; }
+    .stat-card .label { font-size: 12px; color: #8a8aaa; margin-top: 4px; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 20px; right: 20px;
+      background: #4ade80; color: #0a0a1a; padding: 12px 20px;
+      border-radius: 8px; font-size: 13px; font-weight: 600;
+      transform: translateY(100px); opacity: 0; transition: all 0.3s;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.error { background: #f43f5e; color: #fff; }
+
+    .empty-msg { text-align: center; padding: 40px; color: #3a3a5a; font-size: 14px; }
+
+    /* Bulk action bar */
+    .bulk-bar {
+      background: #1a1a36; border: 1px solid #7c5cfc; border-radius: 10px;
+      padding: 12px 20px; margin-bottom: 16px; display: none;
+      align-items: center; gap: 12px; justify-content: space-between;
+    }
+    .bulk-bar.show { display: flex; }
+    .bulk-bar .bulk-info { font-size: 13px; color: #b8a9ff; font-weight: 600; }
+    .bulk-bar .bulk-actions { display: flex; gap: 8px; }
+
+    /* Checkbox */
+    .lic-checkbox {
+      width: 16px; height: 16px; accent-color: #7c5cfc; cursor: pointer;
+    }
+    th .lic-checkbox { margin: 0; }
+
+    /* Action buttons inline */
+    .action-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border: none; border-radius: 6px;
+      cursor: pointer; font-size: 14px; transition: all 0.15s;
+    }
+    .action-btn:hover { transform: scale(1.1); }
+    .action-btn.revoke { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+    .action-btn.revoke:hover { background: rgba(251, 191, 36, 0.4); }
+    .action-btn.edit { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .action-btn.edit:hover { background: rgba(245, 158, 11, 0.4); }
+    .action-btn.delete { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .action-btn.delete:hover { background: rgba(239, 68, 68, 0.4); }
+
+    /* Search/filter bar */
+    .filter-bar {
+      display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap;
+    }
+    .filter-bar input {
+      background: #1a1a36; border: 1px solid #2a2a4a; border-radius: 6px;
+      padding: 8px 12px; color: #fff; font-size: 13px; outline: none; flex: 1; min-width: 200px;
+    }
+    .filter-bar input:focus { border-color: #7c5cfc; }
+    .filter-bar select {
+      background: #1a1a36; border: 1px solid #2a2a4a; border-radius: 6px;
+      padding: 8px 12px; color: #fff; font-size: 13px; outline: none;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .config-bar, .gen-form { flex-direction: column; }
+      .filter-bar { flex-direction: column; }
+    }
+
+    /* ===== Retention Dashboard ===== */
+    .retention-section {
+      padding: 0;
+    }
+    .retention-kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .retention-kpi {
+      background: #12122a;
+      border: 1px solid #2a2a4a;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .retention-kpi .kpi-value {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #7c5cfc;
+      line-height: 1.1;
+    }
+    .retention-kpi .kpi-label {
+      font-size: 0.8rem;
+      color: #8a8aaa;
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .retention-kpi .kpi-sub {
+      font-size: 0.75rem;
+      color: #5a5a7a;
+      margin-top: 4px;
+    }
+    .retention-chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 900px) {
+      .retention-chart-grid { grid-template-columns: 1fr; }
+    }
+    .retention-card {
+      background: #12122a;
+      border: 1px solid #2a2a4a;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .retention-card h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+      margin: 0 0 16px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .retention-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .retention-table th {
+      text-align: left;
+      padding: 8px 12px;
+      color: #8a8aaa;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      border-bottom: 1px solid #2a2a4a;
+    }
+    .retention-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #1a1a36;
+      color: #fff;
+    }
+    .retention-table tr:last-child td { border-bottom: none; }
+    .retention-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .retention-table .rate-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .retention-table .rate-bar-inner {
+      height: 6px;
+      background: #7c5cfc;
+      border-radius: 3px;
+      min-width: 4px;
+      transition: width 0.3s;
+    }
+    .retention-table .rate-bar-pct {
+      font-size: 0.8rem;
+      color: #8a8aaa;
+      min-width: 36px;
+      text-align: right;
+    }
+    .full-width-card {
+      grid-column: 1 / -1;
+    }
+    .trend-chart {
+      width: 100%;
+      height: 80px;
+    }
+    .trend-chart line.zero {
+      stroke: #2a2a4a;
+      stroke-width: 1;
+    }
+    .trend-chart .area {
+      fill: rgba(124, 92, 252, 0.15);
+    }
+    .trend-chart .line {
+      fill: none;
+      stroke: #7c5cfc;
+      stroke-width: 2;
+      stroke-linejoin: round;
+    }
+    .trend-chart .dot {
+      fill: #7c5cfc;
+    }
+    .retention-loader {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: #8a8aaa;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1><span>AdOff</span> Admin</h1>
+    <div class="status" id="apiStatus">Connessione...</div>
+  </div>
+
+  <div class="container">
+    <!-- Config -->
+    <div class="config-bar">
+      <div class="config-field">
+        <label>API URL</label>
+        <input type="text" id="apiUrl" value="https://api.adoff.app" placeholder="https://api.adoff.app">
+      </div>
+      <div class="config-field">
+        <label>Admin Token</label>
+        <input type="password" id="adminToken" placeholder="Il tuo admin token">
+      </div>
+      <button class="btn btn-primary" id="btnConnect">Connetti</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="value" id="statTotal">—</div><div class="label">Licenze totali</div></div>
+      <div class="stat-card"><div class="value" id="statActive">—</div><div class="label">Attive</div></div>
+      <div class="stat-card"><div class="value" id="statLifetime">—</div><div class="label">Lifetime</div></div>
+      <div class="stat-card"><div class="value" id="statRevoked">—</div><div class="label">Revocate</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" data-panel="generate">Genera Licenza</div>
+      <div class="tab" data-panel="licenses">Licenze</div>
+      <div class="tab" data-panel="validate">Valida Key</div>
+      <div class="tab" data-panel="gsc">📊 Google Analisi</div>
+      <div class="tab" data-panel="retention">📊 Retention</div>
+    </div>
+
+    <!-- Panel: Genera -->
+    <div class="panel active" id="panel-generate">
+      <div class="gen-form">
+        <div class="gen-field">
+          <label>Piano</label>
+          <select id="genPlan">
+            <option value="pro">Pro (mensile/trimestrale/annuale)</option>
+            <option value="lifetime">Lifetime</option>
+          </select>
+        </div>
+        <div class="gen-field">
+          <label>Durata (mesi)</label>
+          <input type="number" id="genMonths" value="1" min="1" max="120">
+        </div>
+        <div class="gen-field">
+          <label>Email</label>
+          <input type="email" id="genEmail" placeholder="user@example.com">
+        </div>
+        <div class="gen-field">
+          <label>Max dispositivi</label>
+          <input type="number" id="genDevices" value="3" min="1" max="10">
+        </div>
+        <button class="btn btn-primary" id="btnGenerate">Genera Key</button>
+      </div>
+
+      <div class="result-box" id="resultBox">
+        <div style="font-size:12px;color:#8a8aaa;">License Key generata:</div>
+        <div class="result-key" id="resultKey"></div>
+        <button class="btn btn-secondary" id="btnCopy" style="margin-top:8px;">Copia Key</button>
+        <div class="result-raw" id="resultRaw"></div>
+        <div class="result-meta" id="resultMeta"></div>
+      </div>
+    </div>
+
+    <!-- Panel: Licenze -->
+    <div class="panel" id="panel-licenses">
+      <!-- Filtri -->
+      <div class="filter-bar">
+        <input type="text" id="filterSearch" placeholder="Cerca per email o key...">
+        <select id="filterPlan">
+          <option value="">Tutti i piani</option>
+          <option value="pro">Pro</option>
+          <option value="lifetime">Lifetime</option>
+          <option value="monthly">Monthly</option>
+          <option value="annual">Annual</option>
+        </select>
+        <select id="filterStatus">
+          <option value="">Tutti gli stati</option>
+          <option value="active">Attive</option>
+          <option value="revoked">Revocate</option>
+          <option value="expired">Scadute</option>
+        </select>
+        <button class="btn btn-primary" onclick="loadServerLicenses()">Aggiorna</button>
+      </div>
+
+      <!-- Bulk action bar -->
+      <div class="bulk-bar" id="bulkBar">
+        <div class="bulk-info"><span id="bulkCount">0</span> licenze selezionate</div>
+        <div class="bulk-actions">
+          <button class="btn btn-secondary" onclick="bulkAction('revoke')">Revoca selezionate</button>
+          <button class="btn btn-danger" onclick="bulkAction('delete')">Elimina selezionate</button>
+          <button class="btn btn-secondary" onclick="clearSelection()">Deseleziona</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px;"><input type="checkbox" class="lic-checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
+              <th>Key</th>
+              <th>Email</th>
+              <th>Piano</th>
+              <th>Scadenza</th>
+              <th>Dispositivi</th>
+              <th>Stato</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody id="licensesBody">
+            <tr><td colspan="8" class="empty-msg">Nessuna licenza. Genera la prima!</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Panel: Valida -->
+    <div class="panel" id="panel-validate">
+      <div class="gen-form">
+        <div class="gen-field" style="flex:2;">
+          <label>License Key (raw)</label>
+          <input type="text" id="validateKey" placeholder="Incolla la raw key qui...">
+        </div>
+        <button class="btn btn-primary" id="btnValidate">Valida</button>
+      </div>
+      <div class="result-box" id="validateResult"></div>
+    </div>
+
+    <!-- Panel: Google Analisi (Search Console) -->
+    <div class="panel" id="panel-gsc">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div>
+          <div style="font-size:13px;color:#8a8aaa;">Dati Google Search Console · <span id="gscRange">—</span></div>
+          <div style="font-size:11px;color:#5a5a7a;">Ultimo aggiornamento: <span id="gscUpdated">mai</span> · aggiornamento automatico ogni giorno</div>
+        </div>
+        <button class="btn btn-primary" id="btnGscSync">🔄 Aggiorna ora</button>
+      </div>
+
+      <!-- KPI cards -->
+      <div id="gscKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+      <!-- Trend sparkline -->
+      <div class="table-wrap" style="margin-bottom:20px;padding:16px;">
+        <div style="font-size:13px;color:#8a8aaa;margin-bottom:8px;">Andamento ultimi 30 giorni (impression)</div>
+        <svg id="gscTrend" width="100%" height="60" preserveAspectRatio="none" viewBox="0 0 300 60"></svg>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" id="gscGrid">
+        <div class="table-wrap"><div style="padding:10px 12px;font-size:13px;color:#7c5cfc;font-weight:600;">💡 Opportunità (pos. 5–20 da spingere)</div><div id="gscOpp"></div></div>
+        <div class="table-wrap"><div style="padding:10px 12px;font-size:13px;color:#7c5cfc;font-weight:600;">🔎 Top query</div><div id="gscQueries"></div></div>
+        <div class="table-wrap"><div style="padding:10px 12px;font-size:13px;color:#7c5cfc;font-weight:600;">📄 Top pagine</div><div id="gscPages"></div></div>
+        <div class="table-wrap"><div style="padding:10px 12px;font-size:13px;color:#7c5cfc;font-weight:600;">🌍 Top paesi</div><div id="gscCountries"></div></div>
+      </div>
+      <div id="gscEmpty" style="display:none;text-align:center;color:#8a8aaa;padding:40px;">Nessun dato ancora. Premi <b>Aggiorna ora</b>.</div>
+    </div>
+
+    <!-- Panel: Retention -->
+    <div class="panel" id="panel-retention">
+      <div style="margin-bottom:20px;">
+        <div style="font-size:13px;color:#8a8aaa;">Device-level tracking: installazioni, retention, uninstall.</div>
+      </div>
+
+      <!-- KPI cards -->
+      <div class="retention-kpis" id="retentionKpis">
+        <div class="retention-kpi">
+          <div class="kpi-value" id="rTotalInstalls">—</div>
+          <div class="kpi-label">Installazioni totali</div>
+          <div class="kpi-sub" id="rUninstallRate">—% uninstall</div>
+        </div>
+        <div class="retention-kpi">
+          <div class="kpi-value" id="rActiveDevices">—</div>
+          <div class="kpi-label">Attivi (3gg)</div>
+          <div class="kpi-sub" id="rActive7d">— ultimi 7gg</div>
+        </div>
+        <div class="retention-kpi">
+          <div class="kpi-value" id="rUninstalls">—</div>
+          <div class="kpi-label">Disinstallazioni</div>
+          <div class="kpi-sub" id="rAvgDays">—gg media vita</div>
+        </div>
+        <div class="retention-kpi">
+          <div class="kpi-value" id="rTrialCount">—</div>
+          <div class="kpi-label">Trial attivi</div>
+          <div class="kpi-sub">Pro/Trial</div>
+        </div>
+      </div>
+
+      <!-- Retention curve -->
+      <div class="retention-card" style="margin-bottom:16px">
+        <h3>📈 Retention Curve (% dispositivi ancora attivi)</h3>
+        <div id="retentionCurveChart" style="margin-top:12px"></div>
+      </div>
+
+      <!-- Daily trend -->
+      <div class="retention-card" style="margin-bottom:16px">
+        <h3>📅 Installazioni giornaliere (30gg)</h3>
+        <svg id="dailyTrendChart" class="trend-chart" viewBox="0 0 600 80" preserveAspectRatio="none"></svg>
+      </div>
+
+      <!-- Breakdown grids -->
+      <div class="retention-chart-grid">
+
+        <!-- By Source -->
+        <div class="retention-card">
+          <h3>📦 Source / Canale</h3>
+          <table class="retention-table" id="bySourceTable">
+            <thead><tr><th>Source</th><th class="num">Install</th><th class="num">Uninstall</th><th>Rate</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- By Browser -->
+        <div class="retention-card">
+          <h3>🌐 Browser</h3>
+          <table class="retention-table" id="byBrowserTable">
+            <thead><tr><th>Browser</th><th class="num">Install</th><th class="num">Uninstall</th><th>Rate</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- By Plan -->
+        <div class="retention-card">
+          <h3>💎 Piano</h3>
+          <table class="retention-table" id="byPlanTable">
+            <thead><tr><th>Piano</th><th class="num">Install</th><th class="num">Uninstall</th><th>Rate</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- By Reason -->
+        <div class="retention-card">
+          <h3>🗑️ Motivi disinstallazione</h3>
+          <table class="retention-table" id="byReasonTable">
+            <thead><tr><th>Motivo</th><th class="num">Count</th><th>%</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- By Country -->
+      <div class="retention-card full-width-card">
+        <h3>🌍 Top 20 Paesi</h3>
+        <table class="retention-table" id="byCountryTable">
+          <thead><tr><th>Paese</th><th class="num">Install</th><th class="num">Uninstall</th><th>Rate</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // =============================================
+    // STATE
+    // =============================================
+    let apiUrl = "";
+    let adminToken = "";
+    let licenses = []; // local cache
+
+    const LS_KEY = "adoff_admin_licenses";
+
+    function loadLocal() {
+      try { licenses = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch(_) { licenses = []; }
+    }
+    function saveLocal() {
+      localStorage.setItem(LS_KEY, JSON.stringify(licenses));
+    }
+
+    // =============================================
+    // UI HELPERS
+    // =============================================
+    function toast(msg, isError) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.className = "toast show" + (isError ? " error" : "");
+      setTimeout(() => t.className = "toast", 3000);
+    }
+
+    function setStatus(ok) {
+      const el = document.getElementById("apiStatus");
+      el.textContent = ok ? "Connesso" : "Non connesso";
+      el.className = "status" + (ok ? "" : " offline");
+    }
+
+    // =============================================
+    // TABS
+    // =============================================
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById("panel-" + tab.dataset.panel).classList.add("active");
+        // Refresh server data when switching to licenses tab
+        if (tab.dataset.panel === "licenses" && apiUrl && adminToken) {
+          loadServerLicenses();
+        }
+        if (tab.dataset.panel === "gsc" && apiUrl && adminToken) {
+          loadGsc();
+        }
+        if (tab.dataset.panel === "retention" && apiUrl && adminToken) {
+          loadRetention();
+        }
+      });
+    });
+
+    // =============================================
+    // GOOGLE SEARCH CONSOLE
+    // =============================================
+    function gscEsc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+    function gscTable(rows, labelTrunc) {
+      if (!rows || !rows.length) return '<div style="padding:12px;color:#5a5a7a;font-size:12px;">nessun dato</div>';
+      let h = '<table style="width:100%;font-size:12px;"><thead><tr style="color:#8a8aaa;text-align:left;">' +
+        '<th style="padding:6px 12px;">Voce</th><th style="padding:6px;text-align:right;">Clk</th><th style="padding:6px;text-align:right;">Impr</th><th style="padding:6px;text-align:right;">CTR</th><th style="padding:6px 12px;text-align:right;">Pos</th></tr></thead><tbody>';
+      for (const r of rows) {
+        let label = r.key || "";
+        if (labelTrunc && label.length > labelTrunc) label = label.slice(0, labelTrunc) + "…";
+        h += '<tr style="border-top:1px solid #1a1a36;">' +
+          '<td style="padding:6px 12px;" title="' + gscEsc(r.key) + '">' + gscEsc(label) + '</td>' +
+          '<td style="padding:6px;text-align:right;color:#4ade80;">' + r.clicks + '</td>' +
+          '<td style="padding:6px;text-align:right;">' + r.impressions + '</td>' +
+          '<td style="padding:6px;text-align:right;color:#8a8aaa;">' + r.ctr + '%</td>' +
+          '<td style="padding:6px 12px;text-align:right;color:#7c5cfc;">' + r.position + '</td></tr>';
+      }
+      return h + '</tbody></table>';
+    }
+
+    function gscKpi(label, val, sub) {
+      return '<div class="table-wrap" style="padding:14px 16px;"><div style="font-size:11px;color:#8a8aaa;">' + label +
+        '</div><div style="font-size:24px;font-weight:700;margin-top:4px;">' + val +
+        '</div><div style="font-size:11px;color:#5a5a7a;">' + (sub || "") + '</div></div>';
+    }
+
+    function renderTrend(trend) {
+      const svg = document.getElementById("gscTrend");
+      if (!trend || trend.length < 2) { svg.innerHTML = ""; return; }
+      const max = Math.max(...trend.map(t => t.impressions), 1);
+      const W = 300, H = 60, step = W / (trend.length - 1);
+      let pts = trend.map((t, i) => (i * step).toFixed(1) + "," + (H - (t.impressions / max) * (H - 6) - 2).toFixed(1)).join(" ");
+      svg.innerHTML = '<polyline fill="none" stroke="#7c5cfc" stroke-width="2" points="' + pts + '"/>' +
+        '<polyline fill="rgba(124,92,252,0.12)" stroke="none" points="0,' + H + ' ' + pts + ' ' + W + ',' + H + '"/>';
+    }
+
+    function renderGsc(snap) {
+      const grid = document.getElementById("gscGrid"), empty = document.getElementById("gscEmpty");
+      if (!snap) { grid.style.display = "none"; document.getElementById("gscKpis").innerHTML = ""; document.getElementById("gscTrend").innerHTML = ""; empty.style.display = "block"; return; }
+      grid.style.display = "grid"; empty.style.display = "none";
+      document.getElementById("gscRange").textContent = snap.range ? (snap.range.start + " → " + snap.range.end + " (" + snap.range.days + "g)") : "—";
+      document.getElementById("gscUpdated").textContent = snap.updatedAt ? new Date(snap.updatedAt).toLocaleString("it-IT") : "mai";
+      const t = snap.totals || {};
+      document.getElementById("gscKpis").innerHTML =
+        gscKpi("Click", t.clicks || 0, "ultimi 28g") +
+        gscKpi("Impression", t.impressions || 0, "ultimi 28g") +
+        gscKpi("CTR medio", (t.ctr || 0) + "%", "click/impression") +
+        gscKpi("Posizione media", t.position || 0, "più basso = meglio");
+      renderTrend(snap.trend);
+      document.getElementById("gscOpp").innerHTML = gscTable(snap.opportunities, 38);
+      document.getElementById("gscQueries").innerHTML = gscTable(snap.topQuery, 38);
+      document.getElementById("gscPages").innerHTML = gscTable((snap.topPage || []).map(r => ({ ...r, key: r.key.replace(/^https?:\/\/adoff\.app/, "") || "/" })), 38);
+      document.getElementById("gscCountries").innerHTML = gscTable(snap.topCountry, 38);
+    }
+
+    async function loadGsc() {
+      if (!apiUrl || !adminToken) { toast("Connettiti prima", true); return; }
+      try {
+        const resp = await fetch(apiUrl + "/admin/gsc", { headers: { "X-Admin-Token": adminToken } });
+        const data = await resp.json();
+        if (!data.ok) { toast("GSC: " + (data.error || "errore"), true); return; }
+        renderGsc(data.snapshot);
+      } catch (e) { toast("GSC errore: " + e.message, true); }
+    }
+
+    document.getElementById("btnGscSync").addEventListener("click", async () => {
+      if (!apiUrl || !adminToken) { toast("Connettiti prima", true); return; }
+      const btn = document.getElementById("btnGscSync");
+      btn.disabled = true; btn.textContent = "⏳ Aggiorno…";
+      try {
+        const resp = await fetch(apiUrl + "/admin/gsc/sync", { method: "POST", headers: { "X-Admin-Token": adminToken } });
+        const data = await resp.json();
+        if (!data.ok) { toast("Sync fallita: " + (data.error || "errore"), true); }
+        else { toast("Aggiornato: " + data.clicks + " click, " + data.impressions + " impr"); await loadGsc(); }
+      } catch (e) { toast("Errore: " + e.message, true); }
+      finally { btn.disabled = false; btn.textContent = "🔄 Aggiorna ora"; }
+    });
+
+    // =============================================
+    // CONNECT
+    // =============================================
+    document.getElementById("btnConnect").addEventListener("click", async () => {
+      apiUrl = document.getElementById("apiUrl").value.replace(/\/$/, "");
+      adminToken = document.getElementById("adminToken").value;
+      try {
+        const resp = await fetch(apiUrl + "/health");
+        const data = await resp.json();
+        if (data.status === "ok") {
+          setStatus(true);
+          toast("Connesso a " + apiUrl);
+          // Auto-load server data
+          await loadServerStats();
+          await loadServerLicenses();
+        } else {
+          setStatus(false);
+          toast("API non risponde", true);
+        }
+      } catch(e) {
+        setStatus(false);
+        toast("Errore: " + e.message, true);
+      }
+    });
+
+    // =============================================
+    // GENERATE
+    // =============================================
+    document.getElementById("genPlan").addEventListener("change", () => {
+      const isLifetime = document.getElementById("genPlan").value === "lifetime";
+      document.getElementById("genMonths").disabled = isLifetime;
+      if (isLifetime) document.getElementById("genMonths").value = "0";
+    });
+
+    document.getElementById("btnGenerate").addEventListener("click", async () => {
+      if (!apiUrl || !adminToken) {
+        toast("Connettiti prima all'API (inserisci URL e Admin Token)", true);
+        return;
+      }
+
+      const plan = document.getElementById("genPlan").value;
+      const months = parseInt(document.getElementById("genMonths").value) || 1;
+      const email = document.getElementById("genEmail").value;
+      const devices = parseInt(document.getElementById("genDevices").value) || 3;
+
+      try {
+        const resp = await fetch(apiUrl + "/admin/generate-key", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Admin-Token": adminToken,
+          },
+          body: JSON.stringify({ plan, months, email, devices }),
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({ error: "Errore server" }));
+          toast("Errore: " + (err.error || resp.status), true);
+          return;
+        }
+
+        const data = await resp.json();
+        const { key, raw, plan: respPlan, email: respEmail, expiresHuman } = data;
+
+        // Salva localmente per la tabella
+        const lic = {
+          key,
+          raw,
+          plan: respPlan || plan,
+          email: respEmail || email,
+          expiresHuman: expiresHuman || "—",
+          devices,
+          created: new Date().toISOString(),
+          revoked: false,
+        };
+        licenses.push(lic);
+        saveLocal();
+        renderLicenses();
+        renderStats();
+
+        // Mostra risultato
+        document.getElementById("resultKey").textContent = key;
+        document.getElementById("resultRaw").textContent = "Raw: " + (raw || "");
+        document.getElementById("resultMeta").textContent =
+          "Piano: " + (respPlan || plan) + " | Email: " + (respEmail || email || "—") +
+          " | Scadenza: " + (expiresHuman || "—") + " | Max " + devices + " dispositivi";
+        document.getElementById("resultBox").classList.add("show");
+
+        toast("License key generata!");
+      } catch (e) {
+        toast("Errore di rete: " + e.message, true);
+      }
+    });
+
+    document.getElementById("btnCopy").addEventListener("click", () => {
+      const key = document.getElementById("resultKey").textContent;
+      navigator.clipboard.writeText(key).then(() => toast("Key copiata!"));
+    });
+
+    // =============================================
+    // LICENSES TABLE
+    // =============================================
+    function renderLicenses() {
+      const tbody = document.getElementById("licensesBody");
+      if (licenses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Nessuna licenza. Genera la prima!</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = licenses.map((lic, i) => {
+        const planBadge = lic.plan === "lifetime"
+          ? '<span class="badge badge-lifetime">LIFETIME</span>'
+          : '<span class="badge badge-pro">PRO</span>';
+        const statusBadge = lic.revoked
+          ? '<span class="badge badge-revoked">REVOCATA</span>'
+          : '<span class="badge badge-active">ATTIVA</span>';
+        const licKey = lic.key || lic.raw || "";
+        const isChecked = selectedKeys.has(licKey) ? "checked" : "";
+
+        return `<tr>
+          <td><input type="checkbox" class="lic-checkbox" ${isChecked} onchange="toggleSelect('${licKey}')"></td>
+          <td style="font-family:monospace;font-size:12px;">${lic.key}</td>
+          <td>${lic.email || "—"}</td>
+          <td>${planBadge}</td>
+          <td>${lic.expiresHuman}</td>
+          <td>${lic.devices || 3}</td>
+          <td>${statusBadge}</td>
+          <td style="white-space:nowrap;">
+            ${!lic.revoked ? `<button class="action-btn revoke" onclick="revokeLicense(${i})" title="Revoca">&#x23F8;</button>` : ""}
+            <button class="action-btn delete" onclick="deleteServerLicense('${licKey}')" title="Elimina">&#x2716;</button>
+          </td>
+        </tr>`;
+      }).join("");
+    }
+
+    window.revokeLicense = async function(index) {
+      if (!confirm("Revocare questa licenza?")) return;
+
+      const lic = licenses[index];
+      lic.revoked = true;
+      saveLocal();
+      renderLicenses();
+      renderStats();
+
+      // Se connesso, revoca anche sul server
+      if (apiUrl && adminToken) {
+        try {
+          await fetch(apiUrl + "/revoke", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Admin-Token": adminToken,
+            },
+            body: JSON.stringify({ key: lic.raw }),
+          });
+          toast("Licenza revocata (server + locale)");
+        } catch(_) {
+          toast("Revocata localmente (server non raggiungibile)", true);
+        }
+      } else {
+        toast("Revocata localmente");
+      }
+    };
+
+    // =============================================
+    // VALIDATE
+    // =============================================
+    document.getElementById("btnValidate").addEventListener("click", async () => {
+      const key = document.getElementById("validateKey").value.trim();
+      if (!key) { toast("Inserisci una key", true); return; }
+
+      const resultEl = document.getElementById("validateResult");
+
+      if (apiUrl) {
+        try {
+          const resp = await fetch(apiUrl + "/validate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key }),
+          });
+          const data = await resp.json();
+          resultEl.innerHTML = `<pre style="color:${data.valid ? '#4ade80' : '#f43f5e'}">${JSON.stringify(data, null, 2)}</pre>`;
+          resultEl.classList.add("show");
+        } catch(e) {
+          resultEl.innerHTML = `<pre style="color:#f43f5e">Errore: ${e.message}</pre>`;
+          resultEl.classList.add("show");
+        }
+      } else {
+        // Validazione solo locale
+        const found = licenses.find(l => l.raw === key || l.key === key);
+        if (found) {
+          resultEl.innerHTML = `<pre style="color:${found.revoked ? '#f43f5e' : '#4ade80'}">${JSON.stringify(found, null, 2)}</pre>`;
+        } else {
+          resultEl.innerHTML = `<pre style="color:#f43f5e">Key non trovata nel database locale</pre>`;
+        }
+        resultEl.classList.add("show");
+      }
+    });
+
+    // =============================================
+    // STATS (server-first, local fallback)
+    // =============================================
+    let serverStats = null;
+
+    async function loadServerStats() {
+      if (!apiUrl || !adminToken) return;
+      try {
+        const resp = await fetch(apiUrl + "/admin/stats", {
+          headers: { "X-Admin-Token": adminToken },
+        });
+        if (resp.ok) {
+          serverStats = await resp.json();
+          renderStats();
+        }
+      } catch(_) {}
+    }
+
+    function renderStats() {
+      if (serverStats && serverStats.ok) {
+        const s = serverStats;
+        document.getElementById("statTotal").textContent = s.licenses.total;
+        document.getElementById("statActive").textContent = s.licenses.active;
+        document.getElementById("statLifetime").textContent = s.licenses.lifetime;
+        document.getElementById("statRevoked").textContent = s.licenses.revoked;
+      } else {
+        document.getElementById("statTotal").textContent = licenses.length;
+        document.getElementById("statActive").textContent = licenses.filter(l => !l.revoked).length;
+        document.getElementById("statLifetime").textContent = licenses.filter(l => l.plan === "lifetime").length;
+        document.getElementById("statRevoked").textContent = licenses.filter(l => l.revoked).length;
+      }
+    }
+
+    // =============================================
+    // SERVER LICENSES
+    // =============================================
+    let serverLicenses = null;
+
+    async function loadServerLicenses() {
+      if (!apiUrl || !adminToken) return;
+      try {
+        const resp = await fetch(apiUrl + "/admin/licenses?limit=200", {
+          headers: { "X-Admin-Token": adminToken },
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.ok) {
+            serverLicenses = data.licenses;
+            renderLicenses();
+          }
+        }
+      } catch(_) {}
+    }
+
+    // =============================================
+    // SELECTION STATE
+    // =============================================
+    let selectedKeys = new Set();
+
+    function getFilteredSource() {
+      const source = serverLicenses || licenses;
+      const search = (document.getElementById("filterSearch")?.value || "").toLowerCase();
+      const planFilter = document.getElementById("filterPlan")?.value || "";
+      const statusFilter = document.getElementById("filterStatus")?.value || "";
+
+      return source.filter(lic => {
+        const licKey = (lic.key || "").toLowerCase();
+        const licEmail = (lic.email || "").toLowerCase();
+        const licRaw = (lic.raw || "").toLowerCase();
+        const licStatus = lic.status || (lic.revoked ? "revoked" : "active");
+        const licPlan = lic.plan || "pro";
+
+        if (search && !licKey.includes(search) && !licEmail.includes(search) && !licRaw.includes(search)) return false;
+        if (planFilter && licPlan !== planFilter) return false;
+        if (statusFilter && licStatus !== statusFilter) return false;
+        return true;
+      });
+    }
+
+    function updateBulkBar() {
+      const bar = document.getElementById("bulkBar");
+      const count = selectedKeys.size;
+      document.getElementById("bulkCount").textContent = count;
+      bar.classList.toggle("show", count > 0);
+    }
+
+    window.toggleSelectAll = function(cb) {
+      const filtered = getFilteredSource();
+      if (cb.checked) {
+        filtered.forEach(lic => {
+          const k = lic.key || lic.raw || "";
+          if (k) selectedKeys.add(k);
+        });
+      } else {
+        selectedKeys.clear();
+      }
+      renderLicenses();
+      updateBulkBar();
+    };
+
+    window.toggleSelect = function(key) {
+      if (selectedKeys.has(key)) selectedKeys.delete(key);
+      else selectedKeys.add(key);
+      // Update select-all checkbox state
+      const filtered = getFilteredSource();
+      const allSelected = filtered.length > 0 && filtered.every(lic => selectedKeys.has(lic.key || lic.raw || ""));
+      const selectAllCb = document.getElementById("selectAll");
+      if (selectAllCb) selectAllCb.checked = allSelected;
+      updateBulkBar();
+    };
+
+    window.clearSelection = function() {
+      selectedKeys.clear();
+      const selectAllCb = document.getElementById("selectAll");
+      if (selectAllCb) selectAllCb.checked = false;
+      renderLicenses();
+      updateBulkBar();
+    };
+
+    window.bulkAction = async function(action) {
+      if (selectedKeys.size === 0) return;
+      if (!apiUrl || !adminToken) { toast("Non connesso", true); return; }
+
+      const keys = [...selectedKeys];
+      const label = action === "delete" ? "ELIMINARE DEFINITIVAMENTE" : "REVOCARE";
+      if (!confirm(`${label} ${keys.length} licenze?`)) return;
+      if (action === "delete" && !confirm("Conferma: le licenze verranno cancellate per sempre.")) return;
+
+      const endpoint = action === "delete" ? "/admin/delete-license" : "/revoke";
+      let ok = 0, fail = 0;
+
+      for (const key of keys) {
+        try {
+          const resp = await fetch(apiUrl + endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Admin-Token": adminToken },
+            body: JSON.stringify({ key }),
+          });
+          const data = await resp.json();
+          if (data.ok) ok++; else fail++;
+        } catch(_) { fail++; }
+      }
+
+      selectedKeys.clear();
+      const selectAllCb = document.getElementById("selectAll");
+      if (selectAllCb) selectAllCb.checked = false;
+      updateBulkBar();
+
+      toast(`${ok} ${action === "delete" ? "eliminate" : "revocate"}, ${fail} errori`);
+      await loadServerLicenses();
+      await loadServerStats();
+    };
+
+    // =============================================
+    // FILTERS
+    // =============================================
+    ["filterSearch", "filterPlan", "filterStatus"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener(id === "filterSearch" ? "input" : "change", () => renderLicenses());
+    });
+
+    // Override renderLicenses to prefer server data + filters + checkboxes
+    const _origRenderLicenses = renderLicenses;
+    renderLicenses = function() {
+      const filtered = getFilteredSource();
+      const tbody = document.getElementById("licensesBody");
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Nessuna licenza trovata.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((lic, i) => {
+        const plan = lic.plan || "pro";
+        const planBadge = plan === "lifetime"
+          ? '<span class="badge badge-lifetime">LIFETIME</span>'
+          : '<span class="badge badge-pro">PRO</span>';
+
+        const status = lic.status || (lic.revoked ? "revoked" : "active");
+        let statusBadge;
+        if (status === "revoked") statusBadge = '<span class="badge badge-revoked">REVOCATA</span>';
+        else if (status === "expired") statusBadge = '<span class="badge badge-revoked">SCADUTA</span>';
+        else statusBadge = '<span class="badge badge-active">ATTIVA</span>';
+
+        const key = lic.key || "—";
+        const email = lic.email || "—";
+        const expires = lic.expiresHuman || (lic.expires ? new Date(lic.expires * 1000).toISOString().slice(0, 10) : "LIFETIME");
+        const devices = typeof lic.devices === "number" ? lic.devices + "/" + (lic.maxDevices || 3) : (lic.devices || "0") + "/3";
+
+        const licKey = lic.key || lic.raw || "";
+        const isChecked = selectedKeys.has(licKey) ? "checked" : "";
+
+        // Azioni: revoca (solo se attiva) + modifica + elimina (SEMPRE)
+        const revokeBtn = status !== "revoked"
+          ? `<button class="action-btn revoke" onclick="revokeServerLicense('${licKey}')" title="Revoca">&#x23F8;</button>`
+          : "";
+        const editBtn = `<button class="action-btn edit" onclick="editServerLicense('${licKey}')" title="Modifica">&#x270F;</button>`;
+        const deleteBtn = `<button class="action-btn delete" onclick="deleteServerLicense('${licKey}')" title="Elimina definitivamente">&#x2716;</button>`;
+
+        return `<tr>
+          <td><input type="checkbox" class="lic-checkbox" ${isChecked} onchange="toggleSelect('${licKey}')"></td>
+          <td style="font-family:monospace;font-size:12px;">${key}</td>
+          <td>${email}</td>
+          <td>${planBadge}</td>
+          <td>${expires}</td>
+          <td>${devices}</td>
+          <td>${statusBadge}</td>
+          <td style="white-space:nowrap;">${revokeBtn} ${editBtn} ${deleteBtn}</td>
+        </tr>`;
+      }).join("");
+    };
+
+    // =============================================
+    // SINGLE ACTIONS
+    // =============================================
+    window.revokeServerLicense = async function(licKey) {
+      if (!confirm("Revocare (disabilitare) questa licenza?")) return;
+      if (!apiUrl || !adminToken) { toast("Non connesso", true); return; }
+
+      try {
+        const resp = await fetch(apiUrl + "/revoke", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Admin-Token": adminToken },
+          body: JSON.stringify({ key: licKey }),
+        });
+        const data = await resp.json();
+        if (data.ok) {
+          toast("Licenza revocata!");
+          await loadServerLicenses();
+          await loadServerStats();
+        } else {
+          toast("Errore: " + (data.error || "unknown"), true);
+        }
+      } catch(e) {
+        toast("Errore: " + e.message, true);
+      }
+    };
+
+    window.deleteServerLicense = async function(licKey) {
+      if (!confirm("ELIMINARE DEFINITIVAMENTE questa licenza?\nL'azione e' irreversibile!")) return;
+      if (!apiUrl || !adminToken) { toast("Non connesso", true); return; }
+
+      try {
+        const resp = await fetch(apiUrl + "/admin/delete-license", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Admin-Token": adminToken },
+          body: JSON.stringify({ key: licKey }),
+        });
+        const data = await resp.json();
+        if (data.ok) {
+          toast("Licenza eliminata definitivamente!");
+          await loadServerLicenses();
+          await loadServerStats();
+        } else {
+          toast("Errore: " + (data.error || "unknown"), true);
+        }
+      } catch(e) {
+        toast("Errore: " + e.message, true);
+      }
+    };
+
+    window.editServerLicense = async function(licKey) {
+      toast("Funzione modifica in sviluppo", true);
+    };
+
+    // =============================================
+    // RETENTION
+    // =============================================
+    async function loadRetention() {
+      const container = document.getElementById("retentionKpis");
+      if (!container) return;
+      container.innerHTML = '<div class="retention-loader">⏳ Caricamento...</div>';
+
+      try {
+        const res = await fetch(apiUrl + "/admin/retention", {
+          headers: { "X-Admin-Token": adminToken }
+        });
+        const data = await res.json();
+        if (!data.ok) { container.innerHTML = '<div class="retention-loader">Errore: ' + (data.error || '?') + '</div>'; return; }
+
+        const { summary, retentionCurve, dailyTrend, bySource, byBrowser, byPlan, byReason, byCountry } = data;
+
+        // KPI
+        document.getElementById("rTotalInstalls").textContent = fmt(summary.totalInstalls);
+        document.getElementById("rActiveDevices").textContent = fmt(summary.activeDevices);
+        document.getElementById("rActive7d").textContent = fmt(summary.activeLast7d);
+        document.getElementById("rUninstalls").textContent = fmt(summary.totalUninstalls);
+        document.getElementById("rUninstallRate").textContent = summary.uninstallRate + "% uninstall";
+        document.getElementById("rAvgDays").textContent = summary.avgDaysToUninstall != null ? summary.avgDaysToUninstall + "gg media vita" : "—";
+        // Trial count (da byPlan)
+        const trialRow = byPlan.find(r => r.plan === "trial");
+        document.getElementById("rTrialCount").textContent = trialRow ? fmt(trialRow.installs) : "0";
+
+        // Retention curve chart
+        renderRetentionCurve(retentionCurve || []);
+
+        // Daily trend
+        renderDailyTrend(dailyTrend || []);
+
+        // Tables
+        fillRetTable("bySourceTable", bySource || [], ["source", "installs", "uninstalls"], true);
+        fillRetTable("byBrowserTable", byBrowser || [], ["browser", "installs", "uninstalls"], true);
+        fillRetTable("byPlanTable", byPlan || [], ["plan", "installs", "uninstalls"], true);
+        fillReasonTable(byReason || []);
+        fillRetTable("byCountryTable", byCountry || [], ["country", "installs", "uninstalls"], true);
+
+      } catch (e) {
+        container.innerHTML = '<div class="retention-loader">❌ Errore: ' + e.message + '</div>';
+      }
+    }
+
+    function renderRetentionCurve(curve) {
+      const el = document.getElementById("retentionCurveChart");
+      if (!el) return;
+      if (!curve.length) { el.innerHTML = '<div style="color:#8a8aaa;font-size:0.85rem">Dati non disponibili</div>'; return; }
+
+      const rows = curve.map(c => {
+        const pct = c.rate;
+        const barW = c.installed > 0 ? Math.round((c.active / c.installed) * 100) : 0;
+        return `<tr>
+          <td>${c.days}g</td>
+          <td class="num">${fmt(c.installed)}</td>
+          <td class="num">${fmt(c.active)}</td>
+          <td class="num">${pct}%</td>
+          <td>
+            <div class="rate-bar">
+              <div class="rate-bar-inner" style="width:${Math.max(barW, 2)}px"></div>
+              <span class="rate-bar-pct">${pct}%</span>
+            </div>
+          </td>
+        </tr>`;
+      }).join("");
+      el.innerHTML = `<table class="retention-table">
+        <thead><tr><th>Giorni</th><th class="num">Installati</th><th class="num">Attivi</th><th class="num">Retention</th><th>Trend</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+    }
+
+    function renderDailyTrend(days) {
+      const svg = document.getElementById("dailyTrendChart");
+      if (!svg || !days.length) return;
+
+      const W = 600, H = 80, PAD = 4;
+      const installs = days.map(d => d.installs);
+      const maxV = Math.max(...installs, 1);
+      const xStep = (W - PAD * 2) / Math.max(days.length - 1, 1);
+
+      const pts = days.map((d, i) => [
+        PAD + i * xStep,
+        PAD + (H - PAD * 2) - ((d.installs / maxV) * (H - PAD * 2))
+      ]);
+
+      const polyline = pts.map(p => p.join(",")).join(" ");
+      const area = [pts[0].join(" "), ...pts.map(p => p.join(" ")), `${pts[pts.length-1][0]},${H - PAD}`, `${PAD},${H - PAD}`].join(" ");
+
+      svg.innerHTML = `
+        <defs>
+          <linearGradient id="gradArea" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#7c5cfc" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#7c5cfc" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <polygon class="area" points="${area}" fill="url(#gradArea)"/>
+        <polyline class="line" points="${polyline}"/>
+        ${pts.map((p, i) => `<circle class="dot" cx="${p[0]}" cy="${p[1]}" r="2"/>`).join("")}
+      `;
+    }
+
+    function fillRetTable(tbodyId, rows, cols, showRate) {
+      const tbody = document.querySelector(`#${tbodyId} tbody`);
+      if (!tbody) return;
+
+      if (!rows.length) { tbody.innerHTML = '<tr><td colspan="4" style="color:#5a5a7a;text-align:center;padding:16px;">Nessun dato</td></tr>'; return; }
+
+      tbody.innerHTML = rows.map(r => {
+        const rate = r.installs > 0 ? Math.round((r.uninstalls / r.installs) * 100) : 0;
+        const barW = Math.round((r.uninstalls / Math.max(r.installs, 1)) * 80);
+        const cells = cols.map(c => {
+          if (c === "installs" || c === "uninstalls") return `<td class="num">${fmt(r[c])}</td>`;
+          if (c === "country") return `<td>🌍 ${r[c] || "—"}</td>`;
+          if (c === "browser") return `<td>${browserIcon(r[c])}</td>`;
+          if (c === "plan") return `<td>${planLabel(r[c])}</td>`;
+          if (c === "source") return `<td>${r[c] || "—"}</td>`;
+          return `<td>${r[c] || "—"}</td>`;
+        }).join("");
+        const rateCell = showRate ? `
+          <td>
+            <div class="rate-bar">
+              <div class="rate-bar-inner" style="width:${Math.max(barW, 2)}px;background:${rate > 50 ? '#f43f5e' : '#7c5cfc'}"></div>
+              <span class="rate-bar-pct">${rate}%</span>
+            </div>
+          </td>` : "";
+        return `<tr>${cells}${rateCell}</tr>`;
+      }).join("");
+    }
+
+    function fillReasonTable(reasons) {
+      const tbody = document.querySelector("#byReasonTable tbody");
+      if (!tbody) return;
+      if (!reasons.length) { tbody.innerHTML = '<tr><td colspan="3" style="color:#5a5a7a;text-align:center;padding:16px;">Nessun dato</td></tr>'; return; }
+      const total = reasons.reduce((s, r) => s + (r.n || 0), 0);
+      const labels = {
+        broken_site: "🧩 Sito rotto",
+        ads_visible: "👀 Ads visibili",
+        confusing: "😕 Confusione Free/Pro",
+        performance: "🐌 Performance",
+        found_better: "🔀 Altro prodotto",
+        other: "❔ Altro"
+      };
+      tbody.innerHTML = reasons.map(r => {
+        const pct = total > 0 ? Math.round(((r.n || 0) / total) * 100) : 0;
+        return `<tr>
+          <td>${labels[r.reason] || r.reason || "—"}</td>
+          <td class="num">${fmt(r.n)}</td>
+          <td class="num">${pct}%</td>
+        </tr>`;
+      }).join("");
+    }
+
+    function browserIcon(b) {
+      const m = { chrome: "🌐 Chrome", firefox: "🦊 Firefox", safari: "🧭 Safari", edge: "🔷 Edge", opera: "🔴 Opera" };
+      return m[b] || b || "—";
+    }
+    function planLabel(p) {
+      const m = { free: "🆓 Free", trial: "⏳ Trial", pro: "💎 Pro" };
+      return m[p] || p || "—";
+    }
+    function fmt(n) {
+      if (n == null || isNaN(n)) return "—";
+      return n.toLocaleString("it-IT");
+    }
+
+    // =============================================
+    // INIT
+    // =============================================
+    loadLocal();
+    renderLicenses();
+    renderStats();
+    setStatus(false);
+  </script>
+</body>
+</html>
