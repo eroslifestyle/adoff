@@ -330,6 +330,7 @@
     revalidateLicense("startup");
     syncTrialBg();
     updateUninstallURL();
+    syncRemoteRules();
   });
 
   // 2) Daily alarm — controllo periodico anche con browser sempre aperto
@@ -505,6 +506,7 @@
       revalidateLicense("daily-alarm");
       syncTrialBg();
       updateUninstallURL();
+      syncRemoteRules();
       return;
     }
     if (alarm.name === "adoffHeartbeat") {
@@ -559,9 +561,13 @@
   // ---- IMA SDK redirect rules (Pro/Trial only) ----
   // Regole dinamiche: redirect imasdk verso stub locale.
   // Attivate solo quando l'utente ha Pro o Trial attivo.
+  // Paramount+ SSAI: excludedInitiatorDomains esclude il redirect IMA su
+  // piattaforme che usano Google DAI con stream ads-server-side (mirror
+  // dell'esclusione sulle static rules 220/900). Isolato per categoria.
+  const PREMIUM_STREAMING_INITIATORS = ["paramountplus.com"];
   const IMA_REDIRECT_RULES = [
-    { id: 50001, priority: 3, action: { type: "redirect", redirect: { extensionPath: "/stubs/google-ima3.js" } }, condition: { urlFilter: "||imasdk.googleapis.com/js/sdkloader/ima3.js", resourceTypes: ["script"] } },
-    { id: 50002, priority: 3, action: { type: "redirect", redirect: { extensionPath: "/stubs/google-ima3.js" } }, condition: { urlFilter: "||imasdk.googleapis.com/js/sdkloader/ima3_dai.js", resourceTypes: ["script"] } },
+    { id: 50001, priority: 3, action: { type: "redirect", redirect: { extensionPath: "/stubs/google-ima3.js" } }, condition: { urlFilter: "||imasdk.googleapis.com/js/sdkloader/ima3.js", resourceTypes: ["script"], excludedInitiatorDomains: PREMIUM_STREAMING_INITIATORS } },
+    { id: 50002, priority: 3, action: { type: "redirect", redirect: { extensionPath: "/stubs/google-ima3.js" } }, condition: { urlFilter: "||imasdk.googleapis.com/js/sdkloader/ima3_dai.js", resourceTypes: ["script"], excludedInitiatorDomains: PREMIUM_STREAMING_INITIATORS } },
   ];
 
   function updateImaRules() {
@@ -589,6 +595,24 @@
           removeRuleIds: [50001, 50002],
         });
       }
+
+      // ---- YouTube ad rules: Pro/Trial ONLY (anti SABR-backoff) ----
+      // In Free, bloccare a metà gli ad di YouTube fa scattare il SABR-backoff
+      // (schermo nero ~80% durata ad) SENZA la mitigazione injectNoAd (Pro-only)
+      // → esperienza rotta. Quindi le regole YT-specifiche sono attive SOLO con
+      // Pro/Trial: Free = YouTube intatto (ad normali, player fluido). Completa
+      // il design v3.3.6 "YouTube = solo Pro". Feature-detect updateStaticRules
+      // (Chrome 111+): se assente (browser vecchio) degrada senza regressione.
+      const YT_AD_RULE_IDS = [170, 171, 172, 173, 174, 175, 176, 179];
+      try {
+        if (chrome.declarativeNetRequest.updateStaticRules) {
+          const ytOn = isPro && enabled;
+          chrome.declarativeNetRequest.updateStaticRules({
+            rulesetId: "adblock_rules",
+            [ytOn ? "enableRuleIds" : "disableRuleIds"]: YT_AD_RULE_IDS,
+          }).catch(() => { /* ignore */ });
+        }
+      } catch (_) { /* updateStaticRules non supportato — degrada */ }
     });
   }
 
@@ -617,12 +641,102 @@
     });
   }
 
-  // Aggiorna regole IMA + whitelist all'avvio e quando cambiano gli stati rilevanti
+  // ---- Remote rule-feed (MV3-native: declarativeNetRequest dynamic rules) ----
+  // Mantiene i filtri freschi senza aspettare la review dello store: il service
+  // worker scarica un JSON firmato-per-origine da adoff.app e lo applica a runtime.
+  // SICUREZZA: solo azioni block/allow (mai redirect/modifyHeaders da fonte remota),
+  // id forzati in un range riservato, condition ricostruita con soli campi safe.
+  const REMOTE_RULES_URL = "https://adoff.app/rules-feed.json";
+  const REMOTE_RULES_BASE_ID = 60000;
+  const REMOTE_RULES_MAX = 5000;
+  const REMOTE_RULES_FETCH_TIMEOUT_MS = 8000;
+  const SAFE_REMOTE_ACTIONS = ["block", "allow"];
+  const SAFE_REMOTE_RESOURCE_TYPES = [
+    "main_frame", "sub_frame", "script", "image", "stylesheet",
+    "xmlhttprequest", "media", "font", "object", "ping", "websocket", "other",
+  ];
+
+  function sanitizeRemoteRule(raw, assignedId) {
+    if (!raw || typeof raw !== "object") return null;
+    const action = raw.action && typeof raw.action === "object" ? raw.action : null;
+    if (!action || !SAFE_REMOTE_ACTIONS.includes(action.type)) return null;
+    const cond = raw.condition && typeof raw.condition === "object" ? raw.condition : null;
+    if (!cond) return null;
+    const safeCond = {};
+    if (typeof cond.urlFilter === "string") safeCond.urlFilter = cond.urlFilter.slice(0, 500);
+    if (typeof cond.regexFilter === "string") safeCond.regexFilter = cond.regexFilter.slice(0, 500);
+    if (Array.isArray(cond.requestDomains)) safeCond.requestDomains = cond.requestDomains.slice(0, 200);
+    if (Array.isArray(cond.initiatorDomains)) safeCond.initiatorDomains = cond.initiatorDomains.slice(0, 200);
+    if (Array.isArray(cond.resourceTypes)) {
+      const rt = cond.resourceTypes.filter((t) => SAFE_REMOTE_RESOURCE_TYPES.includes(t));
+      if (rt.length) safeCond.resourceTypes = rt;
+    }
+    if (!safeCond.urlFilter && !safeCond.regexFilter && !safeCond.requestDomains) return null;
+    const prio = Number.isInteger(raw.priority) ? Math.min(Math.max(raw.priority, 1), 100) : 1;
+    return { id: assignedId, priority: prio, action: { type: action.type }, condition: safeCond };
+  }
+
+  function clearRemoteRules() {
+    chrome.declarativeNetRequest.getDynamicRules((existing) => {
+      const oldIds = (existing || [])
+        .filter((r) => r.id >= REMOTE_RULES_BASE_ID && r.id < REMOTE_RULES_BASE_ID + REMOTE_RULES_MAX)
+        .map((r) => r.id);
+      if (oldIds.length) chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: oldIds });
+    });
+  }
+
+  async function syncRemoteRules() {
+    let enabled = true;
+    try {
+      const st = await chrome.storage.local.get(STORAGE_ENABLED);
+      enabled = st[STORAGE_ENABLED] !== false;
+    } catch (_) { /* default enabled */ }
+    if (!enabled) { clearRemoteRules(); return; }
+
+    let data = null;
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), REMOTE_RULES_FETCH_TIMEOUT_MS);
+      const res = await fetch(REMOTE_RULES_URL + "?t=" + Date.now(), { signal: ctrl.signal, cache: "no-store" });
+      clearTimeout(t);
+      if (!res.ok) return;
+      data = await res.json();
+    } catch (_) {
+      return; // offline / errore di rete → mantieni le regole correnti, nessun crash
+    }
+    if (!data || !Array.isArray(data.rules)) return;
+
+    const addRules = [];
+    for (const raw of data.rules.slice(0, REMOTE_RULES_MAX)) {
+      const r = sanitizeRemoteRule(raw, REMOTE_RULES_BASE_ID + addRules.length);
+      if (r) addRules.push(r);
+    }
+
+    chrome.declarativeNetRequest.getDynamicRules((existing) => {
+      const oldIds = (existing || [])
+        .filter((r) => r.id >= REMOTE_RULES_BASE_ID && r.id < REMOTE_RULES_BASE_ID + REMOTE_RULES_MAX)
+        .map((r) => r.id);
+      chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: oldIds, addRules }, () => {
+        if (chrome.runtime.lastError) return;
+        chrome.storage.local.set({
+          adoffRemoteRulesVer: data.version || 0,
+          adoffRemoteRulesSync: Date.now(),
+          adoffRemoteRulesCount: addRules.length,
+        });
+      });
+    });
+  }
+
+  // Aggiorna regole IMA + whitelist + feed remoto all'avvio e quando cambiano gli stati rilevanti
   updateImaRules();
   updateWhitelistAllowRules();
+  syncRemoteRules();
   chrome.storage.onChanged.addListener((changes) => {
     if (changes.adoffLicense || changes.adoffTrialEnd || changes.adoffTrialToken || changes[STORAGE_ENABLED]) {
       updateImaRules();
+    }
+    if (changes[STORAGE_ENABLED]) {
+      syncRemoteRules();
     }
     if (changes[STORAGE_WHITELIST]) {
       updateWhitelistAllowRules();

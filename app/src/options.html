@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdOff — Opzioni</title>
+  <link rel="stylesheet" href="options.css">
+  <script src="i18n.js"></script>
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <img src="../assets/icon48.png" alt="AdOff" class="header-logo">
+        <div>
+          <h1 class="header-title">AdOff</h1>
+          <span class="header-sub">Ads? Off!</span>
+        </div>
+      </div>
+      <div id="headerLicenseBadge" class="license-badge-header"></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- SIDEBAR MENU -->
+    <nav class="sidebar">
+      <a class="nav-item active" data-section="generale" href="#">
+        <span class="nav-icon">&#9881;</span> <span data-i18n="opt.navGeneral">Generale</span>
+      </a>
+      <a class="nav-item" data-section="whitelist" href="#">
+        <span class="nav-icon">&#128737;</span> <span data-i18n="opt.navWhitelist">Siti esclusi</span>
+      </a>
+      <a class="nav-item" data-section="licenza" href="#">
+        <span class="nav-icon">&#10024;</span> <span data-i18n="opt.navLicense">Piano &amp; Licenza</span>
+      </a>
+      <a class="nav-item" data-section="statistiche" href="#">
+        <span class="nav-icon">&#128202;</span> <span data-i18n="opt.navStats">Statistiche</span>
+      </a>
+      <a class="nav-item" data-section="referral" href="#">
+        <span class="nav-icon">&#127873;</span> <span data-i18n="opt.navReferral">Invita amici</span>
+      </a>
+      <a class="nav-item" data-section="avanzate" href="#">
+        <span class="nav-icon">&#128295;</span> <span data-i18n="opt.navAdvanced">Avanzate</span>
+      </a>
+      <a class="nav-item" data-section="aiuto" href="#">
+        <span class="nav-icon">&#128172;</span> <span data-i18n="opt.navHelp">Aiuto</span>
+      </a>
+      <a class="nav-item" data-section="suggerimenti" href="#">
+        <span class="nav-icon">&#128161;</span> <span data-i18n="opt.navSuggest">Suggerimenti</span>
+      </a>
+      <a class="nav-item" data-section="info" href="#">
+        <span class="nav-icon">&#8505;</span> <span data-i18n="opt.navInfo">Info</span>
+      </a>
+    </nav>
+
+    <!-- CONTENUTO PRINCIPALE -->
+    <main class="content">
+
+      <!-- ===== GENERALE ===== -->
+      <section id="sec-generale" class="section active">
+        <h2 class="section-title" data-i18n="opt.generalTitle">Generale</h2>
+
+        <div class="card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label" data-i18n="opt.adsLabel">Blocco ads</span>
+              <span class="setting-desc" data-i18n="opt.adsDesc">Blocca pubblicita' su tutti i siti</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settingEnabled" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label" data-i18n="opt.badgeLabel">Badge icona</span>
+              <span class="setting-desc" data-i18n="opt.badgeDesc">Mostra ON/OFF sull'icona estensione</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settingBadge" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label" data-i18n="opt.counterLabel">Contatore sull'icona</span>
+              <span class="setting-desc" data-i18n="opt.counterDesc">Mostra il numero di ads bloccati oggi</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settingCounter" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-row last">
+            <div class="setting-info">
+              <span class="setting-label" data-i18n="opt.language">Lingua</span>
+              <span class="setting-desc" data-i18n="opt.langDesc">Seleziona la lingua dell'interfaccia</span>
+            </div>
+            <select id="settingLang" class="select-lang">
+              <option value="auto" data-i18n="opt.langAuto">Automatica (browser)</option>
+              <option value="de">Deutsch</option>
+              <option value="en">English</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+              <option value="id">Bahasa Indonesia</option>
+              <option value="it">Italiano</option>
+              <option value="ja">日本語</option>
+              <option value="ko">한국어</option>
+              <option value="pl">Polski</option>
+              <option value="pt">Português</option>
+              <option value="tr">Türkçe</option>
+              <option value="zh">中文</option>
+              <option value="ar">العربية</option>
+              <option value="hi">हिन्दी</option>
+              <option value="ru">Русский</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== WHITELIST ===== -->
+      <section id="sec-whitelist" class="section">
+        <h2 class="section-title" data-i18n="opt.whitelistTitle">Siti esclusi</h2>
+
+        <!-- Aggiungi sito manuale -->
+        <div class="card">
+          <div class="add-site-row">
+            <input type="text" id="addSiteInput" class="text-input"
+              placeholder="es. example.com" data-i18n="opt.addSitePlaceholder" autocomplete="off" spellcheck="false">
+            <button class="btn btn-primary" id="btnAddSite" data-i18n="opt.add">Aggiungi</button>
+          </div>
+          <div class="add-site-actions">
+            <button class="btn btn-ghost" id="btnImportWl">&#8679; <span data-i18n="opt.import">Importa</span></button>
+            <button class="btn btn-ghost" id="btnExportWl">&#8681; <span data-i18n="opt.export">Esporta</span></button>
+            <input type="file" id="importWlFile" accept=".json" style="display:none">
+          </div>
+        </div>
+
+        <!-- Tabella whitelist -->
+        <div class="card table-card">
+          <table class="wl-table" id="whitelistTable">
+            <thead>
+              <tr>
+                <th data-i18n="opt.site">Sito</th>
+                <th data-i18n="opt.type">Tipo</th>
+                <th data-i18n="opt.date">Aggiunto</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="whitelistBody">
+              <!-- Popolato da JS -->
+            </tbody>
+          </table>
+          <div class="empty-state" id="whitelistEmpty" data-i18n="opt.noSites">
+            Nessun sito escluso. Aggiungi un sito sopra o usa "Pausa qui" nel popup.
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PIANO & LICENZA ===== -->
+      <section id="sec-licenza" class="section">
+        <h2 class="section-title" data-i18n="opt.licenseTitle">Piano &amp; Licenza</h2>
+
+        <!-- STATE B: PRO ATTIVO -->
+        <div class="card auth-state" id="stateProActive" style="display:none">
+          <div class="auth-pro-header">
+            <span class="ls-badge pro">PRO</span>
+            <span class="auth-pro-check">&#10003;</span>
+          </div>
+          <div class="auth-pro-info">
+            <div class="auth-info-row">
+              <span class="auth-info-label">Piano</span>
+              <span class="auth-info-val" id="proStatePlan">—</span>
+            </div>
+            <div class="auth-info-row">
+              <span class="auth-info-label">Scadenza</span>
+              <span class="auth-info-val" id="proStateExpiry">—</span>
+            </div>
+            <div class="auth-info-row">
+              <span class="auth-info-label">Dispositivi</span>
+              <div class="auth-info-devices">
+                <div class="devices-bar">
+                  <div class="devices-bar-fill" id="proDevicesBar"></div>
+                </div>
+                <span class="devices-count" id="proDevicesCount">—</span>
+              </div>
+            </div>
+            <div class="auth-info-row">
+              <span class="auth-info-label">Account</span>
+              <span class="auth-info-val" id="proStateEmail">—</span>
+            </div>
+          </div>
+          <div class="auth-pro-actions">
+            <button class="btn btn-ghost auth-btn-sm" id="btnManageDevices">Gestisci account &#8599;</button>
+            <button class="btn btn-ghost auth-btn-sm" id="btnDeactivateDevice">Disattiva su questo device</button>
+          </div>
+        </div>
+
+        <!-- STATE T: TRIAL ATTIVO -->
+        <div class="card auth-state" id="stateTrialActive" style="display:none">
+          <div class="auth-pro-header">
+            <span class="ls-badge trial" id="trialBadge">TRIAL</span>
+            <span class="auth-pro-check" id="trialCountdownDays">—</span>
+          </div>
+          <div class="auth-pro-info">
+            <div class="auth-info-row">
+              <span class="auth-info-label" data-i18n="opt.trialStatus">Stato</span>
+              <span class="auth-info-val" id="trialStatus" data-i18n="opt.trialActive">Trial Pro attivo</span>
+            </div>
+            <div class="auth-info-row">
+              <span class="auth-info-label" data-i18n="opt.trialExpiry">Scadenza</span>
+              <span class="auth-info-val" id="trialExpiryDate">—</span>
+            </div>
+            <div class="auth-info-row">
+              <span class="auth-info-label" data-i18n="opt.trialProgress">Tempo trial</span>
+              <div class="auth-info-devices">
+                <div class="devices-bar">
+                  <div class="devices-bar-fill" id="trialProgressBar"></div>
+                </div>
+                <span class="devices-count" id="trialProgressLabel">—</span>
+              </div>
+            </div>
+          </div>
+          <p style="color:var(--text-muted);font-size:13px;margin:0 20px 16px;line-height:1.5" data-i18n="opt.trialUpgrade">
+            Al termine del trial AdOff continuerà a funzionare in versione FREE. Per non perdere le funzionalità Pro (anti-detection avanzato, video senza ads), attiva una licenza prima della scadenza.
+          </p>
+          <div class="auth-pro-actions">
+            <button class="btn btn-primary auth-btn-sm" id="btnTrialUpgrade" data-i18n="opt.trialUpgradeBtn">Acquista Pro</button>
+            <button class="btn btn-ghost auth-btn-sm" id="btnTrialHaveKey" data-i18n="opt.trialHaveKey">Ho già una licenza</button>
+          </div>
+        </div>
+
+        <!-- STATE A: NO LICENSE (semplificato - no login) -->
+        <div class="card auth-state" id="stateNotLoggedIn" style="display:none">
+          <h3 class="card-title" style="padding-top:20px">&#128273; Attiva AdOff Pro</h3>
+
+          <p class="auth-intro-text" style="color:var(--text-muted);font-size:14px;margin:0 20px 20px;line-height:1.5">
+            Inserisci il codice licenza che hai ricevuto via email dopo l'acquisto.
+          </p>
+
+          <!-- License key activation -->
+          <div class="license-input-row" style="padding:0 20px 16px">
+            <input type="text" id="licenseKeyInput" class="text-input"
+              placeholder="ADOFF-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="20">
+            <button class="btn btn-primary" id="btnActivateLicense">Attiva</button>
+          </div>
+          <div class="license-feedback" id="licenseFeedback"></div>
+
+          <div class="auth-divider"><span>non hai ancora una licenza?</span></div>
+
+          <!-- Link to website account -->
+          <div style="padding:0 20px 20px;text-align:center">
+            <a href="https://adoff.app/account" target="_blank" class="btn btn-ghost" id="btnOpenAccount" style="margin-bottom:10px">
+              &#128100; Gestisci account sul sito
+            </a>
+            <p style="color:var(--text-muted);font-size:12px;margin-top:8px">
+              Acquista, attiva il tuo account e trova il codice licenza su adoff.app
+            </p>
+          </div>
+        </div>
+
+        <!-- PRICING CARD (shown in State A and C) -->
+        <div class="card" id="pricingCard" style="display:none">
+          <h3 class="card-title">&#128230; Acquista AdOff Pro</h3>
+
+          <!-- Device selector -->
+          <div class="pricing-device-selector">
+            <span class="pricing-device-label">Dispositivi:</span>
+            <div class="pricing-device-btns">
+              <button class="pricing-device-btn active" data-devices="3">3 <span class="tag-best">&#128293;</span></button>
+              <button class="pricing-device-btn" data-devices="5">5</button>
+              <button class="pricing-device-btn" data-devices="10">10</button>
+            </div>
+          </div>
+
+          <!-- Plan cards -->
+          <div class="pricing-cards-row">
+            <div class="pricing-plan-card">
+              <div class="pricing-plan-name">Mensile</div>
+              <div class="pricing-plan-price" id="priceMonthly">€2.69</div>
+              <div class="pricing-plan-period">/mese</div>
+              <button class="btn btn-primary pricing-buy-btn" data-plan="monthly">Acquista</button>
+            </div>
+            <div class="pricing-plan-card popular">
+              <div class="pricing-popular-badge">Miglior valore</div>
+              <div class="pricing-plan-name">Annuale</div>
+              <div class="pricing-plan-price" id="priceAnnual">€29.59</div>
+              <div class="pricing-plan-period">/anno</div>
+              <button class="btn btn-primary pricing-buy-btn" data-plan="annual">Acquista</button>
+            </div>
+            <div class="pricing-plan-card">
+              <div class="pricing-plan-name">Lifetime</div>
+              <div class="pricing-plan-price" id="priceLifetime">€67.90</div>
+              <div class="pricing-plan-period">una tantum</div>
+              <button class="btn btn-primary pricing-buy-btn" data-plan="lifetime">Acquista</button>
+            </div>
+          </div>
+
+          <p class="pricing-free-note">
+            La versione Free funziona senza registrazione e senza limiti.
+          </p>
+        </div>
+
+      </section>
+
+      <!-- ===== STATISTICHE ===== -->
+      <section id="sec-statistiche" class="section">
+        <h2 class="section-title" data-i18n="opt.statsTitle">Statistiche</h2>
+
+        <div class="card stats-grid">
+          <div class="big-stat">
+            <span class="big-stat-value" id="statAds">0</span>
+            <span class="big-stat-label" data-i18n="opt.totalAds">Ads bloccati</span>
+          </div>
+          <div class="big-stat">
+            <span class="big-stat-value" id="statReq">0</span>
+            <span class="big-stat-label" data-i18n="opt.totalReq">Richieste bloccate</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <button class="btn btn-danger" id="btnResetStats">
+            &#128465; <span data-i18n="opt.resetStats">Resetta statistiche</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== REFERRAL ===== -->
+      <section id="sec-referral" class="section">
+        <h2 class="section-title">Guadagna con AdOff</h2>
+
+        <!-- Selezione Modalita' -->
+        <div class="card" style="padding: 10px; display: flex; gap: 10px; margin-bottom: 20px;">
+          <button class="btn btn-primary" id="btnShowInvite" style="flex: 1; font-size: 0.8rem;">Invita Amici (Giorni Gratis)</button>
+          <button class="btn btn-ghost" id="btnShowAffiliate" style="flex: 1; font-size: 0.8rem;">Partner Affiliato (30 giorni)</button>
+        </div>
+
+        <!-- SEZIONE 1: INVITA AMICI (FREE DAYS) -->
+        <div id="referralInviteContent">
+          <!-- Hero referral -->
+          <div class="card referral-hero-card">
+            <div class="referral-hero">
+              <span class="referral-hero-icon">&#127873;</span>
+              <div class="referral-hero-text">
+                <h3 data-i18n="ref.heroTitle">Guadagna Pro gratis!</h3>
+                <p data-i18n="ref.heroDesc">Per ogni amico che passa a Pro, ricevi <strong>30 giorni di AdOff Pro gratis</strong>.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Codice e link -->
+          <div class="card">
+            <h3 class="card-title" data-i18n="ref.linkTitle">Il tuo link referral</h3>
+            <div class="referral-link-row">
+              <input type="text" id="referralLink" class="text-input referral-link-input" readonly>
+              <button class="btn btn-primary" id="btnCopyReferral" data-i18n="ref.copy">Copia</button>
+            </div>
+            <button id="btnLinkReferralAccount" class="btn btn-ghost" style="margin-top:12px;">Collega al tuo account adoff.app</button>
+            <p style="font-size:12px;color:#9aa0a8;margin-top:6px;">Necessario per ricevere i 30 giorni gratis quando un amico paga.</p>
+          </div>
+        </div>
+
+        <!-- SEZIONE 2: PARTNER AFFILIATO (BONUS DAYS) -->
+        <div id="referralAffiliateContent" style="display:none">
+          <!-- Non ancora affiliato -->
+          <div class="card" id="affiliateNotRegistered" style="text-align: center; padding: 40px 20px;">
+            <div style="font-size: 3rem; margin-bottom: 20px;">&#128181;</div>
+            <h3>Diventa Partner AdOff</h3>
+            <p class="text-muted" style="margin-bottom: 24px;">Ricevi <strong>30 giorni di AdOff Pro GRATIS</strong> per ogni vendita generata tramite il tuo link.</p>
+            <button class="btn btn-primary" id="btnRegisterAffiliate">Attiva Profilo Partner</button>
+          </div>
+
+          <!-- Dashboard Affiliato -->
+          <div id="affiliateDashboard" style="display:none">
+            <div class="card stats-grid" style="grid-template-columns: repeat(2, 1fr); gap: 10px;">
+              <div class="stat-card" style="padding: 15px; background: var(--bg); border-radius: 8px; text-align: center;">
+                <div id="affStatSales" style="font-size: 1.5rem; font-weight: bold; color: var(--primary-light);">0</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">VENDITE</div>
+              </div>
+              <div class="stat-card" style="padding: 15px; background: var(--bg); border-radius: 8px; text-align: center;">
+                <div id="affStatDays" style="font-size: 1.5rem; font-weight: bold; color: #4ade80;">0</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">GIORNI GUADAGNATI</div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <h4 style="margin-bottom: 10px; font-size: 0.9rem;">Il tuo Link Partner</h4>
+              <div class="referral-link-row">
+                <input type="text" id="affiliateLink" class="text-input" readonly style="font-size: 0.8rem;">
+                <button class="btn btn-primary" id="btnCopyAffLink">Copia</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistiche Comuni (Bonus Giorni) -->
+        <div class="card referral-stats-card">
+          <div class="referral-stats">
+            <div class="referral-stat">
+              <span class="referral-stat-value" id="refCount">0</span>
+              <span class="referral-stat-label" data-i18n="ref.friendsCount">Amici paganti</span>
+            </div>
+            <div class="referral-stat-divider"></div>
+            <div class="referral-stat">
+              <span class="referral-stat-value" id="refDaysEarned">0</span>
+              <span class="referral-stat-label" data-i18n="ref.daysEarned">Giorni bonus</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== AVANZATE ===== -->
+      <section id="sec-avanzate" class="section">
+        <h2 class="section-title" data-i18n="opt.advancedTitle">Avanzate</h2>
+
+        <div class="card">
+          <div class="action-row">
+            <div class="action-info">
+              <span class="action-label" data-i18n="opt.exportLabel">Esporta impostazioni</span>
+              <span class="action-desc" data-i18n="opt.exportDesc">Scarica un backup JSON di tutte le impostazioni</span>
+            </div>
+            <button class="btn btn-ghost" id="btnExportAll">&#8681; <span data-i18n="opt.export">Esporta</span></button>
+          </div>
+
+          <div class="action-row">
+            <div class="action-info">
+              <span class="action-label" data-i18n="opt.importLabel">Importa impostazioni</span>
+              <span class="action-desc" data-i18n="opt.importDesc">Ripristina da un file di backup</span>
+            </div>
+            <button class="btn btn-ghost" id="btnImportAll">&#8679; <span data-i18n="opt.import">Importa</span></button>
+            <input type="file" id="importAllFile" accept=".json" style="display:none">
+          </div>
+
+          <div class="action-row last">
+            <div class="action-info">
+              <span class="action-label" data-i18n="opt.resetLabel">Resetta tutto</span>
+              <span class="action-desc" data-i18n="opt.resetDesc">Cancella tutte le impostazioni e la licenza</span>
+            </div>
+            <button class="btn btn-danger" id="btnResetAll">&#128465; <span data-i18n="opt.reset">Resetta</span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== AIUTO / FAQ ===== -->
+      <section id="sec-aiuto" class="section">
+        <h2 class="section-title" data-i18n="help.title">Aiuto</h2>
+
+        <!-- Chat container -->
+        <div class="card chat-card">
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-bubble bot" data-i18n="help.greeting">
+              Ciao! Sono l'assistente AdOff. Scrivi la tua domanda o scegli un argomento qui sotto.
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input type="text" id="chatInput" class="text-input chat-text-input"
+              placeholder="Scrivi una domanda..." data-i18n="help.inputPlaceholder" autocomplete="off" spellcheck="false">
+            <button class="btn btn-primary chat-send" id="btnChatSend">&#10148;</button>
+          </div>
+        </div>
+
+        <!-- Argomenti rapidi -->
+        <div class="card faq-topics-card">
+          <h3 class="card-title" data-i18n="help.topicsTitle">Argomenti frequenti</h3>
+          <div class="faq-topics" id="faqTopics">
+            <button class="faq-chip" data-q="come funziona" data-i18n="help.chipHowWorks">Come funziona AdOff?</button>
+            <button class="faq-chip" data-q="sito non funziona" data-i18n="help.chipBroken">Un sito non funziona</button>
+            <button class="faq-chip" data-q="video ads" data-i18n="help.chipVideoAds">Le piattaforme video mostrano ancora ads</button>
+            <button class="faq-chip" data-q="whitelist" data-i18n="help.chipWhitelist">Come escludo un sito?</button>
+            <button class="faq-chip" data-q="differenza free pro" data-i18n="help.chipFreePro">Differenza Free vs Pro</button>
+            <button class="faq-chip" data-q="privacy dati" data-i18n="help.chipPrivacy">Privacy e dati personali</button>
+            <button class="faq-chip" data-q="rallenta browser" data-i18n="help.chipSlow">AdOff rallenta il browser?</button>
+            <button class="faq-chip" data-q="anti-adblock" data-i18n="help.chipAntiblock">Siti con anti-adblock</button>
+            <button class="faq-chip" data-q="attivare licenza" data-i18n="help.chipLicense">Come attivo la licenza Pro?</button>
+            <button class="faq-chip" data-q="disinstallare" data-i18n="help.chipUninstall">Come disinstallo AdOff?</button>
+          </div>
+        </div>
+
+        <!-- Segnala un problema -->
+        <div class="card report-card" id="reportCard">
+          <h3 class="card-title">&#9888; <span data-i18n="report.title">Segnala un problema con un sito</span></h3>
+          <div class="report-form">
+            <input type="text" id="reportUrl" class="text-input"
+              placeholder="URL o dominio del sito (es. example.com)" data-i18n="report.urlPlaceholder" autocomplete="off" spellcheck="false">
+            <div class="report-type-row">
+              <button class="report-type-btn active" data-type="broken">&#128683; <span data-i18n="report.typeBroken">Sito non funziona</span></button>
+              <button class="report-type-btn" data-type="ads-visible">&#128064; <span data-i18n="report.typeAds">Ads ancora visibili</span></button>
+              <button class="report-type-btn" data-type="antiblock">&#128737; <span data-i18n="report.typeAntiblock">Anti-adblock</span></button>
+              <button class="report-type-btn" data-type="other">&#128196; <span data-i18n="report.typeOther">Altro</span></button>
+            </div>
+            <textarea id="reportDesc" class="text-input suggest-textarea"
+              placeholder="Descrivi il problema (opzionale)..." data-i18n="report.descPlaceholder" rows="2"></textarea>
+            <input type="email" id="reportEmail" class="text-input"
+              placeholder="La tua email (per ricevere una risposta)" data-i18n="report.emailPlaceholder" autocomplete="email">
+
+            <!-- Honeypot (invisibile, solo i bot lo compilano) -->
+            <input type="text" id="reportWebsite" class="report-honeypot"
+              tabindex="-1" autocomplete="off" aria-hidden="true">
+
+            <!-- Math CAPTCHA -->
+            <div class="captcha-row">
+              <span class="captcha-label" data-i18n="report.captchaLabel">Verifica: </span>
+              <span class="captcha-question" id="captchaQuestion"></span>
+              <span class="captcha-eq"> = </span>
+              <input type="text" id="captchaAnswer" class="text-input captcha-input"
+                placeholder="?" autocomplete="off" inputmode="numeric" maxlength="3">
+            </div>
+
+            <div class="report-actions">
+              <button class="btn btn-primary" id="btnSendReport" disabled>&#9993; <span data-i18n="report.submit">Invia segnalazione</span></button>
+              <span class="report-feedback" id="reportFeedback"></span>
+            </div>
+            <div class="report-limit-info" id="reportLimitInfo"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SUGGERIMENTI ===== -->
+      <section id="sec-suggerimenti" class="section">
+        <h2 class="section-title" data-i18n="suggest.title">Suggerimenti</h2>
+
+        <div class="card">
+          <div class="suggest-intro" data-i18n="suggest.intro">
+            Hai un'idea per migliorare AdOff? Proponi una funzionalita' o segnala un problema. I suggerimenti ci aiutano a costruire un prodotto migliore.
+          </div>
+
+          <!-- Form nuovo suggerimento -->
+          <div class="suggest-form">
+            <div class="suggest-type-row">
+              <button class="suggest-type-btn active" data-type="feature">&#128161; <span data-i18n="suggest.typeFeature">Funzionalita'</span></button>
+              <button class="suggest-type-btn" data-type="bug">&#128027; <span data-i18n="suggest.typeBug">Bug</span></button>
+              <button class="suggest-type-btn" data-type="improvement">&#9889; <span data-i18n="suggest.typeImprovement">Miglioramento</span></button>
+            </div>
+            <input type="text" id="suggestTitle" class="text-input"
+              placeholder="Titolo breve (es. Blocco cookie banner)" data-i18n="suggest.titlePlaceholder" autocomplete="off" spellcheck="false">
+            <textarea id="suggestDesc" class="text-input suggest-textarea"
+              placeholder="Descrivi la tua idea in dettaglio (opzionale)..." data-i18n="suggest.descPlaceholder" rows="3"></textarea>
+            <input type="email" id="suggestEmail" class="text-input"
+              placeholder="La tua email (per ricevere aggiornamenti)" data-i18n="suggest.emailPlaceholder" autocomplete="email">
+
+            <!-- Honeypot (invisibile, solo i bot lo compilano) -->
+            <input type="text" id="suggestWebsite" class="report-honeypot"
+              tabindex="-1" autocomplete="off" aria-hidden="true">
+
+            <!-- Math CAPTCHA -->
+            <div class="captcha-row">
+              <span class="captcha-label" data-i18n="report.captchaLabel">Verifica: </span>
+              <span class="captcha-question" id="suggestCaptchaQuestion"></span>
+              <span class="captcha-eq"> = </span>
+              <input type="text" id="suggestCaptchaAnswer" class="text-input captcha-input"
+                placeholder="?" autocomplete="off" inputmode="numeric" maxlength="3">
+            </div>
+
+            <button class="btn btn-primary suggest-submit" id="btnSubmitSuggest" data-i18n="suggest.submit" disabled>Invia suggerimento</button>
+            <div class="report-limit-info" id="suggestLimitInfo"></div>
+          </div>
+        </div>
+
+        <!-- Lista suggerimenti -->
+        <div class="card" id="suggestListCard">
+          <h3 class="card-title" data-i18n="suggest.listTitle">I tuoi suggerimenti</h3>
+          <div id="suggestList" class="suggest-list">
+            <!-- Popolato da JS -->
+          </div>
+          <div class="empty-state" id="suggestEmpty" data-i18n="suggest.empty">
+            Nessun suggerimento inviato. Usa il form sopra per proporre la tua idea!
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== INFO ===== -->
+      <section id="sec-info" class="section">
+        <h2 class="section-title" data-i18n="opt.infoTitle">Info</h2>
+
+        <div class="card info-card">
+          <div class="info-row">
+            <span class="info-key" data-i18n="opt.version">Versione</span>
+            <span class="info-val" id="infoVersion">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key" data-i18n="opt.website">Sito web</span>
+            <a class="info-link" href="https://adoff.app" target="_blank" rel="noopener noreferrer">adoff.app</a>
+          </div>
+          <div class="info-row">
+            <span class="info-key" data-i18n="opt.privacy">Privacy policy</span>
+            <a class="info-link" href="https://adoff.app/privacy" target="_blank" rel="noopener noreferrer">adoff.app/privacy</a>
+          </div>
+          <div class="info-row last">
+            <span class="info-key" data-i18n="opt.support">Supporto</span>
+            <a class="info-link" href="https://adoff.app/support" target="_blank" rel="noopener noreferrer">adoff.app/support</a>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="license-client.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
