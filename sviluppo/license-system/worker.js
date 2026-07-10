@@ -5691,7 +5691,7 @@ async function fetchGa4Data(token, env, startDate, endDate) {
       metrics: [
         { name: "totalUsers" }, { name: "sessions" }, { name: "engagedSessions" },
         { name: "engagementRate" }, { name: "bounceRate" },
-        { name: "averageSessionDurationSeconds" }, { name: "screenPageViews" },
+        { name: "averageSessionDuration" }, { name: "screenPageViews" },
       ],
       dimensions: [{ name: "date" }],
       orderBys: [{ dimension: { dimensionName: "date" }, desc: false }],
@@ -5710,13 +5710,13 @@ async function fetchGa4Data(token, env, startDate, endDate) {
     const engagedIdx = metricNames.indexOf("engagedSessions");
     const engRateIdx = metricNames.indexOf("engagementRate");
     const bounceIdx = metricNames.indexOf("bounceRate");
-    const avgDurIdx = metricNames.indexOf("averageSessionDurationSeconds");
+    const avgDurIdx = metricNames.indexOf("averageSessionDuration");
     const viewsIdx = metricNames.indexOf("screenPageViews");
 
     const totals = rows.length ? {
-      users: rows.reduce((s, r) => s + (r.metricValues?.[usersIdx]?.value || 0), 0),
-      sessions: rows.reduce((s, r) => s + (r.metricValues?.[sessionsIdx]?.value || 0), 0),
-      engagedSessions: rows.reduce((s, r) => s + (r.metricValues?.[engagedIdx]?.value || 0), 0),
+      users: rows.reduce((s, r) => s + parseInt(r.metricValues?.[usersIdx]?.value || 0, 10), 0),
+      sessions: rows.reduce((s, r) => s + parseInt(r.metricValues?.[sessionsIdx]?.value || 0, 10), 0),
+      engagedSessions: rows.reduce((s, r) => s + parseInt(r.metricValues?.[engagedIdx]?.value || 0, 10), 0),
       engagementRate: rows.reduce((s, r) => s + parseFloat(r.metricValues?.[engRateIdx]?.value || 0), 0) / rows.length,
       bounceRate: rows.reduce((s, r) => s + parseFloat(r.metricValues?.[bounceIdx]?.value || 0), 0) / rows.length,
       avgSessionDuration: rows.reduce((s, r) => s + parseFloat(r.metricValues?.[avgDurIdx]?.value || 0), 0) / rows.length,
