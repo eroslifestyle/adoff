@@ -1,9 +1,10 @@
 # Project Global TOD — AdOff ChromePlugin
 
-**Main HEAD**: 9cb9f0c · **Branch**: master · **Updated**: 2026-07-11 12:40
+**Main HEAD**: 580e151 · **Branch**: master · **Updated**: 2026-07-11 12:40
 
 ## ✅ Done (ultimi 30, evidence-gated)
 
+- [x] **ADMIN-EDGE-AUTOFIX-TABS-2026-07-11** — Tab Edge + Autofix vuoti: panel seo/edge/autofix fuori da #page-stats → switchStatsTab() non li trovava → schermata vuota. Fix: chiusura panel seo + spostamento edge/autofix dentro #page-stats + chiusura corretta. KV admin:html aggiornato + worker ridistribuito. Endpoint funzionanti: `/admin/edge/status` (state:ok) + `/admin/autofix/status` (ok:true, 28 rules, 24 open leaks, shadow mode) · commit `580e151`
 - [x] **DEPLOY-WORKER-2026-07-10** — wrangler login OAuth + worker deploy + admin.html KV sync · commit `a4e57c2`
   Endpoint `/admin/autofix/status` → JSON `{ok:true, open_leaks:24, fixed_leaks:0, total_rules:28, shadow_mode:true}` ✅
 - [x] **DEPLOY-SITE-2026-07-10** — wrangler pages deploy (privacy section 14 GDPR live 16 lingue) · commit `a4e57c2`
