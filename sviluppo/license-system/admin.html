@@ -467,7 +467,6 @@ tr:hover td{background:rgba(124,92,252,.04)}
         <button class="stat-tab" data-tab="churn" onclick="switchStatsTab('churn')">🗑️ Disinstallazioni</button>
         <button class="stat-tab" data-tab="biz" onclick="switchStatsTab('biz')">💰 Business</button>
         <button class="stat-tab" data-tab="seo" onclick="switchStatsTab('seo')">🔍 SEO / AEO</button>
-        <button class="stat-tab" data-tab="edge" onclick="switchStatsTab('edge')">🟣 Edge</button>
         <button class="stat-tab" data-tab="autofix" onclick="switchStatsTab('autofix')">🔧 Autofix</button>
       </div>
 
@@ -654,16 +653,6 @@ tr:hover td{background:rgba(124,92,252,.04)}
           <div id="seo-batch-results"><div class="loading-center"><div class="loader"></div></div></div>
         </div>
       </div>
-      </div>
-
-      <!-- Tab: Edge Add-ons Status -->
-      <div class="stat-panel" data-panel="edge">
-        <div style="margin-bottom:16px">
-          <div style="font-size:14px;font-weight:600;margin-bottom:8px">🟣 Microsoft Edge Add-ons — API Status</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Verifica lo stato delle credenziali API Edge Add-ons v1.1</div>
-          <button class="btn btn-sm btn-accent" onclick="loadEdgeStatus()">↻ Verifica API</button>
-        </div>
-        <div id="edge-results"><div style="color:var(--muted);font-size:13px">Clicca "Verifica API" per testare le credenziali Edge</div></div>
       </div>
 
       <!-- Tab: Autofix -->
@@ -1052,7 +1041,6 @@ function switchStatsTab(name) {
   ["stNetChart", "stRevenueChart", "stPlanChart"].forEach(id => { if (charts[id] && charts[id].resize) charts[id].resize(); });
   if (name === "seo") { loadSeo(); return; }
   if (name === "autofix") { loadAutofix(); return; }
-if (name === "edge") { loadEdgeStatus(); return; }
 }
 
 function loadPage(page, force = false) {
@@ -2035,9 +2023,6 @@ async function loadSeo(force = false) {
   seoLoaded = true;
 }
 
-// ── Edge Add-ons API Status ───────────────────────────────────
-let edgeLoaded = false;
-
 async function loadAutofix(force = false) {
   const resultsEl = document.getElementById("autofix-results");
   resultsEl.innerHTML = '<div class="loading-center"><div class="loader"></div></div>';
@@ -2065,32 +2050,6 @@ async function loadAutofix(force = false) {
         '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700">' + (data.fixed_leaks || 0) + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Leak fixati</div></div>' +
       '</div>' +
       '<div style="font-size:12px;color:var(--muted);padding:8px 0">Dati dal file statico <code>autofix-status.json</code> — aggiornato ogni notte dal job <code>autofix_nightly.sh</code></div>';
-  } catch(e) {
-    resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">Errore: ' + e.message + '</div>';
-  }
-}
-
-async function loadEdgeStatus() {
-  const resultsEl = document.getElementById("edge-results");
-  resultsEl.innerHTML = '<div class="loading-center"><div class="loader"></div></div>';
-  try {
-    const data = await api("/admin/edge/status");
-    if (!data.ok) {
-      resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">' + (data.error || "Errore") + '</div>';
-      return;
-    }
-    const stateColor = data.state === "ok" ? "#16a766" : data.state === "expired" ? "#fb4c2f" : "#ffbc6b";
-    const stateIcon = data.state === "ok" ? "✓" : data.state === "expired" ? "✕" : "!";
-    const stateLabel = data.state === "ok" ? "Credenziali valide" : data.state === "expired" ? "API key scaduta" : "Stato sconosciuto";
-    const httpStatus = (data.probe && data.probe.httpStatus) || "—";
-    resultsEl.innerHTML =
-      '<div style="display:flex;align-items:center;gap:12px;padding:16px;background:var(--input);border-radius:8px;border-left:4px solid ' + stateColor + '">' +
-        '<span style="background:' + stateColor + ';color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">' + stateIcon + '</span>' +
-        '<div><div style="font-weight:600;font-size:14px;margin-bottom:2px">' + stateLabel + ' <span style="color:var(--muted);font-weight:400;font-size:12px">(HTTP ' + httpStatus + ')</span></div>' +
-        '<div style="font-size:12px;color:var(--muted)">' + (data.message || "") + '</div></div>' +
-      '</div>' +
-      '<div style="margin-top:12px;padding:10px 12px;font-size:12px;color:var(--muted)"><b>Product ID:</b> <span style="font-family:monospace">' + (data.productId || "—") + '</span></div>' +
-      '<div style="margin-top:4px;padding:12px;background:var(--input);border-radius:8px;font-size:12px;color:var(--muted)"><b>API Info:</b> Edge Add-ons v1.1 (ApiKey + X-ClientID). L\'API espone solo POST (upload/publish) e GET operation-status — nessun GET per product/submissions. Rinnovo key: Partner Center → Publish API. <a href="https://learn.microsoft.com/en-us/microsoft-edge/extensions/update/api/using-addons-api" target="_blank" style="color:var(--accent)">Documentazione →</a></div>';
   } catch(e) {
     resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">Errore: ' + e.message + '</div>';
   }
