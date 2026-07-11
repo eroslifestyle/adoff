@@ -9,6 +9,7 @@
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
     <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#0a0a1a" />
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <style>
     :root {
       --primary: #7c5cfc;
@@ -244,6 +245,7 @@
         <label for="password">Password</label>
         <input type="password" id="password" name="password" required placeholder="Password" />
       </div>
+      <div id="loginTurnstile" class="cf-turnstile" data-sitekey="0x4AAAAAADAtLsfOV1PCgWx_" data-callback="onLoginTurnstileDone" style="margin-bottom:12px;"></div>
       <button type="submit" class="btn btn-primary">Accedi</button>
     </form>
 
@@ -266,6 +268,7 @@
         <label for="regPassword">Password</label>
         <input type="password" id="regPassword" name="password" required placeholder="Minimo 8 caratteri" minlength="8" />
       </div>
+      <div id="registerTurnstile" class="cf-turnstile" data-sitekey="0x4AAAAAADAtLsfOV1PCgWx_" data-callback="onRegisterTurnstileDone" style="margin-bottom:12px;"></div>
       <button type="submit" class="btn btn-primary">Registrati</button>
     </form>
 
@@ -294,6 +297,12 @@
   <script>
     const API_URL = "https://api.adoff.app";
     let accountToken = null;
+    let loginTsToken = null;
+    let registerTsToken = null;
+
+    // Turnstile callbacks
+    window.onLoginTurnstileDone = (token) => { loginTsToken = token; };
+    window.onRegisterTurnstileDone = (token) => { registerTsToken = token; };
 
     // DOM
     const loginCard = document.getElementById("loginCard");
@@ -608,7 +617,7 @@
         const res = await fetch(API_URL + "/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, turnstileToken: "web" }),
+          body: JSON.stringify({ email, password, turnstileToken: loginTsToken || "" }),
         });
         const data = await res.json();
         if (data.ok) {
@@ -633,7 +642,7 @@
         const res = await fetch(API_URL + "/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, turnstileToken: "web" }),
+          body: JSON.stringify({ email, password, turnstileToken: registerTsToken || "" }),
         });
         const data = await res.json();
         if (data.ok) {

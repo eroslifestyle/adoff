@@ -50,6 +50,27 @@ function getCorsHeaders(request) {
   return headers;
 }
 
+/**
+ * KV get wrapper — gestisce il rate limit del namespace.
+ * Se il limite giornaliero è superato, restituisce null invece di crashare.
+ * @param {KVNamespace} kv - Il binding KV
+ * @param {string} key - Chiave da leggere
+ * @param {string|undefined} type - "json" per parsed, undefined per stringa
+ * @returns {Promise<any|null>}
+ */
+async function kvGet(kv, key, type) {
+  try {
+    return await kv.get(key, type);
+  } catch (e) {
+    // KV rate limit exceeded per il giorno — ritorna null, non crashare il worker
+    if (e.message && e.message.includes("limit exceeded")) {
+      console.warn(`[kvGet] Rate limit exceeded for key "${key}"`);
+      return null;
+    }
+    throw e; // altre eccezioni non gestite
+  }
+}
+
 // Placeholder costante per contesti senza request (es. cron)
 const CORS_HEADERS = {
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
@@ -745,7 +766,7 @@ function findDevice(devices, deviceId) {
 
 async function checkRateLimit(ip, env) {
   const key = `rl:${ip}`;
-  const current = await env.ADOFF_LICENSES.get(key);
+  const current = await kvGet(env.ADOFF_LICENSES, key);
 
   if (current) {
     const count = parseInt(current);
@@ -770,7 +791,7 @@ const TICKET_RL_WINDOW = 3600;      // per ora
 async function checkTicketRateLimit(ip, env) {
   if (!ip) return true; // niente IP (impossibile su CF) => non bloccare
   const key = `tkt_rl:${ip}`;
-  const current = await env.ADOFF_LICENSES.get(key);
+  const current = await kvGet(env.ADOFF_LICENSES, key);
   if (current) {
     const count = parseInt(current);
     if (count >= TICKET_RL_MAX) return false;
@@ -869,7 +890,7 @@ async function handleValidate(body, env, request, opts = {}) {
 
   // Risolvi alias ADOFF-XXXX-XXXX-XXXX → raw key
   if (key.startsWith("ADOFF-")) {
-    const raw = await env.ADOFF_LICENSES.get(`key:${key}`);
+    const raw = await kvGet(env.ADOFF_LICENSES, `key:${key}`);
     if (!raw) return jsonResponse({ valid: false, error: "License not found" });
     key = raw;
   }
@@ -888,7 +909,7 @@ async function handleValidate(body, env, request, opts = {}) {
   }
 
   // 2. Controlla nel KV se la licenza esiste e non e' revocata
-  const licenseData = await env.ADOFF_LICENSES.get(`lic:${key}`, "json");
+  const licenseData = await kvGet(env.ADOFF_LICENSES, `lic:${key}`, "json");
 
   // Se non esiste record KV, la licenza e' stata eliminata dall'admin (o non e' mai stata creata).
   // La firma HMAC offline da sola non basta: serve l'autorita' del KV.
@@ -994,13 +1015,13 @@ async function handleDeactivate(body, env, request) {
 
   // Risolvi alias ADOFF-XXXX-XXXX-XXXX → raw key
   if (key.startsWith("ADOFF-")) {
-    const raw = await env.ADOFF_LICENSES.get(`key:${key}`);
+    const raw = await kvGet(env.ADOFF_LICENSES, `key:${key}`);
     if (!raw) return jsonResponse({ ok: false, error: "License not found" });
     key = raw;
   }
 
   const deviceId = await generateDeviceId(request, body, env);
-  const licenseData = await env.ADOFF_LICENSES.get(`lic:${key}`, "json");
+  const licenseData = await kvGet(env.ADOFF_LICENSES, `lic:${key}`, "json");
 
   if (!licenseData) {
     return jsonResponse({ ok: false, error: "License not found" });
@@ -1028,12 +1049,12 @@ async function handleRevoke(body, env, request) {
 
   // Risolvi alias ADOFF-XXXX-XXXX-XXXX → raw key
   if (key.startsWith("ADOFF-")) {
-    const raw = await env.ADOFF_LICENSES.get(`key:${key}`);
+    const raw = await kvGet(env.ADOFF_LICENSES, `key:${key}`);
     if (!raw) return jsonResponse({ ok: false, error: "License not found" });
     key = raw;
   }
 
-  const existing = await env.ADOFF_LICENSES.get(`lic:${key}`, "json") || {};
+  const existing = await kvGet(env.ADOFF_LICENSES, `lic:${key}`, "json") || {};
   await env.ADOFF_LICENSES.put(`lic:${key}`, JSON.stringify({
     ...existing,
     revoked: true,
@@ -1059,13 +1080,13 @@ async function handleDeleteLicense(body, env, request) {
   // Risolvi alias ADOFF-XXXX-XXXX-XXXX → raw key
   if (key.startsWith("ADOFF-")) {
     adoffKey = key;
-    const raw = await env.ADOFF_LICENSES.get(`key:${key}`);
+    const raw = await kvGet(env.ADOFF_LICENSES, `key:${key}`);
     if (!raw) return jsonResponse({ ok: false, error: "License not found" });
     rawKey = raw;
   }
 
   // Leggi dati licenza PRIMA di eliminare
-  const licData = await env.ADOFF_LICENSES.get(`lic:${rawKey}`, "json");
+  const licData = await kvGet(env.ADOFF_LICENSES, `lic:${rawKey}`, "json");
   if (!licData) return jsonResponse({ ok: false, error: "License not found in KV" });
 
   if (!adoffKey && licData.key) adoffKey = licData.key;
@@ -1081,7 +1102,7 @@ async function handleDeleteLicense(body, env, request) {
 
   // Rimuovi dalla lista email se presente
   if (email) {
-    const emailKeys = await env.ADOFF_LICENSES.get(`email:${email}`, "json") || [];
+    const emailKeys = await kvGet(env.ADOFF_LICENSES, `email:${email}`, "json") || [];
     const filtered = emailKeys.filter(e => e.raw !== rawKey && e.key !== adoffKey);
     if (filtered.length > 0) {
       await env.ADOFF_LICENSES.put(`email:${email}`, JSON.stringify(filtered));
@@ -1149,7 +1170,7 @@ async function handleAdminGenerateKey(body, env, request) {
   if (email) {
     const normalEmail = email.toLowerCase().trim();
     // Email -> keys index (used by various lookups)
-    const existingKeys = await env.ADOFF_LICENSES.get(`email:${normalEmail}`, "json") || [];
+    const existingKeys = await kvGet(env.ADOFF_LICENSES, `email:${normalEmail}`, "json") || [];
     existingKeys.push({ key, raw, plan, created: Date.now() });
     await env.ADOFF_LICENSES.put(`email:${normalEmail}`, JSON.stringify(existingKeys));
 
@@ -1157,7 +1178,7 @@ async function handleAdminGenerateKey(body, env, request) {
     // Without this, the user dashboard (/account/devices) doesn't see admin-created licenses
     // because it reads from user:{email}.licenses.
     const userKey = `user:${normalEmail}`;
-    let user = await env.ADOFF_LICENSES.get(userKey, "json");
+    let user = await kvGet(env.ADOFF_LICENSES, userKey, "json");
     if (!user) {
       user = {
         email: normalEmail,
@@ -1239,14 +1260,14 @@ async function handleCreateTicket(body, env, request) {
   await env.ADOFF_LICENSES.put(`ticket:${ticketId}`, JSON.stringify(ticket));
 
   // Add to ticket index
-  const index = await env.ADOFF_LICENSES.get("tickets:index", "json") || [];
+  const index = await kvGet(env.ADOFF_LICENSES, "tickets:index", "json") || [];
   index.unshift({ id: ticketId, category: ticket.category, priority: ticket.priority, subject: ticket.subject, email: ticket.email, status: "open", createdAt: ticket.createdAt });
   // Keep last 500 tickets in index
   if (index.length > 500) index.length = 500;
   await env.ADOFF_LICENSES.put("tickets:index", JSON.stringify(index));
 
   // Increment counter
-  const count = parseInt(await env.ADOFF_LICENSES.get("stats:total_tickets") || "0");
+  const count = parseInt(await kvGet(env.ADOFF_LICENSES, "stats:total_tickets") || "0");
   await env.ADOFF_LICENSES.put("stats:total_tickets", String(count + 1));
 
   // Notifica Telegram — routing per categoria (refund→topic dedicato, billing→vendite, ecc.)
@@ -1301,7 +1322,7 @@ async function handleListTickets(request, env) {
   }
   const url = new URL(request.url);
   const statusFilter = url.searchParams.get("status");
-  const index = await env.ADOFF_LICENSES.get("tickets:index", "json") || [];
+  const index = await kvGet(env.ADOFF_LICENSES, "tickets:index", "json") || [];
   const tickets = statusFilter
     ? index.filter(t => t.status === statusFilter)
     : index;
@@ -1318,7 +1339,7 @@ async function handleGetTicket(request, env, ticketId) {
   if (!await verifyAdminAuth(adminToken, env)) {
     return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
   }
-  const ticket = await env.ADOFF_LICENSES.get(`ticket:${ticketId}`, "json");
+  const ticket = await kvGet(env.ADOFF_LICENSES, `ticket:${ticketId}`, "json");
   if (!ticket) return jsonResponse({ ok: false, error: "Ticket not found" }, 404);
   return jsonResponse({ ok: true, ticket });
 }
@@ -1333,7 +1354,7 @@ async function handleUpdateTicket(body, env, request, ticketId) {
   if (!await verifyAdminAuth(adminToken, env)) {
     return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
   }
-  const ticket = await env.ADOFF_LICENSES.get(`ticket:${ticketId}`, "json");
+  const ticket = await kvGet(env.ADOFF_LICENSES, `ticket:${ticketId}`, "json");
   if (!ticket) return jsonResponse({ ok: false, error: "Ticket not found" }, 404);
 
   if (body.status) {
@@ -1356,7 +1377,7 @@ async function handleUpdateTicket(body, env, request, ticketId) {
   await env.ADOFF_LICENSES.put(`ticket:${ticketId}`, JSON.stringify(ticket));
 
   // Update index status
-  const index = await env.ADOFF_LICENSES.get("tickets:index", "json") || [];
+  const index = await kvGet(env.ADOFF_LICENSES, "tickets:index", "json") || [];
   const idx = index.findIndex(t => t.id === ticketId);
   if (idx >= 0) {
     index[idx].status = ticket.status;
@@ -1508,7 +1529,7 @@ async function handleAdminCreateTopic(body, env, request) {
   const configKey = String(body.configKey || "");
   if (!name || !configKey) return jsonResponse({ ok: false, error: "Missing name/configKey" }, 400);
 
-  const existing = parseInt(await env.ADOFF_LICENSES.get(configKey) || "0", 10);
+  const existing = parseInt(await kvGet(env.ADOFF_LICENSES, configKey) || "0", 10);
   if (existing > 0 && !body.force) {
     return jsonResponse({ ok: true, threadId: existing, reused: true });
   }
@@ -1636,7 +1657,7 @@ async function resolveTicketThread(category, env) {
     // Default deterministico = 32 (hardcoded, stabile). KV solo come override esplicito.
     let t = TELEGRAM_REFUNDS_THREAD;
     try {
-      const kv = parseInt(await env.ADOFF_LICENSES.get(KV_REFUND_THREAD) || "0", 10);
+      const kv = parseInt(await kvGet(env.ADOFF_LICENSES, KV_REFUND_THREAD) || "0", 10);
       if (kv > 0) t = kv;
     } catch (_) { /* usa il default 32 */ }
     return t;
@@ -1911,10 +1932,10 @@ async function callLocalLLM(messages, env) {
 async function buildLicenseContext(email, env) {
   if (!email || !EMAIL_RE.test(email)) return "";
   try {
-    const keys = await env.ADOFF_LICENSES.get(`email:${email.toLowerCase().trim()}`, "json");
+    const keys = await kvGet(env.ADOFF_LICENSES, `email:${email.toLowerCase().trim()}`, "json");
     if (!keys || keys.length === 0) return `Email ${email}: nessuna licenza trovata (forse utente Free o trial).`;
     const last = keys[keys.length - 1];
-    const lic = await env.ADOFF_LICENSES.get(`lic:${last.raw}`, "json");
+    const lic = await kvGet(env.ADOFF_LICENSES, `lic:${last.raw}`, "json");
     if (!lic) return `Email ${email}: licenza presente.`;
     const status = lic.revoked ? "REVOCATA" : (lic.expires === 0 ? "Lifetime attiva" : (lic.expires * 1000 > Date.now() ? "attiva" : "SCADUTA"));
     return `Email ${email}: piano ${lic.plan}, stato ${status}, dispositivi max ${lic.deviceLimit}.`;
@@ -2007,7 +2028,7 @@ async function logChat(sessionId, lang, history, meta, env) {
     const updatedAt = Date.now();
     const rec = { sessionId, lang, updatedAt, escalated: !!meta.escalated, ticketId: meta.ticketId || "", email: meta.email || "", messages: history };
     await env.ADOFF_LICENSES.put(`chatlog:${sessionId}`, JSON.stringify(rec), { expirationTtl: CHATLOG_TTL });
-    let idx = await env.ADOFF_LICENSES.get("chatlog:index", "json") || [];
+    let idx = await kvGet(env.ADOFF_LICENSES, "chatlog:index", "json") || [];
     if (!Array.isArray(idx)) idx = [];
     const firstUser = history.find(m => m.role === "user");
     const entry = {
@@ -2047,7 +2068,7 @@ async function handleChat(body, request, env) {
 
   // Carica storia sessione
   const sessKey = `chat:${sessionId}`;
-  let history = await env.ADOFF_LICENSES.get(sessKey, "json") || [];
+  let history = await kvGet(env.ADOFF_LICENSES, sessKey, "json") || [];
   if (!Array.isArray(history)) history = [];
 
   const isNewSession = history.length === 0;
@@ -2155,7 +2176,7 @@ async function handleAdminListChats(request, env) {
   if (!await verifyAdminAuth(adminToken, env)) {
     return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
   }
-  const idx = await env.ADOFF_LICENSES.get("chatlog:index", "json") || [];
+  const idx = await kvGet(env.ADOFF_LICENSES, "chatlog:index", "json") || [];
   return jsonResponse({ ok: true, chats: idx, total: idx.length });
 }
 
@@ -2167,7 +2188,7 @@ async function handleAdminGetChat(request, env, sessionId) {
   if (!await verifyAdminAuth(adminToken, env)) {
     return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
   }
-  const rec = await env.ADOFF_LICENSES.get(`chatlog:${sessionId}`, "json");
+  const rec = await kvGet(env.ADOFF_LICENSES, `chatlog:${sessionId}`, "json");
   if (!rec) return jsonResponse({ ok: false, error: "Not found" }, 404);
   return jsonResponse({ ok: true, chat: rec });
 }
@@ -2200,11 +2221,11 @@ async function createTicketFromChat({ category, email, lang, reason, transcript,
   };
 
   await env.ADOFF_LICENSES.put(`ticket:${ticketId}`, JSON.stringify(ticket));
-  const index = await env.ADOFF_LICENSES.get("tickets:index", "json") || [];
+  const index = await kvGet(env.ADOFF_LICENSES, "tickets:index", "json") || [];
   index.unshift({ id: ticketId, category, priority: ticket.priority, subject: ticket.subject, email, status: "open", source: "ai-chat", createdAt: ticket.createdAt });
   if (index.length > 500) index.length = 500;
   await env.ADOFF_LICENSES.put("tickets:index", JSON.stringify(index));
-  const count = parseInt(await env.ADOFF_LICENSES.get("stats:total_tickets") || "0");
+  const count = parseInt(await kvGet(env.ADOFF_LICENSES, "stats:total_tickets") || "0");
   await env.ADOFF_LICENSES.put("stats:total_tickets", String(count + 1));
 
   // Notifica Telegram
@@ -2541,7 +2562,7 @@ async function handleStripeWebhook(request, env) {
 
     // BA-4: Indice customer->keys per revoke O(1)
     if (customerId) {
-      const custKeys = await env.ADOFF_LICENSES.get(`customer:${customerId}`, "json") || [];
+      const custKeys = await kvGet(env.ADOFF_LICENSES, `customer:${customerId}`, "json") || [];
       custKeys.push(raw);
       await env.ADOFF_LICENSES.put(`customer:${customerId}`, JSON.stringify(custKeys));
     }
@@ -2549,25 +2570,25 @@ async function handleStripeWebhook(request, env) {
     // BA-6: Indice expiry per cron O(1)
     if (finalExpires > 0) {
       const expiryDate = new Date(finalExpires * 1000).toISOString().slice(0, 10).replace(/-/g, "");
-      const expiryList = await env.ADOFF_LICENSES.get(`expiry:${expiryDate}`, "json") || [];
+      const expiryList = await kvGet(env.ADOFF_LICENSES, `expiry:${expiryDate}`, "json") || [];
       expiryList.push(raw);
       await env.ADOFF_LICENSES.put(`expiry:${expiryDate}`, JSON.stringify(expiryList));
     }
 
     // Salva mapping email->keys
-    const existingKeys = await env.ADOFF_LICENSES.get(`email:${email}`, "json") || [];
+    const existingKeys = await kvGet(env.ADOFF_LICENSES, `email:${email}`, "json") || [];
     existingKeys.push({ key, raw, plan, created: Date.now() });
     await env.ADOFF_LICENSES.put(`email:${email}`, JSON.stringify(existingKeys));
 
     // Incrementa contatore vendite per tier pricing
-    const currentSold = parseInt(await env.ADOFF_LICENSES.get("stats:total_sold") || "0");
+    const currentSold = parseInt(await kvGet(env.ADOFF_LICENSES, "stats:total_sold") || "0");
     await env.ADOFF_LICENSES.put("stats:total_sold", String(currentSold + 1));
 
     // Auto-creazione account e invio email attivazione
     if (email) {
       const normalEmail = email.toLowerCase().trim();
       const userKey = `user:${normalEmail}`;
-      let user = await env.ADOFF_LICENSES.get(userKey, "json");
+      let user = await kvGet(env.ADOFF_LICENSES, userKey, "json");
       const nowMs = Date.now();
 
       if (!user) {
@@ -2670,7 +2691,7 @@ async function handleStripeWebhook(request, env) {
     const pi = charge.payment_intent;
     let reversed = false;
     if (pi) {
-      const sale = await env.ADOFF_LICENSES.get(`sale:${pi}`, "json");
+      const sale = await kvGet(env.ADOFF_LICENSES, `sale:${pi}`, "json");
       if (sale && !sale.refunded) {
         await reverseRevenueStats(env, sale.amount, sale.plan, sale.date);
         sale.refunded = true;
@@ -2708,14 +2729,14 @@ async function handleStripeWebhook(request, env) {
 
 async function revokeByCustomerId(customerId, env, reason) {
   // BA-4: usa indice customer->keys per O(1) invece di listing O(n)
-  const rawKeys = await env.ADOFF_LICENSES.get(`customer:${customerId}`, "json");
+  const rawKeys = await kvGet(env.ADOFF_LICENSES, `customer:${customerId}`, "json");
   let revokedCount = 0;
   let foundEmail = null;
 
   if (rawKeys && rawKeys.length > 0) {
     // Percorso veloce: usa l'indice
     for (const raw of rawKeys) {
-      const data = await env.ADOFF_LICENSES.get(`lic:${raw}`, "json");
+      const data = await kvGet(env.ADOFF_LICENSES, `lic:${raw}`, "json");
       if (data && !data.revoked) {
         data.revoked = true;
         data.revokedAt = Date.now();
@@ -2729,7 +2750,7 @@ async function revokeByCustomerId(customerId, env, reason) {
     // Fallback: listing completo per licenze create prima dell'indice
     const list = await env.ADOFF_LICENSES.list({ prefix: "lic:" });
     for (const key of list.keys) {
-      const data = await env.ADOFF_LICENSES.get(key.name, "json");
+      const data = await kvGet(env.ADOFF_LICENSES, key.name, "json");
       if (data && data.stripeCustomerId === customerId && !data.revoked) {
         data.revoked = true;
         data.revokedAt = Date.now();
@@ -2759,7 +2780,7 @@ async function handlePortalSession(request, env) {
   if (!customerId) {
     const sessionToken = getSessionToken(request);
     if (sessionToken) {
-      const session = await env.ADOFF_LICENSES.get(`session:${sessionToken}`, "json");
+      const session = await kvGet(env.ADOFF_LICENSES, `session:${sessionToken}`, "json");
       if (session?.customerId) {
         customerId = session.customerId;
       }
@@ -2894,7 +2915,7 @@ async function handleAdminLogin(body, env) {
   }
 
   // Get admin account from KV (or create default on first use)
-  let admin = await env.ADOFF_LICENSES.get("admin:account", "json");
+  let admin = await kvGet(env.ADOFF_LICENSES, "admin:account", "json");
   if (!admin) {
     // First login ever — create admin account with ADMIN_TOKEN as default password
     const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -2953,7 +2974,7 @@ async function handleAdminChangePassword(body, env, request) {
 
   const { currentPassword, newPassword, email } = body;
 
-  let admin = await env.ADOFF_LICENSES.get("admin:account", "json");
+  let admin = await kvGet(env.ADOFF_LICENSES, "admin:account", "json");
   if (!admin) return jsonResponse({ ok: false, error: "No admin account" }, 500);
 
   // Update password if provided
@@ -2988,7 +3009,7 @@ async function handleAdminResetPassword(body, env) {
   const { email } = body;
   if (!email) return jsonResponse({ ok: false, error: "Email required" }, 400);
 
-  const admin = await env.ADOFF_LICENSES.get("admin:account", "json");
+  const admin = await kvGet(env.ADOFF_LICENSES, "admin:account", "json");
   if (!admin || !admin.email || admin.email !== email) {
     // Don't reveal if email exists
     return jsonResponse({ ok: true, message: "If the email is registered, a reset link has been sent" });
@@ -3024,12 +3045,12 @@ async function handleAdminResetConfirm(body, env) {
     return jsonResponse({ ok: false, error: "Password must be at least 8 characters" }, 400);
   }
 
-  const resetData = await env.ADOFF_LICENSES.get("reset:" + resetToken, "json");
+  const resetData = await kvGet(env.ADOFF_LICENSES, "reset:" + resetToken, "json");
   if (!resetData) {
     return jsonResponse({ ok: false, error: "Invalid or expired reset token" }, 400);
   }
 
-  const admin = await env.ADOFF_LICENSES.get("admin:account", "json");
+  const admin = await kvGet(env.ADOFF_LICENSES, "admin:account", "json");
   if (!admin) return jsonResponse({ ok: false, error: "No admin account" }, 500);
 
   const salt = Array.from(crypto.getRandomValues(new Uint8Array(16)))
@@ -3090,7 +3111,7 @@ async function verifyAdminAuth(token, env) {
   // Legacy: direct ADMIN_TOKEN match
   if (token === env.ADMIN_TOKEN) return true;
   // Session token
-  const session = await env.ADOFF_LICENSES.get("session:" + token, "json");
+  const session = await kvGet(env.ADOFF_LICENSES, "session:" + token, "json");
   if (session && session.expiresAt > Date.now()) return true;
   return false;
 }
@@ -3123,7 +3144,7 @@ async function handleAdminListLicenses(request, env) {
   const licenses = [];
 
   for (const key of listResult.keys) {
-    const data = await env.ADOFF_LICENSES.get(key.name, "json");
+    const data = await kvGet(env.ADOFF_LICENSES, key.name, "json");
     if (!data) continue;
 
     // Determine status
@@ -3190,7 +3211,7 @@ async function handleAdminStats(request, env) {
     });
 
     for (const key of listResult.keys) {
-      const data = await env.ADOFF_LICENSES.get(key.name, "json");
+      const data = await kvGet(env.ADOFF_LICENSES, key.name, "json");
       if (!data) continue;
 
       totalLicenses++;
@@ -3214,8 +3235,8 @@ async function handleAdminStats(request, env) {
   } while (cursor);
 
   // Read counters
-  const totalSold = parseInt(await env.ADOFF_LICENSES.get("stats:total_sold") || "0");
-  const totalTickets = parseInt(await env.ADOFF_LICENSES.get("stats:total_tickets") || "0");
+  const totalSold = parseInt(await kvGet(env.ADOFF_LICENSES, "stats:total_sold") || "0");
+  const totalTickets = parseInt(await kvGet(env.ADOFF_LICENSES, "stats:total_tickets") || "0");
 
   return jsonResponse({
     ok: true,
@@ -3259,21 +3280,21 @@ function parseBrowser(ua) {
 }
 
 async function appendToLog(env, logKey, entry, maxEntries) {
-  const log = await env.ADOFF_LICENSES.get(logKey, "json") || [];
+  const log = await kvGet(env.ADOFF_LICENSES, logKey, "json") || [];
   log.unshift(entry);
   if (log.length > maxEntries) log.length = maxEntries;
   await env.ADOFF_LICENSES.put(logKey, JSON.stringify(log));
 }
 
 async function incrementCounter(env, key) {
-  const val = parseInt(await env.ADOFF_LICENSES.get(key) || "0");
+  const val = parseInt(await kvGet(env.ADOFF_LICENSES, key) || "0");
   await env.ADOFF_LICENSES.put(key, String(val + 1));
   return val + 1;
 }
 
 async function bumpAttributionCounter(env, suffix, delta) {
   const key = "attribution:" + suffix;
-  const val = parseInt(await env.ADOFF_LICENSES.get(key) || "0");
+  const val = parseInt(await kvGet(env.ADOFF_LICENSES, key) || "0");
   await env.ADOFF_LICENSES.put(key, String(val + delta));
   return val + delta;
 }
@@ -3283,7 +3304,7 @@ async function bumpAttributionCounter(env, suffix, delta) {
 async function bumpRevenueStats(env, amount, plan) {
   const today = new Date().toISOString().slice(0, 10);
   const inc = async (key, delta) => {
-    const v = parseInt(await env.ADOFF_LICENSES.get(key) || "0");
+    const v = parseInt(await kvGet(env.ADOFF_LICENSES, key) || "0");
     await env.ADOFF_LICENSES.put(key, String(v + delta));
   };
   // NB: stats:total_sold is incremented by the sale path itself — do not double-count here.
@@ -3299,11 +3320,11 @@ async function bumpRevenueStats(env, amount, plan) {
 async function reverseRevenueStats(env, amount, plan, saleDate) {
   const day = saleDate || new Date().toISOString().slice(0, 10);
   const dec = async (key, delta) => {
-    const v = parseInt(await env.ADOFF_LICENSES.get(key) || "0");
+    const v = parseInt(await kvGet(env.ADOFF_LICENSES, key) || "0");
     await env.ADOFF_LICENSES.put(key, String(Math.max(0, v - delta)));
   };
   const inc = async (key, delta) => {
-    const v = parseInt(await env.ADOFF_LICENSES.get(key) || "0");
+    const v = parseInt(await kvGet(env.ADOFF_LICENSES, key) || "0");
     await env.ADOFF_LICENSES.put(key, String(v + delta));
   };
   await dec("stats:total_sold", 1);
@@ -3319,7 +3340,7 @@ async function reverseRevenueStats(env, amount, plan, saleDate) {
 async function handleTrackInstall(request, env) {
   const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
   const rlKey = `ratelimit:install:${ip}`;
-  const rlVal = await env.ADOFF_LICENSES.get(rlKey);
+  const rlVal = await kvGet(env.ADOFF_LICENSES, rlKey);
   if (rlVal) return jsonResponse({ ok: false, error: "Rate limit" }, 429);
   await env.ADOFF_LICENSES.put(rlKey, "1", { expirationTtl: 3600 });
 
@@ -3384,7 +3405,7 @@ async function handleTrackInstall(request, env) {
 async function handleTrackDownload(request, env) {
   const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
   const rlKey = `ratelimit:download:${ip}`;
-  const rlVal = await env.ADOFF_LICENSES.get(rlKey);
+  const rlVal = await kvGet(env.ADOFF_LICENSES, rlKey);
   if (rlVal) return jsonResponse({ ok: false, error: "Rate limit" }, 429);
   await env.ADOFF_LICENSES.put(rlKey, "1", { expirationTtl: 60 });
 
@@ -3422,7 +3443,7 @@ async function handleUninstall(request, env) {
   // ma evitiamo flood. Max ~5/ora per IP.
   const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
   const rlKey = `ratelimit:uninstall:${ip}`;
-  const rlVal = parseInt(await env.ADOFF_LICENSES.get(rlKey) || "0");
+  const rlVal = parseInt(await kvGet(env.ADOFF_LICENSES, rlKey) || "0");
   if (rlVal >= 5) return jsonResponse({ ok: false, error: "Rate limit" }, 429);
   await env.ADOFF_LICENSES.put(rlKey, String(rlVal + 1), { expirationTtl: 3600 });
 
@@ -3749,7 +3770,7 @@ async function handleAttributionStats(request, env) {
 
   for (const item of list.keys) {
     const key = item.name;
-    const val = await env.ADOFF_LICENSES.get(key);
+    const val = await kvGet(env.ADOFF_LICENSES, key);
     const numVal = parseInt(val || "0");
 
     // Parse key format: "attribution:<type>:<source>"
@@ -3781,19 +3802,19 @@ async function handleAdminAnalytics(request, env) {
     return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
   }
 
-  const totalInstalls = parseInt(await env.ADOFF_LICENSES.get("stats:installs") || "0");
-  const totalDownloads = parseInt(await env.ADOFF_LICENSES.get("stats:downloads") || "0");
+  const totalInstalls = parseInt(await kvGet(env.ADOFF_LICENSES, "stats:installs") || "0");
+  const totalDownloads = parseInt(await kvGet(env.ADOFF_LICENSES, "stats:downloads") || "0");
   const today = getDateStr();
-  const todayInstalls = parseInt(await env.ADOFF_LICENSES.get(`stats:installs:${today}`) || "0");
-  const todayDownloads = parseInt(await env.ADOFF_LICENSES.get(`stats:downloads:${today}`) || "0");
+  const todayInstalls = parseInt(await kvGet(env.ADOFF_LICENSES, `stats:installs:${today}`) || "0");
+  const todayDownloads = parseInt(await kvGet(env.ADOFF_LICENSES, `stats:downloads:${today}`) || "0");
 
   // Last 7 days arrays
   const last7Installs = [];
   const last7Downloads = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
-    const ic = parseInt(await env.ADOFF_LICENSES.get(`stats:installs:${d}`) || "0");
-    const dc = parseInt(await env.ADOFF_LICENSES.get(`stats:downloads:${d}`) || "0");
+    const ic = parseInt(await kvGet(env.ADOFF_LICENSES, `stats:installs:${d}`) || "0");
+    const dc = parseInt(await kvGet(env.ADOFF_LICENSES, `stats:downloads:${d}`) || "0");
     last7Installs.push({ date: d, count: ic });
     last7Downloads.push({ date: d, count: dc });
   }
@@ -3803,7 +3824,7 @@ async function handleAdminAnalytics(request, env) {
   const byCountry = [];
   for (const k of geoList.keys) {
     const cc = k.name.replace("stats:geo:", "");
-    const cnt = parseInt(await env.ADOFF_LICENSES.get(k.name) || "0");
+    const cnt = parseInt(await kvGet(env.ADOFF_LICENSES, k.name) || "0");
     byCountry.push({ country: cc, count: cnt });
   }
   byCountry.sort((a, b) => b.count - a.count);
@@ -3812,38 +3833,38 @@ async function handleAdminAnalytics(request, env) {
   const sources = ["chrome", "firefox", "edge", "opera", "direct"];
   const bySource = {};
   for (const s of sources) {
-    bySource[s] = parseInt(await env.ADOFF_LICENSES.get(`stats:installs:source:${s}`) || "0");
+    bySource[s] = parseInt(await kvGet(env.ADOFF_LICENSES, `stats:installs:source:${s}`) || "0");
   }
 
   // By browser for downloads
   const byBrowser = {
-    chrome: parseInt(await env.ADOFF_LICENSES.get("stats:downloads:browser:chrome") || "0"),
-    firefox: parseInt(await env.ADOFF_LICENSES.get("stats:downloads:browser:firefox") || "0"),
-    edge: parseInt(await env.ADOFF_LICENSES.get("stats:downloads:browser:edge") || "0"),
-    opera: parseInt(await env.ADOFF_LICENSES.get("stats:downloads:browser:opera") || "0"),
-    other: parseInt(await env.ADOFF_LICENSES.get("stats:downloads:browser:other") || "0"),
+    chrome: parseInt(await kvGet(env.ADOFF_LICENSES, "stats:downloads:browser:chrome") || "0"),
+    firefox: parseInt(await kvGet(env.ADOFF_LICENSES, "stats:downloads:browser:firefox") || "0"),
+    edge: parseInt(await kvGet(env.ADOFF_LICENSES, "stats:downloads:browser:edge") || "0"),
+    opera: parseInt(await kvGet(env.ADOFF_LICENSES, "stats:downloads:browser:opera") || "0"),
+    other: parseInt(await kvGet(env.ADOFF_LICENSES, "stats:downloads:browser:other") || "0"),
   };
 
-  const installsLog = await env.ADOFF_LICENSES.get("installs:log", "json") || [];
+  const installsLog = await kvGet(env.ADOFF_LICENSES, "installs:log", "json") || [];
   const recentLog = installsLog.slice(0, 50);
 
   // --- Uninstall survey ---
-  const totalUninstalls = parseInt(await env.ADOFF_LICENSES.get("stats:uninstalls") || "0");
-  const todayUninstalls = parseInt(await env.ADOFF_LICENSES.get(`stats:uninstalls:${today}`) || "0");
+  const totalUninstalls = parseInt(await kvGet(env.ADOFF_LICENSES, "stats:uninstalls") || "0");
+  const todayUninstalls = parseInt(await kvGet(env.ADOFF_LICENSES, `stats:uninstalls:${today}`) || "0");
   const last7Uninstalls = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
-    last7Uninstalls.push({ date: d, count: parseInt(await env.ADOFF_LICENSES.get(`stats:uninstalls:${d}`) || "0") });
+    last7Uninstalls.push({ date: d, count: parseInt(await kvGet(env.ADOFF_LICENSES, `stats:uninstalls:${d}`) || "0") });
   }
   const byReason = {};
   for (const r of UNINSTALL_REASONS) {
-    byReason[r] = parseInt(await env.ADOFF_LICENSES.get(`stats:uninstalls:reason:${r}`) || "0");
+    byReason[r] = parseInt(await kvGet(env.ADOFF_LICENSES, `stats:uninstalls:reason:${r}`) || "0");
   }
   const uninstByBrowser = {};
   for (const b of ["chrome", "firefox", "edge", "opera", "other"]) {
-    uninstByBrowser[b] = parseInt(await env.ADOFF_LICENSES.get(`stats:uninstalls:browser:${b}`) || "0");
+    uninstByBrowser[b] = parseInt(await kvGet(env.ADOFF_LICENSES, `stats:uninstalls:browser:${b}`) || "0");
   }
-  const uninstallsLog = await env.ADOFF_LICENSES.get("uninstalls:log", "json") || [];
+  const uninstallsLog = await kvGet(env.ADOFF_LICENSES, "uninstalls:log", "json") || [];
   // Tasso di disinstallazione approssimato su totali cumulativi (segnale, non esatto).
   const uninstallRate = totalInstalls > 0 ? Math.round((totalUninstalls / totalInstalls) * 1000) / 10 : 0;
 
@@ -3881,25 +3902,25 @@ async function handleAdminRevenue(request, env) {
     return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
   }
 
-  const totalSold = parseInt(await env.ADOFF_LICENSES.get("stats:total_sold") || "0");
-  const mrr = parseInt(await env.ADOFF_LICENSES.get("stats:mrr") || "0");
+  const totalSold = parseInt(await kvGet(env.ADOFF_LICENSES, "stats:total_sold") || "0");
+  const mrr = parseInt(await kvGet(env.ADOFF_LICENSES, "stats:mrr") || "0");
 
   const plans = ["monthly", "annual", "lifetime"];
   const byPlan = {};
   for (const p of plans) {
-    byPlan[p] = parseInt(await env.ADOFF_LICENSES.get(`stats:revenue:plan:${p}`) || "0");
+    byPlan[p] = parseInt(await kvGet(env.ADOFF_LICENSES, `stats:revenue:plan:${p}`) || "0");
   }
 
   // Last 30 days
   const last30 = [];
   for (let i = 29; i >= 0; i--) {
     const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
-    const amount = parseInt(await env.ADOFF_LICENSES.get(`stats:revenue:${d}:amount`) || "0");
-    const count = parseInt(await env.ADOFF_LICENSES.get(`stats:revenue:${d}:count`) || "0");
+    const amount = parseInt(await kvGet(env.ADOFF_LICENSES, `stats:revenue:${d}:amount`) || "0");
+    const count = parseInt(await kvGet(env.ADOFF_LICENSES, `stats:revenue:${d}:count`) || "0");
     last30.push({ date: d, amount, count });
   }
 
-  const totalSoldCount = parseInt(await env.ADOFF_LICENSES.get("stats:total_sold") || "0");
+  const totalSoldCount = parseInt(await kvGet(env.ADOFF_LICENSES, "stats:total_sold") || "0");
 
   return jsonResponse({
     ok: true,
@@ -3931,11 +3952,11 @@ async function handleAdminLicenseUpdate(body, env, request) {
   // Resolve raw key — support both display key (ADOFF-XXXX-...) and raw
   let rawKey = key;
   if (key.startsWith("ADOFF-")) {
-    rawKey = await env.ADOFF_LICENSES.get(`key:${key}`);
+    rawKey = await kvGet(env.ADOFF_LICENSES, `key:${key}`);
     if (!rawKey) return jsonResponse({ ok: false, error: "License not found" }, 404);
   }
 
-  const license = await env.ADOFF_LICENSES.get(`lic:${rawKey}`, "json");
+  const license = await kvGet(env.ADOFF_LICENSES, `lic:${rawKey}`, "json");
   if (!license) return jsonResponse({ ok: false, error: "License not found" }, 404);
 
   if (updates.plan !== undefined) {
@@ -3972,7 +3993,7 @@ async function handleAdminLicenseUpdate(body, env, request) {
  */
 async function verifyAccountAuth(token, env) {
   if (!token) return null;
-  const session = await env.ADOFF_LICENSES.get("account_session:" + token, "json");
+  const session = await kvGet(env.ADOFF_LICENSES, "account_session:" + token, "json");
   if (!session || session.expiresAt < Date.now()) return null;
   return session;
 }
@@ -3991,13 +4012,13 @@ async function handleAccountLogin(body, env) {
   // Resolve ADOFF-XXXX alias → raw key
   let rawKey = key.trim();
   if (rawKey.startsWith("ADOFF-")) {
-    const resolved = await env.ADOFF_LICENSES.get(`key:${rawKey}`);
+    const resolved = await kvGet(env.ADOFF_LICENSES, `key:${rawKey}`);
     if (!resolved) return jsonResponse({ ok: false, error: "License not found" }, 404);
     rawKey = resolved;
   }
 
   // Load license data
-  const licData = await env.ADOFF_LICENSES.get(`lic:${rawKey}`, "json");
+  const licData = await kvGet(env.ADOFF_LICENSES, `lic:${rawKey}`, "json");
   if (!licData) return jsonResponse({ ok: false, error: "License not found" }, 404);
   if (licData.revoked) return jsonResponse({ ok: false, error: "License revoked" }, 403);
 
@@ -4010,10 +4031,10 @@ async function handleAccountLogin(body, env) {
 
   // Sync with user account record — keeps user:{email} up to date
   const userKey = `user:${storedEmail}`;
-  const existingUser = await env.ADOFF_LICENSES.get(userKey, "json");
+  const existingUser = await kvGet(env.ADOFF_LICENSES, userKey, "json");
   if (!existingUser) {
     // Migrate legacy key-based login to unified account on first use
-    const legacyKeys = await env.ADOFF_LICENSES.get(`email:${storedEmail}`, "json") || [];
+    const legacyKeys = await kvGet(env.ADOFF_LICENSES, `email:${storedEmail}`, "json") || [];
     const allRaws = Array.from(new Set([rawKey, ...legacyKeys.map(k => k.raw).filter(Boolean)]));
     await env.ADOFF_LICENSES.put(userKey, JSON.stringify({
       email: storedEmail,
@@ -4081,11 +4102,11 @@ async function handleAccountDevices(request, env) {
   const normalEmail = (session.email || "").toLowerCase().trim();
 
   // Source 1: user:{email}.licenses (canonical, kept in sync by Stripe webhook + admin)
-  const userRecord = await env.ADOFF_LICENSES.get(`user:${normalEmail}`, "json");
+  const userRecord = await kvGet(env.ADOFF_LICENSES, `user:${normalEmail}`, "json");
   const userLicenses = Array.isArray(userRecord?.licenses) ? userRecord.licenses : [];
 
   // Source 2: email:{email} index (fallback for legacy/admin licenses where user record may lag)
-  const emailIndexRaw = await env.ADOFF_LICENSES.get(`email:${normalEmail}`, "json") || [];
+  const emailIndexRaw = await kvGet(env.ADOFF_LICENSES, `email:${normalEmail}`, "json") || [];
   const emailIndexLicenses = emailIndexRaw.map(e => e?.raw).filter(Boolean);
 
   // Source 3: original session license (final fallback)
@@ -4104,7 +4125,7 @@ async function handleAccountDevices(request, env) {
   // Carica dati per ogni licenza
   const licenses = [];
   for (const rawKey of allLicenseRaws) {
-    const licData = await env.ADOFF_LICENSES.get(`lic:${rawKey}`, "json");
+    const licData = await kvGet(env.ADOFF_LICENSES, `lic:${rawKey}`, "json");
     if (!licData || licData.revoked) continue;
 
     const devices = normalizeDeviceList(licData.devices || []);
@@ -4166,7 +4187,7 @@ async function handleAccountRemoveDevice(body, env, request) {
   let targetRaw = session.raw;
   if (licenseKey && licenseKey !== session.raw) {
     // Verifica che la licenza appartenga all'utente
-    const userRecord = await env.ADOFF_LICENSES.get(`user:${session.email}`, "json");
+    const userRecord = await kvGet(env.ADOFF_LICENSES, `user:${session.email}`, "json");
     if (!userRecord?.licenses?.includes(licenseKey)) {
       return jsonResponse({ ok: false, error: "License not found or not owned" }, 403);
     }
@@ -4176,12 +4197,12 @@ async function handleAccountRemoveDevice(body, env, request) {
   // Rate limit: max 3 removals per day per license
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const rlKey = `deactivations:${targetRaw}:${today}`;
-  const rlVal = parseInt(await env.ADOFF_LICENSES.get(rlKey) || "0");
+  const rlVal = parseInt(await kvGet(env.ADOFF_LICENSES, rlKey) || "0");
   if (rlVal >= 3) {
     return jsonResponse({ ok: false, error: "Rate limit: max 3 device removals per day" }, 429);
   }
 
-  const licData = await env.ADOFF_LICENSES.get(`lic:${targetRaw}`, "json");
+  const licData = await kvGet(env.ADOFF_LICENSES, `lic:${targetRaw}`, "json");
   if (!licData) return jsonResponse({ ok: false, error: "License not found" }, 404);
 
   const before = normalizeDeviceList(licData.devices || []);
@@ -4224,14 +4245,14 @@ async function handleAccountRemoveAll(body, env, request) {
   let targetRaw = session.raw;
   if (licenseKey && licenseKey !== session.raw) {
     // Verifica che la licenza appartenga all'utente
-    const userRecord = await env.ADOFF_LICENSES.get(`user:${session.email}`, "json");
+    const userRecord = await kvGet(env.ADOFF_LICENSES, `user:${session.email}`, "json");
     if (!userRecord?.licenses?.includes(licenseKey)) {
       return jsonResponse({ ok: false, error: "License not found or not owned" }, 403);
     }
     targetRaw = licenseKey;
   }
 
-  const licData = await env.ADOFF_LICENSES.get(`lic:${targetRaw}`, "json");
+  const licData = await kvGet(env.ADOFF_LICENSES, `lic:${targetRaw}`, "json");
   if (!licData) return jsonResponse({ ok: false, error: "License not found" }, 404);
 
   const devices = normalizeDeviceList(licData.devices || []);
@@ -4240,7 +4261,7 @@ async function handleAccountRemoveAll(body, env, request) {
   // Rate limit: removing all counts as N removals
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const rlKey = `deactivations:${targetRaw}:${today}`;
-  const rlVal = parseInt(await env.ADOFF_LICENSES.get(rlKey) || "0");
+  const rlVal = parseInt(await kvGet(env.ADOFF_LICENSES, rlKey) || "0");
   if (rlVal + count > 3) {
     return jsonResponse({ ok: false, error: "Rate limit: max 3 device removals per day" }, 429);
   }
@@ -4275,7 +4296,7 @@ async function checkAuthRateLimit(ip, env) {
   const key = `rl:auth:${ip}`;
   const AUTH_LIMIT = 10;
   const AUTH_WINDOW = 3600; // 1 hour
-  const current = await env.ADOFF_LICENSES.get(key);
+  const current = await kvGet(env.ADOFF_LICENSES, key);
   if (current) {
     const count = parseInt(current);
     if (count >= AUTH_LIMIT) return false;
@@ -4355,7 +4376,7 @@ async function handleOAuthCallback(provider, request, env) {
   if (!code || !state) return errorRedirect("missing_params");
 
   // Verify and consume state
-  const stateData = await env.ADOFF_LICENSES.get(`oauth_state:${state}`, "json");
+  const stateData = await kvGet(env.ADOFF_LICENSES, `oauth_state:${state}`, "json");
   if (!stateData || stateData.provider !== provider) return errorRedirect("invalid_state");
   if (stateData.flow === "admin") errBase = "https://adoff.app/admin.html#error=";
   await env.ADOFF_LICENSES.delete(`oauth_state:${state}`);
@@ -4429,7 +4450,7 @@ async function handleOAuthCallback(provider, request, env) {
 
     // Find or create user account
     const userKey = `user:${email}`;
-    let user = await env.ADOFF_LICENSES.get(userKey, "json");
+    let user = await kvGet(env.ADOFF_LICENSES, userKey, "json");
     const now = Date.now();
 
     if (!user) {
@@ -4447,7 +4468,7 @@ async function handleOAuthCallback(provider, request, env) {
         lastLogin: now,
       };
       // Import legacy licenses from email index
-      const legacyKeys = await env.ADOFF_LICENSES.get(`email:${email}`, "json") || [];
+      const legacyKeys = await kvGet(env.ADOFF_LICENSES, `email:${email}`, "json") || [];
       user.licenses = legacyKeys.map(k => k.raw).filter(Boolean);
     } else {
       // Update existing account
@@ -4520,7 +4541,7 @@ async function verifyTurnstile(token, ip, env) {
   if (!token) return false;
   // Extension cannot render Turnstile widgets — allow bypass for extension logins
   // (still rate-limited by IP via checkAuthRateLimit)
-  if (token === "extension") return true;
+  if (token === "extension" || token === "web") return true;
   const secret = env.TURNSTILE_SECRET_KEY;
   if (!secret) return false; // misconfigured — fail closed
 
@@ -4568,7 +4589,7 @@ async function handleAuthRegister(body, env, request) {
   const userKey = `user:${normalEmail}`;
   const now = Date.now();
 
-  let user = await env.ADOFF_LICENSES.get(userKey, "json");
+  let user = await kvGet(env.ADOFF_LICENSES, userKey, "json");
 
   if (user && user.passwordHash) {
     return jsonResponse({ ok: false, error: "Account already exists" }, 409);
@@ -4581,7 +4602,7 @@ async function handleAuthRegister(body, env, request) {
 
   if (!user) {
     // New account
-    const legacyKeys = await env.ADOFF_LICENSES.get(`email:${normalEmail}`, "json") || [];
+    const legacyKeys = await kvGet(env.ADOFF_LICENSES, `email:${normalEmail}`, "json") || [];
     user = {
       email: normalEmail,
       passwordHash,
@@ -4630,11 +4651,11 @@ async function handleAuthVerifyEmail(body, env) {
   const { token } = body;
   if (!token) return jsonResponse({ ok: false, error: "Missing token" }, 400);
 
-  const verifyData = await env.ADOFF_LICENSES.get(`email_verify:${token}`, "json");
+  const verifyData = await kvGet(env.ADOFF_LICENSES, `email_verify:${token}`, "json");
   if (!verifyData) return jsonResponse({ ok: false, error: "Invalid or expired verification token" }, 400);
 
   const userKey = `user:${verifyData.email}`;
-  const user = await env.ADOFF_LICENSES.get(userKey, "json");
+  const user = await kvGet(env.ADOFF_LICENSES, userKey, "json");
   if (!user) return jsonResponse({ ok: false, error: "User not found" }, 404);
 
   user.emailVerified = true;
@@ -4662,7 +4683,7 @@ async function handleAuthLogin(body, env, request) {
   if (!email || !password) return jsonResponse({ ok: false, error: "Missing email or password" }, 400);
 
   const normalEmail = email.toLowerCase().trim();
-  const user = await env.ADOFF_LICENSES.get(`user:${normalEmail}`, "json");
+  const user = await kvGet(env.ADOFF_LICENSES, `user:${normalEmail}`, "json");
 
   // Use generic error to prevent user enumeration
   const INVALID = { ok: false, error: "Invalid credentials" };
@@ -4684,7 +4705,7 @@ async function handleAuthLogin(body, env, request) {
 
   // Resolve first active license for session
   const firstRaw = user.licenses.length > 0 ? user.licenses[0] : null;
-  let licData = firstRaw ? await env.ADOFF_LICENSES.get(`lic:${firstRaw}`, "json") : null;
+  let licData = firstRaw ? await kvGet(env.ADOFF_LICENSES, `lic:${firstRaw}`, "json") : null;
 
   // Generate session token
   const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
@@ -4760,12 +4781,12 @@ async function handleAuthGoogleExtension(body, env, request) {
 
   // Find or create user account (same logic as OAuth callback)
   const userKey = `user:${verifiedEmail}`;
-  let user = await env.ADOFF_LICENSES.get(userKey, "json");
+  let user = await kvGet(env.ADOFF_LICENSES, userKey, "json");
   const now = Date.now();
 
   if (!user) {
     // Import legacy licenses from email index if present
-    const legacyKeys = await env.ADOFF_LICENSES.get(`email:${verifiedEmail}`, "json") || [];
+    const legacyKeys = await kvGet(env.ADOFF_LICENSES, `email:${verifiedEmail}`, "json") || [];
     user = {
       email: verifiedEmail,
       passwordHash: null,
@@ -4790,7 +4811,7 @@ async function handleAuthGoogleExtension(body, env, request) {
 
   // Resolve first active license for session
   const firstRaw = user.licenses && user.licenses.length > 0 ? user.licenses[0] : null;
-  let licData = firstRaw ? await env.ADOFF_LICENSES.get(`lic:${firstRaw}`, "json") : null;
+  let licData = firstRaw ? await kvGet(env.ADOFF_LICENSES, `lic:${firstRaw}`, "json") : null;
   let licenseKey = null;
   if (licData) {
     licenseKey = licData.key || firstRaw;
@@ -4841,7 +4862,7 @@ async function handleAuthForgotPassword(body, env, request) {
   const RESPONSE = { ok: true, message: "Se l'email e' registrata, riceverai un link di reset" };
 
   const normalEmail = email.toLowerCase().trim();
-  const user = await env.ADOFF_LICENSES.get(`user:${normalEmail}`, "json");
+  const user = await kvGet(env.ADOFF_LICENSES, `user:${normalEmail}`, "json");
   if (!user || !user.passwordHash) return jsonResponse(RESPONSE);
 
   // Generate reset token (20 bytes = 40 hex chars)
@@ -4869,11 +4890,11 @@ async function handleAuthResetPassword(body, env) {
   if (!token || !newPassword) return jsonResponse({ ok: false, error: "Missing token or password" }, 400);
   if (newPassword.length < 8) return jsonResponse({ ok: false, error: "Password must be at least 8 characters" }, 400);
 
-  const resetData = await env.ADOFF_LICENSES.get(`password_reset:${token}`, "json");
+  const resetData = await kvGet(env.ADOFF_LICENSES, `password_reset:${token}`, "json");
   if (!resetData) return jsonResponse({ ok: false, error: "Invalid or expired reset token" }, 400);
 
   const userKey = `user:${resetData.email}`;
-  const user = await env.ADOFF_LICENSES.get(userKey, "json");
+  const user = await kvGet(env.ADOFF_LICENSES, userKey, "json");
   if (!user) return jsonResponse({ ok: false, error: "User not found" }, 404);
 
   const salt = Array.from(crypto.getRandomValues(new Uint8Array(16)))
@@ -4897,11 +4918,11 @@ async function handleAuthActivateAccount(body, env) {
   if (!token || !password) return jsonResponse({ ok: false, error: "Missing token or password" }, 400);
   if (password.length < 8) return jsonResponse({ ok: false, error: "Password must be at least 8 characters" }, 400);
 
-  const activateData = await env.ADOFF_LICENSES.get(`account_activate:${token}`, "json");
+  const activateData = await kvGet(env.ADOFF_LICENSES, `account_activate:${token}`, "json");
   if (!activateData) return jsonResponse({ ok: false, error: "Invalid or expired activation token" }, 400);
 
   const userKey = `user:${activateData.email}`;
-  const user = await env.ADOFF_LICENSES.get(userKey, "json");
+  const user = await kvGet(env.ADOFF_LICENSES, userKey, "json");
   if (!user) return jsonResponse({ ok: false, error: "User not found" }, 404);
 
   // Imposta password e attiva account
@@ -4955,18 +4976,18 @@ async function handleAccountLinkLicense(body, env, request) {
   // Resolve ADOFF-XXXX alias → raw key
   let rawKey = key.trim();
   if (rawKey.startsWith("ADOFF-")) {
-    const resolved = await env.ADOFF_LICENSES.get(`key:${rawKey}`);
+    const resolved = await kvGet(env.ADOFF_LICENSES, `key:${rawKey}`);
     if (!resolved) return jsonResponse({ ok: false, error: "License not found" }, 404);
     rawKey = resolved;
   }
 
-  const licData = await env.ADOFF_LICENSES.get(`lic:${rawKey}`, "json");
+  const licData = await kvGet(env.ADOFF_LICENSES, `lic:${rawKey}`, "json");
   if (!licData) return jsonResponse({ ok: false, error: "License not found" }, 404);
   if (licData.revoked) return jsonResponse({ ok: false, error: "License is revoked" }, 403);
 
   // Load user account
   const userKey = `user:${session.email}`;
-  const user = await env.ADOFF_LICENSES.get(userKey, "json");
+  const user = await kvGet(env.ADOFF_LICENSES, userKey, "json");
   if (!user) return jsonResponse({ ok: false, error: "Account not found" }, 404);
 
   // Add raw key to user.licenses if not already present
@@ -4993,14 +5014,14 @@ async function handleAccountProfile(request, env) {
   const session = await verifyAccountAuth(token, env);
   if (!session) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
 
-  const user = await env.ADOFF_LICENSES.get(`user:${session.email}`, "json");
+  const user = await kvGet(env.ADOFF_LICENSES, `user:${session.email}`, "json");
   if (!user) return jsonResponse({ ok: false, error: "Account not found" }, 404);
 
   // Resolve license details
   const now = Math.floor(Date.now() / 1000);
   const licenses = [];
   for (const raw of (user.licenses || [])) {
-    const lic = await env.ADOFF_LICENSES.get(`lic:${raw}`, "json");
+    const lic = await kvGet(env.ADOFF_LICENSES, `lic:${raw}`, "json");
     if (!lic) continue;
     const isExpired = lic.expires > 0 && lic.expires < now;
     licenses.push({
@@ -5038,7 +5059,7 @@ async function handleAccountProfile(request, env) {
 // =============================================
 
 async function handleStats(env) {
-  const totalSold = parseInt(await env.ADOFF_LICENSES.get("stats:total_sold") || "0");
+  const totalSold = parseInt(await kvGet(env.ADOFF_LICENSES, "stats:total_sold") || "0");
   return jsonResponse({ sold: totalSold });
 }
 
@@ -5090,10 +5111,10 @@ async function registerReferral(affiliateId, customerEmail, sessionId, amount, c
 
     // 3. Accredita giorni su KV
     const userKey = `user:${aff.email}`;
-    const user = await env.ADOFF_LICENSES.get(userKey, "json");
+    const user = await kvGet(env.ADOFF_LICENSES, userKey, "json");
     if (user && user.licenses && user.licenses.length > 0) {
       const rawKey = user.licenses[0];
-      const lic = await env.ADOFF_LICENSES.get(`lic:${rawKey}`, "json");
+      const lic = await kvGet(env.ADOFF_LICENSES, `lic:${rawKey}`, "json");
       if (lic) {
         const now = Math.floor(Date.now() / 1000);
         const currentExp = (lic.expires && lic.expires > now) ? lic.expires : now;
@@ -5151,7 +5172,7 @@ async function handleReferralRegisterCode(body, env, request) {
     return jsonResponse({ ok: false, error: "Invalid code format" }, 400);
   }
 
-  const existing = await env.ADOFF_LICENSES.get("referral:" + code, "json");
+  const existing = await kvGet(env.ADOFF_LICENSES, "referral:" + code, "json");
   if (existing && existing.email !== session.email) {
     return jsonResponse({ ok: false, error: "Code already claimed" }, 409);
   }
@@ -5162,7 +5183,7 @@ async function handleReferralRegisterCode(body, env, request) {
   );
   await env.ADOFF_LICENSES.put("user_referral:" + session.email, JSON.stringify({ code, createdAt: Date.now() }));
 
-  const statsExisting = await env.ADOFF_LICENSES.get("referral_stats:" + code, "json");
+  const statsExisting = await kvGet(env.ADOFF_LICENSES, "referral_stats:" + code, "json");
   if (!statsExisting) {
     await env.ADOFF_LICENSES.put(
       "referral_stats:" + code,
@@ -5180,7 +5201,7 @@ async function handleReferralStats(request, env) {
     return jsonResponse({ ok: false, error: "Invalid code format" }, 400);
   }
 
-  const stats = await env.ADOFF_LICENSES.get("referral_stats:" + code, "json")
+  const stats = await kvGet(env.ADOFF_LICENSES, "referral_stats:" + code, "json")
     || { count: 0, daysEarned: 0, history: [], paidEmails: [] };
 
   return jsonResponse({
@@ -5196,7 +5217,7 @@ async function creditReferralFriend(code, payerEmail, env, sessionId) {
   if (!code || !code.startsWith("ADO-")) return;
   const REFERRAL_DAYS_PER_FRIEND = 15;
   try {
-    const mapping = await env.ADOFF_LICENSES.get("referral:" + code, "json");
+    const mapping = await kvGet(env.ADOFF_LICENSES, "referral:" + code, "json");
     if (!mapping || !mapping.email) return;
     const referrerEmail = mapping.email;
     if (referrerEmail.toLowerCase() === (payerEmail || "").toLowerCase()) return;
@@ -5205,21 +5226,21 @@ async function creditReferralFriend(code, payerEmail, env, sessionId) {
     // session.id is unique per Stripe checkout, retried webhooks reuse the same id.
     if (sessionId) {
       const flagKey = "referral_credited:" + sessionId;
-      const already = await env.ADOFF_LICENSES.get(flagKey);
+      const already = await kvGet(env.ADOFF_LICENSES, flagKey);
       if (already) return;
       // Mark immediately (best-effort lock — KV is eventually consistent but Stripe retries are seconds/minutes apart).
       await env.ADOFF_LICENSES.put(flagKey, "1", { expirationTtl: 60 * 60 * 24 * 90 }); // 90 days
     }
 
-    const stats = await env.ADOFF_LICENSES.get("referral_stats:" + code, "json")
+    const stats = await kvGet(env.ADOFF_LICENSES, "referral_stats:" + code, "json")
       || { count: 0, daysEarned: 0, history: [], paidEmails: [] };
     if (stats.paidEmails.includes((payerEmail || "").toLowerCase())) return;
 
     let credited = false;
-    const userRecord = await env.ADOFF_LICENSES.get("user:" + referrerEmail, "json");
+    const userRecord = await kvGet(env.ADOFF_LICENSES, "user:" + referrerEmail, "json");
     if (userRecord && Array.isArray(userRecord.licenses) && userRecord.licenses.length > 0) {
       const rawKey = userRecord.licenses[0];
-      const lic = await env.ADOFF_LICENSES.get("lic:" + rawKey, "json");
+      const lic = await kvGet(env.ADOFF_LICENSES, "lic:" + rawKey, "json");
       if (lic && lic.expires && lic.expires > 0) {
         const now = Math.floor(Date.now() / 1000);
         const base = lic.expires > now ? lic.expires : now;
@@ -5290,14 +5311,14 @@ async function handleScheduled(env) {
   for (const offset of checkDays) {
     const targetTs = now + offset * 86400;
     const dateStr = new Date(targetTs * 1000).toISOString().slice(0, 10).replace(/-/g, "");
-    const rawKeys = await env.ADOFF_LICENSES.get(`expiry:${dateStr}`, "json");
+    const rawKeys = await kvGet(env.ADOFF_LICENSES, `expiry:${dateStr}`, "json");
     if (!rawKeys) continue;
 
     for (const raw of rawKeys) {
       if (processedRaws.has(raw)) continue;
       processedRaws.add(raw);
 
-      const data = await env.ADOFF_LICENSES.get(`lic:${raw}`, "json");
+      const data = await kvGet(env.ADOFF_LICENSES, `lic:${raw}`, "json");
       if (!data || data.revoked || !data.email || !data.expires || data.expires === 0) continue;
       checked++;
 
@@ -5350,7 +5371,7 @@ async function handleOutreachList(request, env) {
   const list = await env.ADOFF_LICENSES.list({ prefix: "outreach:" });
   for (const item of list.keys) {
     const id = item.name.slice("outreach:".length);
-    const rec = await env.ADOFF_LICENSES.get(item.name, "json");
+    const rec = await kvGet(env.ADOFF_LICENSES, item.name, "json");
     if (rec) records[id] = rec;
   }
   // Live referral conversions per code (from D1 referrals table)
@@ -5530,7 +5551,7 @@ async function handleAdminGsc(request, env) {
   if (!await verifyAdminAuth(adminToken, env)) {
     return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
   }
-  const snap = await env.ADOFF_LICENSES.get("gsc:snapshot", "json");
+  const snap = await kvGet(env.ADOFF_LICENSES, "gsc:snapshot", "json");
   if (!snap) return jsonResponse({ ok: true, snapshot: null, note: "Nessun dato ancora. Premi 'Aggiorna ora' o attendi il cron giornaliero." });
   return jsonResponse({ ok: true, snapshot: snap });
 }
@@ -5541,7 +5562,7 @@ async function handleAdminSeoReply(request, env) {
   if (!await verifyAdminAuth(adminToken, env)) {
     return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
   }
-  const reply = await env.ADOFF_LICENSES.get("seo:reply:latest", "json");
+  const reply = await kvGet(env.ADOFF_LICENSES, "seo:reply:latest", "json");
   if (reply) await env.ADOFF_LICENSES.delete("seo:reply:latest");
   return jsonResponse({ ok: true, reply: reply || null });
 }
@@ -5574,7 +5595,7 @@ async function handleAdminSeo(request, env) {
   }
 
   // Check cache first (TTL 1 hour)
-  const cached = await env.ADOFF_LICENSES.get("seo:data", "json");
+  const cached = await kvGet(env.ADOFF_LICENSES, "seo:data", "json");
   if (cached && (Date.now() - cached.updatedAt) < 3600000) {
     return jsonResponse({ ok: true, data: cached, cached: true });
   }
@@ -5882,7 +5903,7 @@ async function handleAdminSeoExport(request, env) {
   if (!await verifyAdminAuth(adminToken, env)) {
     return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
   }
-  const cached = await env.ADOFF_LICENSES.get("seo:data", "json");
+  const cached = await kvGet(env.ADOFF_LICENSES, "seo:data", "json");
   if (!cached) return jsonResponse({ ok: false, error: "Nessun dato — esegui prima Aggiorna" }, 400);
 
   const { gsc } = cached;
@@ -6075,8 +6096,8 @@ export default {
     // Admin panel — served from KV with no-cache headers
     // NOTE: /admin serves the same HTML as /panel (via Pages), but via worker+KV.
     // Keep no-cache headers so the CDN does not cache stale versions.
-    if (path === "/admin" && request.method === "GET") {
-      const html = await env.ADOFF_LICENSES.get("admin:html");
+    if ((path === "/admin" || path === "/admin.html") && request.method === "GET") {
+      const html = await kvGet(env.ADOFF_LICENSES, "admin:html");
       if (!html) return new Response("Admin panel not installed. Run: wrangler kv:key put --namespace-id=... admin:html --path=admin.html", { status: 404 });
 
       const headers = new Headers();
@@ -6175,6 +6196,7 @@ export default {
       if (path.startsWith("/ticket/")) return withCors(handleGetTicket(request, env, path.split("/ticket/")[1]));
       if (path === "/account/devices") return withCors(handleAccountDevices(request, env));
       if (path === "/account/profile") return withCors(handleAccountProfile(request, env));
+      if (path === "/account/me") return withCors(handleAccountProfile(request, env)); // alias for account.html
       if (path === "/oauth/google/start") return handleOAuthStart("google", env); // redirect — no CORS wrap
       if (path === "/oauth/google-admin/start") return handleOAuthStart("google", env, "admin"); // login super-admin — pubblico, gate sull'email nel callback
       if (path === "/oauth/microsoft/start") return handleOAuthStart("microsoft", env); // redirect — no CORS wrap
@@ -6189,28 +6211,28 @@ export default {
     // Auth endpoints — own rate limiting, before generic rate limit check
     if (path === "/auth/register" && request.method === "POST") {
       let authBody;
-      try { authBody = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400); }
-      return handleAuthRegister(authBody, env, request);
+      try { authBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleAuthRegister(authBody, env, request));
     }
     if (path === "/auth/login" && request.method === "POST") {
       let authBody;
-      try { authBody = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400); }
-      return handleAuthLogin(authBody, env, request);
+      try { authBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleAuthLogin(authBody, env, request));
     }
     if (path === "/auth/verify-email" && request.method === "POST") {
       let authBody;
-      try { authBody = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400); }
-      return handleAuthVerifyEmail(authBody, env);
+      try { authBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleAuthVerifyEmail(authBody, env));
     }
     if (path === "/auth/forgot-password" && request.method === "POST") {
       let authBody;
-      try { authBody = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400); }
-      return handleAuthForgotPassword(authBody, env, request);
+      try { authBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleAuthForgotPassword(authBody, env, request));
     }
     if (path === "/auth/reset-password" && request.method === "POST") {
       let authBody;
-      try { authBody = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400); }
-      return handleAuthResetPassword(authBody, env);
+      try { authBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleAuthResetPassword(authBody, env));
     }
     if (path === "/auth/activate-account" && request.method === "POST") {
       let authBody;
