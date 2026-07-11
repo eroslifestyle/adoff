@@ -1,9 +1,18 @@
 # Project Global TOD — AdOff ChromePlugin
 
-**Main HEAD**: e71cfca · **Branch**: master · **Updated**: 2026-07-10 20:20
+**Main HEAD**: 9cb9f0c · **Branch**: master · **Updated**: 2026-07-11 12:40
 
 ## ✅ Done (ultimi 30, evidence-gated)
 
+- [x] **DEPLOY-WORKER-2026-07-10** — wrangler login OAuth + worker deploy + admin.html KV sync · commit `a4e57c2`
+  Endpoint `/admin/autofix/status` → JSON `{ok:true, open_leaks:24, fixed_leaks:0, total_rules:28, shadow_mode:true}` ✅
+- [x] **DEPLOY-SITE-2026-07-10** — wrangler pages deploy (privacy section 14 GDPR live 16 lingue) · commit `a4e57c2`
+  autofix-status.json seeded + pubbl. + rules-feed sync ✅ (progr: commit `89a009d`)
+- [x] **AUTOFIX-ADMIN-TAB-2026-07-10** — Tab Autofix + /admin/autofix/status in admin · commit `aa6f504`
+  ✅ Deploy completato (wrangler login OAuth sbloccato il token D1-only)
+- [x] **AUTOFIX-PRIVACY-I18N-2026-07-10** — Section 14 in all 16 privacy pages (GDPR opt-in) · commit `8f4def8`
+  ⚠️ Deploy site: wrangler pages deploy
+- [x] **AUTOFIX-BROAD-DOMAIN-QUALITY-2026-07-10** — no-op: bat.bing.com + amazon-adsystem.com già domain-scoped
 - [x] **AUTOFIX-SYNC-VERIFIED-2026-07-10** — syncRemoteRules() verificato in tutti e 3 i target (Chrome/Firefox/Safari), 20 rule remote (id 60000+) attive, Playwright test PASS · commit `37bf562`
 - [x] **AUTOFIX-SHADOW-VALIDATE-2026-07-10** — 3 bug critici + 4 fix secondari · commit `ed84839` + `330b48f` + `f294139`
   - Bug 1: `sourceDomain` in `urlFilter` (era `||domain^|source` → 85 validation errors) → fix: `domains[]` array
@@ -23,19 +32,10 @@
 
 ## 🔄 In Progress (max 5)
 
-_(vuoto)_
+*(nessuno — tutti i task attivi sono stati completati)*
 
 ## ⬜ Backlog (prossimi, in ordine di priorità)
 
-- [ ] **AUTOFIX-ADMIN-TAB** — Tab "Auto-Fix / Ad-Leak" in admin dashboard
-      Comando: `curl -s "https://api.adoff.app/admin/autofix/status" -H "X-Admin-Token: $ADMIN_TOKEN"`
-      Done when: endpoint ritorna JSON con siti testati/leak/trend + tab visibile in admin
-- [ ] **AUTOFIX-PRIVACY-I18N** — Aggiornare privacy policy 15 lingue con clausola diagnostica opt-in
-      Comando: `grep -l "Diagnostica" "/mnt/backup/Dropbox/1 Programmazione/Progetti/ChromePlugin/site/privacy/"*.html | wc -l`
-      Done when: tutte e 15 le privacy policy contengono la clausola consenso opt-in
-- [ ] **AUTOFIX-BROAD-DOMAIN-QUALITY** — Qualità candidate rules: `||bat.bing.com^` (Vimeo) è tracking Microsoft legittimo; `||amazon-adsystem.com^` (Twitch) potrebbe impattare embed Amazon
-      Comando: `cd "/mnt/backup/Dropbox/1 Programmazione/Progetti/ChromePlugin/sviluppo/autofix" && node analyze_and_fix.mjs --verbose`
-      Done when: candidate rules con 0 false-positive tracking (solo real ad-network)
 - [ ] **EDGE-EXPIRY-2026-09** — Rinnovare EDGE_API_KEY scaduta 2026-09-20
       Comando: vai su https://partner.microsoft.com/dashboard/microsoftedge/publishapi → Create/Renew API credentials
       Done when: tab Edge in admin mostra "Credenziali valide — pronto per upload/publish"
