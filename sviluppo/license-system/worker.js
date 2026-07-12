@@ -786,6 +786,50 @@ function checkRateLimit(ip) {
   return rec.count <= RATE_LIMIT_MAX;
 }
 
+/**
+ * Cache edge (caches.default) davanti a un endpoint admin GET costoso.
+ * Motivazione: un tab admin lasciato aperto pollava /admin/seo & /admin/autofix/*
+ * a decine di richieste/minuto; ogni hit faceva >=2 read KV (auth + dati),
+ * saturando la quota read free tier (100k/giorno) → login e admin panel down.
+ *
+ * Un cache-hit qui NON tocca KV (ne' auth ne' dati): la risposta e' servita
+ * dall'edge. La chiave e' derivata dal token → chi non ha un token valido ha
+ * una chiave diversa e va a miss → auth → 401 (nessun data-leak cross-utente).
+ * TTL breve (default 60s): un tab impazzito fa al massimo ~1 richiesta reale/min.
+ */
+async function cachedAdminGet(request, env, ctx, handler, ttlSeconds = 60) {
+  const token = request.headers.get(ADMIN_TOKEN_HEADER) || "anon";
+  // Hash non crittografico del token: evita di mettere il token in chiaro nella cache key.
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < token.length; i++) { h ^= token.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  const url = new URL(request.url);
+  const cacheKey = new Request(
+    `https://adoff.app/__admincache${url.pathname}?k=${h.toString(36)}&q=${encodeURIComponent(url.search)}`,
+    { method: "GET" }
+  );
+  const cache = caches.default;
+
+  const hit = await cache.match(cacheKey);
+  if (hit) {
+    const hh = new Headers(hit.headers);
+    hh.set("X-Admin-Cache", "HIT");
+    return new Response(hit.body, { status: hit.status, headers: hh });
+  }
+
+  const resp = await handler(request, env);
+  // Cacha solo le risposte valide (200): 401/500 NON vanno in cache (l'auth deve
+  // ri-valutare a ogni richiesta, e un errore transitorio non deve persistere).
+  if (resp.status === 200) {
+    const body = await resp.clone().arrayBuffer();
+    const cacheHeaders = new Headers(resp.headers);
+    cacheHeaders.set("Cache-Control", `max-age=${ttlSeconds}`);
+    ctx.waitUntil(cache.put(cacheKey, new Response(body, { status: 200, headers: cacheHeaders })));
+  }
+  const outHeaders = new Headers(resp.headers);
+  outHeaders.set("X-Admin-Cache", "MISS");
+  return new Response(resp.body, { status: resp.status, headers: outHeaders });
+}
+
 // Rate-limit dedicato ai ticket/suggerimenti: piu' stretto (max N per finestra lunga).
 // Difende l'endpoint /ticket anche dalle richieste che si fingono estensione (turnstileToken="extension").
 const TICKET_RL_MAX = 6;            // max 6 invii
@@ -4325,16 +4369,18 @@ async function handleOAuthStart(provider, env, flow = "account") {
     return jsonResponse({ ok: false, error: "OAuth not configured" }, 500);
   }
 
-  // Generate cryptographically random state (32 bytes = 64 hex chars)
-  const stateBytes = crypto.getRandomValues(new Uint8Array(32));
-  const state = Array.from(stateBytes).map(b => b.toString(16).padStart(2, "0")).join("");
-
-  // flow: "account" (login frontend utente) o "admin" (login backend pannello admin)
-  await env.ADOFF_LICENSES.put(
-    `oauth_state:${state}`,
-    JSON.stringify({ provider, flow, createdAt: Date.now() }),
-    { expirationTtl: 600 }
-  );
+  // State OAuth AUTO-VERIFICANTE (HMAC), NON persistito in KV.
+  // Prima lo state era scritto+riletto in KV: quando la quota read KV free tier
+  // si saturava, il callback non ritrovava lo state → "invalid_state" (login rotto).
+  // Ora il payload {provider,flow,nonce,ts} e' firmato HMAC con ADOFF_SECRET e
+  // rispedito nel parametro `state`: il callback lo verifica crittograficamente,
+  // zero KV. Un nonce random impedisce la predicibilita'; il ts limita la validita'.
+  const nonceBytes = crypto.getRandomValues(new Uint8Array(16));
+  const nonce = Array.from(nonceBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+  const statePayload = { provider, flow, nonce, ts: Date.now() };
+  const statePayloadB64 = btoa(JSON.stringify(statePayload)).replace(/=+$/, "");
+  const stateSig = await hmacSign(statePayloadB64, env.ADOFF_SECRET);
+  const state = `${statePayloadB64}.${stateSig}`;
 
   let authUrl;
   if (provider === "google") {
@@ -4377,11 +4423,28 @@ async function handleOAuthCallback(provider, request, env) {
 
   if (!code || !state) return errorRedirect("missing_params");
 
-  // Verify and consume state
-  const stateData = await kvGet(env.ADOFF_LICENSES, `oauth_state:${state}`, "json");
+  // Verifica lo state AUTO-VERIFICANTE (HMAC) — zero KV (vedi handleOAuthStart).
+  const STATE_MAX_AGE_MS = 600000; // 10 min
+  let stateData = null;
+  const dot = state.lastIndexOf(".");
+  if (dot > 0) {
+    const payloadB64 = state.slice(0, dot);
+    const sig = state.slice(dot + 1);
+    const expectSig = await hmacSign(payloadB64, env.ADOFF_SECRET);
+    if (sig === expectSig) {
+      try {
+        const parsed = JSON.parse(atob(payloadB64));
+        if (parsed && (Date.now() - parsed.ts) < STATE_MAX_AGE_MS) stateData = parsed;
+      } catch (_) {}
+    }
+  }
+  // Fallback legacy: state ancora in KV (sessioni OAuth aperte prima del deploy).
+  if (!stateData) {
+    stateData = await kvGet(env.ADOFF_LICENSES, `oauth_state:${state}`, "json");
+    if (stateData) await env.ADOFF_LICENSES.delete(`oauth_state:${state}`);
+  }
   if (!stateData || stateData.provider !== provider) return errorRedirect("invalid_state");
   if (stateData.flow === "admin") errBase = "https://adoff.app/admin.html#error=";
-  await env.ADOFF_LICENSES.delete(`oauth_state:${state}`);
 
   try {
     // Exchange code for tokens
@@ -6350,11 +6413,28 @@ export default {
         return new Response(cached.body, { status: 200, headers: h });
       }
 
-      const html = await kvGet(env.ADOFF_LICENSES, "admin:html");
+      // Sorgente primaria: HTML statico servito da Pages (adoff.app/admin-console) —
+      // ZERO KV. Fallback: KV admin:html. Cosi' /admin resta UP anche quando la
+      // quota read KV free tier e' satura (era la causa del 503 "not installed").
+      // NB: si fetcha dall'alias Pages `master.adoff-site.pages.dev` e NON da
+      // adoff.app/admin-console: l'apex adoff.app punta a un deployment di
+      // produzione che `wrangler pages deploy` (senza --branch) non aggiorna,
+      // mentre l'alias branch `master` riflette sempre l'ultimo deploy.
+      let html = null;
+      try {
+        const pagesResp = await fetch("https://master.adoff-site.pages.dev/admin-console", { cf: { cacheTtl: 300, cacheEverything: true }, redirect: "follow" });
+        if (pagesResp.ok) {
+          const txt = await pagesResp.text();
+          if (txt && txt.length > 100000) html = txt; // sanity: la console e' ~145KB, non una 404 page
+        }
+      } catch (_) {}
       if (!html) {
-        // kvGet ritorna null anche su rate-limit KV: non e' un "non installato".
+        html = await kvGet(env.ADOFF_LICENSES, "admin:html"); // fallback KV
+      }
+      if (!html) {
+        // Sia Pages che KV falliti (quota read KV satura + Pages non ancora deployato).
         return new Response(
-          "Admin panel temporaneamente non disponibile (KV read limit). Riprova tra qualche minuto.",
+          "Admin panel temporaneamente non disponibile. Riprova tra qualche minuto.",
           { status: 503, headers: { "Retry-After": "60", "Cache-Control": "no-store" } }
         );
       }
@@ -6442,11 +6522,14 @@ export default {
       if (path === "/attribution/stats") return withCors(handleAttributionStats(request, env));
       if (path === "/admin/outreach") return withCors(handleOutreachList(request, env));
       if (path === "/admin/gsc") return withCors(handleAdminGsc(request, env));
-      if (path === "/admin/seo") return withCors(handleAdminSeo(request, env));
+      // Endpoint admin GET costosi & pollati: cache edge 60s → un tab aperto non
+      // satura piu' la quota read KV (vedi cachedAdminGet). seo-reply resta senza
+      // cache perche' CONSUMA il messaggio (side-effect, non idempotente).
+      if (path === "/admin/seo") return withCors(cachedAdminGet(request, env, ctx, handleAdminSeo, 60));
       if (path === "/admin/seo/export") return withCors(handleAdminSeoExport(request, env));
       if (path === "/admin/seo-reply") return withCors(handleAdminSeoReply(request, env));
-      if (path === "/admin/autofix/status")    return withCors(handleAdminAutofixStatus(request, env));
-      if (path === "/admin/autofix/leaks")     return withCors(handleAutofixLeaks(request, env));
+      if (path === "/admin/autofix/status")    return withCors(cachedAdminGet(request, env, ctx, handleAdminAutofixStatus, 60));
+      if (path === "/admin/autofix/leaks")     return withCors(cachedAdminGet(request, env, ctx, handleAutofixLeaks, 60));
       if (path === "/admin/autofix/screenshot") return withCors(handleAutofixScreenshot(request, env));
       if (path === "/admin/edge/status") return withCors(handleAdminEdgeStatus(request, env));
       if (path === "/success") return withCors(handleSuccess(request, env));
