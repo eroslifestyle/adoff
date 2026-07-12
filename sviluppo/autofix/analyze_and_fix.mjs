@@ -464,7 +464,15 @@ async function analyze() {
     validation_errors: validationErrors.length,
     next_id: nextId,
     candidates: newCandidates.map(c => c.rule),
-    tracked: [...newCandidates.map(c => ({ fingerprint: c.fingerprint, domain: c.domain, ad_network: c.ad_network })), ...alreadyTracked],
+    tracked: [
+      ...newCandidates.map(c => ({
+        fingerprint: c.fingerprint,
+        domain: c.domain,
+        ad_network: c.ad_network,
+        candidate_rule: c.rule,    // include rule so push_dashboard gets it
+      })),
+      ...alreadyTracked,
+    ],
     errors: validationErrors,
     leaks_detail
   };

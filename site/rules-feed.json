@@ -1,7 +1,7 @@
 {
   "_comment": "AdOff remote rule-feed. Applicato a runtime via declarativeNetRequest.updateDynamicRules (range id riservato 60000+). Solo azioni block/allow: il client scarta redirect/modifyHeaders. Aggiornabile senza review store. Vedi app/src/background.js -> syncRemoteRules().",
   "version": 1,
-  "updated": "2026-07-10T18:13:16Z",
+  "updated": "2026-07-12",
   "rules": [
     {
       "priority": 1,
@@ -446,10 +446,173 @@
           "twitch.tv"
         ]
       }
+    },
+    {
+      "priority": 1,
+      "action": {
+        "type": "block"
+      },
+      "condition": {
+        "urlFilter": "||static.doubleclick.net^",
+        "resourceTypes": [
+          "script",
+          "xmlhttprequest",
+          "image",
+          "sub_frame"
+        ],
+        "domains": [
+          "youtube.com"
+        ]
+      }
+    },
+    {
+      "priority": 1,
+      "action": {
+        "type": "block"
+      },
+      "condition": {
+        "urlFilter": "||pagead2.googlesyndication.com^",
+        "resourceTypes": [
+          "script",
+          "xmlhttprequest",
+          "image",
+          "sub_frame"
+        ],
+        "domains": [
+          "aliexpress.com"
+        ]
+      }
+    },
+    {
+      "priority": 1,
+      "action": {
+        "type": "block"
+      },
+      "condition": {
+        "urlFilter": "||securepubads.g.doubleclick.net^",
+        "resourceTypes": [
+          "script",
+          "xmlhttprequest",
+          "image",
+          "sub_frame"
+        ],
+        "domains": [
+          "ansa.it"
+        ]
+      }
+    },
+    {
+      "priority": 1,
+      "action": {
+        "type": "block"
+      },
+      "condition": {
+        "urlFilter": "||pagead2.googlesyndication.com^",
+        "resourceTypes": [
+          "script",
+          "xmlhttprequest",
+          "image",
+          "sub_frame"
+        ],
+        "domains": [
+          "bbc.com"
+        ]
+      }
+    },
+    {
+      "priority": 1,
+      "action": {
+        "type": "block"
+      },
+      "condition": {
+        "urlFilter": "||pagead2.googlesyndication.com^",
+        "resourceTypes": [
+          "script",
+          "xmlhttprequest",
+          "image",
+          "sub_frame"
+        ],
+        "domains": [
+          "dailymotion.com"
+        ]
+      }
+    },
+    {
+      "priority": 1,
+      "action": {
+        "type": "block"
+      },
+      "condition": {
+        "urlFilter": "||securepubads.g.doubleclick.net^",
+        "resourceTypes": [
+          "script",
+          "xmlhttprequest",
+          "image",
+          "sub_frame"
+        ],
+        "domains": [
+          "dailymotion.com"
+        ]
+      }
+    },
+    {
+      "priority": 1,
+      "action": {
+        "type": "block"
+      },
+      "condition": {
+        "urlFilter": "||securepubads.g.doubleclick.net^",
+        "resourceTypes": [
+          "script",
+          "xmlhttprequest",
+          "image",
+          "sub_frame"
+        ],
+        "domains": [
+          "repubblica.it"
+        ]
+      }
+    },
+    {
+      "priority": 1,
+      "action": {
+        "type": "block"
+      },
+      "condition": {
+        "urlFilter": "||s.amazon-adsystem.com^",
+        "resourceTypes": [
+          "script",
+          "xmlhttprequest",
+          "image",
+          "sub_frame"
+        ],
+        "domains": [
+          "twitch.tv"
+        ]
+      }
+    },
+    {
+      "priority": 1,
+      "action": {
+        "type": "block"
+      },
+      "condition": {
+        "urlFilter": "||stats.g.doubleclick.net^",
+        "resourceTypes": [
+          "script",
+          "xmlhttprequest",
+          "image",
+          "sub_frame"
+        ],
+        "domains": [
+          "vimeo.com"
+        ]
+      }
     }
   ],
   "_autofix": {
-    "date": "2026-07-10T18:13:16Z",
-    "candidates_added": 8
+    "date": "2026-07-12T05:32:50.015Z",
+    "applied_by": "claude",
+    "count": 8
   }
 }

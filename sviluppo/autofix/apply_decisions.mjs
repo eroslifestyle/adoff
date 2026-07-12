@@ -21,8 +21,8 @@ const API_URL = 'https://api.adoff.app/admin/autofix/leaks';
 const DECISION_URL = 'https://api.adoff.app/admin/autofix/decision';
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 
-// Site root (parent of autofix)
-const SITE_BASE = join(BASE, '..', 'site');
+// Site root (parent of autofix's parent)
+const SITE_BASE = join(BASE, '..', '..', 'site');
 const RULES_FEED = join(SITE_BASE, 'rules-feed.json');
 const SNAPSHOT_DIR = join(BASE, 'snapshots');
 const APPLIED_LOG = join(BASE, 'logs', 'applied.json');
@@ -112,7 +112,20 @@ async function main() {
 
   // ── 3. Fetch leaks ──
   const leaksData = await fetchLeaks();
-  const allLeaks = Array.isArray(leaksData) ? leaksData : (leaksData.leaks || []);
+  // API returns { ok, counts, buckets: { ads_real, tracking, dom_fp }, ... }
+  let allLeaks;
+  if (Array.isArray(leaksData)) {
+    allLeaks = leaksData;
+  } else if (leaksData.buckets) {
+    const b = leaksData.buckets;
+    allLeaks = [
+      ...(b.ads_real || []),
+      ...(b.tracking || []),
+      ...(b.dom_fp || []),
+    ];
+  } else {
+    allLeaks = leaksData.leaks || [];
+  }
   console.log(`Leaks totali dal server: ${allLeaks.length}`);
 
   // Filter: decision === 'fix' && applied !== true
