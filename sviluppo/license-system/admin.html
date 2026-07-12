@@ -2168,7 +2168,8 @@ async function loadAutofixLeaks() {
     for (const s of sections) {
       const leaks = buckets[s.key] || [];
       const count = counts[s.key] || 0;
-      const open  = leaks.filter(l => !l.decision).length;
+      // Un leak e' ancora "aperto" solo se non ha ne' decisione ne' e' gia' applicato.
+      const open  = leaks.filter(l => !l.decision && !l.applied).length;
       const closed = leaks.length - open;
       html +=
         '<div style="margin-bottom:16px">' +
@@ -2177,7 +2178,8 @@ async function loadAutofixLeaks() {
               '<span>' + s.label + ' <span style="background:' + s.color + ';color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;margin-left:6px">' + count + '</span>' +
                 (closed > 0 ? ' <span style="color:var(--muted);font-weight:400;font-size:11px">(' + closed + ' decisi)</span>' : '') +
               '</span>' +
-              (leaks.length > 0 ? '<button class="btn btn-sm" style="background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--border)" onclick="event.stopPropagation();batchDecide(\'' + s.key + '\',\'' + s.action + '\')">' + s.actionLabel + '</button>' : '') +
+              // Il bottone batch compare solo se restano leak da decidere.
+              (open > 0 ? '<button class="btn btn-sm" style="background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--border)" onclick="event.stopPropagation();batchDecide(\'' + s.key + '\',\'' + s.action + '\')">' + s.actionLabel + '</button>' : '') +
             '</summary>' +
             '<div style="padding:12px 16px">' +
               (leaks.length === 0

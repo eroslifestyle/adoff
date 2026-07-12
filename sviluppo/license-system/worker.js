@@ -5933,10 +5933,17 @@ async function handleAdminAutofixStatus(request, env) {
     }
     const status = await resp.json();
     try {
+      // Il file statico e' solo una fotografia del job notturno (date, shadow_mode).
+      // I contatori vivono nel DB/feed: li ricalcoliamo live cosi' la dashboard resta
+      // coerente anche dopo mark applied/decisioni fuori dal cron.
       const dash = await buildAutofixDashboard(env);
       status.pending_decisions = dash.counts.pending;
       status.approved_unapplied = dash.counts.approved_unapplied;
       status.deferred = dash.counts.deferred;
+      status.open_leaks = dash.open_leaks;
+      status.fixed_leaks = dash.fixed_leaks;
+      status.candidates_added = dash.candidates_added;
+      if (dash.total_rules != null) status.total_rules = dash.total_rules;
     } catch (_) {}
     return jsonResponse({ ok: true, ...status });
   } catch (e) {
@@ -5955,10 +5962,11 @@ async function buildAutofixDashboard(env) {
   for (const d of decRows.results) { decMap[d.fingerprint] = d; }
 
   const ads_real = [], tracking = [], dom_fp = [];
-  let pending = 0, approved_unapplied = 0, deferred = 0;
+  let pending = 0, approved_unapplied = 0, deferred = 0, fixed_leaks = 0, open_leaks = 0;
 
   for (const l of leaksRows.results) {
     const dec = decMap[l.fingerprint];
+    const isApplied = !!(dec && dec.applied);
     const obj = {
       ...l,
       candidate_rule: l.candidate_rule ? JSON.parse(l.candidate_rule) : null,
@@ -5974,15 +5982,32 @@ async function buildAutofixDashboard(env) {
     } else {
       tracking.push(obj);
     }
+    // Un leak e' "fixato" quando la sua decision fix e' stata applicata (applied=1).
+    // E' "aperto" quando non c'e' ancora nessuna decision (in attesa di valutazione).
+    if (isApplied) fixed_leaks++;
+    else if (!dec) open_leaks++;
+
     if (l.status === 'open' && !dec) pending++;
     else if (dec && dec.decision === 'fix' && !dec.applied) approved_unapplied++;
     else if (dec && dec.decision === 'defer') deferred++;
   }
 
+  // Conta le regole realmente live nel feed remoto (fonte di verita' = rules-feed.json).
+  let total_rules = null, candidates_added = 0;
+  try {
+    const feedResp = await fetch("https://adoff.app/rules-feed.json", { cf: { cacheTtl: 0 } });
+    if (feedResp.ok) {
+      const feed = await feedResp.json();
+      if (Array.isArray(feed.rules)) total_rules = feed.rules.length;
+      if (feed._autofix && typeof feed._autofix.count === 'number') candidates_added = feed._autofix.count;
+    }
+  } catch (_) {}
+
   const sortBy = arr => arr.sort((a, b) => a.domain.localeCompare(b.domain));
   return {
     generated: now,
     counts: { pending, approved_unapplied, deferred, total: leaksRows.results.length },
+    fixed_leaks, open_leaks, total_rules, candidates_added,
     buckets: {
       ads_real: sortBy(ads_real),
       tracking:  sortBy(tracking),
