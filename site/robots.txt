@@ -4,6 +4,10 @@
 User-agent: *
 Allow: /
 
+# ── Query-string duplication — block ?lang= parameter URLs ──
+# These duplicate the /xx/ subdirectory pages and waste crawl budget.
+Disallow: /*?lang=*
+
 Disallow: /*.json$
 Disallow: /adoff-chrome.zip
 Disallow: /adoff-firefox.zip
