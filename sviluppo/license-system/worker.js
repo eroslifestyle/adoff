@@ -2826,10 +2826,8 @@ async function handlePortalSession(request, env) {
   if (!customerId) {
     const sessionToken = getSessionToken(request);
     if (sessionToken) {
-      const session = await kvGet(env.ADOFF_LICENSES, `session:${sessionToken}`, "json");
-      if (session?.customerId) {
-        customerId = session.customerId;
-      }
+      const session = await sessionGet(env, "account", sessionToken);
+      customerId = session?.stripeCustomerId || session?.customerId || customerId;
     }
   }
 
@@ -3001,9 +2999,7 @@ async function handleAdminLogin(body, env) {
     createdAt: Date.now(),
     expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24h
   };
-  await env.ADOFF_LICENSES.put("session:" + sessionToken, JSON.stringify(session), {
-    expirationTtl: 86400, // auto-delete after 24h
-  });
+  await sessionPut(env, "admin", sessionToken, session, 86400);
 
   return jsonResponse({
     ok: true,
@@ -3156,8 +3152,8 @@ async function verifyAdminAuth(token, env) {
   if (!token) return false;
   // Legacy: direct ADMIN_TOKEN match
   if (token === env.ADMIN_TOKEN) return true;
-  // Session token
-  const session = await kvGet(env.ADOFF_LICENSES, "session:" + token, "json");
+  // Session token (D1 + cache edge, con fallback KV legacy)
+  const session = await sessionGet(env, "admin", token);
   if (session && session.expiresAt > Date.now()) return true;
   return false;
 }
@@ -4033,15 +4029,90 @@ async function handleAdminLicenseUpdate(body, env, request) {
 // ACCOUNT MANAGEMENT (Netflix-style device management)
 // =============================================
 
+// =============================================
+// SESSION STORE — D1 (durevole) + cache edge (path caldo, zero storage read)
+// Motivazione: la validazione sessione a ogni richiesta autenticata NON deve
+// consumare quota read KV free-tier (100k/giorno) — la satura → login rotto.
+// Lettura: 1) cache edge → 2) D1 → 3) fallback KV legacy (sessioni pre-migrazione).
+// =============================================
+
+function _sessionCacheKey(kind, token) {
+  return new Request("https://session.internal/" + kind + "/" + token);
+}
+
+async function sessionPut(env, kind, token, payload, ttlSec) {
+  const expiresAt = payload.expiresAt || (Date.now() + ttlSec * 1000);
+  const data = JSON.stringify(payload);
+  try {
+    await env.DB.prepare(
+      "INSERT OR REPLACE INTO sessions (token, kind, data, expires_at) VALUES (?, ?, ?, ?)"
+    ).bind(token, kind, data, expiresAt).run();
+  } catch (e) {
+    console.error("sessionPut D1 error:", e.message);
+  }
+  try {
+    const resp = new Response(data, { headers: { "Cache-Control": "max-age=" + ttlSec } });
+    await caches.default.put(_sessionCacheKey(kind, token), resp);
+  } catch (_) { /* cache best-effort */ }
+}
+
+async function sessionGet(env, kind, token) {
+  if (!token) return null;
+  // 1) cache edge — nessuna read su storage
+  try {
+    const hit = await caches.default.match(_sessionCacheKey(kind, token));
+    if (hit) {
+      const s = await hit.json();
+      if (s && s.expiresAt > Date.now()) return s;
+    }
+  } catch (_) { /* fallthrough */ }
+  // 2) D1
+  try {
+    const row = await env.DB.prepare(
+      "SELECT data, expires_at FROM sessions WHERE token = ? AND kind = ?"
+    ).bind(token, kind).first();
+    if (row && row.expires_at > Date.now()) {
+      const s = JSON.parse(row.data);
+      // ripopola cache edge
+      try {
+        const ttl = Math.max(1, Math.floor((row.expires_at - Date.now()) / 1000));
+        await caches.default.put(
+          _sessionCacheKey(kind, token),
+          new Response(row.data, { headers: { "Cache-Control": "max-age=" + ttl } })
+        );
+      } catch (_) { /* best-effort */ }
+      return s;
+    }
+    if (row) return null; // trovata ma scaduta
+  } catch (e) {
+    console.error("sessionGet D1 error:", e.message);
+  }
+  // 3) fallback KV legacy (sessioni emesse prima della migrazione)
+  const legacyKey = (kind === "admin" ? "session:" : "account_session:") + token;
+  const legacy = await kvGet(env.ADOFF_LICENSES, legacyKey, "json");
+  if (legacy && (legacy.expiresAt || 0) > Date.now()) return legacy;
+  return null;
+}
+
+async function sessionDelete(env, kind, token) {
+  if (!token) return;
+  try {
+    await env.DB.prepare("DELETE FROM sessions WHERE token = ? AND kind = ?").bind(token, kind).run();
+  } catch (e) {
+    console.error("sessionDelete D1 error:", e.message);
+  }
+  try { await caches.default.delete(_sessionCacheKey(kind, token)); } catch (_) { /* noop */ }
+  const legacyKey = (kind === "admin" ? "session:" : "account_session:") + token;
+  try { await env.ADOFF_LICENSES.delete(legacyKey); } catch (_) { /* noop */ }
+}
+
 /**
  * Verify account session token.
  * Returns session {raw, email} or null if invalid/expired.
  */
 async function verifyAccountAuth(token, env) {
   if (!token) return null;
-  const session = await kvGet(env.ADOFF_LICENSES, "account_session:" + token, "json");
-  if (!session || session.expiresAt < Date.now()) return null;
-  return session;
+  return await sessionGet(env, "account", token);
 }
 
 /**
@@ -4107,11 +4178,7 @@ async function handleAccountLogin(body, env) {
   const now = Date.now();
   const expiresAt = now + 24 * 60 * 60 * 1000; // 24h
 
-  await env.ADOFF_LICENSES.put(
-    "account_session:" + token,
-    JSON.stringify({ raw: rawKey, email: storedEmail, createdAt: now, expiresAt, stripeCustomerId: licData.stripeCustomerId || null }),
-    { expirationTtl: 86400 }
-  );
+  await sessionPut(env, "account", token, { raw: rawKey, email: storedEmail, createdAt: now, expiresAt, stripeCustomerId: licData.stripeCustomerId || null }, 86400);
 
   const devices = normalizeDeviceList(licData.devices || []);
   const maxDevices = licData.deviceLimit || MAX_DEVICES;
@@ -4554,11 +4621,7 @@ async function handleOAuthCallback(provider, request, env) {
     const sessionToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, "0")).join("");
     const expiresAt = now + 24 * 60 * 60 * 1000;
 
-    await env.ADOFF_LICENSES.put(
-      `account_session:${sessionToken}`,
-      JSON.stringify({ raw: firstRaw, email, createdAt: now, expiresAt }),
-      { expirationTtl: 86400 }
-    );
+    await sessionPut(env, "account", sessionToken, { raw: firstRaw, email, createdAt: now, expiresAt }, 86400);
 
     return Response.redirect(
       "https://adoff.app/account/?token=" + encodeURIComponent(sessionToken),
@@ -4583,11 +4646,7 @@ async function issueAdminOAuthSession(email, env) {
   const sessionToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
     .map(b => b.toString(16).padStart(2, "0")).join("");
   const now = Date.now();
-  await env.ADOFF_LICENSES.put(
-    "session:" + sessionToken,
-    JSON.stringify({ token: sessionToken, username: "admin", email, via: "google", createdAt: now, expiresAt: now + 24 * 60 * 60 * 1000 }),
-    { expirationTtl: 86400 }
-  );
+  await sessionPut(env, "admin", sessionToken, { token: sessionToken, username: "admin", email, via: "google", createdAt: now, expiresAt: now + 24 * 60 * 60 * 1000 }, 86400);
   return Response.redirect("https://adoff.app/admin.html#token=" + encodeURIComponent(sessionToken), 302);
 }
 
@@ -4778,11 +4837,7 @@ async function handleAuthLogin(body, env, request) {
   const now = Date.now();
   const expiresAt = now + 24 * 60 * 60 * 1000;
 
-  await env.ADOFF_LICENSES.put(
-    `account_session:${sessionToken}`,
-    JSON.stringify({ raw: firstRaw, email: normalEmail, createdAt: now, expiresAt }),
-    { expirationTtl: 86400 }
-  );
+  await sessionPut(env, "account", sessionToken, { raw: firstRaw, email: normalEmail, createdAt: now, expiresAt }, 86400);
 
   const expires = licData?.expires || 0;
   const devices = normalizeDeviceList(licData?.devices || []);
@@ -4887,11 +4942,7 @@ async function handleAuthGoogleExtension(body, env, request) {
   const sessionToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, "0")).join("");
   const expiresAt = now + 24 * 60 * 60 * 1000;
 
-  await env.ADOFF_LICENSES.put(
-    `account_session:${sessionToken}`,
-    JSON.stringify({ raw: firstRaw, email: verifiedEmail, createdAt: now, expiresAt }),
-    { expirationTtl: 86400 }
-  );
+  await sessionPut(env, "account", sessionToken, { raw: firstRaw, email: verifiedEmail, createdAt: now, expiresAt }, 86400);
 
   const plan = licData?.plan || "free";
   const expires = licData?.expires || 0;
@@ -5009,9 +5060,7 @@ async function handleAuthActivateAccount(body, env) {
     createdAt: Date.now(),
     expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 giorni
   };
-  await env.ADOFF_LICENSES.put(`account_session:${sessionToken}`, JSON.stringify(session), {
-    expirationTtl: 30 * 86400,
-  });
+  await sessionPut(env, "account", sessionToken, session, 30 * 86400);
 
   return jsonResponse({
     ok: true,
@@ -5411,6 +5460,13 @@ async function handleScheduled(env) {
         }
       }
     }
+  }
+
+  // Purge sessioni D1 scadute (housekeeping, non bloccante)
+  try {
+    await env.DB.prepare("DELETE FROM sessions WHERE expires_at < ?").bind(Date.now()).run();
+  } catch (e) {
+    console.error("session purge error:", e.message);
   }
 
   // Sync giornaliera Google Search Console (non bloccante: errori isolati)
@@ -6373,6 +6429,20 @@ export default {
           applied INTEGER DEFAULT 0, applied_by TEXT, applied_at TEXT
         )
       `).run();
+
+      // sessions: storage sessioni account+admin su D1 (non piu' KV) — la validazione
+      // ad ogni richiesta autenticata NON consuma quota read KV (free-tier 100k/giorno).
+      await env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS sessions (
+          token TEXT PRIMARY KEY,
+          kind TEXT NOT NULL,
+          data TEXT NOT NULL,
+          expires_at INTEGER NOT NULL
+        )
+      `).run();
+      await env.DB.prepare(
+        "CREATE INDEX IF NOT EXISTS idx_sessions_exp ON sessions(expires_at)"
+      ).run();
     } catch (e) {
       console.error("D1 init tables error:", e.message);
     }
