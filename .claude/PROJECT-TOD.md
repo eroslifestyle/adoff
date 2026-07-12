@@ -4,6 +4,7 @@
 
 ## ✅ Done (ultimi 30, evidence-gated)
 
+- [x] **ADMIN-AUTOFIX-DEC-2026-07-11** — Worker: 4 endpoint autofix + D1 schema (autofix_leaks + autofix_decisions) + D1 populated con 24 leak. UI shell (3 bucket, card leak, CTA) ma RENDERING BUG: loadAutofixLeaks() non popola il DOM nonostante API funzionante. Files: worker.js, admin.html, auto_decide.mjs, push_dashboard.mjs, apply_decisions.mjs, fp-heuristics.json · commit `0d58708`
 - [x] **ADMIN-EDGE-AUTOFIX-TABS-2026-07-11** — Tab Edge + Autofix vuoti: panel seo/edge/autofix fuori da #page-stats → switchStatsTab() non li trovava → schermata vuota. Fix: chiusura panel seo + spostamento edge/autofix dentro #page-stats + chiusura corretta. KV admin:html aggiornato + worker ridistribuito. Endpoint funzionanti: `/admin/edge/status` (state:ok) + `/admin/autofix/status` (ok:true, 28 rules, 24 open leaks, shadow mode) · commit `580e151`
 - [x] **DEPLOY-WORKER-2026-07-10** — wrangler login OAuth + worker deploy + admin.html KV sync · commit `a4e57c2`
   Endpoint `/admin/autofix/status` → JSON `{ok:true, open_leaks:24, fixed_leaks:0, total_rules:28, shadow_mode:true}` ✅

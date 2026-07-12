@@ -20,8 +20,23 @@ const VERBOSE = process.argv.includes('--verbose');
 
 const FINDINGS_FILE = join(BASE, 'findings', `${DATE}.json`);
 const STATE_FILE = join(BASE, 'logs', 'state.json');
+const FP_HEURISTICS_FILE = join(BASE, 'fp-heuristics.json');
 const OUTPUT_DIR = join(BASE, 'candidate_rules');
 mkdirSync(OUTPUT_DIR, { recursive: true });
+
+// --- Load fp-heuristics.json (default inline if missing) ---
+const FP_HEURISTICS = (() => {
+  try {
+    if (existsSync(FP_HEURISTICS_FILE)) {
+      return JSON.parse(readFileSync(FP_HEURISTICS_FILE, 'utf8'));
+    }
+  } catch {}
+  return {
+    confidence_networks: { high: [], medium: [] },
+    dom_fp_patterns: [],
+    dom_fp_selectors_generic: []
+  };
+})();
 
 const AD_NETWORKS_PATTERNS = [
   { net: 'googlesyndication', tld: 'doubleclick.net|gstatic.com|googleadservices.com' },
@@ -75,6 +90,39 @@ function findAdNetwork(url) {
     if (l.includes(p.net)) return p.net;
   }
   return null;
+}
+
+/**
+ * Classify confidence level for an ad network string.
+ * Uses substring match (case-insensitive) against fp-heuristics.json.
+ */
+function classifyConfidence(adNetwork) {
+  if (!adNetwork) return 'low';
+  const lower = adNetwork.toLowerCase();
+  if (FP_HEURISTICS.confidence_networks?.high?.some(n => lower.includes(n.toLowerCase()) || n.toLowerCase().includes(lower))) return 'high';
+  if (FP_HEURISTICS.confidence_networks?.medium?.some(n => lower.includes(n.toLowerCase()) || n.toLowerCase().includes(lower))) return 'medium';
+  return 'low';
+}
+
+/**
+ * True if a dom_ad looks like a false positive.
+ * Checks: generic selector + FP text pattern, OR degenerate bounding box.
+ */
+function isDomFpSuspect(domAd) {
+  if (!domAd) return false;
+  const { selector, text, class: cls, box } = domAd;
+  // Degenerate bounding box: height or width <= 24px
+  if (box && (box.height <= 24 || box.width <= 24)) return true;
+  // Generic selector + FP pattern in text or class
+  const generics = FP_HEURISTICS.dom_fp_selectors_generic || [];
+  const patterns = FP_HEURISTICS.dom_fp_patterns || [];
+  if (!generics.length || !patterns.length) return false;
+  const isGenericSelector = generics.some(g =>
+    selector && (selector === g || (g.endsWith('"]') && selector.includes(g.slice(0, -1))))
+  );
+  if (!isGenericSelector) return false;
+  const combined = ((text || '') + ' ' + (cls || '')).toLowerCase();
+  return patterns.some(p => combined.includes(p.toLowerCase()));
 }
 
 function extractDomain(url) {
@@ -294,13 +342,16 @@ async function analyze() {
           continue;
         }
 
-        if (VERBOSE) console.log(`  NUOVO: ${adNet} -> rule ${nextId}: ${urlFilter}`);
+        const confidence = classifyConfidence(adNet);
+        if (VERBOSE) console.log(`  NUOVO: ${adNet} [${confidence}] -> rule ${nextId}: ${urlFilter}`);
         newCandidates.push({
           fingerprint,
           domain: finding.domain,
           ad_network: adNet,
           leak_type: 'network_leak',
           blocked_url: req.url,
+          confidence,
+          fp_suspect: 0,
           rule
         });
 
@@ -312,7 +363,8 @@ async function analyze() {
           rule_id: nextId,
           created: new Date().toISOString(),
           updated: new Date().toISOString(),
-          blocked_url: req.url
+          blocked_url: req.url,
+          confidence
         };
         nextId++;
       }
@@ -327,7 +379,8 @@ async function analyze() {
           continue;
         }
 
-        if (VERBOSE) console.log(`  DOM: ${domAd.selector} -> dom_visible_ad (no DNR rule)`);
+        const fpSuspect = isDomFpSuspect(domAd) ? 1 : 0;
+        if (VERBOSE) console.log(`  DOM: ${domAd.selector} -> dom_visible_ad fp_suspect=${fpSuspect}`);
 
         state.leaks[fingerprint] = {
           domain: finding.domain,
@@ -337,12 +390,70 @@ async function analyze() {
           rule_id: null,
           selector: domAd.selector,
           created: new Date().toISOString(),
-          updated: new Date().toISOString()
+          updated: new Date().toISOString(),
+          confidence: 'low',
+          fp_suspect: fpSuspect
         };
         alreadyTracked.push({ fingerprint, domain: finding.domain, selector: domAd.selector });
       }
     }
   }
+
+  // Build leaks_detail: full detail for every fingerprint processed in this run
+  const leaksDetailMap = new Map();
+
+  // New network candidates
+  for (const c of newCandidates) {
+    leaksDetailMap.set(c.fingerprint, {
+      fingerprint: c.fingerprint,
+      domain: c.domain,
+      category: null,   // derive from finding
+      site_type: null,
+      country: null,
+      leak_type: c.leak_type,
+      ad_network: c.ad_network,
+      blocked_url: c.blocked_url,
+      selector: null,
+      candidate_rule: c.rule,
+      confidence: c.confidence,
+      fp_suspect: c.fp_suspect,
+      screenshot: null   // derive from finding
+    });
+  }
+
+  // Already-tracked DOMs
+  for (const t of alreadyTracked) {
+    leaksDetailMap.set(t.fingerprint, {
+      fingerprint: t.fingerprint,
+      domain: t.domain,
+      category: null,
+      site_type: null,
+      country: null,
+      leak_type: 'dom_visible_ad',
+      ad_network: 'dom',
+      blocked_url: null,
+      selector: t.selector,
+      candidate_rule: null,
+      confidence: 'low',
+      fp_suspect: state.leaks[t.fingerprint]?.fp_suspect ?? 0,
+      screenshot: null
+    });
+  }
+
+  // Populate finding-level fields (category, site_type, country, screenshot) from the
+  // matching finding for each fingerprint.
+  for (const finding of findings) {
+    for (const detail of leaksDetailMap.values()) {
+      if (detail.domain === finding.domain) {
+        if (detail.category === null) detail.category = finding.category || null;
+        if (detail.site_type === null) detail.site_type = finding.site_type || null;
+        if (detail.country === null) detail.country = finding.country || null;
+        if (detail.screenshot === null) detail.screenshot = finding.screenshot || null;
+      }
+    }
+  }
+
+  const leaks_detail = [...leaksDetailMap.values()];
 
   const result = {
     date: DATE,
@@ -354,7 +465,8 @@ async function analyze() {
     next_id: nextId,
     candidates: newCandidates.map(c => c.rule),
     tracked: [...newCandidates.map(c => ({ fingerprint: c.fingerprint, domain: c.domain, ad_network: c.ad_network })), ...alreadyTracked],
-    errors: validationErrors
+    errors: validationErrors,
+    leaks_detail
   };
 
   if (!DRY_RUN) {
@@ -372,7 +484,7 @@ async function analyze() {
 
     if (newCandidates.length > 0) {
       console.log('\nNuove candidate rules:');
-      newCandidates.forEach(c => console.log(`  [${c.rule.id}] ${c.rule.condition.urlFilter} (${c.ad_network} -> ${c.domain})`));
+      newCandidates.forEach(c => console.log(`  [${c.rule.id}] ${c.rule.condition.urlFilter} (${c.ad_network} [${c.confidence}] -> ${c.domain})`));
     }
   } else {
     console.log(`\n=== DRY-RUN: ${newCandidates.length} candidate rules ===`);

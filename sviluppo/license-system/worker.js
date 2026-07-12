@@ -5932,10 +5932,190 @@ async function handleAdminAutofixStatus(request, env) {
       return jsonResponse({ ok: false, error: "Status file unavailable" }, 502);
     }
     const status = await resp.json();
+    try {
+      const dash = await buildAutofixDashboard(env);
+      status.pending_decisions = dash.counts.pending;
+      status.approved_unapplied = dash.counts.approved_unapplied;
+      status.deferred = dash.counts.deferred;
+    } catch (_) {}
     return jsonResponse({ ok: true, ...status });
   } catch (e) {
     return jsonResponse({ ok: false, error: e.message }, 500);
   }
+}
+
+/** ─────────────────────────────────────────────────────────────────────────────
+ * Helper interno — costruisce l'oggetto dashboard per autofix leaks.
+ ───────────────────────────────────────────────────────────────────────────── */
+async function buildAutofixDashboard(env) {
+  const now = new Date().toISOString();
+  const leaksRows = await env.DB.prepare(`SELECT * FROM autofix_leaks`).all();
+  const decRows   = await env.DB.prepare(`SELECT * FROM autofix_decisions`).all();
+  const decMap = {};
+  for (const d of decRows.results) { decMap[d.fingerprint] = d; }
+
+  const ads_real = [], tracking = [], dom_fp = [];
+  let pending = 0, approved_unapplied = 0, deferred = 0;
+
+  for (const l of leaksRows.results) {
+    const dec = decMap[l.fingerprint];
+    const obj = {
+      ...l,
+      candidate_rule: l.candidate_rule ? JSON.parse(l.candidate_rule) : null,
+      decision: dec ? (dec.decision || null) : null,
+      note: dec ? (dec.note || null) : null,
+      applied: dec ? (dec.applied || 0) : 0,
+      screenshot_url: l.screenshot ? `/admin/autofix/screenshot?fp=${l.fingerprint}` : null,
+    };
+    if (l.fp_suspect === 1) {
+      dom_fp.push(obj);
+    } else if (l.confidence === 'high') {
+      ads_real.push(obj);
+    } else {
+      tracking.push(obj);
+    }
+    if (l.status === 'open' && !dec) pending++;
+    else if (dec && dec.decision === 'fix' && !dec.applied) approved_unapplied++;
+    else if (dec && dec.decision === 'defer') deferred++;
+  }
+
+  const sortBy = arr => arr.sort((a, b) => a.domain.localeCompare(b.domain));
+  return {
+    generated: now,
+    counts: { pending, approved_unapplied, deferred, total: leaksRows.results.length },
+    buckets: {
+      ads_real: sortBy(ads_real),
+      tracking:  sortBy(tracking),
+      dom_fp:    sortBy(dom_fp),
+    },
+  };
+}
+
+/** ─────────────────────────────────────────────────────────────────────────────
+ * POST /admin/autofix/ingest — ingestisce leak dal crawler.
+ ───────────────────────────────────────────────────────────────────────────── */
+async function handleAutofixIngest(request, env) {
+  if (request.method !== 'POST') return jsonResponse({ ok: false, error: 'Method not allowed' }, 405);
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) return jsonResponse({ ok: false, error: 'Unauthorized' }, 401);
+  let body;
+  try { body = await request.json(); } catch (_) { return jsonResponse({ ok: false, error: 'Invalid JSON' }, 400); }
+  const { leaks = [], shots = {} } = body;
+  if (!Array.isArray(leaks) || leaks.length === 0) return jsonResponse({ ok: false, error: 'No leaks provided' }, 400);
+
+  const now = new Date().toISOString();
+  let ingested = 0;
+
+  for (const leak of leaks) {
+    const cr = leak.candidate_rule != null ? JSON.stringify(leak.candidate_rule) : null;
+    await env.DB.prepare(`
+      INSERT INTO autofix_leaks
+        (fingerprint, domain, category, site_type, country, leak_type, ad_network,
+         blocked_url, selector, candidate_rule, confidence, fp_suspect, screenshot,
+         first_seen, last_seen, status)
+      VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,'open')
+      ON CONFLICT(fingerprint) DO UPDATE SET
+        domain=excluded.domain, category=excluded.category, site_type=excluded.site_type,
+        country=excluded.country, leak_type=excluded.leak_type, ad_network=excluded.ad_network,
+        blocked_url=excluded.blocked_url, selector=excluded.selector,
+        candidate_rule=excluded.candidate_rule, confidence=excluded.confidence,
+        fp_suspect=excluded.fp_suspect, screenshot=excluded.screenshot,
+        last_seen=excluded.last_seen
+    `).bind(
+      leak.fingerprint, leak.domain, leak.category, leak.site_type, leak.country,
+      leak.leak_type, leak.ad_network, leak.blocked_url, leak.selector, cr,
+      leak.confidence, leak.fp_suspect ? 1 : 0, leak.screenshot || null,
+      now, now
+    ).run();
+    ingested++;
+  }
+
+  for (const [fp, b64] of Object.entries(shots)) {
+    if (b64) await env.ADOFF_LICENSES.put(`autofix:shot:${fp}`, b64);
+  }
+
+  const dash = await buildAutofixDashboard(env);
+  await env.ADOFF_LICENSES.put('autofix:dashboard', JSON.stringify(dash));
+  return jsonResponse({ ok: true, ingested });
+}
+
+/** ─────────────────────────────────────────────────────────────────────────────
+ * GET /admin/autofix/leaks — restituisce la dashboard (da KV o fallback).
+ ───────────────────────────────────────────────────────────────────────────── */
+async function handleAutofixLeaks(request, env) {
+  if (request.method !== 'GET') return jsonResponse({ ok: false, error: 'Method not allowed' }, 405);
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) return jsonResponse({ ok: false, error: 'Unauthorized' }, 401);
+  try {
+    const cached = await env.ADOFF_LICENSES.get('autofix:dashboard');
+    if (cached) return jsonResponse({ ok: true, ...JSON.parse(cached) });
+  } catch (_) {}
+  const dash = await buildAutofixDashboard(env);
+  return jsonResponse({ ok: true, ...dash });
+}
+
+/** ─────────────────────────────────────────────────────────────────────────────
+ * POST /admin/autofix/decision — registra una o piu' decisioni su leak.
+ ───────────────────────────────────────────────────────────────────────────── */
+async function handleAutofixDecision(request, env) {
+  if (request.method !== 'POST') return jsonResponse({ ok: false, error: 'Method not allowed' }, 405);
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) return jsonResponse({ ok: false, error: 'Unauthorized' }, 401);
+  let body;
+  try { body = await request.json(); } catch (_) { return jsonResponse({ ok: false, error: 'Invalid JSON' }, 400); }
+
+  const raw = body.decisions ? body.decisions : [body];
+  const decisions = raw.filter(d => d.fingerprint && d.decision);
+  const validDecisions = ['fix', 'ignore', 'defer'];
+  for (const d of decisions) {
+    if (!validDecisions.includes(d.decision))
+      return jsonResponse({ ok: false, error: `Invalid decision: ${d.decision}` }, 400);
+  }
+  if (decisions.length === 0) return jsonResponse({ ok: false, error: 'No valid decisions' }, 400);
+
+  const now = new Date().toISOString();
+  let updated = 0;
+
+  for (const { fingerprint, decision, note } of decisions) {
+    await env.DB.prepare(`
+      INSERT INTO autofix_decisions
+        (fingerprint, decision, note, decided_by, decided_at, applied)
+      VALUES (?1,?2,?3,'admin',?4,0)
+      ON CONFLICT(fingerprint) DO UPDATE SET
+        decision=excluded.decision, note=excluded.note,
+        decided_by='admin', decided_at=excluded.decided_at, applied=0
+    `).bind(fingerprint, decision, note || null, now).run();
+
+    const statusMap = { ignore: 'ignored', defer: 'deferred' };
+    const newStatus = statusMap[decision] || 'open';
+    await env.DB.prepare(`UPDATE autofix_leaks SET status=?1 WHERE fingerprint=?2`)
+      .bind(newStatus, fingerprint).run();
+    updated++;
+  }
+
+  const dash = await buildAutofixDashboard(env);
+  await env.ADOFF_LICENSES.put('autofix:dashboard', JSON.stringify(dash));
+  return jsonResponse({ ok: true, updated });
+}
+
+/** ─────────────────────────────────────────────────────────────────────────────
+ * GET /admin/autofix/screenshot — restituisce screenshot PNG del leak.
+ ───────────────────────────────────────────────────────────────────────────── */
+async function handleAutofixScreenshot(request, env) {
+  if (request.method !== 'GET') return jsonResponse({ ok: false, error: 'Method not allowed' }, 405);
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) return jsonResponse({ ok: false, error: 'Unauthorized' }, 401);
+  const fp = new URL(request.url).searchParams.get('fp');
+  if (!fp) return jsonResponse({ ok: false, error: 'Missing fp parameter' }, 400);
+  let b64;
+  try { b64 = await env.ADOFF_LICENSES.get(`autofix:shot:${fp}`); } catch (_) {}
+  if (!b64) return jsonResponse({ ok: false, error: 'Screenshot not found' }, 404);
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Response(bytes, {
+    headers: { 'Content-Type': 'image/png', 'Cache-Control': 'private, max-age=300' },
+  });
 }
 
 /**
@@ -6070,6 +6250,25 @@ export default {
           install_ts INTEGER
         )
       `).run();
+
+      await env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS autofix_leaks (
+          fingerprint TEXT PRIMARY KEY,
+          domain TEXT, category TEXT, site_type TEXT, country TEXT,
+          leak_type TEXT, ad_network TEXT, blocked_url TEXT, selector TEXT,
+          candidate_rule TEXT, confidence TEXT, fp_suspect INTEGER DEFAULT 0,
+          screenshot TEXT, status TEXT DEFAULT 'open',
+          first_seen TEXT, last_seen TEXT
+        )
+      `).run();
+
+      await env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS autofix_decisions (
+          fingerprint TEXT PRIMARY KEY,
+          decision TEXT, note TEXT, decided_by TEXT, decided_at TEXT,
+          applied INTEGER DEFAULT 0, applied_by TEXT, applied_at TEXT
+        )
+      `).run();
     } catch (e) {
       console.error("D1 init tables error:", e.message);
     }
@@ -6184,7 +6383,9 @@ export default {
       if (path === "/admin/seo") return withCors(handleAdminSeo(request, env));
       if (path === "/admin/seo/export") return withCors(handleAdminSeoExport(request, env));
       if (path === "/admin/seo-reply") return withCors(handleAdminSeoReply(request, env));
-      if (path === "/admin/autofix/status") return withCors(handleAdminAutofixStatus(request, env));
+      if (path === "/admin/autofix/status")    return withCors(handleAdminAutofixStatus(request, env));
+      if (path === "/admin/autofix/leaks")     return withCors(handleAutofixLeaks(request, env));
+      if (path === "/admin/autofix/screenshot") return withCors(handleAutofixScreenshot(request, env));
       if (path === "/admin/edge/status") return withCors(handleAdminEdgeStatus(request, env));
       if (path === "/success") return withCors(handleSuccess(request, env));
       if (path === "/portal") return withCors(handlePortalSession(request, env));
@@ -6206,6 +6407,12 @@ export default {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // POST admin endpoints — autofix
+    if (request.method === "POST") {
+      if (path === "/admin/autofix/ingest") return withCors(handleAutofixIngest(request, env));
+      if (path === "/admin/autofix/decision") return withCors(handleAutofixDecision(request, env));
     }
 
     // Auth endpoints — own rate limiting, before generic rate limit check

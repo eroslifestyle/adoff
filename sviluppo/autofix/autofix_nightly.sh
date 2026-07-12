@@ -31,10 +31,22 @@ log "[2/5] crawl..."
 xvfb-run -a node "$BASE/crawl.mjs" --date "$DATE" >> "$LOG" 2>&1 || log "WARN: crawl failed"
 
 # 3. Analyze
-log "[3/5] analyze..."
+log "[3/7] analyze..."
 node "$BASE/analyze_and_fix.mjs" --date "$DATE" >> "$LOG" 2>&1 || log "WARN: analyze failed"
 
-# 4. Canary (solo se ci sono candidate)
+# 3b. Auto-decide: euristiche decidono fix/ignore/defer prima di push
+log "[3b/8] auto_decide..."
+ADMIN_TOKEN="${ADMIN_TOKEN:-}" node "$BASE/auto_decide.mjs" --date "$DATE" >> "$LOG" 2>&1 || log "WARN: auto_decide failed"
+
+# 4. Push leaks to admin dashboard (D1)
+log "[4/8] push_dashboard..."
+ADMIN_TOKEN="${ADMIN_TOKEN:-}" node "$BASE/push_dashboard.mjs" --date "$DATE" >> "$LOG" 2>&1 || log "WARN: push_dashboard failed"
+
+# 5. Apply approved decisions (D1 → rules-feed)
+log "[5/7] apply_decisions..."
+node "$BASE/apply_decisions.mjs" --date "$DATE" >> "$LOG" 2>&1 || log "WARN: apply_decisions failed"
+
+# 6. Canary (solo se ci sono candidate)
 CANDIDATES="$BASE/candidate_rules/${DATE}.json"
 CANDIDATES_COUNT=0
 if [[ -f "$CANDIDATES" ]]; then

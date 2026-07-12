@@ -655,14 +655,58 @@ tr:hover td{background:rgba(124,92,252,.04)}
       </div>
       </div>
 
-      <!-- Tab: Autofix -->
+      <!-- Tab: Autofix — Ad Leak Blocker -->
       <div class="stat-panel" data-panel="autofix">
+        <!-- Header -->
         <div style="margin-bottom:16px">
-          <div style="font-size:14px;font-weight:600;margin-bottom:8px">🔧 Autofix — Ad Leak Blocker</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Stato notturno del sistema di blocco leak automatizzato</div>
-          <button class="btn btn-sm btn-accent" onclick="loadAutofix()">↻ Aggiorna</button>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px">
+            <div style="font-size:15px;font-weight:600">🔧 Autofix — Ad Leak Blocker</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div id="autofix-mode-badge"></div>
+              <button class="btn btn-sm btn-accent" onclick="loadAutofix();loadAutofixLeaks()" title="Ricarica dati">↻</button>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">Analizza i leak rilevati dal crawler notturno, decide quali fixare, io li applico.</div>
         </div>
-        <div id="autofix-results"><div style="color:var(--muted);font-size:13px">Clicca "Aggiorna" per caricare lo stato</div></div>
+
+        <!-- Shadow Mode notice -->
+        <div id="autofix-shadow-notice" style="display:none;padding:10px 14px;background:#2a2a1a;border:1px solid #ffbc6b;border-radius:8px;margin-bottom:14px;font-size:12px;color:#ffbc6b">
+          <b>⚠ Shadow Mode attivo</b> — Nessun fix viene deployato automaticamente. Dopo aver deciso, esegui manualmente da riga di comando: <code style="background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:3px;display:inline-block;margin-top:4px">node apply_decisions.mjs --date today</code>
+        </div>
+
+        <!-- Stats row -->
+        <div id="autofix-stats-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px"></div>
+
+        <!-- Bucket filter -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" id="autofix-filter-bar">
+          <button class="btn btn-sm" style="background:var(--btn-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 12px" data-bucket="all" onclick="filterAutofixBucket('all')">Tutti <span id="cnt-all" style="color:var(--muted)"></span></button>
+          <button class="btn btn-sm" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:6px;padding:5px 12px" data-bucket="ads_real" onclick="filterAutofixBucket('ads_real')">🎯 Ad-veri <span id="cnt-ads_real" style="opacity:0.7"></span></button>
+          <button class="btn btn-sm" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);color:#eab308;border-radius:6px;padding:5px 12px" data-bucket="tracking" onclick="filterAutofixBucket('tracking')">📡 Tracking <span id="cnt-tracking" style="opacity:0.7"></span></button>
+          <button class="btn btn-sm" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:6px;padding:5px 12px" data-bucket="dom_fp" onclick="filterAutofixBucket('dom_fp')">❓ DOM (sospetti FP) <span id="cnt-dom_fp" style="opacity:0.7"></span></button>
+          <button class="btn btn-sm" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:6px;padding:5px 12px" data-bucket="approved" onclick="filterAutofixBucket('approved')">✅ Approvati <span id="cnt-approved" style="opacity:0.7"></span></button>
+          <button class="btn btn-sm" style="background:rgba(100,116,139,0.1);border:1px solid rgba(100,116,139,0.3);color:#94a3b8;border-radius:6px;padding:5px 12px" data-bucket="ignored" onclick="filterAutofixBucket('ignored')">🚫 Ignorati <span id="cnt-ignored" style="opacity:0.7"></span></button>
+        </div>
+
+        <!-- CTA per azioni collettive -->
+        <div id="autofix-bulk-actions" style="display:none;padding:10px 14px;background:var(--input);border-radius:8px;margin-bottom:14px;border:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
+            <span id="bulk-selection-count">0</span> leak selezionati:
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-sm" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);color:#10b981;border-radius:6px;padding:5px 12px;font-size:12px" onclick="bulkApproveSelected()">✅ Approva tutti</button>
+            <button class="btn btn-sm" style="background:rgba(100,116,139,0.15);border:1px solid rgba(100,116,139,0.4);color:#94a3b8;border-radius:6px;padding:5px 12px;font-size:12px" onclick="bulkIgnoreSelected()">🚫 Ignora tutti</button>
+            <button class="btn btn-sm" style="background:var(--btn-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 12px;font-size:12px" onclick="clearSelection()">🗑️ Deseleziona</button>
+          </div>
+        </div>
+
+        <!-- Sfondo per i leak -->
+        <div id="autofix-leaks-container">
+          <div id="autofix-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 16px;color:var(--muted)">
+            <div class="loader" style="margin-bottom:12px"></div>
+            <div style="font-size:13px">Carico i leak dal sistema...</div>
+          </div>
+        </div>
+        <div id="autofix-empty" style="display:none;text-align:center;padding:32px 16px;color:var(--muted);font-size:13px">Nessun leak in questo bucket.</div>
       </div>
     </div>
 
@@ -2024,7 +2068,8 @@ async function loadSeo(force = false) {
 }
 
 async function loadAutofix(force = false) {
-  const resultsEl = document.getElementById("autofix-results");
+  const resultsEl = document.getElementById("autofix-stats-row");
+  if (!resultsEl) { console.warn("[Autofix] #autofix-stats-row not found"); return; }
   resultsEl.innerHTML = '<div class="loading-center"><div class="loader"></div></div>';
   try {
     const data = await api("/admin/autofix/status");
@@ -2037,6 +2082,9 @@ async function loadAutofix(force = false) {
     const modeIcon  = sm ? "⚠"  : "✓";
     const modeLabel = sm ? "Shadow Mode (nessun deploy)" : "Attivo (deploy automatico)";
     const totalRules = data.total_rules != null ? data.total_rules : "—";
+    const pending   = data.pending_decisions || 0;
+    const approved  = data.approved_unapplied || 0;
+    const deferred  = data.deferred || 0;
     resultsEl.innerHTML =
       '<div style="display:flex;align-items:center;gap:12px;padding:16px;background:var(--input);border-radius:8px;border-left:4px solid ' + modeColor + ';margin-bottom:12px">' +
         '<span style="background:' + modeColor + ';color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">' + modeIcon + '</span>' +
@@ -2049,9 +2097,245 @@ async function loadAutofix(force = false) {
         '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:#16a766">' + (data.open_leaks || 0) + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Leak aperti</div></div>' +
         '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700">' + (data.fixed_leaks || 0) + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Leak fixati</div></div>' +
       '</div>' +
-      '<div style="font-size:12px;color:var(--muted);padding:8px 0">Dati dal file statico <code>autofix-status.json</code> — aggiornato ogni notte dal job <code>autofix_nightly.sh</code></div>';
+      // CTA bar
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">' +
+        '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">' +
+          '🔴 ' + pending + ' leak da valutare · ✅ ' + approved + ' fix approvati in attesa · 💤 ' + deferred + ' rimandati' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">' +
+          '<button class="btn btn-sm btn-success" onclick="batchDecide(\'ads_real\',\'fix\')">✅ Approva tutti gli ads-reali</button>' +
+          '<button class="btn btn-sm btn-outline" onclick="batchDecide(\'dom_fp\',\'ignore\')">🚫 Ignora tutti i DOM sospetti</button>' +
+          '<button class="btn btn-sm btn-accent" onclick="requestApply()">⚡ Applica i fix approvati</button>' +
+        '</div>' +
+        '<div style="font-size:12px;color:var(--muted);background:var(--input);border-radius:6px;padding:8px 10px">' +
+          '💡 Hai <b style="color:var(--text)">' + approved + '</b> decisioni pronte. In chat scrivi <code style="color:var(--accent)">applica i fix approvati</code> per eseguirli subito, oppure il job notturno applicherà gli approvati semplici.' +
+        '</div>' +
+      '</div>';
+    loadAutofixLeaks();
   } catch(e) {
     resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">Errore: ' + e.message + '</div>';
+  }
+}
+
+// Global state per batch decisions
+let _autofixLeaks = null;
+
+// ── Autofix: carica lista leak ──────────────────────────────────────────────
+async function loadAutofixLeaks() {
+  const panel = document.getElementById("autofix-leaks-container");
+  if (!panel) { console.warn("[Autofix] #autofix-leaks-container not found"); return; }
+  panel.innerHTML = '<div id="autofix-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 16px;color:var(--muted)"><div class="loader"></div><div style="margin-top:12px">Carico i leak...</div></div>';
+  try {
+    console.log("[Autofix] API URL:", API + "/admin/autofix/leaks");
+    console.log("[Autofix] Token:", token ? "present" : "MISSING");
+    const data = await api("/admin/autofix/leaks");
+    console.log("[Autofix] Received data:", JSON.stringify(data).substring(0, 200));
+    if (!data) {
+      panel.innerHTML = '<div style="color:var(--error);font-size:13px;padding:8px">Risposta vuota dal server</div>';
+      return;
+    }
+    if (!data.ok) {
+      panel.innerHTML = '<div style="color:var(--error);font-size:13px;padding:8px">Errore: ' + (data.error || "sconosciuto") + '</div>';
+      return;
+    }
+    _autofixLeaks = data;
+    const buckets = data.buckets || { ads_real: [], tracking: [], dom_fp: [] };
+    const api_counts = data.counts || {};
+    const counts = {
+      ads_real: buckets.ads_real?.length || 0,
+      tracking: buckets.tracking?.length || 0,
+      dom_fp: buckets.dom_fp?.length || 0,
+      pending: api_counts.pending || 0,
+      approved: api_counts.approved_unapplied || 0,
+      deferred: api_counts.deferred || 0,
+      total: Object.values(buckets).reduce((s,v) => s + (Array.isArray(v) ? v.length : 0), 0)
+    };
+    console.log("[Autofix] buckets:", buckets);
+    console.log("[Autofix] counts:", counts);
+
+    if (counts.total === 0) {
+      panel.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">Nessun leak rilevato — il sistema è pulito ✅</div>';
+      return;
+    }
+
+    const sections = [
+      { key: "ads_real", label: "🎯 Ads reali (alta confidenza)",  actionLabel: "Approva tutti", action: "fix",    color: "#e66550" },
+      { key: "tracking", label: "📊 Tracking / Analytics (blocco utile, non ads)", actionLabel: "Approva tutti", action: "fix",    color: "#4a86e8" },
+      { key: "dom_fp",   label: "⚠️ DOM sospetti — probabili falsi positivi",     actionLabel: "Ignora tutti", action: "ignore", color: "#ffbc6b" },
+    ];
+
+    let html = '';
+    for (const s of sections) {
+      const leaks = buckets[s.key] || [];
+      const count = counts[s.key] || 0;
+      const open  = leaks.filter(l => !l.decision).length;
+      const closed = leaks.length - open;
+      html +=
+        '<div style="margin-bottom:16px">' +
+          '<details style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">' +
+            '<summary style="padding:12px 16px;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between;user-select:none;list-style:none">' +
+              '<span>' + s.label + ' <span style="background:' + s.color + ';color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;margin-left:6px">' + count + '</span>' +
+                (closed > 0 ? ' <span style="color:var(--muted);font-weight:400;font-size:11px">(' + closed + ' decisi)</span>' : '') +
+              '</span>' +
+              (leaks.length > 0 ? '<button class="btn btn-sm" style="background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--border)" onclick="event.stopPropagation();batchDecide(\'' + s.key + '\',\'' + s.action + '\')">' + s.actionLabel + '</button>' : '') +
+            '</summary>' +
+            '<div style="padding:12px 16px">' +
+              (leaks.length === 0
+                ? '<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">Nessun leak</div>'
+                : leaks.map(l => renderLeakCard(l, s.key)).join('<div style="height:8px"></div>')) +
+            '</div>' +
+          '</details>' +
+        '</div>';
+    }
+    panel.innerHTML = html;
+  } catch(e) {
+    panel.innerHTML = '<div style="color:var(--error);font-size:13px;padding:8px">Errore: ' + escHtml(e.message) + '</div>';
+  }
+}
+
+// ── Autofix: render singola card leak ──────────────────────────────────────
+function renderLeakCard(leak, bucket) {
+  const confColor = leak.confidence === "high" ? "#e66550" : leak.confidence === "medium" ? "#ffbc6b" : "#8a8a8a";
+  const decision  = leak.decision || null;
+  const decisionBadge = decision
+    ? '<span style="background:var(--input);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:10px;color:var(--muted);margin-left:4px">Deciso: ' + decision + '</span>'
+    : '';
+  const fpBadge  = leak.fp_suspect
+    ? '<span style="background:rgba(255,188,107,.15);color:#ffbc6b;border-radius:20px;padding:2px 8px;font-size:10px;margin-left:4px">possibile FP</span>'
+    : '';
+
+  let evidence = "";
+  const lt = (leak.leak_type || "").toLowerCase();
+  if (lt.startsWith("network") || lt.includes("network")) {
+    evidence = '<div style="font-size:12px;color:var(--muted);margin-top:4px">Bloccato: <code style="background:var(--input);padding:1px 5px;border-radius:4px;font-size:11px">' + escHtml(leak.blocked_url || leak.url_pattern || "") + '</code> · rete: ' + escHtml(leak.ad_network || "—") + '</div>';
+  } else if (lt.startsWith("dom") || lt.includes("dom") || lt === "video_ad" || lt.includes("video")) {
+    evidence = '<div style="font-size:12px;color:var(--muted);margin-top:4px">Selettore: <code style="background:var(--input);padding:1px 5px;border-radius:4px;font-size:11px">' + escHtml(leak.selector || "—") + '</code></div>';
+  }
+
+  let candidate = "";
+  if (leak.candidate_rule && typeof leak.candidate_rule === "object") {
+    const cond = (leak.candidate_rule.condition || {});
+    const urlFilter = escHtml(cond.urlFilter || "—");
+    const domains   = (cond.domains || []).join(", ");
+    candidate = '<div style="font-size:12px;color:var(--muted);margin-top:4px">Regola: <code style="background:var(--input);padding:1px 5px;border-radius:4px;font-size:11px">urlFilter: ' + urlFilter + (domains ? ', domains: ' + escHtml(domains) : '') + '</code></div>';
+  } else {
+    candidate = '<div style="font-size:12px;color:var(--muted);margin-top:4px;font-style:italic">(nessuna regola DNR — richiede intervento manuale)</div>';
+  }
+
+  const screenshotBtn = leak.screenshot_url
+    ? '<button class="btn btn-sm btn-outline" style="margin-top:8px" onclick="fetchShot(\'' + escHtml(leak.fingerprint) + '\')">🖼 Screenshot</button>'
+    : '';
+
+  const noteId  = "note-" + leak.fingerprint;
+  const noteVal = leak.note || "";
+
+  return (
+    '<div style="background:var(--input);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px">' +
+      '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px">' +
+        '<b style="color:var(--text)">' + escHtml(leak.domain || "?") + '</b>' +
+        '<span style="background:rgba(124,92,252,.15);color:var(--accent);border-radius:20px;padding:2px 8px;font-size:10px">' + escHtml(leak.category || "?") + '</span>' +
+        '<span style="background:rgba(255,255,255,.07);color:var(--muted);border-radius:20px;padding:2px 8px;font-size:10px">' + escHtml(leak.leak_type || "?") + '</span>' +
+        '<span style="background:' + confColor + ';color:#fff;border-radius:20px;padding:2px 8px;font-size:10px">' + escHtml(leak.confidence || "?") + '</span>' +
+        fpBadge + decisionBadge +
+      '</div>' +
+      evidence + candidate +
+      '<div style="margin-top:8px">' +
+        '<input id="' + noteId + '" placeholder="Nota (opzionale)" value="' + escHtml(noteVal) + '" ' +
+          'style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:11px;width:100%;margin-bottom:6px">' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+          '<button class="btn btn-sm btn-success" onclick="decideLeak(\'' + escHtml(leak.fingerprint) + '\',\'fix\')" ' + (decision==="fix"?"disabled ":"") + '>✅ Fixa</button>' +
+          '<button class="btn btn-sm btn-outline" onclick="decideLeak(\'' + escHtml(leak.fingerprint) + '\',\'ignore\')" ' + (decision==="ignore"?"disabled ":"") + '>🚫 Ignora</button>' +
+          '<button class="btn btn-sm btn-outline" onclick="decideLeak(\'' + escHtml(leak.fingerprint) + '\',\'defer\')" ' + (decision==="defer"?"disabled ":"") + '>⏳ Rimanda</button>' +
+          screenshotBtn +
+        '</div>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+// ── Autofix: decisione singola leak ────────────────────────────────────────
+async function decideLeak(fingerprint, decision) {
+  const noteEl  = document.getElementById("note-" + fingerprint);
+  const note    = noteEl ? noteEl.value.trim() : "";
+  try {
+    const d = await api("/admin/autofix/decision", {
+      method: "POST",
+      body: JSON.stringify({ fingerprint, decision, note })
+    });
+    if (!d.ok) { toast("Errore: " + (d.error || "?"), "error"); return; }
+    toast("Decisione salvata ✅", "success");
+    loadAutofix();
+  } catch(e) {
+    toast("Errore: " + e.message, "error");
+  }
+}
+
+// ── Autofix: batch decision per bucket ──────────────────────────────────────
+async function batchDecide(bucket, decision) {
+  if (!_autofixLeaks) { toast("Carica prima i leak", "error"); return; }
+  const leaks = _autofixLeaks.buckets?.[bucket] || [];
+  if (!leaks.length) { toast("Nessun leak in questo bucket", "info"); return; }
+  if (!confirm("Confermi " + decision + " per " + leaks.length + " leak?")) return;
+  const decisions = leaks.map(l => ({ fingerprint: l.fingerprint, decision }));
+  try {
+    const d = await api("/admin/autofix/decision", {
+      method: "POST",
+      body: JSON.stringify({ decisions })
+    });
+    if (!d.ok) { toast("Errore: " + (d.error || "?"), "error"); return; }
+    toast(leaks.length + " decisioni salvate ✅", "success");
+    loadAutofix();
+  } catch(e) {
+    toast("Errore: " + e.message, "error");
+  }
+}
+
+// ── Autofix: richiesta apply (informativa) ─────────────────────────────────
+function requestApply() {
+  const approved = _autofixLeaks ? (_autofixLeaks.counts?.approved || 0) : 0;
+  toast("I fix approvati verranno applicati dal job notturno. Per applicarli subito, scrivi 'applica i fix approvati' nella chat con Claude.", "info");
+}
+
+// ── Autofix: fetch screenshot + lightbox ────────────────────────────────────
+async function fetchShot(fingerprint) {
+  if (!_autofixLeaks) return;
+  // trova il leak per fingerprint in tutti i bucket
+  let leak = null;
+  const buckets = _autofixLeaks.buckets || {};
+  for (const arr of Object.values(buckets)) {
+    leak = arr.find(l => l.fingerprint === fingerprint);
+    if (leak) break;
+  }
+  if (!leak || !leak.screenshot_url) { toast("Screenshot non disponibile", "error"); return; }
+  try {
+    const r = await fetch(leak.screenshot_url, { headers: { "X-Admin-Token": token } });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const blob = await r.blob();
+    const url  = URL.createObjectURL(blob);
+    // costruisci lightbox inline
+    let lb = document.getElementById("shot-lightbox");
+    if (!lb) {
+      lb = document.createElement("div");
+      lb.id = "shot-lightbox";
+      lb.style = "position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer";
+      lb.onclick = () => { lb.remove(); };
+      document.body.appendChild(lb);
+    } else {
+      lb.innerHTML = "";
+    }
+    const img = document.createElement("img");
+    img.src = url;
+    img.style = "max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.6)";
+    img.onerror = () => { lb.innerHTML = '<div style="color:#fff;padding:24px">Screenshot non disponibile</div>'; };
+    lb.appendChild(img);
+    // chiudi con X
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "✕";
+    closeBtn.style = "position:fixed;top:16px;right:20px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:18px;cursor:pointer;border-radius:50%;width:36px;height:36px;line-height:36px;text-align:center";
+    closeBtn.onclick = (e) => { e.stopPropagation(); lb.remove(); };
+    lb.appendChild(closeBtn);
+  } catch(e) {
+    toast("Errore screenshot: " + e.message, "error");
   }
 }
 
