@@ -6064,6 +6064,20 @@ async function handleAutofixDecision(request, env) {
   let body;
   try { body = await request.json(); } catch (_) { return jsonResponse({ ok: false, error: 'Invalid JSON' }, 400); }
 
+  // Branch: mark fingerprints as applied (no decision needed)
+  if (body.applied !== undefined && Array.isArray(body.fingerprints)) {
+    const now = new Date().toISOString();
+    const fps = body.fingerprints.filter(Boolean);
+    if (fps.length === 0) return jsonResponse({ ok: false, error: 'No valid fingerprints' }, 400);
+    await env.DB.prepare(`
+      UPDATE autofix_decisions SET applied=?1, applied_by='admin', applied_at=?2
+      WHERE fingerprint IN (${fps.map((_, i) => `?${i + 3}`).join(',')})
+    `).bind(body.applied, now, ...fps).run();
+    const dash = await buildAutofixDashboard(env);
+    await env.ADOFF_LICENSES.put('autofix:dashboard', JSON.stringify(dash));
+    return jsonResponse({ ok: true, updated: fps.length });
+  }
+
   const raw = body.decisions ? body.decisions : [body];
   const decisions = raw.filter(d => d.fingerprint && d.decision);
   const validDecisions = ['fix', 'ignore', 'defer'];
