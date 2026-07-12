@@ -764,24 +764,26 @@ function findDevice(devices, deviceId) {
 // RATE LIMITING
 // =============================================
 
-async function checkRateLimit(ip, env) {
-  const key = `rl:${ip}`;
-  const current = await kvGet(env.ADOFF_LICENSES, key);
-
-  if (current) {
-    const count = parseInt(current);
-    if (count >= RATE_LIMIT_MAX) {
-      return false;
+// Rate-limit in-memory per-isolate (ZERO write KV).
+// La protezione robusta a monte e' demandata a Cloudflare Rate Limiting Rules
+// (livello zona, edge). Questo strato e' solo un freno best-effort per-isolate:
+// e' volutamente NON-KV perche' il write-per-richiesta su KV free tier (1k/giorno)
+// saturava la quota e mandava in errore admin panel + OAuth state (invalid_state).
+const RL_BUCKET = new Map(); // ip -> { count, resetAt }
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const winMs = RATE_LIMIT_WINDOW * 1000;
+  let rec = RL_BUCKET.get(ip);
+  if (!rec || now >= rec.resetAt) {
+    rec = { count: 0, resetAt: now + winMs };
+    RL_BUCKET.set(ip, rec);
+    // Pulizia opportunistica: evita crescita illimitata della Map nell'isolate.
+    if (RL_BUCKET.size > 5000) {
+      for (const [k, v] of RL_BUCKET) { if (now >= v.resetAt) RL_BUCKET.delete(k); }
     }
-    await env.ADOFF_LICENSES.put(key, String(count + 1), {
-      expirationTtl: RATE_LIMIT_WINDOW,
-    });
-  } else {
-    await env.ADOFF_LICENSES.put(key, "1", {
-      expirationTtl: RATE_LIMIT_WINDOW,
-    });
   }
-  return true;
+  rec.count++;
+  return rec.count <= RATE_LIMIT_MAX;
 }
 
 // Rate-limit dedicato ai ticket/suggerimenti: piu' stretto (max N per finestra lunga).
@@ -6232,7 +6234,7 @@ export default {
     ctx.waitUntil(handleScheduled(env));
   },
 
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     // Auto-create tracking tables (run on every worker startup — CREATE IF NOT EXISTS è idempotente)
     try {
       await env.DB.prepare(`
@@ -6335,18 +6337,39 @@ export default {
     // NOTE: /admin serves the same HTML as /panel (via Pages), but via worker+KV.
     // Keep no-cache headers so the CDN does not cache stale versions.
     if ((path === "/admin" || path === "/admin.html") && request.method === "GET") {
+      // Cache edge dell'HTML admin: la read KV avviene solo su cache-miss (~1 volta
+      // ogni ADMIN_HTML_CACHE_TTL), non a ogni richiesta. Evita di bruciare la quota
+      // read KV free tier (100k/giorno) col traffico/monitor su /admin.
+      const ADMIN_HTML_CACHE_TTL = 300; // 5 min
+      const cache = caches.default;
+      const cacheKey = new Request("https://adoff.app/__admin_html_cache", { method: "GET" });
+      let cached = await cache.match(cacheKey);
+      if (cached) {
+        const h = new Headers(cached.headers);
+        h.set("Cache-Control", "no-store, no-cache, must-revalidate");
+        return new Response(cached.body, { status: 200, headers: h });
+      }
+
       const html = await kvGet(env.ADOFF_LICENSES, "admin:html");
-      if (!html) return new Response("Admin panel not installed. Run: wrangler kv:key put --namespace-id=... admin:html --path=admin.html", { status: 404 });
+      if (!html) {
+        // kvGet ritorna null anche su rate-limit KV: non e' un "non installato".
+        return new Response(
+          "Admin panel temporaneamente non disponibile (KV read limit). Riprova tra qualche minuto.",
+          { status: 503, headers: { "Retry-After": "60", "Cache-Control": "no-store" } }
+        );
+      }
+
+      // Popola la cache edge (solo per l'HTML statico; TTL breve).
+      ctx.waitUntil(cache.put(
+        cacheKey,
+        new Response(html, { status: 200, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": `max-age=${ADMIN_HTML_CACHE_TTL}` } })
+      ));
 
       const headers = new Headers();
       headers.set("Content-Type", "text/html; charset=utf-8");
       headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
       headers.set("Pragma", "no-cache");
       headers.set("Expires", "0");
-      headers.set("CDN-Cache-Control", "no-store");
-      headers.set("Cloudflare-CDN-Cache-Control", "no-store");
-      headers.set("Surrogate-Control", "no-store");
-      headers.set("Vary", "*");
 
       return new Response(html, { status: 200, headers });
     }
@@ -6382,7 +6405,7 @@ export default {
     const isAdminEndpoint = path.startsWith("/admin");
     if (!isAdminEndpoint) {
       const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
-      const allowed = await checkRateLimit(ip, env);
+      const allowed = checkRateLimit(ip);
       if (!allowed) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
           status: 429,
