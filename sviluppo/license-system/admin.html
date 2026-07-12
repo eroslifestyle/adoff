@@ -1913,7 +1913,7 @@ async function loadStats(force = false) {
         <tbody>${ulog.map(e => `<tr>
           <td style="color:var(--muted)">${timeAgo(e.ts)}</td>
           <td>${(REASON_LABELS[e.reason] || e.reason || "?")}</td>
-          <td style="max-width:240px;${e.comment ? "" : "color:var(--muted)"}">${e.comment ? escHtml(e.comment) : "–"}</td>
+          <td style="max-width:240px;${e.comment ? "" : "color:var(--muted)"}">${e.comment ? esc(e.comment) : "–"}</td>
           <td>${browserBadge(e.browser)}</td>
           <td>${flag(e.country)} ${e.country || "?"}</td>
           <td>${e.wasPro ? "⭐" : "–"}</td>
@@ -2189,7 +2189,7 @@ async function loadAutofixLeaks() {
     }
     panel.innerHTML = html;
   } catch(e) {
-    panel.innerHTML = '<div style="color:var(--error);font-size:13px;padding:8px">Errore: ' + escHtml(e.message) + '</div>';
+    panel.innerHTML = '<div style="color:var(--error);font-size:13px;padding:8px">Errore: ' + esc(e.message) + '</div>';
   }
 }
 
@@ -2207,23 +2207,23 @@ function renderLeakCard(leak, bucket) {
   let evidence = "";
   const lt = (leak.leak_type || "").toLowerCase();
   if (lt.startsWith("network") || lt.includes("network")) {
-    evidence = '<div style="font-size:12px;color:var(--muted);margin-top:4px">Bloccato: <code style="background:var(--input);padding:1px 5px;border-radius:4px;font-size:11px">' + escHtml(leak.blocked_url || leak.url_pattern || "") + '</code> · rete: ' + escHtml(leak.ad_network || "—") + '</div>';
+    evidence = '<div style="font-size:12px;color:var(--muted);margin-top:4px">Bloccato: <code style="background:var(--input);padding:1px 5px;border-radius:4px;font-size:11px">' + esc(leak.blocked_url || leak.url_pattern || "") + '</code> · rete: ' + esc(leak.ad_network || "—") + '</div>';
   } else if (lt.startsWith("dom") || lt.includes("dom") || lt === "video_ad" || lt.includes("video")) {
-    evidence = '<div style="font-size:12px;color:var(--muted);margin-top:4px">Selettore: <code style="background:var(--input);padding:1px 5px;border-radius:4px;font-size:11px">' + escHtml(leak.selector || "—") + '</code></div>';
+    evidence = '<div style="font-size:12px;color:var(--muted);margin-top:4px">Selettore: <code style="background:var(--input);padding:1px 5px;border-radius:4px;font-size:11px">' + esc(leak.selector || "—") + '</code></div>';
   }
 
   let candidate = "";
   if (leak.candidate_rule && typeof leak.candidate_rule === "object") {
     const cond = (leak.candidate_rule.condition || {});
-    const urlFilter = escHtml(cond.urlFilter || "—");
+    const urlFilter = esc(cond.urlFilter || "—");
     const domains   = (cond.domains || []).join(", ");
-    candidate = '<div style="font-size:12px;color:var(--muted);margin-top:4px">Regola: <code style="background:var(--input);padding:1px 5px;border-radius:4px;font-size:11px">urlFilter: ' + urlFilter + (domains ? ', domains: ' + escHtml(domains) : '') + '</code></div>';
+    candidate = '<div style="font-size:12px;color:var(--muted);margin-top:4px">Regola: <code style="background:var(--input);padding:1px 5px;border-radius:4px;font-size:11px">urlFilter: ' + urlFilter + (domains ? ', domains: ' + esc(domains) : '') + '</code></div>';
   } else {
     candidate = '<div style="font-size:12px;color:var(--muted);margin-top:4px;font-style:italic">(nessuna regola DNR — richiede intervento manuale)</div>';
   }
 
   const screenshotBtn = leak.screenshot_url
-    ? '<button class="btn btn-sm btn-outline" style="margin-top:8px" onclick="fetchShot(\'' + escHtml(leak.fingerprint) + '\')">🖼 Screenshot</button>'
+    ? '<button class="btn btn-sm btn-outline" style="margin-top:8px" onclick="fetchShot(\'' + esc(leak.fingerprint) + '\')">🖼 Screenshot</button>'
     : '';
 
   const noteId  = "note-" + leak.fingerprint;
@@ -2232,20 +2232,20 @@ function renderLeakCard(leak, bucket) {
   return (
     '<div style="background:var(--input);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px">' +
       '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px">' +
-        '<b style="color:var(--text)">' + escHtml(leak.domain || "?") + '</b>' +
-        '<span style="background:rgba(124,92,252,.15);color:var(--accent);border-radius:20px;padding:2px 8px;font-size:10px">' + escHtml(leak.category || "?") + '</span>' +
-        '<span style="background:rgba(255,255,255,.07);color:var(--muted);border-radius:20px;padding:2px 8px;font-size:10px">' + escHtml(leak.leak_type || "?") + '</span>' +
-        '<span style="background:' + confColor + ';color:#fff;border-radius:20px;padding:2px 8px;font-size:10px">' + escHtml(leak.confidence || "?") + '</span>' +
+        '<b style="color:var(--text)">' + esc(leak.domain || "?") + '</b>' +
+        '<span style="background:rgba(124,92,252,.15);color:var(--accent);border-radius:20px;padding:2px 8px;font-size:10px">' + esc(leak.category || "?") + '</span>' +
+        '<span style="background:rgba(255,255,255,.07);color:var(--muted);border-radius:20px;padding:2px 8px;font-size:10px">' + esc(leak.leak_type || "?") + '</span>' +
+        '<span style="background:' + confColor + ';color:#fff;border-radius:20px;padding:2px 8px;font-size:10px">' + esc(leak.confidence || "?") + '</span>' +
         fpBadge + decisionBadge +
       '</div>' +
       evidence + candidate +
       '<div style="margin-top:8px">' +
-        '<input id="' + noteId + '" placeholder="Nota (opzionale)" value="' + escHtml(noteVal) + '" ' +
+        '<input id="' + noteId + '" placeholder="Nota (opzionale)" value="' + esc(noteVal) + '" ' +
           'style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:11px;width:100%;margin-bottom:6px">' +
         '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
-          '<button class="btn btn-sm btn-success" onclick="decideLeak(\'' + escHtml(leak.fingerprint) + '\',\'fix\')" ' + (decision==="fix"?"disabled ":"") + '>✅ Fixa</button>' +
-          '<button class="btn btn-sm btn-outline" onclick="decideLeak(\'' + escHtml(leak.fingerprint) + '\',\'ignore\')" ' + (decision==="ignore"?"disabled ":"") + '>🚫 Ignora</button>' +
-          '<button class="btn btn-sm btn-outline" onclick="decideLeak(\'' + escHtml(leak.fingerprint) + '\',\'defer\')" ' + (decision==="defer"?"disabled ":"") + '>⏳ Rimanda</button>' +
+          '<button class="btn btn-sm btn-success" onclick="decideLeak(\'' + esc(leak.fingerprint) + '\',\'fix\')" ' + (decision==="fix"?"disabled ":"") + '>✅ Fixa</button>' +
+          '<button class="btn btn-sm btn-outline" onclick="decideLeak(\'' + esc(leak.fingerprint) + '\',\'ignore\')" ' + (decision==="ignore"?"disabled ":"") + '>🚫 Ignora</button>' +
+          '<button class="btn btn-sm btn-outline" onclick="decideLeak(\'' + esc(leak.fingerprint) + '\',\'defer\')" ' + (decision==="defer"?"disabled ":"") + '>⏳ Rimanda</button>' +
           screenshotBtn +
         '</div>' +
       '</div>' +
@@ -2476,12 +2476,12 @@ async function openTicket(id) {
       </div>
       <div class="ticket-reply">
         <div class="reply-meta">${t.email || "Anonimo"} — ${t.createdAt ? new Date(t.createdAt).toLocaleString("it-IT") : ""}</div>
-        <div class="reply-text">${escHtml(t.description || t.body || t.message || "")}</div>
+        <div class="reply-text">${esc(t.description || t.body || t.message || "")}</div>
       </div>
       ${replies.map(r => `
         <div class="ticket-reply ${r.by === "admin" ? "admin" : ""}">
           <div class="reply-meta">${r.by === "admin" ? "Admin" : t.email || "Utente"} — ${r.at ? new Date(r.at).toLocaleString("it-IT") : ""}</div>
-          <div class="reply-text">${escHtml(r.text || "")}</div>
+          <div class="reply-text">${esc(r.text || "")}</div>
         </div>`).join("")}
     </div>
     <hr class="divider">
@@ -2553,9 +2553,9 @@ async function loadSuggestions(force = false) {
         ${list.map(s => `<tr>
           <td><span class="mono">${s.id || "–"}</span></td>
           <td>${SUGG_TYPE_ICON[s.type] || ""} ${s.type || "–"}</td>
-          <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(s.title || "–")}</td>
+          <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title || "–")}</td>
           <td>${s.votes != null ? s.votes : 1}</td>
-          <td style="color:var(--muted)">${escHtml(s.cluster || "–")}</td>
+          <td style="color:var(--muted)">${esc(s.cluster || "–")}</td>
           <td><span class="badge badge-${SUGG_STATUS_BADGE[s.status] || "open"}">${s.status || "new"}</span></td>
           <td style="color:var(--muted)">${s.created_at ? new Date(s.created_at.replace(" ","T")+"Z").toLocaleDateString("it-IT") : "–"}</td>
           <td><button class="btn btn-sm btn-outline" onclick="openSuggestion('${s.id}')">Apri</button></td>
@@ -2573,21 +2573,21 @@ function openSuggestion(id) {
     <div style="margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
         <span class="badge badge-${SUGG_STATUS_BADGE[s.status] || "open"}">${s.status || "new"}</span>
-        <span style="color:var(--muted);font-size:12px">${escHtml(s.email || "anon")} · ${escHtml(s.browser || "")}</span>
+        <span style="color:var(--muted);font-size:12px">${esc(s.email || "anon")} · ${esc(s.browser || "")}</span>
       </div>
       <div class="ticket-reply">
-        <div class="reply-meta"><b>${escHtml(s.title || "")}</b> — ${s.created_at ? new Date(s.created_at.replace(" ","T")+"Z").toLocaleString("it-IT") : ""}</div>
-        <div class="reply-text">${escHtml(s.description || "")}</div>
+        <div class="reply-meta"><b>${esc(s.title || "")}</b> — ${s.created_at ? new Date(s.created_at.replace(" ","T")+"Z").toLocaleString("it-IT") : ""}</div>
+        <div class="reply-text">${esc(s.description || "")}</div>
       </div>
-      ${s.proposal ? `<div class="ticket-reply admin"><div class="reply-meta">Proposta Claude</div><div class="reply-text">${escHtml(s.proposal)}</div></div>` : ""}
-      ${s.resolution ? `<div class="ticket-reply"><div class="reply-meta">Esito</div><div class="reply-text">${escHtml(s.resolution)}</div></div>` : ""}
+      ${s.proposal ? `<div class="ticket-reply admin"><div class="reply-meta">Proposta Claude</div><div class="reply-text">${esc(s.proposal)}</div></div>` : ""}
+      ${s.resolution ? `<div class="ticket-reply"><div class="reply-meta">Esito</div><div class="reply-text">${esc(s.resolution)}</div></div>` : ""}
     </div>
     <hr class="divider">
     <div class="section-title">Gestione</div>
     <div class="field" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <label style="font-size:12px;color:var(--muted)">Stato</label>
       <select id="suggStatusSel">${statusOpts}</select>
-      <input id="suggClusterInp" placeholder="Cluster (tema)" value="${escHtml(s.cluster || "")}" style="flex:1;min-width:140px">
+      <input id="suggClusterInp" placeholder="Cluster (tema)" value="${esc(s.cluster || "")}" style="flex:1;min-width:140px">
     </div>
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
       <button class="btn btn-primary btn-sm" onclick="saveSuggestion('${id}')">Salva</button>
@@ -2658,7 +2658,7 @@ async function saveRecoveryEmail() {
 }
 
 // ── UTILS ────────────────────────────────────────────────────
-function escHtml(s) {
+function esc(s) {
   return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
