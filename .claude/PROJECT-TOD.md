@@ -1,6 +1,6 @@
 # Project Global TOD — AdOff ChromePlugin
 
-**Main HEAD**: b581428 · **Branch**: master · **Updated**: 2026-07-12 06:45
+**Main HEAD**: 32d340d · **Branch**: master · **Updated**: 2026-07-12 09:10
 
 ## ✅ Done (ultimi 30, evidence-gated)
 
@@ -44,13 +44,8 @@
 
 ## ⬜ Backlog (prossimi, in ordine di priorità)
 
-- [ ] **DEPLOY-WORKER-APPLIED-2026-07-12** — Deploy worker.js con nuovo endpoint applied=1 + Mark 24 leak applied=1 in D1
-      Comando: `cd ~/Dropbox/1\\ Programmazione/Progetti/ChromePlugin/sviluppo/license-system && wrangler deploy`
-      Done when: `curl -X POST https://adoff.app/admin/autofix/decision -H "X-Admin-Token: $ADMIN_TOKEN" -d '{"applied":1,"fingerprints":[...]}'` ritorna `{"ok":true,"updated":24}`
-      Bloccato da: auth 10000 — token CF è Pages-only, serve `wrangler login` (OAuth browser)
-- [ ] **VERIFY-003-2026-07-12** — Verifica tab Autofix admin mostra 24 leak con bottoni Fixa attivi
-      Comando: apri https://adoff.app/admin → tab Autofix
-      Done when: card leak visibili, bottoni non disabilitati
+- [x] **DEPLOY-WORKER-APPLIED-2026-07-12** — Worker deployed (Version ID: 916e7ff1) + endpoint applied=1 verificato + 24 leak marked applied in D1. Wrangler era già OAuth-auth. · commit `32d340d`
+- [x] **VERIFY-003-2026-07-12** — Tab Autofix: 24 leak `applied:1` confermati, bucket tracking[24], counts pending:0. · commit `32d340d`
 - [ ] **EDGE-EXPIRY-2026-09** — Rinnovare EDGE_API_KEY scaduta 2026-09-20
       Comando: vai su https://partner.microsoft.com/dashboard/microsoftedge/publishapi → Create/Renew API credentials
       Done when: tab Edge in admin mostra "Credenziali valide — pronto per upload/publish"
