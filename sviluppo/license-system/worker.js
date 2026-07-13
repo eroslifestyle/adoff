@@ -4863,11 +4863,11 @@ async function handleAdminAnalytics(request, env) {
   let uninstallAdvanced = { cohort: [], versions: [], funnel: {}, reasonTrend: {} };
   try {
     const uaRows = await env.DB.prepare(`
-      SELECT ROUND((ue.uninstall_ts - dh.created_at) / 86400000) AS days_active,
+      SELECT ROUND((ue.uninstall_ts - dh.install_ts) / 86400000) AS days_active,
              ue.reason, COUNT(*) AS cnt
       FROM uninstall_events ue
       JOIN device_heartbeat dh ON ue.device_id = dh.device_id
-      WHERE ue.uninstall_ts > dh.created_at AND ue.uninstall_ts > ? AND dh.created_at > ?
+      WHERE ue.uninstall_ts > dh.install_ts AND ue.uninstall_ts > ? AND dh.install_ts > ?
       GROUP BY days_active, ue.reason
     `).bind(Date.now() - 30 * 86400000, Date.now() - 90 * 86400000).all();
 
@@ -4933,14 +4933,14 @@ async function handleAdminUninstallAnalytics(request, env) {
   try {
     const rows = await env.DB.prepare(`
       SELECT
-        ROUND((ue.uninstall_ts - dh.created_at) / ${DAY}) AS days_active,
+        ROUND((ue.uninstall_ts - dh.install_ts) / ${DAY}) AS days_active,
         COUNT(*) AS count,
         ue.reason
       FROM uninstall_events ue
       JOIN device_heartbeat dh ON ue.device_id = dh.device_id
-      WHERE ue.uninstall_ts > dh.created_at
+      WHERE ue.uninstall_ts > dh.install_ts
         AND ue.uninstall_ts > ?
-        AND dh.created_at > ?
+        AND dh.install_ts > ?
       GROUP BY days_active, ue.reason
       ORDER BY days_active ASC
     `).bind(now - D30, now - 90 * DAY).all();
@@ -4980,8 +4980,8 @@ async function handleAdminUninstallAnalytics(request, env) {
       const v = r.major_minor || "unknown";
       if (!verMap[v]) verMap[v] = { version: v, total: 0, proCount: 0, byReason: {} };
       verMap[v].total += r.total;
-      if (r.was_pro) verMap[v].proCount += r.pro_count;
-      verMap[v].byReason[r.reason] = (verMap[v].byReason[r.reason] || 0) + r.count;
+      verMap[v].proCount += r.pro_count;
+      verMap[v].byReason[r.reason] = (verMap[v].byReason[r.reason] || 0) + r.total;
     }
     versionData = Object.values(verMap).sort((a, b) => b.total - a.total);
   } catch (e) {
@@ -4992,7 +4992,7 @@ async function handleAdminUninstallAnalytics(request, env) {
   let funnel = {};
   try {
     const totalInstalls30d = await env.DB.prepare(`
-      SELECT COUNT(*) as cnt FROM device_heartbeat WHERE created_at > ?
+      SELECT COUNT(*) as cnt FROM device_heartbeat WHERE install_ts > ?
     `).bind(now - D30).all();
 
     const activeUsers = await env.DB.prepare(`
@@ -5001,13 +5001,13 @@ async function handleAdminUninstallAnalytics(request, env) {
 
     const silentUsers = await env.DB.prepare(`
       SELECT COUNT(DISTINCT device_id) as cnt FROM device_heartbeat
-      WHERE created_at > ? AND last_seen < ? AND last_seen > ?
+      WHERE install_ts > ? AND last_seen < ? AND last_seen > ?
     `).bind(now - D30, now - 7 * DAY, now - 30 * DAY).all();
 
     const uninstalledFromRecent = await env.DB.prepare(`
       SELECT COUNT(*) as cnt FROM uninstall_events ue
       JOIN device_heartbeat dh ON ue.device_id = dh.device_id
-      WHERE ue.uninstall_ts > ? AND dh.created_at > ?
+      WHERE ue.uninstall_ts > ? AND dh.install_ts > ?
     `).bind(now - D30, now - D30).all();
 
     funnel = {
