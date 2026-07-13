@@ -29,7 +29,7 @@ Integrazioni completate:
 ### P0 — ✅ FATTO: Uninstall page integrations (2026-07-13)
 
 > SHIPPED 2026-07-13. Commits: acd4847 + fda4f07.
-> Worker deploy: PENDING (richiede secrets configurati)
+> Worker deploy: ✅ COMPLETATO (2026-07-13 20:28 UTC) — GITHUB_TOKEN + GITHUB_REPO configurati, GITHUB issues attive. SLACK/DISCORD webhook: skip (non forniti).
 
 3 categorie implementate:
 - [x] **Notifiche real-time**: slackNotify() + discordNotify() per PRO/Trial uninstalls (fire-and-forget)
@@ -53,7 +53,7 @@ Bugfix critici trovati dal piano-guida:
   - Fase 1: generateResilientFingerprint() in background.js
   - Fase 2: trial_fingerprints table + anti-abuse in worker.js
   - Fase 3: account via di fuga per falsi positivi
-  - Dettaglio: [[adoff-trial-antifraud-system]]
+  - Dettaglio: documento da creare in Memoria/progetti/chromeplugin/
 
 - [x] **Store: Edge API credentials** — API key scaduta (4ZL6...) sostituita con nuova (UiQ7...). POST submissions → HTTP 202 ✅. "InProgressSubmission" = Microsoft già revisiona una submission esistente. Azione: aspettare fine revisione Microsoft OPPURE andare su Partner Center → chiudere submission in coda.
 
