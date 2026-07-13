@@ -89,3 +89,71 @@ CREATE TABLE IF NOT EXISTS device_heartbeat (
     version TEXT,
     install_ts INTEGER                   -- quando è stato installato (dato puro, non calcolato)
 );
+
+-- =============================================
+-- LICENSES BACKUP (KV mirror — fonte secondaria)
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS licenses (
+    raw TEXT PRIMARY KEY,
+    adoff_key TEXT,
+    email TEXT,
+    plan TEXT,
+    expires INTEGER,
+    device_limit INTEGER DEFAULT 3,
+    revoked INTEGER DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    generated_by TEXT DEFAULT 'admin'
+);
+
+CREATE TABLE IF NOT EXISTS licenses_devices (
+    raw TEXT NOT NULL,
+    device_id TEXT NOT NULL,
+    name TEXT,
+    last_seen INTEGER,
+    ip TEXT,
+    PRIMARY KEY (raw, device_id),
+    FOREIGN KEY (raw) REFERENCES licenses(raw) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS licenses_email_index (
+    email TEXT PRIMARY KEY,
+    raw_keys TEXT NOT NULL
+);
+
+-- =============================================
+-- TRIAL ANTI-ABUSE (fingerprint tracking)
+-- Evita abuse tramite reinstall/redevice.
+-- =============================================
+CREATE TABLE IF NOT EXISTS trial_fingerprints (
+    fingerprint TEXT PRIMARY KEY,           -- hash univoco del dispositivo
+    trial_start INTEGER NOT NULL,         -- Unix ms: inizio trial
+    trial_end INTEGER NOT NULL,           -- Unix ms: fine trial
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Collegamento account per via di fuga (sblocca trial bloccato)
+CREATE TABLE IF NOT EXISTS trial_accounts (
+    fingerprint TEXT PRIMARY KEY,
+    account_id TEXT NOT NULL,             -- id account che sblocca
+    linked_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (fingerprint) REFERENCES trial_fingerprints(fingerprint)
+);
+
+-- =============================================
+-- KV SNAPSHOT (backup cron)
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS kv_backup (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS kv_backup_meta (
+    key TEXT PRIMARY KEY DEFAULT 'snapshot',
+    snapshot_at INTEGER NOT NULL,
+    kv_version INTEGER DEFAULT 1,
+    total_keys INTEGER DEFAULT 0
+);

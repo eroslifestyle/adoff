@@ -663,16 +663,24 @@ async function signTrialToken(payloadObj, env) {
 // GET /trial/check ritorna lo stato trial basato SOLO su dati server.
 // Il client NON ha autorita' sul countdown — solo il server decide.
 // =============================================
+/**
+ * GET /trial/check?deviceId=X&fingerprint=Y
+ * Verifica lo stato del trial per un dispositivo.
+ * Se fingerprint e' presente, controlla trial_fingerprints per anti-abuse.
+ */
 async function handleTrialCheck(request, env) {
   let deviceId = "";
+  let fingerprint = null;
   let body = {};
 
   const url = new URL(request.url);
   deviceId = url.searchParams.get("deviceId") || "";
+  fingerprint = url.searchParams.get("fingerprint") || null;
 
   if (!deviceId) {
     try { body = await request.json(); } catch { /* optional */ }
     deviceId = typeof body.deviceId === "string" ? body.deviceId : "";
+    fingerprint = fingerprint || body?.fingerprint || null;
   }
 
   if (!deviceId) {
@@ -680,6 +688,55 @@ async function handleTrialCheck(request, env) {
   }
 
   const now = Date.now();
+
+  // Tabella anti-abuse (crea se non esiste)
+  await env.DB.prepare(
+    "CREATE TABLE IF NOT EXISTS trial_fingerprints (fingerprint TEXT PRIMARY KEY, trial_start INTEGER NOT NULL, trial_end INTEGER NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)"
+  ).run();
+  await env.DB.prepare(
+    "CREATE TABLE IF NOT EXISTS trial_accounts (fingerprint TEXT PRIMARY KEY, account_id TEXT NOT NULL, linked_at DATETIME DEFAULT CURRENT_TIMESTAMP)"
+  ).run();
+
+  // === ANTI-ABUSE: controlla fingerprint ===
+  if (fingerprint) {
+    try {
+      const fpRow = await env.DB.prepare(
+        "SELECT trial_start, trial_end FROM trial_fingerprints WHERE fingerprint = ?"
+      ).bind(fingerprint).first();
+
+      if (fpRow) {
+        const active = now < fpRow.trial_end;
+        const daysLeft = active ? Math.ceil((fpRow.trial_end - now) / 86400000) : 0;
+
+        // Verifica se ha un account collegato
+        const accountRow = await env.DB.prepare(
+          "SELECT account_id FROM trial_accounts WHERE fingerprint = ?"
+        ).bind(fingerprint).first();
+
+        if (accountRow) {
+          // Account collegato → trial attivo
+          const token = await signTrialToken(
+            { deviceId, trialStart: fpRow.trial_start, trialEnd: fpRow.trial_end, iat: now, v: 2 }, env
+          );
+          return jsonResponse({
+            ok: true, active, trialStart: fpRow.trial_start, trialEnd: fpRow.trial_end,
+            daysLeft, now, token, source: "account-linked", allowed: true,
+            serverAuthoritative: true,
+          });
+        }
+
+        // Fingerprint bloccato - ritorna allowed=false
+        return jsonResponse({
+          ok: true, allowed: false, fallback: "account",
+          trialStart: fpRow.trial_start, trialEnd: fpRow.trial_end,
+          active, daysLeft, now, message: "Trial già usato su questo dispositivo",
+          serverAuthoritative: true,
+        });
+      }
+    } catch (e) {
+      console.error("D1 trial_fingerprints check error:", e.message);
+    }
+  }
 
   let installTs = null;
   try {
@@ -727,7 +784,7 @@ async function handleTrialCheck(request, env) {
   );
 
   return jsonResponse({
-    ok: true, active, trialStart, trialEnd, daysLeft, now, token,
+    ok: true, active, trialStart, trialEnd, daysLeft, now, token, allowed: true,
     serverAuthoritative: true,
   });
 }
@@ -741,11 +798,32 @@ async function handleTrialCheck(request, env) {
  */
 async function handleTrial(body, env, request) {
   const deviceId = await generateDeviceId(request, body, env);
+  const fingerprint = body.fingerprint || null;
 
   // Tabella idempotente (no migration separata necessaria).
   await env.DB.prepare(
     "CREATE TABLE IF NOT EXISTS trials (device_id TEXT PRIMARY KEY, trial_start INTEGER NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)"
   ).run();
+
+  // Tabella anti-abuso: traccia fingerprint per prevenire trial multipli.
+  // Un fingerprint = una persona/PC = un trial.
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS trial_fingerprints (
+      fingerprint TEXT PRIMARY KEY,
+      trial_start INTEGER NOT NULL,
+      trial_end INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+
+  // Tabella collegamento account (via di fuga per falsi positivi)
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS trial_accounts (
+      fingerprint TEXT PRIMARY KEY,
+      account_id TEXT NOT NULL,
+      linked_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
 
   const now = Date.now();
   let row = await env.DB.prepare("SELECT trial_start FROM trials WHERE device_id = ?")
@@ -763,6 +841,56 @@ async function handleTrial(body, env, request) {
   const trialEnd = trialStart + TRIAL_DURATION_MS;
   const active = now < trialEnd;
   const daysLeft = active ? Math.ceil((trialEnd - now) / 86400000) : 0;
+
+  // === ANTI-ABUSE: controlla fingerprint ===
+  // Se abbiamo un fingerprint e non e' già stato usato per un trial, salvalo.
+  // Se è già stato usato e il trial è scaduto → via di fuga account.
+  // Se è già stato usato e il trial è ancora attivo → via di fuga account (era un utente legit).
+  if (fingerprint) {
+    const fpRow = await env.DB.prepare(
+      "SELECT trial_start, trial_end FROM trial_fingerprints WHERE fingerprint = ?"
+    ).bind(fingerprint).first();
+
+    if (!fpRow) {
+      // Nuovo fingerprint: salva per blocking futuro
+      await env.DB.prepare(
+        "INSERT OR IGNORE INTO trial_fingerprints (fingerprint, trial_start, trial_end) VALUES (?, ?, ?)"
+      ).bind(fingerprint, trialStart, trialEnd).run();
+    } else {
+      // Fingerprint gia' usato → trial gia' consumato su questo PC/persona.
+      // Verifica se ha un account collegato (trial_accounts).
+      const accountRow = await env.DB.prepare(
+        "SELECT account_id FROM trial_accounts WHERE fingerprint = ?"
+      ).bind(fingerprint).first();
+
+      if (accountRow) {
+        // Account gia' collegato → trial attivo con account
+        return jsonResponse({
+          ok: true,
+          token: null,
+          trialStart,
+          trialEnd,
+          now,
+          daysLeft,
+          active: true,
+          source: "account-linked"
+        });
+      } else {
+        // Nessun account → blocco con via di fuga
+        return jsonResponse({
+          ok: true,
+          allowed: false,
+          fallback: "account",
+          trialStart,
+          trialEnd,
+          now,
+          daysLeft,
+          active: false,
+          message: "Trial già usato su questo dispositivo"
+        });
+      }
+    }
+  }
 
   // Registra installazione in D1 (se nuova) per tracking retention
   try {
@@ -783,7 +911,59 @@ async function handleTrial(body, env, request) {
     { deviceId, trialStart, trialEnd, iat: now, v: 1 }, env
   );
 
-  return jsonResponse({ ok: true, token, trialStart, trialEnd, now, daysLeft, active });
+  return jsonResponse({ ok: true, allowed: true, token, trialStart, trialEnd, now, daysLeft, active });
+}
+
+/**
+ * POST /trial/link-account
+ * Collega un account al fingerprint per sbloccare il trial (via di fuga anti-abuse).
+ * Body: { fingerprint, accountToken }
+ */
+async function handleTrialLinkAccount(body, env) {
+  const { fingerprint, accountToken } = body || {};
+
+  if (!fingerprint || !accountToken) {
+    return jsonResponse({ ok: false, error: "Missing fingerprint or accountToken" }, 400);
+  }
+
+  // Verifica sessione account
+  const session = await env.SESSIONS.get(accountToken);
+  if (!session) {
+    return jsonResponse({ ok: false, error: "Invalid session" }, 401);
+  }
+
+  const sessionData = JSON.parse(session);
+  const accountId = sessionData.accountId;
+  if (!accountId) {
+    return jsonResponse({ ok: false, error: "Invalid session data" }, 400);
+  }
+
+  // Crea tabella trial_accounts se non esiste
+  await env.DB.prepare(
+    "CREATE TABLE IF NOT EXISTS trial_accounts (fingerprint TEXT PRIMARY KEY, account_id TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)"
+  ).run();
+
+  // Collega fingerprint ad account
+  await env.DB.prepare(`
+    INSERT OR REPLACE INTO trial_accounts (fingerprint, account_id) VALUES (?, ?)
+  `).bind(fingerprint, accountId).run();
+
+  // Calcola dati trial
+  const fpRow = await env.DB.prepare(
+    "SELECT trial_start FROM trial_fingerprints WHERE fingerprint = ?"
+  ).bind(fingerprint).first();
+
+  const trialStart = fpRow ? fpRow.trial_start : Date.now();
+  const trialEnd = trialStart + TRIAL_DURATION_MS;
+
+  return jsonResponse({
+    ok: true,
+    linked: true,
+    trialStart,
+    trialEnd,
+    active: true,
+    daysLeft: Math.ceil((trialEnd - Date.now()) / 86400000)
+  });
 }
 
 /**
@@ -7136,6 +7316,13 @@ export default {
       if (path === "/admin/autofix/decision") return withCors(handleAutofixDecision(request, env));
     }
 
+    // Trial endpoints
+    if (request.method === "POST" && path === "/trial/link-account") {
+      let body;
+      try { body = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleTrialLinkAccount(body, env));
+    }
+
     // Auth endpoints — own rate limiting, before generic rate limit check
     if (path === "/auth/register" && request.method === "POST") {
       let authBody;
@@ -7262,6 +7449,13 @@ export default {
     }
     if (path === "/track/uninstall" && request.method === "POST") {
       return withCors(handleUninstall(request, env));
+    }
+
+    // Trial link-account (via di fuga per falsi positivi anti-abuse)
+    if (path === "/trial/link-account" && request.method === "POST") {
+      let linkBody;
+      try { linkBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleTrialLinkAccount(linkBody, env));
     }
 
     // POST endpoints
