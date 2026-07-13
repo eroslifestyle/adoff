@@ -418,6 +418,7 @@
           adoffTrialSeen: Date.now(),
           adoffTrialExpired: !data.active,
           adoffTrialBlocked: false,
+          adoffFingerprint: fingerprint,
         });
         return;
       }
@@ -430,6 +431,7 @@
           adoffTrialSeen: Date.now(),
           adoffTrialExpired: false,
           adoffTrialBlocked: false,
+          adoffFingerprint: fingerprint,
         });
       }
     } catch (_) { /* offline — riprova al prossimo trigger */ }

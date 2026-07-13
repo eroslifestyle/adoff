@@ -26,7 +26,7 @@ const LicenseClient = (function () {
 
   // Durata trial — deve coincidere col server (TRIAL_DURATION_MS nel worker).
   const TRIAL_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
-  const TRIAL_MARGIN_MS = 24 * 60 * 60 * 1000; // 1g di tolleranza per il cap ottimistico
+  const TRIAL_MARGIN_MS = 72 * 60 * 60 * 1000; // 3g di tolleranza per il cap ottimistico
 
   // Chiave PUBBLICA ECDSA P-256 per verificare i token trial firmati dal server.
   // La privata vive SOLO nel Worker (env.ADOFF_TRIAL_PRIVKEY). Avere questa
@@ -149,6 +149,17 @@ const LicenseClient = (function () {
     });
   }
 
+  // Fingerprint browser: generato da background.js e salvato in storage da syncTrialBg().
+  // Prova ad usarlo; se non esiste ancora (primo avvio prima di background.js),
+  // restituisce null — il server tollera l'assenza.
+  function getFingerprint() {
+    return new Promise((resolve) => {
+      chrome.storage.local.get("adoffFingerprint", (result) => {
+        resolve(result.adoffFingerprint || null);
+      });
+    });
+  }
+
   /**
    * Riconcilia il trial col server: ottiene/aggiorna il token firmato.
    * Idempotente: il server fissa trial_start alla prima chiamata e poi ritorna
@@ -158,10 +169,11 @@ const LicenseClient = (function () {
   async function syncTrial() {
     try {
       const deviceId = await getDeviceId();
+      const fingerprint = await getFingerprint();
       const resp = await fetch(API_URL + "/trial", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId }),
+        body: JSON.stringify({ deviceId, fingerprint }),
       });
       const data = await resp.json();
       if (!data || !data.ok || !data.token) return { ok: false };
@@ -235,9 +247,9 @@ const LicenseClient = (function () {
             // Riconcilia col server in background…
             syncTrial();
             // …e nel frattempo applica un fallback OTTIMISTICO limitato: onora il
-            // trial locale SOLO entro la finestra legittima (≤30g+margine da ORA).
+            // trial locale SOLO entro la finestra legittima (≤3g+margine da ORA).
             // Un valore gonfiato via DevTools oltre il cap viene ignorato → senza
-            // token del server non si ottiene mai un trial più lungo di 30 giorni.
+            // token del server non si ottiene mai un trial più lungo di 3 giorni.
             if (!result[STORAGE.TRIAL_EXPIRED] && trialEnd > now
                 && trialEnd <= now + TRIAL_DURATION_MS + TRIAL_MARGIN_MS) {
               const daysLeft = Math.ceil((trialEnd - now) / 86400000);

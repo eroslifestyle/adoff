@@ -630,6 +630,7 @@ async function generateDeviceId(request, body, env) {
 // token con più giorni di trial né modificarne la scadenza.
 
 const TRIAL_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 giorni
+const TRIAL_FALLBACK_MS = 3 * 24 * 60 * 60 * 1000;  // 3 giorni — cap ottimistico client
 
 function b64uEncode(buf) {
   return btoa(String.fromCharCode(...new Uint8Array(buf)))
@@ -787,7 +788,7 @@ async function handleTrialCheck(request, env) {
           return jsonResponse({
             ok: true, active, trialStart: fpRow.trial_start, trialEnd: fpRow.trial_end,
             daysLeft, now, token, source: "account-linked", allowed: true,
-            serverAuthoritative: true,
+            serverAuthoritative: true, fallbackCap: "account",
           });
         }
 
@@ -796,7 +797,7 @@ async function handleTrialCheck(request, env) {
           ok: true, allowed: false, fallback: "account",
           trialStart: fpRow.trial_start, trialEnd: fpRow.trial_end,
           active, daysLeft, now, message: "Trial già usato su questo dispositivo",
-          serverAuthoritative: true,
+          serverAuthoritative: true, fallbackCap: "account",
         });
       }
     } catch (e) {
@@ -891,7 +892,58 @@ async function handleTrial(body, env, request) {
     )
   `).run();
 
+  // Tabella per burst detection e abuse flags
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS trial_abuse_flags (
+      device_id TEXT PRIMARY KEY,
+      request_count INTEGER DEFAULT 1,
+      first_request_at INTEGER NOT NULL,
+      flagged_at INTEGER,
+      reason TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+
   const now = Date.now();
+  const BURST_WINDOW_MS = 60000; // 1 minuto
+  const BURST_THRESHOLD = 5; // max 5 richieste/minuto
+
+  // === BURST DETECTION ===
+  let burstFlagged = false;
+  try {
+    const abuseRow = await env.DB.prepare(
+      "SELECT request_count, first_request_at FROM trial_abuse_flags WHERE device_id = ?"
+    ).bind(deviceId).first();
+
+    if (abuseRow) {
+      const elapsed = now - abuseRow.first_request_at;
+      if (elapsed < BURST_WINDOW_MS && abuseRow.request_count >= BURST_THRESHOLD) {
+        burstFlagged = true;
+        // Aggiorna flagged_at se non già flaggato
+        if (!abuseRow.flagged_at) {
+          await env.DB.prepare(
+            "UPDATE trial_abuse_flags SET flagged_at = ?, reason = ? WHERE device_id = ? AND flagged_at IS NULL"
+          ).bind(now, "burst_detection").run();
+        }
+      } else if (elapsed >= BURST_WINDOW_MS) {
+        // Reset window
+        await env.DB.prepare(
+          "UPDATE trial_abuse_flags SET request_count = 1, first_request_at = ? WHERE device_id = ?"
+        ).bind(now, deviceId).run();
+      } else {
+        await env.DB.prepare(
+          "UPDATE trial_abuse_flags SET request_count = request_count + 1 WHERE device_id = ?"
+        ).bind(deviceId).run();
+      }
+    } else {
+      await env.DB.prepare(
+        "INSERT INTO trial_abuse_flags (device_id, request_count, first_request_at) VALUES (?, 1, ?)"
+      ).bind(deviceId, now).run();
+    }
+  } catch (e) {
+    console.error("D1 burst detection error:", e.message);
+  }
+
   let row = await env.DB.prepare("SELECT trial_start FROM trials WHERE device_id = ?")
     .bind(deviceId).first();
 
@@ -907,6 +959,18 @@ async function handleTrial(body, env, request) {
   const trialEnd = trialStart + TRIAL_DURATION_MS;
   const active = now < trialEnd;
   const daysLeft = active ? Math.ceil((trialEnd - now) / 86400000) : 0;
+
+  // Calcola fallbackCap: quante volte l'utente può ancora usare la via di fuga account
+  const FALLBACK_CAP = 3;
+  let fallbackCap = FALLBACK_CAP;
+  try {
+    const accountLinks = await env.DB.prepare(
+      "SELECT COUNT(*) as cnt FROM trial_accounts WHERE fingerprint = ?"
+    ).bind(fingerprint).first();
+    fallbackCap = Math.max(0, FALLBACK_CAP - (accountLinks?.cnt || 0));
+  } catch (e) {
+    console.error("D1 fallbackCap error:", e.message);
+  }
 
   // === ANTI-ABUSE: controlla fingerprint ===
   // Se abbiamo un fingerprint e non e' già stato usato per un trial, salvalo.
@@ -929,7 +993,7 @@ async function handleTrial(body, env, request) {
         "SELECT account_id FROM trial_accounts WHERE fingerprint = ?"
       ).bind(fingerprint).first();
 
-      if (accountRow) {
+      if (accountRow && fallbackCap > 0) {
         // Account gia' collegato → trial attivo con account
         return jsonResponse({
           ok: true,
@@ -939,10 +1003,11 @@ async function handleTrial(body, env, request) {
           now,
           daysLeft,
           active: true,
-          source: "account-linked"
+          source: "account-linked",
+          fallbackCap
         });
       } else {
-        // Nessun account → blocco con via di fuga
+        // Nessun account o fallback esaurito → blocco con via di fuga
         return jsonResponse({
           ok: true,
           allowed: false,
@@ -952,10 +1017,31 @@ async function handleTrial(body, env, request) {
           now,
           daysLeft,
           active: false,
-          message: "Trial già usato su questo dispositivo"
+          burstFlagged,
+          fallbackCap: 0,
+          message: burstFlagged 
+            ? "Troppe richieste. Riprova tra qualche minuto." 
+            : "Trial già usato su questo dispositivo"
         });
       }
     }
+  }
+
+  // Se burst flaggato, nega comunque
+  if (burstFlagged) {
+    return jsonResponse({
+      ok: true,
+      allowed: false,
+      fallback: "account",
+      trialStart,
+      trialEnd,
+      now,
+      daysLeft,
+      active: false,
+      burstFlagged: true,
+      fallbackCap,
+      message: "Troppe richieste. Riprova tra qualche minuto."
+    });
   }
 
   // Registra installazione in D1 (se nuova) per tracking retention
@@ -973,11 +1059,28 @@ async function handleTrial(body, env, request) {
     console.error("D1 install_events error:", e.message);
   }
 
-  const token = await signTrialToken(
-    { deviceId, trialStart, trialEnd, iat: now, v: 1 }, env
-  );
+  // Token include fingerprint per tracking lato client
+  const tokenPayload = {
+    deviceId,
+    trialStart,
+    trialEnd,
+    iat: now,
+    v: 2,
+    fp: fingerprint // fingerprint nel token
+  };
+  const token = await signTrialToken(tokenPayload, env);
 
-  return jsonResponse({ ok: true, allowed: true, token, trialStart, trialEnd, now, daysLeft, active });
+  return jsonResponse({ 
+    ok: true, 
+    allowed: true, 
+    token, 
+    trialStart, 
+    trialEnd, 
+    now, 
+    daysLeft, 
+    active,
+    fallbackCap
+  });
 }
 
 /**
