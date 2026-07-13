@@ -1,15 +1,40 @@
 # AdOff — TODO Unico Consolidato
 
-**Ultimo aggiornamento:** 2026-07-08
-**Store status:** ✅ CWS 3.5.28 LIVE | ✅ AMO 3.5.28 LIVE | ⚠️ Edge 404 (creds da verificare)
+**Ultimo aggiornamento:** 2026-07-13
+**Versione reale:** 3.5.32 (tutti e 3 i manifest)
+**Store status:** ✅ CWS 3.5.32 LIVE | ⚠️ AMO in review | ✅ Edge 202 Accepted (op baa21678)
 
 ---
 
 ## ⬜ In ordine di priorità
 
+### P0 — ✅ FATTO: Options page redesign "AdBlock-inspired" (2026-07-13)
+
+> SHIPPED v3.5.32. Commits: 0487b9b + c9e9f85.
+> Deploy: CWS LIVE, Site LIVE, Edge 202, AMO in review.
+
+Integrazioni completate:
+- [x] **Sidebar redesign** — emoji Unicode nav icons (⚙️🛡️✨💫📊🎁🔧❓💡ℹ️) + 🔒 Pro lock badges
+- [x] **Pro showcase** — 6 feature card con icone + 🔒 lock + CTA "Inizia gratis"
+- [x] **Grafico statistiche animato** — canvas bezier smooth + tab Oggi/Settimana/Mese/Anno/Sempre (dati REALI da adoffDailyStats)
+- [x] **Temi (gamification)** — sec-temi + sec-cambio-immagine con griglia e pro-gated
+- [x] **Banner upsell persistente** — sticky banner in alto con dismiss remember
+- [ ] **Extension State (trasparenza)** — RIMANDATO (non nei branch)
+- [ ] **nav-lock SVG invece emoji** — RIMANDATO (non nei branch)
+
+**File:** options.{html,css,js} + background.js (3 target sync)
+
+---
+
 ### P0 — Bloccanti / Core
 
-- [ ] **Store: Edge submission bloccata** — c'è una submission precedente in "In review" lato Partner Center. L'API restituisce `InProgressSubmission` e non può pubblicare. Azione: andare su Partner Center → Microsoft Edge Add-ons → AdOff → submissions → chiudere/cancellare la submission in coda, poi riprovare upload+publish.
+- [ ] **Trial Anti-Fraud System** — Implementare fingerprint hardware resiliente
+  - Fase 1: generateResilientFingerprint() in background.js
+  - Fase 2: trial_fingerprints table + anti-abuse in worker.js
+  - Fase 3: account via di fuga per falsi positivi
+  - Dettaglio: [[adoff-trial-antifraud-system]]
+
+- [x] **Store: Edge API credentials** — API key scaduta (4ZL6...) sostituita con nuova (UiQ7...). POST submissions → HTTP 202 ✅. "InProgressSubmission" = Microsoft già revisiona una submission esistente. Azione: aspettare fine revisione Microsoft OPPURE andare su Partner Center → chiudere submission in coda.
 
 ---
 
@@ -46,6 +71,13 @@
 - [ ] **Content bank 13 lingue** — hook-bank esteso solo EN/IT, tier-2 mai tradotto.
 
 ---
+
+## ✅ Ultime cose fatte (2026-07-13)
+
+- Analisi completa sistema trial: vulnerabilità critica identificata (deviceId cancellabile)
+- Ricerca competitor: NordVPN/AdGuard/TotalAdBlock/ulteriori strategie
+- Sessione AQ: 6 domande, strategia definita
+- Checkpoint + vault creati
 
 ## ✅ Ultime cose fatte (2026-07-08)
 
