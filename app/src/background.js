@@ -829,7 +829,7 @@
   // id forzati in un range riservato, condition ricostruita con soli campi safe.
   const REMOTE_RULES_URL = "https://adoff.app/rules-feed.json";
   const REMOTE_RULES_BASE_ID = 60000;
-  const REMOTE_RULES_MAX = 15000;
+  const REMOTE_RULES_MAX = 30000;
   const REMOTE_RULES_FETCH_TIMEOUT_MS = 8000;
   const SAFE_REMOTE_ACTIONS = ["block", "allow"];
   const SAFE_REMOTE_RESOURCE_TYPES = [
