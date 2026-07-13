@@ -206,6 +206,12 @@ tr:hover td{background:rgba(124,92,252,.04)}
 .stat-panel{display:none}
 .stat-panel.active{display:block;animation:fadeIn .2s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ── UNINSTALL ADVANCED ── */
+.funnel-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
+.funnel-step{background:linear-gradient(135deg,rgba(124,92,252,.15),rgba(124,92,252,.05));border:1px solid rgba(124,92,252,.25);border-radius:12px;padding:16px;text-align:center}
+.funnel-val{font-size:26px;font-weight:700;color:var(--accent);line-height:1}
+.funnel-label{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.3}
 </style>
 </head>
 <body>
@@ -289,6 +295,9 @@ tr:hover td{background:rgba(124,92,252,.04)}
       </div>
       <div class="nav-item" data-page="settings" onclick="navTo('settings')">
         <span class="nav-icon">⚙</span><span>Impostazioni</span>
+      </div>
+      <div class="nav-item" data-page="uninstall" onclick="navTo('uninstall')">
+        <span class="nav-icon">🗑️</span><span>Disinstallazioni</span>
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -834,6 +843,41 @@ tr:hover td{background:rgba(124,92,252,.04)}
         </div>
       </div>
     </div>
+
+    <!-- PAGE: DISINSTALLAZIONI -->
+    <div class="page" id="page-uninstall">
+      <h2 style="margin-bottom:20px;font-size:18px;font-weight:700">🗑️ Uninstall — Analisi Avanzata</h2>
+
+      <div class="row-2">
+        <!-- Cohort chart -->
+        <div class="card">
+          <div class="card-title">📊 Coorte: quanto durano gli utenti?</div>
+          <p style="color:var(--muted);font-size:13px;margin-top:4px;margin-bottom:16px">
+            Giorni dall'installazione alla disinstallazione (device con heartbeat attivo + uninstall record)
+          </p>
+          <div id="adv-cohort-chart"></div>
+        </div>
+
+        <!-- Funnel -->
+        <div class="card">
+          <div class="card-title">🔄 Funnel: Install → Attivo → Silenzioso → Disinstall</div>
+          <div id="adv-funnel" class="funnel-grid"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📦 Churn per Versione</div>
+        <p style="color:var(--muted);font-size:13px;margin-top:4px;margin-bottom:16px">
+          Le versioni con alto churn potrebbero contenere regressioni. Focus su versioni recenti.
+        </p>
+        <div id="adv-version-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📈 Trend Motivazioni (7g vs 14g vs 30g)</div>
+        <div id="adv-reason-trend" style="margin-top:16px;overflow-x:auto"></div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -1110,7 +1154,7 @@ async function init() {
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────
-const PAGE_TITLES = { stats:"Statistiche", licenses:"Licenze", finance:"Finanza", outreach:"Outreach", support:"Supporto", suggestions:"Suggerimenti", chat:"Chat AI", settings:"Impostazioni" };
+const PAGE_TITLES = { stats:"Statistiche", licenses:"Licenze", finance:"Finanza", outreach:"Outreach", support:"Supporto", suggestions:"Suggerimenti", chat:"Chat AI", settings:"Impostazioni", uninstall:"Disinstallazioni" };
 
 function navTo(page) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
@@ -1145,6 +1189,7 @@ function loadPage(page, force = false) {
   else if (page === "support") loadTickets(force);
   else if (page === "suggestions") loadSuggestions(force);
   else if (page === "chat") loadChats(force);
+  else if (page === "uninstall") loadUninstallAdvanced(force);
 }
 
 // ── OUTREACH TRACKER (integrato nell'admin) ──────────────────
@@ -1970,6 +2015,105 @@ async function loadStats(force = false) {
     : `<div class="empty"><div class="empty-icon">📭</div><p>Nessuna disinstallazione registrata (l'estensione v3.5.3 inizia a raccoglierle dopo l'approvazione store)</p></div>`;
 
   statsLoaded = true;
+}
+
+// ── Uninstall Advanced Analytics ──────────────────────────────────────────
+
+let uninstallAdvancedLoaded = false;
+
+async function loadUninstallAdvanced(force = false) {
+  if (uninstallAdvancedLoaded && !force) return;
+  uninstallAdvancedLoaded = true;
+
+  const data = await api("/admin/uninstall-analytics");
+  if (!data.ok) {
+    const container = document.getElementById("adv-cohort-chart");
+    if (container) container.innerHTML = `<div style="color:var(--danger);padding:24px">Errore: ${data.error || "Impossibile caricare dati"}</div>`;
+    return;
+  }
+
+  const { cohort, versions, funnel, reasonTrend } = data;
+
+  // Cohort chart (bar chart inline)
+  const cohortEl = document.getElementById("adv-cohort-chart");
+  if (!cohort || !cohort.length) {
+    cohortEl.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>Nessun dato coorte disponibile</p></div>`;
+  } else {
+    const maxC = Math.max(1, ...cohort.map(c => c.count));
+    cohortEl.innerHTML = cohort.map(c => `
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
+          <span>${esc(c.bucket)}</span><span><b>${c.count}</b></span>
+        </div>
+        <div class="progress"><div class="progress-fill" style="width:${Math.round(c.count / maxC * 100)}%;background:var(--accent)"></div></div>
+      </div>`).join("");
+  }
+
+  // Funnel
+  const funnelEl = document.getElementById("adv-funnel");
+  if (!funnelEl) return;
+  const steps = [
+    { val: funnel.installs || 0, label: "Installati (30g)", color: "var(--success)" },
+    { val: funnel.active || 0, label: "Attivi (7g)", color: "#4ade80" },
+    { val: funnel.silent || 0, label: "Silenziosi (>7g)", color: "#fbbf24" },
+    { val: funnel.uninstalled || 0, label: "Disinstallati", color: "var(--danger)" },
+  ];
+  funnelEl.innerHTML = steps.map(s => `
+    <div class="funnel-step">
+      <div class="funnel-val" style="color:${s.color}">${(s.val || 0).toLocaleString()}</div>
+      <div class="funnel-label">${esc(s.label)}</div>
+    </div>`).join("");
+  if (funnel.retentionRate !== undefined) {
+    funnelEl.innerHTML += `<div style="grid-column:1/-1;text-align:center;margin-top:10px;font-size:13px;color:var(--muted)">
+      Retention: <b style="color:${funnel.retentionRate > 50 ? "var(--success)" : "var(--danger)"}">${funnel.retentionRate}%</b>
+      (attivi / installati ultimi 30g)
+    </div>`;
+  }
+
+  // Version comparison
+  const verEl = document.getElementById("adv-version-list");
+  if (!versions || !versions.length) {
+    verEl.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>Nessun dato versione disponibile</p></div>`;
+  } else {
+    verEl.innerHTML = versions.slice(0, 10).map(v => `
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span><b>v${esc(String(v.version))}</b>${v.proCount ? ` <span style="color:var(--accent);font-size:11px">⭐ ${v.proCount} PRO</span>` : ""}</span>
+          <span style="color:var(--danger)">${v.total} uninstalls</span>
+        </div>
+        <div class="progress"><div class="progress-fill" style="width:${Math.round(v.total / (versions[0]?.total || 1) * 100)}%;background:var(--danger)"></div></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">${Object.entries(v.byReason || {}).map(([r, c]) => `${esc(r)}: ${c}`).join(" · ") || "—"}</div>
+      </div>`).join("");
+  }
+
+  // Reason trend table
+  const trendEl = document.getElementById("adv-reason-trend");
+  const periods = ["7d", "14d", "30d"];
+  const REASON_LABELS_SHORT = {
+    broken_site: "🧩 Sito non funzionava",
+    ads_visible: "👀 Ads visibili",
+    confusing: "😕 Complicato",
+    performance: "🐌 Lento",
+    found_better: "🔀 Alternativa",
+    other: "❔ Altro",
+  };
+  const reasons = Object.keys(reasonTrend["30d"] || {});
+  if (!reasons.length) {
+    trendEl.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>Nessun dato trend disponibile</p></div>`;
+  } else {
+    const maxR = Math.max(1, ...periods.flatMap(p => Object.values(reasonTrend[p] || {})));
+    trendEl.innerHTML = `<table style="width:100%;border-collapse:collapse">
+      <thead><tr><th style="text-align:left;padding:8px;border-bottom:1px solid rgba(255,255,255,.1)">Motivo</th>${periods.map(p => `<th style="padding:8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:right">${p}</th>`).join("")}</tr></thead>
+      <tbody>${reasons.map(r => `<tr>
+        <td style="padding:8px;border-bottom:1px solid rgba(255,255,255,.05)">${REASON_LABELS_SHORT[r] || esc(r)}</td>
+        ${periods.map(p => `<td style="padding:8px;border-bottom:1px solid rgba(255,255,255,.05);text-align:right">
+          <span style="font-size:13px">${reasonTrend[p]?.[r] || 0}</span>
+          <div style="width:60px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:3px;display:inline-block;vertical-align:middle;margin-left:8px">
+            <div style="height:4px;border-radius:2px;width:${Math.round((reasonTrend[p]?.[r] || 0) / maxR * 60)}%;background:var(--accent)"></div>
+          </div>
+        </td>`).join("")}</tr>`).join("")}
+      </tbody></table>`;
+  }
 }
 
 // ── SEO / AEO ────────────────────────────────────────────────

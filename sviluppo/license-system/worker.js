@@ -2164,6 +2164,79 @@ async function notifyTelegram(text, env, threadId = TELEGRAM_SUPPORT_THREAD) {
   return false;
 }
 
+// ── NOTIFICHE SLACK / DISCORD ─────────────────────────────────────────────
+
+async function slackNotify(text, env) {
+  if (!env.SLACK_WEBHOOK_URL) return false;
+  const payload = {
+    text, // fallback per canali che non rendono HTML
+    blocks: [{
+      type: "section",
+      text: { type: "mrkdwn", text }
+    }]
+  };
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch(env.SLACK_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) return true;
+      const txt = await res.text().catch(() => "");
+      console.error(`[slack] status=${res.status} attempt=${attempt} body=${txt.slice(0, 200)}`);
+      if (res.status === 429 || res.status >= 500) {
+        await new Promise(r => setTimeout(r, 800 * attempt));
+        continue;
+      }
+      return false;
+    } catch (e) {
+      console.error(`[slack] fetch_error attempt=${attempt} err=${e && e.message ? e.message : e}`);
+      if (attempt < 2) await new Promise(r => setTimeout(r, 800));
+    }
+  }
+  return false;
+}
+
+async function discordNotify(text, env, color = 15158332) {
+  // color: rosso per uninstall (0xE35353 = 15158332)
+  if (!env.DISCORD_WEBHOOK_URL) return false;
+  // text contains HTML (parse_mode: HTML) — strip for Discord
+  const clean = text.replace(/<[^>]+>/g, "");
+  const payload = {
+    username: "AdOff",
+    avatar_url: "https://adoff.app/icon-128.png",
+    embeds: [{
+      title: "🗑️ Uninstall",
+      description: clean,
+      color,
+      footer: { text: "AdOff Analytics" },
+      timestamp: new Date().toISOString(),
+    }]
+  };
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch(env.DISCORD_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) return true;
+      const txt = await res.text().catch(() => "");
+      console.error(`[discord] status=${res.status} attempt=${attempt} body=${txt.slice(0, 200)}`);
+      if (res.status === 429 || res.status >= 500) {
+        await new Promise(r => setTimeout(r, 800 * attempt));
+        continue;
+      }
+      return false;
+    } catch (e) {
+      console.error(`[discord] fetch_error attempt=${attempt} err=${e && e.message ? e.message : e}`);
+      if (attempt < 2) await new Promise(r => setTimeout(r, 800));
+    }
+  }
+  return false;
+}
+
 // =============================================
 // AI SUPPORT CHATBOT (LLM locale via tunnel)
 // =============================================
@@ -4243,6 +4316,30 @@ async function handleUninstall(request, env) {
     await notifyTelegram(text, env, TELEGRAM_SUPPORT_THREAD);
   }
 
+  // Notifiche Slack/Discord: solo se utente era PRO/Trial
+  if (wasPro) {
+    const reasonLabel = {
+      broken_site: "🧩 Un sito non funzionava",
+      ads_visible: "👀 Vedeva ancora le ads",
+      confusing: "😕 Troppo complicato / Free vs Pro",
+      performance: "🐌 Rallentava il browser",
+      found_better: "🔀 Ha trovato di meglio",
+      other: "❔ Altro",
+    }[reason] || reason;
+    const proText =
+      `🗑️ <b>Disinstallazione — PRO</b>\n` +
+      `Motivo: ${reasonLabel}\n` +
+      `Browser: ${browser} · Paese: ${country} · v${version || "?"}\n` +
+      (problemDomain ? `Dominio: ${problemDomain}\n` : "") +
+      (comment ? `Commento: ${comment.replace(/[<>&]/g, "")}` : "");
+
+    // Fire in parallel — non bloccanti
+    Promise.all([
+      env.SLACK_WEBHOOK_URL ? slackNotify(proText, env) : Promise.resolve(false),
+      env.DISCORD_WEBHOOK_URL ? discordNotify(proText, env) : Promise.resolve(false),
+    ]).catch(() => {}); // fire-and-forget
+  }
+
   // ---- D1: scrivi evento uninstall (device-level) ----
   const deviceId = typeof body.deviceId === "string" ? body.deviceId : "";
   if (deviceId) {
@@ -4272,7 +4369,67 @@ async function handleUninstall(request, env) {
     }
   }
 
-  return jsonResponse({ ok: true });
+  // ── Azioni automatiche ──
+  // GitHub issue per broken_site (fire-and-forget)
+  if (problemDomain) {
+    maybeCreateGithubIssue(reason, problemDomain, comment, version, wasPro, env).catch(() => {});
+  }
+
+  // Il retry offer URL viene restituito nella response per mostrarlo in frontend
+  const retryOffer = getRetryOfferUrl(reason);
+
+  return jsonResponse({
+    ok: true,
+    ...(retryOffer ? { retryOffer } : {}),
+  });
+}
+
+// ── UNINSTALL — Azioni Automatiche ────────────────────────────────────────
+// GitHub issue per broken_site + retry offer URL ───────────────────────────
+
+async function maybeCreateGithubIssue(reason, problemDomain, comment, version, wasPro, env) {
+  if (reason !== "broken_site" || !problemDomain || !env.GITHUB_TOKEN || !env.GITHUB_REPO) return;
+  // Crea issue GitHub solo se: broken_site + dominio + commento (segnale qualità)
+  if (!comment && !env.GITHUB_AUTO_ISSUE_MINIMAL) return;
+
+  const title = `[Bug] Adblock non funziona su: ${problemDomain}`;
+  const labels = ["bug", "user-reported", "adblock-broken"];
+  if (wasPro) labels.push("priority:high");
+  const body =
+    `## Problema segnalato dall'utente\n` +
+    `**Dominio:** ${problemDomain}\n` +
+    `**Versione:** ${version || "N/A"}\n` +
+    `**Piano:** ${wasPro ? "Pro/Trial" : "Free"}\n` +
+    `**Commento:**\n> ${(comment || "Nessun commento").replace(/[<>&]/g, "")}\n\n` +
+    `---\n` +
+    `_Segnalazione automatica da uninstall survey AdOff_`;
+
+  try {
+    const res = await fetch(`https://api.github.com/repos/${env.GITHUB_REPO}/issues`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${env.GITHUB_TOKEN}`,
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ title, body, labels }),
+    });
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      console.error(`[github] issue create failed: ${res.status} ${txt.slice(0, 200)}`);
+    }
+  } catch (e) {
+    console.error(`[github] issue create error: ${e && e.message ? e.message : e}`);
+  }
+}
+
+function getRetryOfferUrl(reason) {
+  // Retry offer per chi ha disinstallato per "ads visible" o "broken_site"
+  if (reason === "ads_visible" || reason === "broken_site") {
+    return "https://adoff.app/retry?utm_source=uninstall&utm_medium=survey&utm_campaign=retry";
+  }
+  return null;
 }
 
 // =============================================
@@ -4702,6 +4859,30 @@ async function handleAdminAnalytics(request, env) {
   // Tasso di disinstallazione approssimato su totali cumulativi (segnale, non esatto).
   const uninstallRate = totalInstalls > 0 ? Math.round((totalUninstalls / totalInstalls) * 1000) / 10 : 0;
 
+  // ── Uninstall advanced analytics embedded ──
+  let uninstallAdvanced = { cohort: [], versions: [], funnel: {}, reasonTrend: {} };
+  try {
+    const uaRows = await env.DB.prepare(`
+      SELECT ROUND((ue.uninstall_ts - dh.created_at) / 86400000) AS days_active,
+             ue.reason, COUNT(*) AS cnt
+      FROM uninstall_events ue
+      JOIN device_heartbeat dh ON ue.device_id = dh.device_id
+      WHERE ue.uninstall_ts > dh.created_at AND ue.uninstall_ts > ? AND dh.created_at > ?
+      GROUP BY days_active, ue.reason
+    `).bind(Date.now() - 30 * 86400000, Date.now() - 90 * 86400000).all();
+
+    const buckets = { "<1d": 0, "1-7d": 0, "8-30d": 0, "31-90d": 0, ">90d": 0 };
+    for (const r of uaRows.results || []) {
+      const d = r.days_active;
+      if (d < 1) buckets["<1d"] += r.cnt;
+      else if (d <= 7) buckets["1-7d"] += r.cnt;
+      else if (d <= 30) buckets["8-30d"] += r.cnt;
+      else if (d <= 90) buckets["31-90d"] += r.cnt;
+      else buckets[">90d"] += r.cnt;
+    }
+    uninstallAdvanced.cohort = Object.entries(buckets).map(([b, c]) => ({ bucket: b, count: c }));
+  } catch (e) { /* table may not exist yet */ }
+
   return jsonResponse({
     ok: true,
     installs: {
@@ -4726,7 +4907,150 @@ async function handleAdminAnalytics(request, env) {
       byBrowser: uninstByBrowser,
       ratePercent: uninstallRate,
       recentLog: uninstallsLog.slice(0, 50),
+      _advanced: uninstallAdvanced,
     },
+  });
+}
+
+// ── ADMIN — Uninstall Advanced Analytics ──────────────────────────────────
+// Coorte: quanto durano gli utenti prima di disinstallare
+// Version comparison: quale release ha + churn
+// Funnel: install → uso attivo → silenzio → disinstall
+// ─────────────────────────────────────────────────────────────────────────
+
+async function handleAdminUninstallAnalytics(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const now = Date.now();
+  const DAY = 86400000;
+  const 30D = 30 * DAY;
+
+  // ── COHORT ANALYSIS ──
+  let cohortData = [];
+  try {
+    const rows = await env.DB.prepare(`
+      SELECT
+        ROUND((ue.uninstall_ts - dh.created_at) / ${DAY}) AS days_active,
+        COUNT(*) AS count,
+        ue.reason
+      FROM uninstall_events ue
+      JOIN device_heartbeat dh ON ue.device_id = dh.device_id
+      WHERE ue.uninstall_ts > dh.created_at
+        AND ue.uninstall_ts > ?
+        AND dh.created_at > ?
+      GROUP BY days_active, ue.reason
+      ORDER BY days_active ASC
+    `).bind(now - 30D, now - 90 * DAY).all();
+
+    const cohortBuckets = { "<1d": 0, "1-7d": 0, "8-30d": 0, "31-90d": 0, ">90d": 0 };
+    for (const r of rows.results || []) {
+      const d = r.days_active;
+      if (d < 1) cohortBuckets["<1d"] += r.count;
+      else if (d <= 7) cohortBuckets["1-7d"] += r.count;
+      else if (d <= 30) cohortBuckets["8-30d"] += r.count;
+      else if (d <= 90) cohortBuckets["31-90d"] += r.count;
+      else cohortBuckets[">90d"] += r.count;
+    }
+    cohortData = Object.entries(cohortBuckets).map(([bucket, count]) => ({ bucket, count }));
+  } catch (e) {
+    console.error("Cohort query error:", e.message);
+  }
+
+  // ── VERSION COMPARISON ──
+  let versionData = [];
+  try {
+    const rows = await env.DB.prepare(`
+      SELECT
+        SUBSTR(version, 1, LENGTH(SUBSTR(version, 1, INSTR(version || '.', '.') - 1))) AS major_minor,
+        COUNT(*) AS total,
+        SUM(CASE WHEN was_pro = 1 THEN 1 ELSE 0 END) AS pro_count,
+        ue.reason
+      FROM uninstall_events ue
+      WHERE uninstall_ts > ? AND version != ''
+      GROUP BY major_minor, ue.reason
+      ORDER BY total DESC
+      LIMIT 20
+    `).bind(now - 30D).all();
+
+    const verMap = {};
+    for (const r of rows.results || []) {
+      const v = r.major_minor || "unknown";
+      if (!verMap[v]) verMap[v] = { version: v, total: 0, proCount: 0, byReason: {} };
+      verMap[v].total += r.total;
+      if (r.was_pro) verMap[v].proCount += r.pro_count;
+      verMap[v].byReason[r.reason] = (verMap[v].byReason[r.reason] || 0) + r.count;
+    }
+    versionData = Object.values(verMap).sort((a, b) => b.total - a.total);
+  } catch (e) {
+    console.error("Version query error:", e.message);
+  }
+
+  // ── FUNNEL ANALYSIS ──
+  let funnel = {};
+  try {
+    const totalInstalls30d = await env.DB.prepare(`
+      SELECT COUNT(*) as cnt FROM device_heartbeat WHERE created_at > ?
+    `).bind(now - 30D).all();
+
+    const activeUsers = await env.DB.prepare(`
+      SELECT COUNT(DISTINCT device_id) as cnt FROM device_heartbeat WHERE last_seen > ?
+    `).bind(now - 7 * DAY).all();
+
+    const silentUsers = await env.DB.prepare(`
+      SELECT COUNT(DISTINCT device_id) as cnt FROM device_heartbeat
+      WHERE created_at > ? AND last_seen < ? AND last_seen > ?
+    `).bind(now - 30D, now - 7 * DAY, now - 30 * DAY).all();
+
+    const uninstalledFromRecent = await env.DB.prepare(`
+      SELECT COUNT(*) as cnt FROM uninstall_events ue
+      JOIN device_heartbeat dh ON ue.device_id = dh.device_id
+      WHERE ue.uninstall_ts > ? AND dh.created_at > ?
+    `).bind(now - 30D, now - 30D).all();
+
+    funnel = {
+      installs: totalInstalls30d.results?.[0]?.cnt ?? 0,
+      active: activeUsers.results?.[0]?.cnt ?? 0,
+      silent: silentUsers.results?.[0]?.cnt ?? 0,
+      uninstalled: uninstalledFromRecent.results?.[0]?.cnt ?? 0,
+    };
+    funnel.retentionRate = funnel.installs > 0
+      ? Math.round((funnel.active / funnel.installs) * 1000) / 10
+      : 0;
+  } catch (e) {
+    console.error("Funnel query error:", e.message);
+    funnel = { installs: 0, active: 0, silent: 0, uninstalled: 0, retentionRate: 0 };
+  }
+
+  // ── TREND REASON (ultimi 7 vs 14 vs 30g) ──
+  let reasonTrend = {};
+  try {
+    for (const [label, days] of [["7d", 7], ["14d", 14], ["30d", 30]]) {
+      const since = now - days * DAY;
+      const rows = await env.DB.prepare(`
+        SELECT reason, COUNT(*) as cnt
+        FROM uninstall_events
+        WHERE uninstall_ts > ?
+        GROUP BY reason
+      `).bind(since).all();
+      reasonTrend[label] = {};
+      for (const r of rows.results || []) {
+        reasonTrend[label][r.reason] = r.cnt;
+      }
+    }
+  } catch (e) {
+    console.error("Reason trend error:", e.message);
+  }
+
+  return jsonResponse({
+    ok: true,
+    cohort: cohortData,
+    versions: versionData,
+    funnel,
+    reasonTrend,
+    generatedAt: now,
   });
 }
 
@@ -7428,6 +7752,7 @@ export default {
       if (path === "/admin/stats") return withCors(handleAdminStats(request, env));
       if (path === "/admin/retention") return withCors(handleAdminRetention(request, env));
       if (path === "/admin/analytics") return withCors(handleAdminAnalytics(request, env));
+      if (path === "/admin/uninstall-analytics") return withCors(handleAdminUninstallAnalytics(request, env));
       if (path === "/admin/revenue") return withCors(handleAdminRevenue(request, env));
       if (path === "/admin/licenses") return withCors(handleAdminListLicenses(request, env));
       if (path === "/admin/backup-status" && request.method === "GET") return withCors(handleAdminBackupStatus(request, env));

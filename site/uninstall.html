@@ -85,6 +85,27 @@
     .reinstall { text-align: center; margin-top: 18px; font-size: 13px; color: var(--text-muted); }
     .reinstall a { color: var(--primary-light); }
     .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+    .retry-banner {
+      margin-top: 24px;
+      padding: 16px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 1px solid rgba(124,92,252,.4);
+      border-radius: 12px;
+      text-align: center;
+    }
+    .retry-banner p { color: rgba(255,255,255,.85); margin: 0 0 12px; font-size: 15px; }
+    .btn-retry {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 10px 24px;
+      background: #7252f8;
+      color: #fff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background .2s;
+    }
+    .btn-retry:hover { background: #6144e8; }
     .thanks { text-align: center; }
     .thanks .check {
       width: 64px; height: 64px; margin: 0 auto 20px;
@@ -250,16 +271,28 @@
       try {
         const ctrl = new AbortController();
         const tid = setTimeout(() => ctrl.abort(), 8000);
-        await fetch(API_URL + "/track/uninstall", {
+        const res = await fetch(API_URL + "/track/uninstall", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
           signal: ctrl.signal,
         });
         clearTimeout(tid);
+        var serverData = null;
+        try { serverData = await res.json(); } catch (_) { /* ignore */ }
       } catch (_) { /* best-effort: mostriamo comunque il grazie */ }
       document.getElementById("surveyState").classList.add("hidden");
       document.getElementById("thanksState").classList.remove("hidden");
+
+      // Retry offer: se il server suggerisce di riprovare, mostra banner
+      if (serverData && serverData.retryOffer) {
+        const banner = document.createElement("div");
+        banner.className = "retry-banner";
+        banner.innerHTML = `<p><strong>Want to try again?</strong> ` +
+          `We've updated our ad-blocking rules. <a href="${data.retryOffer}" class="btn-retry">Try again for free</a></p>`;
+        const thanksContent = document.querySelector(".thanks");
+        if (thanksContent) thanksContent.appendChild(banner);
+      }
     }
     submitBtn.addEventListener("click", submit);
   </script>
