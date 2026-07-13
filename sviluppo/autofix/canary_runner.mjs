@@ -68,11 +68,15 @@ async function runCanary() {
   // Inject candidate rules into DNR via the service worker.
   // Remap IDs to a temporary range (65000+) to avoid collision with the
   // remote feed rules (60000+) that the extension already loaded.
+  // Strip underscore-prefixed custom fields (_fingerprint, _domain) — Chrome DNR
+  // only accepts the standard declarativeNetRequest rule schema.
   const CANARY_BASE_ID = 65000;
-  const remapped = candidates.map((c, i) => ({
-    ...c,
-    id: CANARY_BASE_ID + i,
-  }));
+  const remapped = candidates.map((c, i) => {
+    const cleaned = Object.fromEntries(
+      Object.entries(c).filter(([k]) => !k.startsWith('_'))
+    );
+    return { ...cleaned, id: CANARY_BASE_ID + i };
+  });
 
   if (remapped.length > 0) {
     console.log(`Inietto ${remapped.length} candidate rules nel DNR (range 65000+)...`);
@@ -109,7 +113,7 @@ async function runCanary() {
     page.on('request', req => {
       const u = req.url().toLowerCase();
       const m = AD_NETWORKS.find(n => u.includes(n));
-      if (m) leaks.push({ url: req.url().slice(0,80), net: m });
+      if (m) { leaks.push({ url: req.url(), net: m }); console.log(`    [LEAK] ${m}: ${req.url().slice(0,120)}`); }
     });
 
     try {

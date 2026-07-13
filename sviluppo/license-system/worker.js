@@ -4926,7 +4926,7 @@ async function handleAdminUninstallAnalytics(request, env) {
 
   const now = Date.now();
   const DAY = 86400000;
-  const 30D = 30 * DAY;
+  const D30 = 30 * DAY; // ponytail: renamed 30D → D30 (JS identifier can't start with digit)
 
   // ── COHORT ANALYSIS ──
   let cohortData = [];
@@ -4943,7 +4943,7 @@ async function handleAdminUninstallAnalytics(request, env) {
         AND dh.created_at > ?
       GROUP BY days_active, ue.reason
       ORDER BY days_active ASC
-    `).bind(now - 30D, now - 90 * DAY).all();
+    `).bind(now - D30, now - 90 * DAY).all();
 
     const cohortBuckets = { "<1d": 0, "1-7d": 0, "8-30d": 0, "31-90d": 0, ">90d": 0 };
     for (const r of rows.results || []) {
@@ -4973,7 +4973,7 @@ async function handleAdminUninstallAnalytics(request, env) {
       GROUP BY major_minor, ue.reason
       ORDER BY total DESC
       LIMIT 20
-    `).bind(now - 30D).all();
+    `).bind(now - D30).all();
 
     const verMap = {};
     for (const r of rows.results || []) {
@@ -4993,7 +4993,7 @@ async function handleAdminUninstallAnalytics(request, env) {
   try {
     const totalInstalls30d = await env.DB.prepare(`
       SELECT COUNT(*) as cnt FROM device_heartbeat WHERE created_at > ?
-    `).bind(now - 30D).all();
+    `).bind(now - D30).all();
 
     const activeUsers = await env.DB.prepare(`
       SELECT COUNT(DISTINCT device_id) as cnt FROM device_heartbeat WHERE last_seen > ?
@@ -5002,13 +5002,13 @@ async function handleAdminUninstallAnalytics(request, env) {
     const silentUsers = await env.DB.prepare(`
       SELECT COUNT(DISTINCT device_id) as cnt FROM device_heartbeat
       WHERE created_at > ? AND last_seen < ? AND last_seen > ?
-    `).bind(now - 30D, now - 7 * DAY, now - 30 * DAY).all();
+    `).bind(now - D30, now - 7 * DAY, now - 30 * DAY).all();
 
     const uninstalledFromRecent = await env.DB.prepare(`
       SELECT COUNT(*) as cnt FROM uninstall_events ue
       JOIN device_heartbeat dh ON ue.device_id = dh.device_id
       WHERE ue.uninstall_ts > ? AND dh.created_at > ?
-    `).bind(now - 30D, now - 30D).all();
+    `).bind(now - D30, now - D30).all();
 
     funnel = {
       installs: totalInstalls30d.results?.[0]?.cnt ?? 0,
