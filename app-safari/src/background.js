@@ -9,6 +9,7 @@
   const STORAGE_WHITELIST  = "adoffWhitelist";
   const STORAGE_SHOW_BADGE   = "adoffShowBadge";
   const STORAGE_SHOW_COUNTER = "adoffShowCounter";
+  const STORAGE_DAILY_STATS = "adoffDailyStats";
   const TRIAL_DAYS         = 30;
 
   // Data limite per badge Founding Member (3 mesi dal lancio)
@@ -19,8 +20,20 @@
   let adsWriteChain = Promise.resolve();
   function incrementAdsCounter(count) {
     adsWriteChain = adsWriteChain.then(() => new Promise((resolve) => {
-      chrome.storage.local.get(STORAGE_ADS, (result) => {
-        chrome.storage.local.set({ [STORAGE_ADS]: (result[STORAGE_ADS] || 0) + count }, resolve);
+      chrome.storage.local.get([STORAGE_ADS, STORAGE_REQ, STORAGE_DAILY_STATS], (result) => {
+        const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+        const daily = result[STORAGE_DAILY_STATS] || {};
+        const prev = daily[today] || { ads: 0, req: 0 };
+        daily[today] = { ads: prev.ads + count, req: prev.req };
+        // keep 90 days max to bound storage
+        const keys = Object.keys(daily).sort();
+        if (keys.length > 90) {
+          keys.slice(0, keys.length - 90).forEach((k) => delete daily[k]);
+        }
+        chrome.storage.local.set({
+          [STORAGE_ADS]: (result[STORAGE_ADS] || 0) + count,
+          [STORAGE_DAILY_STATS]: daily,
+        }, resolve);
       });
     }));
     return adsWriteChain;
@@ -700,7 +713,7 @@
     }
     if (alarm.name !== ALARM_FLUSH_REQ) return;
 
-    chrome.storage.local.get([STORAGE_ENABLED, STORAGE_REQ, STORAGE_LAST_CHECK], (result) => {
+    chrome.storage.local.get([STORAGE_ENABLED, STORAGE_REQ, STORAGE_LAST_CHECK, STORAGE_DAILY_STATS], (result) => {
       const lastCheck = result[STORAGE_LAST_CHECK] || 0;
       const now = Date.now();
 
@@ -719,6 +732,17 @@
           const updates = { [STORAGE_LAST_CHECK]: now };
           if (adCount > 0) {
             updates[STORAGE_REQ] = (result[STORAGE_REQ] || 0) + adCount;
+            // Aggiorna daily stats per req
+            const today = new Date().toISOString().slice(0, 10);
+            const daily = result[STORAGE_DAILY_STATS] || {};
+            const prev = daily[today] || { ads: 0, req: 0 };
+            daily[today] = { ads: prev.ads, req: prev.req + adCount };
+            // keep 90 days
+            const keys = Object.keys(daily).sort();
+            if (keys.length > 90) {
+              keys.slice(0, keys.length - 90).forEach((k) => delete daily[k]);
+            }
+            updates[STORAGE_DAILY_STATS] = daily;
           }
           chrome.storage.local.set(updates);
         }

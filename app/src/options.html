@@ -22,6 +22,25 @@
     </div>
   </header>
 
+  <!-- BANNER UPSELL PRO -->
+  <div id="proUpsellBanner" class="pro-upsell-banner" style="display:none">
+    <div class="pro-upsell-inner">
+      <div class="pro-upsell-left">
+        <span class="pro-upsell-icon">&#128274;</span>
+        <div class="pro-upsell-text">
+          <span class="pro-upsell-title">Sblocca tutte le funzionalità Pro</span>
+          <span class="pro-upsell-sub">Anti-detection avanzato, video senza pubblicità, stealth mode</span>
+        </div>
+      </div>
+      <div class="pro-upsell-right">
+        <a href="https://adoff.app/account" target="_blank" class="btn-pro-upsell" id="btnBannerPro">
+          Passa a Pro — <strong>gratis</strong>
+        </a>
+        <button class="pro-upsell-close" id="btnBannerClose" title="Chiudi">&#10005;</button>
+      </div>
+    </div>
+  </div>
+
   <div class="layout">
     <!-- SIDEBAR MENU -->
     <nav class="sidebar">
@@ -42,6 +61,14 @@
       </a>
       <a class="nav-item" data-section="avanzate" href="#">
         <span class="nav-icon">&#128295;</span> <span data-i18n="opt.navAdvanced">Avanzate</span>
+      </a>
+      <a class="nav-item" data-section="temi" href="#">
+        <span class="nav-icon">&#127912;</span> <span data-i18n="opt.navThemes">Temi</span>
+        <span class="nav-pro-lock" title="Pro">&#128274;</span>
+      </a>
+      <a class="nav-item" data-section="cambio-immagine" href="#">
+        <span class="nav-icon">&#128444;</span> <span data-i18n="opt.navImageSwap">Cambio immagine</span>
+        <span class="nav-pro-lock" title="Pro">&#128274;</span>
       </a>
       <a class="nav-item" data-section="aiuto" href="#">
         <span class="nav-icon">&#128172;</span> <span data-i18n="opt.navHelp">Aiuto</span>
@@ -164,6 +191,72 @@
       <!-- ===== PIANO & LICENZA ===== -->
       <section id="sec-licenza" class="section">
         <h2 class="section-title" data-i18n="opt.licenseTitle">Piano &amp; Licenza</h2>
+
+        <!-- PRO SHOWCASE (visibile solo se NON Pro) -->
+        <div id="proShowcaseSection">
+          <div class="pro-showcase-header">
+            <span class="pro-showcase-icon">&#128274;</span>
+            <div class="pro-showcase-text">
+              <h3>Sblocca il pieno potere di AdOff</h3>
+              <p>Ecco cosa ottieni con AdOff Pro — gratis per 30 giorni</p>
+            </div>
+          </div>
+          <div class="pro-features-grid">
+            <div class="pro-feature-card">
+              <div class="pro-feature-icon">&#127916;</div>
+              <div class="pro-feature-content">
+                <h4>Video senza pubblicità</h4>
+                <p>Nessuna interruzione durante la visione — neanche sui video embedded</p>
+              </div>
+              <span class="pro-feature-lock">&#128274;</span>
+            </div>
+            <div class="pro-feature-card">
+              <div class="pro-feature-icon">&#128737;</div>
+              <div class="pro-feature-content">
+                <h4>Anti-detection avanzato</h4>
+                <p>Invisibile ai sistemi anti-adblock più sofisticati</p>
+              </div>
+              <span class="pro-feature-lock">&#128274;</span>
+            </div>
+            <div class="pro-feature-card">
+              <div class="pro-feature-icon">&#128274;</div>
+              <div class="pro-feature-content">
+                <h4>Blocco cookie popup</h4>
+                <p>Nessun fastidioso banner per il consenso cookie</p>
+              </div>
+              <span class="pro-feature-lock">&#128274;</span>
+            </div>
+            <div class="pro-feature-card">
+              <div class="pro-feature-icon">&#128166;</div>
+              <div class="pro-feature-content">
+                <h4>Controllo distrazioni</h4>
+                <p>Blocca widget social, commenti e contenuti non richiesti</p>
+              </div>
+              <span class="pro-feature-lock">&#128274;</span>
+            </div>
+            <div class="pro-feature-card">
+              <div class="pro-feature-icon">&#128762;</div>
+              <div class="pro-feature-content">
+                <h4>Stealth mode</h4>
+                <p>Nessuna traccia — variabili spoofate, fetch/XHR mascherati</p>
+              </div>
+              <span class="pro-feature-lock">&#128274;</span>
+            </div>
+            <div class="pro-feature-card">
+              <div class="pro-feature-icon">&#128171;</div>
+              <div class="pro-feature-content">
+                <h4>Trial 30 giorni</h4>
+                <p>Prova gratis per un mese, senza carta di credito</p>
+              </div>
+              <span class="pro-feature-badge trial">30gg</span>
+            </div>
+          </div>
+          <div class="pro-showcase-cta">
+            <a href="https://adoff.app/account" target="_blank" class="btn btn-primary btn-pro-cta">
+              Inizia gratis — Pro per tutti
+            </a>
+          </div>
+        </div>
 
         <!-- STATE B: PRO ATTIVO -->
         <div class="card auth-state" id="stateProActive" style="display:none">
@@ -322,9 +415,25 @@
           </div>
         </div>
 
+        <!-- Tab temporali -->
+        <div class="card stats-chart-card">
+          <div class="stats-tabs">
+            <button class="stats-tab active" data-period="today" data-i18n="opt.periodToday">Oggi</button>
+            <button class="stats-tab" data-period="week" data-i18n="opt.periodWeek">Questa settimana</button>
+            <button class="stats-tab" data-period="month" data-i18n="opt.periodMonth">Questo mese</button>
+            <button class="stats-tab" data-period="year" data-i18n="opt.periodYear">Quest'anno</button>
+            <button class="stats-tab" data-period="all" data-i18n="opt.periodAll">Sempre</button>
+          </div>
+          <div class="stats-chart-wrapper">
+            <canvas id="statsChart" width="600" height="180"></canvas>
+          </div>
+          <div class="stats-chart-meta" id="statsChartMeta"></div>
+        </div>
+
         <div class="card">
           <button class="btn btn-danger" id="btnResetStats">
-            &#128465; <span data-i18n="opt.resetStats">Resetta statistiche</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+            <span data-i18n="opt.resetStats">Resetta statistiche</span>
           </button>
         </div>
       </section>
@@ -410,6 +519,75 @@
               <span class="referral-stat-label" data-i18n="ref.daysEarned">Giorni bonus</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- ===== TEMI ===== -->
+      <section id="sec-temi" class="section">
+        <h2 class="section-title" data-i18n="opt.themesTitle">Temi</h2>
+
+        <div class="card">
+          <p class="section-desc" data-i18n="opt.themesDesc">Personalizza l'aspetto di AdOff con i temi. Alcuni temi sono disponibili solo per Pro.</p>
+        </div>
+
+        <!-- Griglia temi -->
+        <div class="themes-grid" id="themesGrid">
+          <!-- Popolato da JS -->
+        </div>
+
+        <!-- Tema attivo -->
+        <div class="card theme-active-card" id="themeActiveCard">
+          <div class="theme-active-info">
+            <span class="theme-active-label" data-i18n="opt.themeActive">Tema attivo:</span>
+            <span class="theme-active-name" id="themeActiveName">—</span>
+          </div>
+        </div>
+
+        <!-- Pro upsell per temi bloccati -->
+        <div class="card pro-upsell-card" id="themesProUpsell" style="display:none">
+          <div class="pro-upsell-icon">&#128274;</div>
+          <h3 class="pro-upsell-title" data-i18n="opt.themesProTitle">Temi Pro</h3>
+          <p class="pro-upsell-desc" data-i18n="opt.themesProDesc">Sblocca tutti i temi con AdOff Pro. Scegli tra varianti scure, chiare e colorate.</p>
+          <button class="btn btn-primary" id="btnThemesUpgrade" data-i18n="opt.themesProBtn">Sblocca Temi Pro</button>
+        </div>
+      </section>
+
+      <!-- ===== CAMBIO IMMAGINE ===== -->
+      <section id="sec-cambio-immagine" class="section">
+        <h2 class="section-title" data-i18n="opt.imageSwapTitle">Cambio immagine</h2>
+
+        <div class="card">
+          <p class="section-desc" data-i18n="opt.imageSwapDesc">Al posto degli spazi pubblicitari vuoti, mostra immagini divertenti. Disponibile solo per Pro.</p>
+        </div>
+
+        <!-- Toggle principale -->
+        <div class="card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label" data-i18n="opt.imageSwapEnable">Mostra immagini al posto degli ads</span>
+              <span class="setting-desc" data-i18n="opt.imageSwapEnableDesc">Sostituisce gli spazi pubblicitari con immagini decorative</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settingImageSwap">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Categoria immagini -->
+        <div class="card" id="imageSwapCategoryCard">
+          <h3 class="card-title" data-i18n="opt.imageSwapCategory">Categoria</h3>
+          <div class="image-categories-grid" id="imageCategoriesGrid">
+            <!-- Popolato da JS -->
+          </div>
+        </div>
+
+        <!-- Pro upsell -->
+        <div class="card pro-upsell-card" id="imageSwapProUpsell" style="display:none">
+          <div class="pro-upsell-icon">&#128274;</div>
+          <h3 class="pro-upsell-title" data-i18n="opt.imageSwapProTitle">Funzione Pro</h3>
+          <p class="pro-upsell-desc" data-i18n="opt.imageSwapProDesc">Mostra immagini al posto degli spazi pubblicitari vuoti. Scegli tra gatti, cani o paesaggi.</p>
+          <button class="btn btn-primary" id="btnImageSwapUpgrade" data-i18n="opt.imageSwapProBtn">Sblocca Cambio Immagine</button>
         </div>
       </section>
 

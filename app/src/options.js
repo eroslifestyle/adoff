@@ -327,6 +327,35 @@
 
   const headerLicenseBadge = document.getElementById("headerLicenseBadge");
   const pricingCard        = document.getElementById("pricingCard");
+  const proUpsellBanner    = document.getElementById("proUpsellBanner");
+  const btnBannerClose     = document.getElementById("btnBannerClose");
+  const proShowcaseSection = document.getElementById("proShowcaseSection");
+
+  // Banner upsell: mostra solo se NON Pro/Trial e l'utente non l'ha chiuso
+  const BANNER_KEY = "adoffBannerDismissed";
+  function updateBannerVisibility(type) {
+    if (!proUpsellBanner) return;
+    const isProOrTrial = type === "pro" || type === "lifetime" || type === "trial";
+    chrome.storage.local.get([BANNER_KEY], (res) => {
+      const dismissed = res[BANNER_KEY] === true;
+      proUpsellBanner.style.display = (isProOrTrial || dismissed) ? "none" : "block";
+    });
+  }
+
+  // Chiudi banner (ricorda la scelta)
+  if (btnBannerClose) {
+    btnBannerClose.addEventListener("click", () => {
+      proUpsellBanner.style.display = "none";
+      chrome.storage.local.set({ [BANNER_KEY]: true });
+    });
+  }
+
+  // Pro showcase: mostra solo se NON Pro/Trial
+  function updateShowcaseVisibility(type) {
+    if (!proShowcaseSection) return;
+    const isProOrTrial = type === "pro" || type === "lifetime" || type === "trial";
+    proShowcaseSection.style.display = isProOrTrial ? "none" : "block";
+  }
 
   // Auth state elements (solo 2 stati: Pro attivo o No license)
   const stateProActive   = document.getElementById("stateProActive");
@@ -372,6 +401,9 @@
     if (trialEl) trialEl.style.display = state === "trial" ? "block" : "none";
     stateNotLoggedIn.style.display = state === "none" ? "block" : "none";
     pricingCard.style.display = state !== "pro" ? "block" : "none";
+    const t = state === "pro" ? "pro" : state === "trial" ? "trial" : "free";
+    updateBannerVisibility(t);
+    updateShowcaseVisibility(t);
   }
 
   /**
@@ -686,13 +718,205 @@
     statAds.textContent = formatCount(ads);
     statReq.textContent = formatCount(req);
   }
+  const statsChart = document.getElementById("statsChart");
+  const statsChartMeta = document.getElementById("statsChartMeta");
+  const statsTabs = document.querySelectorAll(".stats-tab");
+
+  let currentPeriod = "today";
+  let chartData = { labels: [], ads: [], req: [] };
+
+  // Formatta data ISO "YYYY-MM-DD" → label leggibile
+  function fmtDate(iso) {
+    const d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString(undefined, { day: "2-digit", month: "short" });
+  }
+
+  // Prepara dati per un periodo
+  function prepareChartData(daily, period) {
+    const today = new Date().toISOString().slice(0, 10);
+    const labels = [], ads = [], req = [];
+
+    if (!daily || Object.keys(daily).length === 0) {
+      return { labels, ads, req };
+    }
+
+    const sorted = Object.keys(daily).sort();
+    let startDate = null;
+
+    if (period === "today") {
+      startDate = today;
+    } else if (period === "week") {
+      const d = new Date(); d.setDate(d.getDate() - 6);
+      startDate = d.toISOString().slice(0, 10);
+    } else if (period === "month") {
+      const d = new Date(); d.setDate(d.getDate() - 29);
+      startDate = d.toISOString().slice(0, 10);
+    } else if (period === "year") {
+      const d = new Date(); d.setDate(d.getDate() - 364);
+      startDate = d.toISOString().slice(0, 10);
+    } else { // all
+      startDate = sorted[0] || today;
+    }
+
+    // ponytail: sparse sampling per grafici lunghi (mantiene forma senza 90 punti)
+    const days = sorted.filter(d => d >= startDate && d <= today);
+    const step = period === "year" || period === "all"
+      ? Math.max(1, Math.floor(days.length / 30))
+      : 1;
+
+    for (let i = 0; i < days.length; i += step) {
+      const day = days[i];
+      labels.push(fmtDate(day));
+      ads.push(daily[day]?.ads || 0);
+      req.push(daily[day]?.req || 0);
+    }
+    return { labels, ads, req };
+  }
+
+  // Disegna curva smooth sul canvas
+  function drawChart(canvas, labels, ads, req) {
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width = canvas.offsetWidth * 2;
+    const H = canvas.height = canvas.offsetHeight * 2;
+    ctx.scale(2, 2);
+    const w = canvas.offsetWidth;
+    const h = canvas.offsetHeight;
+
+    ctx.clearRect(0, 0, w, h);
+
+    const maxVal = Math.max(1, ...ads, ...req);
+    const padX = 8, padY = 8;
+    const chartW = w - padX * 2;
+    const chartH = h - padY * 2;
+
+    function scaleX(i) { return padX + (i / Math.max(1, labels.length - 1)) * chartW; }
+    function scaleY(v)  { return padY + chartH - (v / maxVal) * chartH; }
+
+    function fillCurve(vals, color) {
+      ctx.beginPath();
+      vals.forEach((v, i) => {
+        const x = scaleX(i), y = scaleY(v);
+        if (i === 0) ctx.moveTo(x, scaleY(0));
+        ctx.lineTo(x, y);
+      });
+      ctx.lineTo(scaleX(vals.length - 1), scaleY(0));
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    function strokeCurve(vals, color, width) {
+      if (vals.length < 2) return;
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      vals.forEach((v, i) => {
+        const x = scaleX(i), y = scaleY(v);
+        if (i === 0) ctx.moveTo(x, y);
+        else {
+          const px = scaleX(i - 1), py = scaleY(vals[i - 1]);
+          const mx = (px + x) / 2;
+          ctx.bezierCurveTo(mx, py, mx, y, x, y);
+        }
+      });
+      ctx.stroke();
+    }
+
+    fillCurve(req, "rgba(114, 82, 248, 0.08)");
+    fillCurve(ads, "rgba(52, 152, 219, 0.12)");
+    strokeCurve(req, "#7252f8", 1.5);
+    strokeCurve(ads, "#3498db", 2);
+
+    function drawDots(vals, color) {
+      vals.forEach((v, i) => {
+        if (v === 0) return;
+        ctx.beginPath();
+        ctx.arc(scaleX(i), scaleY(v), 3, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      });
+    }
+    drawDots(ads, "#3498db");
+    drawDots(req, "#7252f8");
+
+    ctx.strokeStyle = "rgba(0,0,0,0.06)";
+    ctx.lineWidth = 1;
+    for (let t = 0; t <= 4; t++) {
+      const y = padY + (chartH / 4) * t;
+      ctx.beginPath();
+      ctx.moveTo(padX, y);
+      ctx.lineTo(w - padX, y);
+      ctx.stroke();
+    }
+
+    const labelStep = Math.max(1, Math.floor(labels.length / 6));
+    ctx.fillStyle = "rgba(100,100,100,0.6)";
+    ctx.font = "10px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    labels.forEach((l, i) => {
+      if (i % labelStep === 0 || i === labels.length - 1) {
+        ctx.fillText(l, scaleX(i), h - 2);
+      }
+    });
+  }
+
+  function loadAndRenderChart(period) {
+    chrome.storage.local.get("adoffDailyStats", (result) => {
+      const daily = result.adoffDailyStats || {};
+      const data = prepareChartData(daily, period);
+      chartData = data;
+
+      if (data.labels.length === 0) {
+        statsChartMeta.textContent = "";
+        statsChartMeta.setAttribute("data-honest", "Nessuno storico disponibile. I dati appariranno da domani.");
+        const ctx = statsChart.getContext("2d");
+        ctx.clearRect(0, 0, statsChart.offsetWidth, statsChart.offsetHeight);
+        return;
+      }
+
+      const firstDay = data.labels[0];
+      const lastDay = data.labels[data.labels.length - 1];
+      const totalPeriodAds = data.ads.reduce((a, b) => a + b, 0);
+      const totalPeriodReq = data.req.reduce((a, b) => a + b, 0);
+      statsChartMeta.textContent = `Dal ${firstDay} al ${lastDay} · ${formatCount(totalPeriodAds)} ads · ${formatCount(totalPeriodReq)} richieste`;
+      statsChartMeta.removeAttribute("data-honest");
+      drawChart(statsChart, data.labels, data.ads, data.req);
+    });
+  }
+
+  // Tab switching
+  statsTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      statsTabs.forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+      currentPeriod = tab.dataset.period;
+      loadAndRenderChart(currentPeriod);
+    });
+  });
+
+  // Re-render on window resize
+  window.addEventListener("resize", () => {
+    if (document.getElementById("sec-statistiche")?.style.display !== "none") {
+      loadAndRenderChart(currentPeriod);
+    }
+  });
 
   btnResetStats.addEventListener("click", () => {
-    if (!confirm("Resettare le statistiche?")) return;
-    chrome.storage.local.set({ adoffAdsBlocked: 0, adoffReqBlocked: 0 }, () => {
+    if (!confirm("Resetta le statistiche?")) return;
+    chrome.storage.local.set({ adoffAdsBlocked: 0, adoffReqBlocked: 0, adoffDailyStats: {} }, () => {
       renderStats(0, 0);
+      chartData = { labels: [], ads: [], req: [] };
+      loadAndRenderChart(currentPeriod);
       showToast("Statistiche azzerate.", "success");
     });
+  });
+
+  // Load initial stats
+  chrome.storage.local.get(["adoffAdsBlocked", "adoffReqBlocked", "adoffDailyStats"], (r) => {
+    renderStats(r.adoffAdsBlocked || 0, r.adoffReqBlocked || 0);
+    loadAndRenderChart(currentPeriod);
   });
 
   // ===== AVANZATE =====
@@ -786,6 +1010,8 @@
       renderStats(r.adoffAdsBlocked || 0, r.adoffReqBlocked || 0);
       loadSuggestions();
       loadReferral();
+      loadThemes(r.adoffTheme);
+      loadImageSwap(r.adoffImageSwap);
 
       // Background revalidate: se l'utente ha una licenza attiva, ricontrolla col server.
       // Permette il rilevamento quasi immediato di licenze revocate/eliminate dall'admin
@@ -2004,6 +2230,137 @@
       i18n.applyToDOM();
       showToast(i18n.t("opt.saved"));
     });
+  }
+
+  // ponytail: CSS-only approach — scope restricted to extension UI, no real theming engine needed
+
+  // ===== TEMI =====
+  const THEMES = [
+    { id: "default",  name: "Dark",     badge: "free", bg: "#0a0a1a", bg2: "#12122a", text: "#ffffff", accent: "#7c5cfc" },
+    { id: "midnight", name: "Midnight", badge: "free", bg: "#0d1117", bg2: "#161b22", text: "#c9d1d9", accent: "#1f6feb" },
+    { id: "forest",   name: "Forest",   badge: "free", bg: "#0f1a14", bg2: "#162119", text: "#d4e8d0", accent: "#2ea043" },
+    { id: "ocean",    name: "Ocean",    badge: "pro",  bg: "#0a1520", bg2: "#0f1e2e", text: "#c0d8f0", accent: "#1d9bf0" },
+    { id: "sunset",   name: "Sunset",   badge: "pro",  bg: "#1a0f0a", bg2: "#251510", text: "#f0d8c0", accent: "#f97316" },
+    { id: "lavender", name: "Lavender", badge: "pro",  bg: "#12101a", bg2: "#1a1625", text: "#e0d8f0", accent: "#b794f4" },
+  ];
+
+  function buildThemePreview(theme) {
+    return `<div class="theme-preview" style="background:${theme.bg}">
+      <div class="theme-preview-bar" style="background:${theme.bg2}">
+        <div class="theme-preview-icon" style="background:${theme.accent}"></div>
+        <div class="theme-preview-text" style="background:${theme.text};opacity:0.3"></div>
+      </div>
+      <div class="theme-preview-card" style="background:${theme.bg2}"></div>
+      <div class="theme-preview-bar" style="background:${theme.bg2};height:10px">
+        <div class="theme-preview-text" style="background:${theme.text};opacity:0.15;max-width:50%"></div>
+      </div></div>`;
+  }
+
+  function applyTheme(theme) {
+    const root = document.documentElement;
+    root.style.setProperty("--th-bg", theme.bg);
+    root.style.setProperty("--th-bg2", theme.bg2);
+    root.style.setProperty("--th-text", theme.text);
+    root.style.setProperty("--th-accent", theme.accent);
+  }
+
+  function resetThemeVars() {
+    const root = document.documentElement;
+    ["--th-bg","--th-bg2","--th-text","--th-accent"].forEach(v => root.style.removeProperty(v));
+  }
+
+  function loadThemes(savedThemeId) {
+    const grid = document.getElementById("themesGrid");
+    const upsell = document.getElementById("themesProUpsell");
+    if (!grid) return;
+    grid.innerHTML = "";
+    const isPro = license && (license.valid || (license.source === "trial" && license.plan === "trial"));
+
+    THEMES.forEach((theme) => {
+      const locked = theme.badge === "pro" && !isPro;
+      const active = savedThemeId === theme.id;
+      const card = document.createElement("div");
+      card.className = "theme-card" + (active ? " active" : "") + (locked ? " locked" : "");
+      card.dataset.themeId = theme.id;
+      const badgeText = locked ? `<span class="theme-badge ${theme.badge}">&#128274;</span>`
+        : `<span class="theme-badge ${active ? "active-badge" : theme.badge}">${active ? "&#10003;" : (theme.badge === "pro" ? "Pro" : "Free")}</span>`;
+      card.innerHTML = `${locked ? `<span class="theme-pro-icon">&#128274;</span>` : ""}${buildThemePreview(theme)}<span class="theme-name">${theme.name}</span>${badgeText}`;
+      if (!locked) card.addEventListener("click", () => saveTheme(theme.id));
+      grid.appendChild(card);
+    });
+
+    const activeName = document.getElementById("themeActiveName");
+    if (activeName) {
+      const t = THEMES.find(th => th.id === (savedThemeId || "default"));
+      activeName.textContent = t ? t.name : "Dark";
+    }
+    if (upsell) upsell.style.display = isPro ? "none" : "block";
+    if (savedThemeId) { const t = THEMES.find(th => th.id === savedThemeId); if (t) applyTheme(t); }
+  }
+
+  function saveTheme(themeId) {
+    chrome.storage.local.set({ adoffTheme: themeId });
+    const t = THEMES.find(th => th.id === themeId);
+    if (t) { resetThemeVars(); applyTheme(t); }
+    loadThemes(themeId);
+    showToast("Tema applicato!", "success");
+  }
+
+  // ===== IMAGE SWAP =====
+  const IMAGE_CATEGORIES = [
+    { id: "cats",     name: "Cats",     icon: "&#128008;", pro: true  },
+    { id: "dogs",     name: "Dogs",     icon: "&#128054;", pro: true  },
+    { id: "nature",   name: "Nature",   icon: "&#127795;", pro: false },
+    { id: "abstract", name: "Abstract", icon: "&#127912;", pro: true  },
+    { id: "space",    name: "Space",    icon: "&#127756;", pro: true  },
+    { id: "food",     name: "Food",     icon: "&#127839;", pro: true  },
+  ];
+
+  function loadImageSwap(savedCategory) {
+    const toggle = document.getElementById("settingImageSwap");
+    const catCard = document.getElementById("imageSwapCategoryCard");
+    const catGrid = document.getElementById("imageCategoriesGrid");
+    const upsell = document.getElementById("imageSwapProUpsell");
+    if (!toggle) return;
+    const isPro = license && (license.valid || (license.source === "trial" && license.plan === "trial"));
+    const currentVal = savedCategory || "off";
+
+    // ponytail: stub wired — content.js integration TODO when invasive changes needed
+    // Stub: setting persists to storage; cosmetic wire in content.js deferred per handoff note.
+
+    chrome.storage.local.get("adoffImageSwap", (r) => {
+      const val = r.adoffImageSwap || "off";
+      toggle.checked = val !== "off";
+      if (catCard) catCard.style.display = isPro && val !== "off" ? "block" : "none";
+      if (upsell) upsell.style.display = isPro ? "none" : "block";
+      if (!catGrid) return;
+      catGrid.innerHTML = "";
+      IMAGE_CATEGORIES.forEach((cat) => {
+        const locked = cat.pro && !isPro;
+        const active = val === cat.id;
+        const el = document.createElement("div");
+        el.className = "image-category-card" + (active ? " active" : "") + (locked ? " locked" : "");
+        el.innerHTML = `<div class="image-category-icon">${cat.icon}</div><div class="image-category-name">${cat.name}</div><div class="image-category-check">&#10003;</div>`;
+        if (!locked) el.addEventListener("click", () => {
+          chrome.storage.local.set({ adoffImageSwap: cat.id });
+          loadImageSwap(cat.id);
+          showToast("Salvato!");
+        });
+        catGrid.appendChild(el);
+      });
+    });
+
+    toggle.addEventListener("change", () => {
+      if (!isPro) { toggle.checked = false; showUpgradeUpsell(); return; }
+      const val = toggle.checked ? (savedCategory || "nature") : "off";
+      chrome.storage.local.set({ adoffImageSwap: val });
+      if (val !== "off") loadImageSwap(val);
+    });
+  }
+
+  function showUpgradeUpsell() {
+    const upsell = document.getElementById("imageSwapProUpsell");
+    if (upsell) { upsell.style.display = "block"; upsell.scrollIntoView({ behavior: "smooth", block: "center" }); }
   }
 
   // ===== INIT =====
