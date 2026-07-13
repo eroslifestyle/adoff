@@ -26,6 +26,27 @@ Integrazioni completate:
 
 ---
 
+### P0 — ✅ FATTO: Uninstall page integrations (2026-07-13)
+
+> SHIPPED 2026-07-13. Commits: acd4847 + fda4f07.
+> Worker deploy: PENDING (richiede secrets configurati)
+
+3 categorie implementate:
+- [x] **Notifiche real-time**: slackNotify() + discordNotify() per PRO/Trial uninstalls (fire-and-forget)
+- [x] **Analisi avanzate admin**: handleAdminUninstallAnalytics (cohort/version/funnel/reason-trend) + tab "🗑️ Uninstall"
+- [x] **Azioni automatiche**: maybeCreateGithubIssue() (broken_site) + retry offer nella response
+
+Bugfix critici trovati dal piano-guida:
+- [x] \`30D\` → \`D30\` (JS identifier illegale)
+- [x] \`dh.created_at\` → \`dh.install_ts\` (colonna inesistente, ×5)
+- [x] \`if (r.was_pro)\` sempre undefined → rimosso
+- [x] \`r.count\` → \`r.total\` (×2)
+- [x] \`data.retryOffer\` → \`serverData.retryOffer\`
+
+**Env vars da configurare**: SLACK_WEBHOOK_URL, DISCORD_WEBHOOK_URL, GITHUB_TOKEN, GITHUB_REPO
+
+---
+
 ### P0 — Bloccanti / Core
 
 - [ ] **Trial Anti-Fraud System** — Implementare fingerprint hardware resiliente
