@@ -60,6 +60,153 @@
     });
   }
 
+  // ---- Fingerprint browser resilient (lazy/cached, zero deps, Web Crypto API) ----
+  // Combina canvas + audio + screen + platform + WebGL + timezone/language.
+  // Fallback: hash SHA-256 di adoffDeviceId se tutto fallisce.
+  var _cachedFingerprint = null;
+
+  async function generateResilientFingerprint() {
+    if (_cachedFingerprint !== null) return _cachedFingerprint;
+    try {
+      var components = [];
+      var fallbackDeviceId = null;
+
+      // Leggi deviceId per fallback
+      try {
+        fallbackDeviceId = await new Promise(function(r) {
+          chrome.storage.local.get("adoffDeviceId", r);
+        }).then(function(r) { return r.adoffDeviceId; });
+      } catch (_) {}
+
+      // Canvas 2D fingerprint
+      try {
+        var canvas = document.createElement("canvas");
+        canvas.width = 200;
+        canvas.height = 50;
+        var ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.textBaseline = "top";
+          ctx.font = "14px Arial";
+          ctx.fillStyle = "#f60";
+          ctx.fillRect(125, 1, 62, 20);
+          ctx.fillStyle = "#069";
+          ctx.fillText("AdOff", 2, 15);
+          ctx.fillStyle = "rgba(102,204,0,0.7)";
+          ctx.fillText("fingerprint", 4, 27);
+          var dataUrl = canvas.toDataURL();
+          var canvasHash = await crypto.subtle.digest(
+            "SHA-256",
+            new TextEncoder().encode(dataUrl)
+          );
+          components.push(btoaFromBytes(canvasHash));
+        }
+      } catch (_) {}
+
+      // AudioContext fingerprint
+      try {
+        var AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          var ac = new AudioCtx();
+          var oscillator = ac.createOscillator();
+          var analyser = ac.createAnalyser();
+          var gainNode = ac.createGain();
+          gainNode.gain.value = 0;
+          oscillator.type = "triangle";
+          oscillator.frequency.value = 12345;
+          oscillator.connect(analyser);
+          analyser.connect(gainNode);
+          gainNode.connect(ac.destination);
+          oscillator.start(0);
+          var bins = new Float32Array(analyser.frequencyBinCount);
+          analyser.getFloatFrequencyData(bins);
+          var audioSummary = bins.slice(0, 32).map(function(b) { return b.toFixed(3); }).join(",");
+          var audioHash = await crypto.subtle.digest(
+            "SHA-256",
+            new TextEncoder().encode(audioSummary)
+          );
+          components.push(btoaFromBytes(audioHash));
+          try { oscillator.stop(); } catch (_) {}
+          try { ac.close(); } catch (_) {}
+        }
+      } catch (_) {}
+
+      // Screen
+      try {
+        components.push([
+          screen.width, screen.height, screen.colorDepth, screen.pixelDepth
+        ].join("x"));
+      } catch (_) {}
+
+      // Platform + hardwareConcurrency
+      try {
+        components.push(navigator.platform || "");
+        components.push(String(navigator.hardwareConcurrency || 0));
+      } catch (_) {}
+
+      // WebGL renderer (UNMASKED_RENDERER + UNMASKED_VENDOR)
+      try {
+        var gl = document.createElement("canvas").getContext("webgl")
+             || document.createElement("canvas").getContext("experimental-webgl");
+        if (gl) {
+          var ext = gl.getExtension("WEBGL_debug_renderer_info");
+          if (ext) {
+            var vendor = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) || "";
+            var renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) || "";
+            components.push(vendor + "|" + renderer);
+          }
+        }
+      } catch (_) {}
+
+      // Timezone + Language
+      try {
+        var ro = Intl.DateTimeFormat().resolvedOptions();
+        components.push(ro.timeZone || "");
+        components.push(navigator.language || "");
+        components.push((navigator.languages || []).slice(0, 3).join(","));
+      } catch (_) {}
+
+      // Combina e hash
+      var combined = components.join("||");
+      var hash = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(combined)
+      );
+      _cachedFingerprint = btoaFromBytes(hash);
+      return _cachedFingerprint;
+    } catch (_) {
+      // Fallback finale: hash del deviceId o stringa statica
+      try {
+        var did = await new Promise(function(r) {
+          chrome.storage.local.get("adoffDeviceId", r);
+        }).then(function(res) { return res.adoffDeviceId; });
+        if (did) {
+          var fbHash = await crypto.subtle.digest(
+            "SHA-256",
+            new TextEncoder().encode("fallback-fp:" + did)
+          );
+          _cachedFingerprint = btoaFromBytes(fbHash);
+          return _cachedFingerprint;
+        }
+      } catch (_2) {}
+      _cachedFingerprint = null;
+      return null;
+    }
+  }
+
+  // Helper: Uint8Array → base64
+  function btoaFromBytes(bytes) {
+    if (typeof bytes === "object" && bytes.constructor.name === "Uint8Array") {
+      var bin = "";
+      for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin);
+    }
+    // ArrayBuffer
+    var arr = new Uint8Array(bytes);
+    var bin = "";
+    for (var j = 0; j < arr.length; j++) bin += String.fromCharCode(arr[j]);
+    return btoa(bin);
+  }
+
   // Genera e persiste l'UUID del dispositivo al primo avvio
   chrome.storage.local.get("adoffDeviceId", (result) => {
     if (!result.adoffDeviceId) {
@@ -98,6 +245,7 @@
           plan,
           version,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          fingerprint: await generateResilientFingerprint(),
         }),
       });
     } catch (e) {
@@ -221,7 +369,9 @@
       const deviceId = adoffDeviceId || generateDeviceUuid();
       if (!adoffDeviceId) chrome.storage.local.set({ adoffDeviceId: deviceId });
 
-      const resp = await fetch(`${API_BASE}/trial/check?deviceId=${encodeURIComponent(deviceId)}`);
+      const fingerprint = await generateResilientFingerprint();
+      const fpParam = fingerprint ? "&fingerprint=" + encodeURIComponent(fingerprint) : "";
+      const resp = await fetch(`${API_BASE}/trial/check?deviceId=${encodeURIComponent(deviceId)}${fpParam}`);
       if (!resp.ok) return;
       const data = await resp.json();
       if (!data || !data.ok) return;
