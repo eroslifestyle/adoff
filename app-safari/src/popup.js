@@ -31,6 +31,7 @@
   const optionsLink    = document.getElementById("optionsLink");
 
   // Nuovi elementi
+  const trialBlockedBanner = document.getElementById("trialBlockedBanner");
   const founderBadge      = document.getElementById("founderBadge");
   const changelogBanner   = document.getElementById("changelogBanner");
   const changelogTitle    = document.getElementById("changelogTitle");
@@ -133,7 +134,7 @@
   /** Aggiorna il banner licenza sotto il sito. */
   function renderLicenseBanner() {
     const t = license.type || "free";
-    if (t === "pro" || t === "lifetime") {
+    if (t === "pro" || t === "lifetime" || t === "trial_blocked") {
       licenseBanner.style.display = "none";
       return;
     }
@@ -165,6 +166,15 @@
     }
   }
 
+  /** Mostra il banner trial bloccato. */
+  function renderTrialBlockedBanner() {
+    if (license.type !== "trial_blocked") {
+      trialBlockedBanner.style.display = "none";
+      return;
+    }
+    trialBlockedBanner.style.display = "flex";
+  }
+
   /**
    * Normalizza l'oggetto licenza: il trial vive nella chiave storage
    * separata `adoffTrialEnd`, mentre `adoffLicense` contiene solo le
@@ -173,13 +183,15 @@
    * @param {number|undefined} trialEnd
    * @returns {object}
    */
-  function normalizeLicense(lic, trialEnd) {
+  function normalizeLicense(lic, trialEnd, trialBlocked) {
     const out = Object.assign({}, lic);
     const plan = out.plan || "";
     const hasValidPro = out.valid &&
       (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
     if (hasValidPro) {
       out.type = plan === "lifetime" ? "lifetime" : "pro";
+    } else if (trialBlocked) {
+      out.type = "trial_blocked";
     } else if (trialEnd && trialEnd > Date.now()) {
       out.type = "trial";
       out.trialEndsAt = trialEnd;
@@ -362,6 +374,7 @@
     renderStats(data.adoffAdsBlocked || 0, data.adoffReqBlocked || 0);
     renderLicenseBadge();
     renderLicenseBanner();
+    renderTrialBlockedBanner();
     renderPauseSection();
     renderFounderBadge(data);
     renderChangelog(data);
@@ -390,7 +403,7 @@
           chrome.storage.local.set({ adoffWhitelist: whitelist });
         }
 
-        license = normalizeLicense(result.adoffLicense || result.license, result.adoffTrialEnd);
+        license = normalizeLicense(result.adoffLicense || result.license, result.adoffTrialEnd, result.adoffTrialBlocked);
         renderAll(result);
       });
     });

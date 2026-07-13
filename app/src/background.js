@@ -361,7 +361,7 @@
   }
 
   // Sincronizza trial col server — autorità SERVER per il countdown.
-  // Chiama GET /trial/check per ottenere trial_end server-authoritative.
+  // Chiama POST /trial con {deviceId, fingerprint} come JSON body.
   async function syncTrialBg() {
     try {
       const { adoffDeviceId } = await new Promise((r) =>
@@ -370,24 +370,55 @@
       if (!adoffDeviceId) chrome.storage.local.set({ adoffDeviceId: deviceId });
 
       const fingerprint = await generateResilientFingerprint();
-      const fpParam = fingerprint ? "&fingerprint=" + encodeURIComponent(fingerprint) : "";
-      const resp = await fetch(`${API_BASE}/trial/check?deviceId=${encodeURIComponent(deviceId)}${fpParam}`);
+      const resp = await fetch(`${API_BASE}/trial`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceId, fingerprint }),
+      });
       if (!resp.ok) return;
       const data = await resp.json();
-      if (!data || !data.ok) return;
-      if (!data.token) return; // server dice trial non attivo
+      if (!data) return;
 
-      // Verifica il token firmato dal server
-      const payload = await verifyTrialToken(data.token, deviceId);
-      if (!payload) return; // firma non valida → non fidarsi
+      // Gestione trial bloccato dal server (anti-abuse)
+      if (data.allowed === false) {
+        chrome.storage.local.set({
+          adoffTrialBlocked: true,
+          adoffTrialBlockedFallback: data.fallback || "account",
+          adoffTrialBlockedMsg: data.message || "Trial già usato",
+        });
+        return;
+      }
 
-      chrome.storage.local.set({
-        adoffTrialToken: data.token,
-        adoffTrialEnd: payload.trialEnd,
-        adoffTrialStart: payload.trialStart,
-        adoffTrialSeen: Date.now(),
-        adoffTrialExpired: !data.active,
-      });
+      // Salva source se account-linked
+      if (data.source === "account-linked") {
+        chrome.storage.local.set({ adoffTrialSource: "account-linked" });
+      }
+
+      // Se c'è un token firmato, verificare e salvare
+      if (data.token) {
+        const payload = await verifyTrialToken(data.token, deviceId);
+        if (!payload) return; // firma non valida → non fidarsi
+        chrome.storage.local.set({
+          adoffTrialToken: data.token,
+          adoffTrialEnd: payload.trialEnd,
+          adoffTrialStart: payload.trialStart,
+          adoffTrialSeen: Date.now(),
+          adoffTrialExpired: !data.active,
+          adoffTrialBlocked: false,
+        });
+        return;
+      }
+
+      // Trial attivo ma senza token (account-linked) — salva dates dal server
+      if (data.trialStart && data.trialEnd) {
+        chrome.storage.local.set({
+          adoffTrialEnd: data.trialEnd,
+          adoffTrialStart: data.trialStart,
+          adoffTrialSeen: Date.now(),
+          adoffTrialExpired: false,
+          adoffTrialBlocked: false,
+        });
+      }
     } catch (_) { /* offline — riprova al prossimo trigger */ }
   }
 
