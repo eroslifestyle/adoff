@@ -659,6 +659,72 @@ async function signTrialToken(payloadObj, env) {
 }
 
 // =============================================
+// RULES FEED — Ultra-efficient ad blocking rules
+// Serves optimized DNR rules for declarativeNetRequest
+// Supports ETag/If-None-Match for caching
+// =============================================
+/**
+ * GET /rules/feed
+ * Returns optimized ad blocking rules in gzip.
+ * Rules stored in KV: ADOFF_RULES (or ADOFF_LICENSES fallback)
+ */
+async function handleRulesFeed(env, request) {
+  const RULES_KV = env.ADOFF_RULES || env.ADOFF_LICENSES;
+
+  if (RULES_KV) {
+    const cached = await RULES_KV.get("feed", "arrayBuffer");
+    if (cached) {
+      const etag = await RULES_KV.get("feed:etag") || "";
+      const ifNoneMatch = request.headers.get("If-None-Match");
+      if (ifNoneMatch === etag) {
+        return new Response(null, { status: 304 });
+      }
+      return new Response(cached, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Encoding": "gzip",
+          "ETag": etag,
+          "Cache-Control": "public, max-age=86400",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
+  }
+
+  // Fallback rules (minimal set)
+  const fallbackRules = [
+    { id: 1, a: "b", u: "||doubleclick.net", t: ["script", "image", "xmlhttprequest"] },
+    { id: 2, a: "b", u: "||googlesyndication.com", t: ["script", "image", "xmlhttprequest"] },
+    { id: 3, a: "b", u: "||googleadservices.com", t: ["script", "image", "xmlhttprequest"] },
+    { id: 4, a: "b", u: "||moatads.com", t: ["script", "image", "xmlhttprequest"] },
+    { id: 5, a: "b", u: "||amazon-adsystem.com", t: ["script", "image", "xmlhttprequest"] },
+    { id: 6, a: "b", u: "||adsrvr.org", t: ["script", "image", "xmlhttprequest"] },
+    { id: 7, a: "b", u: "||adnxs.com", t: ["script", "image", "xmlhttprequest"] },
+    { id: 8, a: "b", u: "||criteo.com", t: ["script", "image", "xmlhttprequest"] },
+    { id: 9, a: "b", u: "||taboola.com", t: ["script", "image", "xmlhttprequest"] },
+    { id: 10, a: "b", u: "||outbrain.com", t: ["script", "image", "xmlhttprequest"] },
+  ];
+
+  const feed = {
+    v: "3.5.31",
+    u: new Date().toISOString(),
+    n: fallbackRules.length,
+    c: "fallback-v1",
+    r: fallbackRules,
+  };
+
+  return new Response(JSON.stringify(feed), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "public, max-age=3600",
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
+}
+
+// =============================================
 // TRIAL CHECK — server-authoritative (anti-tampering)
 // GET /trial/check ritorna lo stato trial basato SOLO su dati server.
 // Il client NON ha autorita' sul countdown — solo il server decide.
@@ -4249,6 +4315,101 @@ async function handleHeartbeat(request, env) {
 }
 
 // =============================================
+// ADMIN: CUSTOM RULES MANAGEMENT
+// Allows admin to add/remove rules from the live feed
+// Stored in KV, served via /rules/feed
+// =============================================
+
+async function handleAdminListCustomRules(request, env) {
+  const adminToken = request.headers.get("x-admin-token");
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const RULES_KV = env.ADOFF_RULES || env.ADOFF_LICENSES;
+  const customRules = await RULES_KV.get("customRules", "json") || [];
+  const customBlocklist = await RULES_KV.get("customBlocklist", "json") || [];
+
+  return jsonResponse({
+    ok: true,
+    customRules: customRules,
+    customBlocklist: customBlocklist,
+    counts: { allow: customRules.length, block: customBlocklist.length }
+  });
+}
+
+async function handleAdminAddCustomRule(request, env) {
+  const adminToken = request.headers.get("x-admin-token");
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const RULES_KV = env.ADOFF_RULES || env.ADOFF_LICENSES;
+  const body = await request.json();
+  const { pattern, action = "block", type = "domain", note = "" } = body;
+
+  if (!pattern || !["block", "allow"].includes(action)) {
+    return jsonResponse({ ok: false, error: "Invalid pattern or action" }, 400);
+  }
+
+  const rule = { id: Date.now(), pattern, action, type, note, addedAt: new Date().toISOString(), addedBy: "admin" };
+
+  if (action === "block") {
+    const customBlocklist = await RULES_KV.get("customBlocklist", "json") || [];
+    customBlocklist.push(rule);
+    await RULES_KV.put("customBlocklist", JSON.stringify(customBlocklist));
+  } else {
+    const customRules = await RULES_KV.get("customRules", "json") || [];
+    customRules.push(rule);
+    await RULES_KV.put("customRules", JSON.stringify(customRules));
+  }
+
+  return jsonResponse({ ok: true, rule });
+}
+
+async function handleAdminDeleteCustomRule(request, env) {
+  const adminToken = request.headers.get("x-admin-token");
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const RULES_KV = env.ADOFF_RULES || env.ADOFF_LICENSES;
+  const body = await request.json();
+  const { ruleId, list = "block" } = body;
+
+  if (!ruleId) return jsonResponse({ ok: false, error: "Missing ruleId" }, 400);
+
+  const key = list === "allow" ? "customRules" : "customBlocklist";
+  const rules = await RULES_KV.get(key, "json") || [];
+  const filtered = rules.filter(r => r.id !== ruleId);
+  await RULES_KV.put(key, JSON.stringify(filtered));
+
+  return jsonResponse({ ok: true, deleted: ruleId });
+}
+
+async function handleAdminExportRules(request, env) {
+  const adminToken = request.headers.get("x-admin-token");
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const RULES_KV = env.ADOFF_RULES || env.ADOFF_LICENSES;
+  const customRules = await RULES_KV.get("customRules", "json") || [];
+  const customBlocklist = await RULES_KV.get("customBlocklist", "json") || [];
+
+  return new Response(JSON.stringify({
+    exportedAt: new Date().toISOString(),
+    customRules: customRules,
+    customBlocklist: customBlocklist
+  }, null, 2), {
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Disposition": `attachment; filename="adoff-rules-${Date.now()}.json"`
+    }
+  });
+}
+
+// =============================================
 // RETENTION DASHBOARD DATA
 // =============================================
 
@@ -7458,6 +7619,11 @@ export default {
       return withCors(handleTrialLinkAccount(linkBody, env));
     }
 
+    // GET endpoints (rules feed)
+    if (path === "/rules/feed" && request.method === "GET") {
+      return handleRulesFeed(env, request);
+    }
+
     // POST endpoints
     if (request.method !== "POST") {
       return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -7474,6 +7640,8 @@ export default {
     }
 
     switch (path) {
+      case "/rules/feed":
+        return handleRulesFeed(env, request);
       case "/trial":
         return withCors(handleTrial(body, env, request));
       case "/validate":
@@ -7515,6 +7683,14 @@ export default {
         return withCors(handleAdminSeoUrlInspectBatch(request, env));
       case "/admin/seo/sitemap/submit":
         return withCors(handleAdminSeoSitemapSubmit(request, env));
+      case "/admin/rules/list":
+        return withCors(handleAdminListCustomRules(request, env));
+      case "/admin/rules/add":
+        return withCors(handleAdminAddCustomRule(request, env));
+      case "/admin/rules/delete":
+        return withCors(handleAdminDeleteCustomRule(request, env));
+      case "/admin/rules/export":
+        return withCors(handleAdminExportRules(request, env));
       default:
         return new Response(JSON.stringify({ error: "Not found" }), {
           status: 404,
