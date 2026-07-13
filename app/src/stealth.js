@@ -70,6 +70,7 @@
   // funzionare nativamente. IMA stub e stealth disabilitati su questi siti.
   const PREMIUM_STREAMING = [
     "paramountplus.com",
+    "parampunt.com",
   ];
 
   const isBroadcaster = BROADCASTER_SITES.some((d) => hostname.includes(d));
