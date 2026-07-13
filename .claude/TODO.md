@@ -1,8 +1,8 @@
 # AdOff — TODO Unico Consolidato
 
 **Ultimo aggiornamento:** 2026-07-13
-**Versione reale:** 3.5.32 (tutti e 3 i manifest)
-**Store status:** ✅ CWS 3.5.32 LIVE | ⚠️ AMO in review | ✅ Edge 202 Accepted (op baa21678)
+**Versione reale:** 3.5.33 (tutti e 3 i manifest)
+**Store status:** ✅ CWS 3.5.33 LIVE | ⚠️ AMO in review (JWT errore temp) | ✅ Edge 202 Accepted
 
 ---
 
@@ -49,11 +49,11 @@ Bugfix critici trovati dal piano-guida:
 
 ### P0 — Bloccanti / Core
 
-- [ ] **Trial Anti-Fraud System** — Implementare fingerprint hardware resiliente
-  - Fase 1: generateResilientFingerprint() in background.js
-  - Fase 2: trial_fingerprints table + anti-abuse in worker.js
-  - Fase 3: account via di fuga per falsi positivi
-  - Dettaglio: documento da creare in Memoria/progetti/chromeplugin/
+- [x] **Trial Anti-Fraud System** — SHIPPED v3.5.33 (2026-07-13). Commit 9985e1a. Memory: [[trial-anti-crack-signed-token]].
+  - Fase 1: ✅ generateResilientFingerprint() (già esisteva in background.js)
+  - Fase 2: ✅ burst detection 5req/min + fingerprint in token (v:2, fp) + abuse flags
+  - Fase 3: ✅ account via di fuga (trial_accounts) — wired ma unused
+  - Fallback: 30gg → 3gg · license-client syncTrial fix · background.js persist adoffFingerprint
 
 - [x] **Store: Edge API credentials** — API key scaduta (4ZL6...) sostituita con nuova (UiQ7...). POST submissions → HTTP 202 ✅. "InProgressSubmission" = Microsoft già revisiona una submission esistente. Azione: aspettare fine revisione Microsoft OPPURE andare su Partner Center → chiudere submission in coda.
 
@@ -61,8 +61,8 @@ Bugfix critici trovati dal piano-guida:
 
 ### P1 — Marketing & Launch (bloccati da mesi)
 
-- [ ] **Product Hunt launch** — kit esiste in `sviluppo/seo-tools/PRODUCT-HUNT-LAUNCH-KIT.md`. Da decidere se lanciare o archiviare.
-- [ ] **Reddit + Show HN** — kit esiste in `sviluppo/seo-tools/REDDIT-SHOWHN-KIT.md`. Stesso discorso.
+- [ ] **Product Hunt launch** — kit VERIFICATO ship-ready 2026-07-13: 6 gallery images + video premium 34.5s. Owner: crea Coming Soon page + lancia martedì/mercoledì 09:00 IT. Kit: `sviluppo/seo-tools/PRODUCT-HUNT-LAUNCH-KIT.md`.
+- [ ] **Reddit + Show HN** — kit VERIFICATO ship-ready 2026-07-13 (121 righe). Owner: warming account 1 settimana + seguire regole A0-A6. Kit: `sviluppo/seo-tools/REDDIT-SHOWHN-KIT.md`.
 - [ ] **AlternativeTo + G2 + Wikidata** — mai iniziato. Da decidere se priorità.
 - [ ] **Bing sitemap submit** — sitemap aggiornata (172 URL) ma mai submitterta a Bing Webmaster Tools.
   - Verificare che il sito sia registrato in Bing Webmaster
@@ -95,10 +95,9 @@ Bugfix critici trovati dal piano-guida:
 
 ## ✅ Ultime cose fatte (2026-07-13)
 
-- Analisi completa sistema trial: vulnerabilità critica identificata (deviceId cancellabile)
-- Ricerca competitor: NordVPN/AdGuard/TotalAdBlock/ulteriori strategie
-- Sessione AQ: 6 domande, strategia definita
-- Checkpoint + vault creati
+- **Trial Anti-Fraud hardening SHIPPED v3.5.33**: burst detection + fingerprint in token + fallback 3gg + sync fix. Worker deployato api.adoff.app. CWS published. Telegram announced.
+- Kit PH e Reddit verificati ship-ready
+- Memory page `trial-anti-crack-signed-token.md` creata
 
 ## ✅ Ultime cose fatte (2026-07-08)
 
