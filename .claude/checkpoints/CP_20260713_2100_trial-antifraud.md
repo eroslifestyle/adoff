@@ -10,9 +10,10 @@ Implementare sistema anti-fraud per trial AdOff che previene abuse tramite disin
 - [x] Identificare vulnerabilità: deviceId cancellabile a ogni reinstall
 - [x] Proporre soluzione multi-livello
 - [x] Sessione AQ: 6 domande, risposte raccolte
-- [ ] Implementare Fase 1: generateResilientFingerprint() in background.js
-- [ ] Implementare Fase 2: trial_fingerprints table + anti-abuse logic in worker.js
-- [ ] Implementare Fase 3: account via di fuga per falsi positivi
+- [x] Implementare Fase 1: generateResilientFingerprint() in background.js
+- [x] Implementare Fase 2: trial_fingerprints table + anti-abuse logic in worker.js
+- [x] Implementare Fase 3: account via di fuga per falsi positivi
+- [x] Build e deploy completati
 
 ## Failed Approaches
 
@@ -77,13 +78,27 @@ Utente bloccato → mostra "Crea account per trial"
    - Se server risponde con `fallback: "account"`, mostrare UI "Sblocca trial"
    - L'account opzionale sblocca il trial per quel fingerprint
 
-## File da Modificare
+## File Modificati
 
 | File | Cosa |
 |------|------|
-| `app/src/background.js` | Aggiungere generateResilientFingerprint() |
-| `sviluppo/license-system/worker.js` | Tabella trial_fingerprints + logic in handleTrial() |
-| `app/src/popup.js` / `options.js` | UI via di fuga per account |
+| `app/src/background.js` | generateResilientFingerprint() + POST /trial con fingerprint |
+| `sviluppo/license-system/worker.js` | trial_fingerprints + trial_accounts + handleTrialLinkAccount |
+| `app/src/popup.js/html/css` | UI trial bloccato |
+| `app-firefox/src/*` | Sincronizzato da Chrome |
+| `app-safari/src/*` | Sincronizzato da Chrome |
+
+## Commit SHAs
+
+- `8323cb3` feat(trial): add resilient fingerprint in background.js
+- `0e3cea6` feat(worker): add trial_fingerprints table and anti-abuse logic
+- `10f4489` feat: implement trial anti-fraud system with hardware fingerprint (merge)
+
+## Deploy Status
+
+- ✅ Worker deployato: `adoff-license-api` (c7f25f66)
+- ✅ Site deployato: `https://5021496a.adoff-site.pages.dev`
+- ✅ Build completato: Chrome + Firefox + Safari ZIPs in `site/`
 
 ## Risposte AQ Complete
 
