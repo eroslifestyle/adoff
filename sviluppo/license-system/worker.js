@@ -71,6 +71,81 @@ async function kvGet(kv, key, type) {
   }
 }
 
+// =============================================
+// BACKUP HELPERS (D1 mirror)
+// =============================================
+
+async function dbBackupLicense(env, licenseData, action = 'upsert') {
+  if (!env.DB) return;
+
+  if (action === 'delete') {
+    await env.DB.prepare("DELETE FROM licenses WHERE raw = ?").bind(licenseData.raw).run();
+    return;
+  }
+
+  const {
+    raw,
+    key = null,
+    email = "",
+    plan = "unknown",
+    expires = 0,
+    deviceLimit = 3,
+    revoked = false,
+    createdAt = Date.now(),
+    devices = [],
+    generatedBy = "admin"
+  } = licenseData;
+
+  await env.DB.prepare(`
+    INSERT INTO licenses (raw, adoff_key, email, plan, expires, device_limit, revoked, created_at, updated_at, generated_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(raw) DO UPDATE SET
+      adoff_key = COALESCE(excluded.adoff_key, adoff_key),
+      email = excluded.email,
+      plan = excluded.plan,
+      expires = excluded.expires,
+      device_limit = excluded.device_limit,
+      revoked = excluded.revoked,
+      updated_at = excluded.updated_at
+  `).bind(raw, key, email, plan, expires, deviceLimit, revoked ? 1 : 0, createdAt, Date.now(), generatedBy).run();
+
+  await env.DB.prepare("DELETE FROM licenses_devices WHERE raw = ?").bind(raw).run();
+  for (const dev of (devices || [])) {
+    await env.DB.prepare(`
+      INSERT INTO licenses_devices (raw, device_id, name, last_seen, ip)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind(raw, dev.id || "", dev.name || "", dev.lastSeen || 0, dev.ip || "").run();
+  }
+}
+
+async function dbBackupEmailIndex(env, email, keys) {
+  if (!env.DB || !email) return;
+  const normalEmail = email.toLowerCase().trim();
+  await env.DB.prepare(`
+    INSERT INTO licenses_email_index (email, raw_keys)
+    VALUES (?, ?)
+    ON CONFLICT(email) DO UPDATE SET raw_keys = excluded.raw_keys
+  `).bind(normalEmail, JSON.stringify(keys)).run();
+}
+
+async function dbDeleteLicense(env, raw) {
+  if (!env.DB) return;
+  await env.DB.prepare("DELETE FROM licenses WHERE raw = ?").bind(raw).run();
+}
+
+async function dbRestoreLicenses(env) {
+  if (!env.DB) return { error: "DB not available" };
+  const rows = await env.DB.prepare("SELECT * FROM licenses").all();
+  return rows.results || [];
+}
+
+async function dbRestoreKvSnapshot(env) {
+  if (!env.DB) return { error: "DB not available" };
+  const rows = await env.DB.prepare("SELECT * FROM kv_backup").all();
+  const meta = await env.DB.prepare("SELECT * FROM kv_backup_meta WHERE key = 'snapshot'").first();
+  return { keys: rows.results || [], meta: meta || null };
+}
+
 // Placeholder costante per contesti senza request (es. cron)
 const CORS_HEADERS = {
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
@@ -955,22 +1030,71 @@ async function handleValidate(body, env, request, opts = {}) {
   }
 
   // 2. Controlla nel KV se la licenza esiste e non e' revocata
-  const licenseData = await kvGet(env.ADOFF_LICENSES, `lic:${key}`, "json");
+  let licenseData = await kvGet(env.ADOFF_LICENSES, `lic:${key}`, "json");
+
+  // Se non esiste record KV → fallback D1 (KV puo' essere vuoto per errore/svuotamento)
+  if (!licenseData && env.DB) {
+    try {
+      const dbResult = await env.DB.prepare(
+        "SELECT * FROM licenses WHERE raw = ? OR adoff_key = ?"
+      ).bind(key, key).first();
+      if (dbResult) {
+        licenseData = {
+          key: dbResult.adoff_key,
+          raw: dbResult.raw,
+          plan: dbResult.plan,
+          expires: dbResult.expires,
+          deviceLimit: dbResult.device_limit,
+          revoked: !!dbResult.revoked,
+          createdAt: dbResult.created_at,
+          devices: [],
+          source: "db_fallback",
+        };
+        console.log("[validate] License served from D1 backup (KV was empty)");
+      }
+    } catch (e) {
+      console.warn("[validate] D1 fallback error:", e.message);
+    }
+  }
 
   // Se non esiste record KV, la licenza e' stata eliminata dall'admin (o non e' mai stata creata).
-  // La firma HMAC offline da sola non basta: serve l'autorita' del KV.
+  // La firma HMAC offline da sola non basta: serve l'autorita' del KV/D1.
   // Senza questo check, `validateSignature` passerebbe e il device check ricreerebbe la licenza
   // con `{...null, devices, ...}` resuscitandola silenziosamente.
   if (!licenseData) {
     return jsonResponse({ valid: false, error: "License not found", deleted: true });
   }
 
+  // 3. Controlla scadenza (payload gia' parsato in sigCheck.payload)
+  const payload = sigCheck.payload;
+
+  // Se la licenza viene dal D1 fallback, usiamo i dati D1
+  if (licenseData.source === "db_fallback") {
+    if (licenseData.revoked) {
+      return jsonResponse({ valid: false, error: "License revoked" });
+    }
+    if (payload.x > 0 && payload.x < Date.now() / 1000) {
+      return jsonResponse({ valid: false, error: "License expired", expired: true });
+    }
+    const deviceId = await generateDeviceId(request, body, env);
+    return jsonResponse({
+      valid: true,
+      plan: licenseData.plan,
+      expires: licenseData.expires || null,
+      expiresHuman: licenseData.expires && licenseData.expires > 0
+        ? new Date(licenseData.expires * 1000).toISOString().slice(0, 10)
+        : "LIFETIME",
+      devices: 0,
+      maxDevices: licenseData.deviceLimit || MAX_DEVICES,
+      source: "db_fallback",
+    });
+  }
+
   if (licenseData.revoked) {
     return jsonResponse({ valid: false, error: "License revoked" });
   }
 
-  // 3. Controlla scadenza
-  const payload = sigCheck.payload;
+  // 3b. Controlla scadenza
   if (payload.x > 0 && payload.x < Date.now() / 1000) {
     return jsonResponse({ valid: false, error: "License expired", expired: true });
   }
@@ -1021,6 +1145,16 @@ async function handleValidate(body, env, request, opts = {}) {
       plan: payload.p,
       email: payload.e,
     }));
+    // Backup to D1
+    await dbBackupLicense(env, {
+      raw: key,
+      key: null,
+      email: payload.e,
+      plan: payload.p,
+      expires: payload.x,
+      devices: normalizeDeviceList(devices),
+      updatedAt: Date.now(),
+    });
   } else {
     // Aggiorna lastSeen dispositivo esistente
     devices[existingIdx] = {
@@ -1034,6 +1168,16 @@ async function handleValidate(body, env, request, opts = {}) {
       bannedDevices,
       lastValidated: Date.now(),
     }));
+    // Backup to D1
+    await dbBackupLicense(env, {
+      raw: key,
+      key: null,
+      email: licenseData?.email,
+      plan: licenseData?.plan,
+      expires: licenseData?.expires,
+      devices: normalizeDeviceList(devices),
+      updatedAt: Date.now(),
+    });
   }
 
   return jsonResponse({
@@ -1079,6 +1223,12 @@ async function handleDeactivate(body, env, request) {
     ...licenseData,
     devices,
   }));
+  // Backup to D1
+  await dbBackupLicense(env, {
+    raw: key,
+    devices: normalizeDeviceList(devices),
+    updatedAt: Date.now(),
+  });
 
   return jsonResponse({ ok: true, devicesRemaining: devices.length });
 }
@@ -1106,6 +1256,12 @@ async function handleRevoke(body, env, request) {
     revoked: true,
     revokedAt: Date.now(),
   }));
+  // Backup to D1
+  await dbBackupLicense(env, {
+    raw: key,
+    revoked: true,
+    updatedAt: Date.now(),
+  });
 
   return jsonResponse({ ok: true, message: "License revoked" });
 }
@@ -1137,6 +1293,9 @@ async function handleDeleteLicense(body, env, request) {
 
   if (!adoffKey && licData.key) adoffKey = licData.key;
   const email = licData.email;
+
+  // Elimina prima dal D1 backup
+  await dbDeleteLicense(env, rawKey);
 
   // Elimina licenza dal KV
   await env.ADOFF_LICENSES.delete(`lic:${rawKey}`);
@@ -1212,6 +1371,17 @@ async function handleAdminGenerateKey(body, env, request) {
     createdAt: Date.now(),
     generatedBy: "admin",
   }));
+  // Backup to D1
+  await dbBackupLicense(env, {
+    raw,
+    key,
+    email: email || "",
+    plan,
+    expires,
+    deviceLimit,
+    createdAt: Date.now(),
+    generatedBy: "admin",
+  });
   await env.ADOFF_LICENSES.put(`key:${key}`, raw);
   if (email) {
     const normalEmail = email.toLowerCase().trim();
@@ -1219,6 +1389,8 @@ async function handleAdminGenerateKey(body, env, request) {
     const existingKeys = await kvGet(env.ADOFF_LICENSES, `email:${normalEmail}`, "json") || [];
     existingKeys.push({ key, raw, plan, created: Date.now() });
     await env.ADOFF_LICENSES.put(`email:${normalEmail}`, JSON.stringify(existingKeys));
+    // Backup email index to D1
+    await dbBackupEmailIndex(env, normalEmail, existingKeys);
 
     // User account record — parity with Stripe webhook flow.
     // Without this, the user dashboard (/account/devices) doesn't see admin-created licenses
@@ -3173,57 +3345,133 @@ async function handleAdminListLicenses(request, env) {
   const limitParam = parseInt(url.searchParams.get("limit")) || 50;
   const limit = Math.min(Math.max(limitParam, 1), 200);
   const filterPlan = url.searchParams.get("plan") || null;
-  const filterStatus = url.searchParams.get("status") || null; // active|expired|revoked
-
-  // List all lic: keys from KV with pagination
-  const listResult = await env.ADOFF_LICENSES.list({
-    prefix: "lic:",
-    limit: limit * 3, // fetch more to account for filtering
-    cursor,
-  });
+  const filterStatus = url.searchParams.get("status") || null;
+  const source = url.searchParams.get("source") || null;
 
   const now = Math.floor(Date.now() / 1000);
-  const licenses = [];
+  let licenses = [];
 
-  for (const key of listResult.keys) {
-    const data = await kvGet(env.ADOFF_LICENSES, key.name, "json");
-    if (!data) continue;
-
-    // Determine status
-    let status = "active";
-    if (data.revoked) status = "revoked";
-    else if (data.expires && data.expires > 0 && data.expires < now) status = "expired";
-
-    // Apply filters
-    if (filterPlan && data.plan !== filterPlan) continue;
-    if (filterStatus && status !== filterStatus) continue;
-
-    licenses.push({
-      raw: key.name.replace("lic:", ""),
-      key: data.key || null,
-      email: data.email || "",
-      plan: data.plan || "unknown",
-      status,
-      expires: data.expires || null,
-      expiresHuman: data.expires && data.expires > 0
-        ? new Date(data.expires * 1000).toISOString().slice(0, 10)
-        : "LIFETIME",
-      devices: (data.devices || []).length,
-      maxDevices: data.deviceLimit || MAX_DEVICES,
-      createdAt: data.createdAt || null,
-      activatedAt: data.activatedAt || null,
+  // Try KV first
+  let fromKv = false;
+  try {
+    const listResult = await env.ADOFF_LICENSES.list({
+      prefix: "lic:",
+      limit: limit * 3,
+      cursor,
     });
 
-    if (licenses.length >= limit) break;
+    if (listResult.keys && listResult.keys.length > 0) {
+      fromKv = true;
+      for (const key of listResult.keys) {
+        const data = await kvGet(env.ADOFF_LICENSES, key.name, "json");
+        if (!data) continue;
+
+        let status = "active";
+        if (data.revoked) status = "revoked";
+        else if (data.expires && data.expires > 0 && data.expires < now) status = "expired";
+
+        if (filterPlan && data.plan !== filterPlan) continue;
+        if (filterStatus && status !== filterStatus) continue;
+
+        licenses.push({
+          raw: key.name.replace("lic:", ""),
+          key: data.key || null,
+          email: data.email || "",
+          plan: data.plan || "unknown",
+          status,
+          expires: data.expires || null,
+          expiresHuman: data.expires && data.expires > 0
+            ? new Date(data.expires * 1000).toISOString().slice(0, 10)
+            : "LIFETIME",
+          devices: (data.devices || []).length,
+          maxDevices: data.deviceLimit || MAX_DEVICES,
+          createdAt: data.createdAt || null,
+          activatedAt: data.activatedAt || null,
+          source: "kv",
+        });
+
+        if (licenses.length >= limit) break;
+      }
+
+      return jsonResponse({
+        ok: true,
+        licenses,
+        total: licenses.length,
+        cursor: listResult.list_complete ? null : listResult.cursor,
+        hasMore: !listResult.list_complete,
+        source: "kv",
+      });
+    }
+  } catch (e) {
+    console.warn("[adminListLicenses] KV error:", e.message);
   }
 
-  return jsonResponse({
-    ok: true,
-    licenses,
-    total: licenses.length,
-    cursor: listResult.list_complete ? null : listResult.cursor,
-    hasMore: !listResult.list_complete,
-  });
+  // KV empty or error → D1 always
+  if (source === 'kv' && !fromKv) {
+    return jsonResponse({ ok: true, licenses: [], total: 0, source: "kv_empty", cursor: null, hasMore: false });
+  }
+
+  if (!env.DB) {
+    return jsonResponse({ ok: false, error: "KV empty and DB not available" }, 503);
+  }
+
+  try {
+    let query = "SELECT * FROM licenses WHERE 1=1";
+    const binds = [];
+    if (filterPlan) { query += " AND plan = ?"; binds.push(filterPlan); }
+    if (filterStatus === 'revoked') { query += " AND revoked = 1"; }
+    else if (filterStatus === 'expired') { query += " AND revoked = 0 AND expires > 0 AND expires < ?"; binds.push(now); }
+    else if (filterStatus === 'active') { query += " AND revoked = 0 AND (expires = 0 OR expires > ?)"; binds.push(now); }
+    query += " ORDER BY created_at DESC LIMIT ?"; binds.push(limit);
+
+    const result = await env.DB.prepare(query).bind(...binds).all();
+    const rows = result.results || [];
+
+    for (const row of rows) {
+      let status = "active";
+      if (row.revoked) status = "revoked";
+      else if (row.expires > 0 && row.expires < now) status = "expired";
+
+      licenses.push({
+        raw: row.raw,
+        key: row.adoff_key,
+        email: row.email || "",
+        plan: row.plan || "unknown",
+        status,
+        expires: row.expires || null,
+        expiresHuman: row.expires && row.expires > 0
+          ? new Date(row.expires * 1000).toISOString().slice(0, 10)
+          : "LIFETIME",
+        devices: 0,
+        maxDevices: row.device_limit || MAX_DEVICES,
+        createdAt: row.created_at,
+        source: "db",
+      });
+    }
+
+    // Backfill email index for D1-only licenses (prevents email lookup gaps)
+    const emailGroups = {};
+    for (const row of rows) {
+      if (!row.email) continue;
+      const normalEmail = row.email.toLowerCase().trim();
+      if (!emailGroups[normalEmail]) emailGroups[normalEmail] = [];
+      emailGroups[normalEmail].push({ key: row.adoff_key, raw: row.raw, plan: row.plan, created: row.created_at });
+    }
+    await Promise.all(Object.entries(emailGroups).map(([email, keys]) => dbBackupEmailIndex(env, email, keys)));
+
+    return jsonResponse({
+      ok: true,
+      licenses,
+      total: licenses.length,
+      cursor: null,
+      hasMore: rows.length === limit,
+      source: "db_fallback",
+      warning: rows.length > 0 ? "Served from D1 backup — KV was empty" : null,
+    });
+  } catch (e) {
+    console.error("[adminListLicenses] DB error:", e);
+    return jsonResponse({ ok: false, error: "Backup DB also unavailable: " + e.message }, 503);
+  }
 }
 
 async function handleAdminStats(request, env) {
@@ -3276,6 +3524,32 @@ async function handleAdminStats(request, env) {
     cursor = listResult.list_complete ? undefined : listResult.cursor;
   } while (cursor);
 
+  // KV empty → fallback to D1 for stats
+  if (totalLicenses === 0 && env.DB) {
+    try {
+      const dbResult = await env.DB.prepare(
+        "SELECT plan, revoked, expires FROM licenses"
+      ).all();
+      const rows = dbResult.results || [];
+      for (const row of rows) {
+        totalLicenses++;
+        const plan = row.plan || "unknown";
+        planCounts[plan] = (planCounts[plan] || 0) + 1;
+        if (row.revoked) {
+          revokedLicenses++;
+        } else if (row.expires && row.expires > 0 && row.expires < now) {
+          expiredLicenses++;
+        } else {
+          activeLicenses++;
+          if (plan === "lifetime") lifetimeLicenses++;
+          if (plan === "pro") proLicenses++;
+        }
+      }
+    } catch (e) {
+      console.warn("[adminStats] D1 fallback error:", e.message);
+    }
+  }
+
   // Read counters
   const totalSold = parseInt(await kvGet(env.ADOFF_LICENSES, "stats:total_sold") || "0");
   const totalTickets = parseInt(await kvGet(env.ADOFF_LICENSES, "stats:total_tickets") || "0");
@@ -3301,6 +3575,183 @@ async function handleAdminStats(request, env) {
     support: {
       totalTickets,
     },
+  });
+}
+
+// Admin: sync all KV licenses → D1 (one-shot backfill).
+async function handleAdminSyncLicensesKv(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  if (!env.DB) return jsonResponse({ ok: false, error: "DB not available" }, 503);
+
+  const stats = { total: 0, synced: 0, skipped: 0, errors: 0 };
+  const emailGroups = {};
+  let cursor;
+
+  do {
+    const listResult = await env.ADOFF_LICENSES.list({ prefix: "lic:", limit: 1000, cursor });
+    for (const key of listResult.keys || []) {
+      stats.total++;
+      try {
+        const data = await kvGet(env.ADOFF_LICENSES, key.name, "json");
+        if (!data) { stats.skipped++; continue; }
+        const raw = key.name.replace("lic:", "");
+        await dbBackupLicense(env, {
+          raw, key: data.key || null, email: data.email || "",
+          plan: data.plan || "unknown", expires: data.expires || 0,
+          deviceLimit: data.deviceLimit || 3, revoked: !!data.revoked,
+          createdAt: data.createdAt || Date.now(),
+          devices: normalizeDeviceList(data.devices || []),
+          generatedBy: "kv-sync",
+        });
+        if (data.email) {
+          const normalEmail = data.email.toLowerCase().trim();
+          if (!emailGroups[normalEmail]) emailGroups[normalEmail] = [];
+          emailGroups[normalEmail].push({ key: data.key || null, raw, plan: data.plan, created: data.createdAt });
+        }
+        stats.synced++;
+      } catch (e) {
+        stats.errors++;
+        console.error("[syncLicensesKv]", key.name, e.message);
+      }
+    }
+    cursor = listResult.list_complete ? undefined : listResult.cursor;
+  } while (cursor);
+
+  for (const [email, keys] of Object.entries(emailGroups)) {
+    await dbBackupEmailIndex(env, email, keys);
+  }
+
+  return jsonResponse({ ok: true, ...stats, emailsIndexed: Object.keys(emailGroups).length });
+}
+
+// =============================================
+// BACKUP & RESTORE — KV → D1
+// =============================================
+
+async function handleCronKvSnapshot(request, env) {
+  try {
+    const result = await handleScheduledKvSnapshot(env);
+    return jsonResponse({
+      ok: true,
+      snapshot_at: new Date(result.snapshot_at).toISOString(),
+      total_keys: result.total_keys,
+      errors: result.errors,
+    });
+  } catch (e) {
+    return jsonResponse({ ok: false, error: e.message }, 500);
+  }
+}
+
+async function handleAdminKvDiag(request, env) {
+  // DIAGNOSTIC — dumpa tutte le chiavi che il worker vede via list()
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  const all = [];
+  let cursor = undefined;
+  let iterations = 0;
+  do {
+    const batch = await env.ADOFF_LICENSES.list({ limit: 100, cursor });
+    for (const k of batch.keys) all.push(k.name);
+    cursor = batch.list_complete ? undefined : batch.cursor;
+    iterations++;
+  } while (cursor && iterations < 20);
+
+  const byPrefix = {};
+  for (const name of all) {
+    const p = name.split(":")[0];
+    byPrefix[p] = (byPrefix[p] || 0) + 1;
+  }
+
+  // Test list con prefix "lic:" + lettura valori (replica handleAdminListLicenses)
+  const withPrefix = await env.ADOFF_LICENSES.list({ prefix: "lic:", limit: 150 });
+  const readTest = [];
+  for (const key of withPrefix.keys) {
+    const dataJson = await kvGet(env.ADOFF_LICENSES, key.name, "json");
+    const dataRaw = await kvGet(env.ADOFF_LICENSES, key.name);
+    readTest.push({
+      name: key.name.slice(0, 20),
+      json_ok: dataJson !== null,
+      raw_len: dataRaw ? dataRaw.length : 0,
+      raw_head: dataRaw ? dataRaw.slice(0, 50) : null,
+    });
+  }
+
+  return jsonResponse({
+    ok: true,
+    total_keys: all.length,
+    prefix_test_count: withPrefix.keys.length,
+    read_test: readTest,
+  });
+}
+
+async function handleAdminKvRestore(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  const url = new URL(request.url);
+  const dry = url.searchParams.get("dry") === "true";
+
+  if (!env.DB) return jsonResponse({ ok: false, error: "DB not available" }, 503);
+
+  const rows = await env.DB.prepare("SELECT * FROM kv_backup").all();
+  const keys = rows.results || [];
+  let restored = 0;
+  let skipped = 0;
+  const errors = [];
+
+  for (const row of keys) {
+    if (row.key.startsWith("rl:")) { skipped++; continue; }
+    if (dry) {
+      restored++;
+    } else {
+      try {
+        await env.ADOFF_LICENSES.put(row.key, row.value);
+        restored++;
+      } catch (e) {
+        errors.push({ key: row.key, error: e.message });
+      }
+    }
+  }
+
+  return jsonResponse({
+    ok: true,
+    restored,
+    skipped,
+    errors: errors.length > 0 ? errors : undefined,
+    dry: dry || undefined,
+  });
+}
+
+async function handleAdminBackupStatus(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  if (!env.DB) return jsonResponse({ ok: false, error: "DB not available" }, 503);
+
+  const [licCount, kvLicCount, snapshotMeta, kvTotal] = await Promise.all([
+    env.DB.prepare("SELECT COUNT(*) as n FROM licenses").first(),
+    env.ADOFF_LICENSES.list({ prefix: "lic:", limit: 1 }).then(r => r.keys?.length || 0).catch(() => -1),
+    env.DB.prepare("SELECT * FROM kv_backup_meta WHERE key = 'snapshot'").first(),
+    env.ADOFF_LICENSES.list({ limit: 1 }).then(r => r.keys?.length || 0).catch(() => -1),
+  ]);
+
+  return jsonResponse({
+    ok: true,
+    licenses: { in_kv: kvLicCount, in_db: licCount?.n || 0 },
+    kv_total_keys: kvTotal,
+    snapshot: snapshotMeta ? {
+      at: new Date(snapshotMeta.snapshot_at).toISOString(),
+      keys: snapshotMeta.total_keys,
+    } : null,
+    health: (licCount?.n || 0) > 0 || kvLicCount > 0 ? "ok" : "empty",
   });
 }
 
@@ -5477,7 +5928,54 @@ async function handleScheduled(env) {
     gsc = { ok: false, error: e.message };
   }
 
-  return { reminders, expired, checked, gsc };
+  // KV → D1 nightly snapshot (non bloccante)
+  let kvSnapshot = null;
+  try {
+    kvSnapshot = await handleScheduledKvSnapshot(env);
+  } catch (e) {
+    kvSnapshot = { ok: false, error: e.message };
+  }
+
+  return { reminders, expired, checked, gsc, kvSnapshot };
+}
+
+// =============================================
+// KV → D1 NIGHTLY SNAPSHOT
+// =============================================
+async function handleScheduledKvSnapshot(env) {
+  let cursor = undefined;
+  let totalKeys = 0;
+  let errors = 0;
+  const snapshotAt = Date.now();
+
+  do {
+    const batch = await env.ADOFF_LICENSES.list({ prefix: "", limit: 25, cursor });
+
+    for (const kvKey of batch.keys) {
+      if (kvKey.name.startsWith("rl:")) continue;
+      try {
+        const value = await env.ADOFF_LICENSES.get(kvKey.name);
+        await env.DB.prepare(`
+          INSERT INTO kv_backup (key, value, updated_at)
+          VALUES (?, ?, ?)
+          ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+        `).bind(kvKey.name, value || "", snapshotAt).run();
+        totalKeys++;
+      } catch (e) {
+        errors++;
+        console.error(`[kvSnapshot] Error on ${kvKey.name}:`, e.message);
+      }
+    }
+    cursor = batch.list_complete ? undefined : batch.cursor;
+  } while (cursor);
+
+  await env.DB.prepare(`
+    INSERT INTO kv_backup_meta (key, snapshot_at, kv_version, total_keys)
+    VALUES ('snapshot', ?, 1, ?)
+    ON CONFLICT(key) DO UPDATE SET snapshot_at = excluded.snapshot_at, total_keys = excluded.total_keys
+  `).bind(snapshotAt, totalKeys).run();
+
+  return { snapshot_at: snapshotAt, total_keys: totalKeys, errors };
 }
 
 // =============================================
@@ -6544,6 +7042,10 @@ export default {
     if (path === "/admin/gsc/sync" && request.method === "POST") {
       return handleAdminGscSync(request, env);
     }
+    // Admin: sync KV licenses → D1 (one-shot backfill).
+    if (path === "/admin/licenses/sync-kv" && request.method === "POST") {
+      return handleAdminSyncLicensesKv(request, env);
+    }
     // Admin: crea un forum topic Telegram e salva il thread id in KV.
     if (path === "/admin/tg-create-topic" && request.method === "POST") {
       let tBody; try { tBody = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400); }
@@ -6587,6 +7089,10 @@ export default {
       if (path === "/admin/analytics") return withCors(handleAdminAnalytics(request, env));
       if (path === "/admin/revenue") return withCors(handleAdminRevenue(request, env));
       if (path === "/admin/licenses") return withCors(handleAdminListLicenses(request, env));
+      if (path === "/admin/backup-status" && request.method === "GET") return withCors(handleAdminBackupStatus(request, env));
+      if (path === "/admin/kv-restore" && request.method === "POST") return withCors(handleAdminKvRestore(request, env));
+      if (path === "/admin/kv-diag" && request.method === "GET") return withCors(handleAdminKvDiag(request, env));
+      if (path === "/cron/kv-snapshot" && request.method === "GET") return withCors(handleCronKvSnapshot(request, env));
       if (path === "/admin/chats") return withCors(handleAdminListChats(request, env));
       if (path.startsWith("/admin/chat/")) return withCors(handleAdminGetChat(request, env, path.split("/admin/chat/")[1]));
       if (path === "/attribution/stats") return withCors(handleAttributionStats(request, env));
