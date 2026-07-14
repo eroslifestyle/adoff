@@ -417,6 +417,121 @@ async function handleVpnCreateAccount(request, env) {
   }
 }
 
+// =============================================
+// HELPERS CONDIVISE (webhook + internal)
+// =============================================
+
+/**
+ * Provisiona account VPN per un checkout Premium.
+ * Crea account su VPNresellers e salva deviceId->accountId in D1.
+ * Chiamata da handleStripeWebhook su checkout.session.completed tier=premium.
+ *
+ * @param {string} deviceId
+ * @param {string|null} email
+ * @param {string|null} ip  CF-Connecting-IP o null
+ * @param {object} env
+ * @param {string|null} stripeCustomerId
+ * @returns {Promise<{ok: boolean, accountId?: string, username?: string, error?: string}>}
+ */
+async function provisionVpnForCheckout(deviceId, email, ip, env, stripeCustomerId = null) {
+  // Assicura tabella D1
+  try {
+    await env.DB.prepare(
+      "CREATE TABLE IF NOT EXISTS vpn_accounts (device_id TEXT PRIMARY KEY, account_id TEXT NOT NULL UNIQUE, email TEXT, stripe_customer_id TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)"
+    ).run();
+  } catch (_) { /* gia' esiste */ }
+
+  // Check gia' provisioning per questo device
+  try {
+    const existing = await env.DB.prepare("SELECT account_id FROM vpn_accounts WHERE device_id = ?").bind(deviceId).first();
+    if (existing) {
+      return { ok: true, accountId: existing.account_id, username: null, alreadyExists: true };
+    }
+  } catch (_) { /* table might not exist yet */ }
+
+  // Gia' provisioning per questo customer Stripe? (ricalcolo subscription renewal)
+  if (stripeCustomerId) {
+    try {
+      const existingByCustomer = await env.DB.prepare("SELECT account_id FROM vpn_accounts WHERE stripe_customer_id = ?").bind(stripeCustomerId).first();
+      if (existingByCustomer) {
+        return { ok: true, accountId: existingByCustomer.account_id, username: null, alreadyExists: true };
+      }
+    } catch (_) { /* table might not exist yet */ }
+  }
+
+  // Genera credenziali
+  const username = "ad" + randomBase64url(12);
+  const password = randomBase64url(32);
+
+  try {
+    const result = await vpnApiCall("/accounts", {
+      method: "POST",
+      body: JSON.stringify({
+        username,
+        password,
+        customer: {
+          first_name: "AdOff",
+          last_name: "User",
+          email: email || `${username}@adoff.app`,
+          project_id: VPN_PROJECT_ID,
+        },
+      }),
+    }, env);
+
+    if (result.code === 201) {
+      const accountId = String(result.data.id);
+      try {
+        await env.DB.prepare(
+          "INSERT OR REPLACE INTO vpn_accounts (device_id, account_id, email, stripe_customer_id) VALUES (?, ?, ?, ?)"
+        ).bind(deviceId, accountId, email || null, stripeCustomerId || null).run();
+      } catch (_) { /* non bloccare se D1 fallisce */ }
+
+      await logVpnAudit(env, {
+        action: "create_checkout",
+        accountId,
+        deviceId,
+        ip,
+        extra: { username },
+      });
+
+      return { ok: true, accountId, username };
+    }
+    return { ok: false, error: result.message || "VPNresellers API error" };
+  } catch (e) {
+    console.error("provisionVpnForCheckout error:", e);
+    return { ok: false, error: e.message };
+  }
+}
+
+/**
+ * Disabilita account VPN su cancellazione abbonamento Premium.
+ * @param {string} stripeCustomerId  customer ID Stripe (da subscription.deleted)
+ * @param {string|null} ip
+ * @param {object} env
+ */
+async function disableVpnForCheckout(stripeCustomerId, ip, env) {
+  try {
+    const row = await env.DB.prepare("SELECT account_id, device_id FROM vpn_accounts WHERE stripe_customer_id = ?").bind(stripeCustomerId).first();
+    if (!row) return { ok: true, notFound: true };
+
+    const result = await vpnApiCall(`/accounts/${row.account_id}/disable`, { method: "PUT" }, env);
+    await logVpnAudit(env, {
+      action: "disable_checkout",
+      accountId: row.account_id,
+      deviceId: row.device_id,
+      ip,
+    });
+    return { ok: true, accountId: row.account_id };
+  } catch (e) {
+    console.error("disableVpnForCheckout error:", e);
+    return { ok: false, error: e.message };
+  }
+}
+
+// =============================================
+// ENDPOINT HANDLERS
+// =============================================
+
 /**
  * POST /vpn/delete { accountId }
  * Accesso: tier=premium SOLO.
@@ -590,4 +705,6 @@ export {
   handleVpnDeleteAccount,
   handleVpnEnableDisable,
   handleCronVpnAutoDisable,
+  provisionVpnForCheckout,
+  disableVpnForCheckout,
 };

@@ -56,7 +56,8 @@ function getCorsHeaders(request) {
 // =============================================
 import { handleVpnServers, handleVpnProfile, handleVpnGetConfig,
          handleVpnCreateAccount, handleVpnDeleteAccount,
-         handleVpnEnableDisable, handleCronVpnAutoDisable } from './vpn-module.js';
+         handleVpnEnableDisable, handleCronVpnAutoDisable,
+         provisionVpnForCheckout, disableVpnForCheckout } from './vpn-module.js';
 
 /**
  * KV get wrapper — gestisce il rate limit del namespace.
@@ -3552,6 +3553,18 @@ async function handleStripeWebhook(request, env) {
       (affiliateId ? `\n\u{1F91D} ref: ${escapeHtml(affiliateId)}` : "");
     await notifyTelegram(saleMsg, env, TELEGRAM_SALES_THREAD);
 
+    // VPN provisioning automatico per Premium — dopo la licenza
+    if (tier === "premium") {
+      const vpnDeviceId = session.metadata?.device_id || null; // null = provisioning on-demand la prima volta
+      const vpnIp = request.headers.get("CF-Connecting-IP") || null;
+      const vpnResult = await provisionVpnForCheckout(vpnDeviceId, email, vpnIp, env, customerId || null);
+      if (vpnResult.ok) {
+        console.log(`VPN provisioned for ${email}: accountId=${vpnResult.accountId}, alreadyExists=${!!vpnResult.alreadyExists}`);
+      } else {
+        console.error(`VPN provisioning failed for ${email}: ${vpnResult.error}`);
+      }
+    }
+
     return jsonResponse({ ok: true, message: "License created, account activated" });
   }
 
@@ -3584,8 +3597,35 @@ async function handleStripeWebhook(request, env) {
 
   if (type === "customer.subscription.deleted") {
     // Cancellazione abbonamento — revoca licenza + notifica
-    const customerId = event.data.object.customer;
+    const subscriptionObj = event.data.object;
+    const customerId = subscriptionObj.customer;
+    const subscriptionId = subscriptionObj.id;
     if (customerId) {
+      // Cerca il tier di questa subscription per sapere se era Premium
+      let tier = "pro";
+      if (subscriptionObj.metadata?.tier === "premium") {
+        tier = "premium";
+      } else if (subscriptionId) {
+        try {
+          const subRes = await fetch("https://api.stripe.com/v1/subscriptions/" + subscriptionId, {
+            headers: { "Authorization": "Basic " + btoa(env.STRIPE_SECRET_KEY + ":") },
+          });
+          const subData = await subRes.json();
+          if (subData.metadata?.tier === "premium") tier = "premium";
+        } catch (_) { /* ignore */ }
+      }
+
+      // Disabilita VPN se Premium
+      if (tier === "premium") {
+        const vpnIp = request.headers.get("CF-Connecting-IP") || null;
+        const vpnResult = await disableVpnForCheckout(customerId, vpnIp, env);
+        if (vpnResult.ok) {
+          console.log(`VPN disabled for customer ${customerId}: accountId=${vpnResult.accountId}`);
+        } else if (!vpnResult.notFound) {
+          console.error(`VPN disable failed for ${customerId}: ${vpnResult.error}`);
+        }
+      }
+
       const { revoked, email: revokedEmail } = await revokeByCustomerId(customerId, env, type);
       if (revokedEmail) {
         const tmpl = EMAIL_TEMPLATES.cancelled(revokedEmail);
