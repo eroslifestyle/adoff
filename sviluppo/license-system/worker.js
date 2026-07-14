@@ -50,6 +50,14 @@ function getCorsHeaders(request) {
   return headers;
 }
 
+// =============================================
+// VPN MODULE — provisioning, gating, auto-disable
+// (estratto in vpn-module.js — vedi FASE 0)
+// =============================================
+import { handleVpnServers, handleVpnProfile, handleVpnGetConfig,
+         handleVpnCreateAccount, handleVpnDeleteAccount,
+         handleVpnEnableDisable, handleCronVpnAutoDisable } from './vpn-module.js';
+
 /**
  * KV get wrapper — gestisce il rate limit del namespace.
  * Se il limite giornaliero è superato, restituisce null invece di crashare.
@@ -6812,7 +6820,19 @@ async function handleScheduled(env) {
     kvSnapshot = { ok: false, error: e.message };
   }
 
-  return { reminders, expired, checked, gsc, kvSnapshot };
+  // VPN auto-disable (account inattivi >7gg + abbonamenti scaduti) — cron 10:00 UTC
+  let vpnCron = null;
+  try {
+    const fakeReq = new Request("https://api.adoff.app/vpn/auto-disable", {
+      headers: { "X-Admin-Token": env.ADMIN_TOKEN || "" },
+    });
+    const resp = await handleCronVpnAutoDisable(fakeReq, env);
+    vpnCron = await resp.json().catch(() => ({ ok: false }));
+  } catch (e) {
+    vpnCron = { ok: false, error: e.message };
+  }
+
+  return { reminders, expired, checked, gsc, kvSnapshot, vpnCron };
 }
 
 // =============================================
@@ -7956,93 +7976,7 @@ export default {
       return new Response(resp.body, { status: resp.status, headers: newHeaders });
     };
 
-    // =============================================
-    // VPN RESELLER (VPNresellers.com API)
-    // =============================================
-
-    const VPN_API_BASE = "https://api.vpnresellers.com/v4_1";
-    const VPN_PROJECT_ID = 102; // AdOff project
-
-    async function vpnApiCall(endpoint, options = {}, env) {
-      const url = `${VPN_API_BASE}${endpoint}`;
-      const res = await fetch(url, {
-        ...options,
-        headers: {
-          "Authorization": `Bearer ${env.VPNRESELLERS_API_KEY}`,
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-          ...(options.headers || {}),
-        },
-      });
-      const json = await res.json();
-      return { status: res.status, data: json.data, code: json.code, ...json };
-    }
-
-    async function handleVpnServers(env) {
-      try {
-        const result = await vpnApiCall("/servers", { method: "GET" }, env);
-        if (result.status !== 200) return jsonResponse({ error: "Failed" }, 502);
-        const servers = (result.data || []).map(s => ({
-          id: s.id, name: s.name, country: s.country_code, city: s.city, ip: s.ip,
-        }));
-        return jsonResponse({ ok: true, servers });
-      } catch (e) { return jsonResponse({ error: e.message }, 500); }
-    }
-
-    async function handleVpnProfile(env) {
-      try {
-        const result = await vpnApiCall("/profile", { method: "GET" }, env);
-        return jsonResponse({ ok: true, balance: result.data?.balance || "0.00" });
-      } catch (e) { return jsonResponse({ error: e.message }, 500); }
-    }
-
-    async function handleVpnGetConfig(accountId, serverId, env) {
-      if (!accountId || !serverId) return jsonResponse({ error: "accountId and serverId required" }, 400);
-      try {
-        const result = await vpnApiCall(`/configuration/wireguard?server_id=${serverId}&account_id=${accountId}`, { method: "GET" }, env);
-        if (result.code === 200) return jsonResponse({ ok: true, config: result.data.content, name: result.data.name });
-        return jsonResponse({ error: result.message || "Failed" }, 400);
-      } catch (e) { return jsonResponse({ error: e.message }, 500); }
-    }
-
-    async function handleVpnCreateAccount(body, env) {
-      const { username, password, email, firstName, lastName } = body || {};
-      if (!username || !password) return jsonResponse({ error: "username and password required" }, 400);
-      if (!/^[a-zA-Z0-9_@.]{3,50}$/.test(username)) return jsonResponse({ error: "Invalid username" }, 400);
-      try {
-        const result = await vpnApiCall("/accounts", {
-          method: "POST",
-          body: JSON.stringify({
-            username, password,
-            customer: { first_name: firstName || "AdOff", last_name: lastName || "User",
-              email: email || `${username}@adoff.app`, project_id: VPN_PROJECT_ID },
-          }),
-        }, env);
-        if (result.code === 201) {
-          return jsonResponse({ ok: true, accountId: result.data.id, username: result.data.username,
-            status: result.data.status, wgIp: result.data.wg_ip });
-        }
-        return jsonResponse({ error: result.message || "Failed", details: result.errors }, 400);
-      } catch (e) { return jsonResponse({ error: e.message }, 500); }
-    }
-
-    async function handleVpnDeleteAccount(accountId, env) {
-      if (!accountId) return jsonResponse({ error: "accountId required" }, 400);
-      try {
-        const result = await vpnApiCall(`/accounts/${accountId}`, { method: "DELETE" }, env);
-        return jsonResponse({ ok: result.code === 200 });
-      } catch (e) { return jsonResponse({ error: e.message }, 500); }
-    }
-
-    async function handleVpnEnableDisable(accountId, enable, env) {
-      if (!accountId) return jsonResponse({ error: "accountId required" }, 400);
-      try {
-        const action = enable ? "enable" : "disable";
-        const result = await vpnApiCall(`/accounts/${accountId}/${action}`, { method: "PUT" }, env);
-        return jsonResponse({ ok: result.code === 200, status: action });
-      } catch (e) { return jsonResponse({ error: e.message }, 500); }
-    }
-
+    // VPN MODULE — tutto in vpn-module.js (estratto in FASE 0)
     // GET endpoints
     if (request.method === "GET") {
       if (path === "/stats") return withCors(handleStats(env));
@@ -8090,10 +8024,16 @@ export default {
       if (path === "/oauth/microsoft/start") return handleOAuthStart("microsoft", env); // redirect — no CORS wrap
       if (path === "/oauth/google/callback") return handleOAuthCallback("google", request, env); // redirect — no CORS wrap
       if (path === "/oauth/microsoft/callback") return handleOAuthCallback("microsoft", request, env); // redirect — no CORS wrap
-      // VPN Reseller endpoints (GET)
-      if (path === "/vpn/servers") return withCors(handleVpnServers(env));
-      if (path === "/vpn/profile") return withCors(handleVpnProfile(env));
-      if (path === "/vpn/config") return withCors(handleVpnGetConfig(new URL(request.url).searchParams.get("accountId"), new URL(request.url).searchParams.get("serverId"), env));
+      // VPN Reseller endpoints (GET) — modulo vpn-module.js
+      if (path === "/vpn/servers") return withCors(handleVpnServers(request, env));
+      if (path === "/vpn/profile") return withCors(handleVpnProfile(request, env));
+      if (path === "/vpn/config") return withCors(handleVpnGetConfig(request, env));
+      if (path === "/vpn/auto-disable") return withCors(handleCronVpnAutoDisable(request, env));
+      // Fix 405: /verify-mobile-license era registrato solo come POST (riga ~8308),
+      // il client mobile lo chiama in GET → lo gestiamo anche qui.
+      if (path === "/verify-mobile-license" && request.method === "GET") {
+        return withCors(handleVerifyMobileLicense(request, env));
+      }
       return new Response(JSON.stringify({ error: "Not found" }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -8253,36 +8193,18 @@ export default {
       return handleRulesFeed(env, request);
     }
 
-    // VPN Reseller endpoints
-    if (path === "/vpn/servers" && request.method === "GET") {
-      return withCors(handleVpnServers(env));
-    }
-    if (path === "/vpn/profile" && request.method === "GET") {
-      return withCors(handleVpnProfile(env));
-    }
-    if (path === "/vpn/config" && request.method === "GET") {
-      const url = new URL(request.url);
-      return withCors(handleVpnGetConfig(url.searchParams.get("accountId"), url.searchParams.get("serverId"), env));
-    }
+    // VPN Reseller endpoints (POST) — modulo vpn-module.js con gating Premium
     if (path === "/vpn/create" && request.method === "POST") {
-      let vpnBody;
-      try { vpnBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
-      return withCors(handleVpnCreateAccount(vpnBody, env));
+      return withCors(handleVpnCreateAccount(request, env));
     }
     if (path === "/vpn/delete" && request.method === "POST") {
-      let vpnBody;
-      try { vpnBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
-      return withCors(handleVpnDeleteAccount(vpnBody.accountId, env));
+      return withCors(handleVpnDeleteAccount(request, env));
     }
     if (path === "/vpn/enable" && request.method === "POST") {
-      let vpnBody;
-      try { vpnBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
-      return withCors(handleVpnEnableDisable(vpnBody.accountId, true, env));
+      return withCors(handleVpnEnableDisable(request, env, true));
     }
     if (path === "/vpn/disable" && request.method === "POST") {
-      let vpnBody;
-      try { vpnBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
-      return withCors(handleVpnEnableDisable(vpnBody.accountId, false, env));
+      return withCors(handleVpnEnableDisable(request, env, false));
     }
 
     // POST endpoints
