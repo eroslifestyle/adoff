@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+  <script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AdOff — Ci dispiace vederti andare</title>
@@ -14,14 +17,21 @@
       --primary: #7c5cfc;
       --primary-light: #9d82fd;
       --primary-dark: #5a3de8;
-      --bg: #0a0a1a;
-      --card: #12122a;
+      --bg: #f7f7fb;
+      --card: #ffffff;
       --success: #4ade80;
-      --text: #e2e2f0;
-      --text-muted: #8888aa;
+      --text: #1a1a2e;
+      --text-muted: #5a5a72;
       --border: rgba(124, 92, 252, 0.18);
       --radius: 14px;
       --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #0a0a1a;
+      --card: #12122a;
+      --text: #e2e2f0;
+      --text-muted: #8888aa;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { -webkit-font-smoothing: antialiased; }
@@ -77,7 +87,7 @@
     .submit-btn {
       width: 100%; padding: 15px 20px;
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: #fff; border: none; border-radius: 10px;
+      color: var(--text); border: none; border-radius: 10px;
       font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;
     }
     .submit-btn:hover { filter: brightness(1.1); }
@@ -99,7 +109,7 @@
       margin-top: 8px;
       padding: 10px 24px;
       background: #7252f8;
-      color: #fff;
+      color: var(--text);
       border-radius: 8px;
       text-decoration: none;
       font-weight: 600;

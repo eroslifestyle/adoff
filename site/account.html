@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+  <script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Account AdOff</title>
@@ -15,15 +18,22 @@
       --primary: #7c5cfc;
       --primary-light: #9d82fd;
       --primary-dark: #5a3de8;
-      --bg: #0a0a1a;
-      --card: #12122a;
+      --bg: #f7f7fb;
+      --card: #ffffff;
       --success: #4ade80;
       --error: #f43f5e;
-      --text: #e2e2f0;
-      --text-muted: #8888aa;
+      --text: #1a1a2e;
+      --text-muted: #5a5a72;
       --border: rgba(124, 92, 252, 0.18);
       --radius: 14px;
       --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #0a0a1a;
+      --card: #12122a;
+      --text: #e2e2f0;
+      --text-muted: #8888aa;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { -webkit-font-smoothing: antialiased; }
@@ -81,7 +91,7 @@
     .btn-google svg { width: 20px; height: 20px; }
     .btn-microsoft {
       background: #2f2f2f;
-      color: #fff;
+      color: var(--text);
       margin-bottom: 20px;
     }
     .btn-microsoft:hover { background: #3a3a3a; }
@@ -122,7 +132,7 @@
     }
     .btn-primary {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: #fff;
+      color: var(--text);
     }
     .btn-primary:hover { filter: brightness(1.1); }
     .btn-secondary {
@@ -169,7 +179,7 @@
       gap: 6px;
       padding: 8px 14px;
       background: var(--primary);
-      color: #fff;
+      color: var(--text);
       border: none;
       border-radius: 6px;
       font-size: 13px;

@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Guida Licenze AdOff - Come funzionano le licenze</title>
@@ -31,19 +34,30 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
+      --bg:       #f7f7fb;
+      --bg2:      #eef0f7;
+      --card:     #ffffff;
+      --card2:    #eef0f7;
+      --border:   rgba(124, 92, 252, 0.16);
+      --accent:   #7c5cfc;
+      --accent2:  #9b7ffe;
+      --text:     #1a1a2e;
+      --text2:    #5a5a72;
+      --text3:    #6d6d85;
+      --green:    #22c55e;
+      --yellow:   #fbbf24;
+      --radius:   12px;
+    }
+
+    :root[data-theme="dark"] {
       --bg:       #0a0a1a;
       --bg2:      #0f0f22;
       --card:     #12122a;
       --card2:    #1a1a35;
       --border:   #2a2a4a;
-      --accent:   #7c5cfc;
-      --accent2:  #9b7ffe;
       --text:     #e8e8f0;
       --text2:    #9a9ab8;
       --text3:    #6a6a88;
-      --green:    #22c55e;
-      --yellow:   #fbbf24;
-      --radius:   12px;
     }
 
     html { font-size: 16px; scroll-behavior: smooth; }
@@ -95,7 +109,7 @@
       font-weight: 800;
       line-height: 1.15;
       margin-bottom: 16px;
-      color: #fff;
+      color: var(--text);
     }
 
     .hero__sub {
@@ -124,7 +138,7 @@
     .section__title {
       font-size: 1.75rem;
       font-weight: 800;
-      color: #fff;
+      color: var(--text);
       margin-bottom: 8px;
     }
 
@@ -165,7 +179,7 @@
       left: 50%;
       transform: translateX(-50%);
       background: var(--accent);
-      color: #fff;
+      color: var(--text);
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.06em;
@@ -183,7 +197,7 @@
     .plan-name {
       font-size: 1.1rem;
       font-weight: 700;
-      color: #fff;
+      color: var(--text);
       margin-bottom: 4px;
     }
 
@@ -240,7 +254,7 @@
     .tier-name {
       font-size: 1rem;
       font-weight: 700;
-      color: #fff;
+      color: var(--text);
       margin-bottom: 4px;
     }
 
@@ -290,7 +304,7 @@
       height: 36px;
       border-radius: 50%;
       background: var(--accent);
-      color: #fff;
+      color: var(--text);
       font-weight: 800;
       font-size: 1rem;
       display: flex;
@@ -302,7 +316,7 @@
 
     .step__title {
       font-weight: 700;
-      color: #fff;
+      color: var(--text);
       margin-bottom: 4px;
     }
 
@@ -329,7 +343,7 @@
 
     .callout__title {
       font-weight: 700;
-      color: #fff;
+      color: var(--text);
       font-size: 1.05rem;
       margin-bottom: 12px;
     }
@@ -369,7 +383,7 @@
       width: 100%;
       background: none;
       border: none;
-      color: #fff;
+      color: var(--text);
       font-size: 0.98rem;
       font-weight: 600;
       padding: 18px 20px;
@@ -427,7 +441,7 @@
     .cta-section__title {
       font-size: 1.8rem;
       font-weight: 800;
-      color: #fff;
+      color: var(--text);
       margin-bottom: 12px;
     }
 
@@ -440,7 +454,7 @@
     .btn-primary {
       display: inline-block;
       background: var(--accent);
-      color: #fff;
+      color: var(--text);
       font-weight: 700;
       font-size: 1rem;
       padding: 14px 32px;
@@ -518,7 +532,7 @@
           <div class="plan-price-note">Fatturato mensilmente, cancella quando vuoi</div>
           <ul class="plan-features">
             <li>Tutte le funzioni Pro</li>
-            <li>Prova gratuita di 30 giorni inclusa</li>
+            <li>Prova gratuita di 15 giorni inclusa</li>
             <li>Cancella prima della scadenza, nessun addebito</li>
           </ul>
         </div>
@@ -528,27 +542,13 @@
           <span class="plan-badge">&#11088; Più consigliato</span>
           <div class="plan-icon">&#127882;</div>
           <div class="plan-name">Pro Annuale</div>
-          <div class="plan-price-range">&#8364;19,99&ndash;24,99<span style="font-size:1rem;font-weight:400;color:var(--text3)">/anno</span></div>
-          <div class="plan-price-note">Prezzo Founder &#8364;19,99 per i primi 100 (bloccato a vita), poi &#8364;24,99</div>
+          <div class="plan-price-range">&#8364;29,99&ndash;24,99<span style="font-size:1rem;font-weight:400;color:var(--text3)">/anno</span></div>
+          <div class="plan-price-note">Prezzo Founder &#8364;29,99 per i primi 100 (bloccato a vita), poi &#8364;24,99</div>
           <ul class="plan-features">
             <li>Tutte le funzioni Pro</li>
             <li>Risparmia molto rispetto al mensile</li>
             <li>Prezzo Founder bloccato a vita per i primi 100</li>
-            <li>Prova gratuita di 30 giorni inclusa</li>
-          </ul>
-        </div>
-
-        <!-- Lifetime -->
-        <div class="plan-card">
-          <div class="plan-icon">&#9889;</div>
-          <div class="plan-name">Founder Lifetime</div>
-          <div class="plan-price-range">&#8364;99</div>
-          <div class="plan-price-note">Offerta Founder limitata &middot; pagamento unico, per sempre</div>
-          <ul class="plan-features">
-            <li>Tutte le funzioni Pro</li>
-            <li>Tutti i futuri aggiornamenti inclusi</li>
-            <li>Nessun addebito ricorrente mai</li>
-            <li>Badge Founder nell'estensione</li>
+            <li>Prova gratuita di 15 giorni inclusa</li>
           </ul>
         </div>
 
@@ -712,7 +712,7 @@
             <span class="faq-q__arrow">&#9660;</span>
           </button>
           <div class="faq-a">
-            S. Ogni nuova installazione avvia automaticamente una <strong>prova gratuita di 30 giorni</strong> con tutte le funzioni Pro su 3 dispositivi. Nessuna carta di credito richiesta. Dopo 30 giorni, se non acquisti un piano, l'estensione continua automaticamente con il livello Free.
+            S. Ogni nuova installazione avvia automaticamente una <strong>prova gratuita di 15 giorni</strong> con tutte le funzioni Pro su 3 dispositivi. Nessuna carta di credito richiesta. Dopo 30 giorni, se non acquisti un piano, l'estensione continua automaticamente con il livello Free.
           </div>
         </div>
 
@@ -746,9 +746,9 @@
     ============================================================ -->
     <section class="cta-section">
       <h2 class="cta-section__title">Pronto a stare senza annunci?</h2>
-      <p class="cta-section__sub">Inizia con la prova gratuita di 30 giorni. Nessuna carta di credito richiesta.</p>
+      <p class="cta-section__sub">Inizia con la prova gratuita di 15 giorni. Nessuna carta di credito richiesta.</p>
       <a href="https://adoff.app/#pricing" class="btn-primary">Vedi i piani di prezzo &rarr;</a>
-      <p class="cta-trial-note">30 giorni gratis · garanzia rimborso 30 giorni · cancella quando vuoi</p>
+      <p class="cta-trial-note">15 giorni gratis · garanzia rimborso 30 giorni · cancella quando vuoi</p>
     </section>
 
   </div><!-- /page-wrapper -->

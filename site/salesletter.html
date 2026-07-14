@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+  <script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AdOff · Il tuo browser è una spia. Noi lo fermiamo. | Ad Blocker Invisibile</title>
-  <meta name="description" content="Ogni giorno 847 tracker ti seguono, 12 minuti di pubblicità ti rubano il tempo, e se installi un ad blocker ti bloccano. AdOff è l'unico ad blocker invisibile ai sistemi anti-adblock. 30 giorni gratis, nessuna carta." />
+  <meta name="description" content="Ogni giorno 847 tracker ti seguono, 12 minuti di pubblicità ti rubano il tempo, e se installi un ad blocker ti bloccano. AdOff è l'unico ad blocker invisibile ai sistemi anti-adblock. 15 giorni gratis, nessuna carta." />
   <meta content="index, follow, max-image-preview:large, max-snippet:-1" name="robots"/>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Il tuo browser è una spia. AdOff lo ferma." />
@@ -14,7 +17,7 @@
   <meta property="og:site_name" content="AdOff" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Il tuo browser è una spia. AdOff lo ferma." />
-  <meta name="twitter:description" content="Stealth Mode: i siti anti-adblock non ti rilevano. Trial 30 giorni gratis." />
+  <meta name="twitter:description" content="Stealth Mode: i siti anti-adblock non ti rilevano. Trial 15 giorni gratis." />
   <link rel="icon" href="/assets/icon128.png" type="image/png" />
     <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#0a0a1a" />
@@ -44,22 +47,31 @@
       --primary: #7c5cfc;
       --primary-light: #9d82fd;
       --primary-dark: #5a3de8;
-      --bg: #0a0a1a;
-      --card: #12122a;
-      --card-hover: #1a1a36;
+      --bg: #f7f7fb;
+      --card: #ffffff;
+      --card-hover: #eef0f7;
       --success: #4ade80;
       --error: #f43f5e;
       --warning: #fbbf24;
-      --text: #e2e2f0;
-      --text-muted: #8888aa;
+      --text: #1a1a2e;
+      --text-muted: #5a5a72;
       --border: rgba(124, 92, 252, 0.18);
-      --border-subtle: rgba(255,255,255,0.06);
+      --border-subtle: rgba(20,20,45,0.08);
       --radius: 14px;
       --radius-lg: 20px;
       --radius-sm: 8px;
       --shadow-glow: 0 0 40px rgba(124, 92, 252, 0.25);
       --shadow-card: 0 4px 24px rgba(0,0,0,0.4);
       --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #0a0a1a;
+      --card: #12122a;
+      --card-hover: #1a1a36;
+      --text: #e2e2f0;
+      --text-muted: #8888aa;
+      --border-subtle: rgba(255,255,255,0.06);
     }
 
     /* ============================================================
@@ -116,7 +128,7 @@
     p { margin-bottom: 1em; }
     p:last-child { margin-bottom: 0; }
 
-    strong { color: #fff; font-weight: 700; }
+    strong { color: var(--text); font-weight: 700; }
 
     .text-muted { color: var(--text-muted); }
     .text-center { text-align: center; }
@@ -168,7 +180,7 @@
 
     .btn--primary {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: #fff;
+      color: var(--text);
       box-shadow: 0 4px 20px rgba(124, 92, 252, 0.45);
     }
 
@@ -372,7 +384,7 @@
       display: block;
       font-size: 1.5rem;
       font-weight: 800;
-      color: #fff;
+      color: var(--text);
     }
 
     .social-proof__stat span {
@@ -470,7 +482,7 @@
     .pain-card__title {
       font-size: 1rem;
       font-weight: 700;
-      color: #fff;
+      color: var(--text);
       margin-bottom: 8px;
     }
 
@@ -491,7 +503,7 @@
 
     .problem__twist h3 {
       font-size: 1.4rem;
-      color: #fff;
+      color: var(--text);
       margin-bottom: 12px;
     }
 
@@ -589,7 +601,7 @@
     .feature-card__title {
       font-size: 1.2rem;
       font-weight: 800;
-      color: #fff;
+      color: var(--text);
       margin-bottom: 10px;
     }
 
@@ -719,7 +731,7 @@
     .stealth__how-title {
       font-size: 0.95rem;
       font-weight: 700;
-      color: #fff;
+      color: var(--text);
       margin-bottom: 6px;
     }
 
@@ -872,7 +884,7 @@
 
     .testi-card__name {
       font-weight: 700;
-      color: #fff;
+      color: var(--text);
       font-size: 0.95rem;
     }
 
@@ -929,7 +941,7 @@
       left: 50%;
       transform: translateX(-50%);
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: #fff;
+      color: var(--text);
       font-size: 0.7rem;
       font-weight: 800;
       letter-spacing: 0.1em;
@@ -964,7 +976,7 @@
     .plan-price__amount {
       font-size: 3rem;
       font-weight: 900;
-      color: #fff;
+      color: var(--text);
       line-height: 1;
     }
 
@@ -1003,7 +1015,7 @@
     }
 
     .plan-features li .x-mark {
-      color: rgba(255,255,255,0.2);
+      color: var(--text-muted);
       flex-shrink: 0;
       margin-top: 2px;
     }
@@ -1043,7 +1055,7 @@
     .guarantee__title {
       font-size: clamp(1.4rem, 3vw, 2rem);
       font-weight: 900;
-      color: #fff;
+      color: var(--text);
       margin-bottom: 12px;
     }
 
@@ -1131,7 +1143,7 @@
       width: 100%;
       background: none;
       border: none;
-      color: #fff;
+      color: var(--text);
       font-size: 1rem;
       font-weight: 700;
       padding: 20px 24px;
@@ -1399,7 +1411,7 @@
 
       <div class="hero__eyebrow reveal">
         <span class="hero__eyebrow-dot"></span>
-        Trial 30 giorni, nessuna carta
+        Trial 15 giorni, nessuna carta
       </div>
 
       <h1 class="hero__headline reveal">
@@ -1433,33 +1445,23 @@
     </div>
   </section>
 
-  <!-- ======================== 2. SOCIAL PROOF ======================== -->
+  <!-- ======================== 2. TRUST (dati reali, honesty pivot) ======================== -->
   <div class="social-proof reveal">
     <div class="container--wide">
       <div class="social-proof__inner">
-        <div class="social-proof__stat">
-          <strong>2.847+</strong>
-          <span>Utenti attivi</span>
-        </div>
-        <div class="social-proof__divider"></div>
-        <div class="social-proof__stat">
-          <strong>4.9</strong>
-          <span>
-            <span class="stars">★★★★★</span>
-          </span>
-        </div>
-        <div class="social-proof__divider"></div>
         <div class="social-proof__stat">
           <strong>Ultra-leggera</strong>
           <span>Peso inferiore a 160 KB</span>
         </div>
         <div class="social-proof__divider"></div>
-        <div class="social-proof__press">
-          <span class="social-proof__press-label">Come visto su:</span>
-          <span class="press-badge">Tech Privacy Blog</span>
-          <span class="press-badge">Privacy Weekly</span>
-          <span class="press-badge">BrowserTools.net</span>
-          <span class="press-badge">WebPrivacy.it</span>
+        <div class="social-proof__stat">
+          <strong>Open source</strong>
+          <span>Codice verificabile su GitHub</span>
+        </div>
+        <div class="social-proof__divider"></div>
+        <div class="social-proof__stat">
+          <strong>Zero tracking</strong>
+          <span>Nessun dato raccolto o venduto</span>
         </div>
       </div>
     </div>
@@ -1734,26 +1736,8 @@
 
       <div class="pricing__grid">
 
-        <!-- LIFETIME -->
-        <div class="plan-card reveal reveal-delay-1">
-          <div class="plan-name">Founder Lifetime</div>
-          <div class="plan-price">
-            <span class="plan-price__currency">€</span>
-            <span class="plan-price__amount">99</span>
-          </div>
-          <p class="plan-micro">Offerta Founder limitata · una volta, per sempre.</p>
-          <ul class="plan-features">
-            <li><span class="check">✓</span> Tutto di Pro, senza scadenza</li>
-            <li><span class="check">✓</span> Stealth Mode completo</li>
-            <li><span class="check">✓</span> Aggiornamenti a vita inclusi</li>
-            <li><span class="check">✓</span> Priorità nel supporto</li>
-            <li><span class="check">✓</span> Badge Founder esclusivo</li>
-          </ul>
-          <a href="install.html" class="btn btn--ghost">Acquista Lifetime</a>
-        </div>
-
         <!-- ANNUAL — POPULAR -->
-        <div class="plan-card plan-card--popular reveal reveal-delay-2">
+        <div class="plan-card plan-card--popular reveal reveal-delay-1">
           <div class="plan-badge">⭐ Più Popolare</div>
           <div class="plan-name">Annuale</div>
           <div class="plan-price">
@@ -1770,12 +1754,12 @@
             <li><span class="check">✓</span> Pausa per sito (4 opzioni)</li>
             <li><span class="check">✓</span> Supporto prioritario</li>
           </ul>
-          <a href="install.html" class="btn btn--primary">Prova gratis 30 giorni</a>
-          <p style="font-size:0.78rem; color: var(--text-muted); text-align:center; margin-top:10px;">Prezzo Founder €19,99/anno per i primi 100 (bloccato a vita), poi €24,99. Cancella quando vuoi.</p>
+          <a href="install.html" class="btn btn--primary">Prova gratis 15 giorni</a>
+          <p style="font-size:0.78rem; color: var(--text-muted); text-align:center; margin-top:10px;">Prezzo Founder €29,99/anno per i primi 100 (bloccato a vita), poi €24,99. Cancella quando vuoi.</p>
         </div>
 
         <!-- MONTHLY -->
-        <div class="plan-card reveal reveal-delay-3">
+        <div class="plan-card reveal reveal-delay-2">
           <div class="plan-name">Mensile</div>
           <div class="plan-price">
             <span class="plan-price__currency">€</span>
@@ -1790,11 +1774,11 @@
             <li><span class="check">✓</span> Whitelist siti preferiti</li>
             <li><span class="check">✓</span> Supporto via chat</li>
           </ul>
-          <a href="install.html" class="btn btn--outline">Prova gratis 30 giorni</a>
+          <a href="install.html" class="btn btn--outline">Prova gratis 15 giorni</a>
         </div>
 
         <!-- FREE -->
-        <div class="plan-card plan-card--free reveal reveal-delay-4">
+        <div class="plan-card plan-card--free reveal reveal-delay-3">
           <div class="plan-name">Free</div>
           <div class="plan-price">
             <span class="plan-price__amount" style="font-size:2.2rem">Gratis</span>
@@ -1878,7 +1862,7 @@
           <div class="faq-answer">
             <div class="faq-answer-inner">
               Sì, davvero gratis. Il piano Free è gratuito per sempre senza nessun limite di tempo e senza carta di credito.
-              Il trial Pro da 30 giorni è anch'esso gratuito e senza carta: semplicemente scade dopo 30 giorni, tornando al piano Free.
+              Il trial Pro da 15 giorni è anch'esso gratuito e senza carta: semplicemente scade dopo 15 giorni, tornando al piano Free.
               Nessun costo nascosto, nessun rinnovo automatico indesiderato.
             </div>
           </div>
@@ -1929,22 +1913,6 @@
               AdOff non raccoglie assolutamente nessun dato di navigazione. Non sappiamo quali siti visiti,
               cosa cerchi, quanto ci resti. Tutti i dati (contatori, impostazioni, whitelist) restano sul tuo dispositivo
               usando chrome.storage.local. Il codice è verificabile. Siamo GDPR compliant per design, non per obbligo.
-            </div>
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button class="faq-question" aria-expanded="false">
-            Come funziona la licenza Lifetime?
-            <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
-          <div class="faq-answer">
-            <div class="faq-answer-inner">
-              Paghi una volta, usi AdOff Pro per sempre, inclusi tutti gli aggiornamenti futuri. La licenza è legata all'account
-              e può essere attivata su più dispositivi personali. Non c'è alcun rinnovo annuale.
-              Ricevi anche il badge Founder esclusivo, riconoscimento per i primi supporter del progetto.
             </div>
           </div>
         </div>

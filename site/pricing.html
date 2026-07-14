@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+  <script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AdOff — Prezzi</title>
@@ -96,7 +99,7 @@
       left: 50%;
       transform: translateX(-50%) translateY(-50%);
       background: var(--accent);
-      color: #fff;
+      color: var(--text);
       font-size: 0.7rem;
       font-weight: 700;
       letter-spacing: 0.08em;
@@ -125,7 +128,7 @@
     .plan-price__amount {
       font-size: 3rem;
       font-weight: 800;
-      color: var(--pure-white);
+      color: var(--text);
       line-height: 1;
       letter-spacing: -0.03em;
     }

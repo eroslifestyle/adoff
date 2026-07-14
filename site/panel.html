@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+  <script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AdOff Admin — Gestione Licenze</title>
@@ -8,7 +11,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      background: #0a0a1a; color: #fff; min-height: 100vh;
+      background: #0a0a1a; color: var(--text); min-height: 100vh;
     }
     .header {
       background: #12122a; border-bottom: 1px solid #2a2a4a;
@@ -30,7 +33,7 @@
     .config-field label { font-size: 11px; color: #8a8aaa; font-weight: 600; text-transform: uppercase; }
     .config-field input {
       background: #1a1a36; border: 1px solid #2a2a4a; border-radius: 6px;
-      padding: 8px 12px; color: #fff; font-size: 13px; outline: none;
+      padding: 8px 12px; color: var(--text); font-size: 13px; outline: none;
     }
     .config-field input:focus { border-color: #7c5cfc; }
     .btn {
@@ -39,10 +42,10 @@
     }
     .btn-primary { background: #7c5cfc; color: #fff; }
     .btn-primary:hover { background: #6a4ce0; }
-    .btn-danger { background: #f43f5e; color: #fff; }
+    .btn-danger { background: #f43f5e; color: var(--text); }
     .btn-danger:hover { background: #dc2626; }
     .btn-secondary { background: #1a1a36; color: #8a8aaa; border: 1px solid #2a2a4a; }
-    .btn-secondary:hover { color: #fff; border-color: #7c5cfc; }
+    .btn-secondary:hover { color: var(--text); border-color: #7c5cfc; }
 
     /* Tabs */
     .tabs { display: flex; gap: 4px; margin-bottom: 24px; }
@@ -66,7 +69,7 @@
     .gen-field label { font-size: 11px; color: #8a8aaa; font-weight: 600; }
     .gen-field input, .gen-field select {
       background: #1a1a36; border: 1px solid #2a2a4a; border-radius: 6px;
-      padding: 8px 12px; color: #fff; font-size: 13px; outline: none;
+      padding: 8px 12px; color: var(--text); font-size: 13px; outline: none;
     }
 
     /* Result box */
@@ -126,7 +129,7 @@
       transform: translateY(100px); opacity: 0; transition: all 0.3s;
     }
     .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.error { background: #f43f5e; color: #fff; }
+    .toast.error { background: #f43f5e; color: var(--text); }
 
     .empty-msg { text-align: center; padding: 40px; color: #3a3a5a; font-size: 14px; }
 
@@ -166,12 +169,12 @@
     }
     .filter-bar input {
       background: #1a1a36; border: 1px solid #2a2a4a; border-radius: 6px;
-      padding: 8px 12px; color: #fff; font-size: 13px; outline: none; flex: 1; min-width: 200px;
+      padding: 8px 12px; color: var(--text); font-size: 13px; outline: none; flex: 1; min-width: 200px;
     }
     .filter-bar input:focus { border-color: #7c5cfc; }
     .filter-bar select {
       background: #1a1a36; border: 1px solid #2a2a4a; border-radius: 6px;
-      padding: 8px 12px; color: #fff; font-size: 13px; outline: none;
+      padding: 8px 12px; color: var(--text); font-size: 13px; outline: none;
     }
 
     @media (max-width: 768px) {
@@ -233,7 +236,7 @@
     .retention-card h3 {
       font-size: 0.9rem;
       font-weight: 600;
-      color: #fff;
+      color: var(--text);
       margin: 0 0 16px 0;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -255,7 +258,7 @@
     .retention-table td {
       padding: 8px 12px;
       border-bottom: 1px solid #1a1a36;
-      color: #fff;
+      color: var(--text);
     }
     .retention-table tr:last-child td { border-bottom: none; }
     .retention-table .num { text-align: right; font-variant-numeric: tabular-nums; }

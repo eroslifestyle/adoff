@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Support · AdOff Ad Blocker | Get Help</title>
@@ -34,7 +37,8 @@
   <link rel="alternate" hreflang="x-default" href="https://adoff.app/support.html?lang=en" />
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    :root{--bg:#0a0a1a;--card:#12122a;--border:#2a2a4a;--purple:#7c5cfc;--purple-dark:#4c3ad4;--purple-soft:#b8a9ff;--green:#4ade80;--red:#f43f5e;--yellow:#fbbf24;--white:#fff;--gray:#8a8aaa;--dark:#1a1a3e}
+    :root{--bg:#f7f7fb;--card:#ffffff;--border:rgba(124,92,252,0.16);--purple:#7c5cfc;--purple-dark:#4c3ad4;--purple-soft:#b8a9ff;--green:#4ade80;--red:#f43f5e;--yellow:#fbbf24;--white:#1a1a2e;--gray:#5a5a72;--dark:#1a1a3e}
+    :root[data-theme="dark"]{--bg:#0a0a1a;--card:#12122a;--border:#2a2a4a;--white:#fff;--gray:#8a8aaa}
     body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--white);line-height:1.6}
     a{color:var(--purple-soft);text-decoration:none}a:hover{color:var(--purple)}
 
@@ -53,7 +57,7 @@
     label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--purple-soft)}
     input,select,textarea{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--white);font-size:14px;font-family:inherit;transition:border-color .2s}
     input:focus,select:focus,textarea:focus{outline:none;border-color:var(--purple)}
-    input::placeholder,textarea::placeholder{color:#4a4a6a}
+    input::placeholder,textarea::placeholder{color:var(--gray)}
     select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a8aaa' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer}
     select option{background:var(--card);color:var(--white)}
     textarea{resize:vertical;min-height:120px}
@@ -61,7 +65,7 @@
     .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     @media(max-width:600px){.form-row{grid-template-columns:1fr}}
 
-    .btn{display:inline-block;background:linear-gradient(135deg,var(--purple),var(--purple-dark));color:#fff;padding:14px 32px;border-radius:10px;font-weight:700;font-size:15px;border:none;cursor:pointer;transition:transform .2s,box-shadow .2s;width:100%}
+    .btn{display:inline-block;background:linear-gradient(135deg,var(--purple),var(--purple-dark));color: var(--text);padding:14px 32px;border-radius:10px;font-weight:700;font-size:15px;border:none;cursor:pointer;transition:transform .2s,box-shadow .2s;width:100%}
     .btn:hover{transform:translateY(-2px);box-shadow:0 4px 24px rgba(124,92,252,0.5)}
     .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none}
 
@@ -161,7 +165,7 @@
     <div class="form-group">
       <label for="license" data-i18n="support.license.label">Chiave licenza</label>
       <input type="text" id="license" name="license" placeholder="ADOFF-XXXX-XXXX-XXXX" pattern="ADOFF-.{4}-.{4}-.{4}">
-      <p style="font-size:0.8rem;color:#8888aa;margin-top:4px;" data-i18n="support.license.note">Opzionale, solo per utenti Pro. Puoi lasciare vuoto se usi la versione gratuita.</p>
+      <p style="font-size:0.8rem;color:var(--gray);margin-top:4px;" data-i18n="support.license.note">Opzionale, solo per utenti Pro. Puoi lasciare vuoto se usi la versione gratuita.</p>
     </div>
 
     <!-- SUBJECT -->

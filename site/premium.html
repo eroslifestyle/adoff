@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AdOff Premium — AdBlock + VPN in One Subscription</title>
@@ -51,7 +54,7 @@
     h1,h2{font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;font-weight:800;line-height:1.1;letter-spacing:-.025em;color:var(--text)}
     h1{font-size:clamp(2.4rem,5.5vw,4.2rem)}
     h2{font-size:clamp(1.7rem,3.8vw,2.8rem)}
-    h3{font-size:1.2rem;color:#e2e2f0;margin:0 0 12px;font-weight:700}
+    h3{font-size:1.2rem;color: var(--text);margin:0 0 12px;font-weight:700}
     p{margin-bottom:16px;color:#b0b0c8}
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 26px;border-radius:var(--radius);font-family:"Inter",sans-serif;font-size:.98rem;font-weight:600;letter-spacing:-.005em;text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform var(--t),background var(--t),color var(--t),border-color var(--t),box-shadow var(--t);white-space:normal;text-align:center;line-height:1.3}
     .btn--primary{background:var(--accent-btn);color:var(--pure-white);border-color:var(--accent-btn);box-shadow:0 0 0 0 var(--accent-line)}
@@ -280,7 +283,7 @@
       position: absolute;
       top: -13px; left: 50%; transform: translateX(-50%);
       background: var(--accent-btn);
-      color: #fff;
+      color: var(--text);
       font-size: .72rem; font-weight: 700;
       letter-spacing: .06em; text-transform: uppercase;
       padding: 4px 14px;
@@ -427,7 +430,7 @@
           <a href="/#pricing" class="btn btn--primary btn--xl">Start free trial &rarr;</a>
           <a href="/vpn-policy" class="btn btn--outline btn--lg">VPN Policy &rarr;</a>
         </div>
-        <p class="hero__note">No card required &bull; 30-day Pro trial included &bull; Cancel anytime</p>
+        <p class="hero__note">No card required &bull; 15-day Pro trial included &bull; Cancel anytime</p>
         <div class="hero__vpn-note">
           <strong>How it works:</strong> The VPN runs on your
           <strong>mobile and desktop apps</strong>, not in the browser.
@@ -604,7 +607,7 @@
       <div class="text-center">
         <span class="section-label">Pricing</span>
         <h2 class="section-title">Simple pricing. No surprises.</h2>
-        <p class="section-sub">Start with the 30-day free trial (AdBlock Pro experience). The VPN activates after you subscribe to Premium.</p>
+        <p class="section-sub">Start with the 15-day free trial (AdBlock Pro experience). The VPN activates after you subscribe to Premium.</p>
       </div>
       <div class="pricing-grid">
 
@@ -628,7 +631,7 @@
           <div class="plan-card__cta">
             <button class="btn btn--outline" onclick="checkout('premium_monthly')" style="width:100%">Start free trial &rarr;</button>
           </div>
-          <p class="plan-card__note">30-day Pro trial included</p>
+          <p class="plan-card__note">15-day Pro trial included</p>
         </div>
 
         <!-- ANNUAL FOUNDER -->
@@ -652,7 +655,7 @@
             <button class="btn btn--primary" onclick="checkout('premium_annual_founder')" style="width:100%">Claim Founder spot &rarr;</button>
           </div>
           <div class="plan-card__founder-note">🔥 Limited &mdash; Founder pool: 100 seats, separate from AdBlock Founder</div>
-          <p class="plan-card__note">30-day Pro trial included &bull; then &euro;49.99/yr</p>
+          <p class="plan-card__note">15-day Pro trial included &bull; then &euro;49.99/yr</p>
         </div>
 
         <!-- ANNUAL STANDARD -->
@@ -675,7 +678,7 @@
           <div class="plan-card__cta">
             <button class="btn btn--outline" onclick="checkout('premium_annual')" style="width:100%">Start free trial &rarr;</button>
           </div>
-          <p class="plan-card__note">30-day Pro trial included</p>
+          <p class="plan-card__note">15-day Pro trial included</p>
         </div>
 
       </div>
@@ -789,7 +792,7 @@
       <div class="faq-list">
         <details class="faq-item">
           <summary class="faq-q">
-            Does the 30-day free trial include the VPN?
+            Does the 15-day free trial include the VPN?
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </summary>
           <div class="faq-a">
@@ -868,7 +871,7 @@
     <div class="container">
       <div class="final-cta">
         <span class="section-label">Get started</span>
-        <h2 class="section-title">Try AdOff Premium &mdash;<br><em>free for 30 days</em></h2>
+        <h2 class="section-title">Try AdOff Premium &mdash;<br><em>free for 15 days</em></h2>
         <p>No card required. AdBlock Pro included. VPN activates on Premium checkout.</p>
         <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:16px;">
           <a href="/#pricing" class="btn btn--primary btn--xl">Start free trial &rarr;</a>
