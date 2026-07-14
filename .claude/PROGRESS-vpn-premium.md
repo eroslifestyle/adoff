@@ -3,7 +3,7 @@
 > Stato esecutivo del progetto. Design congelato in `.claude/PLAN-vpn-dns-redesign.md` (102 decisioni AQ).
 > Aggiornare ad ogni step. Checkpoint a fine di ogni fase.
 
-## Stato: GATE VPN DEPLOYED ✅ — codice safe (2026-07-14)
+## Stato: FASE 1 WRAP-UP COMPLETE ✅ — post-verifica congruenza 2026-07-14
 
 ---
 
