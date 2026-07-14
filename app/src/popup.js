@@ -115,10 +115,13 @@
     reqBlockedEl.textContent = formatCount(req);
   }
 
-  /** Aggiorna il badge licenza nell'header. */
+  /** Aggiorna il badge licenza nell'header — 3 livelli: Free / Pro / Premium. */
   function renderLicenseBadge() {
     const t = license.type || "free";
-    if (t === "pro" || t === "lifetime") {
+    if (t === "premium") {
+      licenseBadge.textContent = "PREMIUM";
+      licenseBadge.className = "license-badge premium";
+    } else if (t === "pro" || t === "lifetime") {
       licenseBadge.textContent = "PRO";
       licenseBadge.className = "license-badge pro";
     } else if (t === "trial") {
@@ -128,6 +131,23 @@
     } else {
       licenseBadge.textContent = "FREE";
       licenseBadge.className = "license-badge free";
+    }
+  }
+
+  /** Mostra sezione Premium per utenti non-Premium. */
+  function renderPremiumUpsell(isPremium) {
+    const banner = document.getElementById("premiumBanner");
+    const section = document.getElementById("premiumSection");
+    if (isPremium) {
+      banner.style.display = "none";
+      section.style.display = "block";
+      const badge = document.getElementById("premiumBadge");
+      badge.textContent = "ATTIVO";
+      badge.className = "premium-badge active";
+      section.querySelector(".premium-cta").style.display = "none";
+    } else {
+      banner.style.display = "flex";
+      section.style.display = "none";
     }
   }
 
@@ -178,7 +198,7 @@
   /**
    * Normalizza l'oggetto licenza: il trial vive nella chiave storage
    * separata `adoffTrialEnd`, mentre `adoffLicense` contiene solo le
-   * licenze Pro/Lifetime acquistate. Deriva `type`/`trialEndsAt` per la UI.
+   * licenze Pro/Lifetime/Premium acquistate. Deriva `type`/`trialEndsAt` per la UI.
    * @param {object|undefined} lic
    * @param {number|undefined} trialEnd
    * @returns {object}
@@ -186,17 +206,21 @@
   function normalizeLicense(lic, trialEnd, trialBlocked) {
     const out = Object.assign({}, lic);
     const plan = out.plan || "";
-    const hasValidPro = out.valid &&
-      (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
-    if (hasValidPro) {
-      out.type = plan === "lifetime" ? "lifetime" : "pro";
-    } else if (trialBlocked) {
-      out.type = "trial_blocked";
-    } else if (trialEnd && trialEnd > Date.now()) {
-      out.type = "trial";
-      out.trialEndsAt = trialEnd;
+    if (plan === "premium") {
+      out.type = "premium";
     } else {
-      out.type = "free";
+      const hasValidPro = out.valid &&
+        (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
+      if (hasValidPro) {
+        out.type = plan === "lifetime" ? "lifetime" : "pro";
+      } else if (trialBlocked) {
+        out.type = "trial_blocked";
+      } else if (trialEnd && trialEnd > Date.now()) {
+        out.type = "trial";
+        out.trialEndsAt = trialEnd;
+      } else {
+        out.type = "free";
+      }
     }
     return out;
   }
@@ -376,6 +400,7 @@
     renderLicenseBanner();
     renderTrialBlockedBanner();
     renderPauseSection();
+    renderPremiumUpsell(license.type === "premium");
     renderFounderBadge(data);
     renderChangelog(data);
     renderReviewPrompt(data);
@@ -485,150 +510,10 @@
   });
 
   // ===== INIT =====
-  // ===== VPN -----
-  const API = "https://api.adoff.app";
-
-  async function vpnFetch(path, opts = {}) {
-    try {
-      const r = await fetch(API + path, {
-        headers: { "Content-Type": "application/json" },
-        ...opts,
-      });
-      return r.ok ? await r.json() : { error: r.status };
-    } catch (e) { return { error: e.message }; }
-  }
-
-  let vpnServers = [];
-  let vpnConnected = false;
-  let vpnAccountId = null;
-
-  function setVpnStatus(state, label) {
-    const el = document.getElementById("vpnStatus");
-    el.textContent = label;
-    el.className = "vpn-status" + (state ? " " + state : "");
-  }
-
-  function setVpnBtn(label, cls, disabled) {
-    const btn = document.getElementById("btnVpnToggle");
-    btn.textContent = label;
-    btn.className = "vpn-btn" + (cls ? " " + cls : "");
-    btn.disabled = !!disabled;
-  }
-
-  async function loadVpnState() {
-    // Leggi account salvato + check premium
-    const stored = await new Promise(r => chrome.storage.local.get(["adoffVpnAccountId"], r));
-    vpnAccountId = stored.adoffVpnAccountId || null;
-    vpnConnected = false;
-    setVpnStatus("", "Disconnesso");
-    setVpnBtn("Connetti", "connect", false);
-    document.getElementById("vpnTrialInfo").textContent = "";
-    document.getElementById("vpnTrialInfo").className = "vpn-trial-info";
-    document.getElementById("vpnUpsell").style.display = "none";
-  }
-
-  async function initVpn() {
-    const pro = await LicenseClient.checkPro();
-    if (!pro.isPro) {
-      document.getElementById("vpnServerRow").style.display = "none";
-      setVpnBtn("Connetti", "connect", true);
-      setVpnStatus("", "Free");
-      const ti = document.getElementById("vpnTrialInfo");
-      ti.textContent = "Solo Pro";
-      ti.className = "vpn-trial-info free";
-      document.getElementById("vpnUpsell").style.display = "flex";
-      return;
-    }
-    // Carica server
-    const sel = document.getElementById("vpnServerSelect");
-    sel.innerHTML = '<option value="">Caricamento...</option>';
-    const res = await vpnFetch("/vpn/servers");
-    if (res.error || !res.ok) { sel.innerHTML = '<option value="">Errore server</option>'; return; }
-    vpnServers = res.servers || [];
-    sel.innerHTML = '<option value="">Seleziona server</option>';
-    vpnServers.forEach(s => {
-      const o = document.createElement("option");
-      o.value = s.id;
-      o.textContent = s.city ? `${s.city} (${s.country})` : `${s.name} (${s.country})`;
-      sel.appendChild(o);
-    });
-    // Ripristina stato
-    if (vpnAccountId) {
-      setVpnStatus("", "Pronto");
-      setVpnBtn("Connetti", "connect", false);
-    } else {
-      setVpnStatus("", "Pronto");
-      setVpnBtn("Connetti", "connect", false);
-    }
-  }
-
-  async function toggleVpn() {
-    const btn = document.getElementById("btnVpnToggle");
-    if (vpnConnected) {
-      // Disconnetti
-      btn.disabled = true;
-      setVpnBtn("...", "connect", true);
-      if (vpnAccountId) {
-        await vpnFetch("/vpn/disable", { method: "POST", body: JSON.stringify({ accountId: vpnAccountId }) });
-      }
-      vpnConnected = false;
-      setVpnStatus("", "Disconnesso");
-      setVpnBtn("Connetti", "connect", false);
-      btn.disabled = false;
-    } else {
-      // Connetti
-      const sel = document.getElementById("vpnServerSelect");
-      const serverId = sel.value;
-      if (!serverId) { setVpnStatus("connecting", "Seleziona server"); return; }
-      btn.disabled = true;
-      setVpnStatus("connecting", "Connessione...");
-      setVpnBtn("...", "connect", true);
-
-      try {
-        // 1. Crea account se non esiste
-        if (!vpnAccountId) {
-          const cr = await vpnFetch("/vpn/create", { method: "POST", body: JSON.stringify({ email: "user@adoff.app" }) });
-          if (cr.error || !cr.ok) throw new Error(cr.error || "Create failed");
-          vpnAccountId = cr.accountId;
-          await new Promise(p => chrome.storage.local.set({ adoffVpnAccountId: vpnAccountId }, p));
-        }
-        // 2. Abilita
-        const er = await vpnFetch("/vpn/enable", { method: "POST", body: JSON.stringify({ accountId: vpnAccountId }) });
-        if (er.error) throw new Error(er.error);
-        // 3. Get config
-        const cfg = await vpnFetch(`/vpn/config?accountId=${encodeURIComponent(vpnAccountId)}&serverId=${encodeURIComponent(serverId)}`);
-        if (cfg.error || !cfg.ok) throw new Error(cfg.error || "Config failed");
-        // 4. Scarica config (WireGuard .conf)
-        const conf = cfg.config || cfg.wireguard_config || cfg;
-        const blob = new Blob([typeof conf === "string" ? conf : JSON.stringify(conf, null, 2)], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "adoff-vpn.conf";
-        a.click();
-        URL.revokeObjectURL(url);
-
-        vpnConnected = true;
-        setVpnStatus("connected", "Connesso");
-        setVpnBtn("Disconnetti", "disconnect", false);
-        const ti = document.getElementById("vpnTrialInfo");
-        ti.textContent = "Apri WireGuard";
-        ti.className = "vpn-trial-info";
-      } catch (e) {
-        setVpnStatus("", "Errore");
-        setVpnBtn("Connetti", "connect", false);
-        btn.disabled = false;
-      }
-    }
-  }
-
-  document.getElementById("btnVpnToggle").addEventListener("click", toggleVpn);
-  // ----- fine VPN
 
   i18n.init(() => {
     i18n.applyToDOM();
     loadState();
-    loadVpnState().then(initVpn);
 
     // Versione dal manifest (single source of truth) — sempre congruente
     try {

@@ -657,100 +657,110 @@ body {
   color: #fff;
 }
 
-/* ---- VPN Section ---- */
-.vpn-section {
-  margin: 12px 16px;
-  padding: 12px;
-  background: rgba(124, 92, 252, 0.08);
-  border: 1px solid rgba(124, 92, 252, 0.25);
-  border-radius: var(--radius);
-}
-.vpn-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-.vpn-icon { font-size: 1.1rem; flex-shrink: 0; }
-.vpn-label { flex: 1; font-size: 0.82rem; font-weight: 700; color: var(--text); }
-.vpn-status {
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 20px;
-  background: var(--card2);
-  color: var(--text-sec);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-.vpn-status.connected {
-  background: rgba(74, 222, 128, 0.15);
-  color: var(--success);
-}
-.vpn-status.connecting {
-  background: rgba(251, 191, 36, 0.15);
-  color: #fbbf24;
-}
-.vpn-server { margin-bottom: 10px; }
-.vpn-server-select {
-  width: 100%;
-  padding: 6px 8px;
-  background: var(--card2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-size: 0.78rem;
-  appearance: none;
-  cursor: pointer;
-}
-.vpn-server-select:focus { outline: none; border-color: var(--primary); }
-.vpn-toggle-row {
+/* ---- Premium Banner ---- */
+.premium-banner {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 8px 12px;
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: var(--radius);
+  cursor: default;
+  animation: slideDown 0.3s ease;
 }
-.vpn-btn {
-  padding: 6px 16px;
-  border-radius: var(--radius-sm);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: opacity 0.15s, background 0.15s;
+.premium-banner__icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
 }
-.vpn-btn.connect {
-  background: var(--primary);
-  color: #fff;
-}
-.vpn-btn.connect:hover { opacity: 0.85; }
-.vpn-btn.disconnect {
-  background: rgba(244, 63, 94, 0.2);
-  color: var(--error);
-  border: 1px solid rgba(244, 63, 94, 0.35);
-}
-.vpn-btn.disconnect:hover { background: rgba(244, 63, 94, 0.3); }
-.vpn-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.vpn-trial-info {
-  font-size: 0.68rem;
-  color: var(--text-sec);
-}
-.vpn-trial-info.free {
-  color: #fbbf36;
-}
-.vpn-upsell {
-  margin-top: 8px;
-  font-size: 0.72rem;
-  color: var(--text-sec);
+.premium-banner__text {
+  flex: 1;
   display: flex;
-  align-items: center;
-  gap: 4px;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
 }
-.vpn-upsell a {
-  color: var(--primary);
+.premium-banner__text strong {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e2f0;
+}
+.premium-banner__text span {
+  font-size: 0.68rem;
+  color: #8a8aaa;
+}
+.premium-banner__cta {
+  flex-shrink: 0;
+  font-size: 0.72rem;
   font-weight: 600;
+  color: var(--success);
   text-decoration: none;
 }
-.vpn-upsell a:hover { text-decoration: underline; }
+.premium-banner__cta:hover { text-decoration: underline; }
+
+/* ---- Premium Section ---- */
+.premium-section {
+  padding: 10px 12px;
+  background: rgba(74, 222, 128, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: var(--radius);
+}
+.premium-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.premium-icon { font-size: 1rem; flex-shrink: 0; }
+.premium-label { flex: 1; font-size: 0.8rem; font-weight: 700; color: var(--text); }
+.premium-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: rgba(74, 222, 128, 0.2);
+  color: var(--success);
+}
+.premium-badge.active { background: rgba(74, 222, 128, 0.2); color: var(--success); }
+.premium-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.premium-features li {
+  font-size: 0.72rem;
+  color: var(--text-sec);
+  padding-left: 12px;
+  position: relative;
+}
+.premium-features li::before {
+  content: "\2022 ";
+  color: var(--success);
+  position: absolute;
+  left: 0;
+}
+.premium-cta {
+  display: block;
+  text-align: center;
+  padding: 6px 12px;
+  background: var(--success);
+  color: #0a0a1a;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.premium-cta:hover { opacity: 0.85; }
+
+/* ---- License badge Premium ---- */
+.license-badge.premium {
+  background: linear-gradient(135deg, #4ade80, #22c55e, #4ade80);
+  color: #0a0a1a;
+  border: 1px solid rgba(74, 222, 128, 0.5);
+}
