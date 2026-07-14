@@ -1,7 +1,7 @@
 # TODO — AdOff ChromePlugin
 
 ## Attivo
-- [ ] **Premium VPN — Checkout Stripe**: implementare SPEC-checkout-premium.md nel worker (SKU €4,99/mo, Founder €29,99/€49,99, proration Pro→Premium, multi-valuta)
+- [ ] **VPN provisioning nel webhook**: handleSubscriptionCreated → POST /vpn/create + save vpn_accounts D1
 - [ ] **Premium VPN — Balance refill**: ricaricare VPNresellers $100+ (attuale $25, billing giornaliero $0.066/giorno)
 - [ ] **GATE lancio VPN**: test empirico multi-device (serve VPNRESELLERS_API_KEY in env)
 - [ ] **Premium FASE 2**: VPN reale mobile (VpnService tunnel) + Kill-switch mobile + DNS Guard freemium (blocklist grande)
@@ -22,4 +22,5 @@
 - [x] Verificato: zero "Pro+" in codebase, prezzi congruenti €4,99/€29,99/€49,99, versione da manifest, zero PII leaks, sync Chrome/Firefox/Safari, no-log traffico/IP in vpn-module.js
 - [x] Trial anti-crack ECDSA P-256
 - [x] VPNresellers.com API configurata (balance $25, 82 server, $1,99/acct/mese)
+- [x] Sprint 2 Checkout Premium (2026-07-14): checkout Stripe (3 piani €4.99/€29.99/€49.99) + founder pool D1 separato + webhook con tier nel payload + handleGetVpnToken bridge HMAC→ECDSA + E2E testato. Deploy v24e36eb1
 - [x] v3.5.0 — v3.5.34 rilasciati
