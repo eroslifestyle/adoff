@@ -485,9 +485,150 @@
   });
 
   // ===== INIT =====
+  // ===== VPN -----
+  const API = "https://api.adoff.app";
+
+  async function vpnFetch(path, opts = {}) {
+    try {
+      const r = await fetch(API + path, {
+        headers: { "Content-Type": "application/json" },
+        ...opts,
+      });
+      return r.ok ? await r.json() : { error: r.status };
+    } catch (e) { return { error: e.message }; }
+  }
+
+  let vpnServers = [];
+  let vpnConnected = false;
+  let vpnAccountId = null;
+
+  function setVpnStatus(state, label) {
+    const el = document.getElementById("vpnStatus");
+    el.textContent = label;
+    el.className = "vpn-status" + (state ? " " + state : "");
+  }
+
+  function setVpnBtn(label, cls, disabled) {
+    const btn = document.getElementById("btnVpnToggle");
+    btn.textContent = label;
+    btn.className = "vpn-btn" + (cls ? " " + cls : "");
+    btn.disabled = !!disabled;
+  }
+
+  async function loadVpnState() {
+    // Leggi account salvato + check premium
+    const stored = await new Promise(r => chrome.storage.local.get(["adoffVpnAccountId"], r));
+    vpnAccountId = stored.adoffVpnAccountId || null;
+    vpnConnected = false;
+    setVpnStatus("", "Disconnesso");
+    setVpnBtn("Connetti", "connect", false);
+    document.getElementById("vpnTrialInfo").textContent = "";
+    document.getElementById("vpnTrialInfo").className = "vpn-trial-info";
+    document.getElementById("vpnUpsell").style.display = "none";
+  }
+
+  async function initVpn() {
+    const pro = await LicenseClient.checkPro();
+    if (!pro.isPro) {
+      document.getElementById("vpnServerRow").style.display = "none";
+      setVpnBtn("Connetti", "connect", true);
+      setVpnStatus("", "Free");
+      const ti = document.getElementById("vpnTrialInfo");
+      ti.textContent = "Solo Pro";
+      ti.className = "vpn-trial-info free";
+      document.getElementById("vpnUpsell").style.display = "flex";
+      return;
+    }
+    // Carica server
+    const sel = document.getElementById("vpnServerSelect");
+    sel.innerHTML = '<option value="">Caricamento...</option>';
+    const res = await vpnFetch("/vpn/servers");
+    if (res.error || !res.ok) { sel.innerHTML = '<option value="">Errore server</option>'; return; }
+    vpnServers = res.servers || [];
+    sel.innerHTML = '<option value="">Seleziona server</option>';
+    vpnServers.forEach(s => {
+      const o = document.createElement("option");
+      o.value = s.id;
+      o.textContent = s.city ? `${s.city} (${s.country})` : `${s.name} (${s.country})`;
+      sel.appendChild(o);
+    });
+    // Ripristina stato
+    if (vpnAccountId) {
+      setVpnStatus("", "Pronto");
+      setVpnBtn("Connetti", "connect", false);
+    } else {
+      setVpnStatus("", "Pronto");
+      setVpnBtn("Connetti", "connect", false);
+    }
+  }
+
+  async function toggleVpn() {
+    const btn = document.getElementById("btnVpnToggle");
+    if (vpnConnected) {
+      // Disconnetti
+      btn.disabled = true;
+      setVpnBtn("...", "connect", true);
+      if (vpnAccountId) {
+        await vpnFetch("/vpn/disable", { method: "POST", body: JSON.stringify({ accountId: vpnAccountId }) });
+      }
+      vpnConnected = false;
+      setVpnStatus("", "Disconnesso");
+      setVpnBtn("Connetti", "connect", false);
+      btn.disabled = false;
+    } else {
+      // Connetti
+      const sel = document.getElementById("vpnServerSelect");
+      const serverId = sel.value;
+      if (!serverId) { setVpnStatus("connecting", "Seleziona server"); return; }
+      btn.disabled = true;
+      setVpnStatus("connecting", "Connessione...");
+      setVpnBtn("...", "connect", true);
+
+      try {
+        // 1. Crea account se non esiste
+        if (!vpnAccountId) {
+          const cr = await vpnFetch("/vpn/create", { method: "POST", body: JSON.stringify({ email: "user@adoff.app" }) });
+          if (cr.error || !cr.ok) throw new Error(cr.error || "Create failed");
+          vpnAccountId = cr.accountId;
+          await new Promise(p => chrome.storage.local.set({ adoffVpnAccountId: vpnAccountId }, p));
+        }
+        // 2. Abilita
+        const er = await vpnFetch("/vpn/enable", { method: "POST", body: JSON.stringify({ accountId: vpnAccountId }) });
+        if (er.error) throw new Error(er.error);
+        // 3. Get config
+        const cfg = await vpnFetch(`/vpn/config?accountId=${encodeURIComponent(vpnAccountId)}&serverId=${encodeURIComponent(serverId)}`);
+        if (cfg.error || !cfg.ok) throw new Error(cfg.error || "Config failed");
+        // 4. Scarica config (WireGuard .conf)
+        const conf = cfg.config || cfg.wireguard_config || cfg;
+        const blob = new Blob([typeof conf === "string" ? conf : JSON.stringify(conf, null, 2)], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "adoff-vpn.conf";
+        a.click();
+        URL.revokeObjectURL(url);
+
+        vpnConnected = true;
+        setVpnStatus("connected", "Connesso");
+        setVpnBtn("Disconnetti", "disconnect", false);
+        const ti = document.getElementById("vpnTrialInfo");
+        ti.textContent = "Apri WireGuard";
+        ti.className = "vpn-trial-info";
+      } catch (e) {
+        setVpnStatus("", "Errore");
+        setVpnBtn("Connetti", "connect", false);
+        btn.disabled = false;
+      }
+    }
+  }
+
+  document.getElementById("btnVpnToggle").addEventListener("click", toggleVpn);
+  // ----- fine VPN
+
   i18n.init(() => {
     i18n.applyToDOM();
     loadState();
+    loadVpnState().then(initVpn);
 
     // Versione dal manifest (single source of truth) — sempre congruente
     try {
