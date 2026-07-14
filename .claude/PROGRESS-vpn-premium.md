@@ -47,10 +47,12 @@
   - `/verify-mobile-license` GET → 400 PASS (era 405)
   - Report: `.claude/TEST-REPORT-vpn.md`
 
-### FASE 2 — VPN reale mobile + DNS Guard ⬜
+### FASE 2 — VPN reale mobile + DNS Guard (IN PROGRESS)
+- [x] **Mobile scaffold**: LicenseService (trial ECDSA, verifyTrialOnline, checkPro) + crypto_keys.dart (JWK pubkey embeddata)
+- [x] **GET /verify-mobile-license**: license_service.dart usa GET (già corretto, riga 124)
+- [x] **DNS Guard**: refreshBlocklist() + refreshBlocklistIfNeeded() (cron 7gg via SharedPreferences)
 - [ ] VpnService mobile: DNS-filter → tunnel reale (protocollo da test Fase 0)
 - [ ] Kill-switch (mobile VpnService + desktop firewall)
-- [ ] DNS Guard freemium: blocklist statica grande + update remoto (rules-feed)
 - [ ] App desktop Tauri (riusa UX vpn-tray) — in parallelo mobile
 - [ ] Feature Premium: auto-rotation + fast-connect + country-lock
 - [ ] Gating Premium mobile/desktop + dichiarazioni privacy store native
