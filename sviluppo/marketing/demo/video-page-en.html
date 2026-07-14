@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VideoStream</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Roboto,Arial,sans-serif;background:#0f0f0f;color:#fff}
+  header{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#0f0f0f;border-bottom:1px solid #222;position:sticky;top:0;z-index:30}
+  .brand{font-weight:800;font-size:20px}.brand b{color:#7c5cfc}
+  .search{flex:1;background:#222;border-radius:20px;height:34px;margin:0 6px}
+  .player{position:relative;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden}
+  .frame{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,#3a2f5e,#0a0a14);display:flex;align-items:center;justify-content:center;font-size:60px}
+  .playbtn{position:absolute;inset:0;margin:auto;width:74px;height:74px;border-radius:50%;background:#0008;display:flex;align-items:center;justify-content:center;font-size:34px}
+  /* AD overlay (pre-roll) */
+  .video-ads{position:absolute;inset:0;background:linear-gradient(135deg,#1a6b2a,#0c3d18);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:10}
+  .video-ads .label{position:absolute;top:10px;left:10px;background:#ffcc00;color:#000;font-weight:800;font-size:13px;padding:3px 8px;border-radius:3px}
+  .video-ads .big{font-size:30px;font-weight:800;text-shadow:0 2px 8px #0008}
+  .video-ads .sub{margin-top:8px;opacity:.85;font-size:15px}
+  .video-ads .skip{position:absolute;bottom:14px;right:12px;background:#000a;border:1px solid #fff6;color:#fff;padding:8px 14px;font-size:14px;border-radius:4px}
+  .adbar{position:absolute;bottom:0;left:0;height:5px;background:#ffcc00;width:35%;z-index:11}
+  .progress{position:absolute;bottom:0;left:0;height:4px;background:#7c5cfc;width:0;z-index:5;transition:width 2.6s linear}
+  .info{padding:14px}
+  h1{font-size:18px;line-height:1.3;margin-bottom:8px}
+  .row{display:flex;align-items:center;gap:10px;color:#aaa;font-size:13px}
+  .dot{width:36px;height:36px;border-radius:50%;background:#7c5cfc33}
+  /* banner ad sotto al player */
+  .ad-banner{height:90px;margin:12px;background:#fff3cd;border:1px dashed #e0a800;color:#8a6d00;display:flex;align-items:center;justify-content:center;font-family:Arial;border-radius:4px;position:relative}
+  .ad-banner::before{content:'Ad';position:absolute;top:3px;left:6px;font-size:10px;color:#b08900}
+  .sug{display:flex;gap:10px;padding:10px 12px}
+  .sug .th{width:160px;height:90px;background:#222;border-radius:6px;flex:0 0 auto}
+  .sug .tx{font-size:13px;color:#ddd}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">▶ Video<b>Stream</b></div>
+  <div class="search"></div>
+</header>
+
+<div class="player">
+  <div class="frame">🎬</div>
+  <div class="progress" id="prog"></div>
+  <!-- PRE-ROLL AD (AdOff lo neutralizza) -->
+  <div class="video-ads" id="ad">
+    <div class="label">Ad · 1 of 2</div>
+    <div class="big">Your ad here</div>
+    <div class="sub">Video starts after the ad…</div>
+    <div class="skip">Skip in <span id="cd">5</span>s</div>
+    <div class="adbar"></div>
+  </div>
+</div>
+
+<div class="info">
+  <h1>Sunset over the Dolomites — 4K relax (10 hours)</h1>
+  <div class="row"><div class="dot"></div><div>Nature Italy · 1.2M views</div></div>
+</div>
+
+<div class="ad-banner">Advertisement banner 320×90</div>
+
+<div class="sug"><div class="th"></div><div class="tx">Sunrise over the sea — 4K<br><span style="color:#888">Relax Nature</span></div></div>
+<div class="sug"><div class="th"></div><div class="tx">Rain in the forest — sounds<br><span style="color:#888">Calm Sounds</span></div></div>
+
+<script>
+  // countdown finto dell'annuncio (stato "senza AdOff")
+  let s=5;const cd=document.getElementById('cd');
+  window.__t=setInterval(()=>{s--;if(cd)cd.textContent=s;if(s<=0){clearInterval(window.__t);}},1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,633 @@
+{
+  "id": "w45-engagement-agent",
+  "name": "45 — Reactive Engagement Agent (Comment Monitor + Auto-Reply)",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Rome",
+    "saveExecutionProgress": true,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all"
+  },
+  "nodes": [
+    {
+      "id": "node-001-schedule-trigger",
+      "name": "Schedule (15 min)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 200],
+      "parameters": {
+        "rule": {
+          "interval": [{"field": "minutes", "minutesInterval": 15}]
+        }
+      }
+    },
+    {
+      "id": "node-002-webhook-instant",
+      "name": "Webhook /engagement-now",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 380],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "engagement-now",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "engagement-now-wh"
+    },
+    {
+      "id": "node-003-hmac-validator",
+      "name": "HMAC Auth (W29)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Reusable HMAC-SHA256 validator from W29\nconst crypto = require('crypto');\nconst secret = process.env.WEBHOOK_HMAC_SECRET;\n\nconst isSchedule = $node['Schedule (15 min)'] !== undefined && $json.source === undefined;\nif (isSchedule) {\n  return [{ json: { auth_ok: true, source: 'schedule', route: 'schedule' } }];\n}\n\n// Webhook validation\nif (!secret) {\n  return [{ json: { auth_ok: false, reason: 'WEBHOOK_HMAC_SECRET not configured' } }];\n}\n\nconst signature = $headers?.['x-adoff-signature'];\nif (!signature) {\n  return [{ json: { auth_ok: false, reason: 'missing_signature_header' } }];\n}\n\nconst bodyRaw = $body || JSON.stringify($json);\nconst expectedHmac = crypto\n  .createHmac('sha256', Buffer.from(secret, 'hex'))\n  .update(bodyRaw, 'utf8')\n  .digest('hex');\n\ntry {\n  crypto.timingSafeEqual(\n    Buffer.from(signature, 'hex'),\n    Buffer.from(expectedHmac, 'hex')\n  );\n  return [{ json: { auth_ok: true, source: 'webhook', route: 'engagement-now', payload: $json } }];\n} catch (err) {\n  return [{ json: { auth_ok: false, reason: 'invalid_signature' } }];\n}"
+      }
+    },
+    {
+      "id": "node-004-check-auth",
+      "name": "Auth OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [720, 300],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.auth_ok }}",
+              "operator": "equals",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-005-check-kill-switch",
+      "name": "Check kill_switch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Read engagement_enable from marketing_config table\nconst killSwitchDisabled = process.env.ENGAGEMENT_AGENT_DISABLED === 'true';\nif (killSwitchDisabled) {\n  return [{ json: { kill_switch_hit: true, reason: 'env_disabled', skip_reason: 'ENGAGEMENT_AGENT_DISABLED=true' } }];\n}\nreturn [{ json: { kill_switch_hit: false, proceed: true } }];"
+      }
+    },
+    {
+      "id": "node-006-kill-switch-check",
+      "name": "IF kill_switch?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1200, 300],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.kill_switch_hit }}",
+              "operator": "equals",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-007-phase-a-discover-twitter",
+      "name": "Phase A: Twitter (discover)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, 100],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.twitter.com/2/tweets/{{ $env.TWITTER_POST_ID }}/quote_tweets?max_results=100",
+        "authentication": "headerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Authorization", "value": "=Bearer {{ $env.TWITTER_API_TOKEN }}"},
+            {"name": "User-Agent", "value": "AdOff-Engagement-Agent/1.0"}
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "neverError": true,
+            "fullResponse": false
+          }
+        }
+      },
+      "onError": "continueErrorHandling"
+    },
+    {
+      "id": "node-008-phase-a-discover-reddit",
+      "name": "Phase A: Reddit (discover)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://oauth.reddit.com/comments/{{ $env.REDDIT_POST_ID }}?limit=100",
+        "authentication": "headerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Authorization", "value": "=Bearer {{ $env.REDDIT_API_TOKEN }}"},
+            {"name": "User-Agent", "value": "AdOff-Engagement-Agent/1.0"}
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "neverError": true,
+            "fullResponse": false
+          }
+        }
+      },
+      "onError": "continueErrorHandling"
+    },
+    {
+      "id": "node-009-phase-a-discover-mastodon",
+      "name": "Phase A: Mastodon (discover)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://mastodon.social/api/v1/statuses/{{ $env.MASTODON_POST_ID }}/context?limit=100",
+        "authentication": "headerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Authorization", "value": "=Bearer {{ $env.MASTODON_API_TOKEN }}"},
+            {"name": "User-Agent", "value": "AdOff-Engagement-Agent/1.0"}
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "neverError": true,
+            "fullResponse": false
+          }
+        }
+      },
+      "onError": "continueErrorHandling"
+    },
+    {
+      "id": "node-010-merge-all-comments",
+      "name": "Merge all platforms",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1680, 200],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Collect comments from all platforms\nconst allComments = [];\nconst timestamp = new Date().toISOString();\n\n// Twitter response\nconst twitterResp = $('Phase A: Twitter (discover)').json;\nif (twitterResp?.data && Array.isArray(twitterResp.data)) {\n  twitterResp.data.forEach(tweet => {\n    allComments.push({\n      platform: 'twitter',\n      comment_id: tweet.id,\n      author_handle: tweet.author_id,\n      content: tweet.text,\n      created_at: tweet.created_at || timestamp,\n      source_post_id: $env.TWITTER_POST_ID\n    });\n  });\n}\n\n// Reddit response\nconst redditResp = $('Phase A: Reddit (discover)').json;\nif (redditResp?.data?.children && Array.isArray(redditResp.data.children)) {\n  redditResp.data.children.forEach(child => {\n    const comment = child.data;\n    if (comment && comment.body) {\n      allComments.push({\n        platform: 'reddit',\n        comment_id: comment.id,\n        author_handle: comment.author,\n        content: comment.body,\n        created_at: new Date(comment.created_utc * 1000).toISOString(),\n        source_post_id: $env.REDDIT_POST_ID\n      });\n    }\n  });\n}\n\n// Mastodon response\nconst mastodonResp = $('Phase A: Mastodon (discover)').json;\nif (mastodonResp?.descendants && Array.isArray(mastodonResp.descendants)) {\n  mastodonResp.descendants.forEach(status => {\n    allComments.push({\n      platform: 'mastodon',\n      comment_id: status.id,\n      author_handle: status.account?.acct,\n      content: status.content,\n      created_at: status.created_at,\n      source_post_id: $env.MASTODON_POST_ID\n    });\n  });\n}\n\nreturn allComments.map(c => ({ json: c }));"
+      }
+    },
+    {
+      "id": "node-011-phase-b-check-new",
+      "name": "Phase B: Check if new",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 4.3,
+      "position": [1920, 200],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as cnt FROM engagement_inbox WHERE platform = {{ $json.platform }} AND comment_id = '{{ $json.comment_id }}' LIMIT 1;"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff PostgreSQL Autopilot"
+        }
+      }
+    },
+    {
+      "id": "node-012-is-new-check",
+      "name": "Is new?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2160, 200],
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.cnt }}",
+              "operator": "equals",
+              "value2": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-013-insert-new-comment",
+      "name": "INSERT new comment",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 4.3,
+      "position": [2400, 100],
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "engagement_inbox",
+        "columns": "id, platform, source_post_id, comment_id, author_handle, content, intent, sentiment, priority, suggested_reply, status, handled_at, created_at",
+        "values": "gen_random_uuid(), '{{ $json.platform }}', '{{ $json.source_post_id }}', '{{ $json.comment_id }}', '{{ $json.author_handle }}', '{{ $json.content }}', NULL, NULL, NULL, NULL, 'new', NULL, now()"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff PostgreSQL Autopilot"
+        }
+      },
+      "onError": "continueErrorHandling"
+    },
+    {
+      "id": "node-014-phase-c-build-gemini-prompt",
+      "name": "Phase C: Build Gemini prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2640, 100],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const { platform, author_handle, content, source_post_id } = $json;\nconst captionPreview = `[Post su ${platform}]`; // Ideally from DB\nconst prompt = `Sei community manager AdOff (estensione anti-pubblicità). Analizza questo commento:\\nPLATFORM: ${platform}\\nCOMMENTO: <USER_COMMENT>${content}</USER_COMMENT>\\nCONTESSTO POST: \"${captionPreview}\"\\n\\nRestituisci JSON:\\n{\\n  \"intent\": \"question|praise|complaint|spam|press|legal|other\",\\n  \"sentiment\": 0.0-1.0,\\n  \"priority\": 1-10 (10=urgentissimo),\\n  \"suggested_reply\": \"risposta brand-safe in ita max 280 char, energica/brillante, no brand famosi, no '149 KB', usa sinonimi\",\\n  \"should_auto_reply\": true|false,\\n  \"escalation_reason\": null o stringa,\\n  \"tone_check_ok\": true|false\\n}\\n\\nREGOLE:\\n- se intent='spam' → should_auto_reply=false\\n- se intent IN ('complaint','legal','press') → should_auto_reply=false, escalation_reason=\"manuale\"\\n- se sentiment < 0.4 → should_auto_reply=false\\n- se intent='question' e sentiment > 0.5 → reply utile breve\\n- se intent='praise' → reply breve grazie con CTA soft`;\n\nreturn [{ json: { ...items[0].json, prompt, lang: 'it', model: 'gemini-2.5-flash' } }];"
+      }
+    },
+    {
+      "id": "node-015-gemini-classify",
+      "name": "Gemini 2.5 Flash classify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2880, 100],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Content-Type", "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contents:[{role:'user',parts:[{text:$json.prompt}]}], generationConfig:{ temperature:0.7, topP:0.9, maxOutputTokens:500, responseMimeType:'application/json', thinkingConfig:{thinkingBudget:0} }, safetySettings:[ {category:'HARM_CATEGORY_HARASSMENT',threshold:'BLOCK_NONE'}, {category:'HARM_CATEGORY_HATE_SPEECH',threshold:'BLOCK_NONE'}, {category:'HARM_CATEGORY_SEXUALLY_EXPLICIT',threshold:'BLOCK_NONE'}, {category:'HARM_CATEGORY_DANGEROUS_CONTENT',threshold:'BLOCK_NONE'} ] }) }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "neverError": true,
+            "fullResponse": false
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "adoff-gemini-credential-2026",
+          "name": "AdOff Gemini API (ServerN8N free/tier1)"
+        }
+      }
+    },
+    {
+      "id": "node-016-parse-gemini",
+      "name": "Parse Gemini response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3120, 100],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const meta = $('Phase C: Build Gemini prompt').json;\nconst resp = $json;\nlet text = '';\ntry { text = resp.candidates?.[0]?.content?.parts?.[0]?.text || ''; } catch(e){}\nlet parsed = null;\ntry { parsed = JSON.parse(text); } catch(e) {\n  const m = text.match(/\\{[\\s\\S]*\\}/);\n  if (m) { try { parsed = JSON.parse(m[0]); } catch(e2){} }\n}\n\nif (!parsed || !parsed.intent) {\n  return [{ json: { ...meta, ok: false, reason: 'gemini_parse_fail', raw: text.slice(0,200) } }];\n}\n\nconst intent = String(parsed.intent || '').toLowerCase();\nconst sentiment = Number(parsed.sentiment) || 0.5;\nconst priority = Number(parsed.priority) || 5;\nconst suggested_reply = String(parsed.suggested_reply || 'Grazie per il feedback!').slice(0, 280);\nconst escalation_reason = parsed.escalation_reason || null;\nlet should_auto_reply = Boolean(parsed.should_auto_reply);\n\n// Apply rules\nif (intent === 'spam') should_auto_reply = false;\nif (['complaint', 'legal', 'press'].includes(intent)) {\n  should_auto_reply = false;\n  if (!escalation_reason) { return [{ json: { ...meta, escalation_reason: 'manuale' } }]; }\n}\nif (sentiment < 0.4) should_auto_reply = false;\n\nreturn [{ json: { ...meta, intent, sentiment, priority, suggested_reply, should_auto_reply, escalation_reason, ok: true } }];"
+      }
+    },
+    {
+      "id": "node-017-phase-d-branch",
+      "name": "Phase D: Decision branch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [3360, 100],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.intent }}",
+        "rules": {
+          "rules": [
+            {"value2": "spam", "output": 1},
+            {"value2": "complaint", "output": 2},
+            {"value2": "legal", "output": 2},
+            {"value2": "press", "output": 2},
+            {"value2": "question", "output": 0},
+            {"value2": "praise", "output": 0},
+            {"value2": "other", "output": 2}
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-018-check-auto-reply-enabled",
+      "name": "Auto-reply enabled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [3600, 50],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {"value1": "={{ $json.should_auto_reply && process.env.ENGAGEMENT_AUTOREPLY_ENABLED === 'true' }}", "operator": "equals", "value2": true}
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-019-brand-guard-before-reply",
+      "name": "Brand-guard (before POST)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3840, 50],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "function normalizeForGuard(s) {\n  if (!s) return '';\n  return String(s)\n    .normalize('NFD').replace(/[̀-ͯ]/g, '')\n    .toLowerCase()\n    .replace(/[·•​-‍﻿⁠]/g, '')\n    .replace(/\\s+/g, ' ');\n}\nfunction brandGuardCheck(rawText) {\n  const t = normalizeForGuard(rawText);\n  const BRANDS = ['youtube','google','facebook','instagram','tiktok','twitter','amazon','reddit','twitch','github','linkedin'];\n  for (const b of BRANDS) {\n    if (t.includes(b)) return { ok: false, hit: b };\n  }\n  if (/149[\\s\\-_]*k(?:ilo)?b(?:yte)?s?/iu.test(t)) return { ok: false, hit: '149kb' };\n  return { ok: true };\n}\n\nconst guard = brandGuardCheck($json.suggested_reply);\nif (!guard.ok) {\n  return [{ json: { ...$json, brand_guard_ok: false, guard_reason: guard.hit, action: 'escalate' } }];\n}\nreturn [{ json: { ...$json, brand_guard_ok: true } }];"
+      }
+    },
+    {
+      "id": "node-020-update-status-sent",
+      "name": "UPDATE status='sent'",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 4.3,
+      "position": [4080, 50],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE engagement_inbox SET status='sent', suggested_reply='{{ $json.suggested_reply }}', intent='{{ $json.intent }}', sentiment={{ $json.sentiment }}, priority={{ $json.priority }}, handled_at=now(), handled_by='gemini-flash' WHERE comment_id='{{ $json.comment_id }}' AND platform='{{ $json.platform }}';"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff PostgreSQL Autopilot"
+        }
+      },
+      "onError": "continueErrorHandling"
+    },
+    {
+      "id": "node-021-cooldown-check",
+      "name": "Cooldown 2 min?",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.3,
+      "position": [4320, 50],
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      }
+    },
+    {
+      "id": "node-022-escalate-decision",
+      "name": "Escalate (Telegram)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [3840, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "contentType": "application/json",
+        "body": "={{ { chat_id: $env.TELEGRAM_CHAT_ID, text: `⚠️ Engagement ESCALATE\\nPlatform: ${$json.platform}\\nAuthor: ${$json.author_handle}\\nIntent: ${$json.intent} (${Math.round($json.sentiment * 100)}%)\\nReason: ${$json.escalation_reason || 'negative sentiment'}\\n\\nComment: ${$json.content.slice(0, 150)}...\\n\\nSuggested reply: ${$json.suggested_reply.slice(0, 100)}`, parse_mode: 'HTML' } }}",
+        "options": {"timeout": 10000}
+      },
+      "onError": "continueErrorHandling"
+    },
+    {
+      "id": "node-023-update-status-escalated",
+      "name": "UPDATE status='escalated'",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 4.3,
+      "position": [4080, 200],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE engagement_inbox SET status='escalated', suggested_reply='{{ $json.suggested_reply }}', intent='{{ $json.intent }}', sentiment={{ $json.sentiment }}, priority={{ $json.priority }}, escalation_reason='{{ $json.escalation_reason || 'manuale' }}', handled_at=now() WHERE comment_id='{{ $json.comment_id }}' AND platform='{{ $json.platform }}';"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff PostgreSQL Autopilot"
+        }
+      },
+      "onError": "continueErrorHandling"
+    },
+    {
+      "id": "node-024-update-status-ignored",
+      "name": "UPDATE status='ignored'",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 4.3,
+      "position": [4080, 350],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE engagement_inbox SET status='ignored', intent='spam', handled_at=now() WHERE comment_id='{{ $json.comment_id }}' AND platform='{{ $json.platform }}';"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff PostgreSQL Autopilot"
+        }
+      },
+      "onError": "continueErrorHandling"
+    },
+    {
+      "id": "node-025-daily-report",
+      "name": "Daily report (18:00)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 600],
+      "parameters": {
+        "rule": {
+          "interval": [{"field": "hours", "hoursInterval": 24}],
+          "trigger": {"hour": 18, "minute": 0}
+        }
+      }
+    },
+    {
+      "id": "node-026-query-daily-stats",
+      "name": "Query daily stats",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 4.3,
+      "position": [480, 600],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as total, SUM(CASE WHEN status='sent' THEN 1 ELSE 0 END) as sent, SUM(CASE WHEN status='escalated' THEN 1 ELSE 0 END) as escalated, SUM(CASE WHEN status='ignored' THEN 1 ELSE 0 END) as ignored FROM engagement_inbox WHERE DATE(created_at) = CURRENT_DATE;"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff PostgreSQL Autopilot"
+        }
+      }
+    },
+    {
+      "id": "node-027-format-report",
+      "name": "Format report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 600],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const today = new Date().toISOString().split('T')[0];\nconst stats = items[0]?.json || { total: 0, sent: 0, escalated: 0, ignored: 0 };\nconst message = `📊 Engagement Report ${today}\\n` +\n  `Total comments: ${stats.total || 0}\\n` +\n  `✅ Auto-replied: ${stats.sent || 0}\\n` +\n  `⚠️ Escalated: ${stats.escalated || 0}\\n` +\n  `🚫 Ignored: ${stats.ignored || 0}`;\nreturn [{ json: { message, stats } }];"
+      }
+    },
+    {
+      "id": "node-028-telegram-daily-report",
+      "name": "Send Telegram report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 600],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "contentType": "application/json",
+        "body": "={{ { chat_id: $env.TELEGRAM_CHAT_ID, text: $json.message, parse_mode: 'HTML' } }}",
+        "options": {"timeout": 10000}
+      },
+      "onError": "continueErrorHandling"
+    },
+    {
+      "id": "node-029-auth-fail-response",
+      "name": "Auth fail response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [960, 450],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, reason: $json.reason } }}",
+        "responseCode": 401
+      }
+    },
+    {
+      "id": "node-030-kill-switch-response",
+      "name": "Kill switch response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1440, 450],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, reason: $json.skip_reason } }}",
+        "responseCode": 503
+      }
+    },
+    {
+      "id": "node-031-success-response",
+      "name": "Success response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [4560, 200],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, message: 'Engagement processing complete' } }}",
+        "responseCode": 200
+      }
+    }
+  ],
+  "connections": {
+    "Schedule (15 min)": {
+      "main": [[{"node": "HMAC Auth (W29)", "type": "main", "index": 0}]]
+    },
+    "Webhook /engagement-now": {
+      "main": [[{"node": "HMAC Auth (W29)", "type": "main", "index": 0}]]
+    },
+    "HMAC Auth (W29)": {
+      "main": [[{"node": "Auth OK?", "type": "main", "index": 0}]]
+    },
+    "Auth OK?": {
+      "main": [
+        [{"node": "Check kill_switch", "type": "main", "index": 0}],
+        [{"node": "Auth fail response", "type": "main", "index": 0}]
+      ]
+    },
+    "Check kill_switch": {
+      "main": [[{"node": "IF kill_switch?", "type": "main", "index": 0}]]
+    },
+    "IF kill_switch?": {
+      "main": [
+        [{"node": "Kill switch response", "type": "main", "index": 0}],
+        [
+          {"node": "Phase A: Twitter (discover)", "type": "main", "index": 0},
+          {"node": "Phase A: Reddit (discover)", "type": "main", "index": 0},
+          {"node": "Phase A: Mastodon (discover)", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "Phase A: Twitter (discover)": {
+      "main": [[{"node": "Merge all platforms", "type": "main", "index": 0}]]
+    },
+    "Phase A: Reddit (discover)": {
+      "main": [[{"node": "Merge all platforms", "type": "main", "index": 0}]]
+    },
+    "Phase A: Mastodon (discover)": {
+      "main": [[{"node": "Merge all platforms", "type": "main", "index": 0}]]
+    },
+    "Merge all platforms": {
+      "main": [[{"node": "Phase B: Check if new", "type": "main", "index": 0}]]
+    },
+    "Phase B: Check if new": {
+      "main": [[{"node": "Is new?", "type": "main", "index": 0}]]
+    },
+    "Is new?": {
+      "main": [
+        [{"node": "INSERT new comment", "type": "main", "index": 0}],
+        [{"node": "Success response", "type": "main", "index": 0}]
+      ]
+    },
+    "INSERT new comment": {
+      "main": [[{"node": "Phase C: Build Gemini prompt", "type": "main", "index": 0}]]
+    },
+    "Phase C: Build Gemini prompt": {
+      "main": [[{"node": "Gemini 2.5 Flash classify", "type": "main", "index": 0}]]
+    },
+    "Gemini 2.5 Flash classify": {
+      "main": [[{"node": "Parse Gemini response", "type": "main", "index": 0}]]
+    },
+    "Parse Gemini response": {
+      "main": [[{"node": "Phase D: Decision branch", "type": "main", "index": 0}]]
+    },
+    "Phase D: Decision branch": {
+      "main": [
+        [{"node": "Auto-reply enabled?", "type": "main", "index": 0}],
+        [{"node": "UPDATE status='ignored'", "type": "main", "index": 0}],
+        [{"node": "Escalate (Telegram)", "type": "main", "index": 0}]
+      ]
+    },
+    "Auto-reply enabled?": {
+      "main": [
+        [{"node": "Brand-guard (before POST)", "type": "main", "index": 0}],
+        [{"node": "Escalate (Telegram)", "type": "main", "index": 0}]
+      ]
+    },
+    "Brand-guard (before POST)": {
+      "main": [
+        [{"node": "UPDATE status='sent'", "type": "main", "index": 0}],
+        [{"node": "Escalate (Telegram)", "type": "main", "index": 0}]
+      ]
+    },
+    "UPDATE status='sent'": {
+      "main": [[{"node": "Cooldown 2 min?", "type": "main", "index": 0}]]
+    },
+    "Cooldown 2 min?": {
+      "main": [[{"node": "Success response", "type": "main", "index": 0}]]
+    },
+    "Escalate (Telegram)": {
+      "main": [[{"node": "UPDATE status='escalated'", "type": "main", "index": 0}]]
+    },
+    "UPDATE status='escalated'": {
+      "main": [[{"node": "Success response", "type": "main", "index": 0}]]
+    },
+    "UPDATE status='ignored'": {
+      "main": [[{"node": "Success response", "type": "main", "index": 0}]]
+    },
+    "Daily report (18:00)": {
+      "main": [[{"node": "Query daily stats", "type": "main", "index": 0}]]
+    },
+    "Query daily stats": {
+      "main": [[{"node": "Format report", "type": "main", "index": 0}]]
+    },
+    "Format report": {
+      "main": [[{"node": "Send Telegram report", "type": "main", "index": 0}]]
+    },
+    "Send Telegram report": {
+      "main": [[{"node": "Success response", "type": "main", "index": 0}]]
+    }
+  }
+}

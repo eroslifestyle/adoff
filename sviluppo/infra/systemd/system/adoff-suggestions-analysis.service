@@ -1,0 +1,13 @@
+[Unit]
+Description=AdOff — Analisi settimanale suggerimenti (Claude propone fix su Telegram)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=mrxxx
+WorkingDirectory=/home/mrxxx/adoff
+ExecStart=/usr/bin/bash /home/mrxxx/adoff/sviluppo/ai-autopilot/scripts/weekly-suggestions-analysis.sh
+TimeoutStartSec=1800
+StandardOutput=append:/var/log/adoff-suggestions-analysis.log
+StandardError=append:/var/log/adoff-suggestions-analysis.log

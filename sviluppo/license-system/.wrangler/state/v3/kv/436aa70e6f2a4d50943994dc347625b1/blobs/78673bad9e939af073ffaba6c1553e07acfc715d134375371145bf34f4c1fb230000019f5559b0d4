@@ -1,0 +1,2673 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>AdOff Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a1a;--card:#12122a;--border:#2a2a4a;
+  --accent:#7c5cfc;--success:#4ade80;--danger:#f43f5e;--warn:#fbbf24;
+  --text:#e0e0f0;--muted:#6a6a8a;--input:#1a1a36;--sidebar:220px
+}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+
+/* ── LOGIN ── */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at top,#12122a 0%,var(--bg) 70%)}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px;width:400px;max-width:95vw}
+.login-logo{text-align:center;font-size:26px;font-weight:800;margin-bottom:6px}
+.login-logo span{color:var(--accent)}
+.login-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:28px}
+.login-box input{width:100%;background:var(--input);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--text);font-size:14px;outline:none;margin-bottom:12px;transition:border-color .2s}
+.login-box input:focus{border-color:var(--accent)}
+.err{color:var(--danger);font-size:12px;margin-bottom:12px;display:none}
+.err.show{display:block}
+.ok-msg{color:var(--success);font-size:12px;margin-bottom:12px;display:none}
+.ok-msg.show{display:block}
+.link{color:var(--accent);font-size:12px;cursor:pointer;margin-top:8px;display:inline-block}
+.link:hover{text-decoration:underline}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#6a4de0}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-accent{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.btn-danger{background:rgba(244,63,94,.15);color:var(--danger);border:1px solid rgba(244,63,94,.3)}
+.btn-danger:hover{background:rgba(244,63,94,.25)}
+.btn-success{background:rgba(74,222,128,.15);color:var(--success);border:1px solid rgba(74,222,128,.3)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-full{width:100%;justify-content:center}
+.btn-icon{padding:6px 10px;font-size:16px;background:transparent;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--muted);transition:all .15s}
+.btn-icon:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── LAYOUT ── */
+.app{display:none}
+.app.show{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar);background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .25s}
+.sidebar-logo{padding:20px 20px 16px;font-size:20px;font-weight:800;border-bottom:1px solid var(--border)}
+.sidebar-logo span{color:var(--accent)}
+.sidebar-nav{flex:1;padding:12px 8px;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;transition:all .15s;margin-bottom:2px;user-select:none}
+.nav-item:hover{background:rgba(124,92,252,.1);color:var(--text)}
+.nav-item.active{background:rgba(124,92,252,.2);color:var(--accent)}
+.nav-icon{font-size:18px;width:24px;text-align:center}
+.sidebar-footer{padding:16px;border-top:1px solid var(--border)}
+.admin-badge{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.admin-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.admin-name{font-size:13px;font-weight:600}
+.admin-role{font-size:11px;color:var(--muted)}
+.main{margin-left:var(--sidebar);flex:1;min-height:100vh}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:16px;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.page{padding:24px 28px;display:none}
+.page.active{display:block}
+
+/* ── CARDS / STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden}
+.stat-card::before{content:"";position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 12px 0 60px;opacity:.06;background:var(--accent)}
+.stat-val{font-size:30px;font-weight:800;color:var(--accent);line-height:1}
+.stat-val.green{color:var(--success)}
+.stat-val.red{color:var(--danger)}
+.stat-val.gold{color:var(--warn)}
+.stat-label{font-size:11px;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:.5px}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+.card-title{font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#0e0e26;padding:11px 16px;text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 16px;border-bottom:1px solid rgba(42,42,74,.5);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(124,92,252,.04)}
+.mono{font-family:monospace;font-size:12px;color:var(--accent)}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-active{background:rgba(74,222,128,.12);color:var(--success);border:1px solid rgba(74,222,128,.2)}
+.badge-expired{background:rgba(251,191,36,.12);color:var(--warn);border:1px solid rgba(251,191,36,.2)}
+.badge-revoked{background:rgba(244,63,94,.12);color:var(--danger);border:1px solid rgba(244,63,94,.2)}
+.badge-monthly{background:rgba(124,92,252,.12);color:var(--accent);border:1px solid rgba(124,92,252,.2)}
+.badge-annual{background:rgba(74,222,128,.12);color:var(--success);border:1px solid rgba(74,222,128,.2)}
+.badge-lifetime{background:rgba(251,191,36,.12);color:var(--warn);border:1px solid rgba(251,191,36,.2)}
+.badge-open{background:rgba(251,191,36,.12);color:var(--warn);border:1px solid rgba(251,191,36,.2)}
+.badge-closed{background:rgba(74,222,128,.12);color:var(--success);border:1px solid rgba(74,222,128,.2)}
+
+/* ── FORM ── */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.field label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select,.field textarea{background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;transition:border-color .2s;width:100%}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:80px;font-family:inherit}
+.field select option{background:var(--card)}
+.form-row{display:flex;gap:14px;flex-wrap:wrap}
+.form-row .field{flex:1;min-width:140px}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.toolbar input{background:var(--input);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text);font-size:13px;outline:none;min-width:240px;transition:border-color .2s}
+.toolbar input:focus{border-color:var(--accent)}
+.toolbar select{background:var(--input);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text);font-size:13px;outline:none;cursor:pointer}
+.spacer{flex:1}
+
+/* ── LOADING ── */
+.loader{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+.loader-lg{width:40px;height:40px;border-width:3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-center{display:flex;align-items:center;justify-content:center;padding:60px;flex-direction:column;gap:16px;color:var(--muted)}
+
+/* ── TOAST ── */
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:13px;font-weight:500;min-width:260px;animation:toastIn .25s ease;display:flex;align-items:center;gap:10px}
+.toast.success{border-color:rgba(74,222,128,.4)}
+.toast.error{border-color:rgba(244,63,94,.4)}
+.toast-icon{font-size:16px}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:520px;max-width:95vw;max-height:85vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;padding:4px}
+.modal-close:hover{color:var(--text)}
+
+/* ── CHART ── */
+.chart-wrap{position:relative;height:200px}
+.chart-wrap-lg{height:260px}
+
+/* ── PROGRESS BAR ── */
+.progress{background:var(--input);border-radius:20px;height:6px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:20px;background:var(--accent);transition:width .4s}
+
+/* ── EXPAND ROW ── */
+.detail-row{display:none;background:rgba(124,92,252,.04)}
+.detail-row.show{display:table-row}
+.detail-cell{padding:16px 24px!important}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.detail-item{background:var(--input);border-radius:8px;padding:10px 14px}
+.detail-item .dk{font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px}
+.detail-item .dv{font-size:13px;font-weight:600}
+.inline-edit{background:var(--input);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;outline:none;width:100%}
+.inline-edit:focus{border-color:var(--accent)}
+
+/* ── TICKET ── */
+.ticket-reply{background:var(--input);border-radius:8px;padding:12px 14px;margin-top:8px}
+.ticket-reply.admin{background:rgba(124,92,252,.1);border-left:3px solid var(--accent)}
+.reply-meta{font-size:11px;color:var(--muted);margin-bottom:4px}
+.reply-text{font-size:13px;line-height:1.6}
+
+/* ── COUNTRY BAR ── */
+.country-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(42,42,74,.4)}
+.country-row:last-child{border-bottom:none}
+.country-bar{flex:1;max-width:180px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:none}
+  .main{margin-left:0}
+  .row-2,.row-3{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .topbar{padding:12px 16px}
+  .page{padding:16px}
+  .mobile-menu-btn{display:flex!important}
+}
+.mobile-menu-btn{display:none;background:none;border:none;color:var(--text);cursor:pointer;font-size:22px;padding:4px}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+.overlay.show{display:block}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+
+/* ── DIVIDER ── */
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+.section-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+
+/* ── STAT TABS ── */
+.stat-tabs{display:flex;gap:4px;margin:18px 0 16px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.stat-tab{background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);font-size:13px;font-weight:600;padding:10px 16px;cursor:pointer;transition:all .15s;border-radius:8px 8px 0 0;margin-bottom:-1px}
+.stat-tab:hover{color:var(--text);background:rgba(124,92,252,.08)}
+.stat-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.stat-panel{display:none}
+.stat-panel.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <!-- Main login form -->
+  <div class="login-box" id="loginBox">
+    <div class="login-logo">Ad<span>Off</span></div>
+    <div class="login-sub">Admin Dashboard</div>
+    <div class="err" id="loginErr"></div>
+    <input type="text" id="loginUser" placeholder="Username" autocomplete="username">
+    <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password">
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Accedi</button>
+    <div style="display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:12px">
+      <span style="flex:1;height:1px;background:var(--border,rgba(124,92,252,.18))"></span>oppure<span style="flex:1;height:1px;background:var(--border,rgba(124,92,252,.18))"></span>
+    </div>
+    <button class="btn btn-outline btn-full" onclick="loginGoogle()" style="display:flex;align-items:center;justify-content:center;gap:10px">
+      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-2.1 14.1-5.5l-6.5-5.5c-2 1.5-4.7 2.5-7.6 2.5-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l6.5 5.5C41.4 36.3 44 30.7 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>
+      Continua con Google
+    </button>
+    <div style="text-align:center;margin-top:14px">
+      <span class="link" onclick="showPanel('forgot')">Password dimenticata?</span>
+    </div>
+  </div>
+
+  <!-- Forgot password -->
+  <div class="login-box" id="forgotBox" style="display:none">
+    <div class="login-logo">Ad<span>Off</span></div>
+    <div class="login-sub">Recupero Password</div>
+    <div class="err" id="forgotErr"></div>
+    <div class="ok-msg" id="forgotOk"></div>
+    <input type="email" id="forgotEmail" placeholder="Email admin">
+    <button class="btn btn-primary btn-full" onclick="doForgot()">Invia link reset</button>
+    <div style="text-align:center;margin-top:12px">
+      <span class="link" onclick="showPanel('login')">← Torna al login</span>
+    </div>
+  </div>
+
+  <!-- Reset password -->
+  <div class="login-box" id="resetBox" style="display:none">
+    <div class="login-logo">Ad<span>Off</span></div>
+    <div class="login-sub">Nuova Password</div>
+    <div class="err" id="resetErr"></div>
+    <div class="ok-msg" id="resetOk"></div>
+    <input type="password" id="resetPass" placeholder="Nuova password">
+    <input type="password" id="resetPass2" placeholder="Conferma password">
+    <button class="btn btn-primary btn-full" onclick="doReset()">Imposta password</button>
+  </div>
+</div>
+
+<!-- OVERLAY (mobile) -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- DASHBOARD -->
+<div class="app" id="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">Ad<span>Off</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-page="stats" onclick="navTo('stats')">
+        <span class="nav-icon">📊</span><span>Statistiche</span>
+      </div>
+      <div class="nav-item" data-page="licenses" onclick="navTo('licenses')">
+        <span class="nav-icon">🔑</span><span>Licenze</span>
+      </div>
+      <div class="nav-item" data-page="finance" onclick="navTo('finance')">
+        <span class="nav-icon">💰</span><span>Finanza</span>
+      </div>
+      <div class="nav-item" data-page="outreach" onclick="navTo('outreach')">
+        <span class="nav-icon">📣</span><span>Outreach</span>
+      </div>
+      <div class="nav-item" data-page="support" onclick="navTo('support')">
+        <span class="nav-icon">💬</span><span>Supporto</span>
+      </div>
+      <div class="nav-item" data-page="suggestions" onclick="navTo('suggestions')">
+        <span class="nav-icon">💡</span><span>Suggerimenti</span>
+      </div>
+      <div class="nav-item" data-page="chat" onclick="navTo('chat')">
+        <span class="nav-icon">🤖</span><span>Chat AI</span>
+      </div>
+      <div class="nav-item" data-page="settings" onclick="navTo('settings')">
+        <span class="nav-icon">⚙</span><span>Impostazioni</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="admin-badge">
+        <div class="admin-avatar">A</div>
+        <div>
+          <div class="admin-name" id="adminName">Admin</div>
+          <div class="admin-role">Administrator</div>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm btn-full" onclick="doLogout()">Esci</button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+          <div class="status-dot"></div><span>Worker online</span>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="refreshCurrentPage()">↻ Aggiorna</button>
+      </div>
+    </div>
+
+    <!-- PAGE: DASHBOARD (legacy — non più nel menu, sostituita dal pool Statistiche) -->
+    <div class="page" id="page-dashboard">
+      <div class="stats-grid" id="dash-stats">
+        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+      </div>
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Revenue ultimi 7 giorni</div>
+          <div class="chart-wrap"><canvas id="dashRevenueChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Distribuzione piani</div>
+          <div class="chart-wrap"><canvas id="dashPlanChart"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Installazioni recenti</div>
+        <div id="recentInstalls"><div class="loading-center"><div class="loader"></div></div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: LICENZE -->
+    <div class="page" id="page-licenses">
+      <div class="toolbar">
+        <input type="text" id="licSearch" placeholder="🔍  Cerca per email o key..." oninput="filterLicenses()">
+        <select id="licPlan" onchange="filterLicenses()">
+          <option value="">Tutti i piani</option>
+          <option value="monthly">Mensile</option>
+          <option value="annual">Annuale</option>
+          <option value="lifetime">Lifetime</option>
+        </select>
+        <select id="licStatus" onchange="filterLicenses()">
+          <option value="">Tutti gli stati</option>
+          <option value="active">Attive</option>
+          <option value="expired">Scadute</option>
+          <option value="revoked">Revocate</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn btn-primary" onclick="toggleNewLicForm()">＋ Nuova Licenza</button>
+      </div>
+
+      <!-- New license form -->
+      <div class="card" id="newLicForm" style="display:none;margin-bottom:16px">
+        <div class="card-title">Genera nuova licenza</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Piano</label>
+            <select id="nlPlan">
+              <option value="monthly">Mensile</option>
+              <option value="annual">Annuale</option>
+              <option value="lifetime">Lifetime</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Mesi validità</label>
+            <input type="number" id="nlMonths" value="1" min="1" max="120" placeholder="1">
+          </div>
+          <div class="field">
+            <label>Email (opzionale)</label>
+            <input type="email" id="nlEmail" placeholder="utente@email.com">
+          </div>
+          <div class="field">
+            <label>Max dispositivi</label>
+            <input type="number" id="nlDevices" value="3" min="1" max="10">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="generateKey()">Genera Key</button>
+          <button class="btn btn-outline" onclick="toggleNewLicForm()">Annulla</button>
+          <div id="newKeyResult" style="display:none;flex:1;background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px 14px;align-items:center;gap:10px">
+            <span class="mono" id="newKeyText" style="flex:1;word-break:break-all"></span>
+            <button class="btn-icon" title="Copia" onclick="copyKey(document.getElementById('newKeyText').textContent)">⎘</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bulk action bar -->
+      <div id="bulkBar" style="display:none;background:rgba(124,92,252,.1);border:1px solid var(--accent);border-radius:10px;padding:12px 20px;margin-bottom:14px;align-items:center;justify-content:space-between">
+        <span style="font-size:13px;color:var(--accent);font-weight:600"><span id="bulkCount">0</span> selezionate</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm btn-outline" onclick="bulkAction('revoke')">Revoca selezionate</button>
+          <button class="btn btn-sm btn-danger" onclick="bulkAction('delete')">Elimina selezionate</button>
+          <button class="btn btn-sm btn-outline" onclick="clearSelection()">Deseleziona</button>
+        </div>
+      </div>
+
+      <div id="licTableWrap">
+        <div class="loading-center"><div class="loader"></div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: FINANZA -->
+    <div class="page" id="page-finance">
+      <div class="stats-grid" id="fin-stats">
+        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+      </div>
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Revenue ultimi 30 giorni</div>
+          <div class="chart-wrap chart-wrap-lg"><canvas id="finRevenueChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Revenue per piano</div>
+          <div class="chart-wrap"><canvas id="finPlanChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div class="stats-grid" id="ana-stats">
+        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+      </div>
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Installazioni ultimi 7 giorni</div>
+          <div class="chart-wrap"><canvas id="anaInstallChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Top Paesi</div>
+          <div id="topCountries"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Download per browser</div>
+          <div id="browserStats"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Log installazioni recenti</div>
+          <div id="installLog"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: STATISTICHE (pool unico — dashboard + analytics + churn) -->
+    <div class="page active" id="page-stats">
+      <!-- KPI sempre visibili (riassunto cross-tab) -->
+      <div class="stats-grid" id="st-kpis">
+        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+      </div>
+
+      <!-- Tab -->
+      <div class="stat-tabs">
+        <button class="stat-tab active" data-tab="overview" onclick="switchStatsTab('overview')">📊 Panoramica</button>
+        <button class="stat-tab" data-tab="acq" onclick="switchStatsTab('acq')">📥 Acquisizione</button>
+        <button class="stat-tab" data-tab="churn" onclick="switchStatsTab('churn')">🗑️ Disinstallazioni</button>
+        <button class="stat-tab" data-tab="biz" onclick="switchStatsTab('biz')">💰 Business</button>
+        <button class="stat-tab" data-tab="seo" onclick="switchStatsTab('seo')">🔍 SEO / AEO</button>
+        <button class="stat-tab" data-tab="autofix" onclick="switchStatsTab('autofix')">🔧 Autofix</button>
+      </div>
+
+      <!-- Tab: Panoramica -->
+      <div class="stat-panel active" data-panel="overview">
+        <div class="row-2">
+          <div class="card">
+            <div class="card-title">Installazioni vs Disinstallazioni · ultimi 7 giorni</div>
+            <div class="chart-wrap"><canvas id="stNetChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Top Paesi (installazioni)</div>
+            <div id="stCountries"><div class="loading-center"><div class="loader"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Acquisizione -->
+      <div class="stat-panel" data-panel="acq">
+        <div class="row-2">
+          <div class="card">
+            <div class="card-title">Sorgenti di installazione</div>
+            <div id="stSources"><div class="loading-center"><div class="loader"></div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Download per browser</div>
+            <div id="stDlBrowser"><div class="loading-center"><div class="loader"></div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Installazioni recenti</div>
+          <div id="stInstallLog"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Tab: Disinstallazioni -->
+      <div class="stat-panel" data-panel="churn">
+        <div class="row-2">
+          <div class="card">
+            <div class="card-title">Motivi di disinstallazione</div>
+            <div id="stReasons"><div class="loading-center"><div class="loader"></div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Disinstallazioni per browser</div>
+            <div id="stUninstBrowser"><div class="loading-center"><div class="loader"></div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Disinstallazioni recenti (con commenti)</div>
+          <div id="stUninstLog"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Tab: Business -->
+      <div class="stat-panel" data-panel="biz">
+        <div class="row-2">
+          <div class="card">
+            <div class="card-title">Revenue ultimi 7 giorni</div>
+            <div class="chart-wrap"><canvas id="stRevenueChart"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Distribuzione piani</div>
+            <div class="chart-wrap"><canvas id="stPlanChart"></canvas></div>
+          </div>
+        </div>
+    </div>
+
+    <!-- Tab: SEO / AEO -->
+    <div class="stat-panel" data-panel="seo">
+      <!-- Header with filters -->
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+        <div style="font-size:13px;color:var(--muted)">Periodo:</div>
+        <div class="period-btns">
+          <button class="btn btn-sm btn-outline" id="seo-period-7" onclick="setSeoPeriod(7)">7g</button>
+          <button class="btn btn-sm btn-outline" id="seo-period-30" onclick="setSeoPeriod(30)">30g</button>
+          <button class="btn btn-sm btn-outline" id="seo-period-90" onclick="setSeoPeriod(90)">90g</button>
+        </div>
+        <div class="period-btns" style="margin-left:12px">
+          <select id="seo-device" onchange="loadSeo()" style="background:var(--input);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 8px;font-size:12px">
+            <option value="">Tutti i device</option>
+            <option value="DESKTOP">Desktop</option>
+            <option value="MOBILE">Mobile</option>
+            <option value="TABLET">Tablet</option>
+          </select>
+          <select id="seo-country" onchange="loadSeo()" style="background:var(--input);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 8px;font-size:12px">
+            <option value="">Tutti i paesi</option>
+          </select>
+        </div>
+        <button class="btn btn-sm" style="margin-left:auto;background:var(--success);color:#000;font-weight:600" onclick="refreshSeo()">↻ Aggiorna</button>
+        <span id="seo-updated" style="font-size:11px;color:var(--muted)"></span>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="stats-grid" id="seo-kpis">
+        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+      </div>
+
+      <!-- Charts row: Trend + Device -->
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">📈 Trend Clicks & Impressions</div>
+          <div id="seo-trend-legend" style="display:flex;gap:16px;font-size:12px;margin-bottom:8px">
+            <span style="color:#7c5cfc">● Clicks</span>
+            <span style="color:#60a5fa">● Impressions</span>
+          </div>
+          <div class="chart-wrap chart-wrap-lg"><canvas id="seoTrendChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📱 Device Split</div>
+          <div class="chart-wrap"><canvas id="seoDeviceChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Keyword + Pages row -->
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">🔑 Top Keyword per Clicks</div>
+          <div id="seoKeywords"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📄 Top Pagine per Impressions</div>
+          <div id="seoPages"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Countries + Search Appearances row -->
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">🌍 Top Paesi</div>
+          <div id="seoCountries"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">✨ Search Appearances</div>
+          <div id="seoAppearances"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Opportunities (keywords ranking 5-20) -->
+      <div class="card">
+        <div class="card-title">🎯 Opportunità — Keyword in posizione 5-20 (alto potenziale)</div>
+        <div id="seoOpportunities"><div class="loading-center"><div class="loader"></div></div></div>
+      </div>
+
+      <!-- Sitemap + URL Inspector row -->
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">🗺️ Sitemap</div>
+          <div id="seoSitemaps"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔍 URL Inspector</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <input type="text" id="seo-inspect-url" placeholder="https://adoff.app/..." style="flex:1;background:var(--input);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 12px;font-size:13px">
+            <button class="btn btn-sm btn-primary" onclick="inspectSeoUrl()">Ispeziona</button>
+            <button class="btn btn-sm btn-outline" onclick="batchInspectSitemap()">Batch sitemap</button>
+          </div>
+          <div id="seo-inspect-result"><div class="empty" style="padding:16px"><p style="color:var(--muted);font-size:13px">Inserisci un URL e clicca "Ispeziona" per vedere lo stato di indicizzazione.</p></div></div>
+        </div>
+      </div>
+
+      <!-- Azioni + GA4 row -->
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">⚡ Azioni Rapide</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-sm btn-outline" onclick="submitSitemap()">🔄 Submit Sitemap</button>
+              <button class="btn btn-sm btn-outline" onclick="exportSeoCsv()">📤 Esporta CSV</button>
+              <button class="btn btn-sm btn-outline" onclick="exportSeoPng()">📊 Esporta PNG</button>
+            </div>
+            <div style="font-size:12px;color:var(--muted)">Ultimo submit sitemap: <span id="seo-last-sitemap">—</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 Google Analytics 4</div>
+          <div id="seo-ga4"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+
+      <!-- Batch inspect results -->
+      <div id="seo-batch-panel" style="display:none">
+        <div class="card">
+          <div class="card-title">🔍 Risultati Batch Inspect</div>
+          <div id="seo-batch-results"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+      </div>
+
+      <!-- Tab: Autofix — Ad Leak Blocker -->
+      <div class="stat-panel" data-panel="autofix">
+        <!-- Header -->
+        <div style="margin-bottom:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px">
+            <div style="font-size:15px;font-weight:600">🔧 Autofix — Ad Leak Blocker</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div id="autofix-mode-badge"></div>
+              <button class="btn btn-sm btn-accent" onclick="loadAutofix();loadAutofixLeaks()" title="Ricarica dati">↻</button>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">Analizza i leak rilevati dal crawler notturno, decide quali fixare, io li applico.</div>
+        </div>
+
+        <!-- Shadow Mode notice -->
+        <div id="autofix-shadow-notice" style="display:none;padding:10px 14px;background:#2a2a1a;border:1px solid #ffbc6b;border-radius:8px;margin-bottom:14px;font-size:12px;color:#ffbc6b">
+          <b>⚠ Shadow Mode attivo</b> — Nessun fix viene deployato automaticamente. Dopo aver deciso, esegui manualmente da riga di comando: <code style="background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:3px;display:inline-block;margin-top:4px">node apply_decisions.mjs --date today</code>
+        </div>
+
+        <!-- Stats row -->
+        <div id="autofix-stats-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px"></div>
+
+        <!-- Bucket filter -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" id="autofix-filter-bar">
+          <button class="btn btn-sm" style="background:var(--btn-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 12px" data-bucket="all" onclick="filterAutofixBucket('all')">Tutti <span id="cnt-all" style="color:var(--muted)"></span></button>
+          <button class="btn btn-sm" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:6px;padding:5px 12px" data-bucket="ads_real" onclick="filterAutofixBucket('ads_real')">🎯 Ad-veri <span id="cnt-ads_real" style="opacity:0.7"></span></button>
+          <button class="btn btn-sm" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);color:#eab308;border-radius:6px;padding:5px 12px" data-bucket="tracking" onclick="filterAutofixBucket('tracking')">📡 Tracking <span id="cnt-tracking" style="opacity:0.7"></span></button>
+          <button class="btn btn-sm" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:6px;padding:5px 12px" data-bucket="dom_fp" onclick="filterAutofixBucket('dom_fp')">❓ DOM (sospetti FP) <span id="cnt-dom_fp" style="opacity:0.7"></span></button>
+          <button class="btn btn-sm" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:6px;padding:5px 12px" data-bucket="approved" onclick="filterAutofixBucket('approved')">✅ Approvati <span id="cnt-approved" style="opacity:0.7"></span></button>
+          <button class="btn btn-sm" style="background:rgba(100,116,139,0.1);border:1px solid rgba(100,116,139,0.3);color:#94a3b8;border-radius:6px;padding:5px 12px" data-bucket="ignored" onclick="filterAutofixBucket('ignored')">🚫 Ignorati <span id="cnt-ignored" style="opacity:0.7"></span></button>
+        </div>
+
+        <!-- CTA per azioni collettive -->
+        <div id="autofix-bulk-actions" style="display:none;padding:10px 14px;background:var(--input);border-radius:8px;margin-bottom:14px;border:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
+            <span id="bulk-selection-count">0</span> leak selezionati:
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-sm" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);color:#10b981;border-radius:6px;padding:5px 12px;font-size:12px" onclick="bulkApproveSelected()">✅ Approva tutti</button>
+            <button class="btn btn-sm" style="background:rgba(100,116,139,0.15);border:1px solid rgba(100,116,139,0.4);color:#94a3b8;border-radius:6px;padding:5px 12px;font-size:12px" onclick="bulkIgnoreSelected()">🚫 Ignora tutti</button>
+            <button class="btn btn-sm" style="background:var(--btn-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 12px;font-size:12px" onclick="clearSelection()">🗑️ Deseleziona</button>
+          </div>
+        </div>
+
+        <!-- Sfondo per i leak -->
+        <div id="autofix-leaks-container">
+          <div id="autofix-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 16px;color:var(--muted)">
+            <div class="loader" style="margin-bottom:12px"></div>
+            <div style="font-size:13px">Carico i leak dal sistema...</div>
+          </div>
+        </div>
+        <div id="autofix-empty" style="display:none;text-align:center;padding:32px 16px;color:var(--muted);font-size:13px">Nessun leak in questo bucket.</div>
+      </div>
+    </div>
+
+    <!-- PAGE: OUTREACH -->
+    <div class="page" id="page-outreach">
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title">Genera &amp; registra referral code</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="orefname" placeholder="Nome creator (es. Naomi Brockwell)" style="flex:1;min-width:200px;background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 11px">
+          <button class="btn btn-primary" onclick="genOutreachCode()">Genera</button>
+          <span id="orefout" style="font-family:ui-monospace,monospace;color:#4ade80;font-weight:700"></span>
+          <button class="btn btn-primary" id="orefreg" style="display:none;background:#2a2a4a" onclick="registerOutreachCode()">Registra (traccia conversioni)</button>
+        </div>
+        <div id="orefmsg" style="font-size:12px;color:var(--muted);margin-top:8px">Il codice registrato traccia le conversioni in automatico via il sistema referral esistente.</div>
+      </div>
+      <div id="outreachSum" class="card" style="margin-bottom:16px;font-size:13px;color:var(--muted)"></div>
+      <div id="outreachList"><div class="loading-center"><div class="loader"></div></div></div>
+    </div>
+
+    <!-- PAGE: SUPPORTO -->
+    <div class="page" id="page-support">
+      <div class="toolbar">
+        <select id="ticketFilter" onchange="loadTickets()">
+          <option value="">Tutti i ticket</option>
+          <option value="open">Aperti</option>
+          <option value="closed">Chiusi</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn btn-outline btn-sm" onclick="loadTickets()">↻ Ricarica</button>
+      </div>
+      <div id="ticketTableWrap">
+        <div class="loading-center"><div class="loader"></div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: SUGGERIMENTI -->
+    <div class="page" id="page-suggestions">
+      <div class="toolbar">
+        <select id="suggStatusFilter" onchange="loadSuggestions(true)">
+          <option value="">Tutti gli stati</option>
+          <option value="new">Nuovi</option>
+          <option value="triaged">Triage</option>
+          <option value="proposed">Proposti</option>
+          <option value="approved">Approvati</option>
+          <option value="in_progress">In corso</option>
+          <option value="done">Fatti</option>
+          <option value="rejected">Rifiutati</option>
+        </select>
+        <select id="suggTypeFilter" onchange="loadSuggestions(true)">
+          <option value="">Tutti i tipi</option>
+          <option value="feature">Funzionalità</option>
+          <option value="bug">Bug</option>
+          <option value="improvement">Miglioramento</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn btn-outline btn-sm" onclick="loadSuggestions(true)">↻ Ricarica</button>
+      </div>
+      <div id="suggTableWrap">
+        <div class="loading-center"><div class="loader"></div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: CHAT AI -->
+    <div class="page" id="page-chat">
+      <div class="toolbar">
+        <span style="color:var(--muted);font-size:13px">Storico conversazioni del chatbot AI (retention 90 giorni)</span>
+        <div class="spacer"></div>
+        <button class="btn btn-outline btn-sm" onclick="loadChats(true)">↻ Ricarica</button>
+      </div>
+      <div id="chatTableWrap">
+        <div class="loading-center"><div class="loader"></div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: IMPOSTAZIONI -->
+    <div class="page" id="page-settings">
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Cambia password</div>
+          <div class="field">
+            <label>Password attuale</label>
+            <input type="password" id="settCurrPass" placeholder="Password corrente">
+          </div>
+          <div class="field">
+            <label>Nuova password</label>
+            <input type="password" id="settNewPass" placeholder="Min. 8 caratteri">
+          </div>
+          <div class="field">
+            <label>Conferma password</label>
+            <input type="password" id="settNewPass2" placeholder="Ripeti la nuova password">
+          </div>
+          <div class="err" id="settPassErr"></div>
+          <div class="ok-msg" id="settPassOk"></div>
+          <button class="btn btn-primary" onclick="changePassword()">Aggiorna password</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Email di recupero</div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Usata per il reset password tramite link email.</p>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" id="settEmail" placeholder="admin@tuamail.com">
+          </div>
+          <div class="err" id="settEmailErr"></div>
+          <div class="ok-msg" id="settEmailOk"></div>
+          <button class="btn btn-primary" onclick="saveRecoveryEmail()">Salva email</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Info API</div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="dk">Endpoint</div>
+            <div class="dv mono" id="apiEndpoint" style="font-size:12px">–</div>
+          </div>
+          <div class="detail-item">
+            <div class="dk">Versione</div>
+            <div class="dv">AdOff Worker</div>
+          </div>
+          <div class="detail-item">
+            <div class="dk">Autenticazione</div>
+            <div class="dv">Session Token</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Edit License Modal -->
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <div class="modal-title">
+      Modifica Licenza
+      <button class="modal-close" onclick="closeModal('editModal')">×</button>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Piano</label>
+        <select id="editPlan">
+          <option value="monthly">Mensile</option>
+          <option value="annual">Annuale</option>
+          <option value="lifetime">Lifetime</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Max dispositivi</label>
+        <input type="number" id="editDevices" min="1" max="10">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="editEmail">
+      </div>
+      <div class="field">
+        <label>Scadenza (YYYY-MM-DD)</label>
+        <input type="date" id="editExpires">
+      </div>
+    </div>
+    <input type="hidden" id="editKey">
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-primary" onclick="saveLicense()">Salva modifiche</button>
+      <button class="btn btn-outline" onclick="closeModal('editModal')">Annulla</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ticket Detail Modal -->
+<div class="modal-bg" id="ticketModal">
+  <div class="modal" style="width:640px">
+    <div class="modal-title">
+      <span id="ticketModalTitle">Ticket</span>
+      <button class="modal-close" onclick="closeModal('ticketModal')">×</button>
+    </div>
+    <div id="ticketDetail"><div class="loading-center"><div class="loader"></div></div></div>
+  </div>
+</div>
+
+<!-- Suggestion Detail Modal -->
+<div class="modal-bg" id="suggModal">
+  <div class="modal" style="width:640px">
+    <div class="modal-title">
+      <span id="suggModalTitle">Suggerimento</span>
+      <button class="modal-close" onclick="closeModal('suggModal')">×</button>
+    </div>
+    <div id="suggDetail"><div class="loading-center"><div class="loader"></div></div></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+"use strict";
+
+// Same-origin /api (served by worker route adoff.app/api/*) — avoids cross-subdomain CORS.
+const API = (location.hostname === "adoff.app" || location.hostname.endsWith(".adoff.app"))
+  ? "/api"
+  : "https://api.adoff.app";
+let token = sessionStorage.getItem("adoff_admin_token") || "";
+let currentPage = "stats";
+let licData = [];
+const charts = {};
+
+// ── API HELPER ──────────────────────────────────────────────
+let _logoutScheduled = false;
+async function api(path, opts = {}) {
+  const h = { "Content-Type": "application/json", ...(opts.headers || {}) };
+  if (token) h["X-Admin-Token"] = token;
+  try {
+    const r = await fetch(API + path, { ...opts, headers: h });
+    const data = await r.json();
+    if (r.status === 401) {
+      // Schedule logout once — avoid duplicate doLogout() from parallel requests
+      if (!_logoutScheduled) {
+        _logoutScheduled = true;
+        setTimeout(() => { _logoutScheduled = false; doLogout(); }, 50);
+      }
+      return { ok: false, error: "Sessione scaduta" };
+    }
+    return data;
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+// ── TOAST ───────────────────────────────────────────────────
+function toast(msg, type = "success") {
+  const wrap = document.getElementById("toast-container");
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${type === "success" ? "✓" : "✕"}</span><span>${msg}</span>`;
+  wrap.appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transform = "translateY(8px)"; el.style.transition = ".3s"; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+// ── AUTH ─────────────────────────────────────────────────────
+function showPanel(name) {
+  document.getElementById("loginBox").style.display = name === "login" ? "" : "none";
+  document.getElementById("forgotBox").style.display = name === "forgot" ? "" : "none";
+  document.getElementById("resetBox").style.display = name === "reset" ? "" : "none";
+}
+
+async function doLogin() {
+  const u = document.getElementById("loginUser").value.trim();
+  const p = document.getElementById("loginPass").value;
+  const err = document.getElementById("loginErr");
+  err.className = "err";
+  if (!u || !p) { err.textContent = "Inserisci username e password"; err.className = "err show"; return; }
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = "Accesso...";
+  const d = await api("/admin/login", { method: "POST", body: JSON.stringify({ username: u, password: p }) });
+  btn.disabled = false; btn.textContent = "Accedi";
+  if (!d.ok) { err.textContent = d.error || "Credenziali non valide"; err.className = "err show"; return; }
+  token = d.token;
+  sessionStorage.setItem("adoff_admin_token", token);
+  document.getElementById("adminName").textContent = d.username || "Admin";
+  startApp();
+}
+
+// Login super-admin via Google: solo l'email ADMIN_GOOGLE_EMAIL ottiene la sessione admin
+// (gli account Google degli utenti normali vengono respinti lato worker).
+function loginGoogle() {
+  window.location.href = API + "/oauth/google-admin/start";
+}
+
+async function doForgot() {
+  const email = document.getElementById("forgotEmail").value.trim();
+  const err = document.getElementById("forgotErr");
+  const ok = document.getElementById("forgotOk");
+  err.className = "err"; ok.className = "ok-msg";
+  if (!email) { err.textContent = "Inserisci l'email"; err.className = "err show"; return; }
+  const btn = event.target; btn.disabled = true;
+  const d = await api("/admin/reset-password", { method: "POST", body: JSON.stringify({ email }) });
+  btn.disabled = false;
+  if (!d.ok) { err.textContent = d.error || "Errore"; err.className = "err show"; return; }
+  ok.textContent = "Email inviata! Controlla la tua casella."; ok.className = "ok-msg show";
+}
+
+async function doReset() {
+  const resetToken = new URLSearchParams(location.search).get("reset");
+  const p1 = document.getElementById("resetPass").value;
+  const p2 = document.getElementById("resetPass2").value;
+  const err = document.getElementById("resetErr");
+  const ok = document.getElementById("resetOk");
+  err.className = "err"; ok.className = "ok-msg";
+  if (p1.length < 8) { err.textContent = "Minimo 8 caratteri"; err.className = "err show"; return; }
+  if (p1 !== p2) { err.textContent = "Le password non coincidono"; err.className = "err show"; return; }
+  const btn = event.target; btn.disabled = true;
+  const d = await api("/admin/reset-confirm", { method: "POST", body: JSON.stringify({ token: resetToken, newPassword: p1 }) });
+  btn.disabled = false;
+  if (!d.ok) { err.textContent = d.error || "Errore"; err.className = "err show"; return; }
+  ok.textContent = "Password aggiornata! Reindirizzamento..."; ok.className = "ok-msg show";
+  setTimeout(() => { history.replaceState({}, "", "/admin"); showPanel("login"); }, 2000);
+}
+
+function doLogout() {
+  token = ""; sessionStorage.removeItem("adoff_admin_token");
+  document.getElementById("app").className = "app";
+  document.getElementById("loginWrap").style.display = "";
+  showPanel("login");
+}
+
+// ── APP START ────────────────────────────────────────────────
+function startApp() {
+  document.getElementById("loginWrap").style.display = "none";
+  document.getElementById("app").className = "app show";
+  document.getElementById("apiEndpoint").textContent = location.origin || "same-origin";
+  navTo("stats");
+}
+
+async function init() {
+  // Callback login Google: il worker reindirizza con #token=... (successo) o #error=... (negato)
+  if (location.hash && location.hash.length > 1) {
+    const hp = new URLSearchParams(location.hash.slice(1));
+    const ht = hp.get("token"), he = hp.get("error");
+    if (ht || he) {
+      history.replaceState({}, "", location.pathname); // rimuovi subito il token dall'URL
+      if (ht) {
+        token = ht;
+        sessionStorage.setItem("adoff_admin_token", token);
+      } else {
+        showPanel("login");
+        const el = document.getElementById("loginErr");
+        el.textContent = he === "not_authorized"
+          ? "Questo account Google non è autorizzato come amministratore."
+          : "Login Google non riuscito. Riprova.";
+        el.className = "err show";
+      }
+    }
+  }
+  const resetToken = new URLSearchParams(location.search).get("reset");
+  if (resetToken) { showPanel("reset"); return; }
+  if (token) {
+    // Verify token is still valid before showing dashboard
+    const check = await api("/admin/stats");
+    if (!check.ok) {
+      // Token expired or invalid — clear and show login
+      token = "";
+      sessionStorage.removeItem("adoff_admin_token");
+      showPanel("login");
+    } else {
+      document.getElementById("loginWrap").style.display = "none";
+      document.getElementById("app").className = "app show";
+      document.getElementById("apiEndpoint").textContent = location.origin || "same-origin";
+      navTo("stats");
+    }
+  }
+  // Enter key on login
+  document.getElementById("loginPass").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+  document.getElementById("loginUser").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("loginPass").focus(); });
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────
+const PAGE_TITLES = { stats:"Statistiche", licenses:"Licenze", finance:"Finanza", outreach:"Outreach", support:"Supporto", suggestions:"Suggerimenti", chat:"Chat AI", settings:"Impostazioni" };
+
+function navTo(page) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  document.getElementById(`page-${page}`).classList.add("active");
+  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add("active");
+  document.getElementById("topbarTitle").textContent = PAGE_TITLES[page] || page;
+  currentPage = page;
+  closeSidebar();
+  loadPage(page);
+}
+
+function refreshCurrentPage() { loadPage(currentPage, true); }
+
+// Cambio tab nel pool Statistiche (KPI restano fissi sopra).
+function switchStatsTab(name) {
+  document.querySelectorAll("#page-stats .stat-tab").forEach(t => t.classList.toggle("active", t.getAttribute("data-tab") === name));
+  document.querySelectorAll("#page-stats .stat-panel").forEach(p => p.classList.toggle("active", p.getAttribute("data-panel") === name));
+  // Chart.js non calcola le dimensioni quando il canvas è in display:none → ridimensiona ora che è visibile
+  ["stNetChart", "stRevenueChart", "stPlanChart"].forEach(id => { if (charts[id] && charts[id].resize) charts[id].resize(); });
+  if (name === "seo") { loadSeo(); return; }
+  if (name === "autofix") { loadAutofix(); return; }
+}
+
+function loadPage(page, force = false) {
+  if (page === "dashboard") loadDashboard(force);
+  else if (page === "licenses") loadLicenses(force);
+  else if (page === "finance") loadFinance(force);
+  else if (page === "analytics") loadAnalytics(force);
+  else if (page === "stats") { loadStats(force); loadSeo(); }
+  else if (page === "outreach") loadOutreach(force);
+  else if (page === "support") loadTickets(force);
+  else if (page === "suggestions") loadSuggestions(force);
+  else if (page === "chat") loadChats(force);
+}
+
+// ── OUTREACH TRACKER (integrato nell'admin) ──────────────────
+let _outState = { records:{}, refCounts:{} };
+let _outLoaded = false;
+const OUT_TIERS = { p1:"Priorità 1 · review site", p2:"Priorità 2 · privacy authority", p3:"Priorità 3 · creator FOSS" };
+const OUT_ITEMS = [
+  {id:"o1",pri:"p1",t:"Cybernews",c:"Form contatto (footer cybernews.com)"},
+  {id:"o2",pri:"p1",t:"TechRadar Pro",c:"PR/contact form"},
+  {id:"o3",pri:"p1",t:"PCRisk",c:"press@pcrisk.com"},
+  {id:"o4",pri:"p1",t:"ProPrivacy",c:"Contact / affiliate inquiry"},
+  {id:"o5",pri:"p1",t:"Restore Privacy",c:"Contact form"},
+  {id:"o6",pri:"p1",t:"All About Cookies",c:"Contact form"},
+  {id:"o7",pri:"p1",t:"Ad Block Tester",c:"Contact form"},
+  {id:"o8",pri:"p1",t:"Privacy Guides (forum)",c:"discuss.privacyguides.net — NO payment"},
+  {id:"o9",pri:"p2",t:"Naomi Brockwell (NBTV)",c:"contact@nbtv.media"},
+  {id:"o10",pri:"p2",t:"Techlore",c:"contact@techlore.tech"},
+  {id:"o11",pri:"p2",t:"The Hated One",c:"Patreon / community post"},
+  {id:"o12",pri:"p2",t:"Rob Braxman",c:"brax.me secure contact"},
+  {id:"o13",pri:"p3",t:"DistroTube (Derek)",c:"derek@distrotube.com"},
+  {id:"o14",pri:"p3",t:"Luke Smith",c:"luke@lukesmith.xyz"},
+  {id:"o15",pri:"p3",t:"It's FOSS (Abhishek)",c:"hello@itsfoss.com"},
+];
+function _outBorder(s){ return s==="won"?"#4ade80":s==="reply"?"#fbbf24":s==="lost"?"#444":s?"var(--accent)":"var(--border)"; }
+async function loadOutreach(force=false){
+  if(_outLoaded && !force) return;
+  const wrap=document.getElementById("outreachList");
+  wrap.innerHTML='<div class="loading-center"><div class="loader"></div></div>';
+  const d=await api("/admin/outreach");
+  if(!d.ok){ wrap.innerHTML='<div class="loading-center" style="color:var(--danger)">Errore: '+(d.error||"")+'</div>'; return; }
+  _outState={records:d.records||{}, refCounts:d.refCounts||{}}; _outLoaded=true;
+  renderOutreach();
+}
+function renderOutreach(){
+  const wrap=document.getElementById("outreachList"); wrap.innerHTML=""; let lastPri="";
+  OUT_ITEMS.forEach(it=>{
+    if(it.pri!==lastPri){ const h=document.createElement("div"); h.className="card-title"; h.style.margin="18px 0 6px"; h.textContent=OUT_TIERS[it.pri]; wrap.appendChild(h); lastPri=it.pri; }
+    const rec=_outState.records[it.id]||{}; const rc=rec.refCode||"";
+    const conv=rc&&_outState.refCounts[rc.toUpperCase()];
+    const convTxt=rc?(conv?conv.count+" conversioni · €"+(conv.revenueCents/100).toFixed(2):"0 conversioni"):"—";
+    const card=document.createElement("div"); card.className="card"; card.style.marginBottom="10px"; card.id="oc-"+it.id;
+    card.style.borderColor=_outBorder(rec.status);
+    card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px"><b>'+it.t+'</b><span style="font-size:11px;color:var(--muted)">'+it.c+'</span></div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">'
+      +'<select data-oid="'+it.id+'" data-f="status" style="background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 8px;font-size:12px"><option value="">Da inviare</option><option value="sent">Inviato</option><option value="reply">Risposta</option><option value="won">Esito +</option><option value="lost">Esito −</option></select>'
+      +'<input data-oid="'+it.id+'" data-f="note" placeholder="note / data" style="flex:1;min-width:140px;background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 8px;font-size:12px">'
+      +'<input data-oid="'+it.id+'" data-f="refCode" placeholder="referral code" style="max-width:190px;background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 8px;font-size:12px"></div>'
+      +'<div style="font-size:12px;color:'+(conv?"#4ade80":"var(--muted)")+';margin-top:6px">Conversioni: '+convTxt+'</div>';
+    wrap.appendChild(card);
+    card.querySelector('[data-f="status"]').value=rec.status||"";
+    card.querySelector('[data-f="note"]').value=rec.note||"";
+    card.querySelector('[data-f="refCode"]').value=rc;
+  });
+  wrap.querySelectorAll("[data-oid]").forEach(el=>{
+    const ev=el.tagName==="SELECT"?"change":"input"; let t;
+    el.addEventListener(ev,()=>{ clearTimeout(t); t=setTimeout(()=>saveOutreach(el.dataset.oid), el.tagName==="SELECT"?0:600); });
+  });
+  updateOutreachSum();
+}
+async function saveOutreach(id){
+  const card=document.getElementById("oc-"+id);
+  const body={ id, status:card.querySelector('[data-f="status"]').value, note:card.querySelector('[data-f="note"]').value, refCode:card.querySelector('[data-f="refCode"]').value };
+  const d=await api("/admin/outreach-update",{method:"POST",body:JSON.stringify(body)});
+  if(d.ok){ _outState.records[id]=d.record; card.style.borderColor=_outBorder(body.status); updateOutreachSum(); }
+  else toast(d.error||"Errore salvataggio","error");
+}
+function updateOutreachSum(){
+  const recs=OUT_ITEMS.map(i=>_outState.records[i.id]||{});
+  const sent=recs.filter(r=>r.status).length, reply=recs.filter(r=>["reply","won","lost"].includes(r.status)).length, won=recs.filter(r=>r.status==="won").length;
+  let conv=0,rev=0; for(const k in _outState.refCounts){conv+=_outState.refCounts[k].count;rev+=_outState.refCounts[k].revenueCents;}
+  const el=document.getElementById("outreachSum");
+  if(el)el.innerHTML='📊 <b style="color:var(--text)">'+sent+'/'+OUT_ITEMS.length+'</b> contattati · <b style="color:var(--text)">'+reply+'</b> risposte · <b style="color:var(--text)">'+won+'</b> esiti + · 💶 <b style="color:var(--text)">'+conv+'</b> conversioni (€'+(rev/100).toFixed(2)+')';
+}
+function genOutreachCode(){
+  const n=(document.getElementById("orefname").value||"").trim();
+  const out=document.getElementById("orefout"), reg=document.getElementById("orefreg");
+  if(!n){ out.textContent=""; reg.style.display="none"; return; }
+  const code=n.toUpperCase().replace(/[^A-Z0-9]+/g,"-").replace(/^-+|-+$/g,"")+"-Q2-2026";
+  out.textContent=code; reg.style.display=""; reg.dataset.code=code;
+}
+async function registerOutreachCode(){
+  const code=document.getElementById("orefreg").dataset.code; const msg=document.getElementById("orefmsg");
+  const d=await api("/admin/outreach-code",{method:"POST",body:JSON.stringify({code})});
+  if(d.ok){ msg.innerHTML='✓ Codice <b>'+code+'</b> '+(d.already?"già registrato":"registrato")+'. Link creator: <b>https://adoff.app/r/'+code+'</b>'; toast("Codice registrato"); }
+  else { msg.innerHTML='<span style="color:var(--danger)">Errore: '+(d.error||"")+'</span>'; }
+}
+
+// ── CHAT AI (storico conversazioni chatbot) ──────────────────
+let chatsLoaded = false;
+async function loadChats(force = false) {
+  if (chatsLoaded && !force) return;
+  document.getElementById("chatTableWrap").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  const d = await api("/admin/chats");
+  if (!d.ok) {
+    document.getElementById("chatTableWrap").innerHTML = `<div class="loading-center" style="color:var(--danger)">Errore: ${d.error || "Impossibile caricare le chat"}</div>`;
+    return;
+  }
+  const chats = d.chats || [];
+  chatsLoaded = true;
+  if (!chats.length) {
+    document.getElementById("chatTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">🤖</div><p>Nessuna conversazione registrata</p></div>`;
+    return;
+  }
+  document.getElementById("chatTableWrap").innerHTML = `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Inizio</th><th>Lingua</th><th>Messaggi</th><th>Escalation</th><th>Email</th><th>Anteprima</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${chats.map(c => `<tr>
+          <td style="color:var(--muted)">${c.updatedAt ? new Date(c.updatedAt).toLocaleString("it-IT") : "–"}</td>
+          <td><span class="mono">${(c.lang || "–").toUpperCase()}</span></td>
+          <td>${c.msgCount || 0}</td>
+          <td>${c.escalated ? `<span class="badge badge-open">sì${c.ticketId ? " · " + c.ticketId : ""}</span>` : `<span style="color:var(--muted)">no</span>`}</td>
+          <td style="color:var(--muted)">${c.email || "–"}</td>
+          <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(c.preview || "").replace(/</g,"&lt;")}</td>
+          <td><button class="btn btn-sm btn-outline" onclick="openChat('${c.sessionId}')">Apri</button></td>
+        </tr>`).join("")}
+      </tbody>
+    </table></div>`;
+}
+
+async function openChat(sid) {
+  document.getElementById("ticketModalTitle").textContent = `Conversazione ${sid.slice(0,8)}…`;
+  document.getElementById("ticketDetail").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  openModal("ticketModal");
+  const d = await api(`/admin/chat/${sid}`);
+  if (!d.ok) { document.getElementById("ticketDetail").innerHTML = `<p style="color:var(--danger)">Errore: ${d.error}</p>`; return; }
+  const c = d.chat || {};
+  const msgs = c.messages || [];
+  const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  document.getElementById("ticketDetail").innerHTML = `
+    <div style="margin-bottom:12px;color:var(--muted);font-size:12px">
+      ${(c.lang||"").toUpperCase()} · ${msgs.length} messaggi · ${c.email || "nessuna email"}
+      ${c.escalated ? ` · <span class="badge badge-open">escalata${c.ticketId ? " " + c.ticketId : ""}</span>` : ""}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;max-height:55vh;overflow-y:auto">
+      ${msgs.map(m => `
+        <div style="align-self:${m.role==="user"?"flex-end":"flex-start"};max-width:80%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.5;white-space:pre-wrap;background:${m.role==="user"?"var(--accent)":"var(--input)"};color:${m.role==="user"?"#fff":"var(--text)"}">${esc(m.content)}</div>
+      `).join("")}
+    </div>`;
+}
+
+// ── SIDEBAR (MOBILE) ─────────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById("sidebar").classList.toggle("open");
+  document.getElementById("overlay").classList.toggle("show");
+}
+function closeSidebar() {
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("overlay").classList.remove("show");
+}
+
+// ── MODAL ────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add("show"); }
+function closeModal(id) { document.getElementById(id).classList.remove("show"); }
+
+// ── CHART DEFAULTS ───────────────────────────────────────────
+Chart.defaults.color = "#6a6a8a";
+Chart.defaults.borderColor = "#2a2a4a";
+Chart.defaults.font.family = "system-ui,-apple-system,sans-serif";
+Chart.defaults.font.size = 11;
+
+function mkChart(id, type, labels, datasets, opts = {}) {
+  if (charts[id]) charts[id].destroy();
+  const ctx = document.getElementById(id)?.getContext("2d");
+  if (!ctx) return;
+  charts[id] = new Chart(ctx, {
+    type,
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: opts.legend ?? false, labels: { color: "#9a9ab0", boxWidth: 12, padding: 16 } } },
+      scales: type === "doughnut" ? {} : {
+        x: { grid: { color: "#1e1e3a" }, ticks: { color: "#6a6a8a" } },
+        y: { grid: { color: "#1e1e3a" }, ticks: { color: "#6a6a8a" } }
+      },
+      ...opts
+    }
+  });
+}
+
+// ── FLAG ─────────────────────────────────────────────────────
+function flag(code) {
+  if (!code || code.length !== 2) return "🌍";
+  try { return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)); }
+  catch { return "🌍"; }
+}
+
+// ── TIME ─────────────────────────────────────────────────────
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return `${s}s fa`;
+  if (s < 3600) return `${Math.floor(s/60)}m fa`;
+  if (s < 86400) return `${Math.floor(s/3600)}h fa`;
+  return `${Math.floor(s/86400)}g fa`;
+}
+
+function fmtDate(ts) {
+  if (!ts) return "–";
+  return new Date(ts * 1000).toLocaleDateString("it-IT", { day:"2-digit", month:"short", year:"numeric" });
+}
+
+function fmtMoney(cents) {
+  return (cents / 100).toFixed(2) + " €";
+}
+
+// ── COPY ─────────────────────────────────────────────────────
+function copyKey(text) {
+  navigator.clipboard?.writeText(text).then(() => toast("Key copiata!")).catch(() => toast("Errore copia", "error"));
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────
+let dashLoaded = false;
+
+async function loadDashboard(force = false) {
+  if (dashLoaded && !force) return;
+  dashLoaded = false;
+  // Show spinner immediately (replaces static HTML spinner)
+  document.getElementById("dash-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>`;
+  document.getElementById("recentInstalls").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  const [stats, rev, ana] = await Promise.all([
+    api("/admin/stats"),
+    api("/admin/revenue"),
+    api("/admin/analytics")
+  ]);
+
+  if (!stats.ok) {
+    document.getElementById("dash-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${stats.error || "Impossibile caricare dati"}</div>`;
+    document.getElementById("recentInstalls").innerHTML = "";
+    toast("Errore caricamento stats", "error");
+    return;
+  }
+
+  // Stat cards
+  const lic = stats.licenses || {};
+  const sales = stats.sales || {};
+  const devs = stats.devices || {};
+  const revData = rev.revenue || {};
+  const anaData = ana.installs || {};
+  const dlData = ana.downloads || {};
+
+  document.getElementById("dash-stats").innerHTML = `
+    ${sc("Licenze Totali", lic.total ?? 0, "")}
+    ${sc("Attive", lic.active ?? 0, "green")}
+    ${sc("Lifetime", lic.lifetime ?? 0, "gold")}
+    ${sc("Scadute", lic.expired ?? 0, "red")}
+    ${sc("Dispositivi", devs.total ?? 0, "")}
+    ${sc("Vendute totali", sales.totalSold ?? 0, "")}
+    ${sc("Installazioni", anaData.total ?? 0, "")}
+    ${sc("Download totali", dlData.total ?? 0, "")}
+  `;
+
+  // Revenue chart (last 7 of last 30 days)
+  const last30 = revData.last30days || [];
+  const last7 = last30.slice(-7);
+  const rlabels = last7.map(d => d.date?.slice(5) || "");
+  const rvals = last7.map(d => (d.amount || 0) / 100);
+  mkChart("dashRevenueChart", "bar", rlabels, [{
+    data: rvals, backgroundColor: "rgba(124,92,252,.7)", borderRadius: 6, borderSkipped: false
+  }]);
+
+  // Plan distribution chart
+  const plans = stats.plans || {};
+  const planKeys = Object.keys(plans);
+  const planVals = planKeys.map(k => plans[k]);
+  const planColors = { monthly: "#7c5cfc", annual: "#4ade80", lifetime: "#fbbf24", unknown: "#6a6a8a" };
+  mkChart("dashPlanChart", "doughnut", planKeys.map(k => k.charAt(0).toUpperCase() + k.slice(1)), [{
+    data: planVals,
+    backgroundColor: planKeys.map(k => planColors[k] || "#6a6a8a"),
+    borderWidth: 0
+  }], { legend: true });
+
+  // Recent installs
+  const log = anaData.recentLog || [];
+  const instWrap = document.getElementById("recentInstalls");
+  if (!log.length) {
+    instWrap.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>Nessuna installazione registrata</p></div>`;
+  } else {
+    instWrap.innerHTML = `<div class="table-wrap"><table>
+      <thead><tr><th>Paese</th><th>Città</th><th>Browser</th><th>Sorgente</th><th>Quando</th></tr></thead>
+      <tbody>${log.slice(0,10).map(e => `<tr>
+        <td>${flag(e.country)} ${e.country || "?"}</td>
+        <td>${e.city || "–"}</td>
+        <td>${browserBadge(e.browser)}</td>
+        <td><span style="color:var(--muted)">${e.source || "–"}</span></td>
+        <td style="color:var(--muted)">${timeAgo(e.ts)}</td>
+      </tr>`).join("")}</tbody>
+    </table></div>`;
+  }
+
+  dashLoaded = true;
+}
+
+function sc(label, value, cls) {
+  return `<div class="stat-card"><div class="stat-val ${cls}">${value.toLocaleString()}</div><div class="stat-label">${label}</div></div>`;
+}
+
+function browserBadge(b) {
+  const icons = { chrome:"🌐", firefox:"🦊", edge:"🔷", opera:"🔴", other:"❔", unknown:"❔" };
+  return `<span style="font-size:13px">${icons[b] || "❔"} ${b || "?"}</span>`;
+}
+
+// ── LICENSES ─────────────────────────────────────────────────
+let licLoaded = false;
+
+// Pending newly-created licenses, kept until server's KV list catches up.
+// Map<key, {license, expiresAt}> — auto-expire after 90s as safety
+const pendingNewLicenses = new Map();
+const PENDING_TTL_MS = 90000;
+
+async function loadLicenses(force = false) {
+  if (licLoaded && !force) return;
+  document.getElementById("licTableWrap").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  const plan = document.getElementById("licPlan").value;
+  const status = document.getElementById("licStatus").value;
+  let url = "/admin/licenses?limit=100";
+  if (plan) url += `&plan=${plan}`;
+  if (status) url += `&status=${status}`;
+  const d = await api(url);
+  if (!d.ok) { toast("Errore caricamento licenze", "error"); return; }
+  let merged = d.licenses || [];
+
+  // Re-inject pending licenses that the server hasn't surfaced yet (KV eventual consistency)
+  const now = Date.now();
+  for (const [pk, entry] of [...pendingNewLicenses]) {
+    if (entry.expiresAt < now) { pendingNewLicenses.delete(pk); continue; }
+    const lic = entry.license;
+    const seenByServer = merged.some(l => l.key === lic.key || l.raw === lic.raw);
+    if (seenByServer) { pendingNewLicenses.delete(pk); continue; }
+    // Respect active filters
+    if (plan && lic.plan !== plan) continue;
+    if (status && lic.status !== status) continue;
+    merged = [lic, ...merged];
+  }
+
+  licData = merged;
+  renderLicTable(licData);
+  licLoaded = true;
+}
+
+function filterLicenses() {
+  const search = document.getElementById("licSearch").value.toLowerCase();
+  const plan = document.getElementById("licPlan").value;
+  const status = document.getElementById("licStatus").value;
+  let filtered = licData;
+  if (search) filtered = filtered.filter(l => (l.email || "").toLowerCase().includes(search) || (l.key || l.raw || "").toLowerCase().includes(search));
+  if (plan) filtered = filtered.filter(l => l.plan === plan);
+  if (status) filtered = filtered.filter(l => l.status === status);
+  renderLicTable(filtered);
+}
+
+function renderLicTable(data) {
+  if (!data.length) {
+    document.getElementById("licTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">🔑</div><p>Nessuna licenza trovata</p></div>`;
+    updateBulkBar();
+    return;
+  }
+  document.getElementById("licTableWrap").innerHTML = `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th style="width:36px"><input type="checkbox" style="accent-color:var(--accent);cursor:pointer" onchange="toggleSelectAll(this)"></th>
+        <th>Key</th><th>Email</th><th>Piano</th><th>Scadenza</th>
+        <th>Dispositivi</th><th>Stato</th><th>Azioni</th>
+      </tr></thead>
+      <tbody id="licTbody">
+        ${data.map((l, i) => licRow(l, i)).join("")}
+      </tbody>
+    </table></div>`;
+  updateBulkBar();
+}
+
+function licRow(l, i) {
+  const key = l.key || l.raw || "–";
+  const keyShort = key.length > 24 ? key.slice(0, 24) + "…" : key;
+  const checked = selectedKeys.has(key) ? "checked" : "";
+  return `
+    <tr id="licRow_${i}">
+      <td><input type="checkbox" ${checked} style="accent-color:var(--accent);cursor:pointer" onchange="toggleSelect('${key}')"></td>
+      <td><span class="mono" title="${key}">${keyShort}</span></td>
+      <td>${l.email || '<span style="color:var(--muted)">–</span>'}</td>
+      <td><span class="badge badge-${l.plan}">${l.plan}</span></td>
+      <td>${l.expiresHuman || "–"}</td>
+      <td>
+        <span style="font-size:13px">${l.devices}/${l.maxDevices}</span>
+        <div class="progress" style="width:60px"><div class="progress-fill" style="width:${Math.round(l.devices/Math.max(l.maxDevices,1)*100)}%"></div></div>
+      </td>
+      <td><span class="badge badge-${l.status}">${l.status}</span></td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn-icon" title="Copia key" onclick="copyKey('${key}')">📋</button>
+          <button class="btn-icon" title="Modifica" onclick="openEditModal(${i})">✏️</button>
+          ${l.status !== "revoked" ? `<button class="btn-icon" title="Revoca" style="color:var(--danger)" onclick="revokeLic('${key}', ${i})">⏸</button>` : ""}
+          <button class="btn-icon" title="Elimina definitivamente" style="color:var(--danger)" onclick="deleteLic('${key}')">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+}
+
+function openEditModal(i) {
+  const l = licData[i];
+  if (!l) return;
+  document.getElementById("editKey").value = l.key || l.raw;
+  document.getElementById("editPlan").value = l.plan;
+  document.getElementById("editEmail").value = l.email || "";
+  document.getElementById("editDevices").value = l.maxDevices || 3;
+  document.getElementById("editExpires").value = l.expiresHuman === "LIFETIME" ? "" : (l.expiresHuman || "");
+  openModal("editModal");
+}
+
+async function saveLicense() {
+  const key = document.getElementById("editKey").value;
+  const plan = document.getElementById("editPlan").value;
+  const email = document.getElementById("editEmail").value;
+  const deviceLimit = parseInt(document.getElementById("editDevices").value);
+  const expiresStr = document.getElementById("editExpires").value;
+  const expires = expiresStr ? Math.floor(new Date(expiresStr).getTime() / 1000) : null;
+  const body = { key, plan, email, deviceLimit };
+  if (expires) body.expires = expires;
+  const btn = event.target; btn.disabled = true; btn.textContent = "Salvando...";
+  const d = await api("/admin/license-update", { method: "POST", body: JSON.stringify(body) });
+  btn.disabled = false; btn.textContent = "Salva modifiche";
+  if (!d.ok) { toast(d.error || "Errore salvataggio", "error"); return; }
+  toast("Licenza aggiornata");
+  closeModal("editModal");
+  licLoaded = false;
+  loadLicenses(true);
+}
+
+async function revokeLic(key, i) {
+  if (!confirm("Revocare questa licenza? L'azione è irreversibile.")) return;
+  const d = await api("/revoke", { method: "POST", body: JSON.stringify({ key }) });
+  if (!d.ok) { toast(d.error || "Errore revoca", "error"); return; }
+  toast("Licenza revocata");
+  licData[i].status = "revoked";
+  filterLicenses();
+}
+
+function toggleNewLicForm() {
+  const f = document.getElementById("newLicForm");
+  f.style.display = f.style.display === "none" ? "" : "none";
+}
+
+async function generateKey() {
+  const plan = document.getElementById("nlPlan").value;
+  const months = parseInt(document.getElementById("nlMonths").value) || 1;
+  const email = document.getElementById("nlEmail").value;
+  const deviceLimit = parseInt(document.getElementById("nlDevices").value) || 3;
+  const btn = event.target; btn.disabled = true; btn.textContent = "Generando...";
+  // Server expects 'devices' (not 'deviceLimit'); send both for safety
+  const body = { plan, months, devices: deviceLimit, deviceLimit };
+  if (email) body.email = email;
+  const d = await api("/admin/generate-key", { method: "POST", body: JSON.stringify(body) });
+  btn.disabled = false; btn.textContent = "Genera Key";
+  if (!d.ok) { toast(d.error || "Errore generazione", "error"); return; }
+  const keyEl = document.getElementById("newKeyText");
+  const resEl = document.getElementById("newKeyResult");
+  keyEl.textContent = d.key;
+  resEl.style.display = "flex";
+  toast("Key generata!");
+
+  // Add new license to local cache immediately (KV list has eventual consistency)
+  const newLic = {
+    raw: d.raw,
+    key: d.key,
+    email: email || "",
+    plan: d.plan || plan,
+    status: "active",
+    expires: null,
+    expiresHuman: d.expiresHuman || (plan === "lifetime" ? "LIFETIME" : "—"),
+    devices: 0,
+    maxDevices: deviceLimit,
+    createdAt: Date.now(),
+  };
+  // Track as pending so subsequent refreshes don't remove it until server catches up
+  pendingNewLicenses.set(d.key, { license: newLic, expiresAt: Date.now() + PENDING_TTL_MS });
+  if (Array.isArray(licData)) {
+    licData = [newLic, ...licData];
+    renderLicTable(licData);
+  }
+  // Refresh from server with retries (KV eventual consistency); merge keeps pending visible
+  licLoaded = false;
+  setTimeout(() => loadLicenses(true), 1500);
+  setTimeout(() => loadLicenses(true), 5000);
+  setTimeout(() => loadLicenses(true), 15000);
+}
+
+// ── SELECTION & BULK ─────────────────────────────────────────
+const selectedKeys = new Set();
+
+function updateBulkBar() {
+  const bar = document.getElementById("bulkBar");
+  document.getElementById("bulkCount").textContent = selectedKeys.size;
+  bar.style.display = selectedKeys.size > 0 ? "flex" : "none";
+}
+
+function toggleSelect(key) {
+  if (selectedKeys.has(key)) selectedKeys.delete(key); else selectedKeys.add(key);
+  updateBulkBar();
+}
+
+function toggleSelectAll(cb) {
+  const filtered = licData;
+  if (cb.checked) {
+    filtered.forEach(l => { const k = l.key || l.raw || ""; if (k) selectedKeys.add(k); });
+  } else {
+    selectedKeys.clear();
+  }
+  filterLicenses();
+  updateBulkBar();
+}
+
+function clearSelection() {
+  selectedKeys.clear();
+  filterLicenses();
+  updateBulkBar();
+}
+
+async function bulkAction(action) {
+  if (!selectedKeys.size) return;
+  const keys = [...selectedKeys];
+  const label = action === "delete" ? "ELIMINARE DEFINITIVAMENTE" : "REVOCARE";
+  if (!confirm(`${label} ${keys.length} licenze?`)) return;
+  if (action === "delete" && !confirm("Conferma: le licenze verranno cancellate per sempre.")) return;
+
+  const endpoint = action === "delete" ? "/admin/delete-license" : "/revoke";
+  let ok = 0, fail = 0;
+  for (const key of keys) {
+    const d = await api(endpoint, { method: "POST", body: JSON.stringify({ key }) });
+    if (d.ok) ok++; else fail++;
+  }
+  selectedKeys.clear();
+  updateBulkBar();
+  toast(`${ok} ${action === "delete" ? "eliminate" : "revocate"}${fail ? ", " + fail + " errori" : ""}`);
+  licLoaded = false;
+  loadLicenses(true);
+}
+
+async function deleteLic(key) {
+  if (!confirm("ELIMINARE DEFINITIVAMENTE questa licenza?\nL'azione e' irreversibile!")) return;
+  const d = await api("/admin/delete-license", { method: "POST", body: JSON.stringify({ key }) });
+  if (!d.ok) { toast(d.error || "Errore eliminazione", "error"); return; }
+  toast("Licenza eliminata definitivamente");
+  licLoaded = false;
+  loadLicenses(true);
+}
+
+// ── FINANCE ──────────────────────────────────────────────────
+let finLoaded = false;
+
+async function loadFinance(force = false) {
+  if (finLoaded && !force) return;
+  document.getElementById("fin-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>`;
+  const d = await api("/admin/revenue");
+  if (!d.ok) {
+    document.getElementById("fin-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${d.error || "Impossibile caricare dati"}</div>`;
+    toast("Errore caricamento dati finanziari", "error");
+    return;
+  }
+  const rev = d.revenue || {};
+  const byPlan = rev.byPlan || {};
+
+  // Revenue today (last item in last30)
+  const last30 = rev.last30days || [];
+  const todayRev = last30.length ? last30[last30.length - 1] : { amount: 0, count: 0 };
+  const totalRevCents = last30.reduce((s, x) => s + (x.amount || 0), 0);
+  const mrr = rev.mrr || 0;
+
+  document.getElementById("fin-stats").innerHTML = `
+    ${sc("MRR", fmtMoney(mrr), "")}
+    ${sc("Revenue 30gg", fmtMoney(totalRevCents), "green")}
+    ${sc("Revenue oggi", fmtMoney(todayRev.amount || 0), "gold")}
+    ${sc("Vendite oggi", todayRev.count || 0, "")}
+  `;
+
+  // Revenue chart
+  const labels = last30.map(d => d.date?.slice(5) || "");
+  const vals = last30.map(d => (d.amount || 0) / 100);
+  mkChart("finRevenueChart", "line", labels, [{
+    data: vals, borderColor: "#7c5cfc", backgroundColor: "rgba(124,92,252,.15)",
+    fill: true, tension: 0.4, pointRadius: 2, pointHoverRadius: 5
+  }]);
+
+  // Plan breakdown chart
+  const pKeys = Object.keys(byPlan);
+  const pVals = pKeys.map(k => byPlan[k] / 100);
+  const planColors2 = { monthly: "#7c5cfc", annual: "#4ade80", lifetime: "#fbbf24" };
+  mkChart("finPlanChart", "doughnut",
+    pKeys.map(k => k.charAt(0).toUpperCase() + k.slice(1)),
+    [{ data: pVals, backgroundColor: pKeys.map(k => planColors2[k] || "#6a6a8a"), borderWidth: 0 }],
+    { legend: true }
+  );
+
+  finLoaded = true;
+}
+
+// ── ANALYTICS ────────────────────────────────────────────────
+let anaLoaded = false;
+
+async function loadAnalytics(force = false) {
+  if (anaLoaded && !force) return;
+  document.getElementById("ana-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>`;
+  const d = await api("/admin/analytics");
+  if (!d.ok) {
+    document.getElementById("ana-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${d.error || "Impossibile caricare dati"}</div>`;
+    toast("Errore caricamento analytics", "error");
+    return;
+  }
+  const inst = d.installs || {};
+  const dl = d.downloads || {};
+
+  document.getElementById("ana-stats").innerHTML = `
+    ${sc("Installazioni totali", inst.total ?? 0, "")}
+    ${sc("Oggi", inst.today ?? 0, "green")}
+    ${sc("Download totali", dl.total ?? 0, "")}
+    ${sc("Download oggi", dl.today ?? 0, "gold")}
+  `;
+
+  // Installs chart
+  const i7 = inst.last7days || [];
+  mkChart("anaInstallChart", "bar",
+    i7.map(x => x.date?.slice(5) || ""),
+    [{ data: i7.map(x => x.count), backgroundColor: "rgba(74,222,128,.7)", borderRadius: 5, borderSkipped: false }]
+  );
+
+  // Top countries
+  const countries = (inst.byCountry || []).slice(0, 10);
+  const maxCnt = countries[0]?.count || 1;
+  document.getElementById("topCountries").innerHTML = countries.length
+    ? countries.map(c => `
+        <div class="country-row">
+          <span style="font-size:18px">${flag(c.country)}</span>
+          <span style="width:32px;color:var(--muted);font-size:12px">${c.country}</span>
+          <div class="country-bar progress"><div class="progress-fill" style="width:${Math.round(c.count/maxCnt*100)}%"></div></div>
+          <span style="font-size:13px;font-weight:600;min-width:32px;text-align:right">${c.count}</span>
+        </div>`).join("")
+    : `<div class="empty"><div class="empty-icon">🌍</div><p>Nessun dato geografico</p></div>`;
+
+  // Browser downloads
+  const bData = dl.byBrowser || {};
+  const bNames = ["chrome", "firefox", "edge", "opera", "other"];
+  const bIcons = { chrome:"🌐", firefox:"🦊", edge:"🔷", opera:"🔴", other:"❔" };
+  const bMax = Math.max(1, ...bNames.map(b => bData[b] || 0));
+  document.getElementById("browserStats").innerHTML = bNames.map(b => `
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span>${bIcons[b]} ${b.charAt(0).toUpperCase()+b.slice(1)}</span>
+        <span style="font-weight:600">${bData[b] || 0}</span>
+      </div>
+      <div class="progress"><div class="progress-fill" style="width:${Math.round((bData[b]||0)/bMax*100)}%"></div></div>
+    </div>`).join("");
+
+  // Install log
+  const log = (inst.recentLog || []).slice(0, 20);
+  document.getElementById("installLog").innerHTML = log.length
+    ? `<div class="table-wrap"><table>
+        <thead><tr><th>Quando</th><th>Paese</th><th>Città</th><th>Browser</th></tr></thead>
+        <tbody>${log.map(e => `<tr>
+          <td style="color:var(--muted)">${timeAgo(e.ts)}</td>
+          <td>${flag(e.country)} ${e.country||"?"}</td>
+          <td>${e.city||"–"}</td>
+          <td>${browserBadge(e.browser)}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>`
+    : `<div class="empty"><div class="empty-icon">📭</div><p>Nessun log</p></div>`;
+
+  anaLoaded = true;
+}
+
+// ── STATISTICHE DETTAGLIATE ──────────────────────────────────
+let statsLoaded = false;
+const REASON_LABELS = {
+  broken_site: "🧩 Sito non funzionava",
+  ads_visible: "👀 Ads ancora visibili",
+  confusing: "😕 Troppo complicato (Free vs Pro)",
+  performance: "🐌 Rallentava il browser",
+  found_better: "🔀 Alternativa migliore",
+  other: "❔ Altro motivo",
+};
+const SOURCE_LABELS = { chrome:"🌐 Chrome", firefox:"🦊 Firefox", edge:"🔷 Edge", opera:"🔴 Opera", direct:"🔗 Diretto (sito)" };
+
+// Lista a barre orizzontali (label → valore) riusabile.
+function barList(rows, opts = {}) {
+  const data = rows.filter(r => opts.keepZero || r.value > 0);
+  if (!data.length) return `<div class="empty"><div class="empty-icon">${opts.icon || "📭"}</div><p>${opts.empty || "Nessun dato"}</p></div>`;
+  const max = Math.max(1, ...data.map(r => r.value));
+  const color = opts.color || "var(--accent)";
+  return data.map(r => `
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px">
+        <span>${r.label}</span>
+        <span style="font-weight:600">${r.value.toLocaleString()}${opts.suffix || ""}</span>
+      </div>
+      <div class="progress"><div class="progress-fill" style="width:${Math.round(r.value/max*100)}%;background:${color}"></div></div>
+    </div>`).join("");
+}
+
+async function loadStats(force = false) {
+  if (statsLoaded && !force) return;
+  document.getElementById("st-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>`;
+
+  // Pool unico: business (stats) + revenue + telemetria (analytics)
+  const [stats, rev, ana] = await Promise.all([
+    api("/admin/stats"),
+    api("/admin/revenue"),
+    api("/admin/analytics"),
+  ]);
+  if (!ana.ok && !stats.ok) {
+    document.getElementById("st-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${ana.error || stats.error || "Impossibile caricare dati"}</div>`;
+    toast("Errore caricamento statistiche", "error");
+    return;
+  }
+
+  const lic = stats.licenses || {};
+  const sales = stats.sales || {};
+  const devs = stats.devices || {};
+  const plans = stats.plans || {};
+  const revData = rev.revenue || {};
+  const inst = ana.installs || {};
+  const dl = ana.downloads || {};
+  const un = ana.uninstalls || {};
+
+  const i7 = inst.last7days || [];
+  const u7 = un.last7days || [];
+  const sum = a => (a || []).reduce((s, x) => s + (x.count || 0), 0);
+  const net7 = sum(i7) - sum(u7);
+  const churn = un.ratePercent ?? 0;
+
+  // KPI cards (business + crescita)
+  document.getElementById("st-kpis").innerHTML = `
+    ${sc("Licenze attive", lic.active ?? 0, "green")}
+    ${sc("Vendute totali", sales.totalSold ?? 0, "")}
+    ${sc("Dispositivi", devs.total ?? 0, "")}
+    ${sc("Installazioni totali", inst.total ?? 0, "")}
+    ${sc("Download totali", dl.total ?? 0, "")}
+    ${sc("Disinstallazioni", un.total ?? 0, "red")}
+    ${`<div class="stat-card"><div class="stat-val ${churn > 30 ? "red" : "gold"}">${churn}%</div><div class="stat-label">Tasso disinstallazione</div></div>`}
+    ${`<div class="stat-card"><div class="stat-val ${net7 >= 0 ? "green" : "red"}">${net7 >= 0 ? "+" : ""}${net7.toLocaleString()}</div><div class="stat-label">Crescita netta 7g</div></div>`}
+  `;
+
+  // Chart installs vs uninstalls (7 giorni)
+  const labels = i7.map(x => x.date?.slice(5) || "");
+  mkChart("stNetChart", "bar", labels, [
+    { label: "Installazioni", data: i7.map(x => x.count), backgroundColor: "rgba(74,222,128,.75)", borderRadius: 5, borderSkipped: false },
+    { label: "Disinstallazioni", data: u7.map(x => x.count), backgroundColor: "rgba(244,63,94,.75)", borderRadius: 5, borderSkipped: false },
+  ], { legend: true });
+
+  // Top Paesi
+  const countries = (inst.byCountry || []).slice(0, 10);
+  const maxCnt = countries[0]?.count || 1;
+  document.getElementById("stCountries").innerHTML = countries.length
+    ? countries.map(c => `
+        <div class="country-row">
+          <span style="font-size:18px">${flag(c.country)}</span>
+          <span style="width:32px;color:var(--muted);font-size:12px">${c.country}</span>
+          <div class="country-bar progress"><div class="progress-fill" style="width:${Math.round(c.count/maxCnt*100)}%"></div></div>
+          <span style="font-size:13px;font-weight:600;min-width:32px;text-align:right">${c.count}</span>
+        </div>`).join("")
+    : `<div class="empty"><div class="empty-icon">🌍</div><p>Nessun dato geografico</p></div>`;
+
+  // Revenue ultimi 7 giorni
+  const last7 = (revData.last30days || []).slice(-7);
+  mkChart("stRevenueChart", "bar", last7.map(d => d.date?.slice(5) || ""), [{
+    data: last7.map(d => (d.amount || 0) / 100), backgroundColor: "rgba(124,92,252,.7)", borderRadius: 6, borderSkipped: false,
+  }]);
+
+  // Distribuzione piani
+  const planKeys = Object.keys(plans);
+  const planColors = { monthly:"#7c5cfc", annual:"#4ade80", lifetime:"#fbbf24", unknown:"#6a6a8a" };
+  mkChart("stPlanChart", "doughnut", planKeys.map(k => k.charAt(0).toUpperCase() + k.slice(1)), [{
+    data: planKeys.map(k => plans[k]), backgroundColor: planKeys.map(k => planColors[k] || "#6a6a8a"), borderWidth: 0,
+  }], { legend: true });
+
+  // Sorgenti installazione
+  const src = Object.entries(inst.bySource || {})
+    .map(([k, v]) => ({ label: SOURCE_LABELS[k] || k, value: v }))
+    .sort((a, b) => b.value - a.value);
+  document.getElementById("stSources").innerHTML = barList(src, { color: "var(--success)", icon: "📥", empty: "Nessun dato sorgenti" });
+
+  // Download per browser
+  const bIcons = { chrome:"🌐 Chrome", firefox:"🦊 Firefox", edge:"🔷 Edge", opera:"🔴 Opera", other:"❔ Altro" };
+  const dlRows = Object.entries(dl.byBrowser || {}).map(([k, v]) => ({ label: bIcons[k] || k, value: v })).sort((a, b) => b.value - a.value);
+  document.getElementById("stDlBrowser").innerHTML = barList(dlRows, { color: "var(--accent)", icon: "🧭", empty: "Nessun dato download" });
+
+  // Motivi disinstallazione
+  const reasons = Object.entries(un.byReason || {})
+    .map(([k, v]) => ({ label: REASON_LABELS[k] || k, value: v }))
+    .sort((a, b) => b.value - a.value);
+  document.getElementById("stReasons").innerHTML = barList(reasons, { color: "var(--danger)", icon: "🙋", empty: "Ancora nessuna disinstallazione tracciata" });
+
+  // Disinstallazioni per browser
+  const ubRows = Object.entries(un.byBrowser || {}).map(([k, v]) => ({ label: bIcons[k] || k, value: v })).sort((a, b) => b.value - a.value);
+  document.getElementById("stUninstBrowser").innerHTML = barList(ubRows, { color: "var(--danger)", icon: "🧭", empty: "Nessun dato browser" });
+
+  // Installazioni recenti
+  const ilog = (inst.recentLog || []).slice(0, 15);
+  document.getElementById("stInstallLog").innerHTML = ilog.length
+    ? `<div class="table-wrap"><table>
+        <thead><tr><th>Quando</th><th>Paese</th><th>Città</th><th>Browser</th></tr></thead>
+        <tbody>${ilog.map(e => `<tr>
+          <td style="color:var(--muted)">${timeAgo(e.ts)}</td>
+          <td>${flag(e.country)} ${e.country||"?"}</td>
+          <td>${e.city||"–"}</td>
+          <td>${browserBadge(e.browser)}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>`
+    : `<div class="empty"><div class="empty-icon">📭</div><p>Nessuna installazione registrata</p></div>`;
+
+  // Disinstallazioni recenti
+  const ulog = (un.recentLog || []).slice(0, 15);
+  document.getElementById("stUninstLog").innerHTML = ulog.length
+    ? `<div class="table-wrap"><table>
+        <thead><tr><th>Quando</th><th>Motivo</th><th>Commento</th><th>Browser</th><th>Paese</th><th>Pro</th></tr></thead>
+        <tbody>${ulog.map(e => `<tr>
+          <td style="color:var(--muted)">${timeAgo(e.ts)}</td>
+          <td>${(REASON_LABELS[e.reason] || e.reason || "?")}</td>
+          <td style="max-width:240px;${e.comment ? "" : "color:var(--muted)"}">${e.comment ? esc(e.comment) : "–"}</td>
+          <td>${browserBadge(e.browser)}</td>
+          <td>${flag(e.country)} ${e.country || "?"}</td>
+          <td>${e.wasPro ? "⭐" : "–"}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>`
+    : `<div class="empty"><div class="empty-icon">📭</div><p>Nessuna disinstallazione registrata (l'estensione v3.5.3 inizia a raccoglierle dopo l'approvazione store)</p></div>`;
+
+  statsLoaded = true;
+}
+
+// ── SEO / AEO ────────────────────────────────────────────────
+let seoLoaded = false;
+let seoPeriod = 30; // days
+
+function setSeoPeriod(days) {
+  seoPeriod = days;
+  document.querySelectorAll(".period-btns .btn").forEach(b => b.classList.remove("btn-accent"));
+  const btn = document.getElementById("seo-period-" + days);
+  if (btn) btn.classList.add("btn-accent");
+  seoLoaded = false;
+  loadSeo();
+}
+
+async function refreshSeo() {
+  document.getElementById("seo-updated").textContent = "↻ Sync in corso...";
+  const d = await api("/admin/seo/refresh", { method: "POST" });
+  if (!d.ok) { toast("Errore sync: " + (d.error || "?"), "error"); document.getElementById("seo-updated").textContent = ""; return; }
+  seoLoaded = false;
+  loadSeo();
+  document.getElementById("seo-updated").textContent = "✓ Aggiornato";
+  setTimeout(() => { const el = document.getElementById("seo-updated"); if (el) el.textContent = ""; }, 3000);
+}
+
+async function loadSeo(force = false) {
+  if (seoLoaded && !force) return;
+  document.getElementById("seo-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>`;
+  const d = await api("/admin/seo");
+  if (!d.ok) {
+    document.getElementById("seo-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${d.error || "Impossibile caricare"}</div>`;
+    toast("Errore caricamento SEO", "error");
+    return;
+  }
+  const data = d.data;
+  const gsc = data.gsc || {};
+  const totals = gsc.totals || {};
+  const ga4 = data.ga4 || {};
+  const sitemaps = data.sitemaps || [];
+  const cached = d.cached ? " · Cache" : "";
+
+  // Updated timestamp
+  if (data.updatedAt) {
+    const d2 = new Date(data.updatedAt);
+    const hh = String(d2.getHours()).padStart(2, "0") + ":" + String(d2.getMinutes()).padStart(2, "0");
+    document.getElementById("seo-updated").textContent = "Ultimo aggiornamento: " + hh + cached;
+  }
+
+  // KPI cards
+  document.getElementById("seo-kpis").innerHTML = `
+    ${sc("Clicks " + seoPeriod + "gg", (totals.clicks || 0).toLocaleString(), "green")}
+    ${sc("Impressions", (totals.impressions || 0).toLocaleString(), "")}
+    ${sc("CTR Medio", (totals.ctr || 0) + "%", "")}
+    ${sc("Pos. Media", (totals.position || 0).toFixed(1), "")}
+    ${ga4 && ga4.totals ? sc("Utenti GA4", (ga4.totals.users || 0).toLocaleString(), "gold") : sc("Utenti GA4", "—", "")}
+    ${sc("Sitemap attivi", sitemaps.length, "")}
+  `;
+
+  // Trend chart (use 30d trend)
+  const trend = gsc.trend30d || [];
+  const labels = trend.map(r => r.date?.slice(5) || "");
+  mkChart("seoTrendChart", "line", labels, [
+    { label: "Clicks", data: trend.map(r => r.clicks || 0), borderColor: "#7c5cfc", backgroundColor: "rgba(124,92,252,.15)", fill: true, tension: 0.4, pointRadius: 2 },
+    { label: "Impressions (×100)", data: trend.map(r => Math.round((r.impressions || 0) / 100)), borderColor: "#60a5fa", backgroundColor: "rgba(96,165,250,.1)", fill: true, tension: 0.4, pointRadius: 2 },
+  ], { legend: true });
+
+  // Device chart
+  const devices = gsc.topDevice || [];
+  const deviceColors = { DESKTOP: "#7c5cfc", MOBILE: "#4ade80", TABLET: "#fbbf24" };
+  mkChart("seoDeviceChart", "doughnut",
+    devices.map(d => d.key || "?"),
+    [{ data: devices.map(d => d.clicks || 0), backgroundColor: devices.map(d => deviceColors[d.key] || "#6a6a8a"), borderWidth: 0 }],
+    { legend: true }
+  );
+
+  // Top keywords bar list
+  const keywords = (gsc.topQuery || []).slice(0, 10).map(r => ({ label: r.key, value: r.clicks }));
+  document.getElementById("seoKeywords").innerHTML = barList(keywords, { color: "#7c5cfc", icon: "🔑", empty: "Nessun dato" });
+
+  // Top pages table
+  const pages = (gsc.topPage || []).slice(0, 10);
+  document.getElementById("seoPages").innerHTML = pages.length
+    ? `<div class="table-wrap"><table><thead><tr><th>Pagina</th><th>Clicks</th><th>Impr.</th><th>CTR</th><th>Pos</th></tr></thead><tbody>${
+        pages.map(r => `<tr>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="mono" style="font-size:12px" title="${r.key}">${r.key}</span></td>
+          <td>${r.clicks.toLocaleString()}</td>
+          <td>${r.impressions.toLocaleString()}</td>
+          <td>${r.ctr}%</td>
+          <td>${r.position}</td>
+        </tr>`).join("")
+      }</tbody></table></div>`
+    : `<div class="empty"><p>Nessun dato</p></div>`;
+
+  // Top countries bar list
+  const countries = (gsc.topCountry || []).slice(0, 8).map(r => ({ label: r.key, value: r.clicks }));
+  document.getElementById("seoCountries").innerHTML = barList(countries, { color: "#4ade80", icon: "🌍", empty: "Nessun dato" });
+
+  // Search appearances bar list
+  const appearances = (gsc.topAppearance || []).map(r => ({ label: r.key, value: r.impressions }));
+  document.getElementById("seoAppearances").innerHTML = barList(appearances, { color: "#fbbf24", icon: "✨", empty: "Nessun dato" });
+
+  // Opportunities
+  const opp = (gsc.opportunities || []).slice(0, 15).map(r => ({ label: r.key + ` (pos ${r.position})`, value: r.impressions }));
+  document.getElementById("seoOpportunities").innerHTML = barList(opp, { color: "#7c5cfc", icon: "🎯", empty: "Nessuna opportunità — tutte le keyword sono già in top 5" });
+
+  // Sitemaps
+  if (sitemaps.length) {
+    document.getElementById("seoSitemaps").innerHTML = `<div class="table-wrap"><table><thead><tr><th>Sitemap</th><th>Errori</th><th>Warning</th><th>Ultimo submit</th><th>Submitted/Indexed</th></tr></thead><tbody>${
+      sitemaps.map(s => {
+        const web = (s.contents || []).find(c => c.type === "web") || {};
+        return `<tr>
+          <td><span class="mono" style="font-size:11px" title="${s.path}">${s.path.split("/").pop()}</span></td>
+          <td style="color:${s.errors > 0 ? "var(--danger)" : "var(--success)"}">${s.errors}</td>
+          <td style="color:${s.warnings > 0 ? "var(--gold)" : "var(--muted)"}">${s.warnings}</td>
+          <td style="font-size:12px;color:var(--muted)">${s.lastSubmitted ? new Date(s.lastSubmitted).toLocaleDateString() : "—"}</td>
+          <td style="font-size:12px">${web.submitted || 0} / ${web.indexed || 0}</td>
+        </tr>`;
+      }).join("")
+    }</tbody></table></div>`;
+  } else {
+    document.getElementById("seoSitemaps").innerHTML = `<div class="empty"><p>Nessun sitemap registrato</p></div>`;
+  }
+
+  // GA4 data
+  if (ga4 && ga4.totals) {
+    const t = ga4.totals;
+    document.getElementById("seo-ga4").innerHTML = `
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        ${sc("Utenti", (t.users || 0).toLocaleString(), "gold")}
+        ${sc("Sessioni", (t.sessions || 0).toLocaleString(), "")}
+        ${sc("Tasso engagement", ((t.engagementRate || 0) * 100).toFixed(1) + "%", "green")}
+        ${sc("Bounce rate", ((t.bounceRate || 0) * 100).toFixed(1) + "%", "red")}
+        ${sc("Durata media", Math.round(t.avgSessionDuration || 0) + "s", "")}
+        ${sc("Page views", (t.pageViews || 0).toLocaleString(), "")}
+      </div>
+    `;
+  } else {
+    document.getElementById("seo-ga4").innerHTML = `<div class="empty"><p>GA4 non configurato — aggiungi GA4_PROPERTY_ID al Worker</p></div>`;
+  }
+
+  // Set period button active
+  setSeoPeriod(seoPeriod);
+  seoLoaded = true;
+}
+
+async function loadAutofix(force = false) {
+  const resultsEl = document.getElementById("autofix-stats-row");
+  if (!resultsEl) { console.warn("[Autofix] #autofix-stats-row not found"); return; }
+  resultsEl.innerHTML = '<div class="loading-center"><div class="loader"></div></div>';
+  try {
+    const data = await api("/admin/autofix/status");
+    if (!data.ok) {
+      resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">' + (data.error || "Errore") + '</div>';
+      return;
+    }
+    const sm = data.shadow_mode;
+    const modeColor = sm ? "#ffbc6b" : "#16a766";
+    const modeIcon  = sm ? "⚠"  : "✓";
+    const modeLabel = sm ? "Shadow Mode (nessun deploy)" : "Attivo (deploy automatico)";
+    const totalRules = data.total_rules != null ? data.total_rules : "—";
+    const pending   = data.pending_decisions || 0;
+    const approved  = data.approved_unapplied || 0;
+    const deferred  = data.deferred || 0;
+    resultsEl.innerHTML =
+      '<div style="display:flex;align-items:center;gap:12px;padding:16px;background:var(--input);border-radius:8px;border-left:4px solid ' + modeColor + ';margin-bottom:12px">' +
+        '<span style="background:' + modeColor + ';color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">' + modeIcon + '</span>' +
+        '<div><div style="font-weight:600;font-size:14px;margin-bottom:2px">Modalità: ' + modeLabel + '</div>' +
+        '<div style="font-size:12px;color:var(--muted)">Ultimo run: ' + (data.date ? new Date(data.date).toLocaleString("it-IT") : "—") + '</div></div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:12px">' +
+        '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--accent)">' + (data.candidates_added || 0) + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Nuove regole</div></div>' +
+        '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700">' + totalRules + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Regole totali</div></div>' +
+        '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:#16a766">' + (data.open_leaks || 0) + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Leak aperti</div></div>' +
+        '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700">' + (data.fixed_leaks || 0) + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Leak fixati</div></div>' +
+      '</div>' +
+      // CTA bar
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">' +
+        '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">' +
+          '🔴 ' + pending + ' leak da valutare · ✅ ' + approved + ' fix approvati in attesa · 💤 ' + deferred + ' rimandati' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">' +
+          '<button class="btn btn-sm btn-success" onclick="batchDecide(\'ads_real\',\'fix\')">✅ Approva tutti gli ads-reali</button>' +
+          '<button class="btn btn-sm btn-outline" onclick="batchDecide(\'dom_fp\',\'ignore\')">🚫 Ignora tutti i DOM sospetti</button>' +
+          '<button class="btn btn-sm btn-accent" onclick="requestApply()">⚡ Applica i fix approvati</button>' +
+        '</div>' +
+        '<div style="font-size:12px;color:var(--muted);background:var(--input);border-radius:6px;padding:8px 10px">' +
+          '💡 Hai <b style="color:var(--text)">' + approved + '</b> decisioni pronte. In chat scrivi <code style="color:var(--accent)">applica i fix approvati</code> per eseguirli subito, oppure il job notturno applicherà gli approvati semplici.' +
+        '</div>' +
+      '</div>';
+    loadAutofixLeaks();
+  } catch(e) {
+    resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">Errore: ' + e.message + '</div>';
+  }
+}
+
+// Global state per batch decisions
+let _autofixLeaks = null;
+
+// ── Autofix: carica lista leak ──────────────────────────────────────────────
+async function loadAutofixLeaks() {
+  const panel = document.getElementById("autofix-leaks-container");
+  if (!panel) { console.warn("[Autofix] #autofix-leaks-container not found"); return; }
+  panel.innerHTML = '<div id="autofix-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 16px;color:var(--muted)"><div class="loader"></div><div style="margin-top:12px">Carico i leak...</div></div>';
+  try {
+    console.log("[Autofix] API URL:", API + "/admin/autofix/leaks");
+    console.log("[Autofix] Token:", token ? "present" : "MISSING");
+    const data = await api("/admin/autofix/leaks");
+    console.log("[Autofix] Received data:", JSON.stringify(data).substring(0, 200));
+    if (!data) {
+      panel.innerHTML = '<div style="color:var(--error);font-size:13px;padding:8px">Risposta vuota dal server</div>';
+      return;
+    }
+    if (!data.ok) {
+      panel.innerHTML = '<div style="color:var(--error);font-size:13px;padding:8px">Errore: ' + (data.error || "sconosciuto") + '</div>';
+      return;
+    }
+    _autofixLeaks = data;
+    const buckets = data.buckets || { ads_real: [], tracking: [], dom_fp: [] };
+    const api_counts = data.counts || {};
+    const counts = {
+      ads_real: buckets.ads_real?.length || 0,
+      tracking: buckets.tracking?.length || 0,
+      dom_fp: buckets.dom_fp?.length || 0,
+      pending: api_counts.pending || 0,
+      approved: api_counts.approved_unapplied || 0,
+      deferred: api_counts.deferred || 0,
+      total: Object.values(buckets).reduce((s,v) => s + (Array.isArray(v) ? v.length : 0), 0)
+    };
+    console.log("[Autofix] buckets:", buckets);
+    console.log("[Autofix] counts:", counts);
+
+    if (counts.total === 0) {
+      panel.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">Nessun leak rilevato — il sistema è pulito ✅</div>';
+      return;
+    }
+
+    const sections = [
+      { key: "ads_real", label: "🎯 Ads reali (alta confidenza)",  actionLabel: "Approva tutti", action: "fix",    color: "#e66550" },
+      { key: "tracking", label: "📊 Tracking / Analytics (blocco utile, non ads)", actionLabel: "Approva tutti", action: "fix",    color: "#4a86e8" },
+      { key: "dom_fp",   label: "⚠️ DOM sospetti — probabili falsi positivi",     actionLabel: "Ignora tutti", action: "ignore", color: "#ffbc6b" },
+    ];
+
+    let html = '';
+    for (const s of sections) {
+      const leaks = buckets[s.key] || [];
+      const count = counts[s.key] || 0;
+      // Un leak e' ancora "aperto" solo se non ha ne' decisione ne' e' gia' applicato.
+      const open  = leaks.filter(l => !l.decision && !l.applied).length;
+      const closed = leaks.length - open;
+      html +=
+        '<div style="margin-bottom:16px">' +
+          '<details style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">' +
+            '<summary style="padding:12px 16px;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between;user-select:none;list-style:none">' +
+              '<span>' + s.label + ' <span style="background:' + s.color + ';color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;margin-left:6px">' + count + '</span>' +
+                (closed > 0 ? ' <span style="color:var(--muted);font-weight:400;font-size:11px">(' + closed + ' decisi)</span>' : '') +
+              '</span>' +
+              // Il bottone batch compare solo se restano leak da decidere.
+              (open > 0 ? '<button class="btn btn-sm" style="background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--border)" onclick="event.stopPropagation();batchDecide(\'' + s.key + '\',\'' + s.action + '\')">' + s.actionLabel + '</button>' : '') +
+            '</summary>' +
+            '<div style="padding:12px 16px">' +
+              (leaks.length === 0
+                ? '<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">Nessun leak</div>'
+                : leaks.map(l => renderLeakCard(l, s.key)).join('<div style="height:8px"></div>')) +
+            '</div>' +
+          '</details>' +
+        '</div>';
+    }
+    panel.innerHTML = html;
+  } catch(e) {
+    panel.innerHTML = '<div style="color:var(--error);font-size:13px;padding:8px">Errore: ' + esc(e.message) + '</div>';
+  }
+}
+
+// ── Autofix: render singola card leak ──────────────────────────────────────
+function renderLeakCard(leak, bucket) {
+  const confColor = leak.confidence === "high" ? "#e66550" : leak.confidence === "medium" ? "#ffbc6b" : "#8a8a8a";
+  const decision  = leak.decision || null;
+  const decisionBadge = decision
+    ? '<span style="background:var(--input);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:10px;color:var(--muted);margin-left:4px">Deciso: ' + decision + '</span>'
+    : '';
+  const fpBadge  = leak.fp_suspect
+    ? '<span style="background:rgba(255,188,107,.15);color:#ffbc6b;border-radius:20px;padding:2px 8px;font-size:10px;margin-left:4px">possibile FP</span>'
+    : '';
+
+  let evidence = "";
+  const lt = (leak.leak_type || "").toLowerCase();
+  if (lt.startsWith("network") || lt.includes("network")) {
+    evidence = '<div style="font-size:12px;color:var(--muted);margin-top:4px">Bloccato: <code style="background:var(--input);padding:1px 5px;border-radius:4px;font-size:11px">' + esc(leak.blocked_url || leak.url_pattern || "") + '</code> · rete: ' + esc(leak.ad_network || "—") + '</div>';
+  } else if (lt.startsWith("dom") || lt.includes("dom") || lt === "video_ad" || lt.includes("video")) {
+    evidence = '<div style="font-size:12px;color:var(--muted);margin-top:4px">Selettore: <code style="background:var(--input);padding:1px 5px;border-radius:4px;font-size:11px">' + esc(leak.selector || "—") + '</code></div>';
+  }
+
+  let candidate = "";
+  if (leak.candidate_rule && typeof leak.candidate_rule === "object") {
+    const cond = (leak.candidate_rule.condition || {});
+    const urlFilter = esc(cond.urlFilter || "—");
+    const domains   = (cond.domains || []).join(", ");
+    candidate = '<div style="font-size:12px;color:var(--muted);margin-top:4px">Regola: <code style="background:var(--input);padding:1px 5px;border-radius:4px;font-size:11px">urlFilter: ' + urlFilter + (domains ? ', domains: ' + esc(domains) : '') + '</code></div>';
+  } else {
+    candidate = '<div style="font-size:12px;color:var(--muted);margin-top:4px;font-style:italic">(nessuna regola DNR — richiede intervento manuale)</div>';
+  }
+
+  const screenshotBtn = leak.screenshot_url
+    ? '<button class="btn btn-sm btn-outline" style="margin-top:8px" onclick="fetchShot(\'' + esc(leak.fingerprint) + '\')">🖼 Screenshot</button>'
+    : '';
+
+  const noteId  = "note-" + leak.fingerprint;
+  const noteVal = leak.note || "";
+
+  return (
+    '<div style="background:var(--input);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px">' +
+      '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px">' +
+        '<b style="color:var(--text)">' + esc(leak.domain || "?") + '</b>' +
+        '<span style="background:rgba(124,92,252,.15);color:var(--accent);border-radius:20px;padding:2px 8px;font-size:10px">' + esc(leak.category || "?") + '</span>' +
+        '<span style="background:rgba(255,255,255,.07);color:var(--muted);border-radius:20px;padding:2px 8px;font-size:10px">' + esc(leak.leak_type || "?") + '</span>' +
+        '<span style="background:' + confColor + ';color:#fff;border-radius:20px;padding:2px 8px;font-size:10px">' + esc(leak.confidence || "?") + '</span>' +
+        fpBadge + decisionBadge +
+      '</div>' +
+      evidence + candidate +
+      '<div style="margin-top:8px">' +
+        '<input id="' + noteId + '" placeholder="Nota (opzionale)" value="' + esc(noteVal) + '" ' +
+          'style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:11px;width:100%;margin-bottom:6px">' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+          '<button class="btn btn-sm btn-success" onclick="decideLeak(\'' + esc(leak.fingerprint) + '\',\'fix\')" ' + (decision==="fix"?"disabled ":"") + '>✅ Fixa</button>' +
+          '<button class="btn btn-sm btn-outline" onclick="decideLeak(\'' + esc(leak.fingerprint) + '\',\'ignore\')" ' + (decision==="ignore"?"disabled ":"") + '>🚫 Ignora</button>' +
+          '<button class="btn btn-sm btn-outline" onclick="decideLeak(\'' + esc(leak.fingerprint) + '\',\'defer\')" ' + (decision==="defer"?"disabled ":"") + '>⏳ Rimanda</button>' +
+          screenshotBtn +
+        '</div>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+// ── Autofix: decisione singola leak ────────────────────────────────────────
+async function decideLeak(fingerprint, decision) {
+  const noteEl  = document.getElementById("note-" + fingerprint);
+  const note    = noteEl ? noteEl.value.trim() : "";
+  try {
+    const d = await api("/admin/autofix/decision", {
+      method: "POST",
+      body: JSON.stringify({ fingerprint, decision, note })
+    });
+    if (!d.ok) { toast("Errore: " + (d.error || "?"), "error"); return; }
+    toast("Decisione salvata ✅", "success");
+    loadAutofix();
+  } catch(e) {
+    toast("Errore: " + e.message, "error");
+  }
+}
+
+// ── Autofix: batch decision per bucket ──────────────────────────────────────
+async function batchDecide(bucket, decision) {
+  if (!_autofixLeaks) { toast("Carica prima i leak", "error"); return; }
+  const leaks = _autofixLeaks.buckets?.[bucket] || [];
+  if (!leaks.length) { toast("Nessun leak in questo bucket", "info"); return; }
+  if (!confirm("Confermi " + decision + " per " + leaks.length + " leak?")) return;
+  const decisions = leaks.map(l => ({ fingerprint: l.fingerprint, decision }));
+  try {
+    const d = await api("/admin/autofix/decision", {
+      method: "POST",
+      body: JSON.stringify({ decisions })
+    });
+    if (!d.ok) { toast("Errore: " + (d.error || "?"), "error"); return; }
+    toast(leaks.length + " decisioni salvate ✅", "success");
+    loadAutofix();
+  } catch(e) {
+    toast("Errore: " + e.message, "error");
+  }
+}
+
+// ── Autofix: richiesta apply (informativa) ─────────────────────────────────
+function requestApply() {
+  const approved = _autofixLeaks ? (_autofixLeaks.counts?.approved || 0) : 0;
+  toast("I fix approvati verranno applicati dal job notturno. Per applicarli subito, scrivi 'applica i fix approvati' nella chat con Claude.", "info");
+}
+
+// ── Autofix: fetch screenshot + lightbox ────────────────────────────────────
+async function fetchShot(fingerprint) {
+  if (!_autofixLeaks) return;
+  // trova il leak per fingerprint in tutti i bucket
+  let leak = null;
+  const buckets = _autofixLeaks.buckets || {};
+  for (const arr of Object.values(buckets)) {
+    leak = arr.find(l => l.fingerprint === fingerprint);
+    if (leak) break;
+  }
+  if (!leak || !leak.screenshot_url) { toast("Screenshot non disponibile", "error"); return; }
+  try {
+    const r = await fetch(leak.screenshot_url, { headers: { "X-Admin-Token": token } });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const blob = await r.blob();
+    const url  = URL.createObjectURL(blob);
+    // costruisci lightbox inline
+    let lb = document.getElementById("shot-lightbox");
+    if (!lb) {
+      lb = document.createElement("div");
+      lb.id = "shot-lightbox";
+      lb.style = "position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer";
+      lb.onclick = () => { lb.remove(); };
+      document.body.appendChild(lb);
+    } else {
+      lb.innerHTML = "";
+    }
+    const img = document.createElement("img");
+    img.src = url;
+    img.style = "max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.6)";
+    img.onerror = () => { lb.innerHTML = '<div style="color:#fff;padding:24px">Screenshot non disponibile</div>'; };
+    lb.appendChild(img);
+    // chiudi con X
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "✕";
+    closeBtn.style = "position:fixed;top:16px;right:20px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:18px;cursor:pointer;border-radius:50%;width:36px;height:36px;line-height:36px;text-align:center";
+    closeBtn.onclick = (e) => { e.stopPropagation(); lb.remove(); };
+    lb.appendChild(closeBtn);
+  } catch(e) {
+    toast("Errore screenshot: " + e.message, "error");
+  }
+}
+
+async function inspectSeoUrl() {
+  const url = document.getElementById("seo-inspect-url").value.trim();
+  if (!url) { toast("Inserisci un URL", "error"); return; }
+  document.getElementById("seo-inspect-result").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  const d = await api("/admin/seo/url-inspect", { method: "POST", body: JSON.stringify({ url }) });
+  if (!d.ok) {
+    document.getElementById("seo-inspect-result").innerHTML = `<div class="empty" style="padding:16px"><p style="color:var(--danger)">Errore: ${d.error || "?"}</p></div>`;
+    return;
+  }
+  const r = d.result || {};
+  const indexResult = r.indexStatusResult || {};
+  const coverageResult = r.coverageSummaryResult || {};
+  const mobileResult = r.mobileUsabilityResult || {};
+  const richResult = r.richResultsResult || {};
+
+  const indexColor = indexResult.indexStatus === "INDEXED" ? "var(--success)" : "var(--danger)";
+  const indexText = indexResult.indexStatus === "INDEXED" ? "✅ Indexed" : indexResult.indexStatus === "CRAWLED" ? "⚠️ Crawled" : "❌ Non indicizzato";
+
+  const issues = (r.pageFetchState?.failedCronCause || indexResult.coveringIndexStatus || richResult.verdict || "");
+
+  document.getElementById("seo-inspect-result").innerHTML = `
+    <div style="font-size:13px">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px">
+        <span style="color:${indexColor};font-weight:700;font-size:14px">${indexText}</span>
+        ${coverageResult.issue ? `<span style="color:var(--danger)">⚠️ ${coverageResult.issue}</span>` : ""}
+        ${mobileResult.verdict === "PASS" ? '<span style="color:var(--success)">📱 Mobile OK</span>' : mobileResult.verdict === "FAIL" ? '<span style="color:var(--danger)">📱 Mobile issue</span>' : ""}
+      </div>
+      ${indexResult.sitemap ? `<div style="color:var(--muted);font-size:12px;margin-bottom:4px">Sitemap: <span style="color:var(--success)">✅ Trovato</span> — ${indexResult.sitemap}</div>` : ""}
+      ${indexResult.lastCrawlTime ? `<div style="color:var(--muted);font-size:12px;margin-bottom:4px">Ultimo crawl: ${new Date(indexResult.lastCrawlTime).toLocaleDateString()}</div>` : ""}
+      ${issues ? `<div style="color:var(--danger);font-size:12px;margin-top:6px">Problema: ${issues}</div>` : '<div style="color:var(--success);font-size:12px;margin-top:6px">✅ Nessun problema rilevato</div>'}
+    </div>
+  `;
+}
+
+async function batchInspectSitemap() {
+  const panel = document.getElementById("seo-batch-panel");
+  panel.style.display = "";
+  document.getElementById("seo-batch-results").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  const d = await api("/admin/seo/url-inspect/batch", { method: "POST", body: JSON.stringify({}) });
+  if (!d.ok) {
+    document.getElementById("seo-batch-results").innerHTML = `<div class="empty"><p style="color:var(--danger)">Errore: ${d.error || "?"}</p></div>`;
+    return;
+  }
+  const results = d.results || [];
+  const indexed = results.filter(r => r.indexed).length;
+  document.getElementById("seo-batch-results").innerHTML = `
+    <div style="margin-bottom:12px;font-size:13px;color:var(--muted)">
+      ${d.inspected}/${d.total} URL ispezionate (max 20 per batch · <a href="${d.sitemapUrl || "https://adoff.app/sitemap.xml"}" target="_blank" style="color:var(--accent)">sitemap</a>)
+      — <span style="color:var(--success)">✅ ${indexed} indicizzate</span> / <span style="color:var(--danger)">❌ ${results.length - indexed} no</span>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>URL</th><th>Stato</th></tr></thead><tbody>${
+      results.map(r => `<tr>
+        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="mono" style="font-size:11px" title="${r.url}">${r.url}</span></td>
+        <td style="color:${r.indexed ? "var(--success)" : "var(--danger)"}">${r.indexed ? "✅ Indexed" : "❌ " + (r.status || "Not indexed")}</td>
+      </tr>`).join("")
+    }</tbody></table></div>
+  `;
+}
+
+async function submitSitemap() {
+  const sitemapUrl = "https://adoff.app/sitemap.xml";
+  if (!confirm("Submit " + sitemapUrl + " a Google Search Console?")) return;
+  const d = await api("/admin/seo/sitemap/submit", { method: "POST", body: JSON.stringify({ sitemapUrl }) });
+  if (!d.ok) { toast("Errore: " + (d.error || "?"), "error"); return; }
+  toast("✅ Sitemap submitted!");
+  document.getElementById("seo-last-sitemap").textContent = new Date().toLocaleString();
+}
+
+function exportSeoCsv() {
+  window.open("/admin/seo/export", "_blank");
+}
+
+// ── SUPPORT ──────────────────────────────────────────────────
+let ticketsLoaded = false;
+
+async function loadTickets(force = false) {
+  if (ticketsLoaded && !force) return;
+  document.getElementById("ticketTableWrap").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  const filter = document.getElementById("ticketFilter")?.value || "";
+  let url = "/tickets";
+  if (filter) url += `?status=${filter}`;
+  const d = await api(url);
+  if (!d.ok) {
+    document.getElementById("ticketTableWrap").innerHTML = `<div class="loading-center" style="color:var(--danger)">Errore: ${d.error || "Impossibile caricare ticket"}</div>`;
+    toast("Errore caricamento ticket", "error");
+    return;
+  }
+  const tickets = d.tickets || [];
+  ticketsLoaded = true;
+  if (!tickets.length) {
+    document.getElementById("ticketTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">💬</div><p>Nessun ticket</p></div>`;
+    return;
+  }
+  document.getElementById("ticketTableWrap").innerHTML = `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>ID</th><th>Oggetto</th><th>Email</th><th>Categoria</th><th>Stato</th><th>Data</th><th>Azioni</th>
+      </tr></thead>
+      <tbody>
+        ${tickets.map(t => `<tr>
+          <td><span class="mono">${t.id || "–"}</span></td>
+          <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.subject || "–"}</td>
+          <td style="color:var(--muted)">${t.email || "–"}</td>
+          <td><span style="color:var(--muted)">${t.category || "–"}</span></td>
+          <td><span class="badge badge-${t.status === "open" ? "open" : "closed"}">${t.status || "–"}</span></td>
+          <td style="color:var(--muted)">${t.createdAt ? new Date(t.createdAt).toLocaleDateString("it-IT") : "–"}</td>
+          <td>
+            <button class="btn btn-sm btn-outline" onclick="openTicket('${t.id}')">Apri</button>
+          </td>
+        </tr>`).join("")}
+      </tbody>
+    </table></div>`;
+}
+
+async function openTicket(id) {
+  document.getElementById("ticketModalTitle").textContent = `Ticket ${id}`;
+  document.getElementById("ticketDetail").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  openModal("ticketModal");
+  const d = await api(`/ticket/${id}`);
+  if (!d.ok) { document.getElementById("ticketDetail").innerHTML = `<p style="color:var(--danger)">Errore: ${d.error}</p>`; return; }
+  const t = d.ticket || d;
+  const replies = t.replies || [];
+  document.getElementById("ticketDetail").innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <div>
+          <span class="badge badge-${t.status === "open" ? "open" : "closed"}">${t.status}</span>
+          <span style="margin-left:10px;color:var(--muted);font-size:12px">${t.email || ""}</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          ${t.status === "open"
+            ? `<button class="btn btn-sm btn-success" onclick="updateTicketStatus('${id}','closed')">Chiudi ticket</button>`
+            : `<button class="btn btn-sm btn-outline" onclick="updateTicketStatus('${id}','open')">Riapri ticket</button>`}
+        </div>
+      </div>
+      <div class="ticket-reply">
+        <div class="reply-meta">${t.email || "Anonimo"} — ${t.createdAt ? new Date(t.createdAt).toLocaleString("it-IT") : ""}</div>
+        <div class="reply-text">${esc(t.description || t.body || t.message || "")}</div>
+      </div>
+      ${replies.map(r => `
+        <div class="ticket-reply ${r.by === "admin" ? "admin" : ""}">
+          <div class="reply-meta">${r.by === "admin" ? "Admin" : t.email || "Utente"} — ${r.at ? new Date(r.at).toLocaleString("it-IT") : ""}</div>
+          <div class="reply-text">${esc(r.text || "")}</div>
+        </div>`).join("")}
+    </div>
+    <hr class="divider">
+    <div class="section-title">Rispondi</div>
+    <div class="field">
+      <textarea id="ticketReply" placeholder="Scrivi una risposta..."></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="sendTicketReply('${id}')">Invia risposta</button>
+  `;
+}
+
+async function updateTicketStatus(id, status) {
+  const d = await api(`/ticket/${id}`, { method: "POST", body: JSON.stringify({ status }) });
+  if (!d.ok) { toast(d.error || "Errore", "error"); return; }
+  toast(`Ticket ${status === "closed" ? "chiuso" : "riaperto"}`);
+  openTicket(id);
+  ticketsLoaded = false;
+  loadTickets(true);
+}
+
+async function sendTicketReply(id) {
+  const reply = document.getElementById("ticketReply").value.trim();
+  if (!reply) { toast("Scrivi una risposta prima di inviare", "error"); return; }
+  const btn = event.target; btn.disabled = true; btn.textContent = "Inviando...";
+  const d = await api(`/ticket/${id}`, { method: "POST", body: JSON.stringify({ reply }) });
+  btn.disabled = false; btn.textContent = "Invia risposta";
+  if (!d.ok) { toast(d.error || "Errore invio", "error"); return; }
+  toast("Risposta inviata");
+  openTicket(id);
+}
+
+// ── SUGGERIMENTI ─────────────────────────────────────────────
+let suggLoaded = false;
+let _suggCache = {};
+const SUGG_TYPE_ICON = { feature:"💡", bug:"🐛", improvement:"⚡" };
+const SUGG_STATUS_BADGE = { new:"open", triaged:"open", proposed:"open", approved:"open", in_progress:"open", done:"closed", rejected:"closed" };
+const SUGG_STATUSES = ["new","triaged","proposed","approved","in_progress","done","rejected"];
+
+async function loadSuggestions(force = false) {
+  if (suggLoaded && !force) return;
+  document.getElementById("suggTableWrap").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  const status = document.getElementById("suggStatusFilter")?.value || "";
+  const type = document.getElementById("suggTypeFilter")?.value || "";
+  let url = "/admin/suggestions";
+  const qs = [];
+  if (status) qs.push(`status=${encodeURIComponent(status)}`);
+  if (type) qs.push(`type=${encodeURIComponent(type)}`);
+  if (qs.length) url += "?" + qs.join("&");
+  const d = await api(url);
+  if (!d.ok) {
+    document.getElementById("suggTableWrap").innerHTML = `<div class="loading-center" style="color:var(--danger)">Errore: ${d.error || "Impossibile caricare i suggerimenti"}</div>`;
+    toast("Errore caricamento suggerimenti", "error");
+    return;
+  }
+  const list = d.suggestions || [];
+  suggLoaded = true;
+  _suggCache = {};
+  list.forEach(s => { _suggCache[s.id] = s; });
+  if (!list.length) {
+    document.getElementById("suggTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">💡</div><p>Nessun suggerimento</p></div>`;
+    return;
+  }
+  document.getElementById("suggTableWrap").innerHTML = `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>ID</th><th>Tipo</th><th>Titolo</th><th>Voti</th><th>Cluster</th><th>Stato</th><th>Data</th><th>Azioni</th>
+      </tr></thead>
+      <tbody>
+        ${list.map(s => `<tr>
+          <td><span class="mono">${s.id || "–"}</span></td>
+          <td>${SUGG_TYPE_ICON[s.type] || ""} ${s.type || "–"}</td>
+          <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title || "–")}</td>
+          <td>${s.votes != null ? s.votes : 1}</td>
+          <td style="color:var(--muted)">${esc(s.cluster || "–")}</td>
+          <td><span class="badge badge-${SUGG_STATUS_BADGE[s.status] || "open"}">${s.status || "new"}</span></td>
+          <td style="color:var(--muted)">${s.created_at ? new Date(s.created_at.replace(" ","T")+"Z").toLocaleDateString("it-IT") : "–"}</td>
+          <td><button class="btn btn-sm btn-outline" onclick="openSuggestion('${s.id}')">Apri</button></td>
+        </tr>`).join("")}
+      </tbody>
+    </table></div>`;
+}
+
+function openSuggestion(id) {
+  const s = _suggCache[id];
+  if (!s) { toast("Suggerimento non trovato", "error"); return; }
+  document.getElementById("suggModalTitle").textContent = `${SUGG_TYPE_ICON[s.type] || ""} ${id}`;
+  const statusOpts = SUGG_STATUSES.map(st => `<option value="${st}" ${s.status === st ? "selected" : ""}>${st}</option>`).join("");
+  document.getElementById("suggDetail").innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <span class="badge badge-${SUGG_STATUS_BADGE[s.status] || "open"}">${s.status || "new"}</span>
+        <span style="color:var(--muted);font-size:12px">${esc(s.email || "anon")} · ${esc(s.browser || "")}</span>
+      </div>
+      <div class="ticket-reply">
+        <div class="reply-meta"><b>${esc(s.title || "")}</b> — ${s.created_at ? new Date(s.created_at.replace(" ","T")+"Z").toLocaleString("it-IT") : ""}</div>
+        <div class="reply-text">${esc(s.description || "")}</div>
+      </div>
+      ${s.proposal ? `<div class="ticket-reply admin"><div class="reply-meta">Proposta Claude</div><div class="reply-text">${esc(s.proposal)}</div></div>` : ""}
+      ${s.resolution ? `<div class="ticket-reply"><div class="reply-meta">Esito</div><div class="reply-text">${esc(s.resolution)}</div></div>` : ""}
+    </div>
+    <hr class="divider">
+    <div class="section-title">Gestione</div>
+    <div class="field" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <label style="font-size:12px;color:var(--muted)">Stato</label>
+      <select id="suggStatusSel">${statusOpts}</select>
+      <input id="suggClusterInp" placeholder="Cluster (tema)" value="${esc(s.cluster || "")}" style="flex:1;min-width:140px">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="saveSuggestion('${id}')">Salva</button>
+      <button class="btn btn-success btn-sm" onclick="approveSuggestion('${id}')">✅ Approva → coda fix</button>
+      <button class="btn btn-outline btn-sm" onclick="updateSuggestionStatus('${id}','rejected')">Rifiuta</button>
+    </div>
+  `;
+  openModal("suggModal");
+}
+
+async function saveSuggestion(id) {
+  const status = document.getElementById("suggStatusSel").value;
+  const cluster = document.getElementById("suggClusterInp").value.trim();
+  const d = await api(`/admin/suggestions/${id}`, { method: "POST", body: JSON.stringify({ status, cluster }) });
+  if (!d.ok) { toast(d.error || "Errore", "error"); return; }
+  toast("Suggerimento aggiornato");
+  closeModal("suggModal");
+  loadSuggestions(true);
+}
+
+async function approveSuggestion(id) { await updateSuggestionStatus(id, "approved"); }
+
+async function updateSuggestionStatus(id, status) {
+  const d = await api(`/admin/suggestions/${id}`, { method: "POST", body: JSON.stringify({ status }) });
+  if (!d.ok) { toast(d.error || "Errore", "error"); return; }
+  toast(status === "approved" ? "Approvato → in coda fix" : `Stato: ${status}`);
+  closeModal("suggModal");
+  loadSuggestions(true);
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────
+async function changePassword() {
+  const curr = document.getElementById("settCurrPass").value;
+  const np = document.getElementById("settNewPass").value;
+  const np2 = document.getElementById("settNewPass2").value;
+  const err = document.getElementById("settPassErr");
+  const ok = document.getElementById("settPassOk");
+  err.className = "err"; ok.className = "ok-msg";
+  if (np.length < 8) { err.textContent = "La nuova password deve avere almeno 8 caratteri"; err.className = "err show"; return; }
+  if (np !== np2) { err.textContent = "Le password non coincidono"; err.className = "err show"; return; }
+  const btn = event.target; btn.disabled = true;
+  const d = await api("/admin/change-password", {
+    method: "POST",
+    body: JSON.stringify({ currentPassword: curr, newPassword: np })
+  });
+  btn.disabled = false;
+  if (!d.ok) { err.textContent = d.error || "Errore"; err.className = "err show"; return; }
+  ok.textContent = "Password aggiornata con successo!"; ok.className = "ok-msg show";
+  document.getElementById("settCurrPass").value = "";
+  document.getElementById("settNewPass").value = "";
+  document.getElementById("settNewPass2").value = "";
+}
+
+async function saveRecoveryEmail() {
+  const email = document.getElementById("settEmail").value.trim();
+  const err = document.getElementById("settEmailErr");
+  const ok = document.getElementById("settEmailOk");
+  err.className = "err"; ok.className = "ok-msg";
+  if (!email) { err.textContent = "Inserisci un'email valida"; err.className = "err show"; return; }
+  const btn = event.target; btn.disabled = true;
+  const d = await api("/admin/change-password", {
+    method: "POST",
+    body: JSON.stringify({ email })
+  });
+  btn.disabled = false;
+  if (!d.ok) { err.textContent = d.error || "Errore"; err.className = "err show"; return; }
+  ok.textContent = "Email salvata!"; ok.className = "ok-msg show";
+}
+
+// ── UTILS ────────────────────────────────────────────────────
+function esc(s) {
+  return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ── BOOT ─────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", init);
+</script>
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

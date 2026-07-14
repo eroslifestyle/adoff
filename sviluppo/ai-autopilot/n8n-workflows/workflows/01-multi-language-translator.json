@@ -1,0 +1,73 @@
+{
+  "name": "AdOff 01 - Multi-language Translator (IT -> 14)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "adoff-translate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "wh",
+      "name": "Webhook /translate",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 400],
+      "webhookId": "adoff-translate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: { text: '...', source_lang: 'it', target_langs?: [...], style?: 'reddit|press|tweet|landing' }\nconst body = $input.first().json.body || $input.first().json;\nconst text = body.text || '';\nconst source = body.source_lang || 'it';\nconst defaults = ['en','de','fr','es','pt','ru','ja','ko','zh','ar','hi','tr','id','pl'];\nconst targets = Array.isArray(body.target_langs) && body.target_langs.length ? body.target_langs : defaults;\nconst style = body.style || 'generic';\nif (!text || text.length < 5) {\n  return [{ json: { error: 'text required (min 5 chars)' }}];\n}\nreturn targets.map(lang => ({ json: { text, source, target: lang, style }}));"
+      },
+      "id": "parse",
+      "name": "Parse request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\":\"chat-max\",\"stream\":false,\"options\":{\"temperature\":0.4,\"num_predict\":2048},\"prompt\":\"Translate the text from {{ $json.source }} to {{ $json.target }}. Style: {{ $json.style }}. CRITICAL: do NOT translate word-for-word — adapt idioms, native phrasing, cultural fit. Keep brand names (AdOff, uBlock Origin, etc.) untranslated. Preserve URLs and code. Output ONLY the translated text, no preamble.\\n\\n--- SOURCE ({{ $json.source }}) ---\\n{{ $json.text }}\\n--- END ---\\n\\nTranslated ({{ $json.target }}):\"}",
+        "options": {"timeout": 90000, "response": {"response": {"neverError": true}}}
+      },
+      "id": "translate",
+      "name": "LLM translate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst out = {};\nfor (const it of items) {\n  const ctx = $('Parse request').itemMatching(items.indexOf(it))?.json || it.json;\n  const llm = it.json;\n  const text = (llm.response || llm.message?.content || '').trim();\n  out[ctx.target || 'unknown'] = text;\n}\nreturn [{ json: { translations: out, count: Object.keys(out).length }}];"
+      },
+      "id": "merge",
+      "name": "Merge translations",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "resp",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1120, 400]
+    }
+  ],
+  "connections": {
+    "Webhook /translate": {"main": [[{"node": "Parse request", "type": "main", "index": 0}]]},
+    "Parse request": {"main": [[{"node": "LLM translate", "type": "main", "index": 0}]]},
+    "LLM translate": {"main": [[{"node": "Merge translations", "type": "main", "index": 0}]]},
+    "Merge translations": {"main": [[{"node": "Respond", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "saveExecutionProgress": true},
+  "tags": [{"name": "adoff"}, {"name": "content"}],
+  "active": false
+}

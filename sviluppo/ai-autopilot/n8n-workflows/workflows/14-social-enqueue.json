@@ -1,0 +1,194 @@
+{
+  "name": "AdOff 14 - Social Enqueue (bank -> social_posts draft)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "trig",
+      "name": "Daily 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cat /home/mrxxx/adoff/sviluppo/marketing/video-engine/output/bank/manifest.json 2>/dev/null || echo '[]'"
+      },
+      "id": "readman",
+      "name": "Read bank manifest",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        460,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Per ogni clip del bank: 3 job draft (instagram, facebook, tiktok).\n// IG/FB: file con logo (contenuto brand legittimo) + media_public_url\n//        servito da media.adoff.app (Meta scarica da URL pubblico).\n// TikTok: variante SENZA logo (ToS) via /opt/n8n/local-files/adoff-bank\n//        (symlink al bank) + no_logo_variant=true (FILE_UPLOAD, no URL).\nconst BANK = '/home/mrxxx/adoff/sviluppo/marketing/video-engine/output';\nconst TT_DIR = '/opt/n8n/local-files/adoff-bank';\nconst MEDIA_BASE = 'https://media.adoff.app';\nlet man;\ntry { man = JSON.parse($input.first().json.stdout || '[]'); } catch (e) { man = []; }\n// batch-render scrive {generated,count,items:[...]}; tollera anche array puro.\nif (man && !Array.isArray(man) && Array.isArray(man.items)) man = man.items;\nif (!Array.isArray(man)) man = [];\nconst out = [];\nfor (const m of man) {\n  if (!m || !m.file) continue;\n  const fname = String(m.file).split('/').pop();          // A1-x__it.mp4\n  const fbase = fname.replace(/\\.mp4$/, '');               // A1-x__it\n  const std = `${BANK}/${m.file}`;                         // host (con logo)\n  const pub = `${MEDIA_BASE}/${fname}`;                    // URL pubblico IG/FB\n  const ttPath = `${TT_DIR}/${fbase}__nologo.mp4`;         // TikTok no-logo\n  const hashtags = Array.isArray(m.hashtagSet) ? m.hashtagSet.join(' ') : (m.hashtagSet || '');\n  const lang = m.lang || 'it';\n  const common = { brand: 'adoff', media_type: 'video', caption: '', hashtags, lang, ai_generated: true, src_id: m.id };\n  out.push({ json: { ...common, platform: 'instagram', account_ref: 'adoff', media_path: std,    media_public_url: pub, no_logo_variant: false } });\n  out.push({ json: { ...common, platform: 'facebook',  account_ref: 'adoff', media_path: std,    media_public_url: pub, no_logo_variant: false } });\n  out.push({ json: { ...common, platform: 'tiktok',    account_ref: 'adoff', media_path: ttPath, media_public_url: '',  no_logo_variant: true  } });\n}\nreturn out;"
+      },
+      "id": "build",
+      "name": "Build draft jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// INSERT idempotente: salta se esiste gia' un job (stato vivo) per\n// stessa platform+media_path. La thin admin UI poi approva i draft.\nfunction lit(s){return String(s == null ? '' : s).replace(/'/g,\"''\");}\nconst out=[];\nfor (const it of $input.all()){\n  const j=it.json;\n  const sql=\n    `INSERT INTO adoff_autopilot.social_posts `+\n    `(brand,platform,account_ref,media_type,media_path,media_public_url,`+\n    `no_logo_variant,caption,hashtags,lang,ai_generated,status) `+\n    `SELECT '${lit(j.brand)}','${lit(j.platform)}','${lit(j.account_ref)}',`+\n    `'${lit(j.media_type)}','${lit(j.media_path)}',`+\n    `${j.media_public_url?`'${lit(j.media_public_url)}'`:'NULL'},`+\n    `${j.no_logo_variant?'true':'false'},`+\n    `'${lit(j.caption)}','${lit(j.hashtags)}','${lit(j.lang)}',`+\n    `${j.ai_generated?'true':'false'},'draft' `+\n    `WHERE NOT EXISTS (SELECT 1 FROM adoff_autopilot.social_posts `+\n    `WHERE platform='${lit(j.platform)}' AND media_path='${lit(j.media_path)}' `+\n    `AND status IN ('draft','approved','publishing','published'));`;\n  out.push({json:{platform:j.platform,src_id:j.src_id,sql}});\n}\nreturn out;"
+      },
+      "id": "mksql",
+      "name": "Build INSERT SQL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sql }}",
+        "options": {}
+      },
+      "id": "enqueue",
+      "name": "Enqueue social_posts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1120,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items=$input.all().map(i=>i.json);\nconst n=items.length;\nconst byPlat={};\nfor(const i of items){byPlat[i.platform]=(byPlat[i.platform]||0)+1;}\nconst summary=Object.entries(byPlat).map(([p,c])=>`• ${p}: ${c}`).join('\\n');\nconst text=`📤 *AdOff Social Enqueue* — ${n} job draft accodati\\n\\n${summary}\\n\\nRevisiona e approva nella Admin UI (gate consenso umano).`;\nreturn [{json:{text}}];"
+      },
+      "id": "digest",
+      "name": "Build Telegram digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"chat_id\":\"{{ $env.TELEGRAM_CHAT_ID }}\",\"text\":{{ JSON.stringify($json.text) }},\"parse_mode\":\"Markdown\"}",
+        "options": {}
+      },
+      "id": "tg",
+      "name": "Telegram digest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1560,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Daily 07:00": {
+      "main": [
+        [
+          {
+            "node": "Read bank manifest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read bank manifest": {
+      "main": [
+        [
+          {
+            "node": "Build draft jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build draft jobs": {
+      "main": [
+        [
+          {
+            "node": "Build INSERT SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build INSERT SQL": {
+      "main": [
+        [
+          {
+            "node": "Enqueue social_posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enqueue social_posts": {
+      "main": [
+        [
+          {
+            "node": "Build Telegram digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Telegram digest": {
+      "main": [
+        [
+          {
+            "node": "Telegram digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true
+  },
+  "tags": [
+    "adoff",
+    "social",
+    "enqueue",
+    "S14"
+  ],
+  "active": false
+}

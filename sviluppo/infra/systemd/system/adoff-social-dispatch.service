@@ -1,0 +1,12 @@
+[Unit]
+Description=AdOff Social Dispatcher (pubblica i job approvati IG/FB/TikTok)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=mrxxx
+WorkingDirectory=/home/mrxxx/adoff/sviluppo/ai-autopilot/n8n-workflows/scripts
+ExecStart=/home/mrxxx/adoff/sviluppo/ai-autopilot/n8n-workflows/admin-ui/.venv/bin/python /home/mrxxx/adoff/sviluppo/ai-autopilot/n8n-workflows/scripts/social_publish.py --dispatch --max 10
+StandardOutput=append:/var/log/adoff-social-dispatch.log
+StandardError=append:/var/log/adoff-social-dispatch.log

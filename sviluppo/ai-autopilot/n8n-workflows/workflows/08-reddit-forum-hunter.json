@@ -1,0 +1,128 @@
+{
+  "name": "AdOff 08 - Reddit Forum Hunter (search + reply queue)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {"interval": [{"field": "hours", "hoursInterval": 2}]}
+      },
+      "id": "trig",
+      "name": "Every 2h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Target subreddits + intent-bearing search queries\nconst targets = [\n  { sub: 'uBlockOrigin', q: 'not working OR youtube OR mv3' },\n  { sub: 'chrome', q: 'ad blocker OR youtube ads' },\n  { sub: 'AdBlock', q: 'alternative OR youtube' },\n  { sub: 'firefox', q: 'ad blocker recommendation' },\n  { sub: 'privacy', q: 'ad blocker chrome 2026' },\n  { sub: 'youtube', q: 'anti adblock' },\n  { sub: 'ChromeExtensions', q: 'ad blocker OR privacy' },\n  { sub: 'SideProject', q: 'chrome extension privacy' },\n  { sub: 'browsers', q: 'best adblock' },\n  { sub: 'degoogle', q: 'ad blocker' },\n  { sub: 'firefox', q: 'manifest v3' },\n  { sub: 'edge', q: 'ad blocker' }\n];\nreturn targets.map(t => ({ json: t }));"
+      },
+      "id": "list",
+      "name": "Target subs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.reddit.com/r/{{ $json.sub }}/search.json?q={{ encodeURIComponent($json.q) }}&restrict_sr=1&sort=new&t=week&limit=15",
+        "options": {"timeout": 15000, "response": {"response": {"neverError": true}}},
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "User-Agent", "value": "AdOffHunter/1.0"}]}
+      },
+      "id": "search",
+      "name": "Reddit search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst out = [];\nfor (const it of items) {\n  const data = it.json.data;\n  if (!data?.children) continue;\n  for (const c of data.children) {\n    const d = c.data;\n    if (!d?.id) continue;\n    // Filter: only questions/requests for advice (intent signals)\n    const text = (d.title + ' ' + (d.selftext||'')).toLowerCase();\n    const isQuestion = /\\?|recommend|alternative|best|how|which|help|stopped working/.test(text);\n    if (!isQuestion) continue;\n    // Skip if already locked/old/low quality\n    if (d.locked || d.over_18 || (d.score < -2) || d.num_comments > 50) continue;\n    const ageH = (Date.now()/1000 - d.created_utc)/3600;\n    if (ageH > 168) continue;  // <1 week\n    out.push({ json: {\n      source: 'reddit',\n      source_id: d.id,\n      url: 'https://reddit.com' + d.permalink,\n      sub: d.subreddit,\n      title: d.title,\n      body: (d.selftext||'').slice(0,3000),\n      author: d.author,\n      score: d.score,\n      num_comments: d.num_comments\n    }});\n  }\n}\nreturn out.slice(0, 20);"
+      },
+      "id": "filter",
+      "name": "Filter intent threads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT NOT EXISTS(SELECT 1 FROM adoff_autopilot.mentions WHERE source='reddit' AND source_id=$1::text) AS is_new;",
+        "options": {"queryReplacement": "={{ $json.source_id }}"}
+      },
+      "id": "dedup",
+      "name": "Dedup check",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1120, 400],
+      "credentials": {"postgres": {"id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres"}}
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"version": 2},
+          "conditions": [{"leftValue": "={{ $json.is_new }}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}]
+        }
+      },
+      "id": "if-new",
+      "name": "If new",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\":\"chat-max\",\"stream\":false,\"options\":{\"temperature\":0.6,\"num_predict\":500},\"prompt\":\"You are an experienced Reddit user. Write a reply to this thread that ACTUALLY HELPS. Rules:\\n- First 80% of reply: pure value, solve their problem\\n- Last 20%: mention AdOff (adoff.app) ONLY if relevant, with disclosure 'disclaimer: I'm the dev'\\n- Conversational tone, no marketing\\n- 100-300 words\\n- If AdOff doesn't help here, write reply without mentioning it and end with [NO_PROMO]\\n\\nSUBREDDIT: r/{{ $('Filter intent threads').item.json.sub }}\\nTITLE: {{ $('Filter intent threads').item.json.title }}\\nBODY: {{ $('Filter intent threads').item.json.body }}\\n\\nReply:\"}",
+        "options": {"timeout": 60000, "response": {"response": {"neverError": true}}}
+      },
+      "id": "compose",
+      "name": "Compose reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 320]
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\":\"fast-max\",\"stream\":false,\"format\":\"json\",\"options\":{\"temperature\":0.1,\"num_predict\":80},\"prompt\":\"Rate this Reddit reply on 0-10. Criteria: (a) value-first (b) NOT spammy (c) genuine tone. Return JSON: {\\\"quality\\\": <int>, \\\"reason\\\": \\\"<short>\\\"}\\n\\nREPLY:\\n{{ $json.response }}\"}",
+        "options": {"timeout": 20000, "response": {"response": {"neverError": true}}}
+      },
+      "id": "quality",
+      "name": "Quality gate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 320]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH ins_mention AS (INSERT INTO adoff_autopilot.mentions (source, source_id, url, lang, author, title, body, keywords_matched, intent) VALUES ('reddit', $1, $2, 'en', $3, $4, $5, ARRAY['hunter'], 'question') ON CONFLICT DO NOTHING RETURNING id) INSERT INTO adoff_autopilot.posts_queue (workflow, platform, target_url, parent_mention_id, lang, body, quality_score, status, scheduled_at) SELECT 'reddit_hunter', 'reddit', $2, id, 'en', $6, $7::numeric, CASE WHEN $7::numeric >= 6.5 THEN 'queued' ELSE 'skipped' END, NOW() + (random() * interval '6 hours') FROM ins_mention RETURNING id, status;",
+        "options": {"queryReplacement": "={{ $('Filter intent threads').item.json.source_id }},{{ $('Filter intent threads').item.json.url }},{{ $('Filter intent threads').item.json.author }},{{ $('Filter intent threads').item.json.title }},{{ $('Filter intent threads').item.json.body }},{{ $('Compose reply').item.json.response }},{{ (() => { try { return JSON.parse($json.response).quality || 5 } catch(e) { return 5 } })() }}"}
+      },
+      "id": "queue",
+      "name": "Queue reply",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [2000, 320],
+      "credentials": {"postgres": {"id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres"}}
+    }
+  ],
+  "connections": {
+    "Every 2h": {"main": [[{"node": "Target subs", "type": "main", "index": 0}]]},
+    "Target subs": {"main": [[{"node": "Reddit search", "type": "main", "index": 0}]]},
+    "Reddit search": {"main": [[{"node": "Filter intent threads", "type": "main", "index": 0}]]},
+    "Filter intent threads": {"main": [[{"node": "Dedup check", "type": "main", "index": 0}]]},
+    "Dedup check": {"main": [[{"node": "If new", "type": "main", "index": 0}]]},
+    "If new": {"main": [[{"node": "Compose reply", "type": "main", "index": 0}], []]},
+    "Compose reply": {"main": [[{"node": "Quality gate", "type": "main", "index": 0}]]},
+    "Quality gate": {"main": [[{"node": "Queue reply", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "saveExecutionProgress": true},
+  "tags": [{"name": "adoff"}, {"name": "outreach"}],
+  "active": false
+}

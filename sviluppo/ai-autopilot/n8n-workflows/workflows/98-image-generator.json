@@ -1,0 +1,128 @@
+{
+  "name": "AdOff 98 - Image Generator (async queue)",
+  "active": true,
+  "nodes": [
+    {
+      "id": "wh-gen",
+      "name": "Webhook image-gen",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 300],
+      "parameters": {
+        "path": "image-gen",
+        "responseMode": "responseNode",
+        "httpMethod": "POST",
+        "options": {}
+      },
+      "typeVersion": 2,
+      "webhookId": "adoff-image-gen-001"
+    },
+    {
+      "id": "enqueue",
+      "name": "Enqueue job",
+      "type": "n8n-nodes-base.postgres",
+      "position": [460, 300],
+      "parameters": {
+        "query": "INSERT INTO adoff_autopilot.image_queue (prompt, negative_prompt, width, height, steps, cfg_scale, seed, requested_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING job_id, status, created_at;",
+        "options": {
+          "queryReplacement": "={{ $json.body.prompt }},={{ $json.body.negative_prompt || '' }},={{ $json.body.width || 768 }},={{ $json.body.height || 768 }},={{ $json.body.steps || 4 }},={{ $json.body.cfg_scale || 1.0 }},={{ $json.body.seed || -1 }},={{ $json.body.requested_by || 'n8n' }}"
+        },
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "n8n-postgres"
+        }
+      },
+      "typeVersion": 2.5
+    },
+    {
+      "id": "resp-gen",
+      "name": "Respond job_id",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [680, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ job_id: $json.job_id, status: $json.status, created_at: $json.created_at, poll_url: '/webhook/image-status?job_id=' + $json.job_id }) }}",
+        "options": {}
+      },
+      "typeVersion": 1.1
+    },
+    {
+      "id": "wh-status",
+      "name": "Webhook image-status",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 540],
+      "parameters": {
+        "path": "image-status",
+        "responseMode": "responseNode",
+        "httpMethod": "GET",
+        "options": {}
+      },
+      "typeVersion": 2,
+      "webhookId": "adoff-image-status-001"
+    },
+    {
+      "id": "lookup",
+      "name": "Lookup status",
+      "type": "n8n-nodes-base.postgres",
+      "position": [460, 540],
+      "parameters": {
+        "query": "SELECT job_id, status, image_path, file_size, gen_seconds, error, created_at, completed_at FROM adoff_autopilot.image_queue WHERE job_id = $1::uuid LIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ $json.query.job_id }}"
+        },
+        "operation": "executeQuery"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "n8n-postgres"
+        }
+      },
+      "typeVersion": 2.5
+    },
+    {
+      "id": "read-img",
+      "name": "Format status",
+      "type": "n8n-nodes-base.code",
+      "position": [680, 540],
+      "parameters": {
+        "jsCode": "const row = $input.first().json;\nif (!row || !row.job_id) {\n  return [{ json: { status: 'not_found', error: 'job_id not found in queue' } }];\n}\nreturn [{ json: {\n  job_id: row.job_id,\n  status: row.status,\n  image_path: row.image_path || null,\n  file_size: row.file_size || null,\n  gen_seconds: row.gen_seconds || null,\n  error: row.error || null,\n  ready: row.status === 'done',\n  created_at: row.created_at,\n  completed_at: row.completed_at\n} }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "resp-status",
+      "name": "Respond status",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [900, 540],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "typeVersion": 1.1
+    }
+  ],
+  "connections": {
+    "Webhook image-gen": {
+      "main": [[{ "node": "Enqueue job", "type": "main", "index": 0 }]]
+    },
+    "Enqueue job": {
+      "main": [[{ "node": "Respond job_id", "type": "main", "index": 0 }]]
+    },
+    "Webhook image-status": {
+      "main": [[{ "node": "Lookup status", "type": "main", "index": 0 }]]
+    },
+    "Lookup status": {
+      "main": [[{ "node": "Format status", "type": "main", "index": 0 }]]
+    },
+    "Format status": {
+      "main": [[{ "node": "Respond status", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

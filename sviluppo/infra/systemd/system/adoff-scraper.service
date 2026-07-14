@@ -1,0 +1,19 @@
+[Unit]
+Description=AdOff review scraper (Playwright) — HTTP service on :8788
+After=network.target
+
+[Service]
+Type=simple
+User=mrxxx
+WorkingDirectory=/home/mrxxx/Dropbox/1 Programmazione/Progetti/ChromePlugin/sviluppo/reviews
+Environment=PORT=8788
+Environment=STATE_FILE=/var/lib/adoff-scraper-state.json
+Environment=PLAYWRIGHT_BROWSERS_PATH=/home/mrxxx/.cache/ms-playwright
+ExecStart=/usr/bin/node scraper-service.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/var/log/adoff-scraper.log
+StandardError=append:/var/log/adoff-scraper.log
+
+[Install]
+WantedBy=multi-user.target

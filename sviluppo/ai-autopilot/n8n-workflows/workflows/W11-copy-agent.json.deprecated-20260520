@@ -1,0 +1,86 @@
+{
+  "name": "AdOff 11 - Copy Agent (centralized copywriter)",
+  "active": true,
+  "settings": {"executionOrder": "v1"},
+  "nodes": [
+    {
+      "id": "trig",
+      "name": "Webhook copy-agent",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 400],
+      "parameters": {
+        "path": "copy-agent",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "typeVersion": 2,
+      "webhookId": "adoff-copy-agent-webhook"
+    },
+    {
+      "id": "prep",
+      "name": "Prepare prompt",
+      "type": "n8n-nodes-base.code",
+      "position": [460, 400],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\n\nconst platform = body.platform || 'twitter';\nconst persona = body.persona || 'tech_geek';\nconst framework = body.framework || 'PAS';\nconst language = body.language || 'en';\nconst topic = body.topic || '';\nconst context = body.context || '';\nconst variants = Math.max(1, Math.min(parseInt(body.variants || 1), 5));\n\nconst temp_map = { hook: 1.0, body: 0.7, cta: 0.4, validation: 0.2 };\nconst temperature = body.temperature || 0.85;\n\nconst inputJson = { platform, persona, framework, language, topic, context, variants };\n\nreturn [{\n  json: {\n    ollama_model: body.model || 'copy-max',\n    ollama_temp: temperature,\n    ollama_num_predict: body.num_predict || 800,\n    prompt_payload: JSON.stringify(inputJson, null, 2),\n    request_meta: { platform, persona, framework, language, topic, variants, timestamp: new Date().toISOString() }\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "llm",
+      "name": "Ollama copy-max",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [680, 400],
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "options": {
+          "timeout": 120000,
+          "response": {"response": {"neverError": true}}
+        },
+        "jsonBody": "={{ JSON.stringify({ model: $json.ollama_model, stream: false, options: { temperature: $json.ollama_temp, num_predict: $json.ollama_num_predict }, prompt: $json.prompt_payload }) }}",
+        "sendBody": true,
+        "specifyBody": "json"
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "parse",
+      "name": "Parse output",
+      "type": "n8n-nodes-base.code",
+      "position": [900, 400],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const llmResp = $input.first().json;\nconst meta = $node['Prepare prompt'].json.request_meta;\n\nconst raw = (llmResp.response || '').trim();\n\n// Estrai varianti se numerate (1. ... 2. ... 3. ...)\nlet variants = [];\nconst numberedRegex = /^\\s*(\\d+)\\.\\s+/gm;\nconst matches = [...raw.matchAll(numberedRegex)];\nif (matches.length >= 2) {\n  for (let i = 0; i < matches.length; i++) {\n    const start = matches[i].index + matches[i][0].length;\n    const end = i + 1 < matches.length ? matches[i + 1].index : raw.length;\n    const text = raw.slice(start, end).trim();\n    if (text) variants.push(text);\n  }\n} else {\n  variants = [raw];\n}\n\n// Estrai hashtag + emoji + char count per ogni variante\nconst stats = variants.map(v => {\n  const hashtags = (v.match(/#\\w+/g) || []);\n  const emojis = (v.match(/[\\u{1F300}-\\u{1FAFF}\\u{2600}-\\u{27BF}]/gu) || []);\n  return {\n    text: v,\n    char_count: v.length,\n    word_count: v.split(/\\s+/).length,\n    hashtag_count: hashtags.length,\n    hashtags: hashtags,\n    emoji_count: emojis.length,\n    emojis: emojis\n  };\n});\n\nreturn [{\n  json: {\n    success: true,\n    request: meta,\n    variants: stats,\n    primary_copy: stats[0]?.text || '',\n    eval_count: llmResp.eval_count,\n    eval_duration_ms: Math.round((llmResp.eval_duration || 0) / 1e6),\n    tok_per_sec: llmResp.eval_count && llmResp.eval_duration ? Math.round(llmResp.eval_count / (llmResp.eval_duration / 1e9) * 10) / 10 : null,\n    raw_response: raw\n  }\n}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "resp",
+      "name": "Respond to caller",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [1120, 400],
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "typeVersion": 1.1
+    }
+  ],
+  "connections": {
+    "Webhook copy-agent": {
+      "main": [[{"node": "Prepare prompt", "type": "main", "index": 0}]]
+    },
+    "Prepare prompt": {
+      "main": [[{"node": "Ollama copy-max", "type": "main", "index": 0}]]
+    },
+    "Ollama copy-max": {
+      "main": [[{"node": "Parse output", "type": "main", "index": 0}]]
+    },
+    "Parse output": {
+      "main": [[{"node": "Respond to caller", "type": "main", "index": 0}]]
+    }
+  }
+}

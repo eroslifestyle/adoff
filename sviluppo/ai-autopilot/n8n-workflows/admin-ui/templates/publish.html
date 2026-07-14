@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AdOff — Pubblicazione social</title>
+<style>
+  :root { --bg:#0f1115; --card:#181b22; --line:#2a2f3a; --txt:#e6e9ef;
+          --mut:#9aa3b2; --acc:#4f8cff; --ok:#3ecf8e; --warn:#ffb454; --err:#ff6b6b; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif;
+         background:var(--bg); color:var(--txt); }
+  header { padding:14px 22px; border-bottom:1px solid var(--line);
+           display:flex; justify-content:space-between; align-items:center; }
+  header b { color:var(--acc); }
+  .wrap { display:grid; grid-template-columns:360px 1fr; gap:0;
+          min-height:calc(100vh - 52px); }
+  .col { padding:18px 22px; }
+  .col.left { border-right:1px solid var(--line); }
+  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em;
+       color:var(--mut); margin:0 0 12px; }
+  .item { display:block; padding:10px 12px; border:1px solid var(--line);
+          border-radius:8px; margin-bottom:8px; text-decoration:none;
+          color:var(--txt); background:var(--card); }
+  .item:hover { border-color:var(--acc); }
+  .bulkbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+             padding:8px 0 12px; position:sticky; top:0;
+             background:var(--bg); z-index:5; }
+  .bchk { display:flex; align-items:center; gap:6px; font-size:13px;
+          color:var(--mut); margin-right:auto; }
+  .itrow { display:flex; align-items:flex-start; gap:10px; }
+  .itrow .jchk { margin-top:12px; width:16px; height:16px; flex:none; }
+  .itrow .itlink { flex:1; text-decoration:none; color:var(--txt); }
+  .btn.sm.danger { background:#3a1a22; border:1px solid #5a2530;
+                   color:#ff8088; }
+  .pill { font-size:11px; padding:2px 7px; border-radius:99px;
+          background:#222733; color:var(--mut); }
+  .pill.draft{color:var(--warn)} .pill.approved{color:var(--acc)}
+  .pill.published{color:var(--ok)} .pill.failed{color:var(--err)}
+  .pill.publishing{color:var(--acc)}
+  .meta { color:var(--mut); font-size:12px; margin-top:4px; }
+  .card { background:var(--card); border:1px solid var(--line);
+          border-radius:10px; padding:20px; max-width:760px; }
+  .creator { display:flex; gap:12px; align-items:center; padding:10px 0;
+             border-bottom:1px solid var(--line); margin-bottom:16px; }
+  .creator img { width:48px; height:48px; border-radius:50%; object-fit:cover; }
+  label { display:block; font-weight:600; margin:14px 0 5px; }
+  .hint { color:var(--mut); font-weight:400; font-size:12px; }
+  input[type=text], textarea, select {
+    width:100%; padding:9px 11px; background:#0f1218; color:var(--txt);
+    border:1px solid var(--line); border-radius:7px; font:inherit; }
+  textarea { min-height:90px; resize:vertical; }
+  .row { display:flex; gap:18px; flex-wrap:wrap; }
+  .chk { display:flex; align-items:center; gap:7px; font-weight:400;
+         margin:6px 0; }
+  .chk input { width:16px; height:16px; }
+  .chk.dis { opacity:.45; }
+  video, .ph { width:100%; max-height:420px; border-radius:8px;
+               background:#000; margin-top:8px; }
+  .legal { font-size:12px; color:var(--mut); background:#13161d;
+           border:1px solid var(--line); border-radius:7px; padding:11px;
+           margin:16px 0; }
+  .btn { background:var(--acc); color:#fff; border:0; padding:11px 22px;
+         border-radius:8px; font:inherit; font-weight:600; cursor:pointer; }
+  .btn.sec { background:#2a2f3a; }
+  .err { color:var(--err); }
+  .box { border:1px dashed var(--line); border-radius:8px; padding:12px;
+         margin:12px 0; }
+  .empty { color:var(--mut); padding:40px 0; text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <div><b>AdOff</b> · Pubblicazione social (gate approvazione umana)</div>
+  <div class="meta">utente: {{ user }}</div>
+</header>
+
+<div class="wrap">
+  <div class="col left">
+    <h2>Coda ({{ inbox|length }})</h2>
+    {% if not inbox %}<div class="empty">Nessun job in coda.</div>{% endif %}
+    {% if inbox %}
+    <form method="post" action="/bulk" id="bulkf">
+      <div class="bulkbar">
+        <label class="bchk"><input type="checkbox" id="selall"
+          onclick="for(const c of document.querySelectorAll('.jchk'))c.checked=this.checked;"> Tutti</label>
+        <button class="btn sm" name="action" value="approve"
+          title="Approva i selezionati (status=approved). NON pubblica subito.">Approva</button>
+        <button class="btn sm sec" name="action" value="skip"
+          title="Non pubblicare i selezionati (status=skipped)">Non pubblicare</button>
+        <button class="btn sm danger" name="action" value="delete"
+          onclick="return confirm('Eliminare definitivamente i job selezionati?')"
+          title="Elimina i selezionati">Elimina</button>
+      </div>
+      {% for it in inbox %}
+      <div class="item itrow">
+        <input class="jchk" type="checkbox" name="ids" value="{{ it.id }}"
+          onclick="event.stopPropagation();">
+        <a class="itlink" href="/post/{{ it.id }}">
+          <div style="display:flex;justify-content:space-between">
+            <span>#{{ it.id }} · {{ it.platform }}</span>
+            <span class="pill {{ it.status }}">{{ it.status }}</span>
+          </div>
+          <div class="meta">{{ it.caption or '(senza caption)' }}</div>
+          <div class="meta">{{ it.created }}{% if it.account %} · {{ it.account }}{% endif %}</div>
+          {% if it.error %}<div class="meta err">{{ it.error }}</div>{% endif %}
+          {% if it.url %}<div class="meta"><a href="{{ it.url }}" target="_blank">post →</a></div>{% endif %}
+        </a>
+      </div>
+      {% endfor %}
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="col">
+    {% if not draft %}
+      <div class="empty">Seleziona un job dalla coda a sinistra per
+        revisionarlo e pubblicarlo.</div>
+    {% else %}
+    <div class="card">
+      <h2>Revisione job #{{ draft.id }} — {{ draft.platform }}</h2>
+
+      {% if creator and creator.error %}
+        <div class="legal err">Impossibile caricare info account:
+          {{ creator.error }}</div>
+      {% elif creator and draft.platform == 'tiktok' %}
+        <div class="creator">
+          {% if creator.avatar_url %}<img src="{{ creator.avatar_url }}" alt="">{% endif %}
+          <div>
+            <div><b>{{ creator.nickname or '—' }}</b>
+              <span class="hint">@{{ creator.username or '' }}</span></div>
+            <div class="hint">Durata max video:
+              {{ creator.max_video_post_duration_sec or '?' }}s</div>
+          </div>
+        </div>
+      {% elif creator and draft.platform in ('instagram','facebook') %}
+        <div class="creator"><div>
+          {% if creator.instagram %}<div><b>IG</b>
+            @{{ creator.instagram.username }}
+            <span class="hint">({{ creator.instagram.followers_count or 0 }} follower)</span></div>{% endif %}
+          {% if creator.facebook %}<div><b>FB</b>
+            {{ creator.facebook.name }}
+            <span class="hint">({{ creator.facebook.fan_count or 0 }} fan)</span></div>{% endif %}
+        </div></div>
+      {% endif %}
+
+      {% if draft.media_type == 'video' %}
+        <video src="/media/{{ draft.id }}" controls preload="metadata"></video>
+      {% else %}
+        <img class="ph" src="/media/{{ draft.id }}" alt="anteprima">
+      {% endif %}
+
+      {% if draft.platform == 'tiktok' and not draft.no_logo_variant %}
+        <div class="legal err">⚠️ Questo media ha il logo AdOff. TikTok ToS
+          vieta watermark/branding aggiunti via API. Rigenera la variante
+          SENZA logo prima di pubblicare (la pubblicazione sarà bloccata).</div>
+      {% endif %}
+
+      <form method="post" action="/publish" id="f">
+        <input type="hidden" name="post_id" value="{{ draft.id }}">
+
+        <label>Caption</label>
+        <textarea name="caption">{{ draft.caption }}</textarea>
+
+        <label>Hashtag <span class="hint">(es. #adblock #privacy)</span></label>
+        <input type="text" name="hashtags" value="{{ draft.hashtags }}">
+
+        {% if draft.platform == 'tiktok' %}
+        <label>Privacy <span class="hint">— nessun default, scelta obbligatoria</span></label>
+        <select name="privacy_level" required>
+          <option value="" selected disabled>— seleziona —</option>
+          {% for o in (creator.privacy_level_options if creator and creator.privacy_level_options else []) %}
+            <option value="{{ o }}">{{ privacy_labels.get(o, o) }}</option>
+          {% endfor %}
+        </select>
+
+        <label>Interazioni <span class="hint">(default OFF)</span></label>
+        <div class="row">
+          <label class="chk {{ 'dis' if creator and creator.comment_disabled }}">
+            <input type="checkbox" name="allow_comment"
+              {{ 'disabled' if creator and creator.comment_disabled }}> Commenti</label>
+          <label class="chk {{ 'dis' if creator and creator.duet_disabled }}">
+            <input type="checkbox" name="allow_duet"
+              {{ 'disabled' if creator and creator.duet_disabled }}> Duet</label>
+          <label class="chk {{ 'dis' if creator and creator.stitch_disabled }}">
+            <input type="checkbox" name="allow_stitch"
+              {{ 'disabled' if creator and creator.stitch_disabled }}> Stitch</label>
+        </div>
+
+        <div class="box">
+          <label class="chk"><input type="checkbox" name="commercial_disclosure"
+            id="disc" onchange="document.getElementById('discbox').style.display=this.checked?'block':'none'">
+            Disclosure contenuto commerciale <span class="hint">(default OFF)</span></label>
+          <div id="discbox" style="display:none">
+            <label class="chk"><input type="checkbox" name="your_brand"> Your Brand
+              <span class="hint">— contenuto promozionale del tuo brand</span></label>
+            <label class="chk"><input type="checkbox" name="branded_content" id="bc"> Branded Content
+              <span class="hint">— partnership a pagamento (non può essere Privato)</span></label>
+          </div>
+        </div>
+        {% endif %}
+
+        <label class="chk"><input type="checkbox" name="ai_generated"
+          {{ 'checked' if draft.ai_generated }}> Contenuto generato con AI
+          <span class="hint">(AI-label 2026 — i nostri video sono sintetici)</span></label>
+
+        <div class="legal">
+          Pubblicando, accetti la
+          <b>Music Usage Confirmation</b> di TikTok{% if draft.platform == 'tiktok' %},
+          e — se la disclosure commerciale è attiva — la
+          <b>Branded Content Policy</b> di TikTok{% endif %}.
+          L'elaborazione del contenuto da parte della piattaforma può
+          richiedere qualche minuto dopo l'invio.
+        </div>
+
+        <label class="chk"><input type="checkbox" name="consent" required>
+          <b>Confermo il consenso esplicito alla pubblicazione</b> di questo
+          contenuto con le impostazioni selezionate.</label>
+
+        <div style="margin-top:18px" class="row">
+          <button class="btn" type="submit">Approva e pubblica</button>
+          <button class="btn sec" type="submit" form="skipf">Scarta</button>
+        </div>
+      </form>
+      <form method="post" action="/skip" id="skipf">
+        <input type="hidden" name="post_id" value="{{ draft.id }}"></form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+// Branded Content non può essere Privato: se BC selezionato e privacy=SELF_ONLY, blocca.
+const f = document.getElementById('f');
+if (f) f.addEventListener('submit', e => {
+  const bc = document.getElementById('bc');
+  const pv = f.querySelector('[name=privacy_level]');
+  if (bc && bc.checked && pv && pv.value === 'SELF_ONLY') {
+    e.preventDefault();
+    alert('Branded Content non può essere Privato (SELF_ONLY). Cambia privacy.');
+  }
+});
+</script>
+</body>
+</html>

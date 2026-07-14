@@ -1,0 +1,15 @@
+[Unit]
+Description=AdOff SD Server Qwen-Image text-in-image (port 1238)
+After=network.target
+
+[Service]
+Type=simple
+User=mrxxx
+WorkingDirectory=/home/mrxxx/sdcpp/models
+ExecStart=/usr/bin/nice -n 10 /home/mrxxx/sdcpp/stable-diffusion.cpp/build/bin/sd-server --diffusion-model Qwen_Image-Q8_0.gguf --vae Qwen_Image-VAE.safetensors --llm Qwen2.5-VL-7B-Instruct-Q8_0.gguf --diffusion-fa --listen-ip 0.0.0.0 --listen-port 1238 -t 28
+Restart=always
+RestartSec=15
+MemoryMax=40G
+
+[Install]
+WantedBy=multi-user.target

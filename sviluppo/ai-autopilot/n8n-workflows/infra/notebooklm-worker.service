@@ -1,0 +1,21 @@
+[Unit]
+Description=AdOff NotebookLM Worker (Playwright -> YouTube assets)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mrxxx
+WorkingDirectory=/home/mrxxx/adoff/sviluppo/ai-autopilot/n8n-workflows/scripts
+Environment=NBLM_PROFILE=/home/mrxxx/.nblm-profile
+Environment=NBLM_GEN_TIMEOUT=1500
+# Headless Chromium non richiede X. Se NotebookLM rifiuta headless, sostituire
+# ExecStart con:  /usr/bin/xvfb-run -a python3 notebooklm-worker.py
+ExecStart=/usr/bin/python3 /home/mrxxx/adoff/sviluppo/ai-autopilot/n8n-workflows/scripts/notebooklm-worker.py
+Restart=always
+RestartSec=15
+StandardOutput=append:/var/log/adoff-notebooklm-worker.log
+StandardError=append:/var/log/adoff-notebooklm-worker.log
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,414 @@
+{
+  "executive_summary": "Lo stack AdOff attuale è una solida collezione di 'tool' di automazione, con eccellenti fondamenta nella creazione di contenuti (testo/video) e nella loro distribuzione. Tuttavia, non è ancora un 'agente' autonomo. Mancano i componenti strategici e sensoriali critici: un cervello (strategia dinamica), occhi e orecchie (analytics) e una memoria che apprende (learning loop). Attualmente è un motore potente senza un pilota. Il viaggio verso l'autonomia al 100% richiede di chiudere questo ciclo di feedback, trasformando i workflow da strumenti reattivi a un sistema proattivo e auto-migliorante.",
+  "autonomy_score_current": "45",
+  "autonomy_score_target": "100",
+  "lifecycle_coverage": {
+    "discovery": {
+      "score": "60",
+      "what_exists": "Monitoraggio testuale di menzioni (W04), competitor (W05), news (W06) e forum (W08). Buona copertura per contenuti reattivi e di engagement.",
+      "gaps": [
+        "Manca la scoperta di trend visuali (es. audio/format su TikTok/Reels).",
+        "La ricerca di hashtag è un tool (W23) ma non integrata nel flusso strategico continuo."
+      ]
+    },
+    "strategy": {
+      "score": "25",
+      "what_exists": "Esiste un workflow-tool (W22) per generare un piano editoriale su richiesta.",
+      "gaps": [
+        "Manca un 'Master Orchestrator' che esegua W22 autonomamente, basandosi su dati di performance e trend.",
+        "La strategia è statica, non si adatta dinamicamente ai risultati ottenuti."
+      ]
+    },
+    "creation": {
+      "score": "75",
+      "what_exists": "Capacità avanzate di generazione testo (W20, W21, W99), video (W12, W14), immagini (W98) e cross-posting (W02). Gli agenti centralizzati (W96, W99) sono un'ottima base architetturale.",
+      "gaps": [
+        "Processo di creazione frammentato con molteplici punti di ingresso (W02, W11, W14, W15).",
+        "Manca la generazione nativa di formati complessi come caroselli e thread in modo orchestrato."
+      ]
+    },
+    "approval": {
+      "score": "30",
+      "what_exists": "Esiste un workflow (W25) che agisce da 'gate' per l'approvazione umana di bozze.",
+      "gaps": [
+        "Il processo è un blocco totale all'autonomia. Manca un sistema di approvazione intelligente che auto-approvi contenuti ad alta confidenza ed escali solo le eccezioni."
+      ]
+    },
+    "distribution": {
+      "score": "50",
+      "what_exists": "Un dispatcher robusto (W03) con circuit breaker per Twitter, Mastodon, Reddit. Sistema di accodamento via DB solido.",
+      "gaps": [
+        "Supporto piattaforme limitato (mancano Instagram, Facebook, TikTok, LinkedIn, etc.).",
+        "La schedulazione è randomica, non basata su dati di 'best-time-to-post' per piattaforma/audience."
+      ]
+    },
+    "engagement": {
+      "score": "40",
+      "what_exists": "Buona capacità di engagement proattivo (risposte a thread su Reddit/Quora con W08, W09). Account warming bot (W10) è una mossa intelligente.",
+      "gaps": [
+        "Manca totalmente l'engagement reattivo: rispondere a commenti e DM sui post pubblicati dal sistema stesso."
+      ]
+    },
+    "analytics": {
+      "score": "0",
+      "what_exists": "Nessun workflow esistente per raccogliere metriche di performance (like, commenti, share, views, reach) dai post pubblicati.",
+      "gaps": [
+        "Il sistema è cieco. Non ha modo di sapere cosa funziona e cosa no. Questo è il gap più critico (P0)."
+      ]
+    },
+    "learning_loop": {
+      "score": "0",
+      "what_exists": "Nessun workflow esistente.",
+      "gaps": [
+        "Conseguenza diretta della mancanza di analytics. Il sistema non può imparare dai suoi successi o fallimenti per migliorare prompt, argomenti, formati o timing."
+      ]
+    }
+  },
+  "redundancies_conflicts": [
+    {
+      "workflows": [
+        "W99-copy-agent",
+        "W11-copy-agent"
+      ],
+      "description": "Due workflow identici per nome e scopo. W11 sembra una versione semplificata. Crea confusione e duplica la manutenzione.",
+      "resolution": "deprecate"
+    },
+    {
+      "workflows": [
+        "W02-social-crosspost-hub",
+        "W11-multilang-channel-publisher",
+        "W14-social-enqueue",
+        "W15-cyber-purge-producer"
+      ],
+      "description": "Esistono almeno 4 pipeline diverse per creare e accodare contenuti. Questo indica una mancanza di un processo di creazione unificato e orchestrato centralmente.",
+      "resolution": "rebrand"
+    }
+  ],
+  "orphan_or_inactive_critical": [
+    "W22-gemini-strategist (active=false): Il 'cervello' strategico esiste ma è un tool manuale, non integrato nel ciclo autonomo.",
+    "W25-approve-publish-drafts (active=false): Il gate di approvazione è un componente chiave, ma la sua logica attuale (100% manuale) deve essere evoluta e attivata.",
+    "W20, W21, W23 (active=false): Tool di generazione potenti che dovrebbero essere orchestrati da un workflow strategico, non usati stand-alone."
+  ],
+  "p0_critical_gaps": [
+    {
+      "id": "G001",
+      "title": "Analytics Collector: Il sistema deve poter 'vedere' i risultati",
+      "why": "Senza dati di performance, ogni azione è un'ipotesi non verificata. L'autonomia è impossibile perché manca il feedback basilare per capire se le azioni hanno successo. È il gap che blocca l'intero concetto di SMM autonomo.",
+      "action": "Nuovo workflow W40 - Analytics Collector. Trigger schedule (ogni ora). Per ogni post in 'social_published' degli ultimi 7gg, chiama l'API della piattaforma specifica, recupera like/commenti/share/views e salva i dati in una nuova tabella 'metrics'.",
+      "effort": "L",
+      "success_criteria": "La tabella 'metrics' viene popolata costantemente con dati di performance freschi per ogni post pubblicato."
+    },
+    {
+      "id": "G002",
+      "title": "Learning Loop Engine: Il sistema deve poter 'imparare'",
+      "why": "I dati analytics sono inutili se non vengono usati per migliorare le decisioni future. Questo workflow trasforma i dati grezzi in intelligenza strategica.",
+      "action": "Nuovo workflow W41 - Learning Loop Engine. Trigger schedule (giornaliero). Analizza la tabella 'metrics' per identificare: topic più performanti, formati vincenti, hashtag correlati a alto engagement, best-time-to-post per piattaforma. Aggiorna la tabella 'marketing_config' con questi insight (es. topic_scores, platform_schedules).",
+      "effort": "L",
+      "success_criteria": "La tabella 'marketing_config' contiene parametri strategici (es. ranking di argomenti) che si aggiornano automaticamente ogni giorno."
+    },
+    {
+      "id": "G003",
+      "title": "Master Strategy Orchestrator: Il sistema deve avere un 'cervello' proattivo",
+      "why": "Attualmente i workflow sono attivati da schedule disconnessi o manualmente. Manca un orchestratore centrale che avvii il ciclo 'pensa -> crea -> pubblica' in modo autonomo e coerente.",
+      "action": "Nuovo workflow W00 - Master Strategy Orchestrator. Trigger schedule (giornaliero, es. 05:00 UTC). Chiama W28 per caricare la config aggiornata da W41. Chiama W22 per generare il piano del giorno basato sui topic più performanti. Per ogni idea nel piano, triggera un workflow di creazione (es. un W16 - Campaign Factory unificato) per generare gli asset.",
+      "effort": "M",
+      "success_criteria": "Il processo di creazione di contenuti per il giorno successivo parte automaticamente senza alcun intervento umano."
+    },
+    {
+      "id": "G004",
+      "title": "Unified Distribution Layer: Il sistema deve poter 'parlare' con tutti",
+      "why": "Il dispatcher attuale (W03) è limitato a 3 piattaforme e usa una logica a IF che non scala. Per essere un SMM completo, deve supportare tutte le piattaforme target (IG, FB, TT, LI).",
+      "action": "Modifica W03. Rimuovere i nodi IF. Creare una logica che legge dalla tabella 'channels' le credenziali, l'endpoint API e le regole di formattazione per la piattaforma del post corrente. Aggiungere nodi HTTP Request per Meta Graph API (IG/FB), TikTok API, LinkedIn API.",
+      "effort": "XL",
+      "success_criteria": "Il workflow W03 può pubblicare un post su Instagram, Facebook, TikTok e LinkedIn senza modifiche al workflow stesso, solo configurando la tabella 'channels'."
+    }
+  ],
+  "p1_performance_gaps": [
+    {
+      "id": "G101",
+      "title": "Intelligent Approval Gate",
+      "action": "Modifica W25. Aggiungere un nodo LLM (fast-max) che valuta il draft finale per brand-safety, tone-of-voice e qualità (score 0-100). Se score > 90, lo stato passa da 'draft' a 'approved' automaticamente. Altrimenti, stato 'needs_review' e invia notifica Telegram per approvazione umana.",
+      "effort": "M",
+      "quick_win": "yes"
+    },
+    {
+      "id": "G102",
+      "title": "Reactive Engagement Agent",
+      "action": "Nuovo workflow W45 - Engagement Agent. Trigger schedule (ogni 15 min). Usa le API per leggere nuovi commenti/menzioni sui post pubblicati. Usa un LLM (chat-max) per classificare l'intento (domanda, critica, lode) e generare una bozza di risposta. Se l'intento è semplice (lode, domanda FAQ), pubblica la risposta. Se è complesso/critico, invia a Telegram per approvazione umana.",
+      "effort": "L",
+      "quick_win": "no"
+    },
+    {
+      "id": "G103",
+      "title": "Data-Driven Scheduling",
+      "action": "Modifica W02/W11 (o il nuovo W16). Invece di schedulare con `random()`, leggere il campo `platform_schedules` dalla tabella `marketing_config` (aggiornata da W41) e impostare `scheduled_at` al prossimo slot ottimale disponibile.",
+      "effort": "S",
+      "quick_win": "yes"
+    }
+  ],
+  "p2_quality_gaps": [
+    {
+      "id": "G201",
+      "title": "Visual Trend Discovery",
+      "action": "Nuovo workflow W50 - Visual Trend Scanner. Usa un servizio di scraping (es. Apify/BrightData) per analizzare i trend su TikTok/Reels (audio, format). Un LLM multimodale (es. Gemini Pro Vision) analizza i risultati e li sintetizza in brief creativi da inserire in 'content_seeds'.",
+      "effort": "XL",
+      "quick_win": "no"
+    },
+    {
+      "id": "G202",
+      "title": "A/B Testing Framework",
+      "action": "Modifica il workflow di creazione per generare due varianti di caption (A/B) per il 10% dei post, salvandole in una tabella 'ab_tests'. W03 ne sceglie una a caso per la pubblicazione. W40 (Analytics) popola i risultati. W41 (Learning) analizza quale stile di caption performa meglio e aggiorna i prompt di base.",
+      "effort": "M",
+      "quick_win": "no"
+    }
+  ],
+  "performance_bottlenecks_at_scale": [
+    {
+      "scenario": "100 post/day",
+      "bottleneck": "Le chiamate LLM sequenziali per ogni post (riscrittura, quality gate) nel W02 possono rallentare l'accodamento. Il polling del DB ogni 15 minuti da parte di W03 è adeguato.",
+      "fix": "Nessuna azione immediata richiesta, ma monitorare la durata delle esecuzioni di W02."
+    },
+    {
+      "scenario": "1000 post/day",
+      "bottleneck": "Il polling del DB da parte di W03 diventa inefficiente e un potenziale carico sul DB. Le chiamate LLM diventano un serio collo di bottiglia. L'API rate limiting delle piattaforme social sarà raggiunto quasi certamente.",
+      "fix": "Sostituire il polling del DB con un vero message queue (es. RabbitMQ) per il dispatcher. Parallelizzare le chiamate LLM. Implementare un gestore di code distribuito e con rate limiting a livello globale per tutte le chiamate API esterne."
+    }
+  ],
+  "cost_optimization": [
+    {
+      "area": "LLM routing",
+      "current": "Uso misto di Ollama locale e Gemini, ma la scelta sembra statica per workflow. W02 usa 'chat-max' e 'fast-max' locali, W22 usa Gemini Pro, W15 usa Flash e Ollama.",
+      "optimized": "Implementare un sub-workflow 'LLM Router'. In base alla complessità del task (classificazione, riscrittura, strategia) e al budget residuo (da W26), instrada la richiesta al modello più costo-efficace: Ollama `fast-max` per task semplici, Gemini Flash per generazione di qualità, Gemini Pro solo per analisi strategiche complesse.",
+      "monthly_saving_eur": "Stimato 30-50% dei costi API, a seconda del mix di task."
+    }
+  ],
+  "blueprint_target": {
+    "summary": "L'architettura target è un sistema a ciclo chiuso orchestrato da un 'Master Planner' giornaliero (W00). Il planner si basa sugli insight di un 'Learning Engine' (W41) che a sua volta è alimentato da un 'Analytics Collector' (W40). I contenuti vengono generati da un 'Campaign Factory' unificato (W16) che usa agenti specializzati (copy, media). Un 'Intelligent Approval Gate' (W25) automatizza il 90% delle approvazioni. Un 'Dispatcher' multi-piattaforma (W03) pubblica i contenuti all'orario ottimale. Un 'Engagement Agent' (W45) gestisce le interazioni, chiudendo il ciclo.",
+    "workflow_graph": [
+      {
+        "from": "W40-Analytics",
+        "to": "DB:metrics",
+        "trigger": "schedule"
+      },
+      {
+        "from": "DB:metrics",
+        "to": "W41-Learning",
+        "trigger": "schedule"
+      },
+      {
+        "from": "W41-Learning",
+        "to": "DB:marketing_config",
+        "trigger": "event"
+      },
+      {
+        "from": "W00-Orchestrator",
+        "to": "W22-Strategist",
+        "trigger": "schedule"
+      },
+      {
+        "from": "W22-Strategist",
+        "to": "W16-Campaign-Factory",
+        "trigger": "api"
+      },
+      {
+        "from": "W16-Campaign-Factory",
+        "to": "W25-Approval-Gate",
+        "trigger": "api"
+      },
+      {
+        "from": "W25-Approval-Gate",
+        "to": "DB:posts_queue",
+        "trigger": "event"
+      },
+      {
+        "from": "DB:posts_queue",
+        "to": "W03-Dispatcher",
+        "trigger": "schedule"
+      },
+      {
+        "from": "W03-Dispatcher",
+        "to": "DB:social_published",
+        "trigger": "event"
+      },
+      {
+        "from": "DB:social_published",
+        "to": "W45-Engagement-Agent",
+        "trigger": "schedule"
+      }
+    ],
+    "new_workflows_needed": [
+      {
+        "id": "W00",
+        "name": "Master Strategy Orchestrator",
+        "purpose": "Avvia il ciclo giornaliero di pianificazione e creazione.",
+        "trigger": "schedule",
+        "dependencies": [
+          "W28",
+          "W22",
+          "W16"
+        ],
+        "sprint": 1
+      },
+      {
+        "id": "W16",
+        "name": "Unified Campaign Factory",
+        "purpose": "Sostituisce W02, W11, W14, W15. Prende un brief strategico e genera tutti gli asset (copy+media) per tutte le piattaforme.",
+        "trigger": "api",
+        "dependencies": [
+          "W99",
+          "W96"
+        ],
+        "sprint": 2
+      },
+      {
+        "id": "W40",
+        "name": "Analytics Collector",
+        "purpose": "Raccoglie le metriche di performance dei post pubblicati.",
+        "trigger": "schedule",
+        "dependencies": [
+          "External APIs"
+        ],
+        "sprint": 1
+      },
+      {
+        "id": "W41",
+        "name": "Learning Loop Engine",
+        "purpose": "Analizza le metriche e aggiorna la configurazione strategica.",
+        "trigger": "schedule",
+        "dependencies": [
+          "DB:metrics"
+        ],
+        "sprint": 1
+      },
+      {
+        "id": "W45",
+        "name": "Reactive Engagement Agent",
+        "purpose": "Gestisce commenti e DM sui post pubblicati.",
+        "trigger": "schedule",
+        "dependencies": [
+          "External APIs",
+          "LLM"
+        ],
+        "sprint": 2
+      }
+    ],
+    "tables_evolution": [
+      {
+        "action": "create",
+        "table": "metrics",
+        "columns": "id, post_id, platform, fetched_at, likes, comments, shares, views, reach, engagement_rate",
+        "reason": "Memorizzare i dati di performance, base per il learning loop."
+      },
+      {
+        "action": "alter",
+        "table": "posts_queue",
+        "columns": "ADD COLUMN confidence_score REAL, ADD COLUMN approval_status VARCHAR(20) DEFAULT 'draft'",
+        "reason": "Supportare l'intelligent approval gate."
+      },
+      {
+        "action": "alter",
+        "table": "marketing_config",
+        "columns": "Aggiungere campi JSONB per topic_scores, format_scores, platform_schedules",
+        "reason": "Rendere la strategia dinamica e aggiornabile dal learning loop."
+      }
+    ],
+    "external_apis_needed": [
+      {
+        "name": "Meta Graph API",
+        "what": "Pubblicare post/reel/storie su Instagram e Facebook, leggere commenti e metriche.",
+        "auth": "OAuth2"
+      },
+      {
+        "name": "TikTok for Business API",
+        "what": "Pubblicare video, leggere commenti e metriche.",
+        "auth": "OAuth2"
+      },
+      {
+        "name": "LinkedIn API",
+        "what": "Pubblicare post, leggere commenti e metriche.",
+        "auth": "OAuth2"
+      },
+      {
+        "name": "Bluesky API",
+        "what": "Pubblicare post.",
+        "auth": "App Password"
+      }
+    ],
+    "cron_schedule_daily": [
+      {
+        "time_utc": "04:00",
+        "workflow": "W41-Learning",
+        "purpose": "Analizza i dati del giorno precedente e aggiorna la strategia per oggi."
+      },
+      {
+        "time_utc": "05:00",
+        "workflow": "W00-Orchestrator",
+        "purpose": "Pianifica e avvia la creazione dei contenuti per domani."
+      },
+      {
+        "time_utc": "06:00",
+        "workflow": "W06-Newsjacking",
+        "purpose": "Scansione mattutina per opportunità di contenuto reattivo."
+      },
+      {
+        "time_utc": "Hourly",
+        "workflow": "W40-Analytics",
+        "purpose": "Raccolta continua delle metriche di performance."
+      },
+      {
+        "time_utc": "Every 15 min",
+        "workflow": "W03-Dispatcher",
+        "purpose": "Pubblicazione continua dei post in coda."
+      }
+    ]
+  },
+  "roadmap_3_sprints": {
+    "sprint_1_p0_close_the_loop": {
+      "goal": "Creare un ciclo end-to-end funzionante, anche se non ottimizzato. Il sistema deve essere in grado di pubblicare, misurare e imparare in modo grezzo.",
+      "deliverables": [
+        "Workflow W40 (Analytics Collector) per Twitter e Reddit.",
+        "Workflow W41 (Learning Engine) v1 che calcola solo i 'topic_scores'.",
+        "Workflow W00 (Orchestrator) che triggera W22 e accoda un singolo post di test.",
+        "Attivazione di tutti i workflow critici."
+      ],
+      "acceptance": "Un post viene generato, pubblicato, le sue performance vengono misurate e il topic associato vede il suo score aggiornarsi nel DB, tutto senza intervento umano."
+    },
+    "sprint_2_p1_intelligence": {
+      "goal": "Rendere il sistema più intelligente e interattivo, riducendo la necessità di supervisione umana.",
+      "deliverables": [
+        "Implementazione dell'Intelligent Approval Gate (modifica a W25).",
+        "Creazione di W45 (Engagement Agent) v1 per rispondere ai commenti positivi.",
+        "Integrazione di Instagram e Facebook nel Dispatcher W03.",
+        "Implementazione della schedulazione data-driven."
+      ],
+      "acceptance": "Un post di alta qualità viene approvato e pubblicato automaticamente all'orario ottimale su Instagram. Il sistema risponde autonomamente a un commento 'Great post!'."
+    },
+    "sprint_3_p2_polish": {
+      "goal": "Scalare le capacità, migliorare la qualità dei contenuti e rafforzare le misure di sicurezza.",
+      "deliverables": [
+        "Unificazione dei workflow di creazione in un W16 (Campaign Factory) v1.",
+        "Integrazione di TikTok e LinkedIn nel Dispatcher W03.",
+        "Implementazione del framework di A/B testing per le caption.",
+        "Miglioramento del sistema di alerting e del kill-switch."
+      ],
+      "acceptance": "Il sistema può eseguire una campagna multi-piattaforma (testo+video) partendo da un singolo brief strategico. I risultati di un A/B test sono visibili nella dashboard di analytics."
+    }
+  },
+  "anti_patterns_to_remove": [
+    "Dipendenze da filesystem locale (es. `cat /home/.../file.json`): non è scalabile né robusto. Spostare la configurazione nel DB (tabella `marketing_config` o `content_seeds`).",
+    "Logica di business hardcoded nei nodi (es. nodi IF per ogni piattaforma in W03): rende la manutenzione un incubo. Estrarre la logica in una configurazione nel DB (tabella `channels`).",
+    "Molteplici workflow che fanno cose simili (es. W02, W11, W14): crea confusione e debito tecnico. Unificare sotto un unico workflow orchestratore.",
+    "Workflow critici attivati manualmente (W22): l'autonomia richiede che i trigger siano automatici e basati su schedule o eventi di sistema.",
+    "Schedulazione randomica (`random()`): è un'ammissione di ignoranza. Va sostituita con una logica basata sui dati di performance."
+  ],
+  "must_have_safeguards": [
+    "Budget Cap Monitor (W26): già presente, eccellente. Non negoziabile.",
+    "Global Kill Switch: una tabella `workflow_kill_switch` con un flag per ogni workflow critico, controllata all'inizio di ogni esecuzione per un arresto di emergenza.",
+    "Account Ban Prevention: circuit breaker per account (come in W03) esteso a tutte le interazioni API, con cooldown progressivi (es. 1h, 12h, 48h) dopo errori ripetuti.",
+    "Brand-Guard LLM Check: un sub-workflow dedicato che controlla OGNI output LLM prima della pubblicazione, verificando che rispetti la brand policy (no nomi brand, tone of voice, etc.).",
+    "Idempotency (W27): già presente, va applicato a tutte le operazioni che creano risorse (es. accodamento post) per evitare duplicati in caso di retry.",
+    "Centralized Error Notification (W30): già presente, fondamentale per la supervisione passiva.",
+    "Human Escalation Path: per ogni decisione a bassa confidenza (approvazione, risposta a commenti), deve esistere un percorso chiaro per notificare un umano via Telegram e attendere un input."
+  ],
+  "go_live_readiness_today": "NO_GO. Lo stack è una collezione di arti potenti, ma manca un sistema nervoso centrale (strategia, analytics, learning). Andare live ora significherebbe operare alla cieca, con alto rischio di spreco di risorse e potenziale danno al brand a causa di contenuti non performanti pubblicati in loop."
+}

@@ -1,0 +1,91 @@
+{
+  "name": "AdOff 07 - Press Cold Email Drip (4-step)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {"interval": [{"field": "hours", "hoursInterval": 4}]}
+      },
+      "id": "trig",
+      "name": "Every 4h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM adoff_autopilot.outreach WHERE status='active' AND NOT replied AND NOT unsubscribed AND ((sequence_step = 0) OR (sequence_step = 1 AND last_email_at < NOW() - interval '3 days') OR (sequence_step = 2 AND last_email_at < NOW() - interval '7 days') OR (sequence_step = 3 AND last_email_at < NOW() - interval '14 days')) AND sequence_step < 4 LIMIT 10;",
+        "options": {}
+      },
+      "id": "pick",
+      "name": "Pick recipients",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [460, 400],
+      "credentials": {"postgres": {"id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres"}}
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\":\"chat-max\",\"stream\":false,\"options\":{\"temperature\":0.6,\"num_predict\":600},\"prompt\":\"You write a personalized cold email to a tech journalist/blogger about AdOff (privacy-first ad blocker Chrome extension, MV3-native, defeats YouTube anti-adblock). This is STEP {{ $json.sequence_step + 1 }} of 4.\\n\\nStep angles:\\n1 = intro hook + offer Pro license + 1 specific reason their audience cares (50 words)\\n2 = useful insight related to their beat, no ask (40 words)\\n3 = specific story angle pitched (60 words)\\n4 = break-up email, soft (30 words)\\n\\nRecipient: {{ $json.name }} ({{ $json.org }})\\nTheir beat: {{ $json.topic_match }}\\nLanguage: {{ $json.lang }}\\n\\nReturn JSON ONLY: { \\\"subject\\\": \\\"...\\\", \\\"body\\\": \\\"plain text body, no signature\\\" }\\n\"}",
+        "options": {"timeout": 60000, "response": {"response": {"neverError": true}}}
+      },
+      "id": "compose",
+      "name": "Compose email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const orig = $('Pick recipients').itemMatching(0)?.json;\nlet subject = '', body = '';\ntry {\n  const r = $input.first().json.response || '';\n  const parsed = typeof r === 'string' ? JSON.parse(r) : r;\n  subject = parsed.subject || '';\n  body = parsed.body || '';\n} catch(e) {}\nbody = body + '\\n\\n---\\nThe AdOff team — adoff.app\\nUnsubscribe: https://adoff.app/unsub?e=' + encodeURIComponent(orig.email);\nreturn [{ json: { ...orig, subject, body }}];"
+      },
+      "id": "merge",
+      "name": "Merge email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"from\": \"AdOff Press <press@adoff.app>\", \"to\": [{{ JSON.stringify($json.email) }}], \"subject\": {{ JSON.stringify($json.subject) }}, \"text\": {{ JSON.stringify($json.body) }} }",
+        "options": {"timeout": 20000, "response": {"response": {"neverError": true}}}
+      },
+      "id": "send",
+      "name": "Resend email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.outreach SET sequence_step = sequence_step + 1, last_email_at = NOW(), status = CASE WHEN sequence_step + 1 >= 4 THEN 'completed' ELSE status END WHERE id = $1::bigint RETURNING id, sequence_step, status;",
+        "options": {"queryReplacement": "={{ $('Merge email').item.json.id }}"}
+      },
+      "id": "advance",
+      "name": "Advance sequence",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1340, 400],
+      "credentials": {"postgres": {"id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres"}}
+    }
+  ],
+  "connections": {
+    "Every 4h": {"main": [[{"node": "Pick recipients", "type": "main", "index": 0}]]},
+    "Pick recipients": {"main": [[{"node": "Compose email", "type": "main", "index": 0}]]},
+    "Compose email": {"main": [[{"node": "Merge email", "type": "main", "index": 0}]]},
+    "Merge email": {"main": [[{"node": "Resend email", "type": "main", "index": 0}]]},
+    "Resend email": {"main": [[{"node": "Advance sequence", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "saveExecutionProgress": true},
+  "tags": [{"name": "adoff"}, {"name": "outreach"}],
+  "active": false
+}

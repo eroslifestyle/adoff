@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Studio | AdOff Brand Agent</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <aside>
+        <div class="sidebar-header">
+            <h1>SVG Studio</h1>
+            <p style="font-size: 0.75rem; color: var(--text-secondary);">Asset Management Agent</p>
+        </div>
+        <div class="asset-list" id="asset-list">
+            <!-- Assets will be populated here -->
+            <div class="asset-item active" data-path="../../site/assets/logo.svg">
+                <div class="asset-thumb" id="logo-thumb"></div>
+                <div class="asset-info">
+                    <div class="asset-name">logo.svg</div>
+                    <div class="asset-meta">Main Brand Logo</div>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 20px; padding: 16px; background: var(--glass-bg); border-radius: 12px; border: 1px dashed var(--glass-border); text-align: center;">
+            <p style="font-size: 0.75rem; color: var(--text-secondary);">Drag & Drop SVG here to preview</p>
+        </div>
+    </aside>
+
+    <main id="drop-zone">
+        <div id="preview-container" class="bg-checkered">
+            <!-- SVG Preview will be injected here -->
+        </div>
+    </main>
+
+    <div class="controls">
+        <div class="control-group">
+            <h3>Background</h3>
+            <div class="bg-switcher">
+                <button class="bg-btn bg-light" onclick="setBg('bg-light')"></button>
+                <button class="bg-btn bg-dark" onclick="setBg('bg-dark')"></button>
+                <button class="bg-btn bg-checkered" onclick="setBg('bg-checkered')"></button>
+                <button class="bg-btn bg-brand" onclick="setBg('bg-brand')"></button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Size: <span id="size-val">256</span>px</h3>
+            <input type="range" min="16" max="512" value="256" class="size-slider" id="size-slider">
+        </div>
+
+        <div class="control-group">
+            <h3>Source Code</h3>
+            <div class="code-panel" id="code-output">
+                Select an asset to view code
+            </div>
+            <button class="btn-copy" onclick="copyCode()">Copy SVG Code</button>
+        </div>
+
+        <div class="control-group" style="margin-top: auto;">
+            <p style="font-size: 0.7rem; color: var(--text-secondary); text-align: center;">
+                AdOff Brand Identity System v1.0
+            </p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

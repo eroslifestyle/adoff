@@ -1,0 +1,503 @@
+{
+  "id": "w30-telegram-error-notifier",
+  "name": "30 \u2014 Telegram Error Notifier (Hub Centrale)",
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Rome",
+    "saveExecutionProgress": true,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all"
+  },
+  "nodes": [
+    {
+      "id": "node-001-trigger-manual",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        200
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "node-002-trigger-webhook",
+      "name": "Webhook /telegram-error-notifier",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        380
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram-error-notifier",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "webhookId": "telegram-error-notifier-wh"
+    },
+    {
+      "id": "node-003-validate-input",
+      "name": "Validate input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// F003: Input sanitize + F004: cost-cap\nconst input = items[0]?.json?.body || items[0]?.json || {};\nconst MAX_MSG_LEN = 2000, MAX_CTX_LEN = 5000;\n\nconst workflow_id = String(input.workflow_id || 'UNKNOWN').slice(0, 100).trim();\nconst workflow_name = String(input.workflow_name || 'Unnamed Workflow').slice(0, 200).trim();\nconst execution_id = String(input.execution_id || 'N/A').slice(0, 100).trim();\nconst error_message = String(input.error_message || 'No error message provided').slice(0, MAX_MSG_LEN).trim();\nconst severity = String(input.severity || 'error').toLowerCase();\nconst context = input.context || {};\nconst timestamp = input.timestamp ? new Date(input.timestamp).toISOString() : new Date().toISOString();\n\n// Validate severity\nif (!['info', 'warning', 'error', 'critical'].includes(severity)) {\n  return [{ json: { ok: false, reason: 'invalid_severity', severity } }];\n}\n\n// Sanitize context (convert to string, limit size)\nlet contextStr = '';\ntry {\n  contextStr = JSON.stringify(context).slice(0, MAX_CTX_LEN);\n} catch (e) {\n  contextStr = String(context).slice(0, MAX_CTX_LEN);\n}\n\nreturn [{ json: { ok: true, workflow_id, workflow_name, execution_id, error_message, severity, context: contextStr, timestamp } }];"
+      }
+    },
+    {
+      "id": "node-004-check-dedup",
+      "name": "Check dedup (60s window)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT COUNT(*) as cnt FROM adoff_autopilot.workflow_errors WHERE workflow_id = '{{ $json.workflow_id }}' AND error_message = '{{ $json.error_message | replace(\"'\", \"''\") }}' AND notified_at > NOW() - INTERVAL '60 seconds';"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot Postgres"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-005-if-dedup",
+      "name": "IF already notified?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-dedup",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.cnt || 0 }}",
+              "rightValue": "0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-006-format-telegram-msg",
+      "name": "Format Telegram message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        220
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const meta = $('Validate input').item.json;\nconst { workflow_id, workflow_name, execution_id, error_message, severity, context, timestamp } = meta;\n\nconst SEVERITY_EMOJI = {\n  info: '\u2139\ufe0f',\n  warning: '\u26a0\ufe0f',\n  error: '\u274c',\n  critical: '\ud83d\udea8'\n};\n\nconst emoji = SEVERITY_EMOJI[severity] || '\u2753';\nconst severity_upper = severity.toUpperCase();\n\n// Format context preview (max 200 chars)\nlet contextPreview = '';\nif (context && context.length > 0) {\n  contextPreview = `\\n<code>${context.slice(0, 200)}</code>${context.length > 200 ? '...' : ''}`;\n}\n\n// Build message\nconst message = `${emoji} <b>${severity_upper}</b>\\n\\n<b>Workflow:</b> <code>${workflow_name}</code>\\n<b>ID:</b> <code>${workflow_id}</code>\\n\\n<b>Execution:</b> <code>${execution_id}</code>\\n\\n<b>Error:</b>\\n<code>${error_message.slice(0, 300)}${error_message.length > 300 ? '...' : ''}</code>\\n\\n<b>Time:</b> <code>${timestamp}</code>${contextPreview}`;\n\nreturn [{ json: { ...meta, telegram_message: message, message_ok: message.length <= 4000 } }];"
+      }
+    },
+    {
+      "id": "node-007-http-telegram",
+      "name": "POST Telegram Bot API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        220
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $env.TELEGRAM_CHAT_ID, text: $json.telegram_message, parse_mode: 'HTML' }) }}",
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "node-008-if-telegram-ok",
+      "name": "IF Telegram sent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        220
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-telegram",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "leftValue": "={{ $json.ok === true }}",
+              "rightValue": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-009-pg-insert",
+      "name": "Postgres INSERT workflow_errors",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1920,
+        140
+      ],
+      "parameters": {
+        "operation": "insert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "adoff_autopilot"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "workflow_errors"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow_id": "={{ $json.workflow_id }}",
+            "workflow_name": "={{ $json.workflow_name }}",
+            "execution_id": "={{ $json.execution_id }}",
+            "severity": "={{ $json.severity }}",
+            "error_message": "={{ $json.error_message }}",
+            "context": "={{ $json.context }}"
+          },
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot Postgres"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-010-log-success",
+      "name": "Log success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        140
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "console.log('[w30] Error notified:', JSON.stringify({ workflow_id: $json.workflow_id, severity: $json.severity, execution_id: $json.execution_id, telegram_sent: true }));\nreturn [{ json: { ...items[0].json, notified: true, status: 'success' } }];"
+      }
+    },
+    {
+      "id": "node-011-log-db-error",
+      "name": "Log DB error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        240
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "console.warn('[w30] DB insert failed:', JSON.stringify({ workflow_id: $json.workflow_id, error: $json.error, telegram_sent: true }));\nreturn [{ json: { ...items[0].json, notified: true, status: 'db_error' } }];"
+      }
+    },
+    {
+      "id": "node-012-log-telegram-error",
+      "name": "Log Telegram error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        380
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "console.error('[w30] Telegram send failed:', JSON.stringify({ workflow_id: $json.workflow_id, telegram_response: $json, error_message: $json.error_message }));\nreturn [{ json: { ...items[0].json, notified: false, status: 'telegram_error' } }];"
+      }
+    },
+    {
+      "id": "node-013-log-dedup",
+      "name": "Log dedup (skipped)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        480
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const meta = $('Validate input').item.json;\nconsole.log('[w30] Dedup: error already notified in last 60s, skipping');\nreturn [{ json: { ...meta, notified: false, status: 'dedup_skip', reason: 'duplicate_within_60s' } }];"
+      }
+    },
+    {
+      "id": "node-014-log-invalid",
+      "name": "Log invalid input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        480
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "console.error('[w30] Invalid input:', JSON.stringify(items[0].json));\nreturn [{ json: { ...items[0].json, notified: false, status: 'invalid_input' } }];"
+      }
+    },
+    {
+      "id": "node-015-merge-results",
+      "name": "Merge results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2400,
+        300
+      ],
+      "parameters": {
+        "mode": "append"
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook /telegram-error-notifier": {
+      "main": [
+        [
+          {
+            "node": "Validate input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate input": {
+      "main": [
+        [
+          {
+            "node": "Check dedup (60s window)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log invalid input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check dedup (60s window)": {
+      "main": [
+        [
+          {
+            "node": "IF already notified?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF already notified?": {
+      "main": [
+        [
+          {
+            "node": "Format Telegram message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log dedup (skipped)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Telegram message": {
+      "main": [
+        [
+          {
+            "node": "POST Telegram Bot API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST Telegram Bot API": {
+      "main": [
+        [
+          {
+            "node": "IF Telegram sent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Telegram sent?": {
+      "main": [
+        [
+          {
+            "node": "Postgres INSERT workflow_errors",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Telegram error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres INSERT workflow_errors": {
+      "main": [
+        [
+          {
+            "node": "Log success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log DB error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log success": {
+      "main": [
+        [
+          {
+            "node": "Merge results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log DB error": {
+      "main": [
+        [
+          {
+            "node": "Merge results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Telegram error": {
+      "main": [
+        [
+          {
+            "node": "Merge results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log dedup (skipped)": {
+      "main": [
+        [
+          {
+            "node": "Merge results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log invalid input": {
+      "main": [
+        [
+          {
+            "node": "Merge results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "tags": [
+    {
+      "name": "adoff"
+    },
+    {
+      "name": "error-management"
+    },
+    {
+      "name": "telegram"
+    },
+    {
+      "name": "v2026"
+    }
+  ]
+}

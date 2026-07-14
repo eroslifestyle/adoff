@@ -1,0 +1,12 @@
+[Unit]
+Description=Trigger AdOff Esecuzione Fix Approvati
+
+[Timer]
+# Ogni 3 ore (off-peak), recupera eventuali approvazioni e implementa.
+# NB: il service è no-op finché SUGG_EXECUTE_CONFIRM=1 (vedi .service).
+OnBootSec=20min
+OnUnitActiveSec=3h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

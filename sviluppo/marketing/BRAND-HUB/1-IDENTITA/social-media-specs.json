@@ -1,0 +1,103 @@
+{
+  "version": "1.0.0",
+  "updated": "2026-05-15",
+  "description": "Dimensioni e vincoli ufficiali contenuti social 2026. Usato dal Media Agent per generare asset con le dimensioni corrette per piattaforma e formato.",
+  "platforms": {
+    "twitter": {
+      "aliases": ["x", "twitter", "X"],
+      "image_post": { "w": 1600, "h": 900, "ratio": "16:9", "max_mb": 5, "fmt": ["jpg", "png", "webp"] },
+      "image_square": { "w": 1080, "h": 1080, "ratio": "1:1", "max_mb": 5 },
+      "header": { "w": 1500, "h": 500, "ratio": "3:1" },
+      "video": { "w": 1280, "h": 720, "ratio": "16:9", "max_sec": 140, "max_mb": 512, "fps": 30, "codec": "h264", "audio": "aac" },
+      "video_square": { "w": 1080, "h": 1080, "ratio": "1:1", "max_sec": 140 },
+      "carousel": { "max_slides": 4, "w": 1080, "h": 1080 },
+      "text_max": 280
+    },
+    "mastodon": {
+      "aliases": ["mastodon", "fediverse"],
+      "image_post": { "w": 1280, "h": 720, "ratio": "16:9", "max_mb": 16, "fmt": ["jpg", "png", "webp", "gif"] },
+      "image_square": { "w": 1080, "h": 1080, "ratio": "1:1" },
+      "video": { "w": 1280, "h": 720, "ratio": "16:9", "max_sec": 300, "max_mb": 99, "fps": 30, "codec": "h264" },
+      "carousel": { "max_slides": 4, "note": "Mastodon uses up to 4 media attachments, not native carousel" },
+      "text_max": 500
+    },
+    "instagram": {
+      "aliases": ["instagram", "ig"],
+      "image_square": { "w": 1080, "h": 1080, "ratio": "1:1", "max_mb": 30 },
+      "image_portrait": { "w": 1080, "h": 1350, "ratio": "4:5" },
+      "image_landscape": { "w": 1080, "h": 566, "ratio": "1.91:1" },
+      "story": { "w": 1080, "h": 1920, "ratio": "9:16", "max_sec": 60, "safe_top_px": 250, "safe_bottom_px": 250 },
+      "reel": { "w": 1080, "h": 1920, "ratio": "9:16", "max_sec": 90, "min_sec": 3, "fps": 30, "codec": "h264", "audio": "aac", "cover": { "w": 1080, "h": 1920 } },
+      "carousel": { "max_slides": 10, "min_slides": 2, "w": 1080, "h": 1350, "ratio": "4:5", "note": "all slides same ratio" }
+    },
+    "tiktok": {
+      "aliases": ["tiktok"],
+      "video": { "w": 1080, "h": 1920, "ratio": "9:16", "max_sec": 600, "min_sec": 3, "fps": 30, "codec": "h264", "audio": "aac" },
+      "image_carousel": { "max_slides": 35, "w": 1080, "h": 1920 }
+    },
+    "youtube": {
+      "aliases": ["youtube", "yt"],
+      "thumbnail": { "w": 1280, "h": 720, "ratio": "16:9", "max_mb": 2 },
+      "shorts": { "w": 1080, "h": 1920, "ratio": "9:16", "max_sec": 60, "fps": 30, "codec": "h264" },
+      "video": { "w": 1920, "h": 1080, "ratio": "16:9", "fps": 30, "codec": "h264" }
+    },
+    "linkedin": {
+      "aliases": ["linkedin"],
+      "image_post": { "w": 1200, "h": 627, "ratio": "1.91:1", "max_mb": 5 },
+      "image_square": { "w": 1080, "h": 1080, "ratio": "1:1" },
+      "video": { "w": 1920, "h": 1080, "ratio": "16:9", "max_sec": 600, "fps": 30 },
+      "carousel": { "max_slides": 10, "w": 1080, "h": 1080, "fmt": "pdf", "note": "LinkedIn document/carousel as PDF" }
+    },
+    "facebook": {
+      "aliases": ["facebook", "fb", "meta"],
+      "image_post": { "w": 1200, "h": 630, "ratio": "1.91:1", "max_mb": 30 },
+      "story": { "w": 1080, "h": 1920, "ratio": "9:16" },
+      "reel": { "w": 1080, "h": 1920, "ratio": "9:16", "max_sec": 90, "fps": 30 },
+      "video": { "w": 1280, "h": 720, "ratio": "16:9", "fps": 30 }
+    },
+    "reddit": {
+      "aliases": ["reddit"],
+      "image_post": { "w": 1200, "h": 628, "ratio": "1.91:1", "note": "Reddit prefers text; image used sparingly" },
+      "video": { "w": 1920, "h": 1080, "ratio": "16:9", "max_sec": 900 },
+      "text_first": true
+    },
+    "pinterest": {
+      "aliases": ["pinterest"],
+      "pin": { "w": 1000, "h": 1500, "ratio": "2:3", "max_mb": 20 },
+      "idea_pin": { "w": 1080, "h": 1920, "ratio": "9:16" }
+    },
+    "producthunt": {
+      "aliases": ["producthunt", "ph"],
+      "gallery": { "w": 1270, "h": 760, "ratio": "16:9" },
+      "thumbnail": { "w": 240, "h": 240, "ratio": "1:1" }
+    }
+  },
+  "format_types": {
+    "photo":    { "engine": "flux", "deliver": "single_image" },
+    "carousel": { "engine": "flux_multi", "deliver": "image_sequence", "slides_default": 5 },
+    "reel":     { "engine": "ffmpeg", "source": "flux_frames", "deliver": "mp4_vertical", "duration_default_sec": 12, "effect": "ken_burns + text_overlay + fade" },
+    "video":    { "engine": "ffmpeg", "source": "flux_frames", "deliver": "mp4", "duration_default_sec": 20 },
+    "story":    { "engine": "ffmpeg", "source": "flux_frame", "deliver": "mp4_vertical", "duration_default_sec": 8 }
+  },
+  "render_defaults": {
+    "flux_steps": 4,
+    "flux_cfg": 1.0,
+    "video_fps": 30,
+    "video_codec": "libx264",
+    "video_crf": 20,
+    "video_preset": "medium",
+    "audio_codec": "aac",
+    "ken_burns_zoom": 1.12
+  },
+  "brand_overlay_rules": {
+    "logo_position": "bottom-right",
+    "logo_margin_px": 48,
+    "logo_max_width_pct": 14,
+    "text_safe_margin_pct": 8,
+    "watermark_opacity": 0.85,
+    "respect_brand_palette": true,
+    "respect_brand_fonts": true,
+    "no_text_in_flux_prompt": true,
+    "text_added_via": "ffmpeg/imagemagick drawtext (crisp, brand font)"
+  }
+}

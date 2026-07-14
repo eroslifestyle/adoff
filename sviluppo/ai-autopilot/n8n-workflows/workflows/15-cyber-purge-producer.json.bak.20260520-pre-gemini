@@ -1,0 +1,318 @@
+{
+  "id": "ADOFF15CYBPURGE1",
+  "name": "AdOff 15 - Cyber Purge Producer (cyber-purge end-to-end)",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "9b3f1a01-1500-4001-9001-000000000001",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "lang",
+              "value": "it"
+            },
+            {
+              "name": "concept",
+              "value": "c1-story-arc"
+            },
+            {
+              "name": "force",
+              "value": "0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9b3f1a01-1500-4001-9001-000000000002",
+      "name": "Set lang/concept",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        380,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8792/build/cyber-purge",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ lang: $json.lang, concept: $json.concept, force: $json.force === '1' }) }}",
+        "options": {
+          "timeout": 1500000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "9b3f1a01-1500-4001-9001-000000000003",
+      "name": "Build assets (HTTP bridge)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        580,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// La bridge ritorna JSON parsato in $json. Merge con i parametri Set + costruisce prompt copy.\nconst build = $input.first().json;\nconst src = $('Set lang/concept').first().json;\nconst lang = src.lang;\nconst s = build && build.script ? build.script : { headline:'', specs:[], outro:'' };\nconst specsLine = (s.specs || []).join(' / ');\nconst copy_prompt = `You are the AdOff social copywriter. Brand voice: \"we\" (plural), direct, empathetic, minimal. We leverage the frustration of being BURIED, DROWNED, BOMBARDED by ads on streaming platforms and on every site. Ending feeling: silence / relief in one click.\n\nWrite everything in language code: ${lang}.\n\nCONTEXT (use this video script's TONE and KEYWORDS, do NOT copy verbatim):\n- HEADLINE: ${s.headline}\n- BODY: ${specsLine}\n- OUTRO: ${s.outro}\n\nOUTPUT STRICTLY as JSON with these keys:\n- caption: ONE punchy hook sentence in target language, max 150 chars, ending with soft CTA \"adoff.app\". MUST use a strong frustration verb (Italian: sepolto/invaso/bombardato/soffocato/spazzati; English: buried/drowned/flooded/swallowed; German: begraben/überflutet). NO weak filler like \"niente problemi\" or \"nessun problema\". NO emoji. NO quotes around the string.\n- hashtags: array of EXACTLY 8 hashtag strings, each starting with # and concatenated (no internal spaces, lowercase except brand). EACH hashtag MUST be a REAL natural word or natural compound in language ${lang} — NEVER an English literal when language is not English (forbidden examples in IT: #streamingplatforms #everysite #everywhere #cleanweb). NEVER invented gibberish (forbidden: #bannerofter #adsofter, random mashups). Use real ${lang} vocabulary. ALWAYS include the 2 brand tags #adoff and #adsoff (these stay in English, brand-specific). Valid IT examples: #pubblicità #stopads #navigaresenzapubblicità #adblock #privacy #zeroads. Valid DE: #Werbung #keineWerbung #Adblocker #Privatsphäre.\n- disclosure: ONE short sentence in language ${lang} stating the content is AI-assisted (EU AI Act).\n\nABSOLUTE RULES (output will be filtered, do NOT violate):\n- NEVER mention real brand or platform names (no #youtube #google #facebook #tiktok #instagram #chrome #firefox #safari #edge #opera #amazon #reddit #twitch).\n- NO pricing, NO \"trial\", NO \"15 days\", NO \"paid\", NO \"subscription\".\n- Caption MUST be in language code ${lang} AND contain a frustration verb from the list above.\n- hashtags array MUST have exactly 8 items, all in language ${lang} (except #adoff and #adsoff which are brand tags).\n\nReturn ONLY valid JSON, no markdown fences, no commentary.`;\nreturn [{ json: { lang: src.lang, concept: src.concept, build, copy_prompt } }];"
+      },
+      "id": "9b3f1a01-1500-4001-9001-000000000004",
+      "name": "Parse build JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ Boolean($json.build && $json.build.ok) }}",
+              "value2": true,
+              "operation": "equal"
+            }
+          ]
+        }
+      },
+      "id": "9b3f1a01-1500-4001-9001-000000000005",
+      "name": "Build OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        980,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: 'copy-max',\n  keep_alive: '30m',\n  stream: false,\n  format: 'json',\n  options: { temperature: 0.7, top_p: 0.9, repeat_penalty: 1.15, num_predict: 700 },\n  prompt: $json.copy_prompt\n}) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "9b3f1a01-1500-4001-9001-000000000006",
+      "name": "Copy agent (Ollama)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1180,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse risposta Ollama + brand-guard + build SQL.\nconst input = $input.first().json;\nlet parsed;\ntry {\n  const txt = (input.response || input.choices?.[0]?.message?.content || '').trim();\n  parsed = JSON.parse(txt);\n} catch (e) {\n  return [{ json: { ok:false, error:'copy parse failed: '+e.message, raw: input } }];\n}\nconst caption = (parsed.caption || '').toString().trim();\n// Normalize hashtags: collapse spaces, remove '# ' → '#', dedupe, ensure leading '#'.\nlet raw = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];\nconst seen = new Set();\nconst hashtags = raw\n  .map(h => String(h||'').trim().replace(/\\s+/g,'').replace(/^#+/,'#'))\n  .map(h => h.startsWith('#') ? h : '#'+h)\n  .filter(h => h.length>1)\n  .filter(h => { const k=h.toLowerCase(); if(seen.has(k))return false; seen.add(k); return true; })\n  .slice(0, 10);\nconst disclosure = (parsed.disclosure || '').toString().trim();\nconst FULL = (caption + ' ' + hashtags.join(' ') + ' ' + disclosure).toLowerCase();\nconst BAN = /(youtube|google|facebook|instagram|tiktok|amazon|reddit|twitch|chrome|firefox|safari|edge|opera|\\b15[ -]?day\\b|\\btrial\\b|\\bpaid\\b|\\bsubscription\\b)/i;\nconst hit = FULL.match(BAN);\nif (hit) return [{ json: { ok:false, error:'brand-guard BLOCK: '+hit[0], caption, hashtags, disclosure } }];\nconst meta = $('Parse build JSON').first().json;\nconst video = meta.build?.render?.file || '';\nconst full = caption + '\\n\\n' + hashtags.join(' ') + '\\n\\n' + disclosure;\nconst q = (s) => \"'\" + String(s).replace(/'/g, \"''\") + \"'\";\nconst sql = `INSERT INTO adoff_autopilot.social_posts (\n  brand, platform, account_ref, media_type, media_path,\n  no_logo_variant, caption, hashtags, lang, privacy_level,\n  allow_comment, allow_duet, allow_stitch, ai_generated, status, created_at\n) VALUES\n  ('adoff','instagram','@adoff.app','video',${q(video)},FALSE,${q(full)},${q(hashtags.join(' '))},${q(meta.lang)},'PUBLIC_TO_EVERYONE',TRUE,FALSE,FALSE,TRUE,'draft',NOW()),\n  ('adoff','facebook' ,'adoff.app' ,'video',${q(video)},FALSE,${q(full)},${q(hashtags.join(' '))},${q(meta.lang)},'PUBLIC_TO_EVERYONE',TRUE,FALSE,FALSE,TRUE,'draft',NOW()),\n  ('adoff','tiktok'   ,'adoff_app' ,'video',${q(video)},TRUE ,${q(full)},${q(hashtags.join(' '))},${q(meta.lang)},'SELF_ONLY'        ,TRUE,FALSE,FALSE,TRUE,'draft',NOW())\nRETURNING id, platform;`;\nreturn [{ json: { ok:true, lang: meta.lang, concept: meta.concept, caption, hashtags, disclosure, video_path: video, full_caption: full, sql } }];"
+      },
+      "id": "9b3f1a01-1500-4001-9001-000000000007",
+      "name": "Brand-guard + assemble",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sql }}",
+        "additionalFields": {}
+      },
+      "id": "9b3f1a01-1500-4001-9001-000000000008",
+      "name": "Enqueue social_posts (3 rows)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        1580,
+        220
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  chat_id: $env.TELEGRAM_CHAT_ID,\n  parse_mode: 'Markdown',\n  text: '✅ *Cyber-Purge draft pronto* — lang `' + $('Brand-guard + assemble').first().json.lang + '` · concept `' + $('Brand-guard + assemble').first().json.concept + '`\\n' + 'video: `' + $('Brand-guard + assemble').first().json.video_path + '`\\n' + 'Approva su https://social.adoff.app'\n}) }}",
+        "options": {}
+      },
+      "id": "9b3f1a01-1500-4001-9001-000000000009",
+      "name": "Telegram: draft ready",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1780,
+        220
+      ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  chat_id: $env.TELEGRAM_CHAT_ID,\n  parse_mode: 'Markdown',\n  text: '❌ *Cyber-Purge build FAILED* — lang `' + ($('Set lang/concept').first().json.lang||'?') + '` · concept `' + ($('Set lang/concept').first().json.concept||'?') + '`\\n```\\n' + JSON.stringify($json.build || $json, null, 2).slice(0,1500) + '\\n```'\n}) }}",
+        "options": {}
+      },
+      "id": "9b3f1a01-1500-4001-9001-00000000000a",
+      "name": "Telegram: build failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1180,
+        420
+      ],
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set lang/concept",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set lang/concept": {
+      "main": [
+        [
+          {
+            "node": "Build assets (HTTP bridge)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build assets (HTTP bridge)": {
+      "main": [
+        [
+          {
+            "node": "Parse build JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse build JSON": {
+      "main": [
+        [
+          {
+            "node": "Build OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build OK?": {
+      "main": [
+        [
+          {
+            "node": "Copy agent (Ollama)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: build failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy agent (Ollama)": {
+      "main": [
+        [
+          {
+            "node": "Brand-guard + assemble",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Brand-guard + assemble": {
+      "main": [
+        [
+          {
+            "node": "Enqueue social_posts (3 rows)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enqueue social_posts (3 rows)": {
+      "main": [
+        [
+          {
+            "node": "Telegram: draft ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all"
+  },
+  "pinData": {},
+  "tags": [
+    {
+      "name": "adoff"
+    },
+    {
+      "name": "video"
+    },
+    {
+      "name": "cyber-purge"
+    }
+  ],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

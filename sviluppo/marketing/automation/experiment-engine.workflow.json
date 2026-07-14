@@ -1,0 +1,181 @@
+{
+  "name": "AdOff S7-S9 - Experiment Engine (creative testing)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "weeks", "weeksInterval": 1 }] }
+      },
+      "id": "trig-launch",
+      "name": "Weekly launch",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 260]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, variable, hypothesis, variant_a, variant_b FROM experiments WHERE status='backlog' ORDER BY ice DESC NULLS LAST LIMIT 1;"
+      },
+      "id": "pick-exp",
+      "name": "Pick top-ICE experiment",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [460, 260],
+      "credentials": { "postgres": { "id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Esplode l'esperimento in 2 job render (variante A=controllo, B=variabile).\n// variant_a/variant_b = JSON { template, lang, props:{...} } salvato nel backlog.\nconst e = $input.first().json;\nif (!e || !e.id) return [];\nconst mk = (v, label) => ({ json: { exp_id: e.id, variable: e.variable, variant: label, template: v.template, lang: v.lang, props: v.props } });\nreturn [mk(e.variant_a, 'A'), mk(e.variant_b, 'B')];"
+      },
+      "id": "explode",
+      "name": "Build 2 variants",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 260]
+    },
+    {
+      "parameters": {
+        "command": "=cd /home/mrxxx/adoff/sviluppo/marketing/video-engine && node batch-render.mjs --id {{ $json.props.id || $json.exp_id }} --lang {{ $json.lang }}"
+      },
+      "id": "render-variant",
+      "name": "Render variant",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [900, 260]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": { "__rl": true, "value": "public", "mode": "list" },
+        "table": { "__rl": true, "value": "posts_queue", "mode": "list" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow": "experiment",
+            "platform": "social_native",
+            "lang": "={{ $json.lang }}",
+            "body": "={{ 'EXP ' + $json.exp_id + ' [' + $json.variant + '] — vedi caption-prompt; UTM ?s=' + $json.exp_id + '-' + $json.variant }}",
+            "status": "queued"
+          }
+        }
+      },
+      "id": "enqueue",
+      "name": "Enqueue variant",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1120, 260],
+      "credentials": { "postgres": { "id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres" } }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=UPDATE experiments SET status='running', started_at=NOW() WHERE id='{{ $json.exp_id }}';"
+      },
+      "id": "mark-running",
+      "name": "Mark running",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1340, 260],
+      "credentials": { "postgres": { "id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres" } }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"chat_id\":\"{{ $env.TELEGRAM_CHAT_ID }}\",\"text\":{{ JSON.stringify('🧪 Esperimento ' + $json.exp_id + ' lanciato (' + $json.variable + '). Varianti A/B in output/bank/. Pubblica a giorni alterni stesso slot, UTM ?s=' + $json.exp_id + '-A|B. Min 3 post/variante.') }}}",
+        "options": {}
+      },
+      "id": "tg-launch",
+      "name": "Telegram launch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 260]
+    },
+
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "days", "daysInterval": 1 }] }
+      },
+      "id": "trig-eval",
+      "name": "Daily evaluate",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 560]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT exp_id, variant, COUNT(*) AS posts, percentile_cont(0.5) WITHIN GROUP (ORDER BY (saves+shares)::numeric / NULLIF(views,0)) AS med_ss, AVG(installs) AS avg_inst FROM post_metrics WHERE captured_at > NOW() - INTERVAL '14 days' AND exp_id IN (SELECT id FROM experiments WHERE status='running') GROUP BY exp_id, variant HAVING COUNT(*) >= 3;"
+      },
+      "id": "fetch-metrics",
+      "name": "Fetch 14d medians",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [460, 560],
+      "credentials": { "postgres": { "id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Decision rule: vincente se variante batte l'altra di >=25% su save+share mediana 14g.\nconst rows = $input.all().map(i => i.json);\nconst byExp = {};\nfor (const r of rows) { (byExp[r.exp_id] = byExp[r.exp_id] || {})[r.variant] = r; }\nconst out = [];\nfor (const [exp, v] of Object.entries(byExp)) {\n  if (!v.A || !v.B) continue; // attendere >=3 post per entrambe\n  const a = Number(v.A.med_ss) || 0, b = Number(v.B.med_ss) || 0;\n  let winner = null;\n  if (a > 0 && b >= a * 1.25) winner = 'B';\n  else if (b > 0 && a >= b * 1.25) winner = 'A';\n  if (winner) out.push({ json: { exp_id: exp, winner, a_ss: a, b_ss: b } });\n}\nreturn out;"
+      },
+      "id": "decide",
+      "name": "Decision rule",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 560]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=UPDATE experiments SET status='won', decided_at=NOW(), winner='{{ $json.winner }}' WHERE id='{{ $json.exp_id }}';"
+      },
+      "id": "mark-won",
+      "name": "Mark won",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [900, 560],
+      "credentials": { "postgres": { "id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres" } }
+    },
+    {
+      "parameters": {
+        "command": "=printf '\\n## %s — winner %s (med save+share A=%.4f B=%.4f) %s\\n' '{{ $json.exp_id }}' '{{ $json.winner }}' '{{ $json.a_ss }}' '{{ $json.b_ss }}' \"$(date -I)\" >> /home/mrxxx/adoff/sviluppo/marketing/strategia/experiment-playbook.md"
+      },
+      "id": "playbook",
+      "name": "Append playbook",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1120, 560]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"chat_id\":\"{{ $env.TELEGRAM_CHAT_ID }}\",\"text\":{{ JSON.stringify('🏆 Esperimento ' + $json.exp_id + ' chiuso — vincente ' + $json.winner + '. Promuovi il default in hook-bank.json e lancia prossimo ICE.') }}}",
+        "options": {}
+      },
+      "id": "tg-decided",
+      "name": "Telegram decided",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 560]
+    }
+  ],
+  "connections": {
+    "Weekly launch": { "main": [[{ "node": "Pick top-ICE experiment", "type": "main", "index": 0 }]] },
+    "Pick top-ICE experiment": { "main": [[{ "node": "Build 2 variants", "type": "main", "index": 0 }]] },
+    "Build 2 variants": { "main": [[{ "node": "Render variant", "type": "main", "index": 0 }]] },
+    "Render variant": { "main": [[{ "node": "Enqueue variant", "type": "main", "index": 0 }]] },
+    "Enqueue variant": { "main": [[{ "node": "Mark running", "type": "main", "index": 0 }]] },
+    "Mark running": { "main": [[{ "node": "Telegram launch", "type": "main", "index": 0 }]] },
+    "Daily evaluate": { "main": [[{ "node": "Fetch 14d medians", "type": "main", "index": 0 }]] },
+    "Fetch 14d medians": { "main": [[{ "node": "Decision rule", "type": "main", "index": 0 }]] },
+    "Decision rule": { "main": [[{ "node": "Mark won", "type": "main", "index": 0 }]] },
+    "Mark won": { "main": [[{ "node": "Append playbook", "type": "main", "index": 0 }]] },
+    "Append playbook": { "main": [[{ "node": "Telegram decided", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "saveExecutionProgress": true },
+  "tags": ["adoff", "experiment", "ab-testing", "S7-S9"],
+  "active": false
+}

@@ -1,0 +1,163 @@
+{
+  "name": "AdOff 99 - Copy Agent (centralized)",
+  "active": true,
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "Webhook Copy Agent",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        240,
+        400
+      ],
+      "webhookId": "adoff-copy-agent-001",
+      "parameters": {
+        "path": "copy-agent",
+        "options": {},
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "validate",
+      "name": "Validate brief",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        460,
+        400
+      ],
+      "parameters": {
+        "jsCode": "// Validate incoming brief schema\nconst body = $input.first().json.body || $input.first().json;\n\nconst required = ['platform', 'topic'];\nconst missing = required.filter(k => !body[k]);\nif (missing.length) {\n  throw new Error('Missing required fields: ' + missing.join(', '));\n}\n\n// Defaults\nconst defaults = {\n  persona: null,  // null -> rotation\n  framework: 'auto',\n  language: 'en',\n  length_hint: 'auto',\n  include_cta: null,\n  variants: 1,\n  validate: false\n};\n\nconst brief = { ...defaults, ...body };\n\n// Platform-specific constraints\nconst platforms = {\n  twitter: { max_chars: 280, hashtag_max: 2, emoji_max: 2 },\n  mastodon: { max_chars: 500, hashtag_max: 3, emoji_max: 3 },\n  reddit: { max_chars: 1500, hashtag_max: 0, emoji_max: 0 },\n  blog: { max_chars: 8000, hashtag_max: 0, emoji_max: 0 },\n  press_email: { max_chars: 500, hashtag_max: 0, emoji_max: 0 },\n  quora: { max_chars: 2500, hashtag_max: 0, emoji_max: 0 }\n};\n\nbrief.platform_rules = platforms[brief.platform] || platforms.twitter;\n\n// Persona rotation (round-robin weighted)\nif (!brief.persona) {\n  const personas = [\n    { id: 'privacy_advocate', weight: 0.30 },\n    { id: 'tech_geek', weight: 0.25 },\n    { id: 'average_user', weight: 0.30 },\n    { id: 'founder_perspective', weight: 0.15 }\n  ];\n  const r = Math.random();\n  let acc = 0;\n  for (const p of personas) {\n    acc += p.weight;\n    if (r <= acc) { brief.persona = p.id; break; }\n  }\n}\n\n// Framework auto-select\nif (brief.framework === 'auto') {\n  const fwMap = {\n    twitter: 'PAS',\n    mastodon: 'PAS',\n    reddit: 'PAS',\n    blog: 'AIDA',\n    press_email: 'AIDA',\n    quora: 'PAS'\n  };\n  brief.framework = fwMap[brief.platform] || 'PAS';\n}\n\nreturn [{ json: brief }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "build-prompt",
+      "name": "Build Copy Agent prompt",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        680,
+        400
+      ],
+      "parameters": {
+        "jsCode": "const b = $input.first().json;\n\nconst ctaLine = b.include_cta === false\n  ? '- include_cta: false (no promotion)'\n  : (b.include_cta === true ? '- include_cta: true (soft CTA OK)' : '- include_cta: contextual (decide based on platform)');\n\nconst prompt = [\n  'BRIEF:',\n  `- platform: ${b.platform}`,\n  `- persona: ${b.persona}`,\n  `- framework: ${b.framework}`,\n  `- language: ${b.language}`,\n  `- topic: ${b.topic}`,\n  `- length_hint: ${b.length_hint}`,\n  ctaLine,\n  b.subreddit ? `- subreddit: r/${b.subreddit}` : null,\n  b.recipient_name ? `- recipient_name: ${b.recipient_name}` : null,\n  b.context ? `- context: ${b.context}` : null,\n  '',\n  `Produce ${b.variants > 1 ? b.variants + ' distinct variants' : '1 variant'} of copy for the brief above.`,\n  b.variants > 1\n    ? 'Output JSON ONLY: {\"variants\": [{\"text\": \"...\", \"hashtags\": [\"...\"]}, ...]}'\n    : 'Output the copy text only, no preamble, no markdown fences.'\n].filter(Boolean).join('\\n');\n\nreturn [{ json: { ...b, prompt } }];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "call-copy-max",
+      "name": "Call copy-max",
+      "type": "n8n-nodes-base.httpRequest",
+      "onError": "continueRegularOutput",
+      "position": [
+        900,
+        400
+      ],
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "method": "POST",
+        "options": {
+          "timeout": 300000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "jsonBody": "={{ JSON.stringify({\n  model: 'copy-max',\n  keep_alive: '30m',\n  stream: false,\n  options: {\n    temperature: $json.temperature || 0.85,\n    top_p: 0.92,\n    repeat_penalty: 1.18,\n    num_predict: $json.platform === 'blog' ? 2400 : ($json.platform === 'reddit' ? 800 : 500)\n  },\n  prompt: $json.prompt\n}) }}",
+        "sendBody": true,
+        "specifyBody": "json"
+      },
+      "typeVersion": 4.2
+    },
+    {
+      "id": "parse-output",
+      "name": "Parse Copy Agent output",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1120,
+        400
+      ],
+      "parameters": {
+        "jsCode": "const b = $('Build Copy Agent prompt').first().json;\nconst raw = $input.first().json.response || '';\n\nfunction brandSanitize(s) {\n  if (!s || typeof s !== 'string') return s;\n  const MAP = [\n    ['You ?Tube', 'video platforms'],\n    ['Google', 'search engines'],\n    ['Facebook', 'social media'],\n    ['Instagram', 'social media'],\n    ['TikTok', 'social media'],\n    ['Twitch', 'live streaming platforms'],\n    ['Reddit', 'forums'],\n    ['Twitter', 'social media'],\n    ['LinkedIn', 'professional networks'],\n    ['Amazon', 'e-commerce sites'],\n    ['GitHub', 'code platforms'],\n    ['Meta', 'social media']\n  ];\n  let out = s;\n  for (let i = 0; i < MAP.length; i++) {\n    const re = new RegExp('\\\\b' + MAP[i][0] + '\\\\b', 'gi');\n    out = out.replace(re, MAP[i][1]);\n  }\n  return out.replace(/[ \\t]{2,}/g, ' ');\n}\n\nlet cleaned = raw\n  .replace(/<think>[\\s\\S]*?<\\/think>/gi, '')\n  .replace(/^```(?:json|markdown)?\\s*/i, '')\n  .replace(/\\s*```\\s*$/i, '')\n  .replace(/^(Problem|Agitate|Solution|Attention|Interest|Desire|Action|Hook|Story|Offer|Feature|Advantage|Benefit)\\s*:\\s*/gim, '')\n  .trim();\n\nlet output = { copy: cleaned, variants: null };\n\nif (b.variants > 1) {\n  try {\n    const parsed = JSON.parse(cleaned);\n    if (parsed.variants) output = { copy: parsed.variants[0].text, variants: parsed.variants };\n  } catch (e) { output = { copy: cleaned, variants: null, parse_error: e.message }; }\n}\n\noutput.copy = brandSanitize(output.copy);\nif (Array.isArray(output.variants)) {\n  output.variants = output.variants.map(function (v) {\n    return Object.assign({}, v, { text: brandSanitize(v.text) });\n  });\n}\n\nconst limit = b.platform_rules.max_chars;\nif (output.copy.length > limit) {\n  let t = output.copy.slice(0, limit);\n  const lastDot = Math.max(t.lastIndexOf('. '), t.lastIndexOf('! '), t.lastIndexOf('? '), t.lastIndexOf('\\n'));\n  if (lastDot > limit * 0.5) t = t.slice(0, lastDot + 1);\n  output.copy = t.trim();\n  output.truncated = true;\n}\n\nconst banned = ['100% ad-free', 'guarantee', 'best in the world', 'kill ads'];\nconst lower = output.copy.toLowerCase();\nconst violations = banned.filter(p => lower.includes(p.toLowerCase()));\n\nconst brandRe = /\\b(you ?tube|google|facebook|instagram|tiktok|twitch|reddit|twitter|linkedin|amazon|github)\\b/i;\nconst brand_leak = brandRe.test(output.copy);\n\n// Empty-generation guard: copy-max timed out / returned nothing.\n// Flag so the dispatcher skips this item instead of posting blank.\nconst generation_failed = output.copy.trim().length < 12;\n\nreturn [{ json: {\n  brief: { platform: b.platform, persona: b.persona, framework: b.framework, language: b.language },\n  output,\n  compliance: {\n    banned_phrases_found: violations,\n    brand_leak: brand_leak,\n    generation_failed: generation_failed,\n    char_count: output.copy.length,\n    char_limit: limit,\n    within_limit: output.copy.length <= limit,\n    truncated: output.truncated || false\n  },\n  generated_at: new Date().toISOString()\n} }];\n"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1340,
+        400
+      ],
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "typeVersion": 1.1
+    }
+  ],
+  "connections": {
+    "Call copy-max": {
+      "main": [
+        [
+          {
+            "node": "Parse Copy Agent output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate brief": {
+      "main": [
+        [
+          {
+            "node": "Build Copy Agent prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Copy Agent": {
+      "main": [
+        [
+          {
+            "node": "Validate brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Copy Agent prompt": {
+      "main": [
+        [
+          {
+            "node": "Call copy-max",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Copy Agent output": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
