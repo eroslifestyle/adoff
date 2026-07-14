@@ -245,7 +245,7 @@ Usa `chrome.storage.local` con prefisso `adoff`:
   - **Eccezione legittima**: le chiavi changelog storiche in `background.js`/`popup.js` (`"3.1.0": [...]`, `"3.0.0": [...]`) NON sono la versione corrente — sono dati storici, non si toccano.
 - **Ad ogni deploy**: bump della versione in TUTTI E TRE i `manifest.json` (stessa versione). Essendo la UI dinamica, non serve toccare altro: si propaga da sola.
 - **Più in generale — TUTTO deve essere congruente.** Prima di ogni deploy verificare che numeri/fatti citati nella UI coincidano con la realtà: conteggio regole (`grep -c '"id"' app/rules/adblock-rules.json` = N → i testi dicono "N+"), prezzi (vedi sezione Pricing), conteggio lingue, claim funzionalità. Un numero stantio in un solo punto = incongruenza da fixare subito.
-- **Pre-deploy check congruenza**: `grep -rn '[0-9]\.[0-9]\.[0-9]' app/src/ app-firefox/src/ app-safari/src/ | grep -v getManifest | grep -v graphify-out` → l'unico match atteso sono le chiavi changelog storiche. Qualsiasi altro version literal = bug.
+- **Pre-deploy check congruenza**: `grep -rn '[0-9]\.[0-9]\.[0-9]' app/src/ app-firefox/src/ app-safari/src/ | grep -v getManifest` → l'unico match atteso sono le chiavi changelog storiche. Qualsiasi altro version literal = bug.
 
 ### Multi-Browser Sync (REGOLA ASSOLUTA)
 
@@ -535,10 +535,10 @@ No "lo faccio dopo". Sync nello **stesso turno**.
 
 ## graphify
 
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+This project has a knowledge graph at `sviluppo/license-system/graphify-out/` with god nodes, community structure, and cross-file relationships.
 
 Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- For codebase questions, first run `graphify query "<question>"` when `sviluppo/license-system/graphify-out/graph.json` exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- Read `sviluppo/license-system/graphify-out/wiki/index.md` for broad navigation.
+- Read `sviluppo/license-system/graphify-out/GRAPH_REPORT.md` only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
