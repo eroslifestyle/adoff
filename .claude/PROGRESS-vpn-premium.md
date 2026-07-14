@@ -3,7 +3,7 @@
 > Stato esecutivo del progetto. Design congelato in `.claude/PLAN-vpn-dns-redesign.md` (102 decisioni AQ).
 > Aggiornare ad ogni step. Checkpoint a fine di ogni fase.
 
-## Stato: FASE 0 BACKEND COMPLETATA (2026-07-14, commit 3cc9a6a+acb41e7)
+## Stato: FASE 1+3 SITO COMPLETATA (2026-07-14)
 
 ---
 
@@ -42,14 +42,23 @@
 - [ ] Feature Premium: auto-rotation + fast-connect + country-lock
 - [ ] Gating Premium mobile/desktop + dichiarazioni privacy store native
 
-### FASE 3 — Lancio & comunicazione ⬜
-- [ ] PRICING-PLAN.md + constants.json + pagine pricing (post test E2E)
-- [ ] Messaging 15 lingue + landing /premium + VPN Policy doc + pagine vs/ competitor
+### FASE 3 — Lancio & comunicazione (SITO) ✅ (2026-07-14)
+- [x] Landing /premium (15 lingue hreflang, bundle value, pain-point, onestà piattaforme, CTA trial)
+- [x] Multi-valuta prezzi progettati in constants.json (USD/GBP/CHF) — implementazione nel checkout worker
+- [x] VPN Policy doc (site/vpn-policy.html): no-log, EU giurisdizione, cosa si traccia, P2P consentito, kill-switch
+- [x] Pagina vs/ NordVPN+ProtonVPN+ExpressVPN (vs/vpn-standalone.html)
+- [x] Pagina vs/ AdGuard VPN (vs/adguard-vpn.html)
+- [x] Pagina vs/ Brave VPN+Shield (vs/brave-vpn.html)
+- [x] SPEC checkout Premium (SPEC-checkout-premium.md): SKU, price_data inline, founder pool separato, multi-valuta, crypto gateway, upgrade Pro→Premium proration
+- [x] constants.json SSOT aggiornato (_pending_vpn section)
+- [x] Upsell banner pricing index.html (PENDING test E2E — visible ma non ancora live)
+- [ ] ~~PRICING-PLAN.md~~ → RIMANDATO post test E2E (marchiato PENDING nei prezzi)
+- [ ] Congruenza prezzi/versioni/pre-deploy (post worker implementation + test E2E)
 - [ ] Contenuti SEO (guide adblock+VPN, FAQ AEO, blog)
 - [ ] Monitoring: alert balance + dashboard admin costo + alert errori API + report margine settimanale
 - [ ] Analytics funnel (upsell→click, checkout, prima connessione, upgrade)
 - [ ] Anti-churn (email pre-scadenza, win-back, downgrade, dashboard valore)
-- [ ] Congruenza pre-deploy + CHECKLIST GO-LIVE (no leak IP/DNS, kill-switch, gating 403, congruenza)
+- [ ] CHECKLIST GO-LIVE (no leak IP/DNS, kill-switch, gating 403, congruenza)
 - [ ] Canali: Telegram EN + email Pro + social + in-app · Deploy multi-browser+store
 
 ---
