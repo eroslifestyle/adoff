@@ -638,7 +638,7 @@ async function generateDeviceId(request, body, env) {
 // nell'estensione, che verifica la firma: un cracker non può forgiare un
 // token con più giorni di trial né modificarne la scadenza.
 
-const TRIAL_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 giorni
+const TRIAL_DURATION_MS = 15 * 24 * 60 * 60 * 1000; // 15 giorni
 const TRIAL_FALLBACK_MS = 3 * 24 * 60 * 60 * 1000;  // 3 giorni — cap ottimistico client
 
 function b64uEncode(buf) {

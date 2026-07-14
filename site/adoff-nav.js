@@ -2,8 +2,6 @@
   'use strict';
 
   // ─── Google Analytics 4 (gtag) — iniettato centralmente su tutte le pagine ───
-  // Un solo punto d'inserimento (adoff-nav.js è caricato da ~541 pagine) evita di
-  // toccare ogni singolo HTML. Caricamento async: non blocca il rendering.
   (function loadGa4() {
     var GA4_MEASUREMENT_ID = 'G-RSF32N97JC';
     if (window.gtag || document.querySelector('script[data-adoff-ga4]')) return;
@@ -131,7 +129,27 @@
     '#site-nav .sn-links a:hover{color:#fff;background:rgba(124,92,252,0.12)}',
     '#site-nav .sn-links a.sn-cta{background:#7c5cfc;color:#fff;padding:7px 16px;border-radius:8px;font-weight:700}',
     '#site-nav .sn-links a.sn-cta:hover{background:#b8a9ff;color:#0a0a1a}',
+
+    /* Premium dropdown */
+    '#site-nav .sn-premium-wrap{position:relative}',
+    '#site-nav .sn-premium-btn{color:#8a8aaa;font-size:14px;font-weight:500;text-decoration:none;padding:6px 12px;border-radius:8px;transition:color .2s,background .2s;background:transparent;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;white-space:nowrap}',
+    '#site-nav .sn-premium-btn:hover{color:#fff;background:rgba(124,92,252,0.12)}',
+    '#site-nav .sn-premium-wrap.open .sn-premium-btn{color:#fff}',
+    '#site-nav .sn-premium-arrow{font-size:10px;transition:transform .2s;opacity:0.7}',
+    '#site-nav .sn-premium-wrap.open .sn-premium-arrow{transform:rotate(180deg)}',
+    '#site-nav .sn-premium-dd{display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#12122a;border:1px solid #2a2a4a;border-radius:10px;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow:hidden;z-index:100}',
+    '#site-nav .sn-premium-wrap.open .sn-premium-dd{display:block}',
+    '#site-nav .sn-premium-dd a{display:block;padding:12px 16px;color:#8a8aaa;font-size:14px;font-weight:500;text-decoration:none;transition:all .15s}',
+    '#site-nav .sn-premium-dd a:hover{background:rgba(124,92,252,0.12);color:#fff}',
+    '#site-nav .sn-premium-dd a:first-child{border-radius:10px 10px 0 0}',
+    '#site-nav .sn-premium-dd a:last-child{border-radius:0 0 10px 10px}',
+
     '#site-nav .sn-right{display:flex;align-items:center;gap:12px;flex-shrink:0}',
+
+    /* GitHub badge */
+    '#site-nav .sn-github{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#8a8aaa;font-size:13px;font-weight:500;padding:6px 12px;border-radius:8px;text-decoration:none;transition:all .2s}',
+    '#site-nav .sn-github:hover{background:rgba(255,255,255,0.1);color:#fff}',
+    '#site-nav .sn-github svg{fill:currentColor}',
 
     /* Language dropdown */
     '#site-nav .sn-lang-wrap{position:relative}',
@@ -157,6 +175,7 @@
     '#site-nav .sn-mobile a{display:block;color:#8a8aaa;font-size:15px;font-weight:500;text-decoration:none;padding:10px 12px;border-radius:8px;transition:color .2s,background .2s}',
     '#site-nav .sn-mobile a:hover{color:#fff;background:rgba(124,92,252,0.12)}',
     '#site-nav .sn-mobile a.sn-cta{background:#7c5cfc;color:#fff;font-weight:700;margin-top:8px;text-align:center}',
+    '#site-nav .sn-mobile a.sn-github{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);margin-top:8px;text-align:center;justify-content:center}',
     '#site-nav .sn-mobile .sn-mobile-lang{padding:10px 12px;display:flex;flex-wrap:wrap;gap:6px}',
     '#site-nav .sn-mobile .sn-mobile-lang button{background:transparent;border:1px solid #2a2a4a;color:#8a8aaa;font-size:12px;font-weight:600;padding:5px 10px;border-radius:6px;cursor:pointer;transition:all .2s;font-family:inherit;display:flex;align-items:center;gap:4px}',
     '#site-nav .sn-mobile .sn-mobile-lang button.active{background:rgba(124,92,252,0.18);border-color:#7c5cfc;color:#b8a9ff}',
@@ -165,7 +184,7 @@
     'body{padding-top:60px !important}',
 
     /* Responsive */
-    '@media(max-width:768px){',
+    '@media(max-width:900px){',
       '#site-nav .sn-links{display:none}',
       '#site-nav .sn-burger{display:flex}',
       '#site-nav.open .sn-mobile{display:block}',
@@ -195,38 +214,48 @@
   }
 
   // Build language-aware links
-  var lq = (activeLang && activeLang !== 'it') ? '?lang=' + activeLang : ''; // query for dynamic pages
-  var lp = (activeLang && activeLang !== 'it') ? '/' + activeLang : ''; // prefix for IT-root static pages
-  var base = '/' + lq; // homepage with lang
-
-  // Static page links: EN-root use /{lang}/, IT-root use /{lang}/, guide/community etc.
-  var guideLink = (activeLang === 'it' || !activeLang) ? '/guide' : '/' + activeLang + '/guide';
+  var lq = (activeLang && activeLang !== 'it') ? '?lang=' + activeLang : '';
+  var premiumLink = '/premium' + lq;
   var communityLink = (activeLang === 'en' || !activeLang) ? '/community' : '/' + activeLang + '/community';
   var supportLink = '/support' + lq;
-  // About page: IT → /chi-sono.html, all other languages → /about.html (English)
-  var aboutLink = (activeLang === 'it' || !activeLang) ? '/chi-sono.html' : '/about.html' + lq;
+
+  // GitHub SVG icon
+  var githubSvg = '<svg height="16" width="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>';
 
   root.innerHTML = [
     '<div class="sn-inner">',
       '<a href="/' + lq + '" class="sn-logo" aria-label="AdOff">',
-        'Ad<span>Off</span><span class="sn-dot">.</span>',
+        'Ads? <span>Off</span><span class="sn-dot">!</span>',
       '</a>',
       '<ul class="sn-links">',
-        '<li><a href="/' + lq + '#features"><span data-i18n="nav.features">Features</span></a></li>',
-        '<li><a href="' + (activeLang === 'en' ? '/unique-tech.html' : '/' + activeLang + '/unique-tech.html') + '"><span data-i18n="nav.unique">Why AdOff</span></a></li>',
-        '<li><a href="/' + lq + '#pricing"><span data-i18n="nav.pricing">Pricing</span></a></li>',
-        '<li><a href="/' + lq + '#faq"><span data-i18n="nav.faq">FAQ</span></a></li>',
-        '<li><a href="' + supportLink + '"><span data-i18n="nav.support">Support</span></a></li>',
-        '<li><a href="' + aboutLink + '"><span data-i18n="nav.about">Chi sono</span></a></li>',
-        '<li><a href="' + guideLink + '"><span data-i18n="nav.guide">Guide</span></a></li>',
-        '<li><a href="' + communityLink + '"><span data-i18n="nav.community">Community</span></a></li>',
+        '<li><a href="/' + lq + '">Home</a></li>',
+        '<li><a href="/' + lq + '#features">Features</a></li>',
+        '<li>',
+          '<div class="sn-premium-wrap" id="snPremiumWrap">',
+            '<button class="sn-premium-btn" id="snPremiumBtn">',
+              'Premium <span class="sn-premium-arrow">&#9660;</span>',
+            '</button>',
+            '<div class="sn-premium-dd" id="snPremiumDd">',
+              '<a href="' + premiumLink + '">Premium</a>',
+            '</div>',
+          '</div>',
+        '</li>',
+        '<li><a href="/' + lq + '#pricing">Pricing</a></li>',
+        '<li><a href="' + communityLink + '">Community</a></li>',
+        '<li><a href="' + supportLink + '">Support</a></li>',
+        '<li>',
+          '<a href="https://github.com/eroslifestyle/adoff" class="sn-github" target="_blank" rel="noopener noreferrer" aria-label="GitHub">',
+            githubSvg,
+            'GitHub',
+          '</a>',
+        '</li>',
         '<li><div class="sn-lang-wrap" id="snLangWrap">',
           '<button class="sn-lang-btn" id="snLangBtn">',
             activeLangObj.flag + ' ' + activeLangObj.code.toUpperCase() + ' <span class="sn-arrow">&#9660;</span>',
           '</button>',
           '<div class="sn-lang-dd" id="snLangDd">' + ddItems + '</div>',
         '</div></li>',
-        '<li><a href="/' + lq + '#pricing" class="sn-cta" data-i18n="nav.cta">Install Free</a></li>',
+        '<li><a href="/' + lq + '#pricing" class="sn-cta">Install Free</a></li>',
       '</ul>',
       '<div class="sn-right">',
         '<button class="sn-burger" aria-label="Menu">',
@@ -235,15 +264,17 @@
       '</div>',
     '</div>',
     '<div class="sn-mobile">',
-      '<a href="/' + lq + '#features" data-i18n="nav.features">Features</a>',
-      '<a href="' + (activeLang === 'en' ? '/unique-tech.html' : '/' + activeLang + '/unique-tech.html') + '" data-i18n="nav.unique">Why AdOff</a>',
-      '<a href="/' + lq + '#pricing" data-i18n="nav.pricing">Pricing</a>',
-      '<a href="/' + lq + '#faq" data-i18n="nav.faq">FAQ</a>',
-      '<a href="' + supportLink + '" data-i18n="nav.support">Support</a>',
-      '<a href="' + aboutLink + '" data-i18n="nav.about">Chi sono</a>',
-      '<a href="' + guideLink + '" data-i18n="nav.guide">Guide</a>',
-      '<a href="' + communityLink + '" data-i18n="nav.community">Community</a>',
-      '<a href="/' + lq + '#pricing" class="sn-cta" data-i18n="nav.cta">Install Free</a>',
+      '<a href="/' + lq + '">Home</a>',
+      '<a href="/' + lq + '#features">Features</a>',
+      '<a href="' + premiumLink + '">Premium</a>',
+      '<a href="/' + lq + '#pricing">Pricing</a>',
+      '<a href="' + communityLink + '">Community</a>',
+      '<a href="' + supportLink + '">Support</a>',
+      '<a href="https://github.com/eroslifestyle/adoff" class="sn-github" target="_blank" rel="noopener noreferrer">',
+        githubSvg,
+        ' GitHub',
+      '</a>',
+      '<a href="/' + lq + '#pricing" class="sn-cta">Install Free</a>',
       '<div class="sn-mobile-lang">' + mobileItems + '</div>',
     '</div>'
   ].join('');
@@ -251,12 +282,20 @@
   // ─── Event handlers ─────────────────────────────────────────────────────────
   var langWrap = document.getElementById('snLangWrap');
   var langBtn = document.getElementById('snLangBtn');
+  var premiumWrap = document.getElementById('snPremiumWrap');
+  var premiumBtn = document.getElementById('snPremiumBtn');
   var burger = root.querySelector('.sn-burger');
 
   // Toggle language dropdown
   langBtn.addEventListener('click', function (e) {
     e.stopPropagation();
     langWrap.classList.toggle('open');
+  });
+
+  // Toggle premium dropdown
+  premiumBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    premiumWrap.classList.toggle('open');
   });
 
   // Language selection (dropdown + mobile)
@@ -278,6 +317,7 @@
     if (!root.contains(e.target)) {
       root.classList.remove('open');
       langWrap.classList.remove('open');
+      premiumWrap.classList.remove('open');
     }
   });
 

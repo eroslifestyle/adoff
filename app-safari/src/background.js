@@ -10,7 +10,7 @@
   const STORAGE_SHOW_BADGE   = "adoffShowBadge";
   const STORAGE_SHOW_COUNTER = "adoffShowCounter";
   const STORAGE_DAILY_STATS = "adoffDailyStats";
-  const TRIAL_DAYS         = 30;
+  const TRIAL_DAYS         = 15;
 
   // Data limite per badge Founding Member (3 mesi dal lancio)
   const FOUNDER_CUTOFF = new Date("2026-07-01T00:00:00Z").getTime();

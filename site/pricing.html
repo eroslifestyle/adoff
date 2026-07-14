@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdOff — Prezzi</title>
+  <meta name="description" content="AdOff offre piani flessibili: Free per sempre, Pro a €2,99/mese con stealth anti-detection, e Premium VPN a €4,99/mese. Zero impegno, rimborso 30 giorni." />
+  <meta name="robots" content="index, follow" />
+
+  <link rel="canonical" href="https://adoff.app/pricing.html" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="AdOff — Prezzi" />
+  <meta property="og:description" content="Free per sempre. Pro da €2,99/mese con stealth anti-detection. Premium VPN da €4,99/mese. Zero impegno." />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/pricing.html" />
+  <meta property="og:site_name" content="AdOff" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AdOff — Prezzi" />
+  <meta name="twitter:description" content="Free per sempre. Pro da €2,99/mese. Premium VPN da €4,99/mese." />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <link rel="stylesheet" href="style.css?v=260714b" />
+
+  <!-- FAQ JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "Posso annullare in qualsiasi momento?", "acceptedAnswer": {"@type": "Answer", "text": "Sì. Il piano mensile può essere annullato in qualsiasi momento senza penali. Continui a usufruire del servizio fino alla fine del periodo pagato."}},
+      {"@type": "Question", "name": "Come funziona il trial di 15 giorni?", "acceptedAnswer": {"@type": "Answer", "text": "Il trial Pro di 15 giorni si attiva automaticamente alla prima installazione. Non serve carta di credito. Dopo il trial, scegli se passare a Pro o rimanere con la versione Free."}},
+      {"@type": "Question", "name": "Cosa succede ai miei dati se annullo?", "acceptedAnswer": {"@type": "Answer", "text": "I tuoi dati restano solo sul tuo dispositivo. AdOff non raccoglie dati personali. Annullando, perdi l'accesso a Pro/Premium ma i tuoi dati locali restano tuoi."}},
+      {"@type": "Question", "name": "Posso passare da Free a Pro in qualsiasi momento?", "acceptedAnswer": {"@type": "Answer", "text": "Sì, puoi passare a Pro o Premium in qualsiasi momento direttamente dall'estensione o dal sito. Il trial è disponibile una sola volta per dispositivo."}}
+    ]
+  }
+  </script>
+
+  <style>
+    /* Pricing page specific styles */
+    .trial-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(74, 222, 128, 0.12);
+      border: 1px solid rgba(74, 222, 128, 0.4);
+      color: #4ade80;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 8px 18px;
+      border-radius: 999px;
+      margin-bottom: 24px;
+    }
+    .trial-badge svg { width: 16px; height: 16px; }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      max-width: 1000px;
+      margin: 48px auto 0;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
+    }
+
+    .plan-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: border-color 220ms, box-shadow 220ms;
+    }
+    .plan-card:hover {
+      border-color: rgba(124, 92, 252, 0.48);
+    }
+    .plan-card--pro {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, var(--surface) 60%, rgba(124, 92, 252, 0.08) 100%);
+      box-shadow: 0 0 0 1px var(--accent) inset, 0 8px 40px rgba(124, 92, 252, 0.15);
+    }
+    .plan-card--pro:hover {
+      box-shadow: 0 0 0 1px var(--accent) inset, 0 12px 48px rgba(124, 92, 252, 0.25);
+    }
+    .plan-card--popular::before {
+      content: 'Più scelto';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .plan-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .plan-card--pro .plan-name { color: var(--accent-light); }
+
+    .plan-price {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+    .plan-price__amount {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--pure-white);
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+    .plan-price__currency {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .plan-price__period {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .plan-price__annual {
+      font-size: 0.82rem;
+      color: var(--accent-light);
+      margin-bottom: 20px;
+    }
+
+    .plan-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: rgba(74, 222, 128, 0.12);
+      border: 1px solid rgba(74, 222, 128, 0.4);
+      color: #4ade80;
+      margin-bottom: 16px;
+    }
+    .plan-badge--vpn {
+      background: rgba(124, 92, 252, 0.12);
+      border-color: rgba(124, 92, 252, 0.4);
+      color: var(--accent-light);
+    }
+
+    .plan-features {
+      list-style: none;
+      margin: 20px 0 24px;
+      padding: 20px 0;
+      border-top: 1px solid var(--border-subtle);
+      flex: 1;
+    }
+    .plan-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      padding: 8px 0;
+      line-height: 1.5;
+    }
+    .plan-features li .check {
+      color: var(--success);
+      flex-shrink: 0;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .plan-features li .x {
+      color: var(--text-dim);
+      flex-shrink: 0;
+      font-size: 0.9rem;
+    }
+
+    .plan-cta {
+      margin-top: auto;
+    }
+    .plan-cta .btn {
+      width: 100%;
+      justify-content: center;
+      padding: 14px 24px;
+      font-size: 0.95rem;
+    }
+
+    .plan-divider {
+      height: 1px;
+      background: var(--border-subtle);
+      margin: 8px 0;
+    }
+
+    /* Comparison table */
+    .compare-section { padding: 80px 0; }
+    .compare-wrap {
+      overflow-x: auto;
+      margin-top: 40px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      min-width: 500px;
+    }
+    .compare-table th {
+      padding: 16px 20px;
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .compare-table th:first-child { text-align: left; }
+    .compare-table th.col-pro { color: var(--accent-light); }
+    .compare-table th.col-vpn { color: var(--accent-light); }
+    .compare-table td {
+      padding: 14px 20px;
+      text-align: center;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .compare-table td:first-child {
+      text-align: left;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-yes { color: var(--success); font-size: 1.1rem; }
+    .compare-no { color: rgba(255,255,255,0.2); font-size: 1.1rem; }
+    .compare-partial { color: var(--accent-light); font-size: 0.82rem; font-weight: 600; }
+
+    /* Guarantee box */
+    .guarantee-section { padding: 60px 0; }
+    .guarantee-box {
+      background: rgba(74, 222, 128, 0.06);
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      border-radius: 20px;
+      padding: 40px 32px;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .guarantee-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 12px 0;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+    .guarantee-item svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      color: var(--success);
+      margin-top: 2px;
+    }
+
+    /* FAQ accordion */
+    .faq-section { max-width: 680px; margin: 0 auto; padding: 80px 0; }
+    .faq-item { border-bottom: 1px solid var(--border-subtle); }
+    .faq-question {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 22px 0;
+      text-align: left;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: inherit;
+      gap: 16px;
+    }
+    .faq-question:hover { color: var(--accent-light); }
+    .faq-question svg {
+      flex-shrink: 0;
+      transition: transform 220ms;
+      color: var(--accent-light);
+    }
+    .faq-item.open .faq-question svg { transform: rotate(180deg); }
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 300ms ease;
+    }
+    .faq-item.open .faq-answer { max-height: 300px; }
+    .faq-answer p {
+      padding-bottom: 22px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    /* CTA finale */
+    .cta-final { text-align: center; padding: 80px 0; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="site-nav"></nav>
+
+  <!-- ======= HERO ======= -->
+  <section class="hero" style="padding-top: 80px;">
+    <div class="container">
+      <p class="hero__tagline">Ads? Off!</p>
+      <h1 class="hero__headline" style="font-size: clamp(2.2rem, 5vw, 3.4rem); margin-bottom: 16px;">
+        Scegli il tuo piano
+      </h1>
+      <p class="hero__sub" style="font-size: 1.1rem; max-width: 480px; margin: 0 auto;">
+        Zero impegno. Zero sorprese.
+      </p>
+    </div>
+  </section>
+
+  <!-- ======= TRIAL BADGE ======= -->
+  <section style="padding: 0 0 40px;">
+    <div class="container">
+      <div style="text-align: center;">
+        <span class="trial-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          15 giorni di Pro gratis
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= PLAN CARDS ======= -->
+  <section style="padding: 0 0 80px;">
+    <div class="container">
+      <div class="pricing-grid">
+
+        <!-- FREE -->
+        <div class="plan-card">
+          <p class="plan-name">Free</p>
+          <div class="plan-price">
+            <span class="plan-price__amount">0</span>
+            <span class="plan-price__currency">€</span>
+          </div>
+          <p class="plan-price__period">per sempre</p>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> Blocco pubblicità base</li>
+            <li><span class="check">✓</span> Blocca ads su tutti i siti</li>
+            <li><span class="check">✓</span> Funziona su tutti i browser</li>
+            <li><span class="check">✓</span> 15 lingue</li>
+            <li><span class="x">—</span> Stealth anti-detection</li>
+            <li><span class="x">—</span> Ads video neutralizzati</li>
+            <li><span class="x">—</span> Supporto prioritario</li>
+            <li><span class="x">—</span> VPN incluso</li>
+          </ul>
+          <div class="plan-cta">
+            <a href="install.html" class="btn btn--outline btn--lg">Inizia gratis</a>
+          </div>
+        </div>
+
+        <!-- PRO -->
+        <div class="plan-card plan-card--pro plan-card--popular">
+          <p class="plan-name">Pro</p>
+          <span class="plan-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+            15 giorni Pro gratis
+          </span>
+          <div class="plan-price">
+            <span class="plan-price__amount">2,99</span>
+            <span class="plan-price__currency">€</span>
+          </div>
+          <p class="plan-price__period">/mese</p>
+          <p class="plan-price__annual">oppure €29,99/anno (risparmia €5,89)</p>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> Tutto di Free</li>
+            <li><span class="check">✓</span> Stealth anti-detection</li>
+            <li><span class="check">✓</span> Ads video neutralizzati</li>
+            <li><span class="check">✓</span> Evasione anti-adblock</li>
+            <li><span class="check">✓</span> Supporto prioritario</li>
+            <li><span class="check">✓</span> Aggiornamenti prioritari</li>
+            <li><span class="check">✓</span> Nessun branding nei siti</li>
+            <li><span class="x">—</span> VPN incluso</li>
+          </ul>
+          <div class="plan-cta">
+            <button onclick="checkout('monthly')" class="btn btn--primary btn--lg" style="margin-bottom: 10px;">Prova 15gg gratis</button>
+            <button onclick="checkout('annual')" class="btn btn--outline btn--lg">Annuale — €29,99</button>
+          </div>
+        </div>
+
+        <!-- PREMIUM VPN -->
+        <div class="plan-card">
+          <p class="plan-name">Premium VPN</p>
+          <span class="plan-badge plan-badge--vpn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            VPN incluso
+          </span>
+          <div class="plan-price">
+            <span class="plan-price__amount">4,99</span>
+            <span class="plan-price__currency">€</span>
+          </div>
+          <p class="plan-price__period">/mese</p>
+          <p class="plan-price__annual">oppure €29,99/anno Founder<br>oppure €49,99/anno standard</p>
+          <ul class="plan-features">
+            <li><span class="check">✓</span> Tutto di Pro</li>
+            <li><span class="check">✓</span> VPN WireGuard incluso</li>
+            <li><span class="check">✓</span> 82 server in tutto il mondo</li>
+            <li><span class="check">✓</span> Zero log</li>
+            <li><span class="check">✓</span> P2P consentito</li>
+            <li><span class="check">✓</span> Fino a 3 dispositivi</li>
+            <li><span class="check">✓</span> Kill switch automatico</li>
+            <li><span class="check">✓</span> Protezione IP completa</li>
+          </ul>
+          <div class="plan-cta">
+            <button onclick="checkout('premium_monthly')" class="btn btn--primary btn--lg" style="margin-bottom: 10px;">Premium mensile</button>
+            <button onclick="checkout('premium_annual')" class="btn btn--outline btn--lg">Premium annuale</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= COMPARISON TABLE ======= -->
+  <section class="compare-section" style="background: var(--surface); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);">
+    <div class="container">
+      <div class="text-center" style="margin-bottom: 16px;">
+        <p class="section-label">Confronto</p>
+        <h2 class="section-title">Cosa include ogni piano</h2>
+      </div>
+      <div class="compare-wrap">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Funzionalità</th>
+              <th>Free</th>
+              <th class="col-pro">Pro</th>
+              <th class="col-vpn">Premium VPN</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Blocco pubblicità base</td>
+              <td><span class="compare-yes">✓</span></td>
+              <td><span class="compare-yes">✓</span></td>
+              <td><span class="compare-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>Blocca ads su tutti i siti</td>
+              <td><span class="compare-yes">✓</span></td>
+              <td><span class="compare-yes">✓</span></td>
+              <td><span class="compare-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>Stealth anti-detection</td>
+              <td><span class="compare-no">—</span></td>
+              <td><span class="compare-yes">✓</span></td>
+              <td><span class="compare-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>Video ads neutralizzati</td>
+              <td><span class="compare-no">—</span></td>
+              <td><span class="compare-yes">✓</span></td>
+              <td><span class="compare-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>Supporto prioritario</td>
+              <td><span class="compare-no">—</span></td>
+              <td><span class="compare-yes">✓</span></td>
+              <td><span class="compare-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>VPN WireGuard incluso</td>
+              <td><span class="compare-no">—</span></td>
+              <td><span class="compare-no">—</span></td>
+              <td><span class="compare-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>82 server VPN</td>
+              <td><span class="compare-no">—</span></td>
+              <td><span class="compare-no">—</span></td>
+              <td><span class="compare-yes">✓</span></td>
+            </tr>
+            <tr>
+              <td>Lingue disponibili</td>
+              <td>15</td>
+              <td>15</td>
+              <td>15</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= GUARANTEE ======= -->
+  <section class="guarantee-section">
+    <div class="container">
+      <div class="text-center" style="margin-bottom: 32px;">
+        <p class="section-label">Garanzia</p>
+        <h2 class="section-title">Zero rischio triplo</h2>
+      </div>
+      <div class="guarantee-box">
+        <div class="guarantee-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+          <span><strong style="color: var(--text);">15 giorni di Pro gratis</strong> — prova tutte le funzionalità senza impegno</span>
+        </div>
+        <div class="guarantee-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+          <span><strong style="color: var(--text);">Rimborso entro 30 giorni</strong> — nessuna domanda, nessun problema</span>
+        </div>
+        <div class="guarantee-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span><strong style="color: var(--text);">Disdici mensile quando vuoi</strong> — zero penali, zero vincoli</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= FAQ ======= -->
+  <section style="padding: 80px 0; background: var(--surface); border-top: 1px solid var(--border-subtle);">
+    <div class="container">
+      <div class="text-center" style="margin-bottom: 40px;">
+        <p class="section-label">Domande frequenti</p>
+        <h2 class="section-title">Hai dubbi? Ti rispondiamo.</h2>
+      </div>
+      <div class="faq-section">
+        <div class="faq-item">
+          <button class="faq-question">
+            Posso annullare in qualsiasi momento?
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p>Sì. Il piano mensile può essere annullato in qualsiasi momento senza penali. Continui a usufruire del servizio fino alla fine del periodo pagato. Non c'è alcun vincolo.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">
+            Come funziona il trial di 15 giorni?
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p>Il trial Pro di 15 giorni si attiva automaticamente alla prima installazione. Non serve carta di credito. Dopo il trial, scegli se passare a Pro o rimanere con la versione Free. Il trial è disponibile una sola volta per dispositivo.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">
+            Cosa succede ai miei dati se annullo?
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p>I tuoi dati restano solo sul tuo dispositivo. AdOff non raccoglie dati personali da vendere o condividere. Annullando, perdi l'accesso a Pro/Premium ma i tuoi dati locali restano tuoi.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">
+            Posso passare da Free a Pro in qualsiasi momento?
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="faq-answer">
+            <p>Sì, puoi passare a Pro o Premium in qualsiasi momento direttamente dall'estensione o dal sito. Il trial è disponibile una sola volta per dispositivo.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= CTA FINALE ======= -->
+  <section class="cta-final">
+    <div class="container">
+      <h2 style="margin-bottom: 16px;">Pronto a navigare senza pubblicità?</h2>
+      <p style="color: var(--text-muted); margin-bottom: 32px; font-size: 1.05rem;">Installa AdOff in 30 secondi. Non serve carta di credito.</p>
+      <a href="install.html" class="btn btn--primary btn--xl">Inizia gratis — Nessuna carta</a>
+      <p style="margin-top: 18px; font-size: 0.85rem; color: var(--text-dim);">Open source · Nessun account · Funziona subito</p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer id="adoff-footer"></footer>
+
+  <!-- SCRIPTS -->
+  <script src="adoff-nav.js"></script>
+  <script src="adoff-footer.js"></script>
+
+  <script>
+    // Checkout function
+    function checkout(plan) {
+      // Redirect to checkout with plan parameter
+      var baseUrl = 'https://checkout.adoff.app';
+      var urls = {
+        'monthly': baseUrl + '?plan=pro_monthly',
+        'annual': baseUrl + '?plan=pro_annual',
+        'premium_monthly': baseUrl + '?plan=premium_monthly',
+        'premium_annual': baseUrl + '?plan=premium_annual'
+      };
+      var url = urls[plan] || baseUrl;
+      window.location.href = url;
+    }
+
+    // FAQ accordion
+    document.querySelectorAll('.faq-question').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var item = this.closest('.faq-item');
+        var answer = item.querySelector('.faq-answer');
+        var isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(function(i) {
+          i.classList.remove('open');
+          i.querySelector('.faq-answer').style.maxHeight = '0';
+        });
+        if (!isOpen) {
+          item.classList.add('open');
+          answer.style.maxHeight = answer.scrollHeight + 'px';
+        }
+      });
+    });
+  </script>
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){})});}</script>
+</body>
+</html>
