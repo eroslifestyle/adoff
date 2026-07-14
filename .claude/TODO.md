@@ -1,22 +1,25 @@
 # TODO — AdOff ChromePlugin
 
 ## Attivo
-- [ ] **Premium VPN — FASE 0 (sicurezza)**: gating server-side /vpn/* (token ECDSA tier=premium), fix bug /vpn/create (email→username+password) e /verify-mobile-license (405 GET), cron auto-disable 7gg, modulo vpn-module.js separato. Vedi .claude/PLAN-vpn-dns-redesign.md + PROGRESS-vpn-premium.md
-- [ ] **GATE lancio VPN**: test empirico multi-device WireGuard VS OpenVPN (3 device)
-- [ ] Premium FASE 1: tier Premium €4,99/mo (Founder €29,99→€49,99), rimuovi VPN dal browser→upsell, badge Free/Pro/Premium
-- [ ] Premium FASE 2: VPN reale mobile (VpnService tunnel) + app desktop Tauri + DNS Guard freemium
-- [ ] Premium FASE 3: landing /premium 15 lingue, vs/ competitor, VPN Policy, lancio + Telegram EN
-- [ ] Lanciare le 7 chat parallele (setup git worktree) — .claude/CHAT-PROMPTS-standalone.md
-- [ ] Test manuale popup VPN (Chrome dev mode): Free vs Pro flow
-- [ ] Post Telegram @adoffapp: changelog v3.5.35 con immagine brand
-- [ ] Upload CWS + Edge + AMO: v3.5.35
+- [ ] **Premium VPN — Checkout Stripe**: implementare SPEC-checkout-premium.md nel worker (SKU €4,99/mo, Founder €29,99/€49,99, proration Pro→Premium, multi-valuta)
+- [ ] **Premium VPN — Balance refill**: ricaricare VPNresellers $100+ (attuale $25, billing giornaliero $0.066/giorno)
+- [ ] **GATE lancio VPN**: test empirico multi-device (serve VPNRESELLERS_API_KEY in env)
+- [ ] **Premium FASE 2**: VPN reale mobile (VpnService tunnel) + Kill-switch mobile + DNS Guard freemium (blocklist grande)
+- [ ] **Premium FASE 3 completo**: contenuti SEO /guide, FAQ AEO, analytics funnel, anti-churn, CHECKLIST GO-LIVE, deploy multi-store
+- [ ] **Post Telegram @adoffapp**: changelog v3.5.35 con immagine brand (post deploy)
+- [ ] **Upload CWS + Edge + AMO**: v3.5.35
 
 ## Completati
 - [x] **Riprogettazione VPN/DNS — 102 sessioni AQ** (18 blocchi) + 5 verifiche subagent — design congelato
-- [x] Verificato: VPNresellers $1,99/acct (non per-GB), 1 acct=10 conn (3 device=$1,99), NO proxy HTTP/SOCKS (VPN-estensione impossibile)
-- [x] Prodotti: PLAN-vpn-dns-redesign.md, PROGRESS-vpn-premium.md, CHAT-PROMPTS-standalone.md, PROMPTS-vpn-parallel-chats.md
-- [x] VPN popup JS+CSS (v3.5.35) — f2c490d
-- [x] VPN backend worker deployato su api.adoff.app
-- [x] VPNresellers.com API configurata (balance $25, 82 server)
+- [x] **Premium VPN Sprint 1** (2026-07-14): FASE 0 backend ✅ + FASE 1 estensione ✅ + FASE 1+3 sito ✅ + FASE 2 mobile ✅ + FASE 2 desktop ✅ + GATE testato ✅ + congruenza Chat 7 ✅
+- [x] **FASE 0 backend**: vpn-module.js + gating 403 (ECDSA P-256 tier=premium) + rate-limit + audit D1 + cron auto-disable + fix /verify-mobile-license GET. Deployato api.adoff.app (Version ID 7b6b6be6)
+- [x] **FASE 1 estensione**: rimossa UI VPN dal popup + upsell Premium + badge Free/Pro/Premium (3 colori) + sezione options + Firefox/Safari sync
+- [x] **FASE 1+3 sito**: landing /premium (15 lingue) + VPN Policy + vs/ NordVPN+ProtonVPN+AdGuard+Brave + SPEC-checkout-premium.md + constants.json _pending_vpn
+- [x] **FASE 2 mobile**: crypto_keys.dart (JWK pubkey ECDSA) + DNS Guard expansion (refreshBlocklist cron 7gg)
+- [x] **FASE 2 desktop**: AdOff-desktop/ scaffold Tauri 2.x (4 commands stub: verify_license, get_vpn_servers, get_vpn_config, create_vpn_account)
+- [x] **GATE VPN**: testato e PASS — tutti /vpn/* bloccano 403 senza token Premium. smoke-test.sh QA continuo
+- [x] **Wrangler login + deploy**: OAuth riuscito, worker deployato senza secrets esposti
+- [x] Verificato: zero "Pro+" in codebase, prezzi congruenti €4,99/€29,99/€49,99, versione da manifest, zero PII leaks, sync Chrome/Firefox/Safari, no-log traffico/IP in vpn-module.js
 - [x] Trial anti-crack ECDSA P-256
+- [x] VPNresellers.com API configurata (balance $25, 82 server, $1,99/acct/mese)
 - [x] v3.5.0 — v3.5.34 rilasciati

@@ -3005,10 +3005,20 @@ async function createTicketFromChat({ category, email, lang, reason, transcript,
 const FOUNDER_TOTAL = 100;            // posti Founder totali
 const ANNUAL_FOUNDER_AMOUNT = 1999;   // €19,99 — primi 100, bloccato a vita
 const ANNUAL_STANDARD_AMOUNT = 2499;  // €24,99 — dopo i primi 100
+
+// ── Premium VPN ────────────────────────────────────────────────────────────────
+const FOUNDER_PREMIUM_TOTAL = 100;          // posti Founder Premium separati
+const PREMIUM_MONTHLY_AMOUNT = 499;         // €4,99
+const PREMIUM_ANNUAL_FOUNDER_AMOUNT = 2999; // €29,99 — 1° anno
+const PREMIUM_ANNUAL_STD_AMOUNT    = 4999;  // €49,99 — dopo Founder o standard
 const PRICE_CONFIG = {
-  monthly:  { amount: 299,                  plan: "monthly",  recurring: "month", founder: false },
-  annual:   { amount: ANNUAL_FOUNDER_AMOUNT, plan: "annual",   recurring: "year",  founder: true  },
-  lifetime: { amount: 9900,                 plan: "lifetime", recurring: null,    founder: true  },
+  monthly:  { amount: 299,                    plan: "monthly",  recurring: "month", founder: false, tier: "pro" },
+  annual:   { amount: ANNUAL_FOUNDER_AMOUNT,  plan: "annual",   recurring: "year",  founder: true,  tier: "pro" },
+  lifetime: { amount: 9900,                   plan: "lifetime", recurring: null,    founder: true,  tier: "pro" },
+  // Premium VPN plans
+  premium_monthly:          { amount: PREMIUM_MONTHLY_AMOUNT,         plan: "premium_monthly",          recurring: "month", founder: false, tier: "premium" },
+  premium_annual:           { amount: PREMIUM_ANNUAL_STD_AMOUNT,      plan: "premium_annual",           recurring: "year",  founder: false, tier: "premium" },
+  premium_annual_founder:   { amount: PREMIUM_ANNUAL_FOUNDER_AMOUNT,  plan: "premium_annual_founder",   recurring: "year",  founder: true,  tier: "premium" },
 };
 
 // Conta i posti Founder REALMENTE occupati (dati reali da D1). Auto-crea la tabella.
@@ -3021,6 +3031,34 @@ async function getFounderCount(env) {
   } catch (e) {
     return null;
   }
+}
+
+// Conta i posti Founder Premium REALMENTE occupati (tabella separata da Pro).
+async function getFounderPremiumCount(env) {
+  try {
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS founder_premium_seats (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, stripe_session_id TEXT UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)").run();
+    const row = await env.DB.prepare("SELECT COUNT(*) AS n FROM founder_premium_seats").first();
+    return row ? (row.n || 0) : 0;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Endpoint pubblico: stato reale dei posti Founder Premium (pool separato da Pro).
+async function handleFounderPremiumStatus(env) {
+  const count = await getFounderPremiumCount(env);
+  const taken = (count === null) ? FOUNDER_PREMIUM_TOTAL : count;
+  const remaining = Math.max(0, FOUNDER_PREMIUM_TOTAL - taken);
+  return jsonResponse({
+    active: remaining > 0,
+    taken,
+    remaining,
+    total: FOUNDER_PREMIUM_TOTAL,
+    founder_price: PREMIUM_ANNUAL_FOUNDER_AMOUNT / 100,
+    annual_standard: PREMIUM_ANNUAL_STD_AMOUNT / 100,
+    monthly: PREMIUM_MONTHLY_AMOUNT / 100,
+    currency: "EUR",
+  });
 }
 
 // Endpoint pubblico: stato reale dei posti Founder per il sito (counter X/100 + prezzo annuale).
@@ -3053,21 +3091,41 @@ async function handleCreateCheckout(body, env) {
   const priceConfig = PRICE_CONFIG[plan];
   if (!priceConfig) return jsonResponse({ error: "Invalid plan" }, 400);
 
-  const devices = 3; // piano unico: fino a 3 dispositivi personali
+  const tier = priceConfig.tier || "pro";   // 'pro' | 'premium'
+  const isPremium = tier === "premium";
+  const devices = isPremium ? 3 : 3;        // piano unico: fino a 3 dispositivi
   let amount = priceConfig.amount;
   let isFounder = false;
-  let productName = "AdOff Pro — " + plan.charAt(0).toUpperCase() + plan.slice(1);
+  let productName;
 
-  // Gating Founder AUTHORITATIVE lato server (il prezzo non si fida del client).
-  if (plan === "annual" || plan === "lifetime") {
-    const count = await getFounderCount(env);
-    const seatsLeft = (count === null) ? 0 : Math.max(0, FOUNDER_TOTAL - count);
-    if (plan === "annual") {
-      if (seatsLeft > 0) { amount = ANNUAL_FOUNDER_AMOUNT; isFounder = true; productName = "AdOff Pro — Annuale (Founder)"; }
-      else { amount = ANNUAL_STANDARD_AMOUNT; isFounder = false; productName = "AdOff Pro — Annuale"; }
-    } else { // lifetime: offerta Founder a tiratura limitata, ritirata quando i posti finiscono
-      if (seatsLeft <= 0) return jsonResponse({ error: "Founder Lifetime offer is sold out." }, 409);
-      isFounder = true; productName = "AdOff Founder Lifetime";
+  if (isPremium) {
+    // ── Premium VPN ──────────────────────────────────────────────────────────
+    // Gating Founder AUTHORITATIVE lato server.
+    if (plan === "premium_annual_founder") {
+      const count = await getFounderPremiumCount(env);
+      const seatsLeft = (count === null) ? 0 : Math.max(0, FOUNDER_PREMIUM_TOTAL - count);
+      if (seatsLeft <= 0) return jsonResponse({ error: "Founder Premium seats are sold out." }, 409);
+      isFounder = true;
+      productName = "AdOff Premium VPN — Annuale (Founder)";
+    } else {
+      productName = plan === "premium_monthly"
+        ? "AdOff Premium VPN — Mensile"
+        : "AdOff Premium VPN — Annuale";
+    }
+  } else {
+    // ── Pro (esistente) ─────────────────────────────────────────────────────
+    if (plan === "annual" || plan === "lifetime") {
+      const count = await getFounderCount(env);
+      const seatsLeft = (count === null) ? 0 : Math.max(0, FOUNDER_TOTAL - count);
+      if (plan === "annual") {
+        if (seatsLeft > 0) { amount = ANNUAL_FOUNDER_AMOUNT; isFounder = true; productName = "AdOff Pro — Annuale (Founder)"; }
+        else { amount = ANNUAL_STANDARD_AMOUNT; isFounder = false; productName = "AdOff Pro — Annuale"; }
+      } else { // lifetime
+        if (seatsLeft <= 0) return jsonResponse({ error: "Founder Lifetime offer is sold out." }, 409);
+        isFounder = true; productName = "AdOff Founder Lifetime";
+      }
+    } else {
+      productName = "AdOff Pro — " + plan.charAt(0).toUpperCase() + plan.slice(1);
     }
   }
 
@@ -3084,9 +3142,13 @@ async function handleCreateCheckout(body, env) {
   }
   params.append("line_items[0][quantity]", "1");
   params.append("mode", isRecurring ? "subscription" : "payment");
-  params.append("success_url", "https://adoff.app/success?session_id={CHECKOUT_SESSION_ID}");
+  params.append("success_url", isPremium
+    ? "https://adoff.app/success?session_id={CHECKOUT_SESSION_ID}&tier=premium"
+    : "https://adoff.app/success?session_id={CHECKOUT_SESSION_ID}");
   params.append("cancel_url", "https://adoff.app/#pricing");
-  params.append("custom_text[submit][message]", "AdOff Pro — Ads? Off!");
+  params.append("custom_text[submit][message]", isPremium
+    ? "AdOff Premium — AdBlock Pro + VPN integrata"
+    : "AdOff Pro — Ads? Off!");
 
   // Lingua checkout — sincronizzata con la lingua selezionata sul sito
   const STRIPE_LOCALES = ['auto','bg','cs','da','de','el','en','es','et','fi','fil','fr','hr','hu','id','it','ja','ko','lt','lv','ms','mt','nb','nl','pl','pt','ro','ru','sk','sl','sv','th','tr','vi','zh'];
@@ -3094,16 +3156,15 @@ async function handleCreateCheckout(body, env) {
     params.append("locale", lang);
   }
 
-  // Metadata: piano, dispositivi e flag Founder come source of truth per il webhook
+  // Metadata: piano, tier, dispositivi e flag Founder come source of truth per il webhook
   params.append("metadata[plan]", plan);
+  params.append("metadata[tier]", tier);
   params.append("metadata[devices]", String(devices));
   params.append("metadata[founder]", isFounder ? "1" : "0");
   if (affiliate) {
     params.append("metadata[affiliate]", affiliate);
-    // client_reference_id e' utile per riconciliazione automatica in Stripe
     params.append("client_reference_id", affiliate);
   }
-  // Attribution: source-tagged conversions (independent of affiliate)
   const source = body.source;
   if (source && /^src-[a-z0-9_]{2,20}$/.test(source)) {
     params.append("metadata[source]", source);
@@ -3197,22 +3258,31 @@ async function handleStripeWebhook(request, env) {
     const email = session.customer_email || session.customer_details?.email || "";
     const amount = session.amount_total || 0;
 
-    // Determina piano: prima da metadata.plan (source of truth), poi da price ranges
-    let plan = session.metadata?.plan || null;
+    // Determina piano e tier: prima da metadata (source of truth), poi da price ranges
+    const metadataPlan = session.metadata?.plan || null;
+    const metadataTier = session.metadata?.tier || null; // 'pro' | 'premium'
+    let plan = metadataPlan;
+    let tier = metadataTier || "pro";
+
     if (!plan) {
+      // Fallback: deduce dal price range (legacy webhook per checkout creati pre-premium)
       const PLAN_PRICE_RANGES = [
-        { plan: "monthly",  minCents: 1,    maxCents: 699  },
-        { plan: "annual",   minCents: 700,  maxCents: 6999 },
-        { plan: "lifetime", minCents: 7000, maxCents: Infinity },
+        { plan: "premium_monthly",          minCents: 400,  maxCents: 599,  tier: "premium" },
+        { plan: "premium_annual_founder",    minCents: 2600, maxCents: 3499, tier: "premium" },
+        { plan: "premium_annual",           minCents: 4000, maxCents: 5999, tier: "premium" },
+        { plan: "monthly",                  minCents: 1,    maxCents: 399,  tier: "pro" },
+        { plan: "annual",                   minCents: 400,  maxCents: 6999, tier: "pro" },
+        { plan: "lifetime",                 minCents: 7000, maxCents: Infinity, tier: "pro" },
       ];
       for (const range of PLAN_PRICE_RANGES) {
         if (amount >= range.minCents && amount <= range.maxCents) {
           plan = range.plan;
+          tier = range.tier;
           break;
         }
       }
     }
-    if (!plan) plan = "pro"; // ultimo fallback sicuro
+    if (!plan) { plan = "pro"; tier = "pro"; } // ultimo fallback sicuro
 
     // Affiliazione
     const affiliateId = session.metadata?.affiliate || session.client_reference_id || null;
@@ -3239,13 +3309,13 @@ async function handleStripeWebhook(request, env) {
 
     // Numero dispositivi: da metadata.devices (source of truth), default 3
     const devices = parseInt(session.metadata?.devices) || 3;
-    const PLAN_MONTHS = { monthly: 1, annual: 12, lifetime: 0 };
+    const PLAN_MONTHS = { monthly: 1, annual: 12, lifetime: 0, premium_monthly: 1, premium_annual: 12, premium_annual_founder: 12 };
     let months = PLAN_MONTHS[plan] !== undefined ? PLAN_MONTHS[plan] : 1;
 
-    // Genera license key
+    // Genera license key — payload include tier per gating VPN
     const now = Math.floor(Date.now() / 1000);
     const expires = plan === "lifetime" ? 0 : now + (months * 30 * 86400);
-    const payload = { c: now, d: devices, e: email, p: plan, v: 1, x: expires };
+    const payload = { c: now, d: devices, e: email, p: plan, t: tier, v: 1, x: expires };
     const payloadJson = JSON.stringify(payload);
 
     // Base64 encode
@@ -3281,11 +3351,12 @@ async function handleStripeWebhook(request, env) {
 
     const customerId = session.customer || "";
 
-    // Salva nel KV
+    // Salva nel KV — tier per gating VPN
     await env.ADOFF_LICENSES.put(`lic:${raw}`, JSON.stringify({
       key,
       raw,
       plan,
+      tier,
       email,
       expires: finalExpires,
       deviceLimit: devices,
@@ -3298,20 +3369,27 @@ async function handleStripeWebhook(request, env) {
     // Salva mapping key->raw per lookup
     await env.ADOFF_LICENSES.put(`key:${key}`, raw);
 
-    // Founder seat — conta gli abbonati Founder REALI (annuale a prezzo Founder o Founder Lifetime).
-    // stripe_session_id UNIQUE → idempotente sui webhook ritentati.
+    // Founder seat — Pro e Premium hanno pool separati
     if (session.metadata?.founder === "1") {
       try {
-        await env.DB.prepare("CREATE TABLE IF NOT EXISTS founder_seats (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, plan TEXT, stripe_session_id TEXT UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)").run();
-        await env.DB.prepare("INSERT OR IGNORE INTO founder_seats (email, plan, stripe_session_id) VALUES (?, ?, ?)")
-          .bind(email, plan, session.id).run();
+        if (tier === "premium") {
+          // Pool separato founder_premium_seats
+          await env.DB.prepare("CREATE TABLE IF NOT EXISTS founder_premium_seats (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, stripe_session_id TEXT UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)").run();
+          await env.DB.prepare("INSERT OR IGNORE INTO founder_premium_seats (email, stripe_session_id) VALUES (?, ?)")
+            .bind(email, session.id).run();
+        } else {
+          // Pool Pro esistente
+          await env.DB.prepare("CREATE TABLE IF NOT EXISTS founder_seats (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, plan TEXT, stripe_session_id TEXT UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)").run();
+          await env.DB.prepare("INSERT OR IGNORE INTO founder_seats (email, plan, stripe_session_id) VALUES (?, ?, ?)")
+            .bind(email, plan, session.id).run();
+        }
       } catch (_) { /* non bloccare l'emissione licenza se il conteggio fallisce */ }
     }
 
     // Sale record keyed by payment_intent — abilita lo storno accurato sui rimborsi.
     const _saleId = session.payment_intent || session.id;
     await env.ADOFF_LICENSES.put(`sale:${_saleId}`, JSON.stringify({
-      amount, plan, date: new Date().toISOString().slice(0, 10),
+      amount, plan, tier, date: new Date().toISOString().slice(0, 10),
       raw, key, email, affiliateId: affiliateId || null,
       sessionId: session.id, refunded: false,
     }));
@@ -3387,8 +3465,13 @@ async function handleStripeWebhook(request, env) {
     }
 
     // Notifica vendita su Telegram (thread Vendite & Rimborsi)
-    const planLabel = { monthly: "Mensile", annual: "Annuale", lifetime: "Lifetime" }[plan] || plan;
-    const saleMsg = `\u{1F4B0} <b>Nuova vendita</b>\n` +
+    const PLAN_LABELS = {
+      monthly: "Mensile", annual: "Annuale", lifetime: "Lifetime",
+      premium_monthly: "Premium Mensile", premium_annual: "Premium Annuale", premium_annual_founder: "Premium Annuale (Founder)",
+    };
+    const planLabel = PLAN_LABELS[plan] || plan;
+    const vpnBadge = tier === "premium" ? " \u{1F5A5} VPN" : "";
+    const saleMsg = `\u{1F4B0} <b>Nuova vendita</b>${vpnBadge}\n` +
       `\u{1F4B6} ${((amount || 0) / 100).toFixed(2)} ${(session.currency || "eur").toUpperCase()}\n` +
       `\u{1F4E6} ${escapeHtml(planLabel)} · ${devices} dispositiv${devices === 1 ? "o" : "i"}\n` +
       `\u{2709} ${escapeHtml(email || "—")}\n` +
@@ -8011,6 +8094,7 @@ export default {
       if (path === "/success") return withCors(handleSuccess(request, env));
       if (path === "/portal") return withCors(handlePortalSession(request, env));
       if (path === "/founder-status") return withCors(handleFounderStatus(env));
+      if (path === "/founder-status-premium") return withCors(handleFounderPremiumStatus(env));
       if (path === "/tickets") return withCors(handleListTickets(request, env));
       if (path === "/trial/check") return withCors(handleTrialCheck(request, env));
       if (path === "/admin/suggestions/digest") return withCors(handleAdminSuggestionsDigest(request, env));
