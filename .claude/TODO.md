@@ -6,8 +6,8 @@
 - [ ] **GATE lancio VPN**: test empirico multi-device (serve VPNRESELLERS_API_KEY in env)
 - [ ] **Premium FASE 2**: VPN reale mobile (VpnService tunnel) + Kill-switch mobile + DNS Guard freemium (blocklist grande)
 - [ ] **Premium FASE 3 completo**: contenuti SEO /guide, FAQ AEO, analytics funnel, anti-churn, CHECKLIST GO-LIVE, deploy multi-store
-- [ ] **Post Telegram @adoffapp**: changelog v3.5.35 con immagine brand (post deploy)
-- [ ] **Upload CWS + Edge + AMO**: v3.5.35
+- [ ] **Edge publish pending review**: submission in coda Microsoft (upload passato, publish in attesa). Riprovare tra 1-2 ore.
+- [ ] **Post Telegram @adoffapp**: ✅ Pubblicato msg_id=73
 
 ## Completati
 - [x] **Riprogettazione VPN/DNS — 102 sessioni AQ** (18 blocchi) + 5 verifiche subagent — design congelato
