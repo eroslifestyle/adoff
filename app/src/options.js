@@ -364,7 +364,7 @@
   /**
    * Normalizza l'oggetto licenza: il trial vive nella chiave storage
    * separata `adoffTrialEnd`, mentre `adoffLicense` contiene solo le
-   * licenze Pro/Lifetime acquistate. Deriva `type`/`trialEndsAt` per la UI.
+   * licenze Pro/Lifetime/Premium acquistate. Deriva `type`/`trialEndsAt` per la UI.
    * @param {object|undefined} lic
    * @param {number|undefined} trialEnd
    * @returns {object}
@@ -372,15 +372,19 @@
   function normalizeLicense(lic, trialEnd) {
     const out = Object.assign({}, lic);
     const plan = out.plan || "";
-    const hasValidPro = out.valid &&
-      (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
-    if (hasValidPro) {
-      out.type = plan === "lifetime" ? "lifetime" : "pro";
-    } else if (trialEnd && trialEnd > Date.now()) {
-      out.type = "trial";
-      out.trialEndsAt = trialEnd;
+    if (plan === "premium") {
+      out.type = "premium";
     } else {
-      out.type = "free";
+      const hasValidPro = out.valid &&
+        (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
+      if (hasValidPro) {
+        out.type = plan === "lifetime" ? "lifetime" : "pro";
+      } else if (trialEnd && trialEnd > Date.now()) {
+        out.type = "trial";
+        out.trialEndsAt = trialEnd;
+      } else {
+        out.type = "free";
+      }
     }
     return out;
   }
@@ -393,25 +397,28 @@
 
   /**
    * Nasconde tutti gli stati auth e mostra solo quello richiesto.
-   * @param {'pro'|'trial'|'none'} state
+   * @param {'pro'|'trial'|'none'|'premium'} state
    */
   function showAuthState(state) {
-    stateProActive.style.display = state === "pro" ? "block" : "none";
+    stateProActive.style.display = state === "pro" || state === "premium" ? "block" : "none";
     const trialEl = document.getElementById("stateTrialActive");
     if (trialEl) trialEl.style.display = state === "trial" ? "block" : "none";
     stateNotLoggedIn.style.display = state === "none" ? "block" : "none";
-    pricingCard.style.display = state !== "pro" ? "block" : "none";
-    const t = state === "pro" ? "pro" : state === "trial" ? "trial" : "free";
+    pricingCard.style.display = state !== "pro" && state !== "premium" ? "block" : "none";
+    const t = state === "premium" ? "premium" : state === "pro" ? "pro" : state === "trial" ? "trial" : "free";
     updateBannerVisibility(t);
     updateShowcaseVisibility(t);
   }
 
   /**
    * Aggiorna il badge header in base al piano corrente.
-   * @param {string} t — 'pro'|'lifetime'|'trial'|'free'
+   * @param {string} t — 'pro'|'lifetime'|'trial'|'free'|'premium'
    */
   function updateHeaderBadge(t) {
-    if (t === "pro" || t === "lifetime") {
+    if (t === "premium") {
+      headerLicenseBadge.textContent = "PREMIUM";
+      headerLicenseBadge.className = "license-badge-header premium";
+    } else if (t === "pro" || t === "lifetime") {
       headerLicenseBadge.textContent = "PRO";
       headerLicenseBadge.className = "license-badge-header pro";
     } else if (t === "trial") {
@@ -426,12 +433,28 @@
   /** Render sezione licenza con 3 stati: Pro attivo / Trial attivo / No license. */
   function renderLicenseSection() {
     const plan  = license.plan || "";
+    const isPremium = license.valid && plan === "premium";
     const isPro = license.valid &&
       (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
-    const isTrial = !isPro && license.type === "trial" && license.trialEndsAt && license.trialEndsAt > Date.now();
-    const t = isPro ? (plan === "lifetime" ? "lifetime" : "pro") : (isTrial ? "trial" : (license.type || "free"));
+    const isTrial = !isPro && !isPremium && license.type === "trial" && license.trialEndsAt && license.trialEndsAt > Date.now();
+    const t = isPremium ? "premium" : isPro ? (plan === "lifetime" ? "lifetime" : "pro") : (isTrial ? "trial" : (license.type || "free"));
 
     updateHeaderBadge(t);
+
+    // Premium section visibility
+    const premiumShowcase = document.getElementById("premiumShowcaseSection");
+    const premiumActive = document.getElementById("premiumActiveCard");
+    if (premiumShowcase) premiumShowcase.style.display = isPremium ? "none" : "block";
+    if (premiumActive) premiumActive.style.display = isPremium ? "block" : "none";
+
+    if (isPremium) {
+      // Premium attivo
+      showAuthState("premium");
+      document.getElementById("premiumPlanName").textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
+      const expText = license.expiresHuman ? license.expiresHuman : "—";
+      document.getElementById("premiumExpiry").textContent = expText;
+      return;
+    }
 
     if (isPro) {
       // Stato B: Pro attivo
