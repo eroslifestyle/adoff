@@ -205,8 +205,9 @@ const LicenseClient = (function () {
   // =============================================
 
   /**
-   * Controlla se l'utente ha accesso Pro.
-   * @returns {Promise<{isPro: boolean, plan: string, daysLeft: number|null, source: string}>}
+   * Controlla se l'utente ha accesso Pro/Premium.
+   * @returns {Promise<{isPro: boolean, plan: string, tier: string, daysLeft: number|null, source: string}>}
+   * tier: "free" | "pro" | "premium"
    */
   async function checkPro() {
     return new Promise((resolve) => {
@@ -219,6 +220,13 @@ const LicenseClient = (function () {
           const trialEnd = result[STORAGE.TRIAL_END] || 0;
           const referralDays = result[STORAGE.REFERRAL_DAYS] || 0;
           const now = Date.now();
+
+          // ponytail: tier derivato dal plan; VPN/Premium gated server-side
+          const planToTier = (plan) => {
+            if (plan === "premium") return "premium";
+            if (["pro", "lifetime", "monthly", "annual", "referral", "trial"].includes(plan)) return "pro";
+            return "free";
+          };
 
           // 1. TRIAL — autorità = token firmato dal server (non falsificabile).
           const tokenPayload = result[STORAGE.TRIAL_TOKEN]
@@ -235,7 +243,7 @@ const LicenseClient = (function () {
                 chrome.storage.local.set({ [STORAGE.TRIAL_SEEN]: Math.max(now, seen) });
               }
               const daysLeft = Math.ceil((tokenPayload.trialEnd - now) / 86400000);
-              resolve({ isPro: true, plan: "trial", daysLeft, source: "trial" });
+              resolve({ isPro: true, plan: "trial", tier: "pro", daysLeft, source: "trial" });
               return;
             }
             // Token valido ma scaduto → marca expired una volta e prosegui alla licenza.
@@ -253,13 +261,13 @@ const LicenseClient = (function () {
             if (!result[STORAGE.TRIAL_EXPIRED] && trialEnd > now
                 && trialEnd <= now + TRIAL_DURATION_MS + TRIAL_MARGIN_MS) {
               const daysLeft = Math.ceil((trialEnd - now) / 86400000);
-              resolve({ isPro: true, plan: "trial", daysLeft, source: "trial-optimistic" });
+              resolve({ isPro: true, plan: "trial", tier: "pro", daysLeft, source: "trial-optimistic" });
               return;
             }
           }
 
           // 2. Licenza Pro/Lifetime valida?
-          const isValidPlan = ["pro", "lifetime", "monthly", "annual"].includes(lic.plan);
+          const isValidPlan = ["pro", "lifetime", "monthly", "annual", "premium"].includes(lic.plan);
           if (lic.valid && isValidPlan) {
             // Integrity check — la licenza e' stata manomessa?
             const integrityOk = verifyIntegrity(lic, result[STORAGE.INTEGRITY]);
@@ -268,27 +276,27 @@ const LicenseClient = (function () {
               if (lic.rawKey) {
                 validateOnline(lic.rawKey).then((onlineResult) => {
                   if (onlineResult.valid) {
-                    resolve({ isPro: true, plan: lic.plan, daysLeft: null, source: "revalidated" });
+                    resolve({ isPro: true, plan: lic.plan, tier: planToTier(lic.plan), daysLeft: null, source: "revalidated" });
                   } else {
                     // Licenza manomessa e non valida server-side
                     saveLicense({ valid: false, plan: "tampered", lastValidated: now });
                     chrome.storage.local.remove(STORAGE.INTEGRITY);
-                    resolve({ isPro: false, plan: "free", daysLeft: 0, source: "tamper-revoked" });
+                    resolve({ isPro: false, plan: "free", tier: "free", daysLeft: 0, source: "tamper-revoked" });
                   }
                 }).catch(() => {
                   // Offline — non diamo il beneficio del dubbio se l'integrity e' rotta
-                  resolve({ isPro: false, plan: "free", daysLeft: 0, source: "integrity-fail-offline" });
+                  resolve({ isPro: false, plan: "free", tier: "free", daysLeft: 0, source: "integrity-fail-offline" });
                 });
                 return;
               }
               // Nessuna rawKey — sicuramente manomesso
-              resolve({ isPro: false, plan: "free", daysLeft: 0, source: "tamper-no-key" });
+              resolve({ isPro: false, plan: "free", tier: "free", daysLeft: 0, source: "tamper-no-key" });
               return;
             }
 
             // Scadenza locale
             if (lic.expires && lic.expires < now / 1000) {
-              resolve({ isPro: false, plan: "expired", daysLeft: 0, source: "cache", wasTrialUser: true });
+              resolve({ isPro: false, plan: "expired", tier: "free", daysLeft: 0, source: "cache", wasTrialUser: true });
               return;
             }
 
@@ -299,7 +307,7 @@ const LicenseClient = (function () {
             }
 
             const daysLeft = lic.expires ? Math.ceil((lic.expires * 1000 - now) / 86400000) : null;
-            resolve({ isPro: true, plan: lic.plan, daysLeft, source: "cache" });
+            resolve({ isPro: true, plan: lic.plan, tier: planToTier(lic.plan), daysLeft, source: "cache" });
             return;
           }
 
@@ -308,7 +316,7 @@ const LicenseClient = (function () {
             const referralEnd = (result[STORAGE.TRIAL_END] || 0) + referralDays * 86400000;
             if (referralEnd > now) {
               const daysLeft = Math.ceil((referralEnd - now) / 86400000);
-              resolve({ isPro: true, plan: "referral", daysLeft, source: "referral" });
+              resolve({ isPro: true, plan: "referral", tier: "pro", daysLeft, source: "referral" });
               return;
             }
           }
@@ -323,7 +331,7 @@ const LicenseClient = (function () {
 
           // 5. Free
           const wasTrialUser = trialEnd > 0;
-          resolve({ isPro: false, plan: "free", daysLeft: 0, source: "none", wasTrialUser });
+          resolve({ isPro: false, plan: "free", tier: "free", daysLeft: 0, source: "none", wasTrialUser });
         }
       );
     });
