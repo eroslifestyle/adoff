@@ -1698,6 +1698,79 @@ async function handleDeactivate(body, env, request) {
   return jsonResponse({ ok: true, devicesRemaining: devices.length });
 }
 
+// =============================================
+// GET-VPN-TOKEN — converte licenza HMAC in token ECDSA Premium per VPN
+// Il client chiama /get-vpn-token con {licenseKey, deviceId}.
+// Ritorna un token ECDSA P-256 firmato che /vpn/* accetta.
+// =============================================
+
+async function handleGetVpnToken(body, env, request) {
+  const { licenseKey, deviceId } = body;
+  if (!licenseKey || !deviceId) {
+    return jsonResponse({ error: "Missing licenseKey or deviceId" }, 400);
+  }
+
+  // Risolvi alias e verifica HMAC — stesse logiche di handleValidate
+  let rawKey = licenseKey;
+  if (licenseKey.startsWith("ADOFF-")) {
+    rawKey = await kvGet(env.ADOFF_LICENSES, `key:${licenseKey}`);
+    if (!rawKey) return jsonResponse({ error: "License not found" }, 404);
+  }
+
+  const sigCheck = await validateSignature(rawKey, env.ADOFF_SECRET);
+  if (!sigCheck.valid) return jsonResponse({ error: sigCheck.error }, 401);
+
+  // KV lookup
+  let licenseData = await kvGet(env.ADOFF_LICENSES, `lic:${rawKey}`, "json");
+  if (!licenseData && env.DB) {
+    try {
+      const dbResult = await env.DB.prepare(
+        "SELECT * FROM licenses WHERE raw = ? OR adoff_key = ?"
+      ).bind(rawKey, rawKey).first();
+      if (dbResult) {
+        licenseData = {
+          key: dbResult.adoff_key,
+          raw: dbResult.raw,
+          plan: dbResult.plan,
+          tier: dbResult.tier,
+          expires: dbResult.expires,
+          revoked: !!dbResult.revoked,
+          source: "db_fallback",
+        };
+      }
+    } catch (_) { /* ignore */ }
+  }
+  if (!licenseData) return jsonResponse({ error: "License not found" }, 404);
+
+  // Tier must be premium
+  const tier = licenseData.tier || sigCheck.payload?.t || null;
+  if (tier !== "premium") {
+    return jsonResponse({ error: "Premium subscription required for VPN" }, 403);
+  }
+
+  // Revoked / expired
+  if (licenseData.revoked) return jsonResponse({ error: "License revoked" }, 403);
+  const expiresAt = licenseData.expires || 0;
+  if (expiresAt > 0 && expiresAt < Date.now() / 1000) {
+    return jsonResponse({ error: "License expired" }, 403);
+  }
+
+  // DeviceId: licenza HMAC + deviceId locale = sufficiente per VPN
+  // (device activation è per l'ad blocker; VPN funziona con licenseKey + deviceId)
+
+  // Genera token ECDSA P-256 Premium — stessa chiave del trial
+  const iat = Math.floor(Date.now());
+  const vpnPayload = {
+    deviceId,
+    tier: "premium",
+    expiresAt: expiresAt * 1000,  // ms
+    iat,
+    v: 1,
+  };
+  const token = await signTrialToken(vpnPayload, env);
+  return jsonResponse({ ok: true, token, tier: "premium" });
+}
+
 async function handleRevoke(body, env, request) {
   // Solo admin
   const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
@@ -8206,6 +8279,11 @@ export default {
       let accBody;
       try { accBody = await request.json(); } catch { accBody = {}; }
       return withCors(handleAccountRemoveAll(accBody, env, request));
+    }
+    if (path === "/get-vpn-token" && request.method === "POST") {
+      let body;
+      try { body = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleGetVpnToken(body, env, request));
     }
 
     // Checkout session (crea sessione Stripe con dark mode)
