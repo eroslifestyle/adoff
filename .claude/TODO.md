@@ -1,6 +1,6 @@
 # AdOff — TODO Unico Consolidato
 
-**Ultimo aggiornamento:** 2026-07-13
+**Ultimo aggiornamento:** 2026-07-14
 **Versione reale:** 3.5.33 (tutti e 3 i manifest)
 **Store status:** ✅ CWS 3.5.33 LIVE | ⚠️ AMO in review (JWT errore temp) | ✅ Edge 202 Accepted
 
@@ -58,6 +58,19 @@ Bugfix critici trovati dal piano-guida:
 - [x] **Store: Edge API credentials** — API key scaduta (4ZL6...) sostituita con nuova (UiQ7...). POST submissions → HTTP 202 ✅. "InProgressSubmission" = Microsoft già revisiona una submission esistente. Azione: aspettare fine revisione Microsoft OPPURE andare su Partner Center → chiudere submission in coda.
 
 ---
+
+### P0 — AdOff Mobile Expansion (nuovo — 2026-07-14)
+
+> Checkpoint: `.claude/checkpoints/CP_20260714_0245.md` · Vault: `Memoria/progetti/AdOff/sessioni/adoff-mobile-expansion-2026-07-14.md`
+
+- [x] **Ricerche competitive**: iOS Safari (limitato, no JS), Android Private DNS (no-app), Android VPN (VpnService, Blokada/AdGuard)
+- [x] **30 AQ strategiche**: canale=DNS+VPN, stack=Flutter, DNS backend=AdGuard pubblico, monetizzazione=Pro include mobile, branding=stesso, trial=15gg separato, distro=APK+F-Droid, MITM=selettivo
+- [x] **Fase 1 — DNS no-app**: `site/android-dns.html` (SEO page) + banner popup mobile in `app/src/popup.{html,css,js}` + disclosure AdGuard DNS in `site/privacy.html`
+- [x] **Fase 2 — Scaffold Flutter**: Flutter 3.44.6 in `~/.flutter-sdk/`, 17 file, `flutter pub get` ✅, `flutter analyze` 0 errors
+- [x] **Fase 3 — VPN blocking**: VpnService Kotlin (DNS interceptor IPv4/UDP, NXDOMAIN, blocklist 200+ domini) + MethodChannel `app.adoff/vpn` + home_screen stateful + license_service trial 15gg
+- [ ] **Fase 4 — Build APK**: richiede Android SDK (non su leobox). Da Mac: `flutter build apk --release`
+- [ ] **Fase 5 — Publish**: F-Droid fork + APK sul sito + GitHub `eroslifestyle/adoff-android`
+- [ ] **Fase 6 — Metriche**: Firebase Crashlytics (richiede `google-services.json` da Firebase Console)
 
 ### P1 — Marketing & Launch (bloccati da mesi)
 

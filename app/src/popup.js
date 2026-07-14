@@ -379,6 +379,16 @@
     renderFounderBadge(data);
     renderChangelog(data);
     renderReviewPrompt(data);
+
+    // ---- Mobile banner ----
+    (function showMobileBanner() {
+      var banner = document.getElementById("mobileBanner");
+      if (!banner) return;
+      // Show the banner to all users (free and Pro) after 1.5s
+      setTimeout(function() {
+        banner.style.display = "flex";
+      }, 1500);
+    })();
   }
 
   // ===== CARICAMENTO DATI =====
