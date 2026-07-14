@@ -3,7 +3,7 @@
 > Stato esecutivo del progetto. Design congelato in `.claude/PLAN-vpn-dns-redesign.md` (102 decisioni AQ).
 > Aggiornare ad ogni step. Checkpoint a fine di ogni fase.
 
-## Stato: FASE 1 ESTENSIONE COMPLETATA (2026-07-14)
+## Stato: GATE VPN DEPLOYED ✅ — codice safe (2026-07-14)
 
 ---
 
@@ -17,10 +17,12 @@
 - [ ] ~~verifica firma ECDSA client Dart~~ → **RIMANDATA a FASE 2** (client mobile in repo separato)
 - [x] Cron CF giornaliero: auto-disable inattivi 7gg + abbonamenti scaduti → handleCronVpnAutoDisable(), cron 0 10 * * *
 - [x] Rate-limit /vpn/create (2/h per IP) + audit log D1 vpn_audit + deviceId lock
-- [ ] **GATE**: test empirico multi-device WireGuard VS OpenVPN (3 device)
-  - **BLOCCATO**: worker NON ridistribuito dopo estrazione vpn-module.js (gating FASE 0 assente in produzione — 5 endpoint su 6 non ritornano 403 senza token). Redeploy obbligatorio.
-  - **BLOCCATO**: VPNRESELLERS_API_KEY non disponibile nell'ambiente — test multi-device impossibile senza.
-  - **Balance WARNING**: $25.00 attuale, insufficiente per lancio con Premium reali. Ricaricare $100+.
+- [x] **GATE DEPLOYED ✅**: tutti i 4 endpoint bloccano 403 post-redeploy (Version ID 7b6b6be6)
+  - `/vpn/create` → 403 ✅ | `/vpn/delete` → 403 ✅ | `/vpn/enable` → 403 ✅ | `/vpn/disable` → 403 ✅
+  - `/vpn/servers` → 200 (pubblico, corretto) | `/vpn/profile` → 200 (pubblico, corretto)
+  - `/vpn/config` → 403 ✅ | `/verify-mobile-license` GET → 400 ✅ (era 405)
+- [ ] **Multi-device empirico**: basato su inferenza (OpenVPN multi-sessione OK, WireGuard statico = rischio). Test reale con VPNRESELLERS_API_KEY nell'ambiente.
+- ⚠️ **Balance WARNING**: $25.00 insufficiente — ricaricare $100+ per lancio utenti reali.
 
 ### FASE 1 — Tier Premium & pulizia (ESTENSIONE ✅, CHECKOUT ⬜)
 - [ ] Checkout Stripe: SKU Premium (€4,99/mo · Founder €29,99→€49,99 · std €49,99) price_data inline + founder pool separato
@@ -33,19 +35,16 @@
 - [x] Propagazione a Firefox + Safari ✅ (2026-07-14, commit 6304ee4)
 - [ ] Cap 3 device + gestione device self-service /account
 
-### FASE 1bis — Test E2E ⬜ (gate pre-doc — FAIL, 2026-07-14)
+### FASE 1bis — Test E2E 🟡 (parziale — gating PASS, multi-device PENDING)
 - [ ] Stripe test mode checkout completo
-- [ ] Account VPNresellers test reale (create/enable/config/disable)
+- [ ] Account VPNresellers test reale (create/enable/config/disable) — serve VPNRESELLERS_API_KEY in env
 - [ ] Connessione VPN reale 3 device
-- [x] Gating: non-Premium → 403 — **TESTATO e FALLITO** (5/6 endpoint)
+- [x] Gating: non-Premium → 403 — **TESTATO e PASS** post-redeploy (2026-07-14)
   - `/vpn/servers` → 200 PASS (pubblico, corretto)
   - `/vpn/profile` → 200 PASS (pubblico, corretto)
-  - `/vpn/config` → **HTTP 400** FAIL (atteso 403, old codice)
-  - `/vpn/create` → **HTTP 400** FAIL (atteso 403, old codice senza gating)
-  - `/vpn/delete` → **HTTP 200** FAIL (atteso 403, old codice)
-  - `/vpn/enable` → **HTTP 200** FAIL (atteso 403, old codice)
-  - `/vpn/disable` → **HTTP 200** FAIL (atteso 403, old codice)
-  - Causa: worker non ridistribuito dopo vpn-module.js. Redeploy con `wrangler deploy` richiesto.
+  - `/vpn/config` → 403 PASS | `/vpn/create` → 403 PASS | `/vpn/delete` → 403 PASS
+  - `/vpn/enable` → 403 PASS | `/vpn/disable` → 403 PASS
+  - `/verify-mobile-license` GET → 400 PASS (era 405)
   - Report: `.claude/TEST-REPORT-vpn.md`
 
 ### FASE 2 — VPN reale mobile + DNS Guard ⬜
