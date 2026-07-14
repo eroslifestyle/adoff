@@ -3,19 +3,20 @@
 > Stato esecutivo del progetto. Design congelato in `.claude/PLAN-vpn-dns-redesign.md` (102 decisioni AQ).
 > Aggiornare ad ogni step. Checkpoint a fine di ogni fase.
 
-## Stato: PIANIFICAZIONE COMPLETA — non ancora iniziata l'implementazione
+## Stato: FASE 0 BACKEND COMPLETATA (2026-07-14, commit 3cc9a6a+acb41e7)
 
 ---
 
 ## TODO BOARD
 
-### FASE 0 — Sicurezza & fix 🔄 (in corso)
-- [ ] Estrarre modulo VPN separato dal worker.js
-- [ ] Gating server-side /vpn/* (token ECDSA tier=premium) — bloccante
-- [ ] Fix `/vpn/create` (username+password generati)
-- [ ] Fix `/verify-mobile-license` 405 (gestire GET) + verifica firma ECDSA client Dart
-- [ ] Cron CF giornaliero: auto-disable inattivi 7gg + abbonamenti scaduti + auto-riattiva trasparente
-- [ ] 1 account VPN ↔ deviceId lock + rate-limit /vpn/create + anti-replay + binding config + audit log
+### FASE 0 — Sicurezza & fix ✅ (completata 2026-07-14, commit 3cc9a6a)
+- [x] Estrarre modulo VPN separato dal worker.js → `vpn-module.js` (~340 righe)
+- [x] Gating server-side /vpn/* (token ECDSA tier=premium) — bloccante → verifyPremiumToken() con anti-replay ±5min + deviceId match
+- [x] Fix `/vpn/create` (username+password generati) → randomBase64url() lato worker
+- [x] Fix `/verify-mobile-license` 405 (gestire GET) → aggiunto in blocco GET worker.js riga ~8033
+- [ ] ~~verifica firma ECDSA client Dart~~ → **RIMANDATA a FASE 2** (client mobile in repo separato)
+- [x] Cron CF giornaliero: auto-disable inattivi 7gg + abbonamenti scaduti → handleCronVpnAutoDisable(), cron 0 10 * * *
+- [x] Rate-limit /vpn/create (2/h per IP) + audit log D1 vpn_audit + deviceId lock
 - [ ] **GATE**: test empirico multi-device WireGuard VS OpenVPN (3 device)
 
 ### FASE 1 — Tier Premium & pulizia ⬜

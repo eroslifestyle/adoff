@@ -264,12 +264,14 @@ class VpnService : android.net.VpnService() {
         return try {
             val socket = DatagramSocket()
             socket.soTimeout = 3000
-            datagramPacket.data = query
-            datagramPacket.address = InetAddress.getByName(upstreamDns)
-            datagramPacket.port = upstreamDnsPort
-            socket.send(datagramPacket)
-            socket.receive(datagramPacket)
-            val response = datagramPacket.data.copyOf(datagramPacket.length)
+            val packet = DatagramPacket(query, query.size)
+            packet.address = InetAddress.getByName(upstreamDns)
+            packet.port = upstreamDnsPort
+            socket.send(packet)
+            val responseBuf = ByteArray(512)
+            val responsePacket = DatagramPacket(responseBuf, responseBuf.size)
+            socket.receive(responsePacket)
+            val response = responseBuf.copyOf(responsePacket.length)
             socket.close()
             response
         } catch (e: Exception) {
