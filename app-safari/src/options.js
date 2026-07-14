@@ -2060,13 +2060,13 @@
         const referralEnd = trialEnd + daysEarned * 86400000;
         const daysLeft = referralEnd > now ? Math.ceil((referralEnd - now) / 86400000) : 0;
 
-        // Popola UI
+        // Popola UI (elementi opzionali: il redesign HTML puo' ometterne alcuni)
         const fullLink = REFERRAL_BASE_URL + code;
-        referralLinkInput.value = fullLink;
-        referralCodeEl.textContent = code;
-        refCountEl.textContent = String(count);
-        refDaysEarnedEl.textContent = String(daysEarned);
-        refDaysLeftEl.textContent = String(daysLeft);
+        if (referralLinkInput) referralLinkInput.value = fullLink;
+        if (referralCodeEl) referralCodeEl.textContent = code;
+        if (refCountEl) refCountEl.textContent = String(count);
+        if (refDaysEarnedEl) refDaysEarnedEl.textContent = String(daysEarned);
+        if (refDaysLeftEl) refDaysLeftEl.textContent = String(daysLeft);
 
         // Storico
         renderReferralHistory(history);
@@ -2082,12 +2082,12 @@
               if (typeof data.daysEarned === "number") updates.adoffReferralDays = data.daysEarned;
               if (Array.isArray(data.history)) updates.adoffReferralHistory = data.history;
               chrome.storage.local.set(updates, () => {
-                refCountEl.textContent = String(data.count || 0);
-                refDaysEarnedEl.textContent = String(data.daysEarned || 0);
+                if (refCountEl) refCountEl.textContent = String(data.count || 0);
+                if (refDaysEarnedEl) refDaysEarnedEl.textContent = String(data.daysEarned || 0);
                 // Ricalcola daysLeft con dati freschi
                 const freshEnd = trialEnd + (data.daysEarned || 0) * 86400000;
                 const freshLeft = freshEnd > now ? Math.ceil((freshEnd - now) / 86400000) : 0;
-                refDaysLeftEl.textContent = String(freshLeft);
+                if (refDaysLeftEl) refDaysLeftEl.textContent = String(freshLeft);
                 renderReferralHistory(data.history || []);
               });
             })
@@ -2111,12 +2111,13 @@
   }
 
   function renderReferralHistory(history) {
+    if (!referralHistoryEl) return;
     referralHistoryEl.innerHTML = "";
     if (!history || history.length === 0) {
-      referralEmptyEl.style.display = "block";
+      if (referralEmptyEl) referralEmptyEl.style.display = "block";
       return;
     }
-    referralEmptyEl.style.display = "none";
+    if (referralEmptyEl) referralEmptyEl.style.display = "none";
 
     history.forEach((entry) => {
       const div = document.createElement("div");
