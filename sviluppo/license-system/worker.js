@@ -660,6 +660,114 @@ async function signTrialToken(payloadObj, env) {
 }
 
 // =============================================
+// MOBILE — ECDSA P-256 trial token verification (lato server)
+// L'app mobile non puo' usare crypto.subtle (ServiceWorker/React Native limitato).
+// Qui verifichiamo noi la firma ECDSA con la chiave PUBBLICA embedded.
+// La pubkey e' identica a quella embeddata nell'estensione browser
+// (TRIAL_PUBKEY_JWK in background.js / license-client.js).
+// =============================================
+const TRIAL_MOBILE_PUBKEY_JWK = {
+  kty: "EC",
+  crv: "P-256",
+  x: "FnIroHHVzo3v01gENPaA2U70c58sduDD6hGS0EhCATc",
+  y: "tAzRBzVK1O8ul76s2euNrqV0L4f1qmEtvcKB_HqpfrY",
+};
+
+let _trialMobilePubKeyPromise = null;
+async function importTrialMobilePubKey() {
+  if (!_trialMobilePubKeyPromise) {
+    _trialMobilePubKeyPromise = crypto.subtle.importKey(
+      "jwk", TRIAL_MOBILE_PUBKEY_JWK,
+      { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]
+    );
+  }
+  return _trialMobilePubKeyPromise;
+}
+
+function b64uToBytes(s) {
+  s = s.replace(/-/g, "+").replace(/_/g, "/");
+  while (s.length % 4) s += "=";
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+/**
+ * GET /verify-mobile-license?token=<payloadB64.sigB64>&deviceId=<deviceId>
+ * Verifica lato server un token trial mobile (ECDSA P-256).
+ * Risponde con lo stesso formato di /trial/check per coerenza client.
+ */
+async function handleVerifyMobileLicense(request, env) {
+  const url = new URL(request.url);
+  const token = url.searchParams.get("token");
+  const deviceId = url.searchParams.get("deviceId");
+
+  if (!token || !deviceId) {
+    return jsonResponse({ ok: false, error: "Missing token or deviceId" }, 400);
+  }
+
+  const dotIdx = token.indexOf(".");
+  if (dotIdx < 0) {
+    return jsonResponse({ ok: false, error: "Invalid token format" }, 400);
+  }
+
+  const payloadB64 = token.slice(0, dotIdx);
+  const sigB64 = token.slice(dotIdx + 1);
+
+  let sigBytes;
+  try {
+    sigBytes = b64uToBytes(sigB64);
+  } catch (_) {
+    return jsonResponse({ ok: false, error: "Invalid signature encoding" }, 400);
+  }
+
+  try {
+    const pubKey = await importTrialMobilePubKey();
+    const valid = await crypto.subtle.verify(
+      { name: "ECDSA", hash: "SHA-256" },
+      pubKey,
+      sigBytes,
+      new TextEncoder().encode(payloadB64)
+    );
+
+    if (!valid) {
+      return jsonResponse({ ok: false, error: "Invalid signature" }, 401);
+    }
+
+    let payload;
+    try {
+      payload = JSON.parse(new TextDecoder().decode(b64uToBytes(payloadB64)));
+    } catch (_) {
+      return jsonResponse({ ok: false, error: "Invalid payload encoding" }, 400);
+    }
+
+    // Anti token-sharing: il deviceId nel token deve coincidere con quello inviato
+    if (payload.deviceId && payload.deviceId !== deviceId) {
+      return jsonResponse({ ok: false, error: "DeviceId mismatch" }, 403);
+    }
+
+    // Ritorna lo stesso formato di /trial/check per coerenza
+    const now = Date.now();
+    const active = now < payload.trialEnd;
+    const daysLeft = active ? Math.ceil((payload.trialEnd - now) / 86400000) : 0;
+
+    return jsonResponse({
+      ok: true,
+      active,
+      trialStart: payload.trialStart,
+      trialEnd: payload.trialEnd,
+      daysLeft,
+      now,
+      serverAuthoritative: true,
+    });
+  } catch (e) {
+    console.error("handleVerifyMobileLicense error:", e);
+    return jsonResponse({ ok: false, error: "Verification failed" }, 500);
+  }
+}
+
+// =============================================
 // RULES FEED — Ultra-efficient ad blocking rules
 // Serves optimized DNR rules for declarativeNetRequest
 // Supports ETag/If-None-Match for caching
@@ -8072,6 +8180,8 @@ export default {
         return handleRulesFeed(env, request);
       case "/trial":
         return withCors(handleTrial(body, env, request));
+      case "/verify-mobile-license":
+        return withCors(handleVerifyMobileLicense(request, env));
       case "/validate":
         return withCors(handleValidate(body, env, request));
       case "/activate":
