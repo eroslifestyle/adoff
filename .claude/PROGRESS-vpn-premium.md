@@ -9,7 +9,7 @@
 
 ## TODO BOARD
 
-### FASE 0 — Sicurezza & fix ⬜ (prossima)
+### FASE 0 — Sicurezza & fix 🔄 (in corso)
 - [ ] Estrarre modulo VPN separato dal worker.js
 - [ ] Gating server-side /vpn/* (token ECDSA tier=premium) — bloccante
 - [ ] Fix `/vpn/create` (username+password generati)
