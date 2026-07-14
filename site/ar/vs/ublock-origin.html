@@ -39,25 +39,25 @@
   <style>
     body { direction: rtl; text-align: right; }
     .article-page { max-width: 780px; margin: 0 auto; padding: 80px 24px 100px; }
-    .article-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: #fff; margin-bottom: 12px; }
-    .article-page .meta { font-size: 0.88rem; color: #8888aa; margin-bottom: 40px; }
-    .article-page h2 { font-size: 1.5rem; color: #fff; margin: 48px 0 16px; }
-    .article-page h3 { font-size: 1.2rem; color: #e2e2f0; margin: 32px 0 12px; }
-    .article-page p { color: #b0b0c8; line-height: 1.8; margin-bottom: 16px; }
-    .article-page ul, .article-page ol { color: #b0b0c8; margin: 0 24px 20px 0; line-height: 1.8; }
-    .article-page strong { color: #fff; }
+    .article-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--text); margin-bottom: 12px; }
+    .article-page .meta { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 40px; }
+    .article-page h2 { font-size: 1.5rem; color: var(--text); margin: 48px 0 16px; }
+    .article-page h3 { font-size: 1.2rem; color: var(--text); margin: 32px 0 12px; }
+    .article-page p { color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
+    .article-page ul, .article-page ol { color: var(--text-muted); margin: 0 24px 20px 0; line-height: 1.8; }
+    .article-page strong { color: var(--text); }
     .article-page .highlight { color: #4ade80; font-weight: 700; }
     .article-page .negative { color: #f43f5e; }
     .comp-table { width: 100%; border-collapse: collapse; margin: 24px 0 32px; }
     .comp-table th, .comp-table td { padding: 12px 16px; text-align: right; border-bottom: 1px solid #2a2a4a; }
-    .comp-table th { color: #8888aa; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
-    .comp-table td { color: #b0b0c8; }
+    .comp-table th { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .comp-table td { color: var(--text-muted); }
     .comp-table .check { color: #4ade80; font-weight: 700; }
     .comp-table .cross { color: #f43f5e; }
     .comp-table .partial { color: #fbbf24; }
     .cta-box { background: #12122a; border: 1px solid rgba(124,92,252,0.3); border-radius: 14px; padding: 32px; text-align: center; margin: 48px 0; }
-    .cta-box h3 { color: #fff; margin: 0 0 12px; }
-    .cta-box p { color: #8888aa; margin-bottom: 20px; }
+    .cta-box h3 { color: var(--text); margin: 0 0 12px; }
+    .cta-box p { color: var(--text-muted); margin-bottom: 20px; }
     .cta-box .btn { display: inline-block; background: #7c5cfc; color: #fff; padding: 12px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; transition: all 0.2s; }
     .cta-box .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.3); }
   </style>
@@ -133,7 +133,7 @@
         "name": "هل يقدم uBlock Origin مستوى أعلى من السيطرة على مرشحات الفرز مقارنةً مع AdOff؟",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "نعم - يوفر uBlock Origin خيارات فرز دقيقة، قواعد ديناميكية ومحرر عناصر للعملاء المتقدمين. يتداول AdOff هذا التعقيد لقائمة 138 محددة سلفاً تلقائيًا مع طبقة التخفي والواجهة البسيطة."
+          "text": "نعم - يوفر uBlock Origin خيارات فرز دقيقة، قواعد ديناميكية ومحرر عناصر للعملاء المتقدمين. يتداول AdOff هذا التعقيد لقائمة 144 محددة سلفاً تلقائيًا مع طبقة التخفي والواجهة البسيطة."
         }
       },
       {
@@ -155,7 +155,7 @@
   <article class="article-page">
 
     <h1>AdOff مقابل uBlock Origin 2026: أيهما يعمل فعلاً على Chrome؟</h1>
-    <div class="vs-tldr" style="background:rgba(124,92,252,.08);border:1px solid rgba(124,92,252,.28);border-radius:10px;padding:16px 20px;margin:.2em 0 1.6em;color:#fff;font-size:1.05rem;line-height:1.6">إجابة سريعة: على Manifest V3 في Chrome، يفقد uBlock Origin Lite الكثير من قدرته على الترشيح، بينما صُمّم AdOff من الأساس لأجل MV3 ويضيف مقاومة خفية للكشف إلى جانب تعطيل إعلانات الفيديو. للترشيح المتقدم للمستخدمين المحترفين على Firefox لا يزال uBlock Origin هو الأفضل؛ أما للحجب الذي تضبطه وتنساه ويتجاوز جدران منع حاجبات الإعلانات على Chrome، فاختر AdOff.</div>
+    <div class="vs-tldr" style="background:rgba(124,92,252,.08);border:1px solid rgba(124,92,252,.28);border-radius:10px;padding:16px 20px;margin:.2em 0 1.6em;color:var(--text);font-size:1.05rem;line-height:1.6">إجابة سريعة: على Manifest V3 في Chrome، يفقد uBlock Origin Lite الكثير من قدرته على الترشيح، بينما صُمّم AdOff من الأساس لأجل MV3 ويضيف مقاومة خفية للكشف إلى جانب تعطيل إعلانات الفيديو. للترشيح المتقدم للمستخدمين المحترفين على Firefox لا يزال uBlock Origin هو الأفضل؛ أما للحجب الذي تضبطه وتنساه ويتجاوز جدران منع حاجبات الإعلانات على Chrome، فاختر AdOff.</div>
     <p class="meta">تحديث أبريل 2026 &nbsp;·&nbsp; قراءة 8 دقائق &nbsp;·&nbsp; إضافات Chrome</p>
 
     <p>
@@ -195,7 +195,7 @@
       لم يواجه AdOff مشكلة نقل قاعدة كود قديمة إلى MV3. فقد صُمِّم من الصفر لمعمارية MV3. هذا يعني لا تنازلات، لا وضع "Lite" — فقط إضافة تستثمر بالكامل ما يسمح به MV3 مع إضافة طبقة تخفٍّ لا يمنعها MV3.
     </p>
     <p>
-      يستخدم AdOff 138 قاعدة declarativeNetRequest للحجب على مستوى الشبكة، وطبقة CSS تجميلية لإخفاء عناصر DOM، وبشكل حاسم — <strong>نص برمجي للتخفي يعمل في MAIN world</strong>. هذا المكوّن الأخير هو ما يُميّز AdOff عن أي إضافة MV3 تقتصر على نقل المنطق القديم.
+      يستخدم AdOff 144 قاعدة declarativeNetRequest للحجب على مستوى الشبكة، وطبقة CSS تجميلية لإخفاء عناصر DOM، وبشكل حاسم — <strong>نص برمجي للتخفي يعمل في MAIN world</strong>. هذا المكوّن الأخير هو ما يُميّز AdOff عن أي إضافة MV3 تقتصر على نقل المنطق القديم.
     </p>
 
     <h2>التخفي من أنظمة الكشف: الميزة التي لا يملكها uBlock Origin Lite</h2>
@@ -226,7 +226,7 @@
       هذا الفارق مهم لعدة أسباب. الإضافات الأكبر تستهلك ذاكرة أكبر عند البدء وأثناء تحديثات قوائم المرشحات. على الأجهزة المنخفضة المواصفات أو أجهزة Chromebook، تترجَم الإضافة الأصغر مباشرةً إلى متصفح أكثر استجابةً. والأهم من ذلك، قاعدة الشفرة الأصغر أسهل في التدقيق من حيث الخصوصية والأمان — فثمة ببساطة كود أقل قد يتصرف بشكل غير متوقع.
     </p>
     <p>
-      يحقق AdOff بصمته الصغيرة من خلال الحفاظ على مجموعة مختارة بعناية من 138 قواعد حجب بدلاً من استيراد قواعد بيانات قوائم مرشحات بحجم ميغابايت. هذا خيار تصميمي مقصود يُقدّم الأداء والبساطة على حساب عدد القواعد الخام.
+      يحقق AdOff بصمته الصغيرة من خلال الحفاظ على مجموعة مختارة بعناية من 144 قواعد حجب بدلاً من استيراد قواعد بيانات قوائم مرشحات بحجم ميغابايت. هذا خيار تصميمي مقصود يُقدّم الأداء والبساطة على حساب عدد القواعد الخام.
     </p>
 
     <h2>مقارنة الميزات بالتفصيل</h2>
@@ -247,7 +247,7 @@
         </tr>
         <tr>
           <td>حجب الإعلانات على مستوى الشبكة</td>
-          <td class="check">✔ 138 قاعدة مختارة</td>
+          <td class="check">✔ 144 قاعدة مختارة</td>
           <td class="check">✔ قاعدة بيانات قواعد كبيرة</td>
         </tr>
         <tr>
@@ -363,7 +363,7 @@
 
     <div class="cta-box">
       <h3>جرّب AdOff مجاناً لمدة 30 يوماً</h3>
-      <p>لا حاجة لبطاقة ائتمانية. كامل ميزات Pro خلال فترة التجربة — بما فيها التخفي من أنظمة الكشف وتخطي إعلانات الفيديو وجميع قواعد الحجب الـ 138. شاهد الفرق بنفسك.</p>
+      <p>لا حاجة لبطاقة ائتمانية. كامل ميزات Pro خلال فترة التجربة — بما فيها التخفي من أنظمة الكشف وتخطي إعلانات الفيديو وجميع قواعد الحجب الـ 144. شاهد الفرق بنفسك.</p>
       <a href="../../install.html" class="btn">احصل على AdOff مجاناً ←</a>
     </div>
 
@@ -387,7 +387,7 @@
       <h3>ما الذي يمكن أن يفعله AdOff ولا يستطيع القيام به uBlock Origin؟</h3>
       <p>تقوم النسخة Pro لـAdOff بتحييد الفيديوهات الإعلانية على مستوى SDK باستخدام stub IMA الشامل، مما يجعل المشغل يتخطى مباشرة إلى المحتوى، وطبقة التخفي تتجاوز جدران مكافحة الإعلان. يعتمد uBlock على قوائم المرشحات التي تتوقف عن العمل عندما تقوم المنصات بتبديل نطاقاتها الإعلانية.</p>
       <h3>هل يقدم uBlock Origin مستوى أعلى من السيطرة على مرشحات الفرز مقارنةً مع AdOff؟</h3>
-      <p>نعم - يوفر uBlock Origin خيارات فرز دقيقة، قواعد ديناميكية ومحرر عناصر للعملاء المتقدمين. يتداول AdOff هذا التعقيد لقائمة 138 محددة سلفاً تلقائيًا مع طبقة التخفي والواجهة البسيطة.</p>
+      <p>نعم - يوفر uBlock Origin خيارات فرز دقيقة، قواعد ديناميكية ومحرر عناصر للعملاء المتقدمين. يتداول AdOff هذا التعقيد لقائمة 144 محددة سلفاً تلقائيًا مع طبقة التخفي والواجهة البسيطة.</p>
       <h3>هل هناك فترة تجريبية مجانية لكل من AdOff وuBlock Origin؟</h3>
       <p>يقدم AdOff فترة تجريبية لمدة 30 يوماً كاملة مع ضمان استرداد النقود لمدة شهر واحد، ثم €2.99/شهر أو €99 مدى الحياة. uBlock Origin مجاني ومفتوح المصدر، لذا لا يوجد أي فترة تجربية - كل الميزات متاحة مجانًا.</p>
 

@@ -42,7 +42,7 @@
   <style>
     .article-page { max-width: 780px; margin: 0 auto; padding: 80px 24px 100px; }
     .article-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--text); margin-bottom: 12px; }
-    .article-page .meta { font-size: 0.88rem; color: #8888aa; margin-bottom: 40px; }
+    .article-page .meta { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 40px; }
     .article-page h2 { font-size: 1.5rem; color: var(--text); margin: 48px 0 16px; }
     .article-page h3 { font-size: 1.2rem; color: var(--text); margin: 32px 0 12px; }
     .article-page p { color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
@@ -55,14 +55,14 @@
     .tech-card p { margin-bottom: 0; }
     .comp-table { width: 100%; border-collapse: collapse; margin: 24px 0 32px; }
     .comp-table th, .comp-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #2a2a4a; }
-    .comp-table th { color: #8888aa; font-size: 0.85rem; text-transform: uppercase; }
+    .comp-table th { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; }
     .comp-table td { color: var(--text-muted); }
     .comp-table .check { color: #4ade80; font-weight: 700; }
     .comp-table .cross { color: #f43f5e; }
     .comp-table .partial { color: #fbbf24; }
     .cta-box { background: #12122a; border: 1px solid rgba(124,92,252,0.3); border-radius: 14px; padding: 32px; text-align: center; margin: 48px 0; }
-    .cta-box h3 { color: #fff; margin: 0 0 12px; }
-    .cta-box p { color: #8888aa; margin-bottom: 20px; }
+    .cta-box h3 { color: var(--text); margin: 0 0 12px; }
+    .cta-box p { color: var(--text-muted); margin-bottom: 20px; }
     .cta-box .btn { display: inline-block; background: #7c5cfc; color: #fff; padding: 12px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; transition: all 0.2s; }
     .cta-box .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.3); }
     .rank-card { background: #12122a; border: 1px solid #2a2a4a; border-radius: 16px; padding: 28px 28px 24px; margin: 32px 0; position: relative; overflow: hidden; }
@@ -71,14 +71,14 @@
     .rank-card .rank-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
     .rank-card .rank-badge { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1rem; flex-shrink: 0; }
     .rank-1 .rank-badge { background: #7c5cfc; color: #fff; }
-    .rank-2 .rank-badge { background: #3a3a5a; color: #a0a0c0; }
-    .rank-3 .rank-badge { background: #3a3a5a; color: #a0a0c0; }
-    .rank-4 .rank-badge { background: #3a3a5a; color: #a0a0c0; }
-    .rank-5 .rank-badge { background: #3a3a5a; color: #a0a0c0; }
+    .rank-2 .rank-badge { background: #3a3a5a; color: var(--text-muted); }
+    .rank-3 .rank-badge { background: #3a3a5a; color: var(--text-muted); }
+    .rank-4 .rank-badge { background: #3a3a5a; color: var(--text-muted); }
+    .rank-5 .rank-badge { background: #3a3a5a; color: var(--text-muted); }
     .rank-card .rank-title { font-size: 1.3rem; font-weight: 700; color: var(--text); }
-    .rank-card .rank-subtitle { font-size: 0.85rem; color: #8888aa; margin-top: 2px; }
+    .rank-card .rank-subtitle { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
     .rank-card .stars { color: #f59e0b; font-size: 1.1rem; margin-bottom: 14px; }
-    .rank-card .stars span { color: #8888aa; font-size: 0.85rem; margin-left: 6px; }
+    .rank-card .stars span { color: var(--text-muted); font-size: 0.85rem; margin-left: 6px; }
     .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
     @media (max-width: 560px) { .pros-cons { grid-template-columns: 1fr; } }
     .pros-box, .cons-box { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 14px 16px; }
@@ -88,15 +88,15 @@
     .cons-box .label { color: #f43f5e; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
     .pros-box ul, .cons-box ul { margin: 0; padding-left: 16px; color: var(--text-muted); font-size: 0.9rem; }
     .pros-box ul li, .cons-box ul li { margin-bottom: 4px; }
-    .best-for { background: rgba(124,92,252,0.08); border-radius: 8px; padding: 10px 14px; font-size: 0.9rem; color: #9090c0; margin-top: 12px; }
+    .best-for { background: rgba(124,92,252,0.08); border-radius: 8px; padding: 10px 14px; font-size: 0.9rem; color: var(--text-muted); margin-top: 12px; }
     .best-for strong { color: #a088ee; }
     .methodology-box { background: #0e0e22; border: 1px solid #2a2a4a; border-radius: 12px; padding: 20px 24px; margin: 32px 0; }
     .methodology-box h3 { color: var(--text); font-size: 1rem; margin: 0 0 10px; }
-    .methodology-box ul { margin: 0; padding-left: 20px; color: #8888aa; font-size: 0.9rem; }
+    .methodology-box ul { margin: 0; padding-left: 20px; color: var(--text-muted); font-size: 0.9rem; }
     .methodology-box ul li { margin-bottom: 6px; }
     .toc { background: #12122a; border: 1px solid #2a2a4a; border-radius: 12px; padding: 20px 24px; margin: 32px 0; }
     .toc h3 { color: var(--text); font-size: 1rem; margin: 0 0 12px; }
-    .toc ol { margin: 0; padding-left: 20px; color: #8888aa; }
+    .toc ol { margin: 0; padding-left: 20px; color: var(--text-muted); }
     .toc ol li { margin-bottom: 6px; }
     .toc ol li a { color: #7c5cfc; text-decoration: none; }
     .toc ol li a:hover { text-decoration: underline; }
@@ -114,7 +114,7 @@
         "@type": "SoftwareApplication",
         "name": "AdOff",
         "version": "3.4.6",
-        "description": "Four-layer stealth ad blocker: network blocking (138 declarativeNetRequest rules), cosmetic filtering, anti-detection (Pro), and SDK-level video ad neutralization (Pro).",
+        "description": "Four-layer stealth ad blocker: network blocking (144 declarativeNetRequest rules), cosmetic filtering, anti-detection (Pro), and SDK-level video ad neutralization (Pro).",
         "url": "https://adoff.app/",
         "applicationCategory": "UtilitiesApplication",
         "operatingSystem": "Chrome, Chromium, Edge, Opera"
@@ -560,7 +560,7 @@
         </tr>
         <tr>
           <td>Network-level blocking</td>
-          <td class="check">✔ 138 rules</td>
+          <td class="check">✔ 144 rules</td>
           <td class="check">✔ Extensive</td>
           <td class="check">✔ Extensive</td>
           <td class="partial">~ Limited</td>
@@ -640,7 +640,7 @@
         </tr>
       </tbody>
     </table>
-    <p style="font-size:0.82rem;color:#8888aa;">* ABP with Acceptable Ads enabled; effectiveness improves with it disabled. Testing conditions described in methodology box above.</p>
+    <p style="font-size:0.82rem;color:var(--text-muted);">* ABP with Acceptable Ads enabled; effectiveness improves with it disabled. Testing conditions described in methodology box above.</p>
 
     <!-- ===================== VERDICT ===================== -->
     <h2 id="verdict">Verdict: How to Choose</h2>

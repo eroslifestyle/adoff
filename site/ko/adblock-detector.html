@@ -41,9 +41,9 @@
   <style>
     .tool { max-width: 760px; margin: 0 auto; padding: 96px 24px 100px; }
     .tool__eyebrow { display:inline-flex; align-items:center; gap:8px; font-size:0.78rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:#7c5cfc; margin-bottom:16px; }
-    .tool h1 { font-size: clamp(1.9rem, 4.5vw, 2.7rem); color:#fff; line-height:1.15; margin-bottom:14px; }
-    .tool__lead { font-size:1.05rem; color:#b0b0c8; line-height:1.7; margin-bottom:8px; }
-    .tool__privacy { font-size:0.85rem; color:#6f6f8e; margin-bottom:36px; }
+    .tool h1 { font-size: clamp(1.9rem, 4.5vw, 2.7rem); color:var(--text); line-height:1.15; margin-bottom:14px; }
+    .tool__lead { font-size:1.05rem; color:var(--text-muted); line-height:1.7; margin-bottom:8px; }
+    .tool__privacy { font-size:0.85rem; color:var(--text-dim); margin-bottom:36px; }
     .tool__privacy strong { color:#4ade80; }
 
     .runbtn { display:inline-flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:18px 24px; font-size:1.05rem; font-weight:700; color:#fff; background:#7c5cfc; border:none; border-radius:14px; cursor:pointer; transition:transform .15s, box-shadow .2s; }
@@ -54,7 +54,7 @@
     .result.show { opacity:1; transform:none; }
     .verdict { border-radius:16px; padding:28px; border:1.5px solid #2a2a4a; background:#12122a; margin-bottom:24px; }
     .verdict__title { font-size:1.4rem; font-weight:800; margin:0 0 8px; }
-    .verdict__sub { color:#b0b0c8; line-height:1.7; margin:0; }
+    .verdict__sub { color:var(--text-muted); line-height:1.7; margin:0; }
     .verdict--bad { border-color:#f87171; }
     .verdict--bad .verdict__title { color:#f87171; }
     .verdict--warn { border-color:#fbbf24; }
@@ -63,26 +63,26 @@
     .verdict--good .verdict__title { color:#4ade80; }
 
     .checks { list-style:none; margin:0 0 28px; padding:0; }
-    .checks li { display:flex; align-items:flex-start; gap:12px; padding:14px 0; border-bottom:1px solid #1f1f3a; color:#cfcfe2; font-size:0.96rem; }
+    .checks li { display:flex; align-items:flex-start; gap:12px; padding:14px 0; border-bottom:1px solid #1f1f3a; color:var(--text); font-size:0.96rem; }
     .checks li:last-child { border-bottom:none; }
     .checks .ic { flex-shrink:0; width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:800; margin-top:1px; }
     .ic--block { background:rgba(74,222,128,.15); color:#4ade80; }
     .ic--pass { background:rgba(248,113,113,.15); color:#f87171; }
     .ic--pending { background:#1f1f3a; color:#6f6f8e; }
-    .checks .det { display:block; font-size:0.82rem; color:#8888aa; margin-top:2px; }
+    .checks .det { display:block; font-size:0.82rem; color:var(--text-muted); margin-top:2px; }
 
     .cta-box { background:linear-gradient(135deg,rgba(124,92,252,.12),rgba(124,92,252,.03)); border:1px solid #2a2a4a; border-radius:16px; padding:28px; text-align:center; }
-    .cta-box h2 { color:#fff; font-size:1.3rem; margin:0 0 10px; }
-    .cta-box p { color:#b0b0c8; line-height:1.7; margin:0 0 20px; }
-    .cta-box .btn { display:inline-block; padding:14px 28px; background:#fff; color:#0a0a1a; font-weight:700; border-radius:12px; text-decoration:none; transition:transform .15s; }
+    .cta-box h2 { color:var(--text); font-size:1.3rem; margin:0 0 10px; }
+    .cta-box p { color:var(--text-muted); line-height:1.7; margin:0 0 20px; }
+    .cta-box .btn { display:inline-block; padding:14px 28px; background:#fff; color:var(--text); font-weight:700; border-radius:12px; text-decoration:none; transition:transform .15s; }
     .cta-box .btn:hover { transform:translateY(-2px); }
 
     .explainer { margin-top:56px; }
-    .explainer h2 { color:#fff; font-size:1.4rem; margin:0 0 14px; }
-    .explainer p { color:#b0b0c8; line-height:1.8; margin-bottom:14px; }
-    .explainer strong { color:#fff; }
-    .faq-q { color:#fff; font-weight:700; margin:24px 0 6px; font-size:1.02rem; }
-    .faq-a { color:#b0b0c8; line-height:1.7; }
+    .explainer h2 { color:var(--text); font-size:1.4rem; margin:0 0 14px; }
+    .explainer p { color:var(--text-muted); line-height:1.8; margin-bottom:14px; }
+    .explainer strong { color:var(--text); }
+    .faq-q { color:var(--text); font-weight:700; margin:24px 0 6px; font-size:1.02rem; }
+    .faq-a { color:var(--text-muted); line-height:1.7; }
 
     /* bait container kept off-screen but renderable so blockers act on it */
     #bait-zone { position:absolute; left:-9999px; top:-9999px; width:1px; height:1px; overflow:hidden; }
@@ -96,7 +96,7 @@
   <main class="tool">
     <span class="tool__eyebrow"><span>●</span> 무료 개인정보 보호 도구</span>
     <h1>광고 차단기가 탐지 가능한가요?</h1>
-    <p class="tool__lead">대부분의 광고 차단기는 광고를 중지하지만 차단 자체는 <strong style="color:#fff">가시적</strong>입니다. 안티바이패스 시스템은 그 가시성을 사용하여 사용자를 감지한 다음 콘텐츠를 숨기거나 차단기를 비활성화하도록 강요합니다. 이 테스트는 현재 설정이 감지 가능한 흔적을 남기는지 브라우저에서 확인합니다.</p>
+    <p class="tool__lead">대부분의 광고 차단기는 광고를 중지하지만 차단 자체는 <strong style="color:var(--text)">가시적</strong>입니다. 안티바이패스 시스템은 그 가시성을 사용하여 사용자를 감지한 다음 콘텐츠를 숨기거나 차단기를 비활성화하도록 강요합니다. 이 테스트는 현재 설정이 감지 가능한 흔적을 남기는지 브라우저에서 확인합니다.</p>
     <p class="tool__privacy"><strong>100% 개인:</strong> 모든 확인이 브라우저에서 로컬로 실행됩니다. 서버로 아무것도 전송되지 않으며, 저장되지 않습니다. 우리는 실행 여부도 알 수 없습니다.</p>
 
     <button class="runbtn" id="run">감지 테스트 실행 →</button>

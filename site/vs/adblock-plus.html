@@ -42,7 +42,7 @@
   <style>
     .article-page { max-width: 780px; margin: 0 auto; padding: 80px 24px 100px; }
     .article-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--text); margin-bottom: 12px; }
-    .article-page .meta { font-size: 0.88rem; color: #8888aa; margin-bottom: 40px; }
+    .article-page .meta { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 40px; }
     .article-page h2 { font-size: 1.5rem; color: var(--text); margin: 48px 0 16px; }
     .article-page h3 { font-size: 1.2rem; color: var(--text); margin: 32px 0 12px; }
     .article-page p { color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
@@ -52,14 +52,14 @@
     .article-page .negative { color: #f43f5e; }
     .comp-table { width: 100%; border-collapse: collapse; margin: 24px 0 32px; }
     .comp-table th, .comp-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #2a2a4a; }
-    .comp-table th { color: #8888aa; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .comp-table th { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
     .comp-table td { color: var(--text-muted); }
     .comp-table .check { color: #4ade80; font-weight: 700; }
     .comp-table .cross { color: #f43f5e; }
     .comp-table .partial { color: #fbbf24; }
     .cta-box { background: #12122a; border: 1px solid rgba(124,92,252,0.3); border-radius: 14px; padding: 32px; text-align: center; margin: 48px 0; }
-    .cta-box h3 { color: #fff; margin: 0 0 12px; }
-    .cta-box p { color: #8888aa; margin-bottom: 20px; }
+    .cta-box h3 { color: var(--text); margin: 0 0 12px; }
+    .cta-box p { color: var(--text-muted); margin-bottom: 20px; }
     .cta-box .btn { display: inline-block; background: #7c5cfc; color: #fff; padding: 12px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; transition: all 0.2s; }
     .cta-box .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.3); }
     .warning-box { background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.3); border-radius: 12px; padding: 20px 24px; margin: 28px 0; }
@@ -201,7 +201,7 @@
       This is not a trivial difference. A 3.2 MB extension loads more data into memory, takes longer to initialise when Chrome starts, and requires more resources to process and update filter lists. On machines with limited RAM — Chromebooks, older laptops, shared office computers — this overhead is felt as real browser slowdown.
     </p>
     <p>
-      The size gap also reflects a philosophical difference. AdBlock Plus includes a large infrastructure of filter list management, Acceptable Ads logic, analytics, and user interface components that serve purposes beyond pure blocking. AdOff is lean by design: 138 network blocking rules, a stealth script, a cosmetic filter layer, and the popup interface. Nothing more.
+      The size gap also reflects a philosophical difference. AdBlock Plus includes a large infrastructure of filter list management, Acceptable Ads logic, analytics, and user interface components that serve purposes beyond pure blocking. AdOff is lean by design: 144 network blocking rules, a stealth script, a cosmetic filter layer, and the popup interface. Nothing more.
     </p>
     <p>
       From a security and privacy standpoint, a smaller codebase is also a <strong>smaller attack surface</strong>. Every additional line of code in an extension is a potential vulnerability. AdOff's minimalism is not just a performance feature — it is a security feature.
@@ -223,7 +223,7 @@
       The user's perception may be "I have an ad blocker" while they are still receiving a curated selection of ads from paying partners. This is not full blocking — it is managed filtering with commercial exceptions.
     </p>
     <p>
-      AdOff blocks unconditionally. The 138 rules target known ad network domains, ad server endpoints, and tracking infrastructure. There is no whitelist, no approved exception list, no partner program. If a request matches a blocking rule, it is blocked.
+      AdOff blocks unconditionally. The 144 rules target known ad network domains, ad server endpoints, and tracking infrastructure. There is no whitelist, no approved exception list, no partner program. If a request matches a blocking rule, it is blocked.
     </p>
 
     <h2>Video Ad Neutralization: A Pro Capability AdBlock Plus Cannot Match</h2>
@@ -295,7 +295,7 @@
         </tr>
         <tr>
           <td>Network ad blocking</td>
-          <td class="check">✔ 138 curated rules</td>
+          <td class="check">✔ 144 curated rules</td>
           <td class="check">✔ Large filter lists</td>
         </tr>
         <tr>

@@ -262,16 +262,7 @@
       '<ul class="sn-links">',
         '<li><a href="/' + lq + '">Home</a></li>',
         '<li><a href="/' + lq + '#features">Features</a></li>',
-        '<li>',
-          '<div class="sn-premium-wrap" id="snPremiumWrap">',
-            '<button class="sn-premium-btn" id="snPremiumBtn">',
-              'Premium <span class="sn-premium-arrow">&#9660;</span>',
-            '</button>',
-            '<div class="sn-premium-dd" id="snPremiumDd">',
-              '<a href="' + premiumLink + '">Premium</a>',
-            '</div>',
-          '</div>',
-        '</li>',
+        '<li><a href="' + premiumLink + '">Premium</a></li>',
         '<li><a href="/' + lq + '#pricing">Pricing</a></li>',
         '<li><a href="' + communityLink + '">Community</a></li>',
         '<li><a href="' + supportLink + '">Support</a></li>',
@@ -324,8 +315,6 @@
   // ─── Event handlers ─────────────────────────────────────────────────────────
   var langWrap = document.getElementById('snLangWrap');
   var langBtn = document.getElementById('snLangBtn');
-  var premiumWrap = document.getElementById('snPremiumWrap');
-  var premiumBtn = document.getElementById('snPremiumBtn');
   var burger = root.querySelector('.sn-burger');
   var themeToggles = root.querySelectorAll('.theme-toggle');
 
@@ -341,12 +330,6 @@
   langBtn.addEventListener('click', function (e) {
     e.stopPropagation();
     langWrap.classList.toggle('open');
-  });
-
-  // Toggle premium dropdown
-  premiumBtn.addEventListener('click', function (e) {
-    e.stopPropagation();
-    premiumWrap.classList.toggle('open');
   });
 
   // Language selection (dropdown + mobile)
@@ -368,7 +351,6 @@
     if (!root.contains(e.target)) {
       root.classList.remove('open');
       langWrap.classList.remove('open');
-      premiumWrap.classList.remove('open');
     }
   });
 
