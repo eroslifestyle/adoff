@@ -1945,6 +1945,21 @@ footer {
 .compare-yes { color: var(--accent); font-size: 1.05rem; }
 .compare-no  { color: var(--text-dim); opacity: 0.55; font-size: 1.05rem; }
 
+/* Mobile: tables horizontal scroll */
+@media (max-width: 480px) {
+  .compare-table { font-size: 0.8rem; }
+  .compare-table th, .compare-table td { padding: 10px 12px; }
+  .guide-table { font-size: 0.85rem; display: block; overflow-x: auto; }
+}
+
+/* Mobile: force horizontal scroll for tables */
+@media (max-width: 375px) {
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-wrap table { display: block; overflow-x: auto; min-width: 280px; }
+  table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .compare-table, .comp-table, .guide-table { min-width: 320px; display: block; overflow-x: auto; }
+}
+
 ::selection { background: var(--accent); color: var(--text-on-accent); }
 
 /* ---------- Focus visible (a11y) ---------- */
