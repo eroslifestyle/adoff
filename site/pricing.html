@@ -396,7 +396,7 @@
             <span class="plan-price__currency">€</span>
           </div>
           <p class="plan-price__period">/mese</p>
-          <p class="plan-price__annual">oppure €29,99/anno (risparmia €5,89)</p>
+          <p class="plan-price__annual">oppure €19,99/anno Founder<br>oppure €24,99/anno standard</p>
           <ul class="plan-features">
             <li><span class="check">✓</span> Tutto di Free</li>
             <li><span class="check">✓</span> Stealth anti-detection</li>
@@ -409,7 +409,8 @@
           </ul>
           <div class="plan-cta">
             <button onclick="checkout('monthly')" class="btn btn--primary btn--lg" style="margin-bottom: 10px;">Prova 15gg gratis</button>
-            <button onclick="checkout('annual')" class="btn btn--outline btn--lg">Annuale — €29,99</button>
+            <button onclick="checkout('pro_annual_founder')" class="btn btn--outline btn--lg" style="margin-bottom: 8px;">Founder €19,99/anno</button>
+            <button onclick="checkout('pro_annual_standard')" class="btn btn--outline btn--lg">Standard €24,99/anno</button>
           </div>
         </div>
 
@@ -438,7 +439,8 @@
           </ul>
           <div class="plan-cta">
             <button onclick="checkout('premium_monthly')" class="btn btn--primary btn--lg" style="margin-bottom: 10px;">Premium mensile</button>
-            <button onclick="checkout('premium_annual')" class="btn btn--outline btn--lg">Premium annuale</button>
+            <button onclick="checkout('premium_annual_founder')" class="btn btn--outline btn--lg" style="margin-bottom: 8px;">Founder €29,99/anno</button>
+            <button onclick="checkout('premium_annual_standard')" class="btn btn--outline btn--lg">Standard €49,99/anno</button>
           </div>
         </div>
 
@@ -623,9 +625,11 @@
       var baseUrl = 'https://checkout.adoff.app';
       var urls = {
         'monthly': baseUrl + '?plan=pro_monthly',
-        'annual': baseUrl + '?plan=pro_annual',
         'premium_monthly': baseUrl + '?plan=premium_monthly',
-        'premium_annual': baseUrl + '?plan=premium_annual'
+        'premium_annual_founder': baseUrl + '?plan=premium_annual_founder',
+        'premium_annual_standard': baseUrl + '?plan=premium_annual_standard',
+        'pro_annual_founder': baseUrl + '?plan=pro_annual_founder',
+        'pro_annual_standard': baseUrl + '?plan=pro_annual_standard'
       };
       var url = urls[plan] || baseUrl;
       window.location.href = url;
