@@ -43,8 +43,10 @@
   function detectLang() {
     try {
       var p = new URLSearchParams(window.location.search).get('lang');
+      console.log('[i18n] URL param lang:', p);
       if (p && SUPPORTED.indexOf(p) !== -1) {
         try { localStorage.setItem('adoff_lang', p); } catch (e) {}
+        console.log('[i18n] Using URL param lang:', p);
         return p;
       }
     } catch (e) {}
@@ -164,6 +166,7 @@
 
   function init() {
     var lang = detectLang();
+    console.log('[i18n] Detected lang:', lang);
     if (lang === 'it') {
       document.documentElement.lang = 'it';
       document.documentElement.dir = 'ltr';
@@ -171,7 +174,9 @@
       // No link rewrite for IT (it's root path)
       return;
     }
+    console.log('[i18n] Loading dict for:', lang);
     loadDict(lang).then(function (dict) {
+      console.log('[i18n] Dict loaded, applying translations');
       applyTranslations(dict, lang);
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () { rewriteLinks(lang); });
