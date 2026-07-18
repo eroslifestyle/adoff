@@ -168,13 +168,9 @@
     var lang = detectLang();
     console.log('[i18n] Detected lang:', lang);
 
-    // DEBUG: Add marker to body to prove script runs
+    // DEBUG: Add marker to html to prove script runs (works before body exists)
     try {
-      var debugDiv = document.createElement('div');
-      debugDiv.id = 'i18n-debug-marker';
-      debugDiv.textContent = 'i18n lang=' + lang;
-      debugDiv.style.cssText = 'position:fixed;top:0;left:0;background:red;color:white;padding:2px;z-index:999999;font-size:10px;';
-      document.body.appendChild(debugDiv);
+      document.documentElement.setAttribute('data-i18n-debug', lang);
     } catch(e) {
       console.log('[i18n] ERROR adding debug marker:', e);
     }
