@@ -31,7 +31,7 @@
   <link rel="alternate" hreflang="id" href="https://adoff.app/guide.html?lang=id" />
   <link rel="alternate" hreflang="pl" href="https://adoff.app/guide.html?lang=pl" />
   <link rel="alternate" hreflang="x-default" href="https://adoff.app/guide.html?lang=en" />
-  <link rel="stylesheet" href="style.css?v=260520-201526" />
+  <link rel="stylesheet" href="style.css?v=260714b" />
   <style>
     /* ===== Guide page styles ===== */
     .guide-page {
@@ -327,7 +327,7 @@
         <li><strong>Mode Furtif</strong> (Pro/Essai) : rend AdOff invisible aux systèmes anti-adblock</li>
         <li>Ultraléger ,  conçu pour être l'extension la plus légère du marché</li>
         <li>Ne collecte aucune donnée personnelle : tout fonctionne en local</li>
-        <li>6 langues : italien, anglais, allemand, français, espagnol, portugais</li>
+        <li>15 langues : italien, anglais, allemand, français, espagnol, portugais</li>
         <li>Pause par site avec 4 durées : visite, 1 heure, 1 jour, permanente</li>
         <li>Système de parrainage pour obtenir des jours Pro gratuits</li>
       </ul>
@@ -360,7 +360,7 @@
       <p>Lors de la première installation d'AdOff :</p>
       <ul>
         <li>Une <strong>page de bienvenue</strong> s'ouvre avec des instructions pour épingler l'icône</li>
-        <li>L'<strong>Essai Pro de 30 jours</strong> s'active automatiquement</li>
+        <li>L'<strong>Essai Pro de 15 jours</strong> s'active automatiquement</li>
         <li>Un <strong>code de parrainage unique</strong> est généré (format : <code>ADO-XXXXX</code>)</li>
         <li>AdOff commence à bloquer les publicités immédiatement</li>
         <li>Si vous installez avant le 1er juillet 2026, vous recevez le <strong>badge Membre Fondateur</strong> permanent</li>
@@ -389,7 +389,7 @@
       <p>Le domaine du site que vous visitez, avec le bouton <strong>"Pause ici"</strong>.</p>
 
       <h3>Bannière de licence</h3>
-      <p>Visible uniquement pour les utilisateurs Free ("Essayez Pro 30 jours gratuits") et Essai ("Essai actif ,  X jours restants"). Masquée pour les utilisateurs Pro.</p>
+      <p>Visible uniquement pour les utilisateurs Free ("Essayez Pro 15 jours gratuits") et Essai ("Essai actif ,  X jours restants"). Masquée pour les utilisateurs Pro.</p>
 
       <h3>Invite d'avis</h3>
       <p>Apparaît après 100+ publicités bloquées et 5+ jours depuis l'installation. Maximum 3 apparitions, avec 14 jours de pause entre chaque. Trois options : "Laisser un avis", "Pas maintenant", "Ne plus demander".</p>
@@ -480,10 +480,9 @@
           <thead><tr><th>Abonnement</th><th>Prix</th><th>Inclut</th></tr></thead>
           <tbody>
             <tr><td>Free</td><td>Gratuit pour toujours</td><td>Blocage complet des publicités, masquage des éléments CSS</td></tr>
-            <tr><td>Essai Pro</td><td>Gratuit 30 jours</td><td>Toutes les fonctionnalités Pro</td></tr>
+            <tr><td>Essai Pro</td><td>Gratuit 15 jours</td><td>Toutes les fonctionnalités Pro</td></tr>
             <tr><td>Pro Mensuel</td><td>2,99 EUR/mois</td><td>Free + Neutralisation des publicités vidéo + Mode Furtif + support dédié</td></tr>
             <tr><td>Pro Annuel</td><td>19,99 EUR/an</td><td>Prix Founder bloqué à vie</td></tr>
-            <tr><td>Pro À vie</td><td>99 EUR</td><td>Pro pour toujours</td></tr>
           </tbody>
         </table>
       </div>
@@ -596,7 +595,7 @@
       <h2><span class="sec-icon">&#9881;</span> 15. Comment fonctionne AdOff (technique)</h2>
 
       <h3>Niveau 1 ,  Blocage réseau</h3>
-      <p>AdOff utilise l'API <code>declarativeNetRequest</code> de Chrome pour bloquer les requêtes HTTP vers les serveurs publicitaires <strong>avant que le navigateur ne les télécharge</strong>. Plus de 120 règles couvrent les principaux réseaux publicitaires et de nombreux autres.</p>
+      <p>AdOff utilise l'API <code>declarativeNetRequest</code> de Chrome pour bloquer les requêtes HTTP vers les serveurs publicitaires <strong>avant que le navigateur ne les télécharge</strong>. Plus de 144 règles couvrent les principaux réseaux publicitaires et de nombreux autres.</p>
 
       <h3>Niveau 2 ,  Filtrage cosmétique</h3>
       <p>Pour les publicités servies depuis le même domaine que le site, AdOff utilise CSS et JavaScript pour <strong>les masquer depuis la page</strong> : sélecteurs précis, MutationObserver pour les contenus dynamiques, réduction des conteneurs vides.</p>

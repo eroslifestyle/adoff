@@ -3088,7 +3088,6 @@ const PREMIUM_ANNUAL_STD_AMOUNT    = 4999;  // €49,99 — dopo Founder o stand
 const PRICE_CONFIG = {
   monthly:  { amount: 299,                    plan: "monthly",  recurring: "month", founder: false, tier: "pro" },
   annual:   { amount: ANNUAL_FOUNDER_AMOUNT,  plan: "annual",   recurring: "year",  founder: true,  tier: "pro" },
-  lifetime: { amount: 9900,                   plan: "lifetime", recurring: null,    founder: true,  tier: "pro" },
   // Premium VPN plans
   premium_monthly:          { amount: PREMIUM_MONTHLY_AMOUNT,         plan: "premium_monthly",          recurring: "month", founder: false, tier: "premium" },
   premium_annual:           { amount: PREMIUM_ANNUAL_STD_AMOUNT,      plan: "premium_annual",           recurring: "year",  founder: false, tier: "premium" },

@@ -31,7 +31,7 @@
   <link rel="alternate" hreflang="id" href="https://adoff.app/guide.html?lang=id" />
   <link rel="alternate" hreflang="pl" href="https://adoff.app/guide.html?lang=pl" />
   <link rel="alternate" hreflang="x-default" href="https://adoff.app/guide.html?lang=en" />
-  <link rel="stylesheet" href="style.css?v=260520-201526" />
+  <link rel="stylesheet" href="style.css?v=260714b" />
   <style>
     /* ===== Guide page styles ===== */
     .guide-page {
@@ -328,7 +328,7 @@
         <li><strong>Stealth Mode</strong> (Pro/Trial): rende AdOff invisibile ai siti anti-adblock</li>
         <li>È <strong>leggerissima</strong>, una frazione del peso dei competitor</li>
         <li>Non raccoglie nessun dato personale: tutto funziona in locale</li>
-        <li>6 lingue: italiano, inglese, tedesco, francese, spagnolo, portoghese</li>
+        <li>15 lingue: italiano, inglese, tedesco, francese, spagnolo, portoghese</li>
         <li>Pausa per sito con 4 durate: visita, 1 ora, 1 giorno, permanente</li>
         <li>Sistema referral per ottenere giorni Pro gratis</li>
       </ul>
@@ -361,7 +361,7 @@
       <p>Quando installi AdOff per la prima volta:</p>
       <ul>
         <li>Si apre una <strong>pagina di benvenuto</strong> con istruzioni per pinnare l'icona</li>
-        <li>Il <strong>Trial Pro di 30 giorni</strong> si attiva automaticamente</li>
+        <li>Il <strong>Trial Pro di 15 giorni</strong> si attiva automaticamente</li>
         <li>Viene generato un <strong>codice referral unico</strong> (formato: <code>ADO-XXXXX</code>)</li>
         <li>AdOff inizia a bloccare le pubblicita' immediatamente</li>
         <li>Se installi prima del 1 luglio 2026, ricevi il <strong>badge Founding Member</strong> permanente</li>
@@ -390,7 +390,7 @@
       <p>Il dominio del sito che stai visitando, con il pulsante <strong>"Pausa qui"</strong>.</p>
 
       <h3>Banner licenza</h3>
-      <p>Visibile solo per utenti Free ("Prova Pro 30 giorni gratis") e Trial ("Trial attivo. X giorni rimasti"). Nascosto per utenti Pro.</p>
+      <p>Visibile solo per utenti Free ("Prova Pro 15 giorni gratis") e Trial ("Trial attivo. X giorni rimasti"). Nascosto per utenti Pro.</p>
 
       <h3>Prompt recensione</h3>
       <p>Appare dopo 100+ ads bloccati e 5+ giorni dall'installazione. Massimo 3 apparizioni, con 14 giorni di pausa tra una e l'altra. Tre opzioni: "Lascia recensione", "Non ora", "Mai piu'".</p>
@@ -481,10 +481,9 @@
           <thead><tr><th>Piano</th><th>Prezzo</th><th>Include</th></tr></thead>
           <tbody>
             <tr><td>Free</td><td>Gratis per sempre</td><td>Blocco ads completo, nascondimento elementi CSS</td></tr>
-            <tr><td>Trial Pro</td><td>Gratis 30 giorni</td><td>Tutte le funzionalita' Pro</td></tr>
+            <tr><td>Trial Pro</td><td>Gratis 15 giorni</td><td>Tutte le funzionalita' Pro</td></tr>
             <tr><td>Pro Mensile</td><td>2,99 EUR/mese</td><td>Free + Neutralizzazione video ads + Stealth Mode + supporto dedicato</td></tr>
             <tr><td>Pro Annuale</td><td>19,99 EUR/anno</td><td>Prezzo Founder bloccato a vita</td></tr>
-            <tr><td>Pro Lifetime</td><td>99 EUR</td><td>Pro per sempre</td></tr>
           </tbody>
         </table>
       </div>
@@ -597,7 +596,7 @@
       <h2><span class="sec-icon">&#9881;</span> 15. Come funziona AdOff (tecnico)</h2>
 
       <h3>Livello 1. Blocco di rete</h3>
-      <p>AdOff usa l'API <code>declarativeNetRequest</code> di Chrome per bloccare le richieste HTTP verso i server pubblicitari <strong>prima che il browser le scarichi</strong>. Oltre 120 regole coprono le principali reti pubblicitarie e molti altri ad network.</p>
+      <p>AdOff usa l'API <code>declarativeNetRequest</code> di Chrome per bloccare le richieste HTTP verso i server pubblicitari <strong>prima che il browser le scarichi</strong>. Oltre 144 regole coprono le principali reti pubblicitarie e molti altri ad network.</p>
 
       <h3>Livello 2. Filtro cosmetico</h3>
       <p>Per le pubblicita' servite dallo stesso dominio del sito, AdOff usa CSS e JavaScript per <strong>nasconderle dalla pagina</strong>: selettori precisi, MutationObserver per contenuti dinamici, collasso contenitori vuoti.</p>

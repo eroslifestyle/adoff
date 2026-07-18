@@ -31,7 +31,7 @@
   <link rel="alternate" hreflang="id" href="https://adoff.app/id/guide.html" />
   <link rel="alternate" hreflang="pl" href="https://adoff.app/guide.html?lang=pl" />
   <link rel="alternate" hreflang="x-default" href="https://adoff.app/guide.html?lang=en" />
-  <link rel="stylesheet" href="style.css?v=260520-201526" />
+  <link rel="stylesheet" href="style.css?v=260714b" />
   <style>
     /* ===== Guide page styles ===== */
     .guide-page {
@@ -327,7 +327,7 @@
         <li><strong>Mode Stealth</strong> (Pro/Trial): membuat AdOff tak terlihat oleh sistem anti-adblock</li>
         <li><strong>Super ringan</strong> — 20 kali lebih kecil dari pesaing</li>
         <li>Tidak mengumpulkan data pribadi: semua berjalan secara lokal</li>
-        <li>6 bahasa: Italia, Inggris, Jerman, Prancis, Spanyol, Portugis</li>
+        <li>15 bahasa: Italia, Inggris, Jerman, Prancis, Spanyol, Portugis</li>
         <li>Jeda per situs dengan 4 durasi: kunjungan ini, 1 jam, 1 hari, permanen</li>
         <li>Sistem referral untuk mendapatkan hari Pro gratis</li>
       </ul>
@@ -360,7 +360,7 @@
       <p>Saat pertama kali menginstal AdOff:</p>
       <ul>
         <li>Sebuah <strong>halaman selamat datang</strong> terbuka dengan instruksi untuk menyematkan ikon</li>
-        <li><strong>Trial Pro 30 hari</strong> diaktifkan secara otomatis</li>
+        <li><strong>Trial Pro 15 hari</strong> diaktifkan secara otomatis</li>
         <li>Sebuah <strong>kode referral unik</strong> dibuat (format: <code>ADO-XXXXX</code>)</li>
         <li>AdOff mulai memblokir iklan secara langsung</li>
         <li>Jika Anda menginstal sebelum 1 Juli 2026, Anda mendapatkan <strong>badge Founding Member</strong> permanen</li>
@@ -389,7 +389,7 @@
       <p>Domain situs yang sedang Anda kunjungi, dengan tombol <strong>"Jeda di sini"</strong>.</p>
 
       <h3>Banner lisensi</h3>
-      <p>Hanya terlihat untuk pengguna Free ("Coba Pro 30 hari gratis") dan Trial ("Trial aktif — X hari tersisa"). Tersembunyi untuk pengguna Pro.</p>
+      <p>Hanya terlihat untuk pengguna Free ("Coba Pro 15 hari gratis") dan Trial ("Trial aktif — X hari tersisa"). Tersembunyi untuk pengguna Pro.</p>
 
       <h3>Prompt ulasan</h3>
       <p>Muncul setelah 100+ iklan diblokir dan 5+ hari sejak instalasi. Maksimal 3 kemunculan, dengan jeda 14 hari di antara masing-masing. Tiga opsi: "Tinggalkan ulasan", "Nanti saja", "Jangan pernah lagi".</p>
@@ -480,10 +480,9 @@
           <thead><tr><th>Paket</th><th>Harga</th><th>Termasuk</th></tr></thead>
           <tbody>
             <tr><td>Free</td><td>Gratis selamanya</td><td>Pemblokiran iklan lengkap, penyembunyian elemen CSS</td></tr>
-            <tr><td>Trial Pro</td><td>Gratis 30 hari</td><td>Semua fitur Pro</td></tr>
+            <tr><td>Trial Pro</td><td>Gratis 15 hari</td><td>Semua fitur Pro</td></tr>
             <tr><td>Pro Bulanan</td><td>2,99 EUR/bulan</td><td>Free + Netralisasi iklan video + Mode Stealth + dukungan khusus</td></tr>
             <tr><td>Pro Tahunan</td><td>19,99 EUR/tahun</td><td>Harga Founder terkunci seumur hidup</td></tr>
-            <tr><td>Pro Lifetime</td><td>99 EUR</td><td>Pro selamanya</td></tr>
           </tbody>
         </table>
       </div>
@@ -596,7 +595,7 @@
       <h2><span class="sec-icon">&#9881;</span> 15. Cara kerja AdOff (teknis)</h2>
 
       <h3>Lapisan 1 — Pemblokiran jaringan</h3>
-      <p>AdOff menggunakan API <code>declarativeNetRequest</code> Chrome untuk memblokir permintaan HTTP ke server iklan <strong>sebelum browser mengunduhnya</strong>. Lebih dari 120 aturan mencakup jaringan iklan utama dan banyak ad network lainnya.</p>
+      <p>AdOff menggunakan API <code>declarativeNetRequest</code> Chrome untuk memblokir permintaan HTTP ke server iklan <strong>sebelum browser mengunduhnya</strong>. Lebih dari 144 aturan mencakup jaringan iklan utama dan banyak ad network lainnya.</p>
 
       <h3>Lapisan 2 — Filter kosmetik</h3>
       <p>Untuk iklan yang disajikan dari domain yang sama dengan situs, AdOff menggunakan CSS dan JavaScript untuk <strong>menyembunyikannya dari halaman</strong>: selektor yang presisi, MutationObserver untuk konten dinamis, kolaps kontainer kosong.</p>

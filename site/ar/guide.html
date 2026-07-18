@@ -31,7 +31,7 @@
   <link rel="alternate" hreflang="id" href="https://adoff.app/guide.html?lang=id" />
   <link rel="alternate" hreflang="pl" href="https://adoff.app/guide.html?lang=pl" />
   <link rel="alternate" hreflang="x-default" href="https://adoff.app/guide.html?lang=en" />
-  <link rel="stylesheet" href="style.css?v=260520-201526" />
+  <link rel="stylesheet" href="style.css?v=260714b" />
   <style>
     /* ===== Guide page styles ===== */
     .guide-page {
@@ -330,7 +330,7 @@
         <li><strong>الوضع الخفي</strong> (Pro/Trial): يجعل AdOff غير مرئي لأنظمة كشف حجب الإعلانات</li>
         <li><strong>فائق الخفة</strong> — أصغر بكثير من المنافسين</li>
         <li>لا يجمع أي بيانات شخصية: كل شيء يعمل محلياً</li>
-        <li>6 لغات: إيطالية، إنجليزية، ألمانية، فرنسية، إسبانية، برتغالية</li>
+        <li>15 لغات: إيطالية، إنجليزية، ألمانية، فرنسية، إسبانية، برتغالية</li>
         <li>إيقاف مؤقت للموقع بـ 4 مدد: زيارة واحدة، ساعة، يوم، دائم</li>
         <li>نظام إحالة للحصول على أيام Pro مجانية</li>
       </ul>
@@ -363,7 +363,7 @@
       <p>عند تثبيت AdOff لأول مرة:</p>
       <ul>
         <li>تفتح <strong>صفحة ترحيب</strong> مع تعليمات لتثبيت الأيقونة</li>
-        <li>يُفعَّل <strong>Trial Pro لمدة 30 يوماً</strong> تلقائياً</li>
+        <li>يُفعَّل <strong>Trial Pro لمدة 15 يوماً</strong> تلقائياً</li>
         <li>يُولَّد <strong>رمز إحالة فريد</strong> (بالصيغة: <code>ADO-XXXXX</code>)</li>
         <li>يبدأ AdOff بحجب الإعلانات فوراً</li>
         <li>إذا ثبّتت قبل 1 يوليو 2026، ستحصل على <strong>شارة Founding Member</strong> الدائمة</li>
@@ -392,7 +392,7 @@
       <p>نطاق الموقع الذي تزوره، مع زر <strong>"إيقاف هنا مؤقتاً"</strong>.</p>
 
       <h3>لافتة الترخيص</h3>
-      <p>تظهر فقط لمستخدمي Free ("جرّب Pro مجاناً 30 يوماً") وTrial ("Trial نشط — X أيام متبقية"). مخفية لمستخدمي Pro.</p>
+      <p>تظهر فقط لمستخدمي Free ("جرّب Pro مجاناً 15 يوماً") وTrial ("Trial نشط — X أيام متبقية"). مخفية لمستخدمي Pro.</p>
 
       <h3>طلب التقييم</h3>
       <p>يظهر بعد حجب أكثر من 100 إعلان وبعد 5+ أيام من التثبيت. بحد أقصى 3 مرات، مع توقف 14 يوماً بين كل مرة. ثلاثة خيارات: "اترك تقييماً"، "ليس الآن"، "لا مجدداً".</p>
@@ -483,10 +483,9 @@
           <thead><tr><th>الخطة</th><th>السعر</th><th>يشمل</th></tr></thead>
           <tbody>
             <tr><td>مجاني</td><td>مجاني للأبد</td><td>حجب كامل للإعلانات، إخفاء العناصر بـ CSS</td></tr>
-            <tr><td>Trial Pro</td><td>مجاني 30 يوماً</td><td>جميع ميزات Pro</td></tr>
+            <tr><td>Trial Pro</td><td>مجاني 15 يوماً</td><td>جميع ميزات Pro</td></tr>
             <tr><td>Pro شهري</td><td>2.99 يورو/شهر</td><td>مجاني + تحييد إعلانات الفيديو + الوضع الخفي + دعم مخصص</td></tr>
             <tr><td>Pro سنوي</td><td>19.99 يورو/سنة</td><td>سعر Founder ثابت مدى الحياة</td></tr>
-            <tr><td>Pro مدى الحياة</td><td>99 يورو</td><td>Pro للأبد</td></tr>
           </tbody>
         </table>
       </div>
@@ -599,7 +598,7 @@
       <h2><span class="sec-icon">&#9881;</span> 15. كيف يعمل AdOff (تقني)</h2>
 
       <h3>المستوى 1 — حجب الشبكة</h3>
-      <p>يستخدم AdOff واجهة برمجة <code>declarativeNetRequest</code> في Chrome لحجب طلبات HTTP نحو خوادم الإعلانات <strong>قبل أن يُنزّلها المتصفح</strong>. تغطي أكثر من 120 قاعدة شبكات الإعلانات الرئيسية والعديد من شبكات الإعلانات الأخرى.</p>
+      <p>يستخدم AdOff واجهة برمجة <code>declarativeNetRequest</code> في Chrome لحجب طلبات HTTP نحو خوادم الإعلانات <strong>قبل أن يُنزّلها المتصفح</strong>. تغطي أكثر من 144 قاعدة شبكات الإعلانات الرئيسية والعديد من شبكات الإعلانات الأخرى.</p>
 
       <h3>المستوى 2 — التصفية التجميلية</h3>
       <p>للإعلانات المقدمة من نفس نطاق الموقع، يستخدم AdOff CSS وJavaScript <strong>لإخفائها من الصفحة</strong>: محددات دقيقة، MutationObserver للمحتوى الديناميكي، طي الحاويات الفارغة.</p>
