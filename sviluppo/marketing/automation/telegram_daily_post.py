@@ -2,7 +2,7 @@
 """
 Daily AdOff Telegram channel post (@adoffapp) — autonomous.
 
-- Generates ONE English marketing post via the local LLM (Ollama brand-max on leobox).
+- Generates ONE English marketing post via the local LLM (Ollama fast-max on leobox).
 - Rotates through themes: new features, capabilities, strengths, competitor comparisons.
 - Numbers come ONLY from site/data/constants.json (local models hallucinate figures).
 - Publishes directly to the channel via the Telegram Bot API.
@@ -31,7 +31,7 @@ SITE = "https://adoff.app"
 INSTALL = "https://adoff.app/install"
 LOGO_URL = "https://adoff.app/assets/adoff-logo.png"  # fallback se la card fallisce
 CARD_PATH = "/tmp/adoff_daily_card.png"
-LOCAL_MODEL = "brand-max"
+LOCAL_MODEL = "fast-max"
 # Reach leobox Ollama directly (Tailscale) so cron doesn't depend on a local tunnel.
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "100.71.178.53:11434")
 MAX_HISTORY = 14                          # remember last N themes to avoid repeats
