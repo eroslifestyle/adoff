@@ -98,9 +98,10 @@
 
   // Pages with static translations in /{lang}/ subdirectories
   // EN-root: English version is at root /, other langs at /{lang}/
-  var STATIC_EN_ROOT = ['how-it-works', 'unique-tech', 'best-ad-blocker-2026', 'community', 'press', 'vs/ublock-origin', 'vs/adblock-plus', 'vs/adguard'];
+  var STATIC_EN_ROOT = ['how-it-works', 'unique-tech', 'best-ad-blocker-2026', 'community', 'press',
+    'vs/ublock-origin', 'vs/adblock-plus', 'vs/adguard'];
   // IT-root: Italian version is at root /, other langs (incl EN) at /{lang}/
-  var STATIC_IT_ROOT = ['guide', 'privacy', 'terms', 'withdrawal'];
+  var STATIC_IT_ROOT = ['guide', 'privacy', 'terms', 'withdrawal', 'accessibility', 'license-guide'];
 
   function switchLang(lang) {
     try { localStorage.setItem('adoff_lang', lang); } catch(e) {}
@@ -247,9 +248,14 @@
 
   // Build language-aware links
   var lq = (activeLang && activeLang !== 'it') ? '?lang=' + activeLang : '';
-  var premiumLink = '/premium' + lq;
+  var premiumLink = (activeLang === 'en' || !activeLang) ? '/premium' : '/' + activeLang + '/premium';
+  var vpnPolicyLink = (activeLang === 'en' || !activeLang) ? '/vpn-policy' : '/' + activeLang + '/vpn-policy';
+  var pricingLink = (activeLang === 'en' || !activeLang) ? '/pricing.html' : '/' + activeLang + '/pricing.html';
+  var installLink = '/install.html' + lq;
+  var guideLink = (activeLang === 'en' || !activeLang) ? '/guide.html' : '/' + activeLang + '/guide.html';
+  var privacyLink = (activeLang === 'en' || !activeLang) ? '/privacy.html' : '/' + activeLang + '/privacy.html';
   var communityLink = (activeLang === 'en' || !activeLang) ? '/community' : '/' + activeLang + '/community';
-  var supportLink = '/support' + lq;
+  var supportLink = '/support.html' + lq;
 
   // GitHub SVG icon
   var githubSvg = '<svg height="16" width="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>';
@@ -262,10 +268,17 @@
       '<ul class="sn-links">',
         '<li><a href="/' + lq + '">Home</a></li>',
         '<li><a href="/' + lq + '#features">Features</a></li>',
-        '<li><a href="' + premiumLink + '">Premium</a></li>',
-        '<li><a href="/' + lq + '#pricing">Pricing</a></li>',
+        '<li><a href="' + pricingLink + '">Pricing</a></li>',
+        '<li><div class="sn-premium-wrap" id="snPremiumWrap">',
+          '<button class="sn-premium-btn" id="snPremiumBtn">Premium <span class="sn-premium-arrow">&#9660;</span></button>',
+          '<div class="sn-premium-dd" id="snPremiumDd">',
+            '<a href="' + premiumLink + '">Premium VPN</a>',
+            '<a href="' + vpnPolicyLink + '">VPN Policy</a>',
+          '</div>',
+        '</div></li>',
         '<li><a href="' + communityLink + '">Community</a></li>',
         '<li><a href="' + supportLink + '">Support</a></li>',
+        '<li><a href="' + installLink + '">Install</a></li>',
         '<li>',
           '<a href="https://github.com/eroslifestyle/adoff" class="sn-github" target="_blank" rel="noopener noreferrer" aria-label="GitHub">',
             githubSvg,
@@ -294,10 +307,14 @@
     '<div class="sn-mobile">',
       '<a href="/' + lq + '">Home</a>',
       '<a href="/' + lq + '#features">Features</a>',
-      '<a href="' + premiumLink + '">Premium</a>',
-      '<a href="/' + lq + '#pricing">Pricing</a>',
+      '<a href="' + pricingLink + '">Pricing</a>',
+      '<a href="' + premiumLink + '">Premium VPN</a>',
+      '<a href="' + vpnPolicyLink + '">VPN Policy</a>',
       '<a href="' + communityLink + '">Community</a>',
       '<a href="' + supportLink + '">Support</a>',
+      '<a href="' + installLink + '">Install</a>',
+      '<a href="' + guideLink + '">Guide</a>',
+      '<a href="' + privacyLink + '">Privacy</a>',
       '<a href="https://github.com/eroslifestyle/adoff" class="sn-github" target="_blank" rel="noopener noreferrer">',
         githubSvg,
         ' GitHub',
@@ -315,8 +332,18 @@
   // ─── Event handlers ─────────────────────────────────────────────────────────
   var langWrap = document.getElementById('snLangWrap');
   var langBtn = document.getElementById('snLangBtn');
+  var premiumWrap = document.getElementById('snPremiumWrap');
+  var premiumBtn = document.getElementById('snPremiumBtn');
   var burger = root.querySelector('.sn-burger');
   var themeToggles = root.querySelectorAll('.theme-toggle');
+
+  // Toggle premium dropdown
+  if (premiumBtn) {
+    premiumBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      premiumWrap.classList.toggle('open');
+    });
+  }
 
   // Theme toggle (desktop + mobile)
   for (var t = 0; t < themeToggles.length; t++) {
@@ -351,6 +378,7 @@
     if (!root.contains(e.target)) {
       root.classList.remove('open');
       langWrap.classList.remove('open');
+      if (premiumWrap) premiumWrap.classList.remove('open');
     }
   });
 

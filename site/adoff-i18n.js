@@ -18,8 +18,9 @@
   'use strict';
 
   var SUPPORTED = ['it','en','de','fr','es','pt','ru','ar','zh','hi','ja','ko','tr','id','pl'];
-  var STATIC_EN_ROOT = ['how-it-works','unique-tech','best-ad-blocker-2026','community','press','vs/ublock-origin','vs/adblock-plus','vs/adguard'];
-  var STATIC_IT_ROOT = ['guide','privacy','terms','withdrawal'];
+  var STATIC_EN_ROOT = ['how-it-works','unique-tech','best-ad-blocker-2026','community','press',
+    'vs/ublock-origin','vs/adblock-plus','vs/adguard'];
+  var STATIC_IT_ROOT = ['guide','privacy','terms','withdrawal','accessibility','license-guide'];
   var I18N_BASE = '/i18n/';
 
   // === Anti-FOUC CSS — inject as early as possible ===
