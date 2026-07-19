@@ -3,6 +3,7 @@
 ## Attivo
 - [ ] **Edge publish v3.5.36**: InProgressSubmission (Microsoft in review), riprovare tra 1-2h. Poll path: submissions/draft/package/operations/$OP.
 - [ ] **AMO Firefox v3.5.36**: web-ext sign timeout a 120s, riprovare timeout più lungo.
+- [ ] **Site full audit + fix** (2026-07-18): 37 pagine senza i18n, nav versioni sparse, CSP GTM blocca analytics — TUTTO RISOLTO (vedi checkpoint).
 - [x] **Post Telegram** changelog v3.5.36 (message_id: 78 su @adoffapp).
 - [ ] **Mockup hero localizzato** (opzionale): l'immagine hero (assets/mockup.webp) mostra popup con testo IT "Ads bloccati oggi 15" + changelog v3.1.0. Rigenerare versione aggiornata/neutra se serve.
 - [ ] **Premium VPN — Balance refill**: integrare ricarica auto quando utenti crescono (API no endpoint refill, solo manuale; $25 = ~12 mesi con 0 utenti).
