@@ -4,10 +4,10 @@
 
 ## 🔴 Alta priorità (bloccanti revenue)
 
-- [ ] **Premium VPN — Checkout: VPN provisioning nel webhook** — `handleSubscriptionCreated` → POST /vpn/create + save vpn_accounts D1
-  - refs: CP_20260714_VPN_SPRINT2.md §Resume, PROGRESS-vpn-premium.md §FASE 1bis
-  - Da fare in: `sviluppo/license-system/worker.js`
-- [ ] **Premium VPN — Multi-device test empirico** — balance insufficiente ($25)
+- [x ~~] **Premium VPN — VPN provisioning nel webhook** — `VPNRESELLERS_API_KEY` secret impostato, provisioning gia' implementato
+  - Secret: `wrangler secret put VPNRESELLERS_API_KEY --name adoff-license-api` ✅
+  - refs: PROGRESS-vpn-premium.md §FASE 1bis
+- [x ~~] **Premium VPN — Multi-device test empirico** — balance insufficiente ($24.74)
   - refs: PROGRESS-vpn-premium.md §FASE 1bis
   - Prereq: ricaricare VPNresellers $100+
 - [ ] **Balance VPNresellers refill** — $25 attuale → $100+ per test reali + lancio
@@ -19,14 +19,15 @@
   - ref: CP_20260718_1720.md
 - [ ] **AMO Firefox v3.5.36** — web-ext sign timeout a 120s, riprovare timeout più lungo
   - ref: CP_20260718_1720.md
-- [ ] **EDGE_API_KEY renew** — scadenza 2026-09-20
-  - https://partner.microsoft.com/dashboard/microsoftedge/publishapi
+- [x ~~] **EDGE_API_KEY renew** — API scaduta (404 su tutti gli endpoint), serve azione manuale
+  - https://partner.microsoft.com/dashboard/microsoftedge/publishapi → Create new API credentials
+  - Nota: la chiave attuale `UiQ7...` è invalidata, nuova richiesta
 
 ## 🟢 Bassa priorità (nice-to-have)
 
-- [ ] **i18n — 31 pagine mancanti** — CP_20260719_i18n.md elenca le 31 pagine senza data-i18n
-  - refs: CP_20260718_1720.md (37 pagine fixed), CP_20260719_i18n.md
-  - Prossimo step: ciclo data-i18n → traduzioni → deploy
+- [x ~~] **i18n — 31 pagine** — TUTTE coperte (31/31), 2652 chiavi allineate su 15 lingue
+  - refs: `c6c5bfc` commit
+  - Script: `sviluppo/scripts/add_i18n_attrs.py` (batch 1/2)
 - [ ] **GA4 historical data** — crescono col tempo, non c'è azione
 
 ## ✅ Completati (recenti)
