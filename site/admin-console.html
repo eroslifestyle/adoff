@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script>
+<script>
     (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
   </script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="noindex, nofollow" name="robots"/>
 <title>AdOff Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <style>
@@ -218,735 +218,684 @@ tr:hover td{background:rgba(124,92,252,.04)}
 </style>
 </head>
 <body>
-
 <!-- LOGIN -->
-<div class="login-wrap" id="loginWrap">
-  <!-- Main login form -->
-  <div class="login-box" id="loginBox">
-    <div class="login-logo">Ad<span>Off</span></div>
-    <div class="login-sub">Admin Dashboard</div>
-    <div class="err" id="loginErr"></div>
-    <input type="text" id="loginUser" placeholder="Username" autocomplete="username">
-    <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password">
-    <button class="btn btn-primary btn-full" onclick="doLogin()">Accedi</button>
-    <div style="display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:12px">
-      <span style="flex:1;height:1px;background:var(--border,rgba(124,92,252,.18))"></span>oppure<span style="flex:1;height:1px;background:var(--border,rgba(124,92,252,.18))"></span>
-    </div>
-    <button class="btn btn-outline btn-full" onclick="loginGoogle()" style="display:flex;align-items:center;justify-content:center;gap:10px">
-      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-2.1 14.1-5.5l-6.5-5.5c-2 1.5-4.7 2.5-7.6 2.5-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l6.5 5.5C41.4 36.3 44 30.7 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>
+<div class="login-wrap" data-i18n="loginwrap.main_login_form_forgot_password" id="loginWrap">
+<!-- Main login form -->
+<div class="login-box" id="loginBox">
+<div class="login-logo" data-i18n="login_logo.ad">Ad<span data-i18n="admin_console.off">Off</span></div>
+<div class="login-sub" data-i18n="login_sub.admin_dashboard">Admin Dashboard</div>
+<div class="err" id="loginErr"></div>
+<input autocomplete="username" id="loginUser" placeholder="Username" type="text"/>
+<input autocomplete="current-password" id="loginPass" placeholder="Password" type="password"/>
+<button class="btn btn-primary btn-full" onclick="doLogin()">Accedi</button>
+<div data-i18n="admin-console.oppure" style="display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:12px">
+<span style="flex:1;height:1px;background:var(--border,rgba(124,92,252,.18))"></span>oppure<span style="flex:1;height:1px;background:var(--border,rgba(124,92,252,.18))"></span>
+</div>
+<button class="btn btn-outline btn-full" onclick="loginGoogle()" style="display:flex;align-items:center;justify-content:center;gap:10px">
+<svg aria-hidden="true" height="18" viewbox="0 0 48 48" width="18"><path d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z" fill="#FFC107"></path><path d="m6.3 14.7 6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" fill="#FF3D00"></path><path d="M24 44c5.5 0 10.4-2.1 14.1-5.5l-6.5-5.5c-2 1.5-4.7 2.5-7.6 2.5-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.2 44 24 44z" fill="#4CAF50"></path><path d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.5l6.5 5.5C41.4 36.3 44 30.7 44 24c0-1.3-.1-2.3-.4-3.5z" fill="#1976D2"></path></svg>
       Continua con Google
     </button>
-    <div style="text-align:center;margin-top:14px">
-      <span class="link" onclick="showPanel('forgot')">Password dimenticata?</span>
-    </div>
-  </div>
-
-  <!-- Forgot password -->
-  <div class="login-box" id="forgotBox" style="display:none">
-    <div class="login-logo">Ad<span>Off</span></div>
-    <div class="login-sub">Recupero Password</div>
-    <div class="err" id="forgotErr"></div>
-    <div class="ok-msg" id="forgotOk"></div>
-    <input type="email" id="forgotEmail" placeholder="Email admin">
-    <button class="btn btn-primary btn-full" onclick="doForgot()">Invia link reset</button>
-    <div style="text-align:center;margin-top:12px">
-      <span class="link" onclick="showPanel('login')">← Torna al login</span>
-    </div>
-  </div>
-
-  <!-- Reset password -->
-  <div class="login-box" id="resetBox" style="display:none">
-    <div class="login-logo">Ad<span>Off</span></div>
-    <div class="login-sub">Nuova Password</div>
-    <div class="err" id="resetErr"></div>
-    <div class="ok-msg" id="resetOk"></div>
-    <input type="password" id="resetPass" placeholder="Nuova password">
-    <input type="password" id="resetPass2" placeholder="Conferma password">
-    <button class="btn btn-primary btn-full" onclick="doReset()">Imposta password</button>
-  </div>
+<div style="text-align:center;margin-top:14px">
+<span class="link" data-i18n="admin_console.password.dimenticata" onclick="showPanel('forgot')">Password dimenticata?</span>
 </div>
-
+</div>
+<!-- Forgot password -->
+<div class="login-box" id="forgotBox" style="display:none">
+<div class="login-logo" data-i18n="login_logo.ad_1">Ad<span data-i18n="admin_console.off">Off</span></div>
+<div class="login-sub" data-i18n="login_sub.recupero_password">Recupero Password</div>
+<div class="err" id="forgotErr"></div>
+<div class="ok-msg" id="forgotOk"></div>
+<input id="forgotEmail" placeholder="Email admin" type="email"/>
+<button class="btn btn-primary btn-full" onclick="doForgot()">Invia link reset</button>
+<div style="text-align:center;margin-top:12px">
+<span class="link" data-i18n="admin_console.torna.al.login" onclick="showPanel('login')">← Torna al login</span>
+</div>
+</div>
+<!-- Reset password -->
+<div class="login-box" id="resetBox" style="display:none">
+<div class="login-logo" data-i18n="login_logo.ad_2">Ad<span data-i18n="admin_console.off">Off</span></div>
+<div class="login-sub" data-i18n="login_sub.nuova_password">Nuova Password</div>
+<div class="err" id="resetErr"></div>
+<div class="ok-msg" id="resetOk"></div>
+<input id="resetPass" placeholder="Nuova password" type="password"/>
+<input id="resetPass2" placeholder="Conferma password" type="password"/>
+<button class="btn btn-primary btn-full" onclick="doReset()">Imposta password</button>
+</div>
+</div>
 <!-- OVERLAY (mobile) -->
 <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
-
 <!-- DASHBOARD -->
-<div class="app" id="app">
-  <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">Ad<span>Off</span></div>
-    <nav class="sidebar-nav">
-      <div class="nav-item active" data-page="stats" onclick="navTo('stats')">
-        <span class="nav-icon">📊</span><span>Statistiche</span>
-      </div>
-      <div class="nav-item" data-page="licenses" onclick="navTo('licenses')">
-        <span class="nav-icon">🔑</span><span>Licenze</span>
-      </div>
-      <div class="nav-item" data-page="finance" onclick="navTo('finance')">
-        <span class="nav-icon">💰</span><span>Finanza</span>
-      </div>
-      <div class="nav-item" data-page="outreach" onclick="navTo('outreach')">
-        <span class="nav-icon">📣</span><span>Outreach</span>
-      </div>
-      <div class="nav-item" data-page="support" onclick="navTo('support')">
-        <span class="nav-icon">💬</span><span>Supporto</span>
-      </div>
-      <div class="nav-item" data-page="suggestions" onclick="navTo('suggestions')">
-        <span class="nav-icon">💡</span><span>Suggerimenti</span>
-      </div>
-      <div class="nav-item" data-page="chat" onclick="navTo('chat')">
-        <span class="nav-icon">🤖</span><span>Chat AI</span>
-      </div>
-      <div class="nav-item" data-page="settings" onclick="navTo('settings')">
-        <span class="nav-icon">⚙</span><span>Impostazioni</span>
-      </div>
-      <div class="nav-item" data-page="uninstall" onclick="navTo('uninstall')">
-        <span class="nav-icon">🗑️</span><span>Disinstallazioni</span>
-      </div>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="admin-badge">
-        <div class="admin-avatar">A</div>
-        <div>
-          <div class="admin-name" id="adminName">Admin</div>
-          <div class="admin-role">Administrator</div>
-        </div>
-      </div>
-      <button class="btn btn-outline btn-sm btn-full" onclick="doLogout()">Esci</button>
-    </div>
-  </aside>
-
-  <!-- Main content -->
-  <main class="main">
-    <div class="topbar">
-      <div style="display:flex;align-items:center;gap:14px">
-        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-        <div class="topbar-title" id="topbarTitle">Dashboard</div>
-      </div>
-      <div class="topbar-right">
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
-          <div class="status-dot"></div><span>Worker online</span>
-        </div>
-        <button class="btn btn-outline btn-sm" onclick="refreshCurrentPage()">↻ Aggiorna</button>
-      </div>
-    </div>
-
-    <!-- PAGE: DASHBOARD (legacy — non più nel menu, sostituita dal pool Statistiche) -->
-    <div class="page" id="page-dashboard">
-      <div class="stats-grid" id="dash-stats">
-        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
-      </div>
-      <div class="row-2">
-        <div class="card">
-          <div class="card-title">Revenue ultimi 7 giorni</div>
-          <div class="chart-wrap"><canvas id="dashRevenueChart"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Distribuzione piani</div>
-          <div class="chart-wrap"><canvas id="dashPlanChart"></canvas></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Installazioni recenti</div>
-        <div id="recentInstalls"><div class="loading-center"><div class="loader"></div></div></div>
-      </div>
-    </div>
-
-    <!-- PAGE: LICENZE -->
-    <div class="page" id="page-licenses">
-      <div class="toolbar">
-        <input type="text" id="licSearch" placeholder="🔍  Cerca per email o key..." oninput="filterLicenses()">
-        <select id="licPlan" onchange="filterLicenses()">
-          <option value="">Tutti i piani</option>
-          <option value="monthly">Mensile</option>
-          <option value="annual">Annuale</option>
-          <option value="lifetime">Lifetime</option>
-        </select>
-        <select id="licStatus" onchange="filterLicenses()">
-          <option value="">Tutti gli stati</option>
-          <option value="active">Attive</option>
-          <option value="expired">Scadute</option>
-          <option value="revoked">Revocate</option>
-        </select>
-        <div class="spacer"></div>
-        <button class="btn btn-primary" onclick="toggleNewLicForm()">＋ Nuova Licenza</button>
-      </div>
-
-      <!-- New license form -->
-      <div class="card" id="newLicForm" style="display:none;margin-bottom:16px">
-        <div class="card-title">Genera nuova licenza</div>
-        <div class="form-row">
-          <div class="field">
-            <label>Piano</label>
-            <select id="nlPlan">
-              <option value="monthly">Mensile</option>
-              <option value="annual">Annuale</option>
-              <option value="lifetime">Lifetime</option>
-            </select>
+<div class="app" data-i18n="app.sidebar_main_content" id="app">
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-logo" data-i18n="sidebar.ad">Ad<span data-i18n="admin_console.off">Off</span></div>
+<nav class="sidebar-nav">
+<div class="nav-item active" data-page="stats" onclick="navTo('stats')">
+<span class="nav-icon">📊</span><span data-i18n="admin_console.statistiche">Statistiche</span>
+</div>
+<div class="nav-item" data-page="licenses" onclick="navTo('licenses')">
+<span class="nav-icon">🔑</span><span data-i18n="admin_console.licenze">Licenze</span>
+</div>
+<div class="nav-item" data-page="finance" onclick="navTo('finance')">
+<span class="nav-icon">💰</span><span data-i18n="admin_console.finanza">Finanza</span>
+</div>
+<div class="nav-item" data-page="outreach" onclick="navTo('outreach')">
+<span class="nav-icon">📣</span><span data-i18n="admin_console.outreach">Outreach</span>
+</div>
+<div class="nav-item" data-page="support" onclick="navTo('support')">
+<span class="nav-icon">💬</span><span data-i18n="admin_console.supporto">Supporto</span>
+</div>
+<div class="nav-item" data-page="suggestions" onclick="navTo('suggestions')">
+<span class="nav-icon">💡</span><span data-i18n="admin_console.suggerimenti">Suggerimenti</span>
+</div>
+<div class="nav-item" data-page="chat" onclick="navTo('chat')">
+<span class="nav-icon">🤖</span><span data-i18n="admin_console.chat.ai">Chat AI</span>
+</div>
+<div class="nav-item" data-page="settings" onclick="navTo('settings')">
+<span class="nav-icon">⚙</span><span data-i18n="admin_console.impostazioni">Impostazioni</span>
+</div>
+<div class="nav-item" data-page="uninstall" onclick="navTo('uninstall')">
+<span class="nav-icon">🗑️</span><span data-i18n="admin_console.disinstallazioni">Disinstallazioni</span>
+</div>
+</nav>
+<div class="sidebar-footer">
+<div class="admin-badge">
+<div class="admin-avatar">A</div>
+<div>
+<div class="admin-name" data-i18n="sidebar.admin" id="adminName">Admin</div>
+<div class="admin-role" data-i18n="sidebar.administrator">Administrator</div>
+</div>
+</div>
+<button class="btn btn-outline btn-sm btn-full" onclick="doLogout()">Esci</button>
+</div>
+</aside>
+<!-- Main content -->
+<main class="main">
+<div class="topbar">
+<div style="display:flex;align-items:center;gap:14px">
+<button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+<div class="topbar-title" data-i18n="topbartitle.dashboard" id="topbarTitle">Dashboard</div>
+</div>
+<div class="topbar-right">
+<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+<div class="status-dot"></div><span data-i18n="admin_console.worker.online">Worker online</span>
+</div>
+<button class="btn btn-outline btn-sm" onclick="refreshCurrentPage()">↻ Aggiorna</button>
+</div>
+</div>
+<!-- PAGE: DASHBOARD (legacy — non più nel menu, sostituita dal pool Statistiche) -->
+<div class="page" id="page-dashboard">
+<div class="stats-grid" id="dash-stats">
+<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+</div>
+<div class="row-2">
+<div class="card">
+<div class="card-title" data-i18n="card_title.revenue_ultimi_7_giorni">Revenue ultimi 7 giorni</div>
+<div class="chart-wrap"><canvas id="dashRevenueChart"></canvas></div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.distribuzione_piani">Distribuzione piani</div>
+<div class="chart-wrap"><canvas id="dashPlanChart"></canvas></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.installazioni_recenti">Installazioni recenti</div>
+<div id="recentInstalls"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+</div>
+<!-- PAGE: LICENZE -->
+<div class="page" data-i18n="page_licenses.new_license_form_bulk_action_bar" id="page-licenses">
+<div class="toolbar">
+<input id="licSearch" oninput="filterLicenses()" placeholder="🔍  Cerca per email o key..." type="text"/>
+<select id="licPlan" onchange="filterLicenses()">
+<option value="">Tutti i piani</option>
+<option value="monthly">Mensile</option>
+<option value="annual">Annuale</option>
+<option value="lifetime">Lifetime</option>
+</select>
+<select id="licStatus" onchange="filterLicenses()">
+<option value="">Tutti gli stati</option>
+<option value="active">Attive</option>
+<option value="expired">Scadute</option>
+<option value="revoked">Revocate</option>
+</select>
+<div class="spacer"></div>
+<button class="btn btn-primary" onclick="toggleNewLicForm()">＋ Nuova Licenza</button>
+</div>
+<!-- New license form -->
+<div class="card" id="newLicForm" style="display:none;margin-bottom:16px">
+<div class="card-title" data-i18n="card_title.genera_nuova_licenza">Genera nuova licenza</div>
+<div class="form-row">
+<div class="field">
+<label data-i18n="admin_console.piano">Piano</label>
+<select id="nlPlan">
+<option value="monthly">Mensile</option>
+<option value="annual">Annuale</option>
+<option value="lifetime">Lifetime</option>
+</select>
+</div>
+<div class="field">
+<label data-i18n="admin_console.mesi.validità">Mesi validità</label>
+<input id="nlMonths" max="120" min="1" placeholder="1" type="number" value="1"/>
+</div>
+<div class="field">
+<label data-i18n="admin_console.email.opzionale">Email (opzionale)</label>
+<input id="nlEmail" placeholder="utente@email.com" type="email"/>
+</div>
+<div class="field">
+<label data-i18n="admin_console.max.dispositivi">Max dispositivi</label>
+<input id="nlDevices" max="10" min="1" type="number" value="3"/>
+</div>
+</div>
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+<button class="btn btn-primary" onclick="generateKey()">Genera Key</button>
+<button class="btn btn-outline" onclick="toggleNewLicForm()">Annulla</button>
+<div id="newKeyResult" style="display:none;flex:1;background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px 14px;align-items:center;gap:10px">
+<span class="mono" id="newKeyText" style="flex:1;word-break:break-all"></span>
+<button class="btn-icon" onclick="copyKey(document.getElementById('newKeyText').textContent)" title="Copia">⎘</button>
+</div>
+</div>
+</div>
+<!-- Bulk action bar -->
+<div id="bulkBar" style="display:none;background:rgba(124,92,252,.1);border:1px solid var(--accent);border-radius:10px;padding:12px 20px;margin-bottom:14px;align-items:center;justify-content:space-between">
+<span style="font-size:13px;color:var(--accent);font-weight:600"><span id="bulkCount">0</span> selezionate</span>
+<div style="display:flex;gap:8px">
+<button class="btn btn-sm btn-outline" onclick="bulkAction('revoke')">Revoca selezionate</button>
+<button class="btn btn-sm btn-danger" onclick="bulkAction('delete')">Elimina selezionate</button>
+<button class="btn btn-sm btn-outline" onclick="clearSelection()">Deseleziona</button>
+</div>
+</div>
+<div id="licTableWrap">
+<div class="loading-center"><div class="loader"></div></div>
+</div>
+</div>
+<!-- PAGE: FINANZA -->
+<div class="page" id="page-finance">
+<div class="stats-grid" id="fin-stats">
+<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+</div>
+<div class="row-2">
+<div class="card">
+<div class="card-title" data-i18n="card_title.revenue_ultimi_30_giorni">Revenue ultimi 30 giorni</div>
+<div class="chart-wrap chart-wrap-lg"><canvas id="finRevenueChart"></canvas></div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.revenue_per_piano">Revenue per piano</div>
+<div class="chart-wrap"><canvas id="finPlanChart"></canvas></div>
+</div>
+</div>
+</div>
+<!-- PAGE: ANALYTICS -->
+<div class="page" id="page-analytics">
+<div class="stats-grid" id="ana-stats">
+<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+</div>
+<div class="row-2">
+<div class="card">
+<div class="card-title" data-i18n="card_title.installazioni_ultimi_7_giorni">Installazioni ultimi 7 giorni</div>
+<div class="chart-wrap"><canvas id="anaInstallChart"></canvas></div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.top_paesi">Top Paesi</div>
+<div id="topCountries"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+</div>
+<div class="row-2">
+<div class="card">
+<div class="card-title" data-i18n="card_title.download_per_browser">Download per browser</div>
+<div id="browserStats"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.log_installazioni_recenti">Log installazioni recenti</div>
+<div id="installLog"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+</div>
+</div>
+<!-- PAGE: STATISTICHE (pool unico — dashboard + analytics + churn) -->
+<div class="page active" data-i18n="page_stats.kpi_sempre_visibili_riassunto_cros" id="page-stats">
+<!-- KPI sempre visibili (riassunto cross-tab) -->
+<div class="stats-grid" id="st-kpis">
+<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+</div>
+<!-- Tab -->
+<div class="stat-tabs">
+<button class="stat-tab active" data-tab="overview" onclick="switchStatsTab('overview')">📊 Panoramica</button>
+<button class="stat-tab" data-tab="acq" onclick="switchStatsTab('acq')">📥 Acquisizione</button>
+<button class="stat-tab" data-tab="churn" onclick="switchStatsTab('churn')">🗑️ Disinstallazioni</button>
+<button class="stat-tab" data-tab="biz" onclick="switchStatsTab('biz')">💰 Business</button>
+<button class="stat-tab" data-tab="seo" onclick="switchStatsTab('seo')">🔍 SEO / AEO</button>
+<button class="stat-tab" data-tab="autofix" onclick="switchStatsTab('autofix')">🔧 Autofix</button>
+</div>
+<!-- Tab: Panoramica -->
+<div class="stat-panel active" data-panel="overview">
+<div class="row-2">
+<div class="card">
+<div class="card-title" data-i18n="card_title.installazioni_vs_disinstallazioni">Installazioni vs Disinstallazioni · ultimi 7 giorni</div>
+<div class="chart-wrap"><canvas id="stNetChart"></canvas></div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.top_paesi_installazioni">Top Paesi (installazioni)</div>
+<div id="stCountries"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+</div>
+</div>
+<!-- Tab: Acquisizione -->
+<div class="stat-panel" data-panel="acq">
+<div class="row-2">
+<div class="card">
+<div class="card-title" data-i18n="card_title.sorgenti_di_installazione">Sorgenti di installazione</div>
+<div id="stSources"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.download_per_browser_1">Download per browser</div>
+<div id="stDlBrowser"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.installazioni_recenti_1">Installazioni recenti</div>
+<div id="stInstallLog"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+</div>
+<!-- Tab: Disinstallazioni -->
+<div class="stat-panel" data-panel="churn">
+<div class="row-2">
+<div class="card">
+<div class="card-title" data-i18n="card_title.motivi_di_disinstallazione">Motivi di disinstallazione</div>
+<div id="stReasons"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.disinstallazioni_per_browser">Disinstallazioni per browser</div>
+<div id="stUninstBrowser"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.disinstallazioni_recenti_con_comme">Disinstallazioni recenti (con commenti)</div>
+<div id="stUninstLog"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+</div>
+<!-- Tab: Business -->
+<div class="stat-panel" data-panel="biz">
+<div class="row-2">
+<div class="card">
+<div class="card-title" data-i18n="card_title.revenue_ultimi_7_giorni_1">Revenue ultimi 7 giorni</div>
+<div class="chart-wrap"><canvas id="stRevenueChart"></canvas></div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.distribuzione_piani_1">Distribuzione piani</div>
+<div class="chart-wrap"><canvas id="stPlanChart"></canvas></div>
+</div>
+</div>
+</div>
+<!-- Tab: SEO / AEO -->
+<div class="stat-panel" data-i18n="stat_panel.header_with_filters_kpi_cards" data-panel="seo">
+<!-- Header with filters -->
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+<div data-i18n="admin-console.periodo" style="font-size:13px;color:var(--muted)">Periodo:</div>
+<div class="period-btns">
+<button class="btn btn-sm btn-outline" id="seo-period-7" onclick="setSeoPeriod(7)">7g</button>
+<button class="btn btn-sm btn-outline" id="seo-period-30" onclick="setSeoPeriod(30)">30g</button>
+<button class="btn btn-sm btn-outline" id="seo-period-90" onclick="setSeoPeriod(90)">90g</button>
+</div>
+<div class="period-btns" style="margin-left:12px">
+<select id="seo-device" onchange="loadSeo()" style="background:var(--input);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 8px;font-size:12px">
+<option value="">Tutti i device</option>
+<option value="DESKTOP">Desktop</option>
+<option value="MOBILE">Mobile</option>
+<option value="TABLET">Tablet</option>
+</select>
+<select id="seo-country" onchange="loadSeo()" style="background:var(--input);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 8px;font-size:12px">
+<option value="">Tutti i paesi</option>
+</select>
+</div>
+<button class="btn btn-sm" onclick="refreshSeo()" style="margin-left:auto;background:var(--success);color:#000;font-weight:600">↻ Aggiorna</button>
+<span id="seo-updated" style="font-size:11px;color:var(--muted)"></span>
+</div>
+<!-- KPI Cards -->
+<div class="stats-grid" id="seo-kpis">
+<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+</div>
+<!-- Charts row: Trend + Device -->
+<div class="row-2">
+<div class="card">
+<div class="card-title" data-i18n="card_title.trend_clicks_impressions">📈 Trend Clicks &amp; Impressions</div>
+<div id="seo-trend-legend" style="display:flex;gap:16px;font-size:12px;margin-bottom:8px">
+<span data-i18n="admin_console.clicks" style="color:#7c5cfc">● Clicks</span>
+<span data-i18n="admin_console.impressions" style="color:#60a5fa">● Impressions</span>
+</div>
+<div class="chart-wrap chart-wrap-lg"><canvas id="seoTrendChart"></canvas></div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.device_split">📱 Device Split</div>
+<div class="chart-wrap"><canvas id="seoDeviceChart"></canvas></div>
+</div>
+</div>
+<!-- Keyword + Pages row -->
+<div class="row-2">
+<div class="card">
+<div class="card-title" data-i18n="card_title.top_keyword_per_clicks">🔑 Top Keyword per Clicks</div>
+<div id="seoKeywords"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.top_pagine_per_impressions">📄 Top Pagine per Impressions</div>
+<div id="seoPages"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+</div>
+<!-- Countries + Search Appearances row -->
+<div class="row-2">
+<div class="card">
+<div class="card-title" data-i18n="card_title.top_paesi_1">🌍 Top Paesi</div>
+<div id="seoCountries"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.search_appearances">✨ Search Appearances</div>
+<div id="seoAppearances"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+</div>
+<!-- Opportunities (keywords ranking 5-20) -->
+<div class="card">
+<div class="card-title" data-i18n="card_title.opportunità_keyword_in_posizion">🎯 Opportunità — Keyword in posizione 5-20 (alto potenziale)</div>
+<div id="seoOpportunities"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+<!-- Sitemap + URL Inspector row -->
+<div class="row-2">
+<div class="card">
+<div class="card-title" data-i18n="card_title.sitemap">🗺️ Sitemap</div>
+<div id="seoSitemaps"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.url_inspector">🔍 URL Inspector</div>
+<div style="display:flex;gap:8px;margin-bottom:12px">
+<input id="seo-inspect-url" placeholder="https://adoff.app/..." style="flex:1;background:var(--input);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 12px;font-size:13px" type="text"/>
+<button class="btn btn-sm btn-primary" onclick="inspectSeoUrl()">Ispeziona</button>
+<button class="btn btn-sm btn-outline" onclick="batchInspectSitemap()">Batch sitemap</button>
+</div>
+<div id="seo-inspect-result"><div class="empty" style="padding:16px"><p data-i18n="admin_console.inserisci.un.url.e.clicca.ispeziona.per." style="color:var(--muted);font-size:13px">Inserisci un URL e clicca "Ispeziona" per vedere lo stato di indicizzazione.</p></div></div>
+</div>
+</div>
+<!-- Azioni + GA4 row -->
+<div class="row-2">
+<div class="card">
+<div class="card-title" data-i18n="card_title.azioni_rapide">⚡ Azioni Rapide</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-sm btn-outline" onclick="submitSitemap()">🔄 Submit Sitemap</button>
+<button class="btn btn-sm btn-outline" onclick="exportSeoCsv()">📤 Esporta CSV</button>
+<button class="btn btn-sm btn-outline" onclick="exportSeoPng()">📊 Esporta PNG</button>
+</div>
+<div data-i18n="admin-console.ultimo_submit_sitemap" style="font-size:12px;color:var(--muted)">Ultimo submit sitemap: <span id="seo-last-sitemap">—</span></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.google_analytics_4">📊 Google Analytics 4</div>
+<div id="seo-ga4"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+</div>
+<!-- Batch inspect results -->
+<div id="seo-batch-panel" style="display:none">
+<div class="card">
+<div class="card-title" data-i18n="card_title.risultati_batch_inspect">🔍 Risultati Batch Inspect</div>
+<div id="seo-batch-results"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+</div>
+</div>
+<!-- Tab: Autofix — Ad Leak Blocker -->
+<div class="stat-panel" data-i18n="stat_panel.header_shadow_mode_notice_sta" data-panel="autofix">
+<!-- Header -->
+<div style="margin-bottom:16px">
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px">
+<div data-i18n="admin-console.autofix_ad_leak_blocker" style="font-size:15px;font-weight:600">🔧 Autofix — Ad Leak Blocker</div>
+<div style="display:flex;gap:8px;align-items:center">
+<div id="autofix-mode-badge"></div>
+<button class="btn btn-sm btn-accent" onclick="loadAutofix();loadAutofixLeaks()" title="Ricarica dati">↻</button>
+</div>
+</div>
+<div data-i18n="admin-console.analizza_i_leak_rilevati_dal_crawle" style="font-size:12px;color:var(--muted)">Analizza i leak rilevati dal crawler notturno, decide quali fixare, io li applico.</div>
+</div>
+<!-- Shadow Mode notice -->
+<div data-i18n="autofix_shadow_notice.nessun_fix_viene_deployato_automa" id="autofix-shadow-notice" style="display:none;padding:10px 14px;background:#2a2a1a;border:1px solid #ffbc6b;border-radius:8px;margin-bottom:14px;font-size:12px;color:#ffbc6b">
+<b>⚠ Shadow Mode attivo</b> — Nessun fix viene deployato automaticamente. Dopo aver deciso, esegui manualmente da riga di comando: <code style="background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:3px;display:inline-block;margin-top:4px">node apply_decisions.mjs --date today</code>
+</div>
+<!-- Stats row -->
+<div id="autofix-stats-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px"></div>
+<!-- Bucket filter -->
+<div id="autofix-filter-bar" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+<button class="btn btn-sm" data-bucket="all" onclick="filterAutofixBucket('all')" style="background:var(--btn-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 12px">Tutti <span id="cnt-all" style="color:var(--muted)"></span></button>
+<button class="btn btn-sm" data-bucket="ads_real" onclick="filterAutofixBucket('ads_real')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:6px;padding:5px 12px">🎯 Ad-veri <span id="cnt-ads_real" style="opacity:0.7"></span></button>
+<button class="btn btn-sm" data-bucket="tracking" onclick="filterAutofixBucket('tracking')" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);color:#eab308;border-radius:6px;padding:5px 12px">📡 Tracking <span id="cnt-tracking" style="opacity:0.7"></span></button>
+<button class="btn btn-sm" data-bucket="dom_fp" onclick="filterAutofixBucket('dom_fp')" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:6px;padding:5px 12px">❓ DOM (sospetti FP) <span id="cnt-dom_fp" style="opacity:0.7"></span></button>
+<button class="btn btn-sm" data-bucket="approved" onclick="filterAutofixBucket('approved')" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:6px;padding:5px 12px">✅ Approvati <span id="cnt-approved" style="opacity:0.7"></span></button>
+<button class="btn btn-sm" data-bucket="ignored" onclick="filterAutofixBucket('ignored')" style="background:rgba(100,116,139,0.1);border:1px solid rgba(100,116,139,0.3);color:#94a3b8;border-radius:6px;padding:5px 12px">🚫 Ignorati <span id="cnt-ignored" style="opacity:0.7"></span></button>
+</div>
+<!-- CTA per azioni collettive -->
+<div id="autofix-bulk-actions" style="display:none;padding:10px 14px;background:var(--input);border-radius:8px;margin-bottom:14px;border:1px solid var(--border)">
+<div data-i18n="admin-console.leak_selezionati" style="font-size:12px;color:var(--muted);margin-bottom:8px">
+<span id="bulk-selection-count">0</span> leak selezionati:
           </div>
-          <div class="field">
-            <label>Mesi validità</label>
-            <input type="number" id="nlMonths" value="1" min="1" max="120" placeholder="1">
-          </div>
-          <div class="field">
-            <label>Email (opzionale)</label>
-            <input type="email" id="nlEmail" placeholder="utente@email.com">
-          </div>
-          <div class="field">
-            <label>Max dispositivi</label>
-            <input type="number" id="nlDevices" value="3" min="1" max="10">
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="generateKey()">Genera Key</button>
-          <button class="btn btn-outline" onclick="toggleNewLicForm()">Annulla</button>
-          <div id="newKeyResult" style="display:none;flex:1;background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px 14px;align-items:center;gap:10px">
-            <span class="mono" id="newKeyText" style="flex:1;word-break:break-all"></span>
-            <button class="btn-icon" title="Copia" onclick="copyKey(document.getElementById('newKeyText').textContent)">⎘</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bulk action bar -->
-      <div id="bulkBar" style="display:none;background:rgba(124,92,252,.1);border:1px solid var(--accent);border-radius:10px;padding:12px 20px;margin-bottom:14px;align-items:center;justify-content:space-between">
-        <span style="font-size:13px;color:var(--accent);font-weight:600"><span id="bulkCount">0</span> selezionate</span>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-sm btn-outline" onclick="bulkAction('revoke')">Revoca selezionate</button>
-          <button class="btn btn-sm btn-danger" onclick="bulkAction('delete')">Elimina selezionate</button>
-          <button class="btn btn-sm btn-outline" onclick="clearSelection()">Deseleziona</button>
-        </div>
-      </div>
-
-      <div id="licTableWrap">
-        <div class="loading-center"><div class="loader"></div></div>
-      </div>
-    </div>
-
-    <!-- PAGE: FINANZA -->
-    <div class="page" id="page-finance">
-      <div class="stats-grid" id="fin-stats">
-        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
-      </div>
-      <div class="row-2">
-        <div class="card">
-          <div class="card-title">Revenue ultimi 30 giorni</div>
-          <div class="chart-wrap chart-wrap-lg"><canvas id="finRevenueChart"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Revenue per piano</div>
-          <div class="chart-wrap"><canvas id="finPlanChart"></canvas></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- PAGE: ANALYTICS -->
-    <div class="page" id="page-analytics">
-      <div class="stats-grid" id="ana-stats">
-        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
-      </div>
-      <div class="row-2">
-        <div class="card">
-          <div class="card-title">Installazioni ultimi 7 giorni</div>
-          <div class="chart-wrap"><canvas id="anaInstallChart"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Top Paesi</div>
-          <div id="topCountries"><div class="loading-center"><div class="loader"></div></div></div>
-        </div>
-      </div>
-      <div class="row-2">
-        <div class="card">
-          <div class="card-title">Download per browser</div>
-          <div id="browserStats"><div class="loading-center"><div class="loader"></div></div></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Log installazioni recenti</div>
-          <div id="installLog"><div class="loading-center"><div class="loader"></div></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- PAGE: STATISTICHE (pool unico — dashboard + analytics + churn) -->
-    <div class="page active" id="page-stats">
-      <!-- KPI sempre visibili (riassunto cross-tab) -->
-      <div class="stats-grid" id="st-kpis">
-        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
-      </div>
-
-      <!-- Tab -->
-      <div class="stat-tabs">
-        <button class="stat-tab active" data-tab="overview" onclick="switchStatsTab('overview')">📊 Panoramica</button>
-        <button class="stat-tab" data-tab="acq" onclick="switchStatsTab('acq')">📥 Acquisizione</button>
-        <button class="stat-tab" data-tab="churn" onclick="switchStatsTab('churn')">🗑️ Disinstallazioni</button>
-        <button class="stat-tab" data-tab="biz" onclick="switchStatsTab('biz')">💰 Business</button>
-        <button class="stat-tab" data-tab="seo" onclick="switchStatsTab('seo')">🔍 SEO / AEO</button>
-        <button class="stat-tab" data-tab="autofix" onclick="switchStatsTab('autofix')">🔧 Autofix</button>
-      </div>
-
-      <!-- Tab: Panoramica -->
-      <div class="stat-panel active" data-panel="overview">
-        <div class="row-2">
-          <div class="card">
-            <div class="card-title">Installazioni vs Disinstallazioni · ultimi 7 giorni</div>
-            <div class="chart-wrap"><canvas id="stNetChart"></canvas></div>
-          </div>
-          <div class="card">
-            <div class="card-title">Top Paesi (installazioni)</div>
-            <div id="stCountries"><div class="loading-center"><div class="loader"></div></div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tab: Acquisizione -->
-      <div class="stat-panel" data-panel="acq">
-        <div class="row-2">
-          <div class="card">
-            <div class="card-title">Sorgenti di installazione</div>
-            <div id="stSources"><div class="loading-center"><div class="loader"></div></div></div>
-          </div>
-          <div class="card">
-            <div class="card-title">Download per browser</div>
-            <div id="stDlBrowser"><div class="loading-center"><div class="loader"></div></div></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Installazioni recenti</div>
-          <div id="stInstallLog"><div class="loading-center"><div class="loader"></div></div></div>
-        </div>
-      </div>
-
-      <!-- Tab: Disinstallazioni -->
-      <div class="stat-panel" data-panel="churn">
-        <div class="row-2">
-          <div class="card">
-            <div class="card-title">Motivi di disinstallazione</div>
-            <div id="stReasons"><div class="loading-center"><div class="loader"></div></div></div>
-          </div>
-          <div class="card">
-            <div class="card-title">Disinstallazioni per browser</div>
-            <div id="stUninstBrowser"><div class="loading-center"><div class="loader"></div></div></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">Disinstallazioni recenti (con commenti)</div>
-          <div id="stUninstLog"><div class="loading-center"><div class="loader"></div></div></div>
-        </div>
-      </div>
-
-      <!-- Tab: Business -->
-      <div class="stat-panel" data-panel="biz">
-        <div class="row-2">
-          <div class="card">
-            <div class="card-title">Revenue ultimi 7 giorni</div>
-            <div class="chart-wrap"><canvas id="stRevenueChart"></canvas></div>
-          </div>
-          <div class="card">
-            <div class="card-title">Distribuzione piani</div>
-            <div class="chart-wrap"><canvas id="stPlanChart"></canvas></div>
-          </div>
-        </div>
-    </div>
-
-    <!-- Tab: SEO / AEO -->
-    <div class="stat-panel" data-panel="seo">
-      <!-- Header with filters -->
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
-        <div style="font-size:13px;color:var(--muted)">Periodo:</div>
-        <div class="period-btns">
-          <button class="btn btn-sm btn-outline" id="seo-period-7" onclick="setSeoPeriod(7)">7g</button>
-          <button class="btn btn-sm btn-outline" id="seo-period-30" onclick="setSeoPeriod(30)">30g</button>
-          <button class="btn btn-sm btn-outline" id="seo-period-90" onclick="setSeoPeriod(90)">90g</button>
-        </div>
-        <div class="period-btns" style="margin-left:12px">
-          <select id="seo-device" onchange="loadSeo()" style="background:var(--input);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 8px;font-size:12px">
-            <option value="">Tutti i device</option>
-            <option value="DESKTOP">Desktop</option>
-            <option value="MOBILE">Mobile</option>
-            <option value="TABLET">Tablet</option>
-          </select>
-          <select id="seo-country" onchange="loadSeo()" style="background:var(--input);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 8px;font-size:12px">
-            <option value="">Tutti i paesi</option>
-          </select>
-        </div>
-        <button class="btn btn-sm" style="margin-left:auto;background:var(--success);color:#000;font-weight:600" onclick="refreshSeo()">↻ Aggiorna</button>
-        <span id="seo-updated" style="font-size:11px;color:var(--muted)"></span>
-      </div>
-
-      <!-- KPI Cards -->
-      <div class="stats-grid" id="seo-kpis">
-        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
-      </div>
-
-      <!-- Charts row: Trend + Device -->
-      <div class="row-2">
-        <div class="card">
-          <div class="card-title">📈 Trend Clicks & Impressions</div>
-          <div id="seo-trend-legend" style="display:flex;gap:16px;font-size:12px;margin-bottom:8px">
-            <span style="color:#7c5cfc">● Clicks</span>
-            <span style="color:#60a5fa">● Impressions</span>
-          </div>
-          <div class="chart-wrap chart-wrap-lg"><canvas id="seoTrendChart"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="card-title">📱 Device Split</div>
-          <div class="chart-wrap"><canvas id="seoDeviceChart"></canvas></div>
-        </div>
-      </div>
-
-      <!-- Keyword + Pages row -->
-      <div class="row-2">
-        <div class="card">
-          <div class="card-title">🔑 Top Keyword per Clicks</div>
-          <div id="seoKeywords"><div class="loading-center"><div class="loader"></div></div></div>
-        </div>
-        <div class="card">
-          <div class="card-title">📄 Top Pagine per Impressions</div>
-          <div id="seoPages"><div class="loading-center"><div class="loader"></div></div></div>
-        </div>
-      </div>
-
-      <!-- Countries + Search Appearances row -->
-      <div class="row-2">
-        <div class="card">
-          <div class="card-title">🌍 Top Paesi</div>
-          <div id="seoCountries"><div class="loading-center"><div class="loader"></div></div></div>
-        </div>
-        <div class="card">
-          <div class="card-title">✨ Search Appearances</div>
-          <div id="seoAppearances"><div class="loading-center"><div class="loader"></div></div></div>
-        </div>
-      </div>
-
-      <!-- Opportunities (keywords ranking 5-20) -->
-      <div class="card">
-        <div class="card-title">🎯 Opportunità — Keyword in posizione 5-20 (alto potenziale)</div>
-        <div id="seoOpportunities"><div class="loading-center"><div class="loader"></div></div></div>
-      </div>
-
-      <!-- Sitemap + URL Inspector row -->
-      <div class="row-2">
-        <div class="card">
-          <div class="card-title">🗺️ Sitemap</div>
-          <div id="seoSitemaps"><div class="loading-center"><div class="loader"></div></div></div>
-        </div>
-        <div class="card">
-          <div class="card-title">🔍 URL Inspector</div>
-          <div style="display:flex;gap:8px;margin-bottom:12px">
-            <input type="text" id="seo-inspect-url" placeholder="https://adoff.app/..." style="flex:1;background:var(--input);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 12px;font-size:13px">
-            <button class="btn btn-sm btn-primary" onclick="inspectSeoUrl()">Ispeziona</button>
-            <button class="btn btn-sm btn-outline" onclick="batchInspectSitemap()">Batch sitemap</button>
-          </div>
-          <div id="seo-inspect-result"><div class="empty" style="padding:16px"><p style="color:var(--muted);font-size:13px">Inserisci un URL e clicca "Ispeziona" per vedere lo stato di indicizzazione.</p></div></div>
-        </div>
-      </div>
-
-      <!-- Azioni + GA4 row -->
-      <div class="row-2">
-        <div class="card">
-          <div class="card-title">⚡ Azioni Rapide</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-sm btn-outline" onclick="submitSitemap()">🔄 Submit Sitemap</button>
-              <button class="btn btn-sm btn-outline" onclick="exportSeoCsv()">📤 Esporta CSV</button>
-              <button class="btn btn-sm btn-outline" onclick="exportSeoPng()">📊 Esporta PNG</button>
-            </div>
-            <div style="font-size:12px;color:var(--muted)">Ultimo submit sitemap: <span id="seo-last-sitemap">—</span></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-title">📊 Google Analytics 4</div>
-          <div id="seo-ga4"><div class="loading-center"><div class="loader"></div></div></div>
-        </div>
-      </div>
-
-      <!-- Batch inspect results -->
-      <div id="seo-batch-panel" style="display:none">
-        <div class="card">
-          <div class="card-title">🔍 Risultati Batch Inspect</div>
-          <div id="seo-batch-results"><div class="loading-center"><div class="loader"></div></div></div>
-        </div>
-      </div>
-      </div>
-
-      <!-- Tab: Autofix — Ad Leak Blocker -->
-      <div class="stat-panel" data-panel="autofix">
-        <!-- Header -->
-        <div style="margin-bottom:16px">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px">
-            <div style="font-size:15px;font-weight:600">🔧 Autofix — Ad Leak Blocker</div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <div id="autofix-mode-badge"></div>
-              <button class="btn btn-sm btn-accent" onclick="loadAutofix();loadAutofixLeaks()" title="Ricarica dati">↻</button>
-            </div>
-          </div>
-          <div style="font-size:12px;color:var(--muted)">Analizza i leak rilevati dal crawler notturno, decide quali fixare, io li applico.</div>
-        </div>
-
-        <!-- Shadow Mode notice -->
-        <div id="autofix-shadow-notice" style="display:none;padding:10px 14px;background:#2a2a1a;border:1px solid #ffbc6b;border-radius:8px;margin-bottom:14px;font-size:12px;color:#ffbc6b">
-          <b>⚠ Shadow Mode attivo</b> — Nessun fix viene deployato automaticamente. Dopo aver deciso, esegui manualmente da riga di comando: <code style="background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:3px;display:inline-block;margin-top:4px">node apply_decisions.mjs --date today</code>
-        </div>
-
-        <!-- Stats row -->
-        <div id="autofix-stats-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px"></div>
-
-        <!-- Bucket filter -->
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" id="autofix-filter-bar">
-          <button class="btn btn-sm" style="background:var(--btn-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 12px" data-bucket="all" onclick="filterAutofixBucket('all')">Tutti <span id="cnt-all" style="color:var(--muted)"></span></button>
-          <button class="btn btn-sm" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:6px;padding:5px 12px" data-bucket="ads_real" onclick="filterAutofixBucket('ads_real')">🎯 Ad-veri <span id="cnt-ads_real" style="opacity:0.7"></span></button>
-          <button class="btn btn-sm" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);color:#eab308;border-radius:6px;padding:5px 12px" data-bucket="tracking" onclick="filterAutofixBucket('tracking')">📡 Tracking <span id="cnt-tracking" style="opacity:0.7"></span></button>
-          <button class="btn btn-sm" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:6px;padding:5px 12px" data-bucket="dom_fp" onclick="filterAutofixBucket('dom_fp')">❓ DOM (sospetti FP) <span id="cnt-dom_fp" style="opacity:0.7"></span></button>
-          <button class="btn btn-sm" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:6px;padding:5px 12px" data-bucket="approved" onclick="filterAutofixBucket('approved')">✅ Approvati <span id="cnt-approved" style="opacity:0.7"></span></button>
-          <button class="btn btn-sm" style="background:rgba(100,116,139,0.1);border:1px solid rgba(100,116,139,0.3);color:#94a3b8;border-radius:6px;padding:5px 12px" data-bucket="ignored" onclick="filterAutofixBucket('ignored')">🚫 Ignorati <span id="cnt-ignored" style="opacity:0.7"></span></button>
-        </div>
-
-        <!-- CTA per azioni collettive -->
-        <div id="autofix-bulk-actions" style="display:none;padding:10px 14px;background:var(--input);border-radius:8px;margin-bottom:14px;border:1px solid var(--border)">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
-            <span id="bulk-selection-count">0</span> leak selezionati:
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <button class="btn btn-sm" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);color:#10b981;border-radius:6px;padding:5px 12px;font-size:12px" onclick="bulkApproveSelected()">✅ Approva tutti</button>
-            <button class="btn btn-sm" style="background:rgba(100,116,139,0.15);border:1px solid rgba(100,116,139,0.4);color:#94a3b8;border-radius:6px;padding:5px 12px;font-size:12px" onclick="bulkIgnoreSelected()">🚫 Ignora tutti</button>
-            <button class="btn btn-sm" style="background:var(--btn-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 12px;font-size:12px" onclick="clearSelection()">🗑️ Deseleziona</button>
-          </div>
-        </div>
-
-        <!-- Sfondo per i leak -->
-        <div id="autofix-leaks-container">
-          <div id="autofix-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 16px;color:var(--muted)">
-            <div class="loader" style="margin-bottom:12px"></div>
-            <div style="font-size:13px">Carico i leak dal sistema...</div>
-          </div>
-        </div>
-        <div id="autofix-empty" style="display:none;text-align:center;padding:32px 16px;color:var(--muted);font-size:13px">Nessun leak in questo bucket.</div>
-      </div>
-    </div>
-
-    <!-- PAGE: OUTREACH -->
-    <div class="page" id="page-outreach">
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-title">Genera &amp; registra referral code</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <input id="orefname" placeholder="Nome creator (es. Naomi Brockwell)" style="flex:1;min-width:200px;background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 11px">
-          <button class="btn btn-primary" onclick="genOutreachCode()">Genera</button>
-          <span id="orefout" style="font-family:ui-monospace,monospace;color:#4ade80;font-weight:700"></span>
-          <button class="btn btn-primary" id="orefreg" style="display:none;background:#2a2a4a" onclick="registerOutreachCode()">Registra (traccia conversioni)</button>
-        </div>
-        <div id="orefmsg" style="font-size:12px;color:var(--muted);margin-top:8px">Il codice registrato traccia le conversioni in automatico via il sistema referral esistente.</div>
-      </div>
-      <div id="outreachSum" class="card" style="margin-bottom:16px;font-size:13px;color:var(--muted)"></div>
-      <div id="outreachList"><div class="loading-center"><div class="loader"></div></div></div>
-    </div>
-
-    <!-- PAGE: SUPPORTO -->
-    <div class="page" id="page-support">
-      <div class="toolbar">
-        <select id="ticketFilter" onchange="loadTickets()">
-          <option value="">Tutti i ticket</option>
-          <option value="open">Aperti</option>
-          <option value="closed">Chiusi</option>
-        </select>
-        <div class="spacer"></div>
-        <button class="btn btn-outline btn-sm" onclick="loadTickets()">↻ Ricarica</button>
-      </div>
-      <div id="ticketTableWrap">
-        <div class="loading-center"><div class="loader"></div></div>
-      </div>
-    </div>
-
-    <!-- PAGE: SUGGERIMENTI -->
-    <div class="page" id="page-suggestions">
-      <div class="toolbar">
-        <select id="suggStatusFilter" onchange="loadSuggestions(true)">
-          <option value="">Tutti gli stati</option>
-          <option value="new">Nuovi</option>
-          <option value="triaged">Triage</option>
-          <option value="proposed">Proposti</option>
-          <option value="approved">Approvati</option>
-          <option value="in_progress">In corso</option>
-          <option value="done">Fatti</option>
-          <option value="rejected">Rifiutati</option>
-        </select>
-        <select id="suggTypeFilter" onchange="loadSuggestions(true)">
-          <option value="">Tutti i tipi</option>
-          <option value="feature">Funzionalità</option>
-          <option value="bug">Bug</option>
-          <option value="improvement">Miglioramento</option>
-        </select>
-        <div class="spacer"></div>
-        <button class="btn btn-outline btn-sm" onclick="loadSuggestions(true)">↻ Ricarica</button>
-      </div>
-      <div id="suggTableWrap">
-        <div class="loading-center"><div class="loader"></div></div>
-      </div>
-    </div>
-
-    <!-- PAGE: CHAT AI -->
-    <div class="page" id="page-chat">
-      <div class="toolbar">
-        <span style="color:var(--muted);font-size:13px">Storico conversazioni del chatbot AI (retention 90 giorni)</span>
-        <div class="spacer"></div>
-        <button class="btn btn-outline btn-sm" onclick="loadChats(true)">↻ Ricarica</button>
-      </div>
-      <div id="chatTableWrap">
-        <div class="loading-center"><div class="loader"></div></div>
-      </div>
-    </div>
-
-    <!-- PAGE: IMPOSTAZIONI -->
-    <div class="page" id="page-settings">
-      <div class="row-2">
-        <div class="card">
-          <div class="card-title">Cambia password</div>
-          <div class="field">
-            <label>Password attuale</label>
-            <input type="password" id="settCurrPass" placeholder="Password corrente">
-          </div>
-          <div class="field">
-            <label>Nuova password</label>
-            <input type="password" id="settNewPass" placeholder="Min. 8 caratteri">
-          </div>
-          <div class="field">
-            <label>Conferma password</label>
-            <input type="password" id="settNewPass2" placeholder="Ripeti la nuova password">
-          </div>
-          <div class="err" id="settPassErr"></div>
-          <div class="ok-msg" id="settPassOk"></div>
-          <button class="btn btn-primary" onclick="changePassword()">Aggiorna password</button>
-        </div>
-
-        <div class="card">
-          <div class="card-title">Email di recupero</div>
-          <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Usata per il reset password tramite link email.</p>
-          <div class="field">
-            <label>Email</label>
-            <input type="email" id="settEmail" placeholder="admin@tuamail.com">
-          </div>
-          <div class="err" id="settEmailErr"></div>
-          <div class="ok-msg" id="settEmailOk"></div>
-          <button class="btn btn-primary" onclick="saveRecoveryEmail()">Salva email</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Info API</div>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <div class="dk">Endpoint</div>
-            <div class="dv mono" id="apiEndpoint" style="font-size:12px">–</div>
-          </div>
-          <div class="detail-item">
-            <div class="dk">Versione</div>
-            <div class="dv">AdOff Worker</div>
-          </div>
-          <div class="detail-item">
-            <div class="dk">Autenticazione</div>
-            <div class="dv">Session Token</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- PAGE: DISINSTALLAZIONI -->
-    <div class="page" id="page-uninstall">
-      <h2 style="margin-bottom:20px;font-size:18px;font-weight:700">🗑️ Uninstall — Analisi Avanzata</h2>
-
-      <div class="row-2">
-        <!-- Cohort chart -->
-        <div class="card">
-          <div class="card-title">📊 Coorte: quanto durano gli utenti?</div>
-          <p style="color:var(--muted);font-size:13px;margin-top:4px;margin-bottom:16px">
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<button class="btn btn-sm" onclick="bulkApproveSelected()" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);color:#10b981;border-radius:6px;padding:5px 12px;font-size:12px">✅ Approva tutti</button>
+<button class="btn btn-sm" onclick="bulkIgnoreSelected()" style="background:rgba(100,116,139,0.15);border:1px solid rgba(100,116,139,0.4);color:#94a3b8;border-radius:6px;padding:5px 12px;font-size:12px">🚫 Ignora tutti</button>
+<button class="btn btn-sm" onclick="clearSelection()" style="background:var(--btn-bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 12px;font-size:12px">🗑️ Deseleziona</button>
+</div>
+</div>
+<!-- Sfondo per i leak -->
+<div id="autofix-leaks-container">
+<div id="autofix-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 16px;color:var(--muted)">
+<div class="loader" style="margin-bottom:12px"></div>
+<div data-i18n="admin-console.carico_i_leak_dal_sistema" style="font-size:13px">Carico i leak dal sistema...</div>
+</div>
+</div>
+<div data-i18n="autofix_empty.nessun_leak_in_questo_bucket" id="autofix-empty" style="display:none;text-align:center;padding:32px 16px;color:var(--muted);font-size:13px">Nessun leak in questo bucket.</div>
+</div>
+</div>
+<!-- PAGE: OUTREACH -->
+<div class="page" id="page-outreach">
+<div class="card" style="margin-bottom:16px">
+<div class="card-title" data-i18n="card_title.genera_registra_referral_code">Genera &amp; registra referral code</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+<input id="orefname" placeholder="Nome creator (es. Naomi Brockwell)" style="flex:1;min-width:200px;background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 11px"/>
+<button class="btn btn-primary" onclick="genOutreachCode()">Genera</button>
+<span id="orefout" style="font-family:ui-monospace,monospace;color:#4ade80;font-weight:700"></span>
+<button class="btn btn-primary" id="orefreg" onclick="registerOutreachCode()" style="display:none;background:#2a2a4a">Registra (traccia conversioni)</button>
+</div>
+<div data-i18n="orefmsg.il_codice_registrato_traccia_le_con" id="orefmsg" style="font-size:12px;color:var(--muted);margin-top:8px">Il codice registrato traccia le conversioni in automatico via il sistema referral esistente.</div>
+</div>
+<div class="card" id="outreachSum" style="margin-bottom:16px;font-size:13px;color:var(--muted)"></div>
+<div id="outreachList"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+<!-- PAGE: SUPPORTO -->
+<div class="page" id="page-support">
+<div class="toolbar">
+<select id="ticketFilter" onchange="loadTickets()">
+<option value="">Tutti i ticket</option>
+<option value="open">Aperti</option>
+<option value="closed">Chiusi</option>
+</select>
+<div class="spacer"></div>
+<button class="btn btn-outline btn-sm" onclick="loadTickets()">↻ Ricarica</button>
+</div>
+<div id="ticketTableWrap">
+<div class="loading-center"><div class="loader"></div></div>
+</div>
+</div>
+<!-- PAGE: SUGGERIMENTI -->
+<div class="page" id="page-suggestions">
+<div class="toolbar">
+<select id="suggStatusFilter" onchange="loadSuggestions(true)">
+<option value="">Tutti gli stati</option>
+<option value="new">Nuovi</option>
+<option value="triaged">Triage</option>
+<option value="proposed">Proposti</option>
+<option value="approved">Approvati</option>
+<option value="in_progress">In corso</option>
+<option value="done">Fatti</option>
+<option value="rejected">Rifiutati</option>
+</select>
+<select id="suggTypeFilter" onchange="loadSuggestions(true)">
+<option value="">Tutti i tipi</option>
+<option value="feature">Funzionalità</option>
+<option value="bug">Bug</option>
+<option value="improvement">Miglioramento</option>
+</select>
+<div class="spacer"></div>
+<button class="btn btn-outline btn-sm" onclick="loadSuggestions(true)">↻ Ricarica</button>
+</div>
+<div id="suggTableWrap">
+<div class="loading-center"><div class="loader"></div></div>
+</div>
+</div>
+<!-- PAGE: CHAT AI -->
+<div class="page" id="page-chat">
+<div class="toolbar">
+<span data-i18n="admin_console.storico.conversazioni.del.chatbot.ai.ret" style="color:var(--muted);font-size:13px">Storico conversazioni del chatbot AI (retention 90 giorni)</span>
+<div class="spacer"></div>
+<button class="btn btn-outline btn-sm" onclick="loadChats(true)">↻ Ricarica</button>
+</div>
+<div id="chatTableWrap">
+<div class="loading-center"><div class="loader"></div></div>
+</div>
+</div>
+<!-- PAGE: IMPOSTAZIONI -->
+<div class="page" id="page-settings">
+<div class="row-2">
+<div class="card">
+<div class="card-title" data-i18n="card_title.cambia_password">Cambia password</div>
+<div class="field">
+<label data-i18n="admin_console.password.attuale">Password attuale</label>
+<input id="settCurrPass" placeholder="Password corrente" type="password"/>
+</div>
+<div class="field">
+<label data-i18n="admin_console.nuova.password">Nuova password</label>
+<input id="settNewPass" placeholder="Min. 8 caratteri" type="password"/>
+</div>
+<div class="field">
+<label data-i18n="admin_console.conferma.password">Conferma password</label>
+<input id="settNewPass2" placeholder="Ripeti la nuova password" type="password"/>
+</div>
+<div class="err" id="settPassErr"></div>
+<div class="ok-msg" id="settPassOk"></div>
+<button class="btn btn-primary" onclick="changePassword()">Aggiorna password</button>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.email_di_recupero">Email di recupero</div>
+<p data-i18n="admin_console.usata.per.il.reset.password.tramite.link" style="font-size:13px;color:var(--muted);margin-bottom:14px">Usata per il reset password tramite link email.</p>
+<div class="field">
+<label data-i18n="admin_console.email">Email</label>
+<input id="settEmail" placeholder="admin@tuamail.com" type="email"/>
+</div>
+<div class="err" id="settEmailErr"></div>
+<div class="ok-msg" id="settEmailOk"></div>
+<button class="btn btn-primary" onclick="saveRecoveryEmail()">Salva email</button>
+</div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.info_api">Info API</div>
+<div class="detail-grid">
+<div class="detail-item">
+<div class="dk" data-i18n="dk.endpoint">Endpoint</div>
+<div class="dv mono" id="apiEndpoint" style="font-size:12px">–</div>
+</div>
+<div class="detail-item">
+<div class="dk" data-i18n="dk.versione">Versione</div>
+<div class="dv" data-i18n="dv.adoff_worker">AdOff Worker</div>
+</div>
+<div class="detail-item">
+<div class="dk" data-i18n="dk.autenticazione">Autenticazione</div>
+<div class="dv" data-i18n="dv.session_token">Session Token</div>
+</div>
+</div>
+</div>
+</div>
+<!-- PAGE: DISINSTALLAZIONI -->
+<div class="page" id="page-uninstall">
+<h2 data-i18n="admin_console.uninstall.analisi.avanzata" style="margin-bottom:20px;font-size:18px;font-weight:700">🗑️ Uninstall — Analisi Avanzata</h2>
+<div class="row-2" data-i18n="row_2.cohort_chart_funnel">
+<!-- Cohort chart -->
+<div class="card">
+<div class="card-title" data-i18n="card_title.coorte_quanto_durano_gli_utenti">📊 Coorte: quanto durano gli utenti?</div>
+<p data-i18n="admin-console.giorni_dallinstallazione_alla_disi" style="color:var(--muted);font-size:13px;margin-top:4px;margin-bottom:16px">
             Giorni dall'installazione alla disinstallazione (device con heartbeat attivo + uninstall record)
           </p>
-          <div id="adv-cohort-chart"></div>
-        </div>
-
-        <!-- Funnel -->
-        <div class="card">
-          <div class="card-title">🔄 Funnel: Install → Attivo → Silenzioso → Disinstall</div>
-          <div id="adv-funnel" class="funnel-grid"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">📦 Churn per Versione</div>
-        <p style="color:var(--muted);font-size:13px;margin-top:4px;margin-bottom:16px">
+<div id="adv-cohort-chart"></div>
+</div>
+<!-- Funnel -->
+<div class="card">
+<div class="card-title" data-i18n="card_title.funnel_install_attivo_silenz">🔄 Funnel: Install → Attivo → Silenzioso → Disinstall</div>
+<div class="funnel-grid" id="adv-funnel"></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title" data-i18n="card_title.churn_per_versione">📦 Churn per Versione</div>
+<p data-i18n="admin-console.le_versioni_con_alto_churn_potrebbe" style="color:var(--muted);font-size:13px;margin-top:4px;margin-bottom:16px">
           Le versioni con alto churn potrebbero contenere regressioni. Focus su versioni recenti.
         </p>
-        <div id="adv-version-list"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">📈 Trend Motivazioni (7g vs 14g vs 30g)</div>
-        <div id="adv-reason-trend" style="margin-top:16px;overflow-x:auto"></div>
-      </div>
-    </div>
-  </main>
+<div id="adv-version-list"></div>
 </div>
-
+<div class="card">
+<div class="card-title" data-i18n="card_title.trend_motivazioni_7g_vs_14g_vs_3">📈 Trend Motivazioni (7g vs 14g vs 30g)</div>
+<div id="adv-reason-trend" style="margin-top:16px;overflow-x:auto"></div>
+</div>
+</div>
+</main>
+</div>
 <!-- Edit License Modal -->
 <div class="modal-bg" id="editModal">
-  <div class="modal">
-    <div class="modal-title">
+<div class="modal">
+<div class="modal-title" data-i18n="modal_title.modifica_licenza">
       Modifica Licenza
       <button class="modal-close" onclick="closeModal('editModal')">×</button>
-    </div>
-    <div class="form-row">
-      <div class="field">
-        <label>Piano</label>
-        <select id="editPlan">
-          <option value="monthly">Mensile</option>
-          <option value="annual">Annuale</option>
-          <option value="lifetime">Lifetime</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Max dispositivi</label>
-        <input type="number" id="editDevices" min="1" max="10">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="field">
-        <label>Email</label>
-        <input type="email" id="editEmail">
-      </div>
-      <div class="field">
-        <label>Scadenza (YYYY-MM-DD)</label>
-        <input type="date" id="editExpires">
-      </div>
-    </div>
-    <input type="hidden" id="editKey">
-    <div style="display:flex;gap:10px;margin-top:8px">
-      <button class="btn btn-primary" onclick="saveLicense()">Salva modifiche</button>
-      <button class="btn btn-outline" onclick="closeModal('editModal')">Annulla</button>
-    </div>
-  </div>
 </div>
-
+<div class="form-row">
+<div class="field">
+<label data-i18n="admin_console.piano">Piano</label>
+<select id="editPlan">
+<option value="monthly">Mensile</option>
+<option value="annual">Annuale</option>
+<option value="lifetime">Lifetime</option>
+</select>
+</div>
+<div class="field">
+<label data-i18n="admin_console.max.dispositivi">Max dispositivi</label>
+<input id="editDevices" max="10" min="1" type="number"/>
+</div>
+</div>
+<div class="form-row">
+<div class="field">
+<label data-i18n="admin_console.email">Email</label>
+<input id="editEmail" type="email"/>
+</div>
+<div class="field">
+<label data-i18n="admin_console.scadenza.yyyy.mm.dd">Scadenza (YYYY-MM-DD)</label>
+<input id="editExpires" type="date"/>
+</div>
+</div>
+<input id="editKey" type="hidden"/>
+<div style="display:flex;gap:10px;margin-top:8px">
+<button class="btn btn-primary" onclick="saveLicense()">Salva modifiche</button>
+<button class="btn btn-outline" onclick="closeModal('editModal')">Annulla</button>
+</div>
+</div>
+</div>
 <!-- Ticket Detail Modal -->
 <div class="modal-bg" id="ticketModal">
-  <div class="modal" style="width:640px">
-    <div class="modal-title">
-      <span id="ticketModalTitle">Ticket</span>
-      <button class="modal-close" onclick="closeModal('ticketModal')">×</button>
-    </div>
-    <div id="ticketDetail"><div class="loading-center"><div class="loader"></div></div></div>
-  </div>
+<div class="modal" style="width:640px">
+<div class="modal-title">
+<span data-i18n="admin_console.ticket" id="ticketModalTitle">Ticket</span>
+<button class="modal-close" onclick="closeModal('ticketModal')">×</button>
 </div>
-
+<div id="ticketDetail"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+</div>
 <!-- Suggestion Detail Modal -->
 <div class="modal-bg" id="suggModal">
-  <div class="modal" style="width:640px">
-    <div class="modal-title">
-      <span id="suggModalTitle">Suggerimento</span>
-      <button class="modal-close" onclick="closeModal('suggModal')">×</button>
-    </div>
-    <div id="suggDetail"><div class="loading-center"><div class="loader"></div></div></div>
-  </div>
+<div class="modal" style="width:640px">
+<div class="modal-title">
+<span data-i18n="admin_console.suggerimento" id="suggModalTitle">Suggerimento</span>
+<button class="modal-close" onclick="closeModal('suggModal')">×</button>
 </div>
-
+<div id="suggDetail"><div class="loading-center"><div class="loader"></div></div></div>
+</div>
+</div>
 <div id="toast-container"></div>
-
 <script>
 "use strict";
 
@@ -1235,7 +1184,7 @@ function renderOutreach(){
     const convTxt=rc?(conv?conv.count+" conversioni · €"+(conv.revenueCents/100).toFixed(2):"0 conversioni"):"—";
     const card=document.createElement("div"); card.className="card"; card.style.marginBottom="10px"; card.id="oc-"+it.id;
     card.style.borderColor=_outBorder(rec.status);
-    card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px"><b>'+it.t+'</b><span style="font-size:11px;color:var(--muted)">'+it.c+'</span></div>'
+    card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px"><b>'+it.t+'</b><span style="font-size:11px;color:var(--muted)" data-i18n="admin_console.itc">'+it.c+'</span></div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">'
       +'<select data-oid="'+it.id+'" data-f="status" style="background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 8px;font-size:12px"><option value="">Da inviare</option><option value="sent">Inviato</option><option value="reply">Risposta</option><option value="won">Esito +</option><option value="lost">Esito −</option></select>'
       +'<input data-oid="'+it.id+'" data-f="note" placeholder="note / data" style="flex:1;min-width:140px;background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:6px 8px;font-size:12px">'
@@ -1277,7 +1226,7 @@ async function registerOutreachCode(){
   const code=document.getElementById("orefreg").dataset.code; const msg=document.getElementById("orefmsg");
   const d=await api("/admin/outreach-code",{method:"POST",body:JSON.stringify({code})});
   if(d.ok){ msg.innerHTML='✓ Codice <b>'+code+'</b> '+(d.already?"già registrato":"registrato")+'. Link creator: <b>https://adoff.app/r/'+code+'</b>'; toast("Codice registrato"); }
-  else { msg.innerHTML='<span style="color:var(--danger)">Errore: '+(d.error||"")+'</span>'; }
+  else { msg.innerHTML='<span style="color:var(--danger)" data-i18n="admin_console.errore.derror">Errore: '+(d.error||"")+'</span>'; }
 }
 
 // ── CHAT AI (storico conversazioni chatbot) ──────────────────
@@ -1293,7 +1242,7 @@ async function loadChats(force = false) {
   const chats = d.chats || [];
   chatsLoaded = true;
   if (!chats.length) {
-    document.getElementById("chatTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">🤖</div><p>Nessuna conversazione registrata</p></div>`;
+    document.getElementById("chatTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">🤖</div><p data-i18n="admin_console.nessuna.conversazione.registrata">Nessuna conversazione registrata</p></div>`;
     return;
   }
   document.getElementById("chatTableWrap").innerHTML = `
@@ -1470,7 +1419,7 @@ async function loadDashboard(force = false) {
   const log = anaData.recentLog || [];
   const instWrap = document.getElementById("recentInstalls");
   if (!log.length) {
-    instWrap.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>Nessuna installazione registrata</p></div>`;
+    instWrap.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p data-i18n="admin_console.nessuna.installazione.registrata">Nessuna installazione registrata</p></div>`;
   } else {
     instWrap.innerHTML = `<div class="table-wrap"><table>
       <thead><tr><th>Paese</th><th>Città</th><th>Browser</th><th>Sorgente</th><th>Quando</th></tr></thead>
@@ -1547,7 +1496,7 @@ function filterLicenses() {
 
 function renderLicTable(data) {
   if (!data.length) {
-    document.getElementById("licTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">🔑</div><p>Nessuna licenza trovata</p></div>`;
+    document.getElementById("licTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">🔑</div><p data-i18n="admin_console.nessuna.licenza.trovata">Nessuna licenza trovata</p></div>`;
     updateBulkBar();
     return;
   }
@@ -1829,7 +1778,7 @@ async function loadAnalytics(force = false) {
           <div class="country-bar progress"><div class="progress-fill" style="width:${Math.round(c.count/maxCnt*100)}%"></div></div>
           <span style="font-size:13px;font-weight:600;min-width:32px;text-align:right">${c.count}</span>
         </div>`).join("")
-    : `<div class="empty"><div class="empty-icon">🌍</div><p>Nessun dato geografico</p></div>`;
+    : `<div class="empty"><div class="empty-icon">🌍</div><p data-i18n="admin_console.nessun.dato.geografico">Nessun dato geografico</p></div>`;
 
   // Browser downloads
   const bData = dl.byBrowser || {};
@@ -1857,7 +1806,7 @@ async function loadAnalytics(force = false) {
           <td>${browserBadge(e.browser)}</td>
         </tr>`).join("")}</tbody>
       </table></div>`
-    : `<div class="empty"><div class="empty-icon">📭</div><p>Nessun log</p></div>`;
+    : `<div class="empty"><div class="empty-icon">📭</div><p data-i18n="admin_console.nessun.log">Nessun log</p></div>`;
 
   anaLoaded = true;
 }
@@ -1951,7 +1900,7 @@ async function loadStats(force = false) {
           <div class="country-bar progress"><div class="progress-fill" style="width:${Math.round(c.count/maxCnt*100)}%"></div></div>
           <span style="font-size:13px;font-weight:600;min-width:32px;text-align:right">${c.count}</span>
         </div>`).join("")
-    : `<div class="empty"><div class="empty-icon">🌍</div><p>Nessun dato geografico</p></div>`;
+    : `<div class="empty"><div class="empty-icon">🌍</div><p data-i18n="admin_console.nessun.dato.geografico">Nessun dato geografico</p></div>`;
 
   // Revenue ultimi 7 giorni
   const last7 = (revData.last30days || []).slice(-7);
@@ -1999,7 +1948,7 @@ async function loadStats(force = false) {
           <td>${browserBadge(e.browser)}</td>
         </tr>`).join("")}</tbody>
       </table></div>`
-    : `<div class="empty"><div class="empty-icon">📭</div><p>Nessuna installazione registrata</p></div>`;
+    : `<div class="empty"><div class="empty-icon">📭</div><p data-i18n="admin_console.nessuna.installazione.registrata">Nessuna installazione registrata</p></div>`;
 
   // Disinstallazioni recenti
   const ulog = (un.recentLog || []).slice(0, 15);
@@ -2015,7 +1964,7 @@ async function loadStats(force = false) {
           <td>${e.wasPro ? "⭐" : "–"}</td>
         </tr>`).join("")}</tbody>
       </table></div>`
-    : `<div class="empty"><div class="empty-icon">📭</div><p>Nessuna disinstallazione registrata (l'estensione v3.5.3 inizia a raccoglierle dopo l'approvazione store)</p></div>`;
+    : `<div class="empty"><div class="empty-icon">📭</div><p data-i18n="admin_console.nessuna.disinstallazione.registrata.lest">Nessuna disinstallazione registrata (l'estensione v3.5.3 inizia a raccoglierle dopo l'approvazione store)</p></div>`;
 
   statsLoaded = true;
 }
@@ -2040,7 +1989,7 @@ async function loadUninstallAdvanced(force = false) {
   // Cohort chart (bar chart inline)
   const cohortEl = document.getElementById("adv-cohort-chart");
   if (!cohort || !cohort.length) {
-    cohortEl.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>Nessun dato coorte disponibile</p></div>`;
+    cohortEl.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p data-i18n="admin_console.nessun.dato.coorte.disponibile">Nessun dato coorte disponibile</p></div>`;
   } else {
     const maxC = Math.max(1, ...cohort.map(c => c.count));
     cohortEl.innerHTML = cohort.map(c => `
@@ -2076,7 +2025,7 @@ async function loadUninstallAdvanced(force = false) {
   // Version comparison
   const verEl = document.getElementById("adv-version-list");
   if (!versions || !versions.length) {
-    verEl.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>Nessun dato versione disponibile</p></div>`;
+    verEl.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p data-i18n="admin_console.nessun.dato.versione.disponibile">Nessun dato versione disponibile</p></div>`;
   } else {
     verEl.innerHTML = versions.slice(0, 10).map(v => `
       <div style="margin-bottom:12px">
@@ -2102,7 +2051,7 @@ async function loadUninstallAdvanced(force = false) {
   };
   const reasons = Object.keys(reasonTrend["30d"] || {});
   if (!reasons.length) {
-    trendEl.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>Nessun dato trend disponibile</p></div>`;
+    trendEl.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p data-i18n="admin_console.nessun.dato.trend.disponibile">Nessun dato trend disponibile</p></div>`;
   } else {
     const maxR = Math.max(1, ...periods.flatMap(p => Object.values(reasonTrend[p] || {})));
     trendEl.innerHTML = `<table style="width:100%;border-collapse:collapse">
@@ -2208,7 +2157,7 @@ async function loadSeo(force = false) {
           <td>${r.position}</td>
         </tr>`).join("")
       }</tbody></table></div>`
-    : `<div class="empty"><p>Nessun dato</p></div>`;
+    : `<div class="empty"><p data-i18n="admin_console.nessun.dato">Nessun dato</p></div>`;
 
   // Top countries bar list
   const countries = (gsc.topCountry || []).slice(0, 8).map(r => ({ label: r.key, value: r.clicks }));
@@ -2237,7 +2186,7 @@ async function loadSeo(force = false) {
       }).join("")
     }</tbody></table></div>`;
   } else {
-    document.getElementById("seoSitemaps").innerHTML = `<div class="empty"><p>Nessun sitemap registrato</p></div>`;
+    document.getElementById("seoSitemaps").innerHTML = `<div class="empty"><p data-i18n="admin_console.nessun.sitemap.registrato">Nessun sitemap registrato</p></div>`;
   }
 
   // GA4 data
@@ -2254,7 +2203,7 @@ async function loadSeo(force = false) {
       </div>
     `;
   } else {
-    document.getElementById("seo-ga4").innerHTML = `<div class="empty"><p>GA4 non configurato — aggiungi GA4_PROPERTY_ID al Worker</p></div>`;
+    document.getElementById("seo-ga4").innerHTML = `<div class="empty"><p data-i18n="admin_console.ga4.non.configurato.aggiungi.ga4_propert">GA4 non configurato — aggiungi GA4_PROPERTY_ID al Worker</p></div>`;
   }
 
   // Set period button active
@@ -2282,7 +2231,7 @@ async function loadAutofix(force = false) {
     const deferred  = data.deferred || 0;
     resultsEl.innerHTML =
       '<div style="display:flex;align-items:center;gap:12px;padding:16px;background:var(--input);border-radius:8px;border-left:4px solid ' + modeColor + ';margin-bottom:12px">' +
-        '<span style="background:' + modeColor + ';color: var(--text);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">' + modeIcon + '</span>' +
+        '<span style="background:' + modeColor + ';color: var(--text);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0" data-i18n="admin_console.modeicon">' + modeIcon + '</span>' +
         '<div><div style="font-weight:600;font-size:14px;margin-bottom:2px">Modalità: ' + modeLabel + '</div>' +
         '<div style="font-size:12px;color:var(--muted)">Ultimo run: ' + (data.date ? new Date(data.date).toLocaleString("it-IT") : "—") + '</div></div>' +
       '</div>' +
@@ -2370,8 +2319,8 @@ async function loadAutofixLeaks() {
         '<div style="margin-bottom:16px">' +
           '<details style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">' +
             '<summary style="padding:12px 16px;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:space-between;user-select:none;list-style:none">' +
-              '<span>' + s.label + ' <span style="background:' + s.color + ';color: var(--text);border-radius:20px;padding:1px 8px;font-size:11px;margin-left:6px">' + count + '</span>' +
-                (closed > 0 ? ' <span style="color:var(--muted);font-weight:400;font-size:11px">(' + closed + ' decisi)</span>' : '') +
+              '<span>' + s.label + ' <span style="background:' + s.color + ';color: var(--text);border-radius:20px;padding:1px 8px;font-size:11px;margin-left:6px" data-i18n="admin_console.count">' + count + '</span>' +
+                (closed > 0 ? ' <span style="color:var(--muted);font-weight:400;font-size:11px" data-i18n="admin_console.closed.decisi">(' + closed + ' decisi)</span>' : '') +
               '</span>' +
               // Il bottone batch compare solo se restano leak da decidere.
               (open > 0 ? '<button class="btn btn-sm" style="background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--border)" onclick="event.stopPropagation();batchDecide(\'' + s.key + '\',\'' + s.action + '\')">' + s.actionLabel + '</button>' : '') +
@@ -2395,10 +2344,10 @@ function renderLeakCard(leak, bucket) {
   const confColor = leak.confidence === "high" ? "#e66550" : leak.confidence === "medium" ? "#ffbc6b" : "#8a8a8a";
   const decision  = leak.decision || null;
   const decisionBadge = decision
-    ? '<span style="background:var(--input);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:10px;color:var(--muted);margin-left:4px">Deciso: ' + decision + '</span>'
+    ? '<span style="background:var(--input);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:10px;color:var(--muted);margin-left:4px" data-i18n="admin_console.deciso.decision">Deciso: ' + decision + '</span>'
     : '';
   const fpBadge  = leak.fp_suspect
-    ? '<span style="background:rgba(255,188,107,.15);color:#ffbc6b;border-radius:20px;padding:2px 8px;font-size:10px;margin-left:4px">possibile FP</span>'
+    ? '<span style="background:rgba(255,188,107,.15);color:#ffbc6b;border-radius:20px;padding:2px 8px;font-size:10px;margin-left:4px" data-i18n="admin_console.possibile.fp">possibile FP</span>'
     : '';
 
   let evidence = "";
@@ -2430,9 +2379,9 @@ function renderLeakCard(leak, bucket) {
     '<div style="background:var(--input);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px">' +
       '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px">' +
         '<b style="color:var(--text)">' + esc(leak.domain || "?") + '</b>' +
-        '<span style="background:rgba(124,92,252,.15);color:var(--accent);border-radius:20px;padding:2px 8px;font-size:10px">' + esc(leak.category || "?") + '</span>' +
-        '<span style="background:rgba(255,255,255,.07);color:var(--muted);border-radius:20px;padding:2px 8px;font-size:10px">' + esc(leak.leak_type || "?") + '</span>' +
-        '<span style="background:' + confColor + ';color: var(--text);border-radius:20px;padding:2px 8px;font-size:10px">' + esc(leak.confidence || "?") + '</span>' +
+        '<span style="background:rgba(124,92,252,.15);color:var(--accent);border-radius:20px;padding:2px 8px;font-size:10px" data-i18n="admin_console.escleakcategory">' + esc(leak.category || "?") + '</span>' +
+        '<span style="background:rgba(255,255,255,.07);color:var(--muted);border-radius:20px;padding:2px 8px;font-size:10px" data-i18n="admin_console.escleakleak_type">' + esc(leak.leak_type || "?") + '</span>' +
+        '<span style="background:' + confColor + ';color: var(--text);border-radius:20px;padding:2px 8px;font-size:10px" data-i18n="admin_console.escleakconfidence">' + esc(leak.confidence || "?") + '</span>' +
         fpBadge + decisionBadge +
       '</div>' +
       evidence + candidate +
@@ -2561,9 +2510,9 @@ async function inspectSeoUrl() {
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px">
         <span style="color:${indexColor};font-weight:700;font-size:14px">${indexText}</span>
         ${coverageResult.issue ? `<span style="color:var(--danger)">⚠️ ${coverageResult.issue}</span>` : ""}
-        ${mobileResult.verdict === "PASS" ? '<span style="color:var(--success)">📱 Mobile OK</span>' : mobileResult.verdict === "FAIL" ? '<span style="color:var(--danger)">📱 Mobile issue</span>' : ""}
+        ${mobileResult.verdict === "PASS" ? '<span style="color:var(--success)" data-i18n="admin_console.mobile.ok">📱 Mobile OK</span>' : mobileResult.verdict === "FAIL" ? '<span style="color:var(--danger)" data-i18n="admin_console.mobile.issue">📱 Mobile issue</span>' : ""}
       </div>
-      ${indexResult.sitemap ? `<div style="color:var(--muted);font-size:12px;margin-bottom:4px">Sitemap: <span style="color:var(--success)">✅ Trovato</span> — ${indexResult.sitemap}</div>` : ""}
+      ${indexResult.sitemap ? `<div style="color:var(--muted);font-size:12px;margin-bottom:4px">Sitemap: <span style="color:var(--success)" data-i18n="admin_console.trovato">✅ Trovato</span> — ${indexResult.sitemap}</div>` : ""}
       ${indexResult.lastCrawlTime ? `<div style="color:var(--muted);font-size:12px;margin-bottom:4px">Ultimo crawl: ${new Date(indexResult.lastCrawlTime).toLocaleDateString()}</div>` : ""}
       ${issues ? `<div style="color:var(--danger);font-size:12px;margin-top:6px">Problema: ${issues}</div>` : '<div style="color:var(--success);font-size:12px;margin-top:6px">✅ Nessun problema rilevato</div>'}
     </div>
@@ -2626,7 +2575,7 @@ async function loadTickets(force = false) {
   const tickets = d.tickets || [];
   ticketsLoaded = true;
   if (!tickets.length) {
-    document.getElementById("ticketTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">💬</div><p>Nessun ticket</p></div>`;
+    document.getElementById("ticketTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">💬</div><p data-i18n="admin_console.nessun.ticket">Nessun ticket</p></div>`;
     return;
   }
   document.getElementById("ticketTableWrap").innerHTML = `
@@ -2738,7 +2687,7 @@ async function loadSuggestions(force = false) {
   _suggCache = {};
   list.forEach(s => { _suggCache[s.id] = s; });
   if (!list.length) {
-    document.getElementById("suggTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">💡</div><p>Nessun suggerimento</p></div>`;
+    document.getElementById("suggTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">💡</div><p data-i18n="admin_console.nessun.suggerimento">Nessun suggerimento</p></div>`;
     return;
   }
   document.getElementById("suggTableWrap").innerHTML = `
@@ -2782,7 +2731,7 @@ function openSuggestion(id) {
     <hr class="divider">
     <div class="section-title">Gestione</div>
     <div class="field" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <label style="font-size:12px;color:var(--muted)">Stato</label>
+      <label style="font-size:12px;color:var(--muted)" data-i18n="admin_console.stato">Stato</label>
       <select id="suggStatusSel">${statusOpts}</select>
       <input id="suggClusterInp" placeholder="Cluster (tema)" value="${esc(s.cluster || "")}" style="flex:1;min-width:140px">
     </div>
@@ -2862,7 +2811,6 @@ function esc(s) {
 // ── BOOT ─────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", init);
 </script>
-
-  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
 </body>
 </html>

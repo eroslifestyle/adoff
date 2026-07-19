@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script>
+<script>
     (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
   </script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AdOff Admin — Gestione Licenze</title>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AdOff Admin — Gestione Licenze</title>
+<style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -314,265 +314,239 @@
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1><span>AdOff</span> Admin</h1>
-    <div class="status" id="apiStatus">Connessione...</div>
-  </div>
-
-  <div class="container">
-    <!-- Config -->
-    <div class="config-bar">
-      <div class="config-field">
-        <label>API URL</label>
-        <input type="text" id="apiUrl" value="https://api.adoff.app" placeholder="https://api.adoff.app">
-      </div>
-      <div class="config-field">
-        <label>Admin Token</label>
-        <input type="password" id="adminToken" placeholder="Il tuo admin token">
-      </div>
-      <button class="btn btn-primary" id="btnConnect">Connetti</button>
-    </div>
-
-    <!-- Stats -->
-    <div class="stats-grid" id="statsGrid">
-      <div class="stat-card"><div class="value" id="statTotal">—</div><div class="label">Licenze totali</div></div>
-      <div class="stat-card"><div class="value" id="statActive">—</div><div class="label">Attive</div></div>
-      <div class="stat-card"><div class="value" id="statLifetime">—</div><div class="label">Lifetime</div></div>
-      <div class="stat-card"><div class="value" id="statRevoked">—</div><div class="label">Revocate</div></div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="tabs">
-      <div class="tab active" data-panel="generate">Genera Licenza</div>
-      <div class="tab" data-panel="licenses">Licenze</div>
-      <div class="tab" data-panel="validate">Valida Key</div>
-      <div class="tab" data-panel="gsc">📊 Google Analisi</div>
-      <div class="tab" data-panel="retention">📊 Retention</div>
-    </div>
-
-    <!-- Panel: Genera -->
-    <div class="panel active" id="panel-generate">
-      <div class="gen-form">
-        <div class="gen-field">
-          <label>Piano</label>
-          <select id="genPlan">
-            <option value="pro">Pro (mensile/trimestrale/annuale)</option>
-            <option value="lifetime">Lifetime</option>
-          </select>
-        </div>
-        <div class="gen-field">
-          <label>Durata (mesi)</label>
-          <input type="number" id="genMonths" value="1" min="1" max="120">
-        </div>
-        <div class="gen-field">
-          <label>Email</label>
-          <input type="email" id="genEmail" placeholder="user@example.com">
-        </div>
-        <div class="gen-field">
-          <label>Max dispositivi</label>
-          <input type="number" id="genDevices" value="3" min="1" max="10">
-        </div>
-        <button class="btn btn-primary" id="btnGenerate">Genera Key</button>
-      </div>
-
-      <div class="result-box" id="resultBox">
-        <div style="font-size:12px;color:#8a8aaa;">License Key generata:</div>
-        <div class="result-key" id="resultKey"></div>
-        <button class="btn btn-secondary" id="btnCopy" style="margin-top:8px;">Copia Key</button>
-        <div class="result-raw" id="resultRaw"></div>
-        <div class="result-meta" id="resultMeta"></div>
-      </div>
-    </div>
-
-    <!-- Panel: Licenze -->
-    <div class="panel" id="panel-licenses">
-      <!-- Filtri -->
-      <div class="filter-bar">
-        <input type="text" id="filterSearch" placeholder="Cerca per email o key...">
-        <select id="filterPlan">
-          <option value="">Tutti i piani</option>
-          <option value="pro">Pro</option>
-          <option value="lifetime">Lifetime</option>
-          <option value="monthly">Monthly</option>
-          <option value="annual">Annual</option>
-        </select>
-        <select id="filterStatus">
-          <option value="">Tutti gli stati</option>
-          <option value="active">Attive</option>
-          <option value="revoked">Revocate</option>
-          <option value="expired">Scadute</option>
-        </select>
-        <button class="btn btn-primary" onclick="loadServerLicenses()">Aggiorna</button>
-      </div>
-
-      <!-- Bulk action bar -->
-      <div class="bulk-bar" id="bulkBar">
-        <div class="bulk-info"><span id="bulkCount">0</span> licenze selezionate</div>
-        <div class="bulk-actions">
-          <button class="btn btn-secondary" onclick="bulkAction('revoke')">Revoca selezionate</button>
-          <button class="btn btn-danger" onclick="bulkAction('delete')">Elimina selezionate</button>
-          <button class="btn btn-secondary" onclick="clearSelection()">Deseleziona</button>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:36px;"><input type="checkbox" class="lic-checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
-              <th>Key</th>
-              <th>Email</th>
-              <th>Piano</th>
-              <th>Scadenza</th>
-              <th>Dispositivi</th>
-              <th>Stato</th>
-              <th>Azioni</th>
-            </tr>
-          </thead>
-          <tbody id="licensesBody">
-            <tr><td colspan="8" class="empty-msg">Nessuna licenza. Genera la prima!</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Panel: Valida -->
-    <div class="panel" id="panel-validate">
-      <div class="gen-form">
-        <div class="gen-field" style="flex:2;">
-          <label>License Key (raw)</label>
-          <input type="text" id="validateKey" placeholder="Incolla la raw key qui...">
-        </div>
-        <button class="btn btn-primary" id="btnValidate">Valida</button>
-      </div>
-      <div class="result-box" id="validateResult"></div>
-    </div>
-
-    <!-- Panel: Google Analisi (Search Console) -->
-    <div class="panel" id="panel-gsc">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-        <div>
-          <div style="font-size:13px;color:#8a8aaa;">Dati Google Search Console · <span id="gscRange">—</span></div>
-          <div style="font-size:11px;color:#5a5a7a;">Ultimo aggiornamento: <span id="gscUpdated">mai</span> · aggiornamento automatico ogni giorno</div>
-        </div>
-        <button class="btn btn-primary" id="btnGscSync">🔄 Aggiorna ora</button>
-      </div>
-
-      <!-- KPI cards -->
-      <div id="gscKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;"></div>
-
-      <!-- Trend sparkline -->
-      <div class="table-wrap" style="margin-bottom:20px;padding:16px;">
-        <div style="font-size:13px;color:#8a8aaa;margin-bottom:8px;">Andamento ultimi 30 giorni (impression)</div>
-        <svg id="gscTrend" width="100%" height="60" preserveAspectRatio="none" viewBox="0 0 300 60"></svg>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" id="gscGrid">
-        <div class="table-wrap"><div style="padding:10px 12px;font-size:13px;color:#7c5cfc;font-weight:600;">💡 Opportunità (pos. 5–20 da spingere)</div><div id="gscOpp"></div></div>
-        <div class="table-wrap"><div style="padding:10px 12px;font-size:13px;color:#7c5cfc;font-weight:600;">🔎 Top query</div><div id="gscQueries"></div></div>
-        <div class="table-wrap"><div style="padding:10px 12px;font-size:13px;color:#7c5cfc;font-weight:600;">📄 Top pagine</div><div id="gscPages"></div></div>
-        <div class="table-wrap"><div style="padding:10px 12px;font-size:13px;color:#7c5cfc;font-weight:600;">🌍 Top paesi</div><div id="gscCountries"></div></div>
-      </div>
-      <div id="gscEmpty" style="display:none;text-align:center;color:#8a8aaa;padding:40px;">Nessun dato ancora. Premi <b>Aggiorna ora</b>.</div>
-    </div>
-
-    <!-- Panel: Retention -->
-    <div class="panel" id="panel-retention">
-      <div style="margin-bottom:20px;">
-        <div style="font-size:13px;color:#8a8aaa;">Device-level tracking: installazioni, retention, uninstall.</div>
-      </div>
-
-      <!-- KPI cards -->
-      <div class="retention-kpis" id="retentionKpis">
-        <div class="retention-kpi">
-          <div class="kpi-value" id="rTotalInstalls">—</div>
-          <div class="kpi-label">Installazioni totali</div>
-          <div class="kpi-sub" id="rUninstallRate">—% uninstall</div>
-        </div>
-        <div class="retention-kpi">
-          <div class="kpi-value" id="rActiveDevices">—</div>
-          <div class="kpi-label">Attivi (3gg)</div>
-          <div class="kpi-sub" id="rActive7d">— ultimi 7gg</div>
-        </div>
-        <div class="retention-kpi">
-          <div class="kpi-value" id="rUninstalls">—</div>
-          <div class="kpi-label">Disinstallazioni</div>
-          <div class="kpi-sub" id="rAvgDays">—gg media vita</div>
-        </div>
-        <div class="retention-kpi">
-          <div class="kpi-value" id="rTrialCount">—</div>
-          <div class="kpi-label">Trial attivi</div>
-          <div class="kpi-sub">Pro/Trial</div>
-        </div>
-      </div>
-
-      <!-- Retention curve -->
-      <div class="retention-card" style="margin-bottom:16px">
-        <h3>📈 Retention Curve (% dispositivi ancora attivi)</h3>
-        <div id="retentionCurveChart" style="margin-top:12px"></div>
-      </div>
-
-      <!-- Daily trend -->
-      <div class="retention-card" style="margin-bottom:16px">
-        <h3>📅 Installazioni giornaliere (30gg)</h3>
-        <svg id="dailyTrendChart" class="trend-chart" viewBox="0 0 600 80" preserveAspectRatio="none"></svg>
-      </div>
-
-      <!-- Breakdown grids -->
-      <div class="retention-chart-grid">
-
-        <!-- By Source -->
-        <div class="retention-card">
-          <h3>📦 Source / Canale</h3>
-          <table class="retention-table" id="bySourceTable">
-            <thead><tr><th>Source</th><th class="num">Install</th><th class="num">Uninstall</th><th>Rate</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-        <!-- By Browser -->
-        <div class="retention-card">
-          <h3>🌐 Browser</h3>
-          <table class="retention-table" id="byBrowserTable">
-            <thead><tr><th>Browser</th><th class="num">Install</th><th class="num">Uninstall</th><th>Rate</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-        <!-- By Plan -->
-        <div class="retention-card">
-          <h3>💎 Piano</h3>
-          <table class="retention-table" id="byPlanTable">
-            <thead><tr><th>Piano</th><th class="num">Install</th><th class="num">Uninstall</th><th>Rate</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-        <!-- By Reason -->
-        <div class="retention-card">
-          <h3>🗑️ Motivi disinstallazione</h3>
-          <table class="retention-table" id="byReasonTable">
-            <thead><tr><th>Motivo</th><th class="num">Count</th><th>%</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-      </div>
-
-      <!-- By Country -->
-      <div class="retention-card full-width-card">
-        <h3>🌍 Top 20 Paesi</h3>
-        <table class="retention-table" id="byCountryTable">
-          <thead><tr><th>Paese</th><th class="num">Install</th><th class="num">Uninstall</th><th>Rate</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
-
-  <script>
+<div class="header">
+<h1 data-i18n="panel.admin"><span data-i18n="panel.adoff">AdOff</span> Admin</h1>
+<div class="status" data-i18n="apistatus.connessione" id="apiStatus">Connessione...</div>
+</div>
+<div class="container" data-i18n="container.config_stats_tabs_panel_g">
+<!-- Config -->
+<div class="config-bar">
+<div class="config-field">
+<label data-i18n="panel.api.url">API URL</label>
+<input id="apiUrl" placeholder="https://api.adoff.app" type="text" value="https://api.adoff.app"/>
+</div>
+<div class="config-field">
+<label data-i18n="panel.admin.token">Admin Token</label>
+<input id="adminToken" placeholder="Il tuo admin token" type="password"/>
+</div>
+<button class="btn btn-primary" id="btnConnect">Connetti</button>
+</div>
+<!-- Stats -->
+<div class="stats-grid" id="statsGrid">
+<div class="stat-card"><div class="value" id="statTotal">—</div><div class="label" data-i18n="label.licenze_totali">Licenze totali</div></div>
+<div class="stat-card"><div class="value" id="statActive">—</div><div class="label" data-i18n="label.attive">Attive</div></div>
+<div class="stat-card"><div class="value" id="statLifetime">—</div><div class="label" data-i18n="label.lifetime">Lifetime</div></div>
+<div class="stat-card"><div class="value" id="statRevoked">—</div><div class="label" data-i18n="label.revocate">Revocate</div></div>
+</div>
+<!-- Tabs -->
+<div class="tabs">
+<div class="tab active" data-i18n="tab.genera_licenza" data-panel="generate">Genera Licenza</div>
+<div class="tab" data-i18n="tab.licenze" data-panel="licenses">Licenze</div>
+<div class="tab" data-i18n="tab.valida_key" data-panel="validate">Valida Key</div>
+<div class="tab" data-i18n="tab.google_analisi" data-panel="gsc">📊 Google Analisi</div>
+<div class="tab" data-i18n="tab.retention" data-panel="retention">📊 Retention</div>
+</div>
+<!-- Panel: Genera -->
+<div class="panel active" id="panel-generate">
+<div class="gen-form">
+<div class="gen-field">
+<label data-i18n="panel.piano">Piano</label>
+<select id="genPlan">
+<option value="pro">Pro (mensile/trimestrale/annuale)</option>
+<option value="lifetime">Lifetime</option>
+</select>
+</div>
+<div class="gen-field">
+<label data-i18n="panel.durata.mesi">Durata (mesi)</label>
+<input id="genMonths" max="120" min="1" type="number" value="1"/>
+</div>
+<div class="gen-field">
+<label data-i18n="panel.email">Email</label>
+<input id="genEmail" placeholder="user@example.com" type="email"/>
+</div>
+<div class="gen-field">
+<label data-i18n="panel.max.dispositivi">Max dispositivi</label>
+<input id="genDevices" max="10" min="1" type="number" value="3"/>
+</div>
+<button class="btn btn-primary" id="btnGenerate">Genera Key</button>
+</div>
+<div class="result-box" id="resultBox">
+<div data-i18n="panel.license_key_generata" style="font-size:12px;color:#8a8aaa;">License Key generata:</div>
+<div class="result-key" id="resultKey"></div>
+<button class="btn btn-secondary" id="btnCopy" style="margin-top:8px;">Copia Key</button>
+<div class="result-raw" id="resultRaw"></div>
+<div class="result-meta" id="resultMeta"></div>
+</div>
+</div>
+<!-- Panel: Licenze -->
+<div class="panel" data-i18n="panel_licenses.filtri_bulk_action_bar" id="panel-licenses">
+<!-- Filtri -->
+<div class="filter-bar">
+<input id="filterSearch" placeholder="Cerca per email o key..." type="text"/>
+<select id="filterPlan">
+<option value="">Tutti i piani</option>
+<option value="pro">Pro</option>
+<option value="lifetime">Lifetime</option>
+<option value="monthly">Monthly</option>
+<option value="annual">Annual</option>
+</select>
+<select id="filterStatus">
+<option value="">Tutti gli stati</option>
+<option value="active">Attive</option>
+<option value="revoked">Revocate</option>
+<option value="expired">Scadute</option>
+</select>
+<button class="btn btn-primary" onclick="loadServerLicenses()">Aggiorna</button>
+</div>
+<!-- Bulk action bar -->
+<div class="bulk-bar" id="bulkBar">
+<div class="bulk-info" data-i18n="bulk_info.licenze_selezionate"><span id="bulkCount">0</span> licenze selezionate</div>
+<div class="bulk-actions">
+<button class="btn btn-secondary" onclick="bulkAction('revoke')">Revoca selezionate</button>
+<button class="btn btn-danger" onclick="bulkAction('delete')">Elimina selezionate</button>
+<button class="btn btn-secondary" onclick="clearSelection()">Deseleziona</button>
+</div>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th style="width:36px;"><input class="lic-checkbox" id="selectAll" onchange="toggleSelectAll(this)" type="checkbox"/></th>
+<th data-i18n="panel.key">Key</th>
+<th data-i18n="panel.email">Email</th>
+<th data-i18n="panel.piano">Piano</th>
+<th data-i18n="panel.scadenza">Scadenza</th>
+<th data-i18n="panel.dispositivi">Dispositivi</th>
+<th data-i18n="panel.stato">Stato</th>
+<th data-i18n="panel.azioni">Azioni</th>
+</tr>
+</thead>
+<tbody id="licensesBody">
+<tr><td class="empty-msg" colspan="8" data-i18n="empty_msg.nessuna_licenza_genera_la_prima">Nessuna licenza. Genera la prima!</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Panel: Valida -->
+<div class="panel" id="panel-validate">
+<div class="gen-form">
+<div class="gen-field" style="flex:2;">
+<label data-i18n="panel.license.key.raw">License Key (raw)</label>
+<input id="validateKey" placeholder="Incolla la raw key qui..." type="text"/>
+</div>
+<button class="btn btn-primary" id="btnValidate">Valida</button>
+</div>
+<div class="result-box" id="validateResult"></div>
+</div>
+<!-- Panel: Google Analisi (Search Console) -->
+<div class="panel" data-i18n="panel_gsc.kpi_cards_trend_sparkline" id="panel-gsc">
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+<div>
+<div data-i18n="panel.dati_google_search_console" style="font-size:13px;color:#8a8aaa;">Dati Google Search Console · <span id="gscRange">—</span></div>
+<div data-i18n="panel.ultimo_aggiornamento_aggiorname" style="font-size:11px;color:#5a5a7a;">Ultimo aggiornamento: <span data-i18n="panel.mai" id="gscUpdated">mai</span> · aggiornamento automatico ogni giorno</div>
+</div>
+<button class="btn btn-primary" id="btnGscSync">🔄 Aggiorna ora</button>
+</div>
+<!-- KPI cards -->
+<div id="gscKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;"></div>
+<!-- Trend sparkline -->
+<div class="table-wrap" style="margin-bottom:20px;padding:16px;">
+<div data-i18n="panel.andamento_ultimi_30_giorni_impress" style="font-size:13px;color:#8a8aaa;margin-bottom:8px;">Andamento ultimi 30 giorni (impression)</div>
+<svg height="60" id="gscTrend" preserveaspectratio="none" viewbox="0 0 300 60" width="100%"></svg>
+</div>
+<div id="gscGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+<div class="table-wrap"><div data-i18n="panel.opportunità_pos_520_da_spinger" style="padding:10px 12px;font-size:13px;color:#7c5cfc;font-weight:600;">💡 Opportunità (pos. 5–20 da spingere)</div><div id="gscOpp"></div></div>
+<div class="table-wrap"><div data-i18n="panel.top_query" style="padding:10px 12px;font-size:13px;color:#7c5cfc;font-weight:600;">🔎 Top query</div><div id="gscQueries"></div></div>
+<div class="table-wrap"><div data-i18n="panel.top_pagine" style="padding:10px 12px;font-size:13px;color:#7c5cfc;font-weight:600;">📄 Top pagine</div><div id="gscPages"></div></div>
+<div class="table-wrap"><div data-i18n="panel.top_paesi" style="padding:10px 12px;font-size:13px;color:#7c5cfc;font-weight:600;">🌍 Top paesi</div><div id="gscCountries"></div></div>
+</div>
+<div data-i18n="gscempty.nessun_dato_ancora_premi" id="gscEmpty" style="display:none;text-align:center;color:#8a8aaa;padding:40px;">Nessun dato ancora. Premi <b>Aggiorna ora</b>.</div>
+</div>
+<!-- Panel: Retention -->
+<div class="panel" data-i18n="panel_retention.kpi_cards_retention_curve_dai" id="panel-retention">
+<div style="margin-bottom:20px;">
+<div data-i18n="panel.device_level_tracking_installazion" style="font-size:13px;color:#8a8aaa;">Device-level tracking: installazioni, retention, uninstall.</div>
+</div>
+<!-- KPI cards -->
+<div class="retention-kpis" id="retentionKpis">
+<div class="retention-kpi">
+<div class="kpi-value" id="rTotalInstalls">—</div>
+<div class="kpi-label" data-i18n="kpi_label.installazioni_totali">Installazioni totali</div>
+<div class="kpi-sub" data-i18n="runinstallrate.uninstall" id="rUninstallRate">—% uninstall</div>
+</div>
+<div class="retention-kpi">
+<div class="kpi-value" id="rActiveDevices">—</div>
+<div class="kpi-label" data-i18n="kpi_label.attivi_3gg">Attivi (3gg)</div>
+<div class="kpi-sub" data-i18n="ractive7d.ultimi_7gg" id="rActive7d">— ultimi 7gg</div>
+</div>
+<div class="retention-kpi">
+<div class="kpi-value" id="rUninstalls">—</div>
+<div class="kpi-label" data-i18n="kpi_label.disinstallazioni">Disinstallazioni</div>
+<div class="kpi-sub" data-i18n="ravgdays.gg_media_vita" id="rAvgDays">—gg media vita</div>
+</div>
+<div class="retention-kpi">
+<div class="kpi-value" id="rTrialCount">—</div>
+<div class="kpi-label" data-i18n="kpi_label.trial_attivi">Trial attivi</div>
+<div class="kpi-sub" data-i18n="kpi_sub.protrial">Pro/Trial</div>
+</div>
+</div>
+<!-- Retention curve -->
+<div class="retention-card" style="margin-bottom:16px">
+<h3 data-i18n="panel.retention.curve.dispositivi.ancora.attiv">📈 Retention Curve (% dispositivi ancora attivi)</h3>
+<div id="retentionCurveChart" style="margin-top:12px"></div>
+</div>
+<!-- Daily trend -->
+<div class="retention-card" style="margin-bottom:16px">
+<h3 data-i18n="panel.installazioni.giornaliere.30gg">📅 Installazioni giornaliere (30gg)</h3>
+<svg class="trend-chart" id="dailyTrendChart" preserveaspectratio="none" viewbox="0 0 600 80"></svg>
+</div>
+<!-- Breakdown grids -->
+<div class="retention-chart-grid" data-i18n="retention_chart_grid.by_source_by_browser_by_plan">
+<!-- By Source -->
+<div class="retention-card">
+<h3 data-i18n="panel.source.canale">📦 Source / Canale</h3>
+<table class="retention-table" id="bySourceTable">
+<thead><tr><th data-i18n="panel.source">Source</th><th class="num" data-i18n="num.install">Install</th><th class="num" data-i18n="num.uninstall">Uninstall</th><th data-i18n="panel.rate">Rate</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+<!-- By Browser -->
+<div class="retention-card">
+<h3 data-i18n="panel.browser">🌐 Browser</h3>
+<table class="retention-table" id="byBrowserTable">
+<thead><tr><th data-i18n="panel.browser">Browser</th><th class="num" data-i18n="num.install_1">Install</th><th class="num" data-i18n="num.uninstall_1">Uninstall</th><th data-i18n="panel.rate_1">Rate</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+<!-- By Plan -->
+<div class="retention-card">
+<h3 data-i18n="panel.piano">💎 Piano</h3>
+<table class="retention-table" id="byPlanTable">
+<thead><tr><th data-i18n="panel.piano_1">Piano</th><th class="num" data-i18n="num.install_2">Install</th><th class="num" data-i18n="num.uninstall_2">Uninstall</th><th data-i18n="panel.rate_2">Rate</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+<!-- By Reason -->
+<div class="retention-card">
+<h3 data-i18n="panel.motivi.disinstallazione">🗑️ Motivi disinstallazione</h3>
+<table class="retention-table" id="byReasonTable">
+<thead><tr><th data-i18n="panel.motivo">Motivo</th><th class="num" data-i18n="num.count">Count</th><th>%</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+<!-- By Country -->
+<div class="retention-card full-width-card">
+<h3 data-i18n="panel.top.20.paesi">🌍 Top 20 Paesi</h3>
+<table class="retention-table" id="byCountryTable">
+<thead><tr><th data-i18n="panel.paese">Paese</th><th class="num" data-i18n="num.install_3">Install</th><th class="num" data-i18n="num.uninstall_3">Uninstall</th><th data-i18n="panel.rate_3">Rate</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
     // =============================================
     // STATE
     // =============================================
@@ -818,11 +792,11 @@
 
       tbody.innerHTML = licenses.map((lic, i) => {
         const planBadge = lic.plan === "lifetime"
-          ? '<span class="badge badge-lifetime">LIFETIME</span>'
-          : '<span class="badge badge-pro">PRO</span>';
+          ? '<span class="badge badge-lifetime" data-i18n="panel.lifetime">LIFETIME</span>'
+          : '<span class="badge badge-pro" data-i18n="panel.pro">PRO</span>';
         const statusBadge = lic.revoked
-          ? '<span class="badge badge-revoked">REVOCATA</span>'
-          : '<span class="badge badge-active">ATTIVA</span>';
+          ? '<span class="badge badge-revoked" data-i18n="panel.revocata">REVOCATA</span>'
+          : '<span class="badge badge-active" data-i18n="panel.attiva">ATTIVA</span>';
         const licKey = lic.key || lic.raw || "";
         const isChecked = selectedKeys.has(licKey) ? "checked" : "";
 
@@ -1081,14 +1055,14 @@
       tbody.innerHTML = filtered.map((lic, i) => {
         const plan = lic.plan || "pro";
         const planBadge = plan === "lifetime"
-          ? '<span class="badge badge-lifetime">LIFETIME</span>'
-          : '<span class="badge badge-pro">PRO</span>';
+          ? '<span class="badge badge-lifetime" data-i18n="panel.lifetime">LIFETIME</span>'
+          : '<span class="badge badge-pro" data-i18n="panel.pro">PRO</span>';
 
         const status = lic.status || (lic.revoked ? "revoked" : "active");
         let statusBadge;
-        if (status === "revoked") statusBadge = '<span class="badge badge-revoked">REVOCATA</span>';
-        else if (status === "expired") statusBadge = '<span class="badge badge-revoked">SCADUTA</span>';
-        else statusBadge = '<span class="badge badge-active">ATTIVA</span>';
+        if (status === "revoked") statusBadge = '<span class="badge badge-revoked" data-i18n="panel.revocata">REVOCATA</span>';
+        else if (status === "expired") statusBadge = '<span class="badge badge-revoked" data-i18n="panel.scaduta">SCADUTA</span>';
+        else statusBadge = '<span class="badge badge-active" data-i18n="panel.attiva">ATTIVA</span>';
 
         const key = lic.key || "—";
         const email = lic.email || "—";

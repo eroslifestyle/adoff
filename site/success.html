@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script>
+<script>
     (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
   </script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Acquisto completato - AdOff</title>
-  <meta name="description" content="Acquisto completato, attiva il tuo account" />
-  <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-  <meta name="theme-color" content="#0a0a1a" />
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Acquisto completato - AdOff</title>
+<meta content="Acquisto completato, attiva il tuo account" name="description"/>
+<meta content="noindex, nofollow" name="robots"/>
+<link href="assets/logo.svg" rel="icon" type="image/svg+xml"/>
+<link href="/manifest.webmanifest" rel="manifest"/>
+<meta content="#0a0a1a" name="theme-color"/>
+<style>
     :root {
       --primary: #7c5cfc;
       --primary-light: #9d82fd;
@@ -194,66 +194,60 @@
   </style>
 </head>
 <body>
-  <div id="site-nav"></div>
-  <script src="/adoff-i18n.js?v=260718" defer></script>
-  <script src="/adoff-nav.js?v=260718"></script>
-  <a href="/" class="logo">
-    <img src="assets/logo.svg" alt="AdOff" />
-    <span>AdOff</span>
-  </a>
-
-  <div class="card">
-    <!-- Loading State -->
-    <div id="loadingState" class="loading">
-      <div class="spinner"></div>
-      <p>Elaborazione...</p>
-    </div>
-
-    <!-- Success State -->
-    <div id="successState" class="hidden">
-      <div class="success-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-      </div>
-      <h1>Acquisto confermato</h1>
-      <p class="subtitle">Ti abbiamo inviato un'email con il link di attivazione.</p>
-
-      <div class="license-card" style="background: rgba(74, 222, 128, 0.1); border-color: var(--success);">
-        <div class="label" style="color: var(--success);">Email inviata a</div>
-        <div style="font-size: 15px; color: var(--text); line-height: 1.6;">
-          <strong id="userEmail"></strong>
-        </div>
-      </div>
-
-      <div class="instructions">
-        <strong>Prossimi passi:</strong>
-        <ol>
-          <li>Apri l'email di attivazione</li>
-          <li>Imposta una password</li>
-          <li>Accedi all'estensione AdOff</li>
-          <li>Usa la tua licenza su fino a 3 dispositivi</li>
-        </ol>
-        <p style="margin-top: 16px; color: var(--text-muted); font-size: 13px;">
+<div id="site-nav"></div>
+<script defer="" src="/adoff-i18n.js?v=260718"></script>
+<script src="/adoff-nav.js?v=260718"></script>
+<a class="logo" href="/">
+<img alt="AdOff" src="assets/logo.svg"/>
+<span data-i18n="success.adoff">AdOff</span>
+</a>
+<div class="card" data-i18n="card.loading_state_success_state_e">
+<!-- Loading State -->
+<div class="loading" id="loadingState">
+<div class="spinner"></div>
+<p data-i18n="success.elaborazione">Elaborazione...</p>
+</div>
+<!-- Success State -->
+<div class="hidden" id="successState">
+<div class="success-icon">
+<svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewbox="0 0 24 24">
+<polyline points="20 6 9 17 4 12"></polyline>
+</svg>
+</div>
+<h1 data-i18n="success.acquisto.confermato">Acquisto confermato</h1>
+<p class="subtitle" data-i18n="success.ti.abbiamo.inviato.unemail.con.il.link.d">Ti abbiamo inviato un'email con il link di attivazione.</p>
+<div class="license-card" style="background: rgba(74, 222, 128, 0.1); border-color: var(--success);">
+<div class="label" data-i18n="label.email_inviata_a" style="color: var(--success);">Email inviata a</div>
+<div style="font-size: 15px; color: var(--text); line-height: 1.6;">
+<strong id="userEmail"></strong>
+</div>
+</div>
+<div class="instructions">
+<strong>Prossimi passi:</strong>
+<ol>
+<li data-i18n="success.apri.lemail.di.attivazione">Apri l'email di attivazione</li>
+<li data-i18n="success.imposta.una.password">Imposta una password</li>
+<li data-i18n="success.accedi.allestensione.adoff">Accedi all'estensione AdOff</li>
+<li data-i18n="success.usa.la.tua.licenza.su.fino.a.3.dispositi">Usa la tua licenza su fino a 3 dispositivi</li>
+</ol>
+<p data-i18n="success.non_vedi_lemail_controlla_spam_op" style="margin-top: 16px; color: var(--text-muted); font-size: 13px;">
           Non vedi l'email? Controlla spam oppure <a href="/support.html" style="color: var(--primary-light);">contattaci</a>.
         </p>
-        <p style="margin-top: 8px;"><a href="/install.html">Installa l'estensione</a></p>
-      </div>
-    </div>
-
-    <!-- Error State -->
-    <div id="errorState" class="hidden">
-      <div class="error-card">
-        <h2>Errore</h2>
-        <p id="errorMessage">Verifica il tuo ordine.</p>
-      </div>
-      <a href="/account.html" class="btn btn-primary" style="margin-top: 20px; text-decoration: none; display: inline-block;">
+<p style="margin-top: 8px;"><a href="/install.html">Installa l'estensione</a></p>
+</div>
+</div>
+<!-- Error State -->
+<div class="hidden" id="errorState">
+<div class="error-card">
+<h2 data-i18n="success.errore">Errore</h2>
+<p data-i18n="success.verifica.il.tuo.ordine" id="errorMessage">Verifica il tuo ordine.</p>
+</div>
+<a class="btn btn-primary" href="/account.html" style="margin-top: 20px; text-decoration: none; display: inline-block;">
         Vai all'account
       </a>
-    </div>
-  </div>
-
-  <script>
+</div>
+</div>
+<script>
     const API_URL = "https://api.adoff.app";
     const loadingState = document.getElementById("loadingState");
     const successState = document.getElementById("successState");
@@ -307,7 +301,6 @@
       fetchSessionInfo(sessionId);
     }
   </script>
-
-  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
 </body>
 </html>

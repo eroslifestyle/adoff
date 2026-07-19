@@ -1,31 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>
+<script>
     (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
   </script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VPN Policy — AdOff Premium: No-Log, Privacy &amp; Security</title>
-  <meta name="description" content="AdOff Premium VPN policy: strict no-log, EU jurisdiction, what we collect (connection status only for billing), P2P allowed, kill-switch." />
-  <link rel="canonical" href="https://adoff.app/vpn-policy" />
-  <link rel="alternate" hreflang="it" href="https://adoff.app/it/vpn-policy" />
-  <link rel="alternate" hreflang="en" href="https://adoff.app/vpn-policy" />
-  <link rel="alternate" hreflang="x-default" href="https://adoff.app/vpn-policy" />
-  <meta property="og:type" content="article" />
-  <meta property="og:title" content="VPN Policy — AdOff Premium" />
-  <meta property="og:description" content="Strict no-log VPN. EU servers. What we collect (billing only). P2P allowed. Kill-switch." />
-  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
-  <meta property="og:url" content="https://adoff.app/vpn-policy" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="VPN Policy — AdOff Premium" />
-  <meta name="twitter:description" content="Strict no-log VPN. EU servers. What we collect (billing only). P2P allowed. Kill-switch." />
-  <link rel="icon" href="/assets/icon128.png" type="image/png" />
-  <link rel="manifest" href="/manifest.webmanifest" />
-  <meta name="theme-color" content="#0a0a1a" />
-  <link rel="preload" id="adoff-font" href="/assets/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
-  <script src="/adoff-i18n.js?v=260718" defer></script>
-  <style id="adoff-critical">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VPN Policy — AdOff Premium: No-Log, Privacy &amp; Security</title>
+<meta content="AdOff Premium VPN policy: strict no-log, EU jurisdiction, what we collect (connection status only for billing), P2P allowed, kill-switch." name="description"/>
+<link href="https://adoff.app/vpn-policy" rel="canonical"/>
+<link href="https://adoff.app/it/vpn-policy" hreflang="it" rel="alternate"/>
+<link href="https://adoff.app/vpn-policy" hreflang="en" rel="alternate"/>
+<link href="https://adoff.app/vpn-policy" hreflang="x-default" rel="alternate"/>
+<meta content="article" property="og:type"/>
+<meta content="VPN Policy — AdOff Premium" property="og:title"/>
+<meta content="Strict no-log VPN. EU servers. What we collect (billing only). P2P allowed. Kill-switch." property="og:description"/>
+<meta content="https://adoff.app/assets/og-image.png" property="og:image"/>
+<meta content="https://adoff.app/vpn-policy" property="og:url"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="VPN Policy — AdOff Premium" name="twitter:title"/>
+<meta content="Strict no-log VPN. EU servers. What we collect (billing only). P2P allowed. Kill-switch." name="twitter:description"/>
+<link href="/assets/icon128.png" rel="icon" type="image/png"/>
+<link href="/manifest.webmanifest" rel="manifest"/>
+<meta content="#0a0a1a" name="theme-color"/>
+<link as="font" crossorigin="" href="/assets/fonts/InterVariable.woff2" id="adoff-font" rel="preload" type="font/woff2"/>
+<script defer="" src="/adoff-i18n.js?v=260718"></script>
+<style id="adoff-critical">
     @font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:optional;src:url("/assets/fonts/InterVariable.woff2") format("woff2-variations")}
     @font-face{font-family:"Inter";font-style:italic;font-weight:100 900;font-display:optional;src:url("/assets/fonts/InterVariable-Italic.woff2") format("woff2-variations")}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -68,251 +68,234 @@
     .section-divider{width:40px;height:3px;background:var(--accent);border-radius:2px;margin:40px 0}
     @media(max-width:768px){body{font-size:16px}.legal-page{padding:56px 16px 80px}h2{margin-top:36px}}
   </style>
-  <link rel="preload" href="/style.css?v=260714b" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-  <noscript><link rel="stylesheet" href="/style.css?v=260714b" /></noscript>
+<link as="style" href="/style.css?v=260714b" onload="this.onload=null;this.rel='stylesheet'" rel="preload"/>
+<noscript><link href="/style.css?v=260714b" rel="stylesheet"/></noscript>
 </head>
 <body>
-  <div id="site-nav"></div>
-  <script src="/adoff-nav.js?v=260718"></script>
-
-  <div class="legal-page">
-    <h1>VPN Policy</h1>
-    <p class="legal-meta">
-      <span>AdOff Premium &mdash; VPN Service</span> &nbsp;&middot;&nbsp;
-      <span>Effective: 2026-07-14</span> &nbsp;&middot;&nbsp;
-      <span>Version 1.0</span>
-    </p>
-
-    <div class="toc">
-      <strong style="color:var(--text);display:block;margin-bottom:12px;">Contents</strong>
-      <ol>
-        <li><a href="#overview">Overview</a></li>
-        <li><a href="#what-we-collect">What We Collect (and What We Don't)</a></li>
-        <li><a href="#jurisdiction">Jurisdiction &amp; Data Location</a></li>
-        <li><a href="#logging">No-Log Commitment</a></li>
-        <li><a href="#billing">Billing &amp; Connection Status</a></li>
-        <li><a href="#p2p">P2P &amp; Torrent Policy</a></li>
-        <li><a href="#kill-switch">Kill-Switch</a></li>
-        <li><a href="#security">Security</a></li>
-        <li><a href="#abuse">Abuse &amp; Termination</a></li>
-        <li><a href="#gdpr">GDPR &amp; Data Rights</a></li>
-        <li><a href="#changes">Policy Changes</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ol>
-    </div>
-
-    <h2 id="overview">1. Overview</h2>
-    <p>
+<div id="site-nav"></div>
+<script src="/adoff-nav.js?v=260718"></script>
+<div class="legal-page">
+<h1 data-i18n="vpn_policy.vpn.policy">VPN Policy</h1>
+<p class="legal-meta">
+<span data-i18n="vpn_policy.adoff.premium.mdash.vpn.service">AdOff Premium — VPN Service</span>  · 
+      <span data-i18n="vpn_policy.effective.2026.07.14">Effective: 2026-07-14</span>  · 
+      <span data-i18n="vpn_policy.version.10">Version 1.0</span>
+</p>
+<div class="toc">
+<strong style="color:var(--text);display:block;margin-bottom:12px;">Contents</strong>
+<ol>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#what-we-collect">What We Collect (and What We Don't)</a></li>
+<li><a href="#jurisdiction">Jurisdiction &amp; Data Location</a></li>
+<li><a href="#logging">No-Log Commitment</a></li>
+<li><a href="#billing">Billing &amp; Connection Status</a></li>
+<li><a href="#p2p">P2P &amp; Torrent Policy</a></li>
+<li><a href="#kill-switch">Kill-Switch</a></li>
+<li><a href="#security">Security</a></li>
+<li><a href="#abuse">Abuse &amp; Termination</a></li>
+<li><a href="#gdpr">GDPR &amp; Data Rights</a></li>
+<li><a href="#changes">Policy Changes</a></li>
+<li><a href="#contact">Contact</a></li>
+</ol>
+</div>
+<h2 data-i18n="vpn_policy.1.overview" id="overview">1. Overview</h2>
+<p data-i18n="vpn-policy.adoff_premium_plan_includes_a_re">
       AdOff Premium (<strong>Premium</strong> plan) includes a real VPN tunnel powered by
       VPNresellers.com infrastructure. This document explains exactly what data we collect,
       how we handle privacy, and what your rights are as an AdOff Premium subscriber.
     </p>
-    <p>
+<p data-i18n="vpn-policy.this_vpn_policy_supplements_the_gen">
       This VPN Policy supplements the general <a href="/privacy.html">Privacy Policy</a>.
       In case of conflict, this VPN Policy prevails for VPN-related matters.
     </p>
-
-    <div class="callout callout--good">
-      <p><strong>The short version:</strong> We log <span class="highlight">nothing about your traffic</span>.
+<div class="callout callout--good">
+<p data-i18n="vpn-policy.we_log_we_only_track_whethe"><strong>The short version:</strong> We log <span class="highlight" data-i18n="vpn_policy.nothing.about.your.traffic">nothing about your traffic</span>.
       We only track whether your VPN account is active or disabled, and when it was last used,
       for billing purposes. We do not know which sites you visit, what you download, or who you communicate with.</p>
-    </div>
-
-    <h2 id="what-we-collect">2. What We Collect (and What We Don't)</h2>
-    <h3>We DO NOT collect:</h3>
-    <ul>
-      <li><span class="bad">&times;</span> Browsing history, visited sites, or DNS queries</li>
-      <li><span class="bad">&times;</span> Downloaded or uploaded files</li>
-      <li><span class="bad">&times;</span> Source or destination IP addresses of your traffic</li>
-      <li><span class="bad">&times;</span> Timestamps of individual connections or sessions</li>
-      <li><span class="bad">&times;</span> Bandwidth usage per session or per day</li>
-      <li><span class="bad">&times;</span> Communication metadata (who you connect to, when, how often)</li>
-      <li><span class="bad">&times;</span> Original IP addresses before the VPN tunnel</li>
-      <li><span class="bad">&times;</span> Any data that passes through the VPN tunnel</li>
-    </ul>
-
-    <h3>We DO collect (minimum necessary for billing):</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Data</th>
-          <th>Purpose</th>
-          <th>Retained</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>VPN account status</td>
-          <td>Billing activation / deactivation</td>
-          <td>Duration of subscription + 30 days</td>
-        </tr>
-        <tr>
-          <td>Last connection timestamp</td>
-          <td>Auto-disable inactive accounts (7-day rule)</td>
-          <td>Duration of subscription + 30 days</td>
-        </tr>
-        <tr>
-          <td>Account ID (VPNresellers)</td>
-          <td>Map license to VPN account</td>
-          <td>Duration of subscription + 30 days</td>
-        </tr>
-        <tr>
-          <td>Device ID (AdOff license)</td>
-          <td>Anti-sharing: one account per device</td>
-          <td>Duration of subscription + 30 days</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
+</div>
+<h2 data-i18n="vpn_policy.2.what.we.collect.and.what.we.dont" id="what-we-collect">2. What We Collect (and What We Don't)</h2>
+<h3 data-i18n="vpn_policy.we.do.not.collect">We DO NOT collect:</h3>
+<ul>
+<li data-i18n="vpn-policy.browsing_history_visited_sites_or"><span class="bad" data-i18n="vpn_policy.times">×</span> Browsing history, visited sites, or DNS queries</li>
+<li data-i18n="vpn-policy.downloaded_or_uploaded_files"><span class="bad" data-i18n="vpn_policy.times">×</span> Downloaded or uploaded files</li>
+<li data-i18n="vpn-policy.source_or_destination_ip_addresses"><span class="bad" data-i18n="vpn_policy.times">×</span> Source or destination IP addresses of your traffic</li>
+<li data-i18n="vpn-policy.timestamps_of_individual_connection"><span class="bad" data-i18n="vpn_policy.times">×</span> Timestamps of individual connections or sessions</li>
+<li data-i18n="vpn-policy.bandwidth_usage_per_session_or_per"><span class="bad" data-i18n="vpn_policy.times">×</span> Bandwidth usage per session or per day</li>
+<li data-i18n="vpn-policy.communication_metadata_who_you_con"><span class="bad" data-i18n="vpn_policy.times">×</span> Communication metadata (who you connect to, when, how often)</li>
+<li data-i18n="vpn-policy.original_ip_addresses_before_the_vp"><span class="bad" data-i18n="vpn_policy.times">×</span> Original IP addresses before the VPN tunnel</li>
+<li data-i18n="vpn-policy.any_data_that_passes_through_the_vp"><span class="bad" data-i18n="vpn_policy.times">×</span> Any data that passes through the VPN tunnel</li>
+</ul>
+<h3 data-i18n="vpn_policy.we.do.collect.minimum.necessary.for.bill">We DO collect (minimum necessary for billing):</h3>
+<table>
+<thead>
+<tr>
+<th data-i18n="vpn-policy.data">Data</th>
+<th data-i18n="vpn-policy.purpose">Purpose</th>
+<th data-i18n="vpn-policy.retained">Retained</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td data-i18n="vpn-policy.vpn_account_status">VPN account status</td>
+<td data-i18n="vpn-policy.billing_activation_deactivation">Billing activation / deactivation</td>
+<td data-i18n="vpn-policy.duration_of_subscription_30_days">Duration of subscription + 30 days</td>
+</tr>
+<tr>
+<td data-i18n="vpn-policy.last_connection_timestamp">Last connection timestamp</td>
+<td data-i18n="vpn-policy.auto_disable_inactive_accounts_7_d">Auto-disable inactive accounts (7-day rule)</td>
+<td data-i18n="vpn-policy.duration_of_subscription_30_days_1">Duration of subscription + 30 days</td>
+</tr>
+<tr>
+<td data-i18n="vpn-policy.account_id_vpnresellers">Account ID (VPNresellers)</td>
+<td data-i18n="vpn-policy.map_license_to_vpn_account">Map license to VPN account</td>
+<td data-i18n="vpn-policy.duration_of_subscription_30_days_2">Duration of subscription + 30 days</td>
+</tr>
+<tr>
+<td data-i18n="vpn-policy.device_id_adoff_license">Device ID (AdOff license)</td>
+<td data-i18n="vpn-policy.anti_sharing_one_account_per_devic">Anti-sharing: one account per device</td>
+<td data-i18n="vpn-policy.duration_of_subscription_30_days_3">Duration of subscription + 30 days</td>
+</tr>
+</tbody>
+</table>
+<p data-i18n="vpn-policy.this_data_is_used_to_manage_your_v">
       This data is used <strong>only</strong> to manage your VPN subscription and ensure billing accuracy.
       It tells us whether your account is active and when you last connected — not what you did.
     </p>
-
-    <h2 id="jurisdiction">3. Jurisdiction &amp; Data Location</h2>
-    <p>
+<h2 data-i18n="vpn_policy.3.jurisdiction.amp.data.location" id="jurisdiction">3. Jurisdiction &amp; Data Location</h2>
+<p data-i18n="vpn-policy.adoff_is_operated_from_all_adoff">
       AdOff is operated from <strong>European Union</strong>. All AdOff Premium VPN accounts
       are provisioned on servers located in <strong>Switzerland and the European Union</strong>.
     </p>
-    <p>
+<p data-i18n="vpn-policy.switzerland_and_the_eu_have_strong">
       Switzerland and the EU have strong data protection laws. Switzerland is not an EU member
       but has an adequacy decision from the European Commission, meaning personal data transfers
       are considered adequately protected. No data is stored or processed outside these jurisdictions.
     </p>
-
-    <h2 id="logging">4. No-Log Commitment</h2>
-    <p>
+<h2 data-i18n="vpn_policy.4.no.log.commitment" id="logging">4. No-Log Commitment</h2>
+<p data-i18n="vpn-policy.adoff_premium_maintains_a_strict_f">
       AdOff Premium maintains a strict <strong>no-log policy</strong> for all VPN traffic.
       Specifically:
     </p>
-    <ul>
-      <li>We do not keep records of your online activity through the VPN.</li>
-      <li>We do not monitor, log, or store the content of any communications passing through our VPN servers.</li>
-      <li>We do not keep timestamps associated with individual user sessions.</li>
-      <li>We do not retain bandwidth usage data per user.</li>
-      <li>We do not sell, share, or disclose any data about your VPN usage to third parties.</li>
-    </ul>
-    <div class="callout callout--warn">
-      <p><strong>Important:</strong> While we are committed to no-logging, you are responsible for your
+<ul>
+<li data-i18n="vpn_policy.we.do.not.keep.records.of.your.online.ac">We do not keep records of your online activity through the VPN.</li>
+<li data-i18n="vpn_policy.we.do.not.monitor.log.or.store.the.conte">We do not monitor, log, or store the content of any communications passing through our VPN servers.</li>
+<li data-i18n="vpn_policy.we.do.not.keep.timestamps.associated.wit">We do not keep timestamps associated with individual user sessions.</li>
+<li data-i18n="vpn_policy.we.do.not.retain.bandwidth.usage.data.pe">We do not retain bandwidth usage data per user.</li>
+<li data-i18n="vpn_policy.we.do.not.sell.share.or.disclose.any.dat">We do not sell, share, or disclose any data about your VPN usage to third parties.</li>
+</ul>
+<div class="callout callout--warn">
+<p data-i18n="vpn-policy.while_we_are_committed_to_no_loggin"><strong>Important:</strong> While we are committed to no-logging, you are responsible for your
       own actions while using the VPN. AdOff cannot be held responsible for how you use your VPN connection.
       Use for lawful purposes only.</p>
-    </div>
-
-    <h2 id="billing">5. Billing &amp; Connection Status</h2>
-    <p>
+</div>
+<h2 data-i18n="vpn_policy.5.billing.amp.connection.status" id="billing">5. Billing &amp; Connection Status</h2>
+<p data-i18n="vpn-policy.the_only_connection_related_data_we">
       The only connection-related data we store is a <strong>last connection timestamp</strong>
       (the last time your VPN app checked in with our server). This is used to:
     </p>
-    <ul>
-      <li><strong>Auto-disable inactive accounts:</strong> If your VPN account has no connection activity
+<ul>
+<li data-i18n="vpn-policy.if_your_vpn_account_has_no_connecti"><strong>Auto-disable inactive accounts:</strong> If your VPN account has no connection activity
         for more than 7 consecutive days, it is automatically disabled to stop billing.
         Re-enabling is instant and automatic when you reconnect.</li>
-      <li><strong>Subscription management:</strong> When your Premium subscription ends or is cancelled,
+<li data-i18n="vpn-policy.when_your_premium_subscription_ends"><strong>Subscription management:</strong> When your Premium subscription ends or is cancelled,
         your VPN account is disabled immediately.</li>
-    </ul>
-    <p>
+</ul>
+<p data-i18n="vpn-policy.this_timestamp_is_a_single_daily_ch">
       This timestamp is a single daily checkpoint (not per-session logging) and cannot be used to
       reconstruct your browsing history or session times.
     </p>
-
-    <h2 id="p2p">6. P2P &amp; Torrent Policy</h2>
-    <p>
-      <strong>P2P and BitTorrent traffic is allowed</strong> on AdOff Premium VPN, subject to the
+<h2 data-i18n="vpn_policy.6.p2p.amp.torrent.policy" id="p2p">6. P2P &amp; Torrent Policy</h2>
+<p data-i18n="vpn-policy.on_adoff_premium_vpn_subject_to_th">
+<strong>P2P and BitTorrent traffic is allowed</strong> on AdOff Premium VPN, subject to the
       following terms:
     </p>
-    <ul>
-      <li>Use for <strong>lawful purposes only</strong>. Downloading or sharing copyrighted material
+<ul>
+<li data-i18n="vpn-policy.use_for_downloading_or_sharing_co">Use for <strong>lawful purposes only</strong>. Downloading or sharing copyrighted material
         without the rights holder's permission is prohibited.</li>
-      <li>Bandwidth is not artificially capped, but usage must be within reasonable personal use limits
+<li data-i18n="vpn_policy.bandwidth.is.not.artificially.capped.but">Bandwidth is not artificially capped, but usage must be within reasonable personal use limits
         (we reserve the right to restrict accounts exhibiting abnormal usage patterns).</li>
-      <li>VPNresellers.com (our upstream provider) permits P2P on select servers.
+<li data-i18n="vpn_policy.vpnresellerscom.our.upstream.provider.pe">VPNresellers.com (our upstream provider) permits P2P on select servers.
         The VPN app will indicate which servers support P2P.</li>
-    </ul>
-    <div class="callout callout--warn">
-      <p><strong>DMCA / Copyright Notices:</strong> Due to our no-log policy, we cannot identify
+</ul>
+<div class="callout callout--warn">
+<p data-i18n="vpn-policy.due_to_our_no_log_policy_we_cannot"><strong>DMCA / Copyright Notices:</strong> Due to our no-log policy, we cannot identify
       individual users from traffic data — there is nothing to identify. If VPNresellers.com
       receives an abuse report, we will act on it by disabling the implicated account
       (kill-switch abuse response). We strongly recommend using P2P only for legal content.</p>
-    </div>
-
-    <h2 id="kill-switch">7. Kill-Switch</h2>
-    <p>
+</div>
+<h2 data-i18n="vpn_policy.7.kill.switch" id="kill-switch">7. Kill-Switch</h2>
+<p data-i18n="vpn-policy.adoff_premium_includes_a_on_suppor">
       AdOff Premium includes a <strong>kill-switch</strong> on supported platforms:
       if the VPN connection drops unexpectedly, all internet traffic is blocked until the VPN
       is reconnected. This prevents your real IP address from leaking during reconnection.
     </p>
-    <p>
+<p data-i18n="vpn-policy.the_kill_switch_is_available_on">
       The kill-switch is available on:
     </p>
-    <ul>
-      <li>AdOff VPN for Android (coming with Premium launch)</li>
-      <li>AdOff VPN for desktop (coming post-launch)</li>
-    </ul>
-    <p>The kill-switch is optional and can be enabled/disabled in the VPN app settings.</p>
-
-    <h2 id="security">8. Security</h2>
-    <ul>
-      <li><strong>Protocols:</strong> WireGuard (default) and OpenVPN supported.
+<ul>
+<li data-i18n="vpn_policy.adoff.vpn.for.android.coming.with.premiu">AdOff VPN for Android (coming with Premium launch)</li>
+<li data-i18n="vpn_policy.adoff.vpn.for.desktop.coming.post.launch">AdOff VPN for desktop (coming post-launch)</li>
+</ul>
+<p data-i18n="vpn_policy.the.kill.switch.is.optional.and.can.be.e">The kill-switch is optional and can be enabled/disabled in the VPN app settings.</p>
+<h2 data-i18n="vpn_policy.8.security" id="security">8. Security</h2>
+<ul>
+<li data-i18n="vpn-policy.wireguard_default_and_openvpn_sup"><strong>Protocols:</strong> WireGuard (default) and OpenVPN supported.
         WireGuard uses modern cryptography (Curve25519, ChaCha20-Poly1305, BLAKE2s).</li>
-      <li><strong>TLS:</strong> All communication between your device and our API uses TLS 1.2+.</li>
-      <li><strong>Key exchange:</strong> ECDH with P-256 or X25519 depending on protocol.</li>
-      <li><strong>No third-party DNS:</strong> DNS resolution through the VPN tunnel (1.1.1.1 or upstream resolver).</li>
-      <li><strong>Auto-rotate:</strong> Server recommendations are based on latency and server health.
+<li data-i18n="vpn-policy.all_communication_between_your_devi"><strong>TLS:</strong> All communication between your device and our API uses TLS 1.2+.</li>
+<li data-i18n="vpn-policy.ecdh_with_p_256_or_x25519_depending"><strong>Key exchange:</strong> ECDH with P-256 or X25519 depending on protocol.</li>
+<li data-i18n="vpn-policy.dns_resolution_through_the_vpn_tunn"><strong>No third-party DNS:</strong> DNS resolution through the VPN tunnel (1.1.1.1 or upstream resolver).</li>
+<li data-i18n="vpn-policy.server_recommendations_are_based_on"><strong>Auto-rotate:</strong> Server recommendations are based on latency and server health.
         We do not log which server you connect to.</li>
-    </ul>
-
-    <h2 id="abuse">9. Abuse &amp; Account Termination</h2>
-    <p>AdOff reserves the right to suspend or terminate Premium VPN accounts in the following cases:</p>
-    <ul>
-      <li>Use of the VPN for illegal activities under applicable law.</li>
-      <li>Abuse reports received from upstream providers (VPNresellers.com).</li>
-      <li>Abnormal usage patterns that indicate automated abuse or resale.</li>
-      <li>Sharing an account across more than 3 devices simultaneously.</li>
-    </ul>
-    <p>
+</ul>
+<h2 data-i18n="vpn_policy.9.abuse.amp.account.termination" id="abuse">9. Abuse &amp; Account Termination</h2>
+<p data-i18n="vpn_policy.adoff.reserves.the.right.to.suspend.or.t">AdOff reserves the right to suspend or terminate Premium VPN accounts in the following cases:</p>
+<ul>
+<li data-i18n="vpn_policy.use.of.the.vpn.for.illegal.activities.un">Use of the VPN for illegal activities under applicable law.</li>
+<li data-i18n="vpn_policy.abuse.reports.received.from.upstream.pro">Abuse reports received from upstream providers (VPNresellers.com).</li>
+<li data-i18n="vpn_policy.abnormal.usage.patterns.that.indicate.au">Abnormal usage patterns that indicate automated abuse or resale.</li>
+<li data-i18n="vpn_policy.sharing.an.account.across.more.than.3.de">Sharing an account across more than 3 devices simultaneously.</li>
+</ul>
+<p data-i18n="vpn-policy.in_case_of_abuse_we_will_disable_t">
       In case of abuse, we will disable the account immediately. Refunds for terminated accounts
       are handled on a case-by-case basis.
     </p>
-
-    <h2 id="gdpr">10. GDPR &amp; Data Rights</h2>
-    <p>
+<h2 data-i18n="vpn_policy.10.gdpr.amp.data.rights" id="gdpr">10. GDPR &amp; Data Rights</h2>
+<p data-i18n="vpn-policy.as_an_eu_based_service_adoff_compl">
       As an EU-based service, AdOff complies with the <strong>General Data Protection Regulation (GDPR)</strong>.
       You have the following rights regarding your VPN data:
     </p>
-    <ul>
-      <li><strong>Right of access:</strong> Request a copy of all data we hold about you (limited to the billing data described in section 2).</li>
-      <li><strong>Right to erasure:</strong> Request deletion of your account data. We will delete your VPN account, billing records, and connection timestamps within 30 days of account termination.</li>
-      <li><strong>Right to portability:</strong> Receive your data in a structured, machine-readable format.</li>
-      <li><strong>Right to object:</strong> Object to the processing of your data. Note that we cannot stop billing-related processing without cancelling your subscription.</li>
-      <li><strong>Right to withdraw consent:</strong> Cancel your subscription at any time. Upon cancellation, VPN access is disabled and no further data is processed.</li>
-    </ul>
-    <p>
+<ul>
+<li data-i18n="vpn-policy.request_a_copy_of_all_data_we_hold"><strong>Right of access:</strong> Request a copy of all data we hold about you (limited to the billing data described in section 2).</li>
+<li data-i18n="vpn-policy.request_deletion_of_your_account_da"><strong>Right to erasure:</strong> Request deletion of your account data. We will delete your VPN account, billing records, and connection timestamps within 30 days of account termination.</li>
+<li data-i18n="vpn-policy.receive_your_data_in_a_structured"><strong>Right to portability:</strong> Receive your data in a structured, machine-readable format.</li>
+<li data-i18n="vpn-policy.object_to_the_processing_of_your_da"><strong>Right to object:</strong> Object to the processing of your data. Note that we cannot stop billing-related processing without cancelling your subscription.</li>
+<li data-i18n="vpn-policy.cancel_your_subscription_at_any_tim"><strong>Right to withdraw consent:</strong> Cancel your subscription at any time. Upon cancellation, VPN access is disabled and no further data is processed.</li>
+</ul>
+<p data-i18n="vpn-policy.to_exercise_any_of_these_rights_co">
       To exercise any of these rights, contact us at <strong>support [at] adoff [dot] app</strong>
       with the subject "GDPR Request".
     </p>
-
-    <h2 id="changes">11. Policy Changes</h2>
-    <p>
+<h2 data-i18n="vpn_policy.11.policy.changes" id="changes">11. Policy Changes</h2>
+<p data-i18n="vpn-policy.we_may_update_this_vpn_policy_from">
       We may update this VPN Policy from time to time. Changes will be communicated via email
       to active Premium subscribers at least 30 days before they take effect.
       The effective date is always shown at the top of this page.
       Significant changes will be highlighted on this page.
     </p>
-
-    <h2 id="contact">12. Contact</h2>
-    <p>
+<h2 data-i18n="vpn_policy.12.contact" id="contact">12. Contact</h2>
+<p data-i18n="vpn-policy.for_questions_about_this_vpn_policy">
       For questions about this VPN Policy or to exercise your data rights:
     </p>
-    <ul>
-      <li>Email: <strong>support [at] adoff [dot] app</strong></li>
-      <li>Support form: <a href="/support.html">adoff.app/support.html</a></li>
-    </ul>
-    <p>
+<ul>
+<li data-i18n="vpn-policy.email">Email: <strong>support [at] adoff [dot] app</strong></li>
+<li data-i18n="vpn-policy.support_form">Support form: <a href="/support.html">adoff.app/support.html</a></li>
+</ul>
+<p data-i18n="vpn-policy.for_privacy_related_matters_please">
       For privacy-related matters, please include "VPN Privacy" in your subject line
       to route your request to the appropriate team.
     </p>
-  </div>
-
-  <div id="site-footer"></div>
-  <script src="/adoff-footer.js?v=260709-ga4b"></script>
+</div>
+<div id="site-footer"></div>
+<script src="/adoff-footer.js?v=260709-ga4b"></script>
 </body>
 </html>
