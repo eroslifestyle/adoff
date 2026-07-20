@@ -132,35 +132,36 @@
   <div id="site-nav"></div>
   <script src="/adoff-i18n.js?v=260718" defer></script>
   <script src="/adoff-nav.js?v=260718"></script>
+  <script src="/adoff-footer.js?v=260613d"></script>
   <a href="/" class="logo">
     <img src="assets/logo.svg" alt="AdOff" />
-    <span>AdOff</span>
+    <span data-i18n="uninstall.adoff">AdOff</span>
   </a>
 
   <div class="card">
     <!-- Survey -->
     <div id="surveyState">
-      <h1 id="t_title">Ci dispiace vederti andare</h1>
-      <p class="subtitle" id="t_sub">Una domanda veloce: perché hai disinstallato AdOff? Ci aiuta a migliorare.</p>
+      <h1 id="t_title" data-i18n="uninstall.ci.dispiace.vederti.andare">Ci dispiace vederti andare</h1>
+      <p class="subtitle" id="t_sub" data-i18n="uninstall.una.domanda.veloce.perché.hai.disinstall">Una domanda veloce: perché hai disinstallato AdOff? Ci aiuta a migliorare.</p>
 
       <div class="reasons" id="reasons">
-        <button type="button" class="reason-btn" data-reason="broken_site"><span class="ico">🧩</span><span class="lbl" data-k="broken_site">Un sito non funzionava più</span></button>
-        <button type="button" class="reason-btn" data-reason="ads_visible"><span class="ico">👀</span><span class="lbl" data-k="ads_visible">Vedevo ancora le pubblicità</span></button>
-        <button type="button" class="reason-btn" data-reason="confusing"><span class="ico">😕</span><span class="lbl" data-k="confusing">Troppo complicato / non capivo Free vs Pro</span></button>
-        <button type="button" class="reason-btn" data-reason="performance"><span class="ico">🐌</span><span class="lbl" data-k="performance">Rallentava il browser</span></button>
-        <button type="button" class="reason-btn" data-reason="found_better"><span class="ico">🔀</span><span class="lbl" data-k="found_better">Ho trovato un'alternativa migliore</span></button>
-        <button type="button" class="reason-btn" data-reason="other"><span class="ico">❔</span><span class="lbl" data-k="other">Altro motivo</span></button>
+        <button type="button" class="reason-btn" data-reason="broken_site"><span class="ico">🧩</span><span class="lbl" data-k="broken_site" data-i18n="uninstall.un.sito.non.funzionava.più">Un sito non funzionava più</span></button>
+        <button type="button" class="reason-btn" data-reason="ads_visible"><span class="ico">👀</span><span class="lbl" data-k="ads_visible" data-i18n="uninstall.vedevo.ancora.le.pubblicità">Vedevo ancora le pubblicità</span></button>
+        <button type="button" class="reason-btn" data-reason="confusing"><span class="ico">😕</span><span class="lbl" data-k="confusing" data-i18n="uninstall.troppo.complicato.non.capivo.free.vs.pro">Troppo complicato / non capivo Free vs Pro</span></button>
+        <button type="button" class="reason-btn" data-reason="performance"><span class="ico">🐌</span><span class="lbl" data-k="performance" data-i18n="uninstall.rallentava.il.browser">Rallentava il browser</span></button>
+        <button type="button" class="reason-btn" data-reason="found_better"><span class="ico">🔀</span><span class="lbl" data-k="found_better" data-i18n="uninstall.ho.trovato.unalternativa.migliore">Ho trovato un'alternativa migliore</span></button>
+        <button type="button" class="reason-btn" data-reason="other"><span class="ico">❔</span><span class="lbl" data-k="other" data-i18n="uninstall.altro.motivo">Altro motivo</span></button>
       </div>
 
       <textarea id="comment" maxlength="500" data-ph="Vuoi dirci di più? (facoltativo — es. quale sito non funzionava)"></textarea>
 
       <!-- Domain field: mostra SOLO per ads_visible e broken_site -->
       <div id="domainSection" class="hidden" style="margin-bottom: 14px;">
-        <label style="display:block; font-size:13px; color:var(--text-muted); margin-bottom:6px;" id="t_domain_label">Su quale sito hai ancora visto pubblicità?</label>
+        <label style="display:block; font-size:13px; color:var(--text-muted); margin-bottom:6px;" id="t_domain_label" data-i18n="uninstall.su.quale.sito.hai.ancora.visto.pubblicit">Su quale sito hai ancora visto pubblicità?</label>
         <input type="url" id="problemDomain" placeholder="https://example.com" style="width:100%; padding:10px 12px; background:rgba(0,0,0,0.25); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:14px; font-family:inherit;" />
         <label style="display:flex; align-items:flex-start; gap:10px; margin-top:10px; cursor:pointer;">
           <input type="checkbox" id="consentCheckbox" style="margin-top:3px; accent-color:var(--primary);" />
-          <span style="font-size:12px; color:var(--text-muted); line-height:1.5;" id="t_consent_text">Sì, invia questo indirizzo per aiutarci a migliorare. Nessun altro dato viene raccolto. Puoi richiedere la cancellazione in qualsiasi momento.</span>
+          <span style="font-size:12px; color:var(--text-muted); line-height:1.5;" id="t_consent_text" data-i18n="uninstall.sì.invia.questo.indirizzo.per.aiutarci.a">Sì, invia questo indirizzo per aiutarci a migliorare. Nessun altro dato viene raccolto. Puoi richiedere la cancellazione in qualsiasi momento.</span>
         </label>
       </div>
 
@@ -177,8 +178,8 @@
       <div class="check">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
       </div>
-      <h1 id="t_thanks">Grazie!</h1>
-      <p class="subtitle" id="t_thanks_sub">Il tuo feedback ci aiuta a rendere AdOff migliore per tutti.</p>
+      <h1 id="t_thanks" data-i18n="uninstall.grazie">Grazie!</h1>
+      <p class="subtitle" id="t_thanks_sub" data-i18n="uninstall.il.tuo.feedback.ci.aiuta.a.rendere.adoff">Il tuo feedback ci aiuta a rendere AdOff migliore per tutti.</p>
       <p class="reinstall">Cambiato idea? <a href="/install.html" data-k="reinstall_link">Reinstalla AdOff</a></p>
     </div>
   </div>
