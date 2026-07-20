@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 L'estensione opera su 4 livelli:
 
-1. **Network blocking** (`declarativeNetRequest`) — 138 regole `block`/`allow` (nessun `redirect`) bloccano richieste HTTP verso ad network, incluso il blocco di IMA SDK (`imasdk.googleapis.com`, rule 900). Le regole si dividono in **ads reali** (contate nel badge) e **tracking/analytics** (bloccati ma non contati, 23 rule IDs esclusi)
+1. **Network blocking** (`declarativeNetRequest`) — 144 regole `block`/`allow` (nessun `redirect`) bloccano richieste HTTP verso ad network, incluso il blocco di IMA SDK (`imasdk.googleapis.com`, rule 900). Le regole si dividono in **ads reali** (contate nel badge) e **tracking/analytics** (bloccati ma non contati, 23 rule IDs esclusi)
 2. **Cosmetic filtering** (CSS + content script ISOLATED) — Nasconde elementi ad dal DOM
 3. **Video ad neutralization** (IMA SDK stub, MAIN world, Solo Pro/Trial) — Lo stub universale è iniettato in-page da `stealth.js` via `Object.defineProperty(window.google, "ima", ...)`, sostituendo Google IMA SDK su tutti i siti (sia caricato esternamente che bundlato nei player). Quando un player video chiama `adsManager.start()`, lo stub emette immediatamente `CONTENT_RESUME_REQUESTED` → zero ads, player funzionante. Il caricamento esterno di IMA è inoltre bloccato a livello rete (rule 900)
 4. **Stealth anti-detection** (script MAIN world, Solo Pro/Trial) — Evasione anti-adblock: bait spoofing, variable spoofing, fetch/XHR interception
@@ -40,7 +40,7 @@ Il trial è **ancorato al server** e non manomettibile via DevTools/storage, e *
 - `src/i18n.js` — Internazionalizzazione 15 lingue (IT/EN/DE/FR/ES/PT/RU/AR/ZH/TR/PL/HI/JA/KO + ulteriori)
 - `src/license-client.js` — Client validazione licenze (HMAC + API + integrity check)
 - `stubs/google-ima3.js` — Stub IMA SDK completo, esposto come `web_accessible_resources` (NON più redirect target; la neutralizzazione primaria avviene in-page via `stealth.js`)
-- `rules/adblock-rules.json` — 138 regole declarativeNetRequest (137 block incluso IMA SDK rule 900 + 1 allow GTM broadcaster rule 910; nessun redirect)
+- `rules/adblock-rules.json` — 144 regole declarativeNetRequest (143 block incluso IMA SDK rule 900 + 1 allow GTM broadcaster rule 910; nessun redirect)
 
 ### File structure — Firefox (`app-firefox/`)
 
