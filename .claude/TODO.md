@@ -14,11 +14,10 @@
 
 ## 🟡 Media priorità (store publish)
 
-- [ ] **Edge publish v3.5.36** — InProgressSubmission (Microsoft in review), riprovare tra 1-2h
-  - Poll: `GET /submissions/draft/package/operations/{operationId}`
-  - ref: CP_20260718_1720.md
-- [ ] **AMO Firefox v3.5.36** — web-ext sign timeout a 120s, riprovare timeout più lungo
-  - ref: CP_20260718_1720.md
+- [ ] **Edge publish v3.5.36** — BLOCCO: `EDGE_API_KEY` scaduta (404 su tutti gli endpoint), serve AZIONE MANUALE
+  - Portale: https://partner.microsoft.com/dashboard/microsoftedge/publishapi → Create new API credentials
+  - Poi aggiornare `EDGE_API_KEY` in ~/.secrets/adoff-stores.env e ripetere upload+publish
+- [x ~~] **AMO Firefox v3.5.36** — RISOLTO: 3.5.36 già su AMO ma canale `unlisted` (listed resta 3.5.35). Si riallinea alla prossima release naturale (opzione B). NON serve azione.
 - [x ~~] **EDGE_API_KEY renew** — API scaduta (404 su tutti gli endpoint), serve azione manuale
   - https://partner.microsoft.com/dashboard/microsoftedge/publishapi → Create new API credentials
   - Nota: la chiave attuale `UiQ7...` è invalidata, nuova richiesta
