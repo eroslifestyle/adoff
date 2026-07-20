@@ -14,7 +14,37 @@
   // quindi la lista e' hardcoded. La whitelist dinamica e' gestita da content.js
   // (ISOLATED world) che ha accesso a chrome.storage e termina l'esecuzione prima
   // di modificare il DOM se il dominio e' in whitelist.
+  // Siti broadcasting — ricevono IMA stub (blocco video ads)
+  const BROADCASTER_SITES = [
+    // IT
+    "raiplay.it", "rai.it",
+    "mediasetinfinity.mediaset.it", "mediaset.it",
+    "la7.it", "discoveryplus.com",
+    // EN
+    "bbc.co.uk", "bbc.com",
+    "itv.com", "itvx.com",
+    "channel4.com", "channel5.com", "my5.tv",
+    "pbs.org", "pluto.tv", "tubi.tv",
+    // DE
+    "zdf.de", "ard.de", "ardmediathek.de",
+    "rtl.de", "rtlplus.de", "joyn.de",
+    "servustv.com", "orf.at",
+    // FR
+    "france.tv", "tf1.fr",
+    "6play.fr", "m6.fr",
+    "arte.tv", "mycanal.fr",
+    // ES
+    "rtve.es", "atresplayer.com",
+    "mitele.es", "lasexta.com",
+    // PT
+    "rtp.pt", "tvi.pt", "sic.pt",
+    "globoplay.globo.com", "globo.com",
+    // CH
+    "srf.ch", "rsi.ch", "rts.ch",
+  ];
+
   const STEALTH_EXCLUDED = [
+    // Big tech — stealth API overrides rompono questi siti
     "youtube.com",
     "google.com", "google.it", "google.co",
     "gmail.com",
@@ -35,21 +65,43 @@
     "netflix.com",
   ];
 
-  // Streaming premium con SSAI via Google DAI — il player ha bisogno
-  // del vero google.ima per ottenere lo stream stitched. Stealth disattivato.
+  // Streaming premium con SSAI via Google DAI — il content stream
+  // arriva attraverso DAI, quindi google.ima.dai.api.StreamManager DEVE
+  // funzionare nativamente. IMA stub e stealth disabilitati su questi siti.
   const PREMIUM_STREAMING = [
     "paramountplus.com",
+    "parampunt.com",
   ];
 
+  const isBroadcaster = BROADCASTER_SITES.some((d) => hostname.includes(d));
   const isPremiumStreaming = PREMIUM_STREAMING.some((d) => hostname.includes(d));
-  const isStealhExcluded = isPremiumStreaming || STEALTH_EXCLUDED.some((d) => hostname.includes(d));
+  const isStealhExcluded = isBroadcaster || isPremiumStreaming || STEALTH_EXCLUDED.some((d) => hostname.includes(d));
 
   // =============================================
   // POPUP / POPUNDER BLOCKER (MAIN world, document_start)
-  // Vedi commento esteso nello stealth.js di app/ (Chrome).
+  //
+  // Blocca le finestre/tab pubblicitarie aperte dai siti di streaming
+  // pirata, aggregatori, mirror video. Tre layer di difesa:
+  //
+  //   Layer 1 — URL blacklist: pattern di popunder ad networks noti
+  //             (ExoClick, PopAds, TrafficJunky, AdsTerra, ...) e
+  //             TLD/path cloaking comuni nei redirect a pagamento.
+  //   Layer 2 — User-gesture verification: window.open() chiamato
+  //             senza click utente recente (<1s, isTrusted) viene
+  //             bloccato. I popunder usano timer/eventi sintetici.
+  //   Layer 3 — Multi-window throttle: piu' di 1 window.open per
+  //             gesture e' signature popunder ("aprire 3 tab al click
+  //             su play"). Blocchiamo dalla seconda in poi.
+  //
+  // Disabilitato sui big tech (STEALTH_EXCLUDED) e broadcaster
+  // (BROADCASTER_SITES, PREMIUM_STREAMING) dove popup legittimi
+  // sono attesi (auth OAuth, dialog, payment, share). Layer 1 (URL
+  // blacklist) resta attivo ovunque — quegli URL non sono mai voluti.
   // =============================================
   (function popupBlocker() {
+    // Layer 1 — URL blacklist (sempre attivo, anche su big tech)
     const POPUP_AD_PATTERNS = [
+      // Popunder ad networks
       /popads\.net/i, /popcash\.net/i, /propellerads\.com/i,
       /adsterra\.com/i, /exoclick\.com/i, /juicyads\.com/i,
       /trafficjunky\.(?:com|net)/i, /clickadu\.com/i, /hilltopads\.net/i,
@@ -59,23 +111,29 @@
       /yllix\.com/i, /revenuehits\.com/i, /bidvertiser\.com/i,
       /adversal\.com/i, /infolinks\.com/i, /popunder/i,
       /\bpopads\b/i, /\bpop-?ads?\b/i, /\bpop-?under\b/i,
+      // Cloaking/redirect comuni nei popunder
       /awsmsndr\.com/i, /clksite\.com/i, /clkrev\.com/i,
       /go\.onelink\.me\/.*\?af_xp/i, /trk\..*\?p=/i,
-      /\/4\/\d{6,}/i,
+      /\/4\/\d{6,}/i,               // ExoClick zone tracker path
       /\/smartpop/i, /\/popunder\.js/i,
-      /^https?:\/\/[a-z0-9-]+\.(?:tk|ml|ga|cf|gq|click|loan|win|men|trade|top|gdn|surf|date|stream|cricket|science|party|review|kim|country|faith|racing|bid|webcam|download|accountant)\//i,
+      // Pattern domini TLD a basso costo + query tracker (cloak)
+      /^https?:\/\/[a-z0-9-]+\.(?:tk|ml|ga|cf|gq|click|loan|win|men|trade|top|gdn|surf|date|stream|cricket|science|party|review|kim|country|faith|cricket|racing|bid|webcam|download|accountant)\//i,
+      // Push-notification ad networks ("vuoi ricevere notifiche?")
       /pushwhy\.com/i, /pushnam\.com/i, /pushhouse\.com/i,
       /pushtape\.com/i, /pushmaster\.io/i, /push-notification-/i,
+      // Generic cloak redirects
       /\bredirect=https?%3A/i, /\bgo=https?%3A/i,
       /\/redirect\.php\?/i, /\/go\.php\?/i, /\/out\.php\?/i,
     ];
 
     function isPopupAdUrl(u) {
       if (!u || typeof u !== "string") return false;
+      // about:blank popup poi assegna location → check parziale
       if (u === "about:blank" || u === "" || u === "javascript:void(0)") return false;
       return POPUP_AD_PATTERNS.some((re) => re.test(u));
     }
 
+    // Layer 2/3 — gesture tracking
     let lastTrustedClick = 0;
     let windowsThisGesture = 0;
     let gestureTimer = null;
@@ -87,6 +145,7 @@
       gestureTimer = setTimeout(() => { windowsThisGesture = 0; }, 1000);
     }
 
+    // Capture phase: registriamo il gesture PRIMA che il sito lo intercetti
     const GESTURE_EVENTS = ["click", "auxclick", "pointerdown", "mousedown", "touchstart", "keydown"];
     for (const ev of GESTURE_EVENTS) {
       window.addEventListener(ev, function (e) {
@@ -94,22 +153,28 @@
       }, true);
     }
 
+    // Disabilita Layer 2/3 sui big tech / broadcaster / streaming premium
+    // dove popup legittimi sono attesi
     const enableGestureCheck = !isStealhExcluded;
 
     const origOpen = window.open;
     function safeOpen(url, name, features) {
       try {
         const u = String(url || "");
+        // Layer 1: sempre attivo
         if (isPopupAdUrl(u)) {
           try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: u } })); } catch (_) {}
           return null;
         }
+        // Layer 2/3: solo se non big tech
         if (enableGestureCheck) {
           const sinceClick = Date.now() - lastTrustedClick;
+          // window.open senza gesto utente recente (>1.5s) → popunder
           if (sinceClick > 1500) {
             try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: u, reason: "no-gesture" } })); } catch (_) {}
             return null;
           }
+          // 2+ finestre nello stesso click → popunder signature
           if (windowsThisGesture >= 1) {
             try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: u, reason: "multi-window" } })); } catch (_) {}
             return null;
@@ -121,6 +186,7 @@
         return null;
       }
     }
+    // Manteniamo la prototype chain originale
     try {
       Object.defineProperty(window, "open", {
         value: safeOpen,
@@ -131,6 +197,8 @@
       try { window.open = safeOpen; } catch (__) {}
     }
 
+    // HTMLAnchorElement.click() programmatico verso ad networks
+    // (popunder spesso fa: a = document.createElement('a'); a.href=ad; a.target='_blank'; a.click())
     const origAClick = HTMLAnchorElement.prototype.click;
     HTMLAnchorElement.prototype.click = function () {
       try {
@@ -139,6 +207,7 @@
           try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: href, reason: "anchor-click" } })); } catch (_) {}
           return;
         }
+        // target=_blank programmatico senza gesto recente
         if (enableGestureCheck && (this.target === "_blank" || this.target === "_new")) {
           const sinceClick = Date.now() - lastTrustedClick;
           if (sinceClick > 1500) {
@@ -150,6 +219,7 @@
       return origAClick.apply(this, arguments);
     };
 
+    // Notifica content.js (ISOLATED) per incrementare contatore + badge
     window.addEventListener("adoff-popup-blocked", function () {
       try { document.documentElement.setAttribute("data-adoff-popup-blocked", String(Date.now())); } catch (_) {}
     });
@@ -215,10 +285,10 @@
     let _ytResp = window.ytInitialPlayerResponse;
     Object.defineProperty(window, "ytInitialPlayerResponse", {
       get() { return _ytResp; },
-      set(v) { _ytResp = isStealthEnabled() ? stripAdObj(v) : v; },
+      set(v) { _ytResp = isProEnabled() ? stripAdObj(v) : v; },
       configurable: true,
     });
-    if (_ytResp && isStealthEnabled()) _ytResp = stripAdObj(_ytResp);
+    if (_ytResp && isProEnabled()) _ytResp = stripAdObj(_ytResp);
 
     // A2: Intercept fetch for player API (SPA navigation)
     //
@@ -248,7 +318,7 @@
 
       // Free: passthrough completo sulle player API. Solo Pro/Trial modifica
       // request body (isInlinePlaybackNoAd) e mangle response (adPlacements/...).
-      if (!isPlayerReq || !isStealthEnabled()) {
+      if (!isPlayerReq || !isProEnabled()) {
         return _origFetch.call(window, input, init);
       }
 
@@ -284,7 +354,7 @@
       };
       XMLHttpRequest.prototype.send = function (body) {
         // Free: passthrough. Pro/Trial inietta isInlinePlaybackNoAd.
-        if (isStealthEnabled() && this._adoffUrl &&
+        if (isProEnabled() && this._adoffUrl &&
             (this._adoffUrl.includes("/youtubei/v1/player") ||
              this._adoffUrl.includes("/youtubei/v1/next"))) {
           body = injectNoAd(body);
@@ -293,7 +363,7 @@
       };
     } catch (_) { /* ignore — XHR may be locked on some pages */ }
 
-    // Layer B/C/Observer — attivati dal ytProChecker solo se Pro/Trial confermato.
+    // Layer B/C/Observer — attivati dal proChecker solo se Pro/Trial confermato.
     // Definiti come funzione per essere chiamati on-demand quando arriva il gate.
     function activateYoutubeRuntimeKiller() {
 
@@ -494,12 +564,16 @@
 
     } // fine activateYoutubeRuntimeKiller()
 
-    // Gating Pro/Trial: Layer A e' gia' installato sopra con check runtime
-    // (no-op se Free). Qui aspettiamo content.js per attivare Layer B/C.
+    // Su YouTube niente IMA stub (YouTube non usa IMA SDK) ne' stealth
+    // anti-adblock (youtube.com e' in STEALTH_EXCLUDED). Esce dall'IIFE
+    // dopo aver installato Layer A; il proChecker piu' in basso non viene
+    // mai raggiunto perche' YouTube e' video platform.
+    // NOTA: gating Pro/Trial e' implementato dentro Layer A (runtime check)
+    // e tramite il proChecker che chiama activateYoutubeRuntimeKiller().
     let ytProCheckCount = 0;
     const ytProChecker = setInterval(() => {
       ytProCheckCount++;
-      if (isStealthEnabled()) {
+      if (isProEnabled()) {
         clearInterval(ytProChecker);
         activateYoutubeRuntimeKiller();
       } else if (ytProCheckCount >= 20) {
@@ -512,28 +586,275 @@
     return;
   }
 
-  // Siti grandi esclusi — le API override rompono i loro script
-  if (isStealhExcluded) return;
+  // =============================================
+  // IMA SDK STUB (MAIN world) — Solo Pro/Trial
+  //
+  // Blocca video ads su QUALSIASI sito che usa Google IMA SDK.
+  // Inietta un fake google.ima che emette CONTENT_RESUME_REQUESTED
+  // immediatamente → zero ads, player funzionante.
+  // Gated: si attiva solo se content.js segnala Pro/Trial via nonce.
+  // =============================================
 
-  // Stealth mode e' SOLO per Pro/Trial
-  // content.js (ISOLATED) setta data-adoff-stealth con un nonce nel formato "ao_XXXXXXXX"
-  // EB-7: verifica il formato del nonce — un sito malevolo non conosce il formato esatto
-  function isStealthEnabled() {
+  // Verifica Pro/Trial via nonce di content.js
+  function isProEnabled() {
     const val = document.documentElement.getAttribute("data-adoff-stealth") || "";
-    // Nonce generato da content.js: "ao_" + 8 caratteri hex lowercase
     return /^ao_[0-9a-f]{8}$/.test(val);
   }
 
-  // Attendi che content.js comunichi lo stato licenza (max 2s)
-  let stealthCheckCount = 0;
-  const stealthChecker = setInterval(() => {
-    stealthCheckCount++;
-    if (isStealthEnabled()) {
-      clearInterval(stealthChecker);
-      activateStealth();
-    } else if (stealthCheckCount >= 20) {
-      // Dopo 2s senza segnale Pro — stealth disabilitato (versione Free)
-      clearInterval(stealthChecker);
+  function injectImaStub() {
+
+    class _EventHandler {
+      constructor() { this._m = new Map(); }
+      addEventListener(e, fn) {
+        for (const t of (Array.isArray(e) ? e : [e])) {
+          if (!this._m.has(t)) this._m.set(t, new Set());
+          this._m.get(t).add(fn);
+        }
+      }
+      removeEventListener(e, fn) {
+        for (const t of (Array.isArray(e) ? e : [e])) {
+          const s = this._m.get(t); if (s) s.delete(fn);
+        }
+      }
+      _fire(evt) {
+        const s = this._m.get(evt.type);
+        if (s) for (const fn of s) { try { fn(evt); } catch (_) {} }
+      }
+    }
+
+    const T = {
+      AD_BREAK_READY: "adBreakReady", AD_BUFFERING: "adBuffering",
+      AD_CAN_PLAY: "adCanPlay", AD_ERROR: "adError",
+      AD_METADATA: "adMetadata", AD_PROGRESS: "adProgress",
+      ALL_ADS_COMPLETED: "allAdsCompleted", CLICK: "click",
+      COMPLETE: "complete",
+      CONTENT_PAUSE_REQUESTED: "contentPauseRequested",
+      CONTENT_RESUME_REQUESTED: "contentResumeRequested",
+      DURATION_CHANGE: "durationChange", FIRST_QUARTILE: "firstQuartile",
+      IMPRESSION: "impression", INTERACTION: "interaction",
+      LINEAR_CHANGED: "linearChanged", LOADED: "loaded", LOG: "log",
+      MIDPOINT: "midpoint", PAUSED: "pause", RESUMED: "resume",
+      SKIPPABLE_STATE_CHANGED: "skippableStateChanged", SKIPPED: "skip",
+      STARTED: "start", THIRD_QUARTILE: "thirdQuartile",
+      USER_CLOSE: "userClose", VIDEO_CLICKED: "videoClicked",
+      VIDEO_ICON_CLICKED: "videoIconClicked",
+      VIEWABLE_IMPRESSION: "viewableImpression",
+      VOLUME_CHANGED: "volumeChange", VOLUME_MUTED: "mute",
+    };
+
+    // AdPodInfo: alcuni player (es. RTI/Mediaset) chiamano ad.getAdPodInfo()
+    // dentro l'handler di OGNI evento, incluso CONTENT_RESUME_REQUESTED. Se
+    // manca, il listener lancia prima di riprendere il contenuto e il video
+    // non parte. Idem per getAdIdValue/getAdIdRegistry e getUniversalAdIds()
+    // che deve restituire oggetti con metodi accessor, non proprieta'.
+    class _AdPodInfo {
+      getAdPosition() { return 1; } getIsBumper() { return false; }
+      getMaxDuration() { return -1; } getPodIndex() { return 0; }
+      getTimeOffset() { return 0; } getTotalAds() { return 1; }
+    }
+
+    class _Ad {
+      getAdId() { return ""; } getAdSystem() { return ""; }
+      getAdIdValue() { return ""; } getAdIdRegistry() { return ""; }
+      getCreativeId() { return ""; } getDuration() { return 0.1; }
+      getHeight() { return 0; } getWidth() { return 0; }
+      getSkipTimeOffset() { return -1; } getTitle() { return ""; }
+      getMediaUrl() { return null; } getCompanionAds() { return []; }
+      getWrapperAdIds() { return []; } getWrapperAdSystems() { return []; }
+      getWrapperCreativeIds() { return []; }
+      getTraffickingParameters() { return {}; }
+      getTraffickingParametersString() { return ""; }
+      getUniversalAdIds() { return [{ getAdIdRegistry() { return "unknown"; }, getAdIdValue() { return "unknown"; }, adIdRegistry: "unknown", adIdValue: "unknown" }]; }
+      getVastMediaBitrate() { return 0; }
+      isLinear() { return true; } isSkippable() { return true; }
+      getAdvertiserName() { return ""; } getContentType() { return ""; }
+      getDescription() { return ""; } getSurveyUrl() { return null; }
+      getMinSuggestedDuration() { return 0; }
+      getAdPodInfo() { return new _AdPodInfo(); }
+    }
+
+    class _AdEvent {
+      constructor(type) { this.type = type; }
+      getAd() { return new _Ad(); }
+      getAdData() { return {}; }
+    }
+    _AdEvent.Type = T;
+
+    class _AdError {
+      constructor(m, c, t) { this._m = m || ""; this._c = c || 1009; this._t = t || "adLoadError"; }
+      getErrorCode() { return this._c; } getMessage() { return this._m; }
+      getInnerError() { return null; } getType() { return this._t; }
+      getVastErrorCode() { return this._c; }
+    }
+    _AdError.ErrorCode = { UNKNOWN_ERROR: 900, VAST_EMPTY_RESPONSE: 1009 };
+    _AdError.Type = { AD_LOAD: "adLoadError", AD_PLAY: "adPlayError" };
+
+    class _AdErrorEvent {
+      constructor(e) { this.type = T.AD_ERROR; this._e = e || new _AdError(); }
+      getError() { return this._e; } getUserRequestContext() { return {}; }
+    }
+    _AdErrorEvent.Type = { AD_ERROR: T.AD_ERROR };
+
+    class _AdsManager extends _EventHandler {
+      constructor() { super(); this._vol = 1; }
+      init() {}
+      start() {
+        // Emetti lifecycle completo → player riprende immediatamente
+        requestAnimationFrame(() => {
+          const seq = [
+            T.LOADED, T.STARTED, T.CONTENT_PAUSE_REQUESTED,
+            T.AD_BUFFERING, T.IMPRESSION, T.FIRST_QUARTILE,
+            T.MIDPOINT, T.THIRD_QUARTILE, T.COMPLETE,
+            T.ALL_ADS_COMPLETED, T.CONTENT_RESUME_REQUESTED,
+          ];
+          for (const t of seq) this._fire(new _AdEvent(t));
+        });
+      }
+      collapse() {} destroy() {} discardAdBreak() {} expand() {}
+      focus() {} pause() {} resize() {} resume() {} skip() {} stop() {}
+      configureAdsManager() {} updateAdsRenderingSettings() {}
+      getAdSkippableState() { return false; }
+      getCuePoints() { return []; }
+      getCurrentAd() { return new _Ad(); }
+      getRemainingTime() { return 0; }
+      getVolume() { return this._vol; }
+      setVolume(v) { this._vol = v; }
+      isCustomClickTrackingUsed() { return false; }
+      isCustomPlaybackUsed() { return false; }
+    }
+
+    class _AdsManagerLoadedEvent {
+      constructor(m) { this.type = "adsManagerLoaded"; this._m = m; }
+      getAdsManager() { return this._m; }
+      getUserRequestContext() { return {}; }
+    }
+    _AdsManagerLoadedEvent.Type = { ADS_MANAGER_LOADED: "adsManagerLoaded" };
+
+    class _AdsLoader extends _EventHandler {
+      constructor() { super(); }
+      contentComplete() {} destroy() {}
+      getSettings() { return new _ImaSdkSettings(); }
+      getVersion() { return "3.746.0"; }
+      requestAds() {
+        requestAnimationFrame(() => {
+          this._fire(new _AdsManagerLoadedEvent(new _AdsManager()));
+        });
+      }
+    }
+
+    class _AdDisplayContainer {
+      constructor(el) {
+        if (el) {
+          const d = document.createElement("div");
+          d.style.cssText = "display:none!important";
+          try { el.appendChild(d); } catch (_) {}
+        }
+      }
+      initialize() {} destroy() {}
+    }
+
+    class _ImaSdkSettings {
+      getCompanionBackfill() { return ""; }
+      getDisableCustomPlaybackForIOS10Plus() { return false; }
+      getDisableFlashAds() { return true; }
+      getFeatureFlags() { return {}; }
+      getLocale() { return "en"; }
+      getNumRedirects() { return 0; }
+      getPlayerType() { return "Unknown"; }
+      getPlayerVersion() { return "0.0.0"; }
+      getPpid() { return ""; }
+      getVersion() { return "3.746.0"; }
+      isCookiesEnabled() { return true; }
+      isVpaidAllowed() { return true; }
+      setAutoPlayAdBreaks() {} setCompanionBackfill() {}
+      setCookiesEnabled() {} setDisableCustomPlaybackForIOS10Plus() {}
+      setDisableFlashAds() {} setFeatureFlags() {} setLocale() {}
+      setNumRedirects() {} setPlayerType() {} setPlayerVersion() {}
+      setPpid() {} setSessionId() {} setStreamCorrelator() {}
+      setVpaidAllowed() {} setVpaidMode() {}
+    }
+
+    class _AdsRenderingSettings {}
+    class _AdsRequest {
+      constructor() { this.adTagUrl = ""; this.adsResponse = ""; }
+      setAdWillAutoPlay() {} setAdWillPlayMuted() {} setContinuousPlayback() {}
+    }
+
+    const imaStub = {
+      Ad: _Ad,
+      AdDisplayContainer: _AdDisplayContainer,
+      AdError: _AdError,
+      AdErrorEvent: _AdErrorEvent,
+      AdEvent: _AdEvent,
+      AdsLoader: _AdsLoader,
+      AdsManager: _AdsManager,
+      AdsManagerLoadedEvent: _AdsManagerLoadedEvent,
+      AdsRenderingSettings: _AdsRenderingSettings,
+      AdsRequest: _AdsRequest,
+      CompanionAdSelectionSettings: function () {},
+      CompanionBackfillMode: { ALWAYS: "always", ON_MASTER_AD: "on_master_ad" },
+      ImaSdkSettings: _ImaSdkSettings,
+      OmidAccessMode: { DOMAIN: "domain", FULL: "full", LIMITED: "limited" },
+      OmidVerificationVendor: { GOOGLE: 1, MOAT: 2, DOUBLEVERIFY: 3, INTEGRAL_AD_SCIENCE: 4 },
+      UiElements: { AD_ATTRIBUTION: "adAttribution", COUNTDOWN: "countdown" },
+      VERSION: "3.746.0",
+      ViewMode: { FULLSCREEN: "fullscreen", NORMAL: "normal" },
+      settings: new _ImaSdkSettings(),
+      dai: { api: {
+        Ad: function () {},
+        AdPodInfo: function () {},
+        StreamEvent: { Type: {} },
+        StreamManager: class extends _EventHandler {
+          contentTimeForStreamTime(t) { return t; }
+          getStreamId() { return ""; }
+          onTimedMetadata() {} processMetadata() {}
+          requestStream() {} reset() {}
+          streamTimeForContentTime(t) { return t; }
+        },
+        StreamRequest: function () {},
+        VODStreamRequest: function () {},
+        LiveStreamRequest: function () {},
+      }},
+    };
+
+    // Inietta PRIMA di qualsiasi altro script — Object.defineProperty
+    // impedisce che il vero IMA SDK sovrascriva il nostro stub
+    window.google = window.google || {};
+    Object.defineProperty(window.google, "ima", {
+      get() { return imaStub; },
+      set() { /* blocca sovrascrittura */ },
+      configurable: false,
+    });
+
+  }
+  // Fine definizione injectImaStub
+
+  // =============================================
+  // PRO/TRIAL GATE — IMA stub + Stealth
+  //
+  // Attende che content.js (ISOLATED) setti data-adoff-stealth
+  // con un nonce verificabile. Se Pro/Trial:
+  //   1. Inietta IMA stub (tutti i siti)
+  //   2. Attiva stealth anti-adblock (solo siti non-esclusi)
+  // Se Free: niente IMA stub, niente stealth.
+  // =============================================
+  let proCheckCount = 0;
+  const proChecker = setInterval(() => {
+    proCheckCount++;
+    if (isProEnabled()) {
+      clearInterval(proChecker);
+      // Premium streaming (SSAI/DAI): no stub, no stealth — il player
+      // ha bisogno del vero google.ima per ottenere lo stream
+      if (isPremiumStreaming) return;
+      // Stealth anti-adblock solo su siti non-esclusi e non-broadcaster
+      if (!isBroadcaster && !isStealhExcluded) {
+        activateStealth();
+        // IMA stub iniettato DOPO stealth per non interferire col player
+        injectImaStub();
+      }
+    } else if (proCheckCount >= 20) {
+      // Dopo 2s senza segnale Pro — versione Free, niente IMA/stealth
+      clearInterval(proChecker);
     }
   }, 100);
 
@@ -748,8 +1069,6 @@
       const src = String(child.src || "");
       const text = child.textContent || "";
       const srcLower = src.toLowerCase();
-      // EM-5: pattern piu' specifico per rilevare script anti-adblock reali
-      // Evita falsi positivi su articoli/contenuti che menzionano "adblock"
       const isAntiAdblockSrc = (
         srcLower.includes("blockadblock") ||
         srcLower.includes("fuckadblock") ||
@@ -759,13 +1078,18 @@
       const isAntiAdblock = (
         (text.includes("adblock") || text.includes("ad-block") || text.includes("adblocker")) &&
         (text.includes("detected") || text.includes("disable") || text.includes("whitelist")) &&
-        text.length < 5000 // Gli script anti-adblock sono piccoli, gli articoli sono grandi
+        text.length < 5000
       );
       if (isAntiAdblockSrc || isAntiAdblock) {
         return child;
       }
     }
-    return origAppendChild.call(this, child);
+    try {
+      return origAppendChild.call(this, child);
+    } catch (_) {
+      // Sandboxed iframe (about:blank senza allow-scripts) — passthrough silenzioso
+      return child;
+    }
   };
 
   } // fine activateStealth()

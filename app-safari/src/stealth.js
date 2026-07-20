@@ -70,6 +70,7 @@
   // funzionare nativamente. IMA stub e stealth disabilitati su questi siti.
   const PREMIUM_STREAMING = [
     "paramountplus.com",
+    "parampunt.com",
   ];
 
   const isBroadcaster = BROADCASTER_SITES.some((d) => hostname.includes(d));
@@ -845,11 +846,11 @@
       // Premium streaming (SSAI/DAI): no stub, no stealth — il player
       // ha bisogno del vero google.ima per ottenere lo stream
       if (isPremiumStreaming) return;
-      // Pro/Trial confermato — inietta IMA stub su tutti i siti
-      injectImaStub();
       // Stealth anti-adblock solo su siti non-esclusi e non-broadcaster
       if (!isBroadcaster && !isStealhExcluded) {
         activateStealth();
+        // IMA stub iniettato DOPO stealth per non interferire col player
+        injectImaStub();
       }
     } else if (proCheckCount >= 20) {
       // Dopo 2s senza segnale Pro — versione Free, niente IMA/stealth

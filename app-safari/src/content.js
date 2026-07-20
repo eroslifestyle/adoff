@@ -425,8 +425,27 @@
       }
     }
 
-    // 5. Trova label "Pubblicità"/"Ad" SOLO se adiacente a un contenitore ad noto
-    //    Non nascondere label/span/div generici — rompe pulsanti di popup legittimi
+    // 5. CITYNEWS PLATFORM — nasconde banner container self-hosted
+    //    (gif banner serviti dal sito stesso, non bloccabili a livello network)
+    const citynewsSelectors = [".area_banner", ".paszone_container", ".area-header"];
+    for (const sel of citynewsSelectors) {
+      const els = document.querySelectorAll(sel);
+      for (const el of els) {
+        if (el.hasAttribute("data-adoff-hidden")) continue;
+        if (el.querySelector("nav, header, article, section, [role='navigation'], .menu, .logo")) continue;
+        const hasAdContent = el.querySelector(
+          "ins.adsbygoogle, iframe[src], img[src*='banner' i], img[src*='ads' i], " +
+          "img[src*='sponsor' i], img[src*='promo' i], [id*='gpt-'], .adsbygoogle"
+        );
+        if (hasAdContent) {
+          collapseElement(el);
+          collapseAdParent(el);
+          count++;
+        }
+      }
+    }
+
+    // 5b. Trova label "Pubblicità"/"Ad" SOLO se adiacente a un contenitore ad noto
     const AD_LABELS = ["pubblicità", "ad", "ads", "advertisement", "annuncio", "pubblicita"];
     const candidates = document.querySelectorAll("p, span, div, small");
     for (const el of candidates) {

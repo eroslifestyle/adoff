@@ -31,6 +31,7 @@
   const optionsLink    = document.getElementById("optionsLink");
 
   // Nuovi elementi
+  const trialBlockedBanner = document.getElementById("trialBlockedBanner");
   const founderBadge      = document.getElementById("founderBadge");
   const changelogBanner   = document.getElementById("changelogBanner");
   const changelogTitle    = document.getElementById("changelogTitle");
@@ -114,10 +115,13 @@
     reqBlockedEl.textContent = formatCount(req);
   }
 
-  /** Aggiorna il badge licenza nell'header. */
+  /** Aggiorna il badge licenza nell'header — 3 livelli: Free / Pro / Premium. */
   function renderLicenseBadge() {
     const t = license.type || "free";
-    if (t === "pro" || t === "lifetime") {
+    if (t === "premium") {
+      licenseBadge.textContent = "PREMIUM";
+      licenseBadge.className = "license-badge premium";
+    } else if (t === "pro" || t === "lifetime") {
       licenseBadge.textContent = "PRO";
       licenseBadge.className = "license-badge pro";
     } else if (t === "trial") {
@@ -130,10 +134,27 @@
     }
   }
 
+  /** Mostra sezione Premium per utenti non-Premium. */
+  function renderPremiumUpsell(isPremium) {
+    const banner = document.getElementById("premiumBanner");
+    const section = document.getElementById("premiumSection");
+    if (isPremium) {
+      banner.style.display = "none";
+      section.style.display = "block";
+      const badge = document.getElementById("premiumBadge");
+      badge.textContent = "ATTIVO";
+      badge.className = "premium-badge active";
+      section.querySelector(".premium-cta").style.display = "none";
+    } else {
+      banner.style.display = "flex";
+      section.style.display = "none";
+    }
+  }
+
   /** Aggiorna il banner licenza sotto il sito. */
   function renderLicenseBanner() {
     const t = license.type || "free";
-    if (t === "pro" || t === "lifetime") {
+    if (t === "pro" || t === "lifetime" || t === "trial_blocked") {
       licenseBanner.style.display = "none";
       return;
     }
@@ -165,26 +186,41 @@
     }
   }
 
+  /** Mostra il banner trial bloccato. */
+  function renderTrialBlockedBanner() {
+    if (license.type !== "trial_blocked") {
+      trialBlockedBanner.style.display = "none";
+      return;
+    }
+    trialBlockedBanner.style.display = "flex";
+  }
+
   /**
    * Normalizza l'oggetto licenza: il trial vive nella chiave storage
    * separata `adoffTrialEnd`, mentre `adoffLicense` contiene solo le
-   * licenze Pro/Lifetime acquistate. Deriva `type`/`trialEndsAt` per la UI.
+   * licenze Pro/Lifetime/Premium acquistate. Deriva `type`/`trialEndsAt` per la UI.
    * @param {object|undefined} lic
    * @param {number|undefined} trialEnd
    * @returns {object}
    */
-  function normalizeLicense(lic, trialEnd) {
+  function normalizeLicense(lic, trialEnd, trialBlocked) {
     const out = Object.assign({}, lic);
     const plan = out.plan || "";
-    const hasValidPro = out.valid &&
-      (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
-    if (hasValidPro) {
-      out.type = plan === "lifetime" ? "lifetime" : "pro";
-    } else if (trialEnd && trialEnd > Date.now()) {
-      out.type = "trial";
-      out.trialEndsAt = trialEnd;
+    if (plan === "premium") {
+      out.type = "premium";
     } else {
-      out.type = "free";
+      const hasValidPro = out.valid &&
+        (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
+      if (hasValidPro) {
+        out.type = plan === "lifetime" ? "lifetime" : "pro";
+      } else if (trialBlocked) {
+        out.type = "trial_blocked";
+      } else if (trialEnd && trialEnd > Date.now()) {
+        out.type = "trial";
+        out.trialEndsAt = trialEnd;
+      } else {
+        out.type = "free";
+      }
     }
     return out;
   }
@@ -362,10 +398,22 @@
     renderStats(data.adoffAdsBlocked || 0, data.adoffReqBlocked || 0);
     renderLicenseBadge();
     renderLicenseBanner();
+    renderTrialBlockedBanner();
     renderPauseSection();
+    renderPremiumUpsell(license.type === "premium");
     renderFounderBadge(data);
     renderChangelog(data);
     renderReviewPrompt(data);
+
+    // ---- Mobile banner ----
+    (function showMobileBanner() {
+      var banner = document.getElementById("mobileBanner");
+      if (!banner) return;
+      // Show the banner to all users (free and Pro) after 1.5s
+      setTimeout(function() {
+        banner.style.display = "flex";
+      }, 1500);
+    })();
   }
 
   // ===== CARICAMENTO DATI =====
@@ -390,7 +438,7 @@
           chrome.storage.local.set({ adoffWhitelist: whitelist });
         }
 
-        license = normalizeLicense(result.adoffLicense || result.license, result.adoffTrialEnd);
+        license = normalizeLicense(result.adoffLicense || result.license, result.adoffTrialEnd, result.adoffTrialBlocked);
         renderAll(result);
       });
     });
@@ -462,6 +510,7 @@
   });
 
   // ===== INIT =====
+
   i18n.init(() => {
     i18n.applyToDOM();
     loadState();
