@@ -32,6 +32,7 @@
 
 ## ✅ Completati (recenti)
 
+- [x] **Site restyle cleanup + i18n IT residui** (2026-07-20): fix miscuglio vecchio/nuovo (nav doppia unique-tech topbarNav→site-nav, affiliati orfana, footer condivisi android/success/uninstall/account, versione→3.5.36, VPN Founder €29,99/Standard €49,99, trial→15gg, regole→144); +audit ~178 chiavi/lingua×14 con testo IT non tradotto→tradotte tutte via 2 workflow. commit e86586b/58b2bf8/f12941e, deploy live
 - [x] **Site full audit + fix** (2026-07-18): 37 pagine senza i18n, nav versioni, CSP GTM — TUTTO RISOLTO
 - [x] **Post Telegram** changelog v3.5.36 (message_id: 78)
 - [x] **Redesign sito light+dark** (2026-07-14): stile AdBlock/ABP, 15 lingue
