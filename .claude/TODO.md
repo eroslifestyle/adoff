@@ -14,13 +14,9 @@
 
 ## 🟡 Media priorità (store publish)
 
-- [ ] **Edge publish v3.5.36** — BLOCCO: `EDGE_API_KEY` scaduta (404 su tutti gli endpoint), serve AZIONE MANUALE
-  - Portale: https://partner.microsoft.com/dashboard/microsoftedge/publishapi → Create new API credentials
-  - Poi aggiornare `EDGE_API_KEY` in ~/.secrets/adoff-stores.env e ripetere upload+publish
+- [ ] **Edge publish v3.5.36** — upload 3.5.36 OK+validato (HTTP 202, Succeeded). Credenziali `EDGE_API_KEY` FUNZIONANO (il "404" precedente era sui GET di lettura, non supportati dall'API v1.1). Publish bloccato da `InProgressSubmission`: c'è una submission Microsoft ancora in review → riprovare il solo publish quando si sblocca.
+  - Retry automatico: `sviluppo/scripts/edge-publish-retry.sh` (draft già caricato, fa solo il publish)
 - [x ~~] **AMO Firefox v3.5.36** — RISOLTO: 3.5.36 già su AMO ma canale `unlisted` (listed resta 3.5.35). Si riallinea alla prossima release naturale (opzione B). NON serve azione.
-- [x ~~] **EDGE_API_KEY renew** — API scaduta (404 su tutti gli endpoint), serve azione manuale
-  - https://partner.microsoft.com/dashboard/microsoftedge/publishapi → Create new API credentials
-  - Nota: la chiave attuale `UiQ7...` è invalidata, nuova richiesta
 
 ## 🟢 Bassa priorità (nice-to-have)
 
