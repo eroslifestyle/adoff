@@ -2,6 +2,17 @@
 
 > Consolidato 2026-07-19. I check sono cancellazioni, non aggiunte.
 
+## Release 3.5.38 — anti-detection fix (2026-07-28)
+
+- [x] **Fix spoof googletag/adsbygoogle** — commit b251624. I siti riassegnavano `window.googletag` cancellando lo spoof (1 chiave, `apiReady:false` = firma adblock). Ora merge-accessor: 18 chiavi stabili.
+- [x] **Sito** — LIVE 3.5.38 (ZIP + 51 file HTML/JSON-LD)
+- [x] **CWS** — 3.5.37 pubblicata, in review (CONTIENE il fix)
+- [x] **AMO** — 3.5.38 canale **listed** (versions/6380919), riallinea il listing pubblico fermo a 3.5.35
+- [x] **Telegram** — annuncio EN + card (message_id 89)
+- [ ] **CWS: caricare 3.5.38** quando la 3.5.37 esce da review (ora `ITEM_NOT_UPDATABLE`) — riallinea il numero con AMO/sito
+- [ ] **Edge: publish 3.5.38** — package gia' caricato in draft; `InProgressSubmission` perche' la 3.5.36 e' ora in review. Riprovare con `bash sviluppo/scripts/edge-publish-retry.sh`
+- [ ] **Verificare** che il wall investing.com sia sparito per l'utente dopo l'update
+
 ## 🔴 Alta priorità (bloccanti revenue)
 
 - [x ~~] **Premium VPN — VPN provisioning nel webhook** — `VPNRESELLERS_API_KEY` secret impostato, provisioning gia' implementato
@@ -16,7 +27,7 @@
 
 - [ ] **Edge publish v3.5.36** — upload 3.5.36 OK+validato (HTTP 202, Succeeded). Credenziali `EDGE_API_KEY` FUNZIONANO (il "404" precedente era sui GET di lettura, non supportati dall'API v1.1). Publish bloccato da `InProgressSubmission`: c'è una submission Microsoft ancora in review → riprovare il solo publish quando si sblocca.
   - Retry automatico: `sviluppo/scripts/edge-publish-retry.sh` (draft già caricato, fa solo il publish)
-- [x ~~] **AMO Firefox v3.5.36** — RISOLTO: 3.5.36 già su AMO ma canale `unlisted` (listed resta 3.5.35). Si riallinea alla prossima release naturale (opzione B). NON serve azione.
+- [x] **AMO Firefox** — RISOLTO 2026-07-28: canale listed riallineato con la 3.5.38.
 
 ## 🟢 Bassa priorità (nice-to-have)
 
