@@ -4,11 +4,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>AdOff — Invisible Ad Blocker for Chrome, Edge & Firefox | Free Trial</title>
-<meta content="AdOff is an invisible ad blocker that stays undetected by anti-adblock systems. Blocks banner ads, video ads (Pro), trackers and popups on Chrome, Edge, Brave, Firefox and Safari. Free with 15-day Pro trial." name="description"/>
+<title>AdOff Ad Blocker | Free + Pro Video Blocking | 15 Days Free</title>
+<meta content="AdOff blocks ads on Chrome, Edge, Brave, and Firefox. Free: banners, trackers, popups. Pro: video ad blocking, Stealth anti-adblock. 15 free Pro days." name="description"/>
 <meta content="index, follow, max-image-preview:large, max-snippet:-1" name="robots"/>
 <link href="https://adoff.app/en/" rel="canonical"/>
-<!-- hreflang — 15 lingue -->
 <link href="https://adoff.app/" hreflang="it" rel="alternate"/>
 <link href="https://adoff.app/en/" hreflang="en" rel="alternate"/>
 <link href="https://adoff.app/de/" hreflang="de" rel="alternate"/>
@@ -25,15 +24,16 @@
 <link href="https://adoff.app/id/" hreflang="id" rel="alternate"/>
 <link href="https://adoff.app/pl/" hreflang="pl" rel="alternate"/>
 <link href="https://adoff.app/en/" hreflang="x-default" rel="alternate"/>
+<!-- hreflang — 15 lingue -->
 <meta content="website" property="og:type"/>
-<meta content="AdOff — Invisible Ad Blocker for Chrome, Edge & Firefox | Free Trial" property="og:title"/>
-<meta content="AdOff is an invisible ad blocker that stays undetected by anti-adblock systems. Blocks banner ads, video ads (Pro), trackers and popups on Chrome, Edge, Brave, Firefox and Safari. Free with 15-day Pro trial." property="og:description"/>
+<meta content="AdOff Ad Blocker | Free + Pro Video Blocking | 15 free Pro days" property="og:title"/>
+<meta content="AdOff blocks ads on Chrome, Edge, Brave, and Firefox. Free: banners, trackers, popups. Pro: video ad blocking, Stealth anti-adblock. 15 free Pro days." property="og:description"/>
 <meta content="https://adoff.app/assets/og-image.png" property="og:image"/>
 <meta content="https://adoff.app/en/" property="og:url"/>
 <meta content="AdOff" property="og:site_name"/>
 <meta content="summary_large_image" name="twitter:card"/>
-<meta content="AdOff — Invisible Ad Blocker for Chrome, Edge & Firefox | Free Trial" name="twitter:title"/>
-<meta content="AdOff is an invisible ad blocker that stays undetected by anti-adblock systems. Blocks banner ads, video ads (Pro), trackers and popups on Chrome, Edge, Brave, Firefox and Safari. Free with 15-day Pro trial." name="twitter:description"/>
+<meta content="AdOff Ad Blocker | Free + Pro Video Blocking | 15 free Pro days" name="twitter:title"/>
+<meta content="AdOff blocks ads on Chrome, Edge, Brave, and Firefox. Free: banners, trackers, popups. Pro: video ad blocking, Stealth anti-adblock. 15 free Pro days." name="twitter:description"/>
 <meta content="https://adoff.app/assets/og-image.png" name="twitter:image"/>
 <link href="/assets/logo.svg" rel="icon" type="image/svg+xml"/>
 <link href="/manifest.webmanifest" rel="manifest"/>
@@ -50,41 +50,58 @@
   </script>
 <link href="/style.css?v=260714b" rel="stylesheet"/>
 <script src="/affiliate-tracking.js"></script>
+<script src="/adoff-i18n.js?v=260718-fix"></script>
 <!-- Organization JSON-LD -->
 <script type="application/ld+json">
-{
+  {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "AdOff",
-    "alternateName": "AdOff Ad Blocker",
+    "alternateName": ["AdOff Ad Blocker", "Ad Off", "Ads Off", "Add Off", "AdsOff"],
     "url": "https://adoff.app",
     "logo": "https://adoff.app/assets/icon128.png",
-    "description": "AdOff is a Manifest V3 browser extension that blocks ads on every website while staying invisible to anti-adblock detection. Available on Chrome, Edge, Brave, Opera, Firefox and Safari.",
+    "description": "AdOff è un'estensione browser Manifest V3 che blocca la pubblicità su ogni sito restando invisibile al rilevamento anti-adblock. Disponibile su Chrome, Edge, Brave, Opera, Firefox e Safari.",
     "sameAs": ["https://github.com/eroslifestyle/adoff"]
-}
-</script>
-
+  }
+  </script>
 <!-- SoftwareApplication JSON-LD -->
 <script type="application/ld+json">
-{
+  {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "AdOff",
     "alternateName": "AdOff Ad Blocker",
     "applicationCategory": "BrowserExtension",
     "operatingSystem": "Chrome, Edge, Brave, Opera, Firefox, Safari",
-    "description": "Invisible adblocker that stays undetected by anti-adblock systems. Blocks banner ads, video ads (Pro), trackers and popups with zero configuration. Free with 15-day Pro trial.",
+    "description": "Ad blocker stealth invisibile ai rilevamenti anti-adblock. Blocca banner, popup, tracker e ads video. Zero configurazione. Free con trial Pro 15 giorni.",
     "url": "https://adoff.app",
-    "downloadUrl": "https://adoff.app/install.html",
+    "downloadUrl": "https://adoff.app/install",
+    "softwareVersion": "3.5.38",
+    "softwareHelp": "https://adoff.app/guide",
+    "isAccessibleForFree": true,
+    "inLanguage": ["it","en","de","fr","es","pt","ru","ar","zh","hi","ja","ko","tr","id","pl"],
+    "featureList": [
+      "144 regole di blocco a livello di rete (declarativeNetRequest)",
+      "Filtro cosmetico CSS per banner, slot pubblicitari e cookie wall",
+      "Stub IMA SDK universale per neutralizzare gli ads video (Pro/Trial)",
+      "Stealth Mode anti-rilevamento: i siti che rilevano uBlock Origin o AdBlock Plus non rilevano AdOff (Pro/Trial)",
+      "Whitelist per sito con 4 modalità di pausa",
+      "Contatore che conta solo gli ads reali bloccati",
+      "Zero raccolta dati, nessuna telemetria"
+    ],
+    "publisher": {
+      "@type": "Organization",
+      "name": "AdOff",
+      "url": "https://adoff.app"
+    },
     "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "EUR",
-        "description": "Free: ad and tracker blocking. Pro: €2.99/month or €19.99/year founder. 30-day money-back guarantee."
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR",
+      "description": "Free: blocco ads e tracker. Pro: €2,99/mese o €19,99/anno founder. Garanzia rimborso 30 giorni."
     }
-}
-</script>
-
+  }
+  </script>
 <!-- FAQ JSON-LD -->
 <script type="application/ld+json">{
     "@context": "https://schema.org",
@@ -135,7 +152,7 @@
             "name": "How much does it cost?",
             "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Basic protection is free. Pro starts at €2.99/month or €19.99/year (founder pricing), with 15 days free Pro trial included. 30-day money-back guarantee."
+                "text": "Basic protection is free. Pro starts at €2.99/month or €19.99/year, with 15 days free trial. Premium adds a VPN for €4.99/month."
             }
         },
         {
@@ -267,7 +284,7 @@
 <div class="pcard__note" data-i18n="home.p.free.note">Forever. The basics you need.</div>
 <ul class="pcard__feats">
 <li data-i18n="home.p.free.f1">Block ads and trackers on every site</li>
-<li data-i18n="home.p.free.f2">138 network rules, 15 languages</li>
+<li data-i18n="home.p.free.f2">144 network rules, 15 languages</li>
 <li data-i18n="home.p.free.f3">Open source, zero tracking</li>
 </ul>
 <a class="btn btn--outline" data-i18n="home.p.free.cta" href="install.html">Install free</a>
@@ -328,7 +345,7 @@
 <div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q3">Does it work on videos too?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a3">Yes, with Pro. AdOff neutralizes video ads on major streaming platforms using the IMA standard.</span></div></div>
 <div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q4">What about "Disable your ad blocker" walls?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a4">Pro's stealth tech makes AdOff invisible to anti-adblock systems, so you keep browsing without seeing those walls.</span></div></div>
 <div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q5">Do you collect my data?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a5">No. AdOff is open source, doesn't collect or sell personal data, and doesn't track your browsing.</span></div></div>
-<div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q6">How much does it cost?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a6">Basic protection is free. Pro starts at €2.99/month or €19.99/year (founder pricing), with 15 days free Pro trial included. 30-day money-back guarantee.</span></div></div>
+<div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q6">How much does it cost?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a6">Basic protection is free. Pro starts at €2.99/month or €19.99/year, with 15 days free trial. Premium adds a VPN for €4.99/month.</span></div></div>
 <div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q7">Which browsers does it work on?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a7">Chrome, Firefox, Edge, Opera, and Brave. Safari coming soon.</span></div></div>
 <div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q8">Can I cancel anytime?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a8">Yes. The monthly plan cancels at any moment and there's a refund within 30 days, no questions asked.</span></div></div>
 </div>
