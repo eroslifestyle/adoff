@@ -970,42 +970,165 @@
   };
 
   // ---- 3. ADBLOCK VARIABLE SPOOFING ----
-  if (!window.adsbygoogle) {
-    window.adsbygoogle = { loaded: true, push: function () {}, length: 1 };
+  // Spoof resistente alla sovrascrittura: i siti riassegnano window.googletag
+  // dopo document_start; l'accessor fa merge invece di replace cosi' i marker
+  // (apiReady/pubadsReady/_loaded_) non spariscono mai.
+
+  // Build googletag stub with all required properties
+  function buildGoogletagStub(existing) {
+    var stub = {
+      cmd: {
+        push: function(f) {
+          try {
+            if (typeof f === "function") {
+              f();
+            }
+          } catch (_) {}
+          return 1;
+        },
+        length: 0
+      },
+      pubads: function() {
+        return {
+          addEventListener: function() { return this; },
+          setTargeting: function() { return this; },
+          refresh: function() {},
+          enableSingleRequest: function() { return this; },
+          disableInitialLoad: function() {},
+          collapseEmptyDivs: function() {},
+          getSlots: function() { return []; },
+          clear: function() {}
+        };
+      },
+      enableServices: function() {},
+      defineSlot: function() {
+        return {
+          addService: function() { return this; },
+          setTargeting: function() { return this; },
+          defineSizeMapping: function() { return this; },
+          setCollapseEmptyDiv: function() { return this; }
+        };
+      },
+      defineOutOfPageSlot: function() {
+        return {
+          addService: function() { return this; },
+          setTargeting: function() { return this; },
+          defineSizeMapping: function() { return this; },
+          setCollapseEmptyDiv: function() { return this; }
+        };
+      },
+      display: function() {},
+      destroySlots: function() {},
+      sizeMapping: function() {
+        return {
+          addSize: function() { return this; },
+          build: function() { return []; }
+        };
+      },
+      apiReady: true,
+      pubadsReady: true,
+      _loaded_: true,
+      _loadStarted_: true,
+      _vars_: {},
+      _b_: {},
+      secureSignalProviders: [],
+      encryptedSignalProviders: [],
+      evalScripts: function() {},
+      getVersion: function() { return "2024"; }
+    };
+
+    // Execute any pending commands from existing cmd array
+    if (existing && existing.cmd && existing.cmd.length > 0) {
+      for (var i = 0; i < existing.cmd.length; i++) {
+        try {
+          if (typeof existing.cmd[i] === "function") {
+            existing.cmd[i]();
+          }
+        } catch (_) {}
+      }
+    }
+
+    // Merge existing properties
+    if (existing && typeof existing === "object") {
+      Object.assign(stub, existing);
+    }
+
+    // cmd DEVE restare l'array-like che esegue subito: il merge qui sopra lo
+    // riporterebbe all'array del sito, e le callback non partirebbero mai.
+    stub.cmd = {
+      push: function(f) {
+        try {
+          if (typeof f === "function") { f(); }
+        } catch (_) {}
+        return 1;
+      },
+      length: 0
+    };
+
+    // Ensure critical properties are always set
+    stub.apiReady = true;
+    stub.pubadsReady = true;
+    stub._loaded_ = true;
+
+    return stub;
   }
 
-  if (!window.googletag) {
-    window.googletag = window.googletag || {};
-    window.googletag.cmd = window.googletag.cmd || [];
-    window.googletag.pubads = function () {
-      return {
-        addEventListener: function () { return this; },
-        setTargeting: function () { return this; },
-        refresh: function () {},
-        enableSingleRequest: function () { return this; },
-        disableInitialLoad: function () {},
-        collapseEmptyDivs: function () {},
-        getSlots: function () { return []; },
-        clear: function () {},
-      };
+  // Initialize and protect window.googletag
+  var _gtag = buildGoogletagStub(window.googletag);
+  try {
+    Object.defineProperty(window, "googletag", {
+      configurable: true,
+      get: function() {
+        return _gtag;
+      },
+      set: function(v) {
+        if (v && typeof v === "object") {
+          try {
+            _gtag = buildGoogletagStub(Object.assign({}, _gtag, v));
+          } catch (_) {}
+        }
+        return true;
+      }
+    });
+  } catch (_) {
+    window.googletag = _gtag;
+  }
+
+  // Build adsbygoogle stub with all required properties
+  function buildAdsbygoogleStub(existing) {
+    var stub = {
+      loaded: true,
+      push: function() { return 1; },
+      length: 1
     };
-    window.googletag.enableServices = function () {};
-    window.googletag.defineSlot = function () {
-      return {
-        addService: function () { return this; },
-        setTargeting: function () { return this; },
-        defineSizeMapping: function () { return this; },
-        setCollapseEmptyDiv: function () { return this; },
-      };
-    };
-    window.googletag.defineOutOfPageSlot = window.googletag.defineSlot;
-    window.googletag.display = function () {};
-    window.googletag.destroySlots = function () {};
-    window.googletag.sizeMapping = function () {
-      return { addSize: function () { return this; }, build: function () { return []; } };
-    };
-    window.googletag.apiReady = true;
-    window.googletag.pubadsReady = true;
+
+    // Merge existing properties
+    if (existing && typeof existing === "object") {
+      Object.assign(stub, existing);
+    }
+
+    return stub;
+  }
+
+  // Initialize and protect window.adsbygoogle
+  var _adsbygoogle = buildAdsbygoogleStub(window.adsbygoogle);
+  try {
+    Object.defineProperty(window, "adsbygoogle", {
+      configurable: true,
+      get: function() {
+        return _adsbygoogle;
+      },
+      set: function(v) {
+        if (v && typeof v === "object") {
+          try {
+            _adsbygoogle = buildAdsbygoogleStub(Object.assign({}, _adsbygoogle, v));
+          } catch (_) {}
+        }
+        return true;
+      }
+    });
+  } catch (_) {
+    window.adsbygoogle = _adsbygoogle;
   }
 
   // ---- 4. ANTI-ADBLOCK SCRIPT NEUTRALIZERS ----
