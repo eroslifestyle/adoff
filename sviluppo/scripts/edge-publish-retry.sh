@@ -1,15 +1,18 @@
 #!/bin/bash
-# Retry publish Edge 3.5.36 — riprova finché la submission pendente Microsoft si sblocca.
-# Il draft package 3.5.36 è già caricato e validato; serve solo il publish.
+# Retry publish Edge — riprova finché la submission pendente Microsoft si sblocca.
+# Il draft package è già caricato e validato; serve solo il publish.
+# La versione è letta da app/manifest.json (single source of truth), mai hardcoded.
 set -e
 source ~/.secrets/adoff-stores.env
 cd "/mnt/backup/Dropbox/1 Programmazione/Progetti/ChromePlugin"
+
+VERSION=$(python3 -c "import json;print(json.load(open('app/manifest.json'))['version'])")
 
 HTTP=$(curl -s -o /tmp/edge-retry-body.txt -w "%{http_code}" -X POST \
   -H "Authorization: ApiKey $EDGE_API_KEY" \
   -H "X-ClientID: $EDGE_CLIENT_ID" \
   -H "Content-Type: application/json" \
-  -d '{"notes":"v3.5.36"}' \
+  -d "{\"notes\":\"v$VERSION\"}" \
   -D /tmp/edge-retry-headers.txt \
   "https://api.addons.microsoftedge.microsoft.com/v1/products/$EDGE_PRODUCT_ID/submissions")
 

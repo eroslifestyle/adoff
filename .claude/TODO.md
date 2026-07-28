@@ -9,8 +9,8 @@
 - [x] **CWS** — 3.5.37 pubblicata, in review (CONTIENE il fix)
 - [x] **AMO** — 3.5.38 canale **listed** (versions/6380919), riallinea il listing pubblico fermo a 3.5.35
 - [x] **Telegram** — annuncio EN + card (message_id 89)
-- [ ] **CWS: caricare 3.5.38** quando la 3.5.37 esce da review (ora `ITEM_NOT_UPDATABLE`) — riallinea il numero con AMO/sito
-- [ ] **Edge: publish 3.5.38** — package gia' caricato in draft; `InProgressSubmission` perche' la 3.5.36 e' ora in review. Riprovare con `bash sviluppo/scripts/edge-publish-retry.sh`
+- [ ] **CWS: caricare 3.5.38** quando la 3.5.37 esce da review — retentato 2026-07-28 sera: ancora `ITEM_NOT_UPDATABLE`, review 3.5.37 tuttora aperta (`uploadState: NOT_FOUND`, `crxVersion: 3.5.37`). Riprovare con lo stesso comando PUT.
+- [ ] **Edge: publish 3.5.38** — package 3.5.38 **ricaricato e validato nel draft** 2026-07-28 sera (upload op `Succeeded`, quindi il draft NON è più il 3.5.36). Publish ancora `InProgressSubmission`: review 3.5.36 aperta. Riprovare col solo publish: `bash sviluppo/scripts/edge-publish-retry.sh` (ora legge la versione dal manifest, non più hardcoded).
 - [ ] **Verificare** che il wall investing.com sia sparito per l'utente dopo l'update
 
 ## 🔴 Alta priorità (bloccanti revenue)
@@ -25,8 +25,8 @@
 
 ## 🟡 Media priorità (store publish)
 
-- [ ] **Edge publish v3.5.36** — upload 3.5.36 OK+validato (HTTP 202, Succeeded). Credenziali `EDGE_API_KEY` FUNZIONANO (il "404" precedente era sui GET di lettura, non supportati dall'API v1.1). Publish bloccato da `InProgressSubmission`: c'è una submission Microsoft ancora in review → riprovare il solo publish quando si sblocca.
-  - Retry automatico: `sviluppo/scripts/edge-publish-retry.sh` (draft già caricato, fa solo il publish)
+- [x] **Edge publish v3.5.36** — pubblicata (senza fix). Superata: il draft ora contiene la 3.5.38, vedi la voce nella sezione Release 3.5.38.
+  - Nota API v1.1: i GET di lettura stato NON esistono (404 su `submissions/draft/package`). L'unico modo di sondare il canale è tentare l'upload/publish e leggere l'errorCode.
 - [x] **AMO Firefox** — RISOLTO 2026-07-28: canale listed riallineato con la 3.5.38.
 
 ## 🟢 Bassa priorità (nice-to-have)
