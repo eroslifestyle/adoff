@@ -6,11 +6,13 @@
 
 - [x] **Fix spoof googletag/adsbygoogle** — commit b251624. I siti riassegnavano `window.googletag` cancellando lo spoof (1 chiave, `apiReady:false` = firma adblock). Ora merge-accessor: 18 chiavi stabili.
 - [x] **Sito** — LIVE 3.5.38 (ZIP + 51 file HTML/JSON-LD)
-- [x] **CWS** — 3.5.37 pubblicata, in review (CONTIENE il fix)
+- [x] **CWS** — 3.5.38 pubblicata (`uploadState: SUCCESS` → publish `status: OK`, `crxVersion: 3.5.38`). La 3.5.37 intermedia conteneva già il fix.
 - [x] **AMO** — 3.5.38 canale **listed** (versions/6380919), riallinea il listing pubblico fermo a 3.5.35
 - [x] **Telegram** — annuncio EN + card (message_id 89)
-- [ ] **CWS: caricare 3.5.38** quando la 3.5.37 esce da review — retentato 2026-07-28 sera: ancora `ITEM_NOT_UPDATABLE`, review 3.5.37 tuttora aperta (`uploadState: NOT_FOUND`, `crxVersion: 3.5.37`). Riprovare con lo stesso comando PUT.
-- [ ] **Edge: publish 3.5.38** — package 3.5.38 **ricaricato e validato nel draft** 2026-07-28 sera (upload op `Succeeded`, quindi il draft NON è più il 3.5.36). Publish ancora `InProgressSubmission`: review 3.5.36 aperta. Riprovare col solo publish: `bash sviluppo/scripts/edge-publish-retry.sh` (ora legge la versione dal manifest, non più hardcoded).
+- [x] **CWS: 3.5.38 caricata e pubblicata** — review 3.5.37 chiusa, upload `SUCCESS`, publish `OK`, `crxVersion: 3.5.38` verificata.
+- [x] **Edge: 3.5.38 pubblicata** — review 3.5.36 chiusa, operazione publish `Succeeded`. Edge ora serve il fix (non più la 3.5.36 senza).
+
+**Release 3.5.38 allineata su tutti i canali automatizzabili**: sito, CWS, AMO, Edge, Telegram. Resta solo Safari (richiede Mac con Xcode).
 - [x] **Wall investing.com SPARITO** — confermato dall'utente 2026-07-28 sulla build col fix. Il merge-accessor su `googletag` era effettivamente la causa del rilevamento: root cause chiusa, non serve cercare altri vettori.
 
 ## 🔴 Alta priorità (bloccanti revenue)
