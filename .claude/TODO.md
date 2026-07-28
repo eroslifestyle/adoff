@@ -11,7 +11,7 @@
 - [x] **Telegram** — annuncio EN + card (message_id 89)
 - [ ] **CWS: caricare 3.5.38** quando la 3.5.37 esce da review — retentato 2026-07-28 sera: ancora `ITEM_NOT_UPDATABLE`, review 3.5.37 tuttora aperta (`uploadState: NOT_FOUND`, `crxVersion: 3.5.37`). Riprovare con lo stesso comando PUT.
 - [ ] **Edge: publish 3.5.38** — package 3.5.38 **ricaricato e validato nel draft** 2026-07-28 sera (upload op `Succeeded`, quindi il draft NON è più il 3.5.36). Publish ancora `InProgressSubmission`: review 3.5.36 aperta. Riprovare col solo publish: `bash sviluppo/scripts/edge-publish-retry.sh` (ora legge la versione dal manifest, non più hardcoded).
-- [ ] **Verificare** che il wall investing.com sia sparito per l'utente dopo l'update
+- [x] **Wall investing.com SPARITO** — confermato dall'utente 2026-07-28 sulla build col fix. Il merge-accessor su `googletag` era effettivamente la causa del rilevamento: root cause chiusa, non serve cercare altri vettori.
 
 ## 🔴 Alta priorità (bloccanti revenue)
 
