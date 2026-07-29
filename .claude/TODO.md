@@ -23,7 +23,7 @@
 - [x ~~] **Premium VPN — Multi-device test empirico** — balance insufficiente ($24.74)
   - refs: PROGRESS-vpn-premium.md §FASE 1bis
   - Prereq: ricaricare VPNresellers $100+
-- [ ] **Balance VPNresellers refill** — $25 attuale → $100+ per test reali + lancio
+- [ ] **Balance VPNresellers refill** — ~$24.74 → $100+. **Non è più un blocco ai test**: l'utente conferma 2026-07-28 che i test E2E Premium VPN sono stati eseguiti e funzionano. È ora un limite di **capienza in produzione**: a ~$1,99/account il saldo copre ~12 attivazioni (meno, se i test ne hanno già consumate). Oltre quella soglia il cliente paga e il provisioning VPN fallisce → incasso senza consegna. Da ricaricare PRIMA di aprire le vendite Premium, non dopo.
 
 ## 🟡 Media priorità (store publish)
 
