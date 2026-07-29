@@ -63,19 +63,39 @@ def cmd_consolidate():
 
 # ───────────────────────── build ─────────────────────────
 def cmd_build():
+    """
+    Rigenera i dizionari runtime dalla matrice.
+
+    ATTENZIONE (2026-07-29): questa funzione SOVRASCRIVEVA ogni {lang}.json con le
+    sole chiavi della matrice. La matrice si e' desincronizzata dai dizionari (656
+    chiavi contro 2662), quindi eseguirla avrebbe cancellato ~2000 chiavi tradotte
+    per lingua — verificato su copia. `deploy-site.sh` chiama questo comando prima
+    di pubblicare: era una mina, e con ogni probabilita' il motivo per cui i deploy
+    sono stati fatti aggirando lo script.
+
+    Ora il comportamento e' additivo: la matrice aggiorna e integra il dizionario
+    esistente, non lo rimpiazza. E se un build dovesse comunque ridurre il numero
+    di chiavi, si ferma invece di scrivere.
+    """
     if not os.path.exists(MATRIX):
         sys.exit("build: matrix missing — run `consolidate` first")
     matrix = load_json(MATRIX)
     for l in LANGS:
-        out = {}
+        path = os.path.join(I18N, f'{l}.json')
+        current = load_json(path) if os.path.exists(path) else {}
+        out = dict(current)                 # si parte da cio' che esiste gia'
         for k in matrix:
             cell = matrix[k]
             if l in cell:
                 out[k] = cell[l]
-            elif SRC in cell:           # fall back to EN so nothing is missing at runtime
-                out[k] = cell[SRC]
-        dump_json(os.path.join(I18N, f'{l}.json'), out)
-    print(f"build: wrote {len(LANGS)} runtime files from {len(matrix)} keys")
+            elif SRC in cell and k not in out:
+                out[k] = cell[SRC]          # fallback EN solo per chiavi NUOVE
+        if len(out) < len(current):
+            sys.exit(f"build: ABORT — {l}.json passerebbe da {len(current)} a "
+                     f"{len(out)} chiavi. Non sovrascrivo traduzioni esistenti.")
+        dump_json(path, out)
+    print(f"build: aggiornati {len(LANGS)} file runtime da {len(matrix)} chiavi di matrice "
+          f"(modalita' additiva: nessuna chiave esistente viene rimossa)")
 
 
 # ───────────────────────── check ─────────────────────────
