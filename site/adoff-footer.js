@@ -153,7 +153,7 @@
   if (!window.__adoffChatLoaded) {
     var loadChat = function (attempt) {
       var cs = document.createElement('script');
-      cs.src = '/adoff-chat.js?v=260602a';
+      cs.src = '/adoff-chat.js?v=260729';
       cs.async = true;
       cs.onerror = function () {
         cs.remove();
