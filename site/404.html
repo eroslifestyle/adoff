@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagina non trovata · AdOff</title>
     <meta name="robots" content="noindex">
     <link rel="stylesheet" href="/style.css?v=260714b" />
     <script src="/adoff-i18n.js?v=260718-fix"></script>
     <style>
+        /* I colori vengono dalle variabili di /style.css, cosi' la pagina segue
+           il tema chiaro di default e il toggle scuro come il resto del sito. */
         body {
-            background: #0a0a1a;
-            color: #e2e2f0;
+            background: var(--bg);
+            color: var(--text);
             font-family: Inter, system-ui, sans-serif;
             min-height: 100vh;
             margin: 0;
@@ -33,7 +36,7 @@
             font-weight: 700;
         }
         p {
-            color: #9090a0;
+            color: var(--text-muted);
             margin: 0 0 32px 0;
             line-height: 1.6;
         }
@@ -53,24 +56,24 @@
             opacity: 0.85;
         }
         .btn {
-            background: rgba(255, 255, 255, 0.1);
-            color: #e2e2f0;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--border);
+            color: var(--text);
+            border: 1px solid var(--border-strong);
         }
         .btn-primary {
-            background: #7c5cfc;
-            color: #ffffff;
+            background: var(--accent);
+            color: var(--text-on-accent);
             border: 1px solid transparent;
         }
         .useful-links {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid var(--border);
             padding-top: 32px;
         }
         .useful-links h2 {
             font-size: 1rem;
             font-weight: 600;
             margin: 0 0 16px 0;
-            color: #9090a0;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
@@ -81,17 +84,17 @@
             justify-content: center;
         }
         .links-list a {
-            color: #e2e2f0;
+            color: var(--text);
             text-decoration: none;
             padding: 8px 16px;
             border-radius: 6px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
             font-size: 0.9rem;
             transition: background 0.2s;
         }
         .links-list a:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--border);
         }
     </style>
 </head>

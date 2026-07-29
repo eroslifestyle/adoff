@@ -207,42 +207,61 @@
 
   function init() {
     var lang = detectLang();
-
-    // Gate: skip if source lang === active lang (text already in correct language)
     var sourceLang = document.documentElement.lang || 'it';
-    if (lang === sourceLang) {
-      document.documentElement.lang = lang;
-      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-      emitReady(lang, null);
-      return;
-    }
+
+    // Imposta sempre lingua e direzione del documento
+    document.documentElement.lang = lang;
+    document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+
+    // Se il markup e' gia' nella lingua giusta, mostra subito la pagina: il
+    // dizionario continua a caricarsi in background perche' serve comunque a
+    // tradurre nav e footer, che vengono iniettati dopo con testo inglese.
+    if (lang === sourceLang) markReady();
 
     loadDict(lang).then(function (dict) {
       window.AdOffI18n.lang = lang;
       window.AdOffI18n.dict = dict;
-      applyTranslations(dict, lang);
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () { rewriteLinks(lang); });
-      } else {
-        rewriteLinks(lang);
+
+      // Applica le traduzioni solo se la lingua rilevata differisce da quella sorgente
+      if (lang !== sourceLang) {
+        applyTranslations(dict, lang);
       }
+
+      // Riscrivi i link solo se necessario
+      if (lang !== sourceLang) {
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', function () { rewriteLinks(lang); });
+        } else {
+          rewriteLinks(lang);
+        }
+      }
+
       emitReady(lang, dict);
     }).catch(function () {
-      // Fallback to EN
+      // Fallback a inglese
       if (lang !== 'en') {
         loadDict('en').then(function (dict) {
           window.AdOffI18n.lang = 'en';
           window.AdOffI18n.dict = dict;
+          // Il fallback viene sempre applicato perché la lingua sorgente non è l'inglese
           applyTranslations(dict, 'en');
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function () { rewriteLinks('en'); });
-          } else {
-            rewriteLinks('en');
+          if (sourceLang !== 'en') {
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', function () { rewriteLinks('en'); });
+            } else {
+              rewriteLinks('en');
+            }
           }
           emitReady('en', dict);
-        }).catch(function () { emitReady(lang, null); });
+        }).catch(function () {
+          // Anche il fallback fallisce: si notifica e si marca la pagina pronta
+          emitReady(lang, null);
+          markReady();
+        });
       } else {
+        // La lingua rilevata è già inglese e il caricamento è fallito
         emitReady('en', null);
+        markReady();
       }
     });
   }
