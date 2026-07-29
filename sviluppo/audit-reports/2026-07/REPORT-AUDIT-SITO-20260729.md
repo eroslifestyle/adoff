@@ -387,6 +387,34 @@ Sitemap rigenerato (B23), hreflang (B22), canonical (B25, B26), description (B24
 
 ---
 
+## 5-bis. CORREZIONE AI NUMERI SEO DI QUESTO REPORT (2026-07-29, in fase di fix)
+
+Tre regex di `audit_seo.py` producevano **falsi positivi in massa**. Assumevano che negli
+attributi HTML `name=`/`property=` precedesse sempre `content=`, e che il valore di
+`content` non contenesse apici. Nessuna delle due cose è vera in questo sito: molte pagine
+scrivono `content=` per primo, e una `description` coreana comincia con un apostrofo, che
+troncava il match.
+
+Numeri riportati nella tabella bug contro quelli reali, misurati dopo la correzione:
+
+| voce | riportato | reale |
+|---|---|---|
+| pagine senza `<meta name="description">` (B24) | 43 | **1** |
+| pagine senza `<link rel="canonical">` (B25) | 18 | **1** (`404.html`, corretto così) |
+| pagine con Open Graph incompleti (B27) | 148 | **47** |
+
+Gli altri numeri SEO del report reggono alla riverifica: 86 hreflang rotti, 13 URL morti nel
+sitemap, 266 pagine assenti, titoli e description duplicati. Le regex sono state riscritte
+con lookahead sugli attributi e backreference sul carattere di quoting, e commentate con la
+ragione, così l'errore non si ripresenta.
+
+Vale la pena registrare il modo in cui è emerso: uno script di fix ha riferito «description
+aggiunte: 0» dove l'audit ne dichiarava 15 mancanti. La discrepanza fra due misure dello
+stesso fatto ha portato a ispezionare l'HTML e a trovare l'errore nello strumento, non nel
+sito. Un audit che non si contraddice mai non si sta controllando.
+
+---
+
 ## 6. NON VERIFICATO
 
 Elenco onesto di ciò che non ho controllato e perché.
