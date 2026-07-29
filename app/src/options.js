@@ -144,14 +144,17 @@
   const settingEnabled = document.getElementById("settingEnabled");
   const settingBadge   = document.getElementById("settingBadge");
   const settingCounter = document.getElementById("settingCounter");
+  const settingVideoCompat = document.getElementById("settingVideoCompat");
 
   function loadGenerali() {
     chrome.storage.local.get(
-      ["adoffEnabled", "adoffShowBadge", "adoffShowCounter"],
+      ["adoffEnabled", "adoffShowBadge", "adoffShowCounter", "adoffYtCompat"],
       (r) => {
         settingEnabled.checked = r.adoffEnabled !== false;
         settingBadge.checked   = r.adoffShowBadge !== false;
         settingCounter.checked = r.adoffShowCounter !== false;
+        // Default OFF: la modalita' compatibilita' e' una via di fuga, non lo standard
+        if (settingVideoCompat) settingVideoCompat.checked = r.adoffYtCompat === true;
       }
     );
   }
@@ -167,6 +170,12 @@
   settingCounter.addEventListener("change", () => {
     chrome.storage.local.set({ adoffShowCounter: settingCounter.checked });
   });
+
+  if (settingVideoCompat) {
+    settingVideoCompat.addEventListener("change", () => {
+      chrome.storage.local.set({ adoffYtCompat: settingVideoCompat.checked });
+    });
+  }
 
   // ===== WHITELIST =====
 

@@ -120,7 +120,7 @@
 
   // --- Controlla whitelist, stato e licenza prima di avviare ---
   if (!isExtensionValid()) return;
-  chrome.storage.local.get(["adoffEnabled", "adoffAdsBlocked", "adoffWhitelist", "adoffTrialEnd", "adoffTrialToken", "adoffTrialExpired", "adoffDeviceId", "adoffLicense", "adoffIntegrity"], async (result) => {
+  chrome.storage.local.get(["adoffEnabled", "adoffAdsBlocked", "adoffWhitelist", "adoffTrialEnd", "adoffTrialToken", "adoffTrialExpired", "adoffDeviceId", "adoffLicense", "adoffIntegrity", "adoffYtCompat"], async (result) => {
     if (chrome.runtime.lastError || !isExtensionValid()) return;
     const whitelist = result.adoffWhitelist || [];
     // EA-7: suffix matching corretto (non bidirezionale)
@@ -149,6 +149,18 @@
     if (isPro) {
       // EB-7: usa nonce verificabile invece di "1" fisso
       document.documentElement.setAttribute("data-adoff-stealth", STEALTH_NONCE);
+    }
+
+    // --- Modalita' compatibilita' piattaforma video (kill-switch) ---
+    // stealth.js gira nel MAIN world a document_start e deve decidere se
+    // strippare la config ads PRIMA che la pagina la legga: una storage.get
+    // asincrona arriverebbe troppo tardi. localStorage e' condiviso tra
+    // ISOLATED e MAIN sullo stesso origin ed e' leggibile in modo sincrono,
+    // quindi lo usiamo come canale per la preferenza (stabile tra i load).
+    if (isVideoPlatform()) {
+      const compatOn = result.adoffYtCompat === true;
+      try { localStorage.setItem("__adoff_vc", compatOn ? "1" : "0"); } catch (_) { /* storage negato */ }
+      document.documentElement.setAttribute("data-adoff-vcompat", compatOn ? "1" : "0");
     }
 
     enabled    = result.adoffEnabled !== false;

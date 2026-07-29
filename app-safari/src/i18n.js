@@ -164,6 +164,8 @@ const i18n = (function () {
 
       // Avanzate
       "opt.advancedTitle": "Avanzate",
+      "opt.vcompatLabel": "Compatibilita' piattaforme video",
+      "opt.vcompatDesc": "Attiva se i video restano neri a lungo prima di partire: gli annunci vengono saltati durante la riproduzione invece che rimossi in anticipo",
       "opt.exportLabel": "Esporta impostazioni",
       "opt.exportDesc": "Scarica un backup JSON di tutte le impostazioni",
       "opt.importLabel": "Importa impostazioni",
@@ -432,6 +434,8 @@ const i18n = (function () {
 
       // Advanced
       "opt.advancedTitle": "Advanced",
+      "opt.vcompatLabel": "Video platform compatibility",
+      "opt.vcompatDesc": "Enable if videos stay black for a long time before playing: ads are skipped during playback instead of being removed early.",
       "opt.exportLabel": "Export settings",
       "opt.exportDesc": "Download a JSON backup of all settings",
       "opt.importLabel": "Import settings",
@@ -693,6 +697,8 @@ const i18n = (function () {
 
       // Erweitert
       "opt.advancedTitle": "Erweitert",
+      "opt.vcompatLabel": "Kompatibilitaet der Video-Plattformen",
+      "opt.vcompatDesc": "Aktivieren, wenn Videos lange schwarz bleiben, bevor sie starten: Werbung wird waehrend der Wiedergabe uebersprungen, anstatt im Voraus entfernt zu werden.",
       "opt.exportLabel": "Einstellungen exportieren",
       "opt.exportDesc": "JSON-Backup aller Einstellungen herunterladen",
       "opt.importLabel": "Einstellungen importieren",
@@ -953,6 +959,8 @@ const i18n = (function () {
 
       // Avance
       "opt.advancedTitle": "Avance",
+      "opt.vcompatLabel": "Compatibilite des plateformes video",
+      "opt.vcompatDesc": "Activer si les videos restent noires longtemps avant de demarrer: les publicites sont sautees pendant la lecture au lieu d'etre supprimees a l'avance.",
       "opt.exportLabel": "Exporter les parametres",
       "opt.exportDesc": "Telecharger une sauvegarde JSON",
       "opt.importLabel": "Importer les parametres",
@@ -1213,6 +1221,8 @@ const i18n = (function () {
 
       // Avanzado
       "opt.advancedTitle": "Avanzado",
+      "opt.vcompatLabel": "Compatibilidad con plataformas de video",
+      "opt.vcompatDesc": "Activar si los videos permanecen negros durante mucho tiempo antes de iniciar: los anuncios se omiten durante la reproduccion en lugar de eliminarse de antemano.",
       "opt.exportLabel": "Exportar configuracion",
       "opt.exportDesc": "Descargar copia de seguridad JSON",
       "opt.importLabel": "Importar configuracion",
@@ -1473,6 +1483,8 @@ const i18n = (function () {
 
       // Avancado
       "opt.advancedTitle": "Avancado",
+      "opt.vcompatLabel": "Compatibilidade com plataformas de video",
+      "opt.vcompatDesc": "Ativar se os videos ficarem pretos por muito tempo antes de iniciar: os anuncios sao ignorados durante a reproducao em vez de serem removidos antecipadamente.",
       "opt.exportLabel": "Exportar configuracoes",
       "opt.exportDesc": "Baixar backup JSON",
       "opt.importLabel": "Importar configuracoes",
@@ -1733,6 +1745,8 @@ const i18n = (function () {
 
       // Advanced
       "opt.advancedTitle": "Дополнительно",
+      "opt.vcompatLabel": "Совместимость с видеоплатформами",
+      "opt.vcompatDesc": "Включите, если видео долго остаются черными перед воспроизведением: реклама пропускается во время воспроизведения вместо удаления заранее.",
       "opt.exportLabel": "Экспорт настроек",
       "opt.exportDesc": "Скачать резервную копию JSON всех настроек",
       "opt.importLabel": "Импорт настроек",
@@ -1993,6 +2007,8 @@ const i18n = (function () {
 
       // Advanced
       "opt.advancedTitle": "متقدم",
+      "opt.vcompatLabel": "توافق منصات الفيديو",
+      "opt.vcompatDesc": "تفعيل إذا بقيت الفيديوهات سوداء لفترة طويلة قبل البدء: يتم تخطي الإعلانات أثناء التشغيل بدلاً من إزالتها مسبقاً.",
       "opt.exportLabel": "تصدير الإعدادات",
       "opt.exportDesc": "تنزيل نسخة احتياطية JSON لجميع الإعدادات",
       "opt.importLabel": "استيراد الإعدادات",
@@ -2253,6 +2269,8 @@ const i18n = (function () {
 
       // Advanced
       "opt.advancedTitle": "高级",
+      "opt.vcompatLabel": "视频平台兼容性",
+      "opt.vcompatDesc": "如果视频在播放前长时间黑屏，请启用：广告在播放时被跳过，而不是提前移除。",
       "opt.exportLabel": "导出设置",
       "opt.exportDesc": "下载所有设置的 JSON 备份",
       "opt.importLabel": "导入设置",
@@ -2513,6 +2531,8 @@ const i18n = (function () {
 
       // Gelismis
       "opt.advancedTitle": "Gelismis",
+      "opt.vcompatLabel": "Video platformu uyumlulugu",
+      "opt.vcompatDesc": "Videolar baslamadan once uzun sure siyah kalmasi durumunda etkinlestir: reklamlar oynatma sirasinda atlanir, onceki kaldirma yerine.",
       "opt.exportLabel": "Ayarlari disa aktar",
       "opt.exportDesc": "Tum ayarlarin JSON yedegini indir",
       "opt.importLabel": "Ayarlari iceri aktar",
@@ -2773,6 +2793,8 @@ const i18n = (function () {
 
       // Lanjutan
       "opt.advancedTitle": "Lanjutan",
+      "opt.vcompatLabel": "Kompatibilitas platform video",
+      "opt.vcompatDesc": "Aktifkan jika video tetap hitam dalam waktu lama sebelum mulai: iklan dilewati selama pemutaran alih-alih dihapus lebih awal.",
       "opt.exportLabel": "Ekspor pengaturan",
       "opt.exportDesc": "Unduh cadangan JSON dari semua pengaturan",
       "opt.importLabel": "Impor pengaturan",
@@ -3033,6 +3055,8 @@ const i18n = (function () {
 
       // Zaawansowane
       "opt.advancedTitle": "Zaawansowane",
+      "opt.vcompatLabel": "Kompatybilnosc platform video",
+      "opt.vcompatDesc": "Wlacz, jesli filmy pozostaja ciemne przez dlugi czas przed uruchomieniem: reklamy sa pomijane podczas odtwarzania zamiast byc usuwane wczesniej.",
       "opt.exportLabel": "Eksportuj ustawienia",
       "opt.exportDesc": "Pobierz kopie zapasowa JSON wszystkich ustawien",
       "opt.importLabel": "Importuj ustawienia",
@@ -3292,6 +3316,8 @@ const i18n = (function () {
 
       // Advanced
       "opt.advancedTitle": "उन्नत",
+      "opt.vcompatLabel": "वीडियो प्लेटफॉर्म अनुकूलता",
+      "opt.vcompatDesc": "यदि वीडियो शुरू होने से पहले लंबे समय तक काले रहते हैं, तो इसे सक्षम करें: विज्ञापन प्लेबैक के दौरान छोड़ दिए जाते हैं, पहले से हटाने के बजाय।",
       "opt.exportLabel": "सेटिंग्स निर्यात करें",
       "opt.exportDesc": "सभी सेटिंग्स का JSON बैकअप डाउनलोड करें",
       "opt.importLabel": "सेटिंग्स आयात करें",
@@ -3551,6 +3577,8 @@ const i18n = (function () {
 
       // Advanced
       "opt.advancedTitle": "詳細設定",
+      "opt.vcompatLabel": "動画プラットフォームの互換性",
+      "opt.vcompatDesc": "動画が再生前に長時間黒画面のままになる場合は有効にしてください：広告再生時にスキップされ、事前削除の代わりに再生されます。",
       "opt.exportLabel": "設定をエクスポート",
       "opt.exportDesc": "すべての設定のJSONバックアップをダウンロード",
       "opt.importLabel": "設定をインポート",
@@ -3810,6 +3838,8 @@ const i18n = (function () {
 
       // Advanced
       "opt.advancedTitle": "고급",
+      "opt.vcompatLabel": "비디오 플랫폼 호환성",
+      "opt.vcompatDesc": "동영상이 재생 전에 오랫동안 검은 화면으로 유지되면 활성화하세요: 광고는 재생 중에 건너뛰며 사전 제거 대신 재생됩니다。",
       "opt.exportLabel": "설정 내보내기",
       "opt.exportDesc": "모든 설정의 JSON 백업 다운로드",
       "opt.importLabel": "설정 가져오기",

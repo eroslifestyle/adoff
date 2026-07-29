@@ -780,7 +780,7 @@
   function updateImaRules() {
     chrome.storage.local.get(
       ["adoffLicense", "adoffTrialEnd", "adoffTrialToken", "adoffTrialExpired",
-       "adoffDeviceId", "adoffIntegrity", STORAGE_ENABLED],
+       "adoffDeviceId", "adoffIntegrity", STORAGE_ENABLED, "adoffYtCompat"],
       async (result) => {
       const lic = result.adoffLicense || {};
       const enabled = result[STORAGE_ENABLED] !== false;
@@ -808,12 +808,16 @@
       // (schermo nero ~80% durata ad) SENZA la mitigazione injectNoAd (Pro-only)
       // → esperienza rotta. Quindi le regole YT-specifiche sono attive SOLO con
       // Pro/Trial: Free = YouTube intatto (ad normali, player fluido). Completa
-      // il design v3.3.6 "YouTube = solo Pro". Feature-detect updateStaticRules
+      // il design v3.3.6 "piattaforme video = solo Pro". Feature-detect updateStaticRules
       // (Chrome 111+): se assente (browser vecchio) degrada senza regressione.
       const YT_AD_RULE_IDS = [170, 171, 172, 173, 174, 175, 176, 179];
       try {
         if (chrome.declarativeNetRequest.updateStaticRules) {
-          const ytOn = isPro && enabled;
+          // Modalita' compatibilita': l'utente ha segnalato attese/schermo nero.
+          // Disattiviamo anche il blocco di RETE degli ad, non solo lo strip
+          // client: se le richieste restano bloccate il backoff scatta lo stesso
+          // e l'interruttore non servirebbe a niente.
+          const ytOn = isPro && enabled && result.adoffYtCompat !== true;
           chrome.declarativeNetRequest.updateStaticRules({
             rulesetId: "adblock_rules",
             [ytOn ? "enableRuleIds" : "disableRuleIds"]: YT_AD_RULE_IDS,
@@ -939,7 +943,8 @@
   updateWhitelistAllowRules();
   syncRemoteRules();
   chrome.storage.onChanged.addListener((changes) => {
-    if (changes.adoffLicense || changes.adoffTrialEnd || changes.adoffTrialToken || changes[STORAGE_ENABLED]) {
+    if (changes.adoffLicense || changes.adoffTrialEnd || changes.adoffTrialToken ||
+        changes[STORAGE_ENABLED] || changes.adoffYtCompat) {
       updateImaRules();
     }
     if (changes[STORAGE_ENABLED]) {

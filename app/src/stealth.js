@@ -248,6 +248,18 @@
   // =============================================
   if (isVideoPlatform) {
 
+    // Kill-switch compatibilita': se attivo, NON tocchiamo la config ads della
+    // pagina (niente strip, niente mangle, niente inject) e lasciamo che la
+    // piattaforma programmi gli annunci normalmente — vengono poi bruciati a
+    // runtime dal Layer B. Serve quando lo strip fa reagire il server con
+    // attese/buffering al posto dell'annuncio.
+    // Letto da localStorage perche' qui siamo a document_start e serve una
+    // lettura SINCRONA: content.js lo scrive al load precedente.
+    function isVideoCompatMode() {
+      try { if (localStorage.getItem("__adoff_vc") === "1") return true; } catch (_) { /* negato */ }
+      return document.documentElement?.getAttribute("data-adoff-vcompat") === "1";
+    }
+
     // ---- LAYER A: Ad Prevention (strip ad config) ----
 
     // Mangle ad field names in JSON text — makes them unrecognizable
@@ -285,10 +297,10 @@
     let _ytResp = window.ytInitialPlayerResponse;
     Object.defineProperty(window, "ytInitialPlayerResponse", {
       get() { return _ytResp; },
-      set(v) { _ytResp = isProEnabled() ? stripAdObj(v) : v; },
+      set(v) { _ytResp = (isProEnabled() && !isVideoCompatMode()) ? stripAdObj(v) : v; },
       configurable: true,
     });
-    if (_ytResp && isProEnabled()) _ytResp = stripAdObj(_ytResp);
+    if (_ytResp && isProEnabled() && !isVideoCompatMode()) _ytResp = stripAdObj(_ytResp);
 
     // A2: Intercept fetch for player API (SPA navigation)
     //
@@ -318,7 +330,7 @@
 
       // Free: passthrough completo sulle player API. Solo Pro/Trial modifica
       // request body (isInlinePlaybackNoAd) e mangle response (adPlacements/...).
-      if (!isPlayerReq || !isProEnabled()) {
+      if (!isPlayerReq || !isProEnabled() || isVideoCompatMode()) {
         return _origFetch.call(window, input, init);
       }
 
@@ -354,7 +366,7 @@
       };
       XMLHttpRequest.prototype.send = function (body) {
         // Free: passthrough. Pro/Trial inietta isInlinePlaybackNoAd.
-        if (isProEnabled() && this._adoffUrl &&
+        if (isProEnabled() && !isVideoCompatMode() && this._adoffUrl &&
             (this._adoffUrl.includes("/youtubei/v1/player") ||
              this._adoffUrl.includes("/youtubei/v1/next"))) {
           body = injectNoAd(body);
@@ -516,6 +528,72 @@
       if (!isFinite(ct) || ct <= 1) return;
       savedContentTime = ct;
     }, 500);
+
+    // ---- LAYER D: Anti-stall watchdog ----
+
+    // Costanti watchdog Anti-stall
+    const STALL_CHECK_INTERVAL_MS = 500, STALL_THRESHOLD_TICKS = 3, STALL_MAX_RECOVERIES = 5,
+          STALL_MIN_PROGRESS_SEC = 0.05, STALL_BUFFER_AHEAD_SEC = 0.5, STALL_SEEK_NUDGE_SEC = 0.1,
+          STALL_HARD_SEEK_SEC = 0.5, STALL_HARD_AFTER_RECOVERIES = 3;
+
+    // Stato watchdog
+    let stallTicks = 0, stallLastCt = -1, stallRecoveries = 0, stallTimer = null;
+
+    // Interval principale
+    if (stallTimer) clearInterval(stallTimer);
+    stallTimer = setInterval(() => {
+        const player = document.getElementById('movie_player');
+        if (!player) return;
+        const video = player.querySelector('video');
+        if (!video) return;
+        // Annuncio attivo: Layer B gestisce già
+        if (player.classList.contains('ad-showing') || player.classList.contains('ad-interrupting')) {
+            stallTicks = 0;
+            stallLastCt = video.currentTime;
+            return;
+        }
+        // Pausa o video finito: non intervenire
+        if (video.paused || video.ended) {
+            stallTicks = 0;
+            stallLastCt = video.currentTime;
+            return;
+        }
+        // isFinite ESCLUDE le dirette (duration = Infinity): un seek su live rompe lo stream
+        if (!isFinite(video.duration) || video.duration <= 0) return;
+        if (video.readyState < 2) { stallTicks = 0; return; } // metadati non caricati
+        const ct = video.currentTime;
+        if (Math.abs(ct - stallLastCt) > STALL_MIN_PROGRESS_SEC) { // video avanza
+            stallTicks = 0;
+            stallLastCt = ct;
+            return;
+        }
+        stallTicks++;
+        stallLastCt = ct;
+        if (stallTicks < STALL_THRESHOLD_TICKS) return; // ancora sotto soglia
+        if (stallRecoveries >= STALL_MAX_RECOVERIES) return; // budget esaurito
+        // ---- Stallo confermato, recovery ----
+        stallRecoveries++;
+        stallTicks = 0;
+        const bufEnd = video.buffered.length ? video.buffered.end(video.buffered.length - 1) : 0;
+        const hasBufferAhead = (bufEnd - ct) > STALL_BUFFER_AHEAD_SEC;
+        try {
+            if (stallRecoveries >= STALL_HARD_AFTER_RECOVERIES && typeof player.seekTo === 'function') {
+                player.seekTo(ct + STALL_HARD_SEEK_SEC, true);
+            } else if (hasBufferAhead) {
+                video.currentTime = Math.min(ct + STALL_SEEK_NUDGE_SEC, bufEnd - 0.05);
+            } else if (typeof player.playVideo === 'function') {
+                player.playVideo();
+            } else {
+                video.play().catch(() => {});
+            }
+        } catch (e) {}
+        window.dispatchEvent(new CustomEvent('adoff-stall-recovered', { detail: { ct, hasBufferAhead, attempt: stallRecoveries } }));
+    }, STALL_CHECK_INTERVAL_MS);
+
+    // Reset su cambio video
+    document.addEventListener('yt-navigate-finish', () => {
+        stallRecoveries = 0; stallTicks = 0; stallLastCt = -1;
+    });
 
     // ---- LAYER C: Anti-detection (insurance) ----
 
