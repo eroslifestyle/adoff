@@ -14,7 +14,11 @@ async function main() {
   const browserArgs = [
     '--mute-audio',
     '--no-first-run',
-    '--disable-default-apps'
+    '--disable-default-apps',
+    // SENZA questo il video si auto-mette in pausa dopo pochi decimi (policy
+    // autoplay di Chromium senza gesto utente) e la misura del ritardo di
+    // partenza diventa insensata: sembra "mai partito" anche quando va tutto bene.
+    '--autoplay-policy=no-user-gesture-required'
   ];
   if (WITH_EXT) {
     browserArgs.push('--disable-extensions-except=' + EXT_PATH);
@@ -29,6 +33,24 @@ async function main() {
     ignoreDefaultArgs: ['--disable-extensions'],
     viewport: { width: 1366, height: 900 }
   });
+
+  // PRO_STORAGE=1 → scrive una licenza Pro nello storage dell'estensione via
+  // service worker. Serve per riprodurre il bug davvero: le regole di RETE
+  // 170-176 sono Pro-only e le attiva il background, non stealth.js. Forzare
+  // solo data-adoff-stealth inganna il MAIN world ma lascia le regole spente.
+  if (WITH_EXT && process.env.PRO_STORAGE === '1') {
+    let sw = context.serviceWorkers()[0];
+    if (!sw) sw = await context.waitForEvent('serviceworker', { timeout: 15000 }).catch(() => null);
+    if (sw) {
+      await sw.evaluate(() => new Promise((res) => {
+        chrome.storage.local.set({ adoffLicense: { type: 'pro', valid: true, plan: 'pro' }, adoffEnabled: true }, res);
+      })).catch(() => {});
+      console.log('[setup] licenza Pro scritta nello storage (regole di rete attive)');
+      await new Promise((r) => setTimeout(r, 2500));
+    } else {
+      console.log('[setup] ATTENZIONE: service worker non raggiunto, regole di rete NON attive');
+    }
+  }
 
   const page = context.pages()[0];
 
