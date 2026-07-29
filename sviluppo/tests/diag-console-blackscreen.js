@@ -1,20 +1,26 @@
 (function() {
 'use strict';
-console.log('Diagnostica avviata: guarda il video normalmente per 90 secondi. Per fermarla prima: window.__stop()');
+console.log('Diagnostica avviata: guarda il video normalmente per 120 secondi. Per fermarla prima: window.__stop()');
 const staticInfo={
 versioneEstensione:document.documentElement.getAttribute('data-adoff-stealth')?'gate Pro attivo':'gate Pro NON attivo',
 compatMode:(function(){try{return localStorage.getItem('__adoff_vc');}catch(e){return 'n/d';}})(),
 adPlacementsPresenti:!!(window.ytInitialPlayerResponse&&window.ytInitialPlayerResponse.adPlacements),
 playerAdsPresenti:!!(window.ytInitialPlayerResponse&&window.ytInitialPlayerResponse.playerAds),
 formatiConUrlDiretto:(function(){const af=window.ytInitialPlayerResponse?.streamingData?.adaptiveFormats||[];return af.filter(f=>!!f.url).length+'/'+af.length;})(),
-haServerAbr:!!(window.ytInitialPlayerResponse?.streamingData?.serverAbrStreamingUrl)
+haServerAbr:!!(window.ytInitialPlayerResponse?.streamingData?.serverAbrStreamingUrl),
+runtimeKillerAttivo:(function(){try{const fetchStr=window.fetch.toString();return fetchStr.includes('isProEnabled')?'hook fetch installato':'hook fetch NON installato';}catch(e){return 'hook fetch NON installato';}})()
 };
 let stallRecoveredCount=0;
 window.addEventListener('adoff-stall-recovered',()=>stallRecoveredCount++);
+let stuckAdEndedCount=0;
+window.addEventListener('adoff-stuck-ad-ended',()=>stuckAdEndedCount++);
 let lastCurrentTime=null;
 let inBlackPeriod=false;
 let currentBlackPeriod=null;
 const periods=[];
+let inAdPeriod=false;
+let currentAdPeriod=null;
+const adPeriods=[];
 const startTs=performance.now();
 let intervalId=null,timeoutId=null;
 function sample(){
@@ -48,19 +54,45 @@ inBlackPeriod=false;
 currentBlackPeriod=null;
 }
 }
+if(!inAdPeriod){
+if(adShowing){
+inAdPeriod=true;
+currentAdPeriod={startMs:t,ctIniziale:currentTime,maxRate:playbackRate};
+}
+}else{
+if(adShowing){
+if(playbackRate>currentAdPeriod.maxRate){
+currentAdPeriod.maxRate=playbackRate;
+}
+}else{
+currentAdPeriod.durationMs=t-currentAdPeriod.startMs;
+currentAdPeriod.ctFinale=lastCurrentTime;
+currentAdPeriod.avanzato=(currentAdPeriod.ctFinale-currentAdPeriod.ctIniziale)>0.5;
+adPeriods.push(currentAdPeriod);
+inAdPeriod=false;
+currentAdPeriod=null;
+}
+}
 lastCurrentTime=currentTime;
 }
 intervalId=setInterval(sample,250);
-timeoutId=setTimeout(()=>{clearInterval(intervalId);printReport();},90000);
+timeoutId=setTimeout(()=>{clearInterval(intervalId);printReport();},120000);
 window.__stop=function(){clearInterval(intervalId);clearTimeout(timeoutId);printReport();};
 function printReport(){
-// chiude un nero ancora in corso: senza questo il caso peggiore andrebbe perso
 if(inBlackPeriod&&currentBlackPeriod){
 currentBlackPeriod.durationMs=(performance.now()-startTs)-currentBlackPeriod.startMs;
 currentBlackPeriod.stopCurrentTime=lastCurrentTime;
 currentBlackPeriod.ancoraInCorso=true;
 periods.push(currentBlackPeriod);
 inBlackPeriod=false;currentBlackPeriod=null;
+}
+if(inAdPeriod&&currentAdPeriod){
+currentAdPeriod.durationMs=(performance.now()-startTs)-currentAdPeriod.startMs;
+currentAdPeriod.ctFinale=lastCurrentTime;
+currentAdPeriod.avanzato=(currentAdPeriod.ctFinale-currentAdPeriod.ctIniziale)>0.5;
+currentAdPeriod.ancoraInCorso=true;
+adPeriods.push(currentAdPeriod);
+inAdPeriod=false;currentAdPeriod=null;
 }
 console.log('COPIA DA QUI IN GIU');
 console.log('Versione estensione: '+staticInfo.versioneEstensione);
@@ -69,6 +101,7 @@ console.log('adPlacements presenti: '+staticInfo.adPlacementsPresenti);
 console.log('playerAds presenti: '+staticInfo.playerAdsPresenti);
 console.log('formati con URL diretto: '+staticInfo.formatiConUrlDiretto);
 console.log('ha server ABR: '+staticInfo.haServerAbr);
+console.log('runtimeKiller: '+staticInfo.runtimeKillerAttivo);
 console.log('');
 if(periods.length===0){
 console.log('Nessun periodo di nero rilevato.');
@@ -87,6 +120,26 @@ console.log('');
 const totalMs=periods.reduce((s,p)=>s+p.durationMs,0);
 console.log('Totale periodi neri: '+periods.length+', somma '+Math.round(totalMs)+'ms');
 }
+console.log('');
+console.log('ANNUNCI A SCHERMO:');
+if(adPeriods.length===0){
+console.log('Nessun annuncio rilevato a schermo.');
+}else{
+adPeriods.forEach((p,i)=>{
+const num=i+1;
+const durata=Math.round(p.durationMs);
+const ctIn=p.ctIniziale.toFixed(2);
+const ctFin=(p.ctFinale!==undefined?p.ctFinale:p.ctIniziale).toFixed(2);
+const maxRate=p.maxRate;
+const scorso=p.avanzato?'SI':'NO';
+console.log(`annuncio #${num}: ${durata}ms | ct ${ctIn} -> ${ctFin} | playbackRate max: ${maxRate} | scorso: ${scorso}${p.ancoraInCorso?' (ANCORA IN CORSO)':''}`);
+});
+console.log('');
+const totalAdMs=adPeriods.reduce((s,p)=>s+p.durationMs,0);
+console.log('Totale annunci: '+adPeriods.length+', somma '+Math.round(totalAdMs)+'ms');
+}
+console.log('');
 console.log('Interventi watchdog (adoff-stall-recovered): '+stallRecoveredCount);
+console.log('Annunci terminati dal fix (adoff-stuck-ad-ended): '+stuckAdEndedCount);
 }
 })();
