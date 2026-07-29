@@ -84,6 +84,18 @@ async function main() {
     window.addEventListener('adoff-stall-recovered', (e) => window.__adoffStalls.push(e.detail));
   });
 
+  // Stream di contenuto bloccati da noi: DEVE essere zero. Bloccare
+  // googlevideo.com/videoplayback significa bloccare il video stesso, perche'
+  // con SABR contenuto e annuncio condividono lo stesso endpoint.
+  const streamBlocked = [];
+  page.on('requestfailed', (req) => {
+    const u = req.url();
+    const err = req.failure()?.errorText || '';
+    if (u.includes('googlevideo.com/videoplayback') && /BLOCKED_BY_CLIENT/i.test(err)) {
+      streamBlocked.push({ ctier: /ctier=([^&]*)/.exec(u)?.[1] || null, rn: /[?&]rn=(\d+)/.exec(u)?.[1] || null, err });
+    }
+  });
+
   const pageErrors = [];
 
   // Listener richieste
@@ -238,6 +250,11 @@ async function main() {
   const stalls = await page.evaluate(() => window.__adoffStalls || []).catch(() => []);
   console.log('--- Watchdog anti-stallo (Layer D) ---');
   console.log('Interventi:', stalls.length, stalls.length ? JSON.stringify(stalls) : '(nessuno: nessun falso positivo)');
+
+  console.log('--- Stream di contenuto bloccati da noi (deve essere 0) ---');
+  console.log(streamBlocked.length === 0
+    ? '0 — nessun blocco sullo stream'
+    : `${streamBlocked.length} BLOCCATI! ` + JSON.stringify(streamBlocked.slice(0, 5)));
 
   console.log('--- Errori JS ---');
   if (pageErrors.length === 0) console.log('Nessun errore');
