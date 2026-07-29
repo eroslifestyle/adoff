@@ -36,8 +36,9 @@ SITE = ROOT / "site"
 I18N = SITE / "i18n"
 BACKUP = Path(__file__).parent / "out" / "i18n-backup"
 
-LANGS = ["de", "fr", "es", "pt", "ru", "ar", "zh", "tr", "pl", "hi", "ja", "ko", "id"]
+LANGS = ["it", "de", "fr", "es", "pt", "ru", "ar", "zh", "tr", "pl", "hi", "ja", "ko", "id"]
 LANG_NAME = {
+    "it": "ITALIANO",
     "de": "TEDESCO", "fr": "FRANCESE", "es": "SPAGNOLO", "pt": "PORTOGHESE",
     "ru": "RUSSO", "ar": "ARABO", "zh": "CINESE SEMPLIFICATO", "tr": "TURCO",
     "pl": "POLACCO", "hi": "HINDI", "ja": "GIAPPONESE", "ko": "COREANO",
@@ -71,12 +72,30 @@ def public_keys():
     return keys
 
 
+# marker per riconoscere l'inglese: serve solo per il caso 'it', dove il criterio
+# "identico all'inglese" da solo produrrebbe falsi positivi (nomi propri, "Email",
+# "AdOff", sigle) che non vanno tradotti.
+EN_MARK = re.compile(
+    r"\b(the|you|your|and|with|for|that|this|are|is|to|of|from|have|has|will|"
+    r"can|not|but|they|we|our|when|where|why|how|all|every|it's|don't)\b", re.I)
+
+
+def looks_english(s):
+    return len(s.strip()) >= 20 and len(EN_MARK.findall(s)) >= 2
+
+
 def untranslated(lang, pub, it, en):
     d = json.loads((I18N / f"{lang}.json").read_text(encoding="utf-8"))
     out = {}
     for k in sorted(pub):
         v = d.get(k)
         if not isinstance(v, str) or not v.strip():
+            continue
+        if lang == "it":
+            # caso speciale: it.json contiene INGLESE. Criterio prudente — il valore
+            # coincide con quello inglese ED e' riconoscibilmente una frase inglese.
+            if k in en and v == en[k] and looks_english(v):
+                out[k] = en[k]
             continue
         same_en = k in en and v == en[k]
         same_it = k in it and v == it[k]

@@ -17,13 +17,22 @@ OUT = Path(__file__).parent / "out"
 OUT.mkdir(exist_ok=True)
 
 TITLE = re.compile(r"<title[^>]*>(.*?)</title>", re.S | re.I)
-DESC = re.compile(r"""<meta[^>]+name=["']description["'][^>]*content=["']([^"']*)["']""", re.I)
-CANON = re.compile(r"""<link[^>]+rel=["']canonical["'][^>]*href=["']([^"']+)["']""", re.I)
-CANON2 = re.compile(r"""<link[^>]+href=["']([^"']+)["'][^>]*rel=["']canonical["']""", re.I)
+# ATTENZIONE: l'ordine degli attributi nei <meta>/<link> non e' garantito — molte
+# pagine del sito hanno `content=` PRIMA di `name=`. Le prime versioni di questo
+# script assumevano un ordine fisso e producevano falsi positivi in massa
+# (43 pagine "senza description" che la description ce l'avevano).
+# Il valore di content puo' contenere l'altro tipo di apice (una description
+# coreana inizia con un apostrofo): serve il backreference al carattere di
+# quoting, altrimenti [^"'] tronca il valore e la meta risulta "assente".
+DESC = re.compile(
+    r"""<meta(?=[^>]*\bname=["']description["'])[^>]*\bcontent=(["'])(.*?)\1[^>]*>"""
+    r"""|<meta(?=[^>]*\bcontent=)[^>]*\bname=["']description["'][^>]*>""", re.I | re.S)
+CANON = re.compile(r"""<link(?=[^>]*\brel=["']canonical["'])[^>]*\bhref=["']([^"']+)["']""", re.I)
+CANON2 = re.compile(r"""<link(?=[^>]*\bhref=)[^>]*\brel=["']canonical["'][^>]*>""", re.I)
 HREFLANG = re.compile(
     r"""<link[^>]+(?:rel=["']alternate["'][^>]*hreflang=["']([^"']+)["'][^>]*href=["']([^"']+)["']"""
     r"""|href=["']([^"']+)["'][^>]*hreflang=["']([^"']+)["'][^>]*rel=["']alternate["'])""", re.I)
-OG = re.compile(r"""<meta[^>]+property=["']og:(title|description|image)["'][^>]*content=["']([^"']*)["']""", re.I)
+OG = re.compile(r"""<meta(?=[^>]*\bproperty=["']og:(?:title|description|image)["'])[^>]*\bproperty=["']og:(title|description|image)["'][^>]*>""", re.I)
 
 
 def url_to_path(u):
@@ -56,7 +65,7 @@ def main():
         (titles[title].append(rel) if title else no_title.append(rel))
 
         m = DESC.search(head)
-        d = m.group(1).strip() if m else ""
+        d = (m.group(2) or "").strip() if m else ""
         (descs[d].append(rel) if d else no_desc.append(rel))
 
         m = CANON.search(head) or CANON2.search(head)
@@ -86,7 +95,7 @@ def main():
         if hls and not any(l == "x-default" for l, _ in hls):
             hreflang_no_xdefault.append(rel)
 
-        ogs = {k.lower(): v for k, v in OG.findall(head)}
+        ogs = {k.lower() for k in OG.findall(head)}
         miss = [k for k in ("title", "description", "image") if k not in ogs]
         if miss:
             og_missing.append((rel, miss))

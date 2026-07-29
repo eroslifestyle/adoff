@@ -1,6 +1,6 @@
 # Lista di lavoro — ambito `en`
 
-**40 occorrenze di contenuto + 1 pagine con SEO incompleto**
+**38 occorrenze di contenuto + 1 pagine con SEO incompleto**
 Riferimento: `sviluppo/scripts/audit/SPEC-contenuti.md`
 Versione reale: **3.5.39** · trial reale: **15 giorni** · regole: **144**
 
@@ -14,11 +14,9 @@ _piano Lifetime rimosso il 2026-07-16 (ATTENZIONE: «prezzo Founder bloccato a v
 
 - `en/salesletter.html:451` — …> </div> <p class="plan-micro">Founder · bloccato a vita · i primi 100</p> <ul class="plan-features"> <l…
 
-## SAFARI — 38 occorrenze
+## SAFARI — 36 occorrenze
 _Safari non e' ancora disponibile (constants.json: browsers_coming_soon). Va rimosso dagli elenchi di browser supportati o marcato «in arrivo»_
 
-- `en/index.html:130` — …nt-size: 0.95rem;">Works on Chrome · Firefox · Edge · Opera · Brave — Safari coming soon</p> </div> </section> <!-- ======= 6. OPEN SOURCE TRUST =…
-- `en/index.html:225` — …ner" data-i18n="home.faq.a7">Chrome, Firefox, Edge, Opera, and Brave. Safari coming soon.</span></div></div> <div class="faq-item"><button class="…
 - `en/install.html:6` — …tle>Install AdOff · Free Ad Blocker for Chrome, Edge, Brave, Firefox, Safari</title> <meta name="description" content="Download and install AdOf…
 - `en/install.html:7` — …n" content="Download and install AdOff ad blocker on Chrome, Firefox, Safari, Edge, Opera and Brave. Free 15 days of free trial trial. Featherligh…
 - `en/install.html:27` — …roperty="og:description" content="Download AdOff for Chrome, Firefox, Safari, Edge, Opera and Brave. 15 days of free trial trial included." /> <…
