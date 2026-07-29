@@ -49,7 +49,17 @@ Sono descritte nella SPEC. In sintesi:
 - **Prezzi**: solo quelli del listino in SPEC. Gli intervalli legati ai vecchi tier per
   numero di dispositivi vanno riscritti: piano unico fino a 3 dispositivi.
 - **Versione**: quella corrente è nel manifest. Le voci di changelog storico restano.
-- **Safari**: non ancora disponibile, va tolto dagli elenchi di browser supportati.
+- **Safari — CORREZIONE, leggi con attenzione**: una versione precedente di questo brief
+  diceva di rimuovere Safari. **Era sbagliato e ha già causato un errore.** La verità:
+  `site/adoff-safari.zip` esiste ed è scaricabile (152 KB), quindi l'estensione Safari
+  **c'è**. Non è ancora sul Mac App Store e richiede Xcode per l'installazione permanente:
+  è esattamente ciò che dicono già le pagine di installazione, ed è corretto.
+  Quindi: **non rimuovere le sezioni Safari dalle pagine di installazione, e non
+  cancellare le chiavi `install.safari.*` dai dizionari.** L'unica cosa da correggere lì
+  è la versione stantia (`v3.4.6` in `install.dl.info.safari`).
+  Dove invece si dichiara un **conteggio** di browser supportati, quello resta **5**
+  (Chrome, Firefox, Edge, Opera, Brave): Safari non entra nel conteggio finché non è
+  distribuito sullo store.
 - **Regole**: sono 144. Non toccare i numeri riferiti ad altri prodotti (le 80.000 regole
   di altri blocker, il limite di 30.000 di Chrome: sono confronti corretti).
 - **Separatore**: nei `<title>` tradotti il carattere `·` è diventato una virgola.

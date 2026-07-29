@@ -159,8 +159,13 @@ def main():
         missing = []
         for p in pages:
             rel = p.relative_to(SITE).as_posix()
+            # stesse esclusioni di gen_sitemap.py: pannelli interni, pagine
+            # tecniche, 404 e salesletter (landing volutamente fuori dal sitemap)
             if any(rel.startswith(x) for x in
                    ("mgmt-9f4a/", "admin-console", "account", "panel", "success", "uninstall")):
+                continue
+            base = rel.rsplit("/", 1)[-1]
+            if base in ("404.html", "salesletter.html"):
                 continue
             own = "/" + (rel[:-5] if rel.endswith(".html") else rel)
             own = own[:-6] if own.endswith("/index") else own

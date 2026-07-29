@@ -184,47 +184,47 @@ def fix_file(filepath: Path) -> bool:
 
     canonical_url = get_canonical_url(rel)
 
+    # Helper: find ANY <meta> tag containing a specific property value
+    def find_meta_with(prop_val):
+        return re.search(r'<meta\b[^>]*\bproperty=["\']' + re.escape(prop_val) + r'["\'][^>]*>', content, re.IGNORECASE)
+
     # 1. Add <meta name="description"> if missing
     if not has_tag(content, r'<meta\s+name=["\']description["\']'):
-        # Find the <title> tag and insert description after it
         title_match = re.search(r'(<title>[^<]*</title>)', content, re.IGNORECASE)
         if title_match:
-            desc = DESCRIPTIONS.get(rel, f"AdOff — {rel}")
+            desc = DESCRIPTIONS.get(rel, f"AdOff")
             insert = f'\n  <meta name="description" content="{desc}" />'
-            content = content.replace(title_match.group(1), title_match.group(1) + insert)
+            content = content.replace(title_match.group(1), title_match.group(1) + insert, 1)
 
     # 2. Add <link rel="canonical"> if missing (skip 404)
     if not is_404 and not has_tag(content, r'<link\s+rel=["\']canonical["\']'):
-        # Find the last <link rel="alternate"> or insert after description
         alt_match = re.search(r'(<link\s+rel=["\']alternate["\'][^>]*>)', content)
         if alt_match:
             insert = f'\n  <link rel="canonical" href="{canonical_url}" />'
-            content = content.replace(alt_match.group(1), alt_match.group(1) + insert)
+            content = content.replace(alt_match.group(1), alt_match.group(1) + insert, 1)
 
     # 3. Add og:title if missing
     if not has_tag(content, r'<meta\s+property=["\']og:title["\']'):
-        title_match = re.search(r'<meta\s+property=["\']og:type["\']', content)
-        if title_match:
-            og_t = OG_TITLES.get(rel, "")
-            if og_t:
-                insert = f'\n  <meta property="og:title" content="{og_t}" />'
-                content = content.replace(title_match.group(0), insert + '\n  ' + title_match.group(0))
+        og_type_match = find_meta_with("og:type")
+        og_t = OG_TITLES.get(rel, "")
+        if og_type_match and og_t:
+            insert = f'\n  <meta property="og:title" content="{og_t}" />'
+            content = content.replace(og_type_match.group(0), insert + '\n  ' + og_type_match.group(0), 1)
 
     # 4. Add og:description if missing
     if not has_tag(content, r'<meta\s+property=["\']og:description["\']'):
-        title_match = re.search(r'<meta\s+property=["\']og:type["\']', content)
-        if title_match:
-            og_d = OG_DESCRIPTIONS.get(rel, "")
-            if og_d:
-                insert = f'\n  <meta property="og:description" content="{og_d}" />'
-                content = content.replace(title_match.group(0), insert + '\n  ' + title_match.group(0))
+        og_type_match = find_meta_with("og:type")
+        og_d = OG_DESCRIPTIONS.get(rel, "")
+        if og_type_match and og_d:
+            insert = f'\n  <meta property="og:description" content="{og_d}" />'
+            content = content.replace(og_type_match.group(0), insert + '\n  ' + og_type_match.group(0), 1)
 
-    # 5. Add og:image if missing (only if og:url exists but og:image doesn't)
+    # 5. Add og:image if missing
     if not has_tag(content, r'<meta\s+property=["\']og:image["\']'):
-        title_match = re.search(r'<meta\s+property=["\']og:type["\']', content)
-        if title_match:
+        og_type_match = find_meta_with("og:type")
+        if og_type_match:
             insert = f'\n  <meta property="og:image" content="{OG_IMAGE}" />'
-            content = content.replace(title_match.group(0), insert + '\n  ' + title_match.group(0))
+            content = content.replace(og_type_match.group(0), insert + '\n  ' + og_type_match.group(0), 1)
 
     if content != original:
         filepath.write_text(content, encoding="utf-8")
