@@ -1553,6 +1553,7 @@ async function handleValidate(body, env, request, opts = {}) {
       devices: 0,
       maxDevices: licenseData.deviceLimit || MAX_DEVICES,
       source: "db_fallback",
+      email: maskEmail(licenseData.email),
     });
   }
 
@@ -1655,6 +1656,7 @@ async function handleValidate(body, env, request, opts = {}) {
       : "LIFETIME",
     devices: devices.length,
     maxDevices,
+    email: maskEmail(licenseData?.email),
   });
 }
 

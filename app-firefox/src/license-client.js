@@ -375,6 +375,10 @@ const LicenseClient = (function () {
           expiresHuman: data.expiresHuman,
           devices: data.devices,
           maxDevices: data.maxDevices,
+          // Email mascherata dal server (es. "er***@gmail.com"): serve al pannello
+          // per far riconoscere l'account. Senza questo campo la riga "Account"
+          // restava vuota anche con licenza valida.
+          email: data.email || null,
           lastValidated: Date.now(),
           activatedAt: Date.now(),
         };
@@ -446,6 +450,10 @@ const LicenseClient = (function () {
           expiresHuman: data.expiresHuman,
           devices: data.devices,
           maxDevices: data.maxDevices,
+          // Email mascherata dal server (es. "er***@gmail.com"): serve al pannello
+          // per far riconoscere l'account. Senza questo campo la riga "Account"
+          // restava vuota anche con licenza valida.
+          email: data.email || null,
           lastValidated: Date.now(),
         };
         await saveLicense(licData);
