@@ -772,6 +772,23 @@
   // piattaforme che usano Google DAI con stream ads-server-side (mirror
   // dell'esclusione sulle static rules 220/900). Isolato per categoria.
   const PREMIUM_STREAMING_INITIATORS = ["paramountplus.com"];
+  // Domini della piattaforma video, usati come initiator per le regole di allow.
+  const VIDEO_PLATFORM_DOMAINS = ["youtube.com", "youtube-nocookie.com", "m.youtube.com"];
+
+  // Gli annunci video della piattaforma inviano ping di conferma verso doubleclick.
+  // Le regole di blocco generiche su quel dominio sono attive SEMPRE, anche senza
+  // abbonamento. Se quei ping vengono bloccati il player non riproduce l'annuncio
+  // ne' passa al contenuto: resta appeso al timeout, 10-15 secondi di schermo nero.
+  // Con abbonamento attivo abbiamo lo skip a runtime che termina l'annuncio, quindi
+  // il blocco va mantenuto. SENZA abbonamento (o in modalita' compatibilita') non
+  // c'e' nessuno skip: bloccarli produce solo lo schermo nero, quindi li lasciamo
+  // passare e l'utente vede un annuncio regolare con player fluido.
+  const AD_PING_ALLOW_RULES = [
+    { id: 50010, priority: 2500, action: { type: "allow" }, condition: { urlFilter: "||doubleclick.net", initiatorDomains: VIDEO_PLATFORM_DOMAINS, resourceTypes: ["xmlhttprequest", "image", "ping", "script", "sub_frame", "media", "other"] } },
+    { id: 50011, priority: 2500, action: { type: "allow" }, condition: { urlFilter: "||googlesyndication.com", initiatorDomains: VIDEO_PLATFORM_DOMAINS, resourceTypes: ["xmlhttprequest", "image", "ping", "script", "sub_frame", "media", "other"] } },
+  ];
+  const AD_PING_ALLOW_IDS = [50010, 50011];
+
   const IMA_REDIRECT_RULES = [
     { id: 50001, priority: 3, action: { type: "redirect", redirect: { extensionPath: "/stubs/google-ima3.js" } }, condition: { urlFilter: "||imasdk.googleapis.com/js/sdkloader/ima3.js", resourceTypes: ["script"], excludedInitiatorDomains: PREMIUM_STREAMING_INITIATORS } },
     { id: 50002, priority: 3, action: { type: "redirect", redirect: { extensionPath: "/stubs/google-ima3.js" } }, condition: { urlFilter: "||imasdk.googleapis.com/js/sdkloader/ima3_dai.js", resourceTypes: ["script"], excludedInitiatorDomains: PREMIUM_STREAMING_INITIATORS } },
@@ -788,6 +805,15 @@
       const isPro = lic.type === "pro" || lic.type === "lifetime"
         || (lic.valid && ["pro", "lifetime", "monthly", "annual"].includes(lic.plan))
         || trialOk;
+      // Ping degli annunci sulla piattaforma video: vedi AD_PING_ALLOW_RULES.
+      // A protezione spenta le regole vengono rimosse, per non lasciarle appese.
+      const needAdPingAllow = enabled && (!isPro || result.adoffYtCompat === true);
+      chrome.declarativeNetRequest.updateDynamicRules(
+        needAdPingAllow
+          ? { removeRuleIds: AD_PING_ALLOW_IDS, addRules: AD_PING_ALLOW_RULES }
+          : { removeRuleIds: AD_PING_ALLOW_IDS }
+      ).catch(() => { /* ignore */ });
+
 
       // Il redirect si attiva SOLO se Pro/Trial E protezione attiva.
       // Se l'utente disattiva AdOff il redirect va rimosso, altrimenti
