@@ -105,7 +105,39 @@ $ curl -sS https://adoff.app/CLAUDE.md | head -c 60
 This project has a knowledge graph at graphify-out/
 ```
 
-Ho verificato il contenuto esposto: **nessun dato personale, nessuna email, nessun segreto** (`erosdegrande`, `mrxxx`, `/mnt/backup`, `sk_live`, `acct_1`: 0 match su tutto `graph.json`). Resta un'esposizione di struttura interna da 4 MB e la conferma che il guard-rail è stato scavalcato.
+> **CORREZIONE (2026-07-29, in fase di fix).** La prima stesura di questa sezione diceva
+> «nessun dato personale, nessuna email, nessun segreto». Quella verifica aveva coperto solo
+> `graph.json` e `GRAPH_REPORT.md`: **non** il contenuto di `/CLAUDE.md`, che invece espone lo
+> username Linux e la struttura della home directory, tre volte:
+>
+> ```
+> $ curl -sS https://adoff.app/CLAUDE.md | grep -nE "mrxxx|/home/"
+> 15:Pagina progetto: `/home/mrxxx/Obsidian/Memoria/progetti/site/site.md`. Regole complete: `~/.claude/CLAUDE.md` …
+> 20:3. Append `/home/mrxxx/Obsidian/Memoria/log.md`: `## [YYYY-MM-DD HH:MM] <op> | <slug>`.
+> 21:4. Aggiorna `/home/mrxxx/Obsidian/Memoria/INDICE.md` se nuove pagine.
+> ```
+>
+> Violazione diretta della regola di privacy del progetto. Nessuna credenziale esposta, ma il
+> perimetro dell'esposizione era più ampio di quanto scritto: la ricerca sistematica dei file
+> non-web nella root di deploy ha trovato **altri 8 artefatti interni serviti con HTTP 200**:
+>
+> | path online | byte | cosa è |
+> |---|---|---|
+> | `/CLAUDE.md` | 1 529 | istruzioni interne + percorsi home |
+> | `/.claude/gen-pricing-pages.py` | 13 781 | script interno di generazione pagine |
+> | `/.claude/settings.json` | 813 | configurazione hook |
+> | `/AUDIT_ES_TUTEO_REPORT.md` | 6 737 | report interno di audit linguistico |
+> | `/i18n/AUDIT_AR_PRICING_2026-05-20.md` | 11 424 | report interno |
+> | `/i18n/AUDIT_HI_FAQ_STEALTH_2026-05-20.md` | 8 330 | report interno |
+> | `/i18n/AUDIT_ID_FORMAL_LANGUAGE.md` | 7 680 | report interno |
+> | `/i18n/TRANSLATION_REPORT_PT.md` | 2 847 | report interno |
+> | `/i18n/README.md` | 2 782 | doc interna |
+>
+> Nessuno di questi contiene credenziali (verificato) e solo `/CLAUDE.md` contiene percorsi
+> personali. Tutti spostati fuori da `site/` durante il fix. **L'esposizione resta attiva online
+> finché non si ridispiega**: rimuoverli dal repo non li rimuove da produzione.
+
+Il resto dell'esposizione è struttura interna: 4 MB di knowledge graph, senza credenziali (`sk_live`, `acct_1`, `api_key`: 0 match su `graph.json`).
 
 Nota strutturale sul gate: `_matrix.json` conosce 656 chiavi, le pagine ne usano 2262. La "single source" i18n è scollegata dalla realtà da tempo, per questo il gate è diventato un ostacolo da aggirare invece che una rete di sicurezza.
 
@@ -145,7 +177,7 @@ Severità: **P0** blocca/rompe il sito · **P1** rompe una funzione · **P2** in
 | B04 | P0 | i18n | [adoff-nav.js:268-330](site/adoff-nav.js#L268-L330) | Nav senza alcun `data-i18n`: etichette inglesi hardcoded su tutte le 552 pagine, in tutte le lingue | `grep -c 'data-i18n' site/adoff-nav.js` → `0`; su `/de/guide` il nav è inglese | Reintrodurre i `data-i18n` (esistevano fino a `51f788e`) e applicarli dopo l'injection |
 | B05 | P0 | i18n | [adoff-footer.js:66-117](site/adoff-footer.js#L66-L117) | Footer con 26 `data-i18n` e default italiano, mai tradotto: 551 pagine lo includono, solo 152 caricano `adoff-i18n.js` → 399 pagine con footer italiano fisso | su `/de/guide` e `/ar/privacy`: `PRODOTTO Prezzi Installa Come funziona Guida utente…` | Far applicare le traduzioni dopo l'injection (evento o chiamata diretta) e includere `adoff-i18n.js` ovunque |
 | B06 | P0 | SEO/UX | [adoff-i18n.js:99-101](site/adoff-i18n.js#L99-L101) | `document.title = dict['meta.title']` applicato **senza condizione su ogni pagina**: `meta.title` è il titolo della HOMEPAGE. Tutte le pagine runtime-tradotte ereditano titolo e description della home | `/pricing`, `/premium`, `/install`, `/support`, `/account` mostrano tutte `AdOff Ad Blocker \| Free + Pro Video Blocking \| 15 Days Free`; `/premium?lang=de` → `AdOff, bester unsichtbarer Ad Blocker` | Applicare `meta.title` solo se la pagina non ne definisce uno proprio, o usare chiavi per-pagina |
-| B07 | P1 | Deploy | processo (non un file) | Deploy eseguito bypassando `deploy-site.sh`: `graphify-out/` (4 MB) e `CLAUDE.md` serviti da adoff.app | `curl /graphify-out/graph.json` → `200 3993796`; `curl /CLAUDE.md` → contenuto reale. Nessun segreto/PII esposto (verificato: 0 match) | Rimuovere dal deploy, ripubblicare via `deploy-site.sh`, riparare il gate i18n |
+| B07 | **P0** | Deploy / Privacy | processo + 11 path dentro `site/` | Deploy eseguito bypassando `deploy-site.sh`: `graphify-out/` (4 MB), `CLAUDE.md`, `.claude/` e 6 report interni serviti da adoff.app. **`/CLAUDE.md` espone username Linux e struttura della home** — violazione della regola di privacy del progetto. Severità alzata da P1 a P0 rispetto alla prima stesura | `curl /CLAUDE.md \| grep -nE "mrxxx\|/home/"` → 3 righe `/home/mrxxx/Obsidian/…`; `curl /.claude/gen-pricing-pages.py` → `200 13781`; `curl /.claude/settings.json` → `200 813`; `curl /graphify-out/graph.json` → `200 3993796`. Nessuna credenziale (verificato) | Spostare tutto fuori da `site/` (**fatto**: → `sviluppo/graphify-site/`, `sviluppo/site-internal-docs/`), poi ripubblicare via `deploy-site.sh`. **Finché non si ridispiega, l'esposizione resta online** |
 | B08 | P1 | Gate | `sviluppo/scripts/i18n_manager.py` + `site/i18n/_matrix.json` | Il gate fallisce con 2001 hard failures perché `_matrix.json` ha 656 chiavi contro le 2262 usate: la "single source" non è più la sorgente | `EXIT REALE = 1`, `hard_failures=2001` | Rigenerare `_matrix.json` dalle chiavi realmente usate, poi rendere il gate bloccante di nuovo |
 | B09 | P1 | Nav | [adoff-nav.js:104](site/adoff-nav.js#L104) vs [255-256](site/adoff-nav.js#L255-L256) | Contraddizione interna: `STATIC_IT_ROOT` dichiara guide/privacy IT-root, i link builder trattano la root come EN. L'utente EN riceve guida e privacy **in italiano**; `/en/guide.html` esiste ma è irraggiungibile | `guide.html` → `<html lang="it">`, titolo *"Guida Utente"*; `en/guide.html` → `<html lang="en">` | Usare `itRoot()`/`enRoot()` come già fa il footer |
 | B10 | P1 | Nav | 16 pagine: 10 × `vs/*.html` + `about-data/`, `account/`, `admin-console`, `it/about-data/`, `mgmt-9f4a/`, `panel.html` | Nav e footer **legacy hardcoded**, non i componenti condivisi: 4 voci italiane, nessun selettore lingua, nessun toggle tema | `/vs/ublock-origin`: `linkNuovi=0 linkLegacy=4`, voci `['Funzionalità','Prezzi','Installa','Supporto']`; switcher lingua assente (`#snLangBtn` non esiste); screenshot `out/shots/vs_uBlock_(nav_legacy).png` | Migrare le 10 pagine `vs/` agli script condivisi |

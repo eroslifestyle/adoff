@@ -32,16 +32,23 @@ SRC_RE = re.compile(r"""<(?:script|img|link|source|iframe)\b[^>]*?\b(?:src|href)
 # Simulazione di adoff-nav.js (righe 250-330) per una data lingua
 # ─────────────────────────────────────────────────────────────────────────────
 def nav_links(lang):
+    """Rispecchia site/adoff-nav.js dopo il fix del 2026-07-29."""
     lq = ("?lang=" + lang) if (lang and lang != "it") else ""
-    en_or_none = (lang == "en") or (not lang)
-    premium = "/premium" if en_or_none else "/" + lang + "/premium"
-    vpnpol = "/vpn-policy" if en_or_none else "/" + lang + "/vpn-policy"
-    pricing = "/pricing.html" if en_or_none else "/" + lang + "/pricing.html"
+
+    def en_root(page):
+        return ("/" + page) if lang == "en" else ("/" + lang + "/" + page)
+
+    def it_root(page):
+        return ("/" + page) if lang == "it" else ("/" + lang + "/" + page)
+
+    premium = "/premium"
+    vpnpol = "/vpn-policy"
+    pricing = "/pricing.html" + lq
     install = "/install.html" + lq
-    guide = "/guide.html" if en_or_none else "/" + lang + "/guide.html"
-    privacy = "/privacy.html" if en_or_none else "/" + lang + "/privacy.html"
-    community = "/community" if en_or_none else "/" + lang + "/community"
     support = "/support.html" + lq
+    community = en_root("community")
+    guide = it_root("guide.html")
+    privacy = it_root("privacy.html")
     return [
         ("logo", "/" + lq),
         ("Home", "/" + lq),
@@ -71,7 +78,7 @@ def footer_links(lang):
         return ("/" + page) if (lang == "it" or not lang) else ("/" + lang + "/" + page)
 
     def lp(page):
-        return ("/it/" + page) if lang == "it" else ("/" + page)
+        return ("/" + page) if lang == "en" else ("/" + lang + "/" + page)
 
     return [
         ("Prezzi", "/pricing.html" + fq),
@@ -80,13 +87,13 @@ def footer_links(lang):
         ("Come funziona", en_root("how-it-works")),
         ("Guida utente", it_root("guide")),
         ("Migliori Ad Blocker 2026", en_root("best-ad-blocker-2026")),
-        ("Test detector", ("/it/adblock-detector" if lang == "it" else "/adblock-detector")),
+        ("Test detector", en_root("adblock-detector")),
         ("vs uBlock Origin", lp("vs/ublock-origin")),
         ("vs AdBlock Plus", lp("vs/adblock-plus")),
         ("vs AdGuard", lp("vs/adguard")),
         ("Community", en_root("community")),
-        ("Blog", "/blog/" + fq),
-        ("Tutti i confronti", lp("vs/")),
+        ("Blog", "/blog/" if lang == "en" else "/" + lang + "/blog/"),
+        ("Tutti i confronti", "/vs/"),
         ("Chi sono", ("/chi-sono.html" if (lang == "it" or not lang) else "/about.html" + fq)),
         ("Live data", ("/it/about-data/" if lang == "it" else "/about-data/")),
         ("Supporto", "/support" + fq),

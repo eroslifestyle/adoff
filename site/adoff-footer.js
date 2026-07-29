@@ -39,13 +39,15 @@
   document.head.appendChild(style);
 
   // ─── Detect language for footer links ────────────────────────────────────────
-  var fLang = 'it';
-  try { fLang = localStorage.getItem('adoff_lang') || 'it'; } catch(e) {}
-  // Also check URL for lang
-  var fParams = new URLSearchParams(window.location.search);
-  if (fParams.get('lang')) fLang = fParams.get('lang');
-  var fPathLang = window.location.pathname.split('/')[1];
-  if (fPathLang && fPathLang.length === 2 && /^[a-z]{2}$/.test(fPathLang)) fLang = fPathLang;
+  // Prefer AdOffI18n.lang (same source as nav), fallback to own calculation
+  var fLang = (window.AdOffI18n && window.AdOffI18n.lang) ? window.AdOffI18n.lang : 'it';
+  if (!window.AdOffI18n || !window.AdOffI18n.lang) {
+    try { fLang = localStorage.getItem('adoff_lang') || 'it'; } catch(e) {}
+    var fParams = new URLSearchParams(window.location.search);
+    if (fParams.get('lang')) fLang = fParams.get('lang');
+    var fPathLang = window.location.pathname.split('/')[1];
+    if (fPathLang && fPathLang.length === 2 && /^[a-z]{2}$/.test(fPathLang)) fLang = fPathLang;
+  }
 
   // Dynamic pages (homepage, install, support) use ?lang=
   var fq = (fLang && fLang !== 'it') ? '?lang=' + fLang : '';
@@ -53,8 +55,10 @@
   function enRoot(page) { return (fLang === 'en' || !fLang) ? '/' + page : '/' + fLang + '/' + page; }
   // IT-root static pages (guide, privacy, terms, withdrawal)
   function itRoot(page) { return (fLang === 'it' || !fLang) ? '/' + page : '/' + fLang + '/' + page; }
-  // Landing pages exist only in EN (root) + IT (/it/); route non-IT to the EN page.
-  function lp(page) { return (fLang === 'it') ? '/it/' + page : '/' + page; }
+  // Confronti: le versioni moderne stanno in /{lang}/vs/ per 14 lingue (italiano
+  // incluso). La root /vs/ contiene 14 pagine legacy italiane; l'inglese non ha
+  // una propria cartella vs/, quindi ricade li'.
+  function lp(page) { return (fLang === 'en') ? '/' + page : '/' + fLang + '/' + page; }
 
   // ─── Build HTML ──────────────────────────────────────────────────────────────
   var html = [
@@ -81,7 +85,7 @@
             '<li><a href="' + enRoot('how-it-works') + '" data-i18n="footer.howit">Come funziona</a></li>',
             '<li><a href="' + itRoot('guide') + '" data-i18n="footer.guide">Guida utente</a></li>',
             '<li><a href="' + enRoot('best-ad-blocker-2026') + '" data-i18n="footer.best">Migliori Ad Blocker 2026</a></li>',
-            '<li><a href="' + (fLang === 'it' ? '/it/adblock-detector' : '/adblock-detector') + '" data-i18n="footer.tool">Test: ad blocker rilevabile?</a></li>',
+            '<li><a href="' + enRoot('adblock-detector') + '" data-i18n="footer.tool">Test: ad blocker rilevabile?</a></li>',
           '</ul>',
         '</div>',
 
@@ -98,8 +102,8 @@
           '<p class="footer__col-title" data-i18n="footer.col.company">Risorse</p>',
           '<ul class="footer__links">',
             '<li><a href="' + enRoot('community') + '" data-i18n="footer.community">Community</a></li>',
-            '<li><a href="/blog/' + fq + '" data-i18n="footer.blog">Blog</a></li>',
-            '<li><a href="' + lp('vs/') + '" data-i18n="footer.vs.all">Tutti i confronti</a></li>',
+            '<li><a href="' + (fLang === 'en' ? '/blog/' : '/' + fLang + '/blog/') + '" data-i18n="footer.blog">Blog</a></li>',
+            '<li><a href="/vs/" data-i18n="footer.vs.all">Tutti i confronti</a></li>',
             '<li><a href="' + (fLang === 'it' || !fLang ? '/chi-sono.html' : '/about.html' + fq) + '" data-i18n="footer.about">Chi sono</a></li>',
             '<li><a href="' + (fLang === 'it' ? '/it/about-data/' : '/about-data/') + '" data-i18n="footer.aboutdata">Live data</a></li>',
             '<li><a href="/support' + fq + '" data-i18n="footer.support">Supporto</a></li>',
@@ -122,18 +126,28 @@
 
   // ─── Inject footer ───────────────────────────────────────────────────────────
   var existing = document.querySelector('footer');
+  var footerEl;
   if (existing) {
     // Replace existing footer content (keep the <footer> tag)
     existing.innerHTML = html;
     // Remove any inline styles that clash with our injected styles
     existing.removeAttribute('style');
     existing.className = '';
+    footerEl = existing;
   } else {
     // No footer element — create and append before </body>
-    var footer = document.createElement('footer');
-    footer.innerHTML = html;
-    document.body.appendChild(footer);
+    footerEl = document.createElement('footer');
+    footerEl.innerHTML = html;
+    document.body.appendChild(footerEl);
   }
+
+  // ─── Translate footer after injection ─────────────────────────────────────────
+  if (window.AdOffI18n && window.AdOffI18n.ready) {
+    window.AdOffI18n.applyTo(footerEl);
+  }
+  document.addEventListener('adoff-i18n-ready', function () {
+    if (window.AdOffI18n) window.AdOffI18n.applyTo(footerEl);
+  });
 
   // ─── Load AI support chat widget (site-wide) ──────────────────────────────────
   if (!window.__adoffChatLoaded) {

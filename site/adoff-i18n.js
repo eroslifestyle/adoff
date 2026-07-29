@@ -11,8 +11,8 @@
  * Strategy:
  *  - On <head> load: inject CSS rule `html:not([data-i18n-ready]) body { visibility:hidden }`
  *  - Detect language synchronously (cached lang first)
- *  - For IT (default text in HTML): mark ready immediately
- *  - For non-IT: fetch JSON, apply, then mark ready
+ *  - Gate: skip if source lang === active lang (no translation needed)
+ *  - For others: fetch JSON, apply, then mark ready
  */
 (function () {
   'use strict';
@@ -44,10 +44,8 @@
   function detectLang() {
     try {
       var p = new URLSearchParams(window.location.search).get('lang');
-      console.log('[i18n] URL param lang:', p);
       if (p && SUPPORTED.indexOf(p) !== -1) {
         try { localStorage.setItem('adoff_lang', p); } catch (e) {}
-        console.log('[i18n] Using URL param lang:', p);
         return p;
       }
     } catch (e) {}
@@ -74,21 +72,29 @@
     return 'en';
   }
 
-  function applyTranslations(dict, lang) {
-    if (!dict) return;
-    var textEls = document.querySelectorAll('[data-i18n]');
+  /**
+   * Apply translations to a specific element (or document.body for full-page).
+   * Handles [data-i18n] → textContent, [data-i18n-html] → innerHTML,
+   * [data-i18n-placeholder] → placeholder, plus dir/lang and meta tags.
+   * @param {Element} element
+   * @param {Object} dict
+   * @param {string} lang
+   */
+  function applyTo(element, dict, lang) {
+    if (!dict || !element) return;
+    var textEls = element.querySelectorAll('[data-i18n]');
     for (var i = 0; i < textEls.length; i++) {
       var el = textEls[i];
       var key = el.getAttribute('data-i18n');
       if (dict[key] !== undefined) el.textContent = dict[key];
     }
-    var htmlEls = document.querySelectorAll('[data-i18n-html]');
+    var htmlEls = element.querySelectorAll('[data-i18n-html]');
     for (var j = 0; j < htmlEls.length; j++) {
       var hel = htmlEls[j];
       var hkey = hel.getAttribute('data-i18n-html');
       if (dict[hkey] !== undefined) hel.innerHTML = dict[hkey];
     }
-    var placeholderEls = document.querySelectorAll('[data-i18n-placeholder]');
+    var placeholderEls = element.querySelectorAll('[data-i18n-placeholder]');
     for (var k = 0; k < placeholderEls.length; k++) {
       var pel = placeholderEls[k];
       var pkey = pel.getAttribute('data-i18n-placeholder');
@@ -96,13 +102,47 @@
     }
     document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
-    if (dict['meta.title']) document.title = dict['meta.title'];
-    var metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc && dict['meta.description']) metaDesc.setAttribute('content', dict['meta.description']);
-    var ogTitle = document.querySelector('meta[property="og:title"]');
-    if (ogTitle && dict['meta.og.title']) ogTitle.setAttribute('content', dict['meta.og.title']);
-    var ogDesc = document.querySelector('meta[property="og:description"]');
-    if (ogDesc && dict['meta.og.description']) ogDesc.setAttribute('content', dict['meta.og.description']);
+    // Meta tags only on homepage (to avoid wrong title on /pricing, /premium, etc.)
+    var isHomepage = /^\/(?:$|\?|#|index\.html$|\/[a-z]{2}\/?$|\/[a-z]{2}\/index\.html$)/.test(window.location.pathname);
+    if (isHomepage && dict['meta.title']) document.title = dict['meta.title'];
+    if (isHomepage) {
+      var metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc && dict['meta.description']) metaDesc.setAttribute('content', dict['meta.description']);
+      var ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle && dict['meta.og.title']) ogTitle.setAttribute('content', dict['meta.og.title']);
+      var ogDesc = document.querySelector('meta[property="og:description"]');
+      if (ogDesc && dict['meta.og.description']) ogDesc.setAttribute('content', dict['meta.og.description']);
+    }
+  }
+
+  function applyTranslations(dict, lang) {
+    applyTo(document.body, dict, lang);
+  }
+
+  // ─── Public API for nav/footer ─────────────────────────────────────────────
+  window.AdOffI18n = {
+    lang: null,
+    dict: null,
+    ready: false,
+    applyTo: function (rootElement) {
+      if (!this.dict || !rootElement) return;
+      applyTo(rootElement, this.dict, this.lang);
+    }
+  };
+
+  /**
+   * Set AdOffI18n state and fire 'adoff-i18n-ready'.
+   * @param {string} lang
+   * @param {Object|null} dict
+   */
+  function emitReady(lang, dict) {
+    window.AdOffI18n.lang = lang;
+    window.AdOffI18n.dict = dict || null;
+    window.AdOffI18n.ready = true;
+    markReady();
+    try {
+      document.dispatchEvent(new Event('adoff-i18n-ready', { bubbles: true, cancelable: false }));
+    } catch (e) {}
   }
 
   /**
@@ -167,46 +207,42 @@
 
   function init() {
     var lang = detectLang();
-    console.log('[i18n] Detected lang:', lang);
 
-    // DEBUG: Add marker to html to prove script runs (works before body exists)
-    try {
-      document.documentElement.setAttribute('data-i18n-debug', lang);
-    } catch(e) {
-      console.log('[i18n] ERROR adding debug marker:', e);
-    }
-
-    if (lang === 'it') {
-      document.documentElement.lang = 'it';
-      document.documentElement.dir = 'ltr';
-      markReady();
-      // No link rewrite for IT (it's root path)
+    // Gate: skip if source lang === active lang (text already in correct language)
+    var sourceLang = document.documentElement.lang || 'it';
+    if (lang === sourceLang) {
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      emitReady(lang, null);
       return;
     }
-    console.log('[i18n] Loading dict for:', lang);
+
     loadDict(lang).then(function (dict) {
-      console.log('[i18n] Dict loaded, applying translations');
+      window.AdOffI18n.lang = lang;
+      window.AdOffI18n.dict = dict;
       applyTranslations(dict, lang);
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () { rewriteLinks(lang); });
       } else {
         rewriteLinks(lang);
       }
-      markReady();
+      emitReady(lang, dict);
     }).catch(function () {
       // Fallback to EN
       if (lang !== 'en') {
         loadDict('en').then(function (dict) {
+          window.AdOffI18n.lang = 'en';
+          window.AdOffI18n.dict = dict;
           applyTranslations(dict, 'en');
           if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function () { rewriteLinks('en'); });
           } else {
             rewriteLinks('en');
           }
-          markReady();
-        }).catch(markReady);
+          emitReady('en', dict);
+        }).catch(function () { emitReady(lang, null); });
       } else {
-        markReady();
+        emitReady('en', null);
       }
     });
   }

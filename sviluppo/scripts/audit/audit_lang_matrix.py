@@ -42,6 +42,16 @@ def page_lang(target):
     return m.group(1).lower() if m else "(nessun lang)"
 
 
+def loads_i18n(target):
+    """La pagina carica adoff-i18n.js? Se si', viene tradotta lato client."""
+    if not target:
+        return False
+    p = SITE / target.lstrip("/")
+    if not p.is_file():
+        return False
+    return "adoff-i18n.js" in p.read_text(encoding="utf-8", errors="replace")
+
+
 def evaluate(lang, href):
     files = FILES
     clean = strip_query(href) or "/"
@@ -51,6 +61,11 @@ def evaluate(lang, href):
         return "SOFT404", None, None
     served = page_lang(target)
     if has_q:
+        return "RUNTIME", target, served
+    # Dal fix 2026-07-29 adoff-i18n.js traduce verso QUALSIASI lingua diversa da
+    # quella sorgente, italiano incluso: una pagina che lo carica non e' un
+    # mismatch, e' una pagina tradotta a runtime.
+    if served != lang and loads_i18n(target):
         return "RUNTIME", target, served
     if served is None:
         return "OK", target, served
