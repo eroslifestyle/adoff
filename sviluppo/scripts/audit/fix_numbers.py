@@ -23,9 +23,11 @@ SITE = ROOT / "site"
 VERSION = json.loads((ROOT / "app" / "manifest.json").read_text())["version"]
 RULES = (ROOT / "app" / "rules" / "adblock-rules.json").read_text().count('"id"')
 
-# versioni 3.0.x - 3.5.38: tutte stantie. Si escludono le chiavi di changelog
-# storico, che sono dati corretti e non la versione corrente.
-VER_RE = re.compile(r"\bv?3\.(?:[0-4]\.\d+|5\.(?:[0-9]|[12]\d|3[0-8]))\b")
+# Qualunque 3.x.y diverso dalla versione corrente e' stantio. La prima stesura
+# aveva la soglia scritta a mano (fino a 3.5.38) e nel giro di poche ore era gia'
+# obsoleta: nel frattempo erano usciti nove rilasci. Ora il confronto e' dinamico
+# sul manifest, cosi' non serve ritoccare la regex a ogni release.
+VER_RE = re.compile(r"\bv?(3\.\d+\.\d+)\b")
 CHANGELOG_CTX = re.compile(r'"3\.\d+\.\d+"\s*:')
 
 TITLE_RE = re.compile(r"(<title[^>]*>)(.*?)(</title>)", re.S | re.I)
@@ -43,9 +45,11 @@ def fix_version(text):
     # non toccare le righe che sembrano chiavi di changelog storico
     out, last = [], 0
     for m in VER_RE.finditer(text):
+        if m.group(1) == VERSION:
+            continue                      # gia' aggiornata
         ctx = text[max(0, m.start() - 30): m.end() + 10]
         if CHANGELOG_CTX.search(ctx):
-            continue
+            continue                      # voce di changelog storico: dato corretto
         out.append(text[last:m.start()])
         out.append(rep(m))
         last = m.end()

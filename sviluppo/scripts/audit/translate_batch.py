@@ -59,7 +59,7 @@ TAG = re.compile(r"</?[a-zA-Z][^>]*>")
 INTERNAL = ("admin-console.html", "mgmt-9f4a/", "panel.html", "account.html",
             "account/", "success.html", "uninstall.html")
 
-BATCH = 22
+BATCH = 4
 
 
 def public_keys():
@@ -94,7 +94,18 @@ BRAND_KEY = re.compile(
 NEUTRAL_VALUE = re.compile(r"^[A-Za-z0-9 ./+\-&%:()~,'\"]+$")
 
 
+# chiavi dichiarate identiche-per-natura in site/i18n/_same_ok.json:
+# vanno rispettate, altrimenti ogni giro riprova a tradurre le stesse
+# stringhe (codici lingua, specifiche tecniche, "No", identificatori).
+try:
+    SAME_OK = set(json.loads((I18N / "_same_ok.json").read_text(encoding="utf-8")))
+except Exception:
+    SAME_OK = set()
+
+
 def not_translatable(k, v):
+    if k in SAME_OK:
+        return True
     if BRAND_KEY.search(k):
         return True
     if not re.search(r"[A-Za-zЀ-ӿ؀-ۿऀ-ॿ"
