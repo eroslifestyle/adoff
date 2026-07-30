@@ -161,6 +161,11 @@
       const compatOn = result.adoffYtCompat === true;
       try { localStorage.setItem("__adoff_vc", compatOn ? "1" : "0"); } catch (_) { /* storage negato */ }
       document.documentElement.setAttribute("data-adoff-vcompat", compatOn ? "1" : "0");
+      // Stesso canale sincrono per il verdetto Pro: il nonce qui sopra viene
+      // scritto dopo storage.get + verifica ECDSA, ma stealth.js deve decidere
+      // se ripulire la config ads PRIMA che la pagina la legga (pochi ms dopo
+      // document_start). Scritto solo sulle piattaforme video: e' li' che serve.
+      try { localStorage.setItem("__adoff_pro", isPro ? "1" : "0"); } catch (_) { /* storage negato */ }
     }
 
     enabled    = result.adoffEnabled !== false;

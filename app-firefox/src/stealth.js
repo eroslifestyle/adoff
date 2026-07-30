@@ -292,15 +292,32 @@
 
     // A1: Hook ytInitialPlayerResponse before YouTube's inline script sets it
     // Gating runtime: Free passthrough (no strip), Pro/Trial strip.
-    // L'hook si installa sempre a document_start per non perdere il primo set;
-    // la decisione strip vs passthrough avviene quando YouTube chiama il setter.
+    //
+    // CRITICO — la decisione NON va presa nel setter. YouTube assegna
+    // ytInitialPlayerResponse da uno script inline pochi ms dopo document_start,
+    // mentre il verdetto Pro arriva da content.js solo dopo storage.get +
+    // verifica ECDSA del token trial (entrambe asincrone). Decidendo nel set si
+    // perde quella corsa quasi sempre: gli adPlacements passano intatti e il
+    // player schedula tutti gli annunci. Lo strip e' quindi PIGRO, valutato al
+    // get: il player legge la config molto piu' tardi (playerBootstrap), quando
+    // il gate e' arrivato. isProSync legge in piu' il canale localStorage
+    // sincrono, che copre anche una lettura anticipata.
     let _ytResp = window.ytInitialPlayerResponse;
+    let _ytStripped = false;
+
+    function stripYtRespIfPro() {
+      if (_ytStripped || !_ytResp) return;
+      if (!isProSync() || isVideoCompatMode()) return;
+      stripAdObj(_ytResp);
+      _ytStripped = true;
+    }
+
     Object.defineProperty(window, "ytInitialPlayerResponse", {
-      get() { return _ytResp; },
-      set(v) { _ytResp = (isProEnabled() && !isVideoCompatMode()) ? stripAdObj(v) : v; },
+      get() { stripYtRespIfPro(); return _ytResp; },
+      set(v) { _ytResp = v; _ytStripped = false; stripYtRespIfPro(); },
       configurable: true,
     });
-    if (_ytResp && isProEnabled() && !isVideoCompatMode()) _ytResp = stripAdObj(_ytResp);
+    stripYtRespIfPro();
 
     // A2: Intercept fetch for player API (SPA navigation)
     //
@@ -330,7 +347,7 @@
 
       // Free: passthrough completo sulle player API. Solo Pro/Trial modifica
       // request body (isInlinePlaybackNoAd) e mangle response (adPlacements/...).
-      if (!isPlayerReq || !isProEnabled() || isVideoCompatMode()) {
+      if (!isPlayerReq || !isProSync() || isVideoCompatMode()) {
         return _origFetch.call(window, input, init);
       }
 
@@ -366,7 +383,7 @@
       };
       XMLHttpRequest.prototype.send = function (body) {
         // Free: passthrough. Pro/Trial inietta isInlinePlaybackNoAd.
-        if (isProEnabled() && !isVideoCompatMode() && this._adoffUrl &&
+        if (isProSync() && !isVideoCompatMode() && this._adoffUrl &&
             (this._adoffUrl.includes("/youtubei/v1/player") ||
              this._adoffUrl.includes("/youtubei/v1/next"))) {
           body = injectNoAd(body);
@@ -711,6 +728,17 @@
   function isProEnabled() {
     const val = document.documentElement.getAttribute("data-adoff-stealth") || "";
     return /^ao_[0-9a-f]{8}$/.test(val);
+  }
+
+  // Verdetto Pro leggibile in modo SINCRONO a document_start.
+  // Il nonce sopra arriva tardi (storage.get + verifica ECDSA sono asincrone),
+  // ma la config ads di una piattaforma video va decisa subito. content.js
+  // pubblica il verdetto in localStorage al load precedente — stesso canale e
+  // stesso limite (una ricarica) gia' adottati per __adoff_vc.
+  // Usata SOLO dal Layer A: IMA stub e stealth anti-adblock restano sul nonce.
+  function isProSync() {
+    if (isProEnabled()) return true;
+    try { return localStorage.getItem("__adoff_pro") === "1"; } catch (_) { return false; }
   }
 
   function injectImaStub() {
