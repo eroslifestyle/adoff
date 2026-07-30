@@ -25,7 +25,7 @@ try {
 // ----------------------------------------------------------------------
 // Estrazione del blocco reale: da AD_KEYS fino a prima di «A2: Intercept fetch»
 // ----------------------------------------------------------------------
-const MARK_START = '// Object-level deletion for ytInitialPlayerResponse';
+const MARK_START = '// Object-level deep deletion';
 const MARK_END = '// A2: Intercept fetch';
 const i = src.indexOf(MARK_START);
 const j = src.indexOf(MARK_END);
