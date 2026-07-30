@@ -397,82 +397,62 @@
     let recoveryTimer = null;     // restore-position watchdog
     let positionTracker = null;   // interval that updates savedContentTime
 
-    // Terminazione degli annunci che si impiantano: vedi commento in instantSkip.
-    const STUCK_AD_TICKS = 6;
-    const STUCK_AD_MIN_PROGRESS_SEC = 0.02;
-    const STUCK_AD_END_OFFSET_SEC = 0.15;
+    // Terminazione immediata dell'annuncio: vedi il commento dentro instantSkip.
+    const AD_END_OFFSET_SEC = 0.15;
+    const AD_END_MIN_READY_STATE = 1;   // bastano i metadati: serve solo duration
 
-    let stuckAdTicks = 0;
-    let stuckAdLastCt = -1;
-    let stuckAdForced = false;
+    let adEndForced = false;            // una sola terminazione per annuncio
 
     function instantSkip(player) {
       const video = player.querySelector("video");
       if (video) {
-        video.playbackRate = 16;
-        // Se il video è in pausa non può avanzare: forziamo il play.
-        // Un eventuale promise rifiutata (es. autoplay bloccato) viene ignorata.
+        // Un annuncio in pausa non finisce mai.
         if (video.paused) {
           try {
-            const playPromise = video.play();
-            if (playPromise !== undefined) {
-              playPromise.catch(() => {});
-            }
-          } catch (e) {}
+            const p = video.play();
+            if (p && typeof p.catch === "function") p.catch(() => {});
+          } catch (_) { /* ignore */ }
         }
-        // L'annuncio è impiantato quando i dati sono già disponibili (readyState >= 2)
-        // ma currentTime non avanza per più di STUCK_AD_TICKS chiamate consecutive.
-        // In quel caso impostiamo currentTime alla fine per sbloccare il player.
-        // La piattaforma ripristinerà la posizione del contenuto tramite il meccanismo
-        // di recupero della posizione già presente.
-        if (video.readyState >= 2 && isFinite(video.duration) && video.duration > 0) {
-          const ct = video.currentTime;
-          if (Math.abs(ct - stuckAdLastCt) <= STUCK_AD_MIN_PROGRESS_SEC) {
-            stuckAdTicks++;
-          } else {
-            stuckAdTicks = 0;
-          }
-          stuckAdLastCt = ct;
-          if (stuckAdTicks >= STUCK_AD_TICKS && !stuckAdForced) {
-            stuckAdForced = true;
-            try {
-              video.currentTime = Math.max(0, video.duration - STUCK_AD_END_OFFSET_SEC);
-              window.dispatchEvent(new CustomEvent('adoff-stuck-ad-ended', {
-                detail: { adDuration: video.duration, stuckAtCt: ct }
-              }));
-            } catch (e) {}
-          }
-        } else if (video.readyState < 2) {
-          // I dati non sono ancora pronti: è un'attesa normale, non un impianto.
-          stuckAdTicks = 0;
+        // Portare currentTime alla fine e' l'unico modo affidabile di terminare
+        // un annuncio: il pulsante di salto spesso non esiste (annunci non
+        // saltabili) e playbackRate viene rimesso a 1 dal player, quindi
+        // accelerare non basta. La posizione del contenuto viene poi
+        // ripristinata dal recupero gia' presente (savedContentTime + onAdEnd).
+        if (!adEndForced && video.readyState >= AD_END_MIN_READY_STATE &&
+            isFinite(video.duration) && video.duration > 0) {
+          const ctPrima = video.currentTime;
+          adEndForced = true;
+          try {
+            video.currentTime = Math.max(0, video.duration - AD_END_OFFSET_SEC);
+          } catch (_) { /* seek negato dal player */ }
+          window.dispatchEvent(new CustomEvent("adoff-ad-ended", {
+            detail: { adDuration: video.duration, ctPrima },
+          }));
         }
-    }
-    // Click skip button immediately (no humanized delay — MAIN world)
-    const skip = player.querySelector(
-      ".ytp-skip-ad-button, .ytp-ad-skip-button, " +
-      ".ytp-ad-skip-button-modern, .ytp-ad-skip-button-slot button, " +
-      "[id^='skip-button'], .videoAdUiSkipButton"
-    );
-    // skip && ... : con solo skip?.offsetParent, se il pulsante non esiste la
-    // condizione e' vera (undefined !== null) e skip.click() lancia TypeError
-    // ad ogni chiamata, impedendo la chiusura degli overlay piu' sotto.
-    if (skip && skip.offsetParent !== null) skip.click();
-    // Close overlay ads
-    for (const btn of player.querySelectorAll(
-      ".ytp-ad-overlay-close-button, .ytp-ad-overlay-close-container"
-    )) { if (btn.offsetParent !== null) btn.click(); }
+        // Rete di sicurezza se il seek viene bloccato o annullato dal player.
+        video.playbackRate = 16;
+      }
+      const skip = player.querySelector(
+        ".ytp-skip-ad-button, .ytp-ad-skip-button, " +
+        ".ytp-ad-skip-button-modern, .ytp-ad-skip-button-slot button, " +
+        "[id^='skip-button'], .videoAdUiSkipButton"
+      );
+      // skip && ... : con solo skip?.offsetParent, se il pulsante non esiste la
+      // condizione e' vera (undefined !== null) e skip.click() lancia TypeError.
+      if (skip && skip.offsetParent !== null) skip.click();
+      for (const btn of player.querySelectorAll(
+        ".ytp-ad-overlay-close-button, .ytp-ad-overlay-close-container"
+      )) { if (btn.offsetParent !== null) btn.click(); }
     }
 
-    function resetStuckAdState() {
-      stuckAdTicks = 0;
-      stuckAdLastCt = -1;
-      stuckAdForced = false;
+    function resetAdSkipState() {
+      adEndForced = false;
     }
 
     function onAdStart(player) {
       if (adActive) { instantSkip(player); return; }
       adActive = true;
-      resetStuckAdState();  // nuovo annuncio: riarma il rilevatore di impianto
+      resetAdSkipState();  // nuovo annuncio: riarma il rilevatore di impianto
 
       // Cancel any pending recovery from a previous ad
       if (recoveryTimer) { clearTimeout(recoveryTimer); recoveryTimer = null; }
@@ -501,7 +481,7 @@
     function onAdEnd(player) {
       if (!adActive) return;
       adActive = false;
-      resetStuckAdState();
+      resetAdSkipState();
       if (skipTimer) { clearInterval(skipTimer); skipTimer = null; }
 
       const video = player.querySelector("video");
