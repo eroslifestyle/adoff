@@ -396,142 +396,51 @@
     // Definiti come funzione per essere chiamati on-demand quando arriva il gate.
     function activateYoutubeRuntimeKiller() {
 
-    // ---- LAYER B: Instant Skip (fallback for ads that slip through) ----
+    // ---- LAYER B: Fast-forward (FadBlock approach) ----
     //
-    // CRITICAL: ad and content share the SAME <video> element on YouTube
-    // (MSE source switching). Setting currentTime=duration on the ad video
-    // corrupts the content's resume position — the player loses track of
-    // where the user was watching. Confirmed by users + April 2026 YouTube bug.
+    // MAI seekare (impostare currentTime) sul video di YouTube. Annuncio e
+    // contenuto condividono lo stesso elemento <video> (MSE source switching):
+    // un seek lasciava currentTime alla fine dell'annuncio, e il contenuto
+    // partiva da un punto a caso. Sei versioni di fix non hanno risolto il
+    // problema perche' la causa era il seek stesso, non la guardia.
     //
-    // Fix: only fast-forward via playbackRate (FadBlock approach), and
-    // save/restore the content position around every ad as safety net.
+    // Ora: solo playbackRate=16. L'annuncio finisce NATURALMENTE a 16x (~1s
+    // per un ad da 15s), YouTube gestisce la transizione e il contenuto parte
+    // da 0. Niente seek = niente posizione sbagliata = niente stall sul buffer.
 
     let adActive = false;
     let wasMuted = false;
     let playerObs = null;
     let skipTimer = null;
-    let savedContentTime = 0;     // last known content position (pre-ad)
-    let recoveryTimer = null;     // restore-position watchdog
-    let positionTracker = null;   // interval that updates savedContentTime
-
-    // Terminazione immediata dell'annuncio: vedi il commento dentro instantSkip.
-    const AD_END_OFFSET_SEC = 0.15;
-    const AD_END_MIN_READY_STATE = 1;   // bastano i metadati: serve solo duration
-    const AD_SEEK_SAFETY_SEC = 0.25;    // margine dal bordo del buffer
-    const AD_SEEK_MIN_GAIN_SEC = 0.1;   // sotto questo guadagno il seek non paga
-    const AD_DURATION_EPSILON_SEC = 0.5;  // oltre questo scarto la sorgente e' cambiata
-    const AD_MAX_PLAUSIBLE_SEC = 180;     // piu' lungo di cosi' non e' un annuncio
-    const AD_STABLE_TICKS = 2;            // tick con durata ferma prima di agire
-
-    let adEndForced = false;            // una sola terminazione per annuncio
-    let adDurationSeen = 0;             // durata del media attualmente montato
-    let adStableTicks = 0;              // tick consecutivi con la stessa durata
-
-    // Agisce sul media montato SOLO se e' davvero l'annuncio. Annuncio e
-    // contenuto condividono lo stesso elemento video (MSE source switching) e
-    // ad-showing non dice quale dei due stia suonando: compare PRIMA che la
-    // sorgente venga scambiata all'annuncio e resta addosso ancora per qualche
-    // decina di ms DOPO che e' tornata al contenuto. In entrambe le finestre un
-    // salto cade nel video vero.
-    function skipSeMediaAnnuncio(video) {
-      const dur = video.duration;
-      if (video.readyState < AD_END_MIN_READY_STATE || !isFinite(dur) || dur <= 0) return;
-
-      // Nessun annuncio dura piu' di qualche minuto: se il media montato e' piu'
-      // lungo, quello che sta suonando e' il contenuto e non si tocca. Misurato
-      // su un preroll: contenuto da 1080s spinto a 152,708s, cioe' esattamente
-      // il bordo del suo buffer meno il margine.
-      if (dur > AD_MAX_PLAUSIBLE_SEC) {
-        if (video.playbackRate !== 1) video.playbackRate = 1;
-        return;
-      }
-
-      // La durata deve restare ferma per qualche tick: mentre la sorgente viene
-      // scambiata cambia, e agire nel mezzo significa colpire il media
-      // sbagliato. A 50ms di polling l'attesa e' impercettibile.
-      if (Math.abs(dur - adDurationSeen) > AD_DURATION_EPSILON_SEC) {
-        adDurationSeen = dur;
-        adStableTicks = 1;
-        adEndForced = false;   // media nuovo: puo' essere il secondo spot
-        return;
-      }
-      if (adStableTicks < AD_STABLE_TICKS) { adStableTicks++; return; }
-
-      // Un annuncio in pausa non finisce mai.
-      if (video.paused) {
-        try {
-          const p = video.play();
-          if (p && typeof p.catch === "function") p.catch(() => {});
-        } catch (_) { /* ignore */ }
-      }
-
-      // Portare currentTime alla fine e' l'unico modo affidabile di terminare
-      // un annuncio: il pulsante di salto spesso non esiste (annunci non
-      // saltabili) e playbackRate viene rimesso a 1 dal player, quindi
-      // accelerare non basta. La posizione del contenuto viene poi
-      // ripristinata dal recupero gia' presente (savedContentTime + onAdEnd).
-      if (!adEndForced) {
-        const ctPrima = video.currentTime;
-        // Mai seekare oltre i dati gia' scaricati. Il player clampa un seek
-        // oltre il buffer e resta poi ad aspettare i segmenti mancanti, che per
-        // un annuncio possono tardare a lungo: al posto del salto si ottiene lo
-        // spinner. Misurato: annuncio da 10s interamente bufferizzato = saltato
-        // in 0,5s; annuncio da 40s con buffer corto = bloccato a 38s. Si insegue
-        // quindi il bordo del buffer, che il polling rilancia man mano che
-        // cresce mentre playbackRate=16 lo fa crescere in fretta.
-        const buf = video.buffered;
-        const bufEnd = buf && buf.length ? buf.end(buf.length - 1) : 0;
-        const fine = Math.max(0, dur - AD_END_OFFSET_SEC);
-        const target = bufEnd >= fine
-          ? fine
-          : Math.max(0, bufEnd - AD_SEEK_SAFETY_SEC);
-
-        if (target > ctPrima + AD_SEEK_MIN_GAIN_SEC) {
-          try { video.currentTime = target; } catch (_) { /* seek negato dal player */ }
-        }
-        // Terminato davvero solo quando il salto ha raggiunto la fine: finche'
-        // il buffer resta corto il rilevatore va lasciato armato, altrimenti
-        // l'annuncio non verrebbe piu' inseguito.
-        if (target >= fine) {
-          adEndForced = true;
-          window.dispatchEvent(new CustomEvent("adoff-ad-ended", {
-            detail: { adDuration: dur, ctPrima },
-          }));
-        }
-      }
-      // Rete di sicurezza se il seek viene bloccato o annullato dal player.
-      video.playbackRate = 16;
-    }
 
     function instantSkip(player) {
       const video = player.querySelector("video");
-      if (video) skipSeMediaAnnuncio(video);
+      if (video) {
+        // Un annuncio in pausa non finisce mai a 16x.
+        if (video.paused) {
+          try {
+            const p = video.play();
+            if (p && typeof p.catch === "function") p.catch(() => {});
+          } catch (_) { /* ignore */ }
+        }
+        video.playbackRate = 16;
+      }
+      // Click sul pulsante di salto se esiste (annunci saltabili).
       const skip = player.querySelector(
         ".ytp-skip-ad-button, .ytp-ad-skip-button, " +
         ".ytp-ad-skip-button-modern, .ytp-ad-skip-button-slot button, " +
         "[id^='skip-button'], .videoAdUiSkipButton"
       );
-      // skip && ... : con solo skip?.offsetParent, se il pulsante non esiste la
-      // condizione e' vera (undefined !== null) e skip.click() lancia TypeError.
       if (skip && skip.offsetParent !== null) skip.click();
+      // Chiudi gli overlay ad (banner sovrapposti).
       for (const btn of player.querySelectorAll(
         ".ytp-ad-overlay-close-button, .ytp-ad-overlay-close-container"
       )) { if (btn.offsetParent !== null) btn.click(); }
     }
 
-    function resetAdSkipState() {
-      adEndForced = false;
-      adDurationSeen = 0;
-      adStableTicks = 0;
-    }
-
     function onAdStart(player) {
       if (adActive) { instantSkip(player); return; }
       adActive = true;
-      resetAdSkipState();  // nuovo annuncio: riarma il rilevatore di impianto
-
-      // Cancel any pending recovery from a previous ad
-      if (recoveryTimer) { clearTimeout(recoveryTimer); recoveryTimer = null; }
 
       const video = player.querySelector("video");
       if (video) {
@@ -541,7 +450,8 @@
 
       instantSkip(player);
 
-      // Aggressive 50ms polling until ad clears
+      // Polling a 50ms: mantiene playbackRate=16 finche' YouTube non lo
+      // rimette a 1, e clicka lo skip appena compare.
       if (skipTimer) clearInterval(skipTimer);
       skipTimer = setInterval(function () {
         if (!player.classList.contains("ad-showing") &&
@@ -557,7 +467,6 @@
     function onAdEnd(player) {
       if (!adActive) return;
       adActive = false;
-      resetAdSkipState();
       if (skipTimer) { clearInterval(skipTimer); skipTimer = null; }
 
       const video = player.querySelector("video");
@@ -566,169 +475,9 @@
         video.playbackRate = 1;
         if (wasMuted) { video.muted = false; wasMuted = false; }
       }
-
-      // ---- POSITION RECOVERY ----
-      // After the ad, YouTube may resume from the wrong position.
-      const target = savedContentTime;
-      if (!video) return;
-
-      // Preroll (video mai visto): savedContentTime e' 0. Lo skip ha lasciato
-      // currentTime alla fine dell'annuncio (es. 14.85s per un ad da 15s). Se
-      // YouTube non resetta a 0 il contenuto parte da li' — punto a caso.
-      // Lo correggiamo forzando currentTime=0 appena il contenuto e' montato.
-      if (target <= 2) {
-        let preAttempts = 0;
-        function tryPrerollReset() {
-          preAttempts++;
-          if (player.classList.contains("ad-showing") ||
-              player.classList.contains("ad-interrupting")) {
-            recoveryTimer = null; return;
-          }
-          if (!isFinite(video.currentTime) || video.readyState < 1) {
-            if (preAttempts < 15) { recoveryTimer = setTimeout(tryPrerollReset, 100); }
-            else { recoveryTimer = null; }
-            return;
-          }
-          if (video.currentTime > 2) {
-            try { video.currentTime = 0; } catch (_) { /* ignore */ }
-          }
-          recoveryTimer = null;
-        }
-        recoveryTimer = setTimeout(tryPrerollReset, 200);
-        return;
-      }
-
-      // Midroll: il contenuto deve riprendere da dove l'utente era rimasto.
-      let attempts = 0;
-      const maxAttempts = 30; // ~3s total
-      let restored = false;
-
-      function tryRecover() {
-        attempts++;
-        // Abort if a new ad started
-        if (player.classList.contains("ad-showing") ||
-            player.classList.contains("ad-interrupting")) {
-          recoveryTimer = null;
-          return;
-        }
-        const ct = video.currentTime;
-        const dur = video.duration;
-        // Wait for content video to be loaded enough
-        if (!isFinite(ct) || !isFinite(dur) || dur <= 0) {
-          if (attempts < maxAttempts) {
-            recoveryTimer = setTimeout(tryRecover, 100);
-          } else {
-            recoveryTimer = null;
-          }
-          return;
-        }
-        // If content position is sane (within 5s of saved), accept it.
-        // Tolerance accounts for natural playback during recovery loop.
-        if (Math.abs(ct - target) <= 5) {
-          recoveryTimer = null;
-          return;
-        }
-        // Position is wrong — force-restore (only once)
-        if (!restored && target < dur - 1) {
-          restored = true;
-          try {
-            video.currentTime = target;
-          } catch (_) { /* ignore */ }
-          // Verify after a tick — YouTube may override us
-          recoveryTimer = setTimeout(tryRecover, 200);
-          return;
-        }
-        // Already restored, give up if YouTube keeps overriding
-        recoveryTimer = null;
-      }
-
-      recoveryTimer = setTimeout(tryRecover, 200);
+      // Nessun position recovery: l'annuncio e' finito NATURALMENTE a 16x,
+      // YouTube ha gestito la transizione. Non tocchiamo currentTime.
     }
-
-    // ---- POSITION TRACKER ----
-    // Continuously remember the content video's currentTime while NOT in
-    // an ad. When an ad starts, savedContentTime holds the user's last
-    // real position — used by onAdEnd for recovery.
-    if (positionTracker) clearInterval(positionTracker);
-    positionTracker = setInterval(function () {
-      if (adActive) return;
-      const p = document.getElementById("movie_player");
-      if (!p) return;
-      // Skip if YouTube hasn't classified the player yet
-      if (p.classList.contains("ad-showing") ||
-          p.classList.contains("ad-interrupting")) return;
-      const v = p.querySelector("video");
-      if (!v) return;
-      const ct = v.currentTime;
-      if (!isFinite(ct) || ct <= 1) return;
-      savedContentTime = ct;
-    }, 500);
-
-    // ---- LAYER D: Anti-stall watchdog ----
-
-    // Costanti watchdog Anti-stall
-    const STALL_CHECK_INTERVAL_MS = 500, STALL_THRESHOLD_TICKS = 3, STALL_MAX_RECOVERIES = 5,
-          STALL_MIN_PROGRESS_SEC = 0.05, STALL_BUFFER_AHEAD_SEC = 0.5, STALL_SEEK_NUDGE_SEC = 0.1,
-          STALL_HARD_SEEK_SEC = 0.5, STALL_HARD_AFTER_RECOVERIES = 3;
-
-    // Stato watchdog
-    let stallTicks = 0, stallLastCt = -1, stallRecoveries = 0, stallTimer = null;
-
-    // Interval principale
-    if (stallTimer) clearInterval(stallTimer);
-    stallTimer = setInterval(() => {
-        const player = document.getElementById('movie_player');
-        if (!player) return;
-        const video = player.querySelector('video');
-        if (!video) return;
-        // Annuncio attivo: Layer B gestisce già
-        if (player.classList.contains('ad-showing') || player.classList.contains('ad-interrupting')) {
-            stallTicks = 0;
-            stallLastCt = video.currentTime;
-            return;
-        }
-        // Pausa o video finito: non intervenire
-        if (video.paused || video.ended) {
-            stallTicks = 0;
-            stallLastCt = video.currentTime;
-            return;
-        }
-        // isFinite ESCLUDE le dirette (duration = Infinity): un seek su live rompe lo stream
-        if (!isFinite(video.duration) || video.duration <= 0) return;
-        if (video.readyState < 2) { stallTicks = 0; return; } // metadati non caricati
-        const ct = video.currentTime;
-        if (Math.abs(ct - stallLastCt) > STALL_MIN_PROGRESS_SEC) { // video avanza
-            stallTicks = 0;
-            stallLastCt = ct;
-            return;
-        }
-        stallTicks++;
-        stallLastCt = ct;
-        if (stallTicks < STALL_THRESHOLD_TICKS) return; // ancora sotto soglia
-        if (stallRecoveries >= STALL_MAX_RECOVERIES) return; // budget esaurito
-        // ---- Stallo confermato, recovery ----
-        stallRecoveries++;
-        stallTicks = 0;
-        const bufEnd = video.buffered.length ? video.buffered.end(video.buffered.length - 1) : 0;
-        const hasBufferAhead = (bufEnd - ct) > STALL_BUFFER_AHEAD_SEC;
-        try {
-            if (stallRecoveries >= STALL_HARD_AFTER_RECOVERIES && typeof player.seekTo === 'function') {
-                player.seekTo(ct + STALL_HARD_SEEK_SEC, true);
-            } else if (hasBufferAhead) {
-                video.currentTime = Math.min(ct + STALL_SEEK_NUDGE_SEC, bufEnd - 0.05);
-            } else if (typeof player.playVideo === 'function') {
-                player.playVideo();
-            } else {
-                video.play().catch(() => {});
-            }
-        } catch (e) {}
-        window.dispatchEvent(new CustomEvent('adoff-stall-recovered', { detail: { ct, hasBufferAhead, attempt: stallRecoveries } }));
-    }, STALL_CHECK_INTERVAL_MS);
-
-    // Reset su cambio video
-    document.addEventListener('yt-navigate-finish', () => {
-        stallRecoveries = 0; stallTicks = 0; stallLastCt = -1;
-    });
 
     // ---- LAYER C: Anti-detection (insurance) ----
 

@@ -1,446 +1,99 @@
 'use strict';
+// Anti-regressione per il Layer B minimale (solo playbackRate, nessun seek).
+// Analisi statica sul sorgente reale: verifica che non ci siano seek e che
+// playbackRate=16 sia presente. Il seek (currentTime=) era la causa di tutti
+// i bug di posizione della sessione 2026-07-30.
+
 const fs = require('fs');
 const path = require('path');
 
-// ----------------------------------------------------------------------
-// Lettura del file sorgente stealth.js
-// ----------------------------------------------------------------------
 const stealthPath = path.resolve(__dirname, '../../app/src/stealth.js');
-let src;
-try {
-    src = fs.readFileSync(stealthPath, 'utf8');
-} catch (e) {
-    console.error('Errore durante la lettura di stealth.js:', e.message);
+const src = fs.readFileSync(stealthPath, 'utf8');
+
+// Estrai solo la sezione YouTube (da LAYER B a fine activateYoutubeRuntimeKiller)
+const start = src.indexOf('// ---- LAYER B:');
+const end = src.indexOf('} // fine activateYoutubeRuntimeKiller');
+if (start === -1 || end === -1) {
+    console.error('Marcatori della sezione YouTube non trovati');
     process.exit(1);
 }
+const block = src.slice(start, end);
 
-// ----------------------------------------------------------------------
-// Estrazione del blocco di codice che contiene «instantSkip»
-// ----------------------------------------------------------------------
-const MARK_START = '// Terminazione immediata';
-const MARK_RESET = 'function resetAdSkipState';
-const i = src.indexOf(MARK_START);
-const j = src.indexOf(MARK_RESET);
+// Rimuovi le righe di commento per l'analisi statica
+const codeLines = block.split('\n').filter(l => !l.trim().startsWith('//'));
 
-if (i === -1 || j === -1) {
-    console.error('Marcatori non trovati nel file stealth.js');
-    process.exit(1);
-}
-
-// Trova la chiusura della funzione resetAdSkipState
-const searchFrom = j + MARK_RESET.length;
-const k = src.indexOf('\n    }', searchFrom);
-if (k === -1) {
-    console.error('Chiusura della funzione resetAdSkipState non trovata');
-    process.exit(1);
-}
-
-// Estrai il blocco (dal marcatore di inizio fino alla chiusura della funzione)
-const block = src.slice(i, k + 6);
-
-// Verifica minima che il blocco contenga effettivamente instantSkip
-if (!block.includes('instantSkip')) {
-    console.error('Il blocco estratto non contiene instantSkip');
-    process.exit(1);
-}
-
-// ----------------------------------------------------------------------
-// Helper per creare mock freschi ad ogni scenario
-// ----------------------------------------------------------------------
-function makeMocks(opts) {
-    const events = [];
-    const window = {
-        dispatchEvent: e => events.push(e)
-    };
-
-    class CustomEvent {
-        constructor(type, options) {
-            this.type = type;
-            this.detail = options && options.detail;
-        }
-    }
-
-    const playCalls = { n: 0 };
-
-    const video = {
-        currentTime: opts.ct,
-        duration: opts.duration,
-        readyState: opts.readyState,
-        paused: !!opts.paused,
-        playbackRate: 1,
-        // Il buffer copre per default l'intera durata — e' il caso dell'annuncio
-        // corto, gia' scaricato per intero. Gli scenari che simulano dati
-        // incompleti passano bufEnd esplicito e possono farlo crescere.
-        buffered: {
-            length: 1,
-            end() {
-                if (opts.bufEnd !== undefined) return opts.bufEnd;
-                return isFinite(opts.duration) ? opts.duration : 0;
-            }
-        },
-        play() {
-            playCalls.n++;
-            return Promise.resolve();
-        }
-    };
-
-    const skipButton = opts.conSkip ? {
-        offsetParent: {},
-        clicked: 0,
-        click() { this.clicked++; }
-    } : null;
-
-    const player = {
-        querySelector(sel) {
-            if (sel === 'video') return video;
-            // Qualunque altro selettore e' quello del pulsante di salto: nel
-            // codice reale e' una lista lunga (.ytp-skip-ad-button, ...), non
-            // una stringa breve, quindi non va confrontata per uguaglianza.
-            return skipButton;
-        },
-        querySelectorAll() { return []; }
-    };
-
-    return { window, CustomEvent, video, events, playCalls, skipButton, player, opts };
-}
-
-// ----------------------------------------------------------------------
-// Costruisce le funzioni istanziate con i mock
-// ----------------------------------------------------------------------
-function buildFunctions(window, CustomEvent, isFinite, Math) {
-    const code = block + '; return {instantSkip,resetAdSkipState};';
-    // new Function permette di eseguire il blocco come funzione
-    const fn = new Function('window', 'CustomEvent', 'isFinite', 'Math', code);
-    return fn(window, CustomEvent, isFinite, Math);
-}
-
-// ----------------------------------------------------------------------
-// Definizione dei 9 scenari di test
-// ----------------------------------------------------------------------
 const scenarios = [
     {
         id: 'T1',
-        desc: 'durata 15, readyState 4, video non in pausa',
-        opts: { ct: 0, duration: 15, readyState: 4, paused: false, conSkip: false },
-        calls: 3,
-        after: null,
-        check(m) {
-            if (m.events.length !== 1) return 'events.length atteso 1, ottenuto ' + m.events.length;
-            if (m.events[0].type !== 'adoff-ad-ended') return 'tipo evento atteso adoff-ad-ended, ottenuto ' + m.events[0].type;
-            if (!(Math.abs(m.video.currentTime - 14.85) < 0.01)) return 'currentTime atteso ~14.85, ottenuto ' + m.video.currentTime;
-            return null;
+        desc: 'playbackRate=16 presente (fast-forward durante annuncio)',
+        check() {
+            return codeLines.some(l => /playbackRate\s*=\s*16/.test(l))
+                ? null : 'playbackRate=16 non trovato nel codice attivo';
         }
     },
     {
         id: 'T2',
-        desc: '5 chiamate con durata NaN, readyState 0',
-        opts: { ct: 0, duration: NaN, readyState: 0, paused: false, conSkip: false },
-        calls: 5,
-        after: null,
-        check(m) {
-            if (m.events.length !== 0) return 'events.length atteso 0, ottenuto ' + m.events.length;
-            return null;
+        desc: 'playbackRate=1 al termine annuncio (onAdEnd reset)',
+        check() {
+            return codeLines.some(l => /playbackRate\s*=\s*1/.test(l))
+                ? null : 'playbackRate=1 (reset post-annuncio) non trovato';
         }
     },
     {
         id: 'T3',
-        desc: '5 chiamate reimpostando currentTime a 0 dopo ogni chiamata',
-        opts: { ct: 0, duration: 15, readyState: 4, paused: false, conSkip: false },
-        calls: 5,
-        after(m) { m.video.currentTime = 0; },
-        check(m) {
-            if (m.events.length !== 1) return 'events.length atteso 1, ottenuto ' + m.events.length;
-            return null;
+        desc: 'NESSUN seek: zero assegnazioni a currentTime nel codice attivo',
+        check() {
+            const seeks = codeLines.filter(l =>
+                /currentTime\s*=/.test(l) && !/===|!==|==|!=/.test(l)
+            );
+            return seeks.length
+                ? `trovate ${seeks.length} assegnazioni a currentTime: ${seeks.map(l => l.trim()).join('; ')}`
+                : null;
         }
     },
     {
         id: 'T4',
-        desc: 'Sequenza: instantSkip, resetAdSkipState, currentTime=0, instantSkip',
-        opts: { ct: 0, duration: 15, readyState: 4, paused: false, conSkip: false },
-        manualSequence: true,
-        check(m) {
-            if (m.events.length !== 2) return 'events.length atteso 2, ottenuto ' + m.events.length;
-            return null;
+        desc: 'pulsante skip clickato (selettore skip-ad presente)',
+        check() {
+            return codeLines.some(l => /skip.*\.click\(\)/.test(l))
+                ? null : 'click del pulsante skip non trovato';
         }
     },
     {
         id: 'T5',
-        desc: 'Video in pausa, deve invocare play',
-        opts: { ct: 0, duration: 15, readyState: 4, paused: true, conSkip: false },
-        calls: 3,
-        after: null,
-        check(m) {
-            if (m.playCalls.n !== 1) return 'playCalls.n atteso 1, ottenuto ' + m.playCalls.n;
-            return null;
+        desc: 'NESSUN position recovery (era la fonte dei bug)',
+        check() {
+            const recovery = codeLines.filter(l =>
+                /savedContentTime|tryRecover|tryPrerollReset|positionTracker/.test(l)
+            );
+            return recovery.length
+                ? `trovati ${recovery.length} riferimenti a position recovery: ${recovery.map(l => l.trim()).join('; ')}`
+                : null;
         }
     },
     {
         id: 'T6',
-        desc: '5 chiamate con durata Infinity, nessun evento',
-        opts: { ct: 100, duration: Infinity, readyState: 4, paused: false, conSkip: false },
-        calls: 5,
-        after: null,
-        check(m) {
-            if (m.events.length !== 0) return 'events.length atteso 0, ottenuto ' + m.events.length;
-            return null;
-        }
-    },
-    {
-        id: 'T7',
-        desc: 'conSkip false, 5 chiamate non devono lanciare eccezioni',
-        opts: { ct: 0, duration: 15, readyState: 4, paused: false, conSkip: false },
-        calls: 5,
-        after: null,
+        desc: 'NESSUN stall watchdog ( Layer D rimosso)',
         check() {
-            return null; // Il solo fatto di non lanciare eccezioni è verificato nel runner
+            const stall = codeLines.filter(l =>
+                /stallTimer|stallRecoveries|STALL_/.test(l)
+            );
+            return stall.length
+                ? `trovati ${stall.length} riferimenti allo stall watchdog`
+                : null;
         }
     },
-    {
-        id: 'T8',
-        desc: 'conSkip true, 3 chiamate devono invocare click 3 volte',
-        opts: { ct: 0, duration: 15, readyState: 4, paused: false, conSkip: true },
-        calls: 3,
-        after: null,
-        check(m) {
-            if (m.skipButton === null) return 'skipButton è null';
-            if (m.skipButton.clicked !== 3) return 'skipButton.clicked atteso 3, ottenuto ' + m.skipButton.clicked;
-            return null;
-        }
-    },
-    {
-        id: 'T9',
-        desc: 'deve impostare playbackRate a 16',
-        opts: { ct: 0, duration: 15, readyState: 4, paused: false, conSkip: false },
-        calls: 3,
-        after: null,
-        check(m) {
-            if (m.video.playbackRate !== 16) return 'playbackRate atteso 16, ottenuto ' + m.video.playbackRate;
-            return null;
-        }
-    },
-    {
-        // Il bug osservato: annuncio da 40s con buffer fermo a 12s. Seekando a
-        // 39.85 il player clampa al bordo del buffer e resta ad aspettare i
-        // segmenti mancanti — spinner al posto del salto.
-        id: 'T10',
-        desc: 'buffer corto: il salto non deve superare i dati scaricati',
-        opts: { ct: 0, duration: 40, readyState: 4, paused: false, conSkip: false, bufEnd: 12 },
-        calls: 3,
-        after: null,
-        check(m) {
-            if (m.video.currentTime > 12) {
-                return 'seek a ' + m.video.currentTime + ': oltre il buffer (12), il player si blocchera';
-            }
-            if (!(Math.abs(m.video.currentTime - 11.75) < 0.01)) {
-                return 'currentTime atteso ~11.75 (bordo buffer meno margine), ottenuto ' + m.video.currentTime;
-            }
-            if (m.events.length !== 0) {
-                return 'annuncio dato per terminato con il buffer a 12 su 40: non lo e';
-            }
-            return null;
-        }
-    },
-    {
-        // Il buffer cresce mentre l'annuncio scorre accelerato: il polling deve
-        // inseguirlo fino alla fine vera.
-        id: 'T11',
-        desc: 'buffer che cresce: il salto lo insegue fino a terminare l annuncio',
-        opts: { ct: 0, duration: 40, readyState: 4, paused: false, conSkip: false, bufEnd: 12 },
-        calls: 1,
-        after(m) { m.opts.bufEnd = 40; },
-        callsDopo: 3,
-        check(m) {
-            if (!(Math.abs(m.video.currentTime - 39.85) < 0.01)) {
-                return 'currentTime atteso ~39.85 dopo la crescita del buffer, ottenuto ' + m.video.currentTime;
-            }
-            if (m.events.length !== 1) {
-                return 'events.length atteso 1 a fine annuncio, ottenuto ' + m.events.length;
-            }
-            return null;
-        }
-    },
-    {
-        // La regressione: annuncio e contenuto condividono lo stesso elemento
-        // video. Se il player scambia la sorgente mentre ad-showing e' ancora
-        // addosso, un salto cade DENTRO al contenuto, in un punto arbitrario.
-        id: 'T12',
-        desc: 'sorgente passata al contenuto: il video vero non va toccato',
-        opts: { ct: 0, duration: 20, readyState: 4, paused: false, conSkip: false },
-        calls: 1,
-        after(m) {
-            // Lo switch: durata da contenuto lungo, posizione all'inizio.
-            m.opts.duration = 1600;
-            m.opts.bufEnd = 1600;
-            m.video.duration = 1600;
-            m.video.currentTime = 12;
-        },
-        callsDopo: 4,
-        check(m) {
-            if (m.video.currentTime !== 12) {
-                return 'il contenuto e stato spostato a ' + m.video.currentTime + ' invece di restare a 12';
-            }
-            if (m.video.playbackRate !== 1) {
-                return 'il contenuto resta accelerato a ' + m.video.playbackRate + 'x';
-            }
-            return null;
-        }
-    },
-    {
-        // Blocco con due spot: al secondo la durata cambia, ma resta da
-        // annuncio. Va inseguito anche quello, dopo la conferma.
-        id: 'T13',
-        desc: 'secondo spot dello stesso blocco: viene comunque saltato',
-        opts: { ct: 0, duration: 10, readyState: 4, paused: false, conSkip: false },
-        calls: 1,
-        after(m) {
-            m.opts.duration = 25;
-            m.opts.bufEnd = 25;
-            m.video.duration = 25;
-            m.video.currentTime = 0;
-        },
-        callsDopo: 3,
-        check(m) {
-            if (!(Math.abs(m.video.currentTime - 24.85) < 0.01)) {
-                return 'secondo spot non saltato: currentTime ' + m.video.currentTime + ', atteso ~24.85';
-            }
-            return null;
-        }
-    },
-    {
-        // Il caso misurato sul browser dell'utente. Preroll: il player marca
-        // ad-showing PRIMA di scambiare la sorgente, quindi al primo tick il
-        // media montato e' ancora il contenuto — 1080s di durata con 152,9s di
-        // buffer. Col codice precedente quella durata veniva presa per la
-        // durata dell'annuncio e il contenuto finiva a 152,708s (bufEnd meno il
-        // margine), esattamente il valore letto nel ping atr del contenuto.
-        id: 'T14',
-        desc: 'preroll: al primo tick c e ancora il contenuto, non va toccato',
-        opts: { ct: 0, duration: 1080.121, readyState: 4, paused: false, conSkip: false, bufEnd: 152.958 },
-        calls: 5,
-        after: null,
-        check(m) {
-            if (m.video.currentTime !== 0) {
-                return 'il contenuto e stato spinto a ' + m.video.currentTime +
-                       ' invece di restare a 0 (il bug misurato dava 152.708)';
-            }
-            if (m.video.playbackRate !== 1) {
-                return 'il contenuto e stato accelerato a ' + m.video.playbackRate + 'x';
-            }
-            if (m.events.length !== 0) {
-                return 'annuncio dato per terminato mentre suonava il contenuto';
-            }
-            return null;
-        }
-    },
-    {
-        // Seguito naturale di T14: scambiata la sorgente, l'annuncio vero
-        // (15,041s come nel log) deve essere terminato.
-        id: 'T15',
-        desc: 'preroll: scambiata la sorgente, l annuncio vero viene terminato',
-        opts: { ct: 0, duration: 1080.121, readyState: 4, paused: false, conSkip: false, bufEnd: 152.958 },
-        calls: 2,
-        after(m) {
-            m.opts.duration = 15.041;
-            m.opts.bufEnd = 15.041;
-            m.video.duration = 15.041;
-            m.video.currentTime = 0;
-        },
-        callsDopo: 4,
-        check(m) {
-            if (!(Math.abs(m.video.currentTime - 14.891) < 0.01)) {
-                return 'annuncio non terminato: currentTime ' + m.video.currentTime + ', atteso ~14.891';
-            }
-            if (m.events.length !== 1) {
-                return 'events.length atteso 1, ottenuto ' + m.events.length;
-            }
-            return null;
-        }
-    }
 ];
 
-// ----------------------------------------------------------------------
-// Esecuzione dei test
-// ----------------------------------------------------------------------
 const results = [];
-
-for (const scenario of scenarios) {
-    const mocks = makeMocks(scenario.opts);
-    let instantSkip, resetAdSkipState;
-
-    try {
-        const fns = buildFunctions(mocks.window, mocks.CustomEvent, isFinite, Math);
-        instantSkip = fns.instantSkip;
-        resetAdSkipState = fns.resetAdSkipState;
-    } catch (e) {
-        results.push('FAIL ' + scenario.id + ': ' + scenario.desc + ' | errore costruzione: ' + e.message);
-        continue;
-    }
-
-    // Reset dello stato ad inizio di ogni scenario
-    try {
-        resetAdSkipState();
-    } catch (e) {
-        results.push('FAIL ' + scenario.id + ': ' + scenario.desc + ' | errore resetAdSkipState: ' + e.message);
-        continue;
-    }
-
-    let exception = null;
-    try {
-        if (scenario.manualSequence) {
-            // Scenario T4: sequenza manuale
-            instantSkip(mocks.player);
-            instantSkip(mocks.player);
-            instantSkip(mocks.player);
-            resetAdSkipState();
-            mocks.video.currentTime = 0;
-            instantSkip(mocks.player);
-            instantSkip(mocks.player);
-            instantSkip(mocks.player);
-        } else {
-            for (let c = 0; c < scenario.calls; c++) {
-                instantSkip(mocks.player);
-                if (scenario.after) scenario.after(mocks);
-            }
-            // Chiamate ulteriori dopo la modifica applicata da «after»: servono
-            // agli scenari in cui il buffer cresce fra un tentativo e l'altro.
-            for (let c = 0; c < (scenario.callsDopo || 0); c++) {
-                instantSkip(mocks.player);
-            }
-        }
-    } catch (e) {
-        exception = e;
-    }
-
-    // T7 deve completare senza eccezioni
-    if (scenario.id === 'T7') {
-        if (exception) {
-            results.push('FAIL ' + scenario.id + ': ' + scenario.desc + ' | atteso nessuna eccezione, ottenuto: ' + exception.message);
-            continue;
-        }
-    } else {
-        if (exception) {
-            results.push('FAIL ' + scenario.id + ': ' + scenario.desc + ' | eccezione: ' + exception.message);
-            continue;
-        }
-    }
-
-    const err = scenario.check(mocks);
-    if (err) {
-        results.push('FAIL ' + scenario.id + ': ' + scenario.desc + ' | ' + err);
-    } else {
-        results.push('PASS ' + scenario.id + ': ' + scenario.desc);
-    }
+for (const s of scenarios) {
+    let err;
+    try { err = s.check(); }
+    catch (e) { err = 'eccezione: ' + e.message; }
+    results.push((err ? 'FAIL ' : 'PASS ') + s.id + ': ' + s.desc + (err ? ' | ' + err : ''));
 }
 
-// ----------------------------------------------------------------------
-// Output dei risultati e codice di uscita
-// ----------------------------------------------------------------------
-for (const line of results) {
-    console.log(line);
-}
-
+for (const line of results) console.log(line);
 const passed = results.filter(r => r.startsWith('PASS')).length;
 console.log('RISULTATO: ' + passed + '/' + scenarios.length + ' passati');
-if (passed < scenarios.length) {
-    process.exit(1);
-}
+if (passed < scenarios.length) process.exit(1);
