@@ -2,6 +2,15 @@
 
 > Consolidato 2026-07-19. I check sono cancellazioni, non aggiunte.
 
+## Sessione 2026-07-30 — annunci sempre attivi su piattaforma video (v3.5.45)
+
+- [x] **ROOT CAUSE: lo strip perdeva la corsa contro la pagina** (v3.5.45, `1a750b4`). L'hook A1 su `ytInitialPlayerResponse` decideva strip vs passthrough **dentro il setter**, che scatta pochi ms dopo `document_start`; il verdetto Pro arriva pero' da `content.js` solo dopo `storage.get` + `crypto.subtle.verify` (asincrone). Corsa persa quasi sempre → `adPlacements` intatti → il player schedula ogni annuncio. **Non e' una regressione: e' una race che il codice ha sempre corso**, da cui l'intermittenza storica e il fatto che Playwright non riproducesse. Fix: (a) strip **pigro** valutato al `get`, (b) canale **sincrono** `localStorage.__adoff_pro` scritto da content.js, stesso pattern di `__adoff_vc`. `isProSync` usata SOLO dal Layer A; stub IMA e anti-detection restano sul nonce.
+- [x] **Test anti-regressione** `test-yt-initial-response-race.js` 7/7, validato per mutazione (rimettendo il bug falliscono T1, T5, T6). T6 e' la guardia strutturale: il setter non deve consultare il gate.
+- [x] **Falso allarme diagnosticato**: l'interruttore "Compatibilita' piattaforme video" era rimasto **acceso** dopo il debug degli schermi neri. In quella modalita' Layer A e regole di rete YT sono disattivati e i ping annuncio **sbloccati**: gli annunci passano *by design*. La sua causa originale (regola 178) era gia' stata rimossa in 3.5.41.
+- [ ] **Validazione utente v3.5.45** — ricaricare l'estensione e verificare che gli annunci non partano piu'. Serve **una ricarica di pagina in piu'** al primo giro se `__adoff_pro` non e' ancora popolato.
+- [ ] **403 su `googlevideo.com/videoplayback` (itag=18) NON spiegato** — due richieste consecutive, la seconda senza `ctier`, entrambe `403 Forbidden` dal server. Verificato che `stealth.js` **non tocca** quegli URL (le righe 334/374 nello stack sono il wrapper fetch/XHR in passthrough). Sospetto VPN: URL con `ip=60.73.55.47` mentre la pagina e' `cr=IT`. Da indagare separatamente.
+- [ ] **Valutare se l'interruttore compatibilita' debba sopravvivere** — oggi il suo unico effetto pratico e' disarmare la protezione sulla piattaforma video; la causa per cui era nato non esiste piu'.
+
 ## Sessione 2026-07-29/30 — schermo nero YouTube + bug critico licenze (v3.5.39→3.5.44)
 
 Checkpoint completo: `.claude/checkpoints/CP_20260730_0225.md`
