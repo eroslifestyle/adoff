@@ -448,6 +448,20 @@
     "Invalid expiry",
   ]);
 
+  // Stesso algoritmo di license-client.js e content.js. Se le tre copie
+  // divergono, il gate Pro si chiude su licenze valide: e' un hash di
+  // integrita' calcolato su TUTTO l'oggetto licenza serializzato.
+  function computeIntegrity(licData) {
+    const raw = JSON.stringify(licData);
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < raw.length; i++) {
+      hash ^= raw.charCodeAt(i);
+      hash = Math.imul(hash, 0x01000193);
+    }
+    hash = ((hash >>> 0) ^ 0x5f3759df).toString(36);
+    return "ao_" + hash;
+  }
+
   async function revalidateLicense(reason) {
     return new Promise((resolve) => {
       chrome.storage.local.get(["adoffLicense", "adoffDeviceId"], async (result) => {
@@ -462,17 +476,25 @@
           const data = await resp.json();
           if (data.valid) {
             // Aggiorna cache (devices/maxDevices possono essere cambiati)
+            const updated = {
+              ...lic,
+              valid: true,
+              plan: data.plan || lic.plan,
+              expires: data.expires ?? lic.expires,
+              expiresHuman: data.expiresHuman || lic.expiresHuman,
+              devices: data.devices ?? lic.devices,
+              maxDevices: data.maxDevices ?? lic.maxDevices,
+              email: data.email ?? lic.email ?? null,
+              lastValidated: Date.now(),
+            };
+            // CRITICO: l'hash va ricalcolato sullo STESSO oggetto che salviamo.
+            // Senza questo content.js confronta l'hash vecchio con l'oggetto
+            // nuovo — lastValidated cambia a ogni giro — conclude che la licenza
+            // e' manomessa e declassa un cliente pagante a Free. Accadeva a
+            // ogni avvio del browser (revalidateLicense("startup")).
             chrome.storage.local.set({
-              adoffLicense: {
-                ...lic,
-                valid: true,
-                plan: data.plan || lic.plan,
-                expires: data.expires ?? lic.expires,
-                expiresHuman: data.expiresHuman || lic.expiresHuman,
-                devices: data.devices ?? lic.devices,
-                maxDevices: data.maxDevices ?? lic.maxDevices,
-                lastValidated: Date.now(),
-              },
+              adoffLicense: updated,
+              adoffIntegrity: computeIntegrity(updated),
             });
             resolve({ valid: true });
             return;
