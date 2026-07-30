@@ -81,7 +81,7 @@
           '<ul class="footer__links">',
             '<li><a href="/pricing.html' + fq + '" data-i18n="footer.pricing">Prezzi</a></li>',
             '<li><a href="/premium' + fq + '" data-i18n="footer.premium">Premium VPN</a></li>',
-            '<li><a href="/install' + fq + '" data-i18n="footer.install">Installa</a></li>',
+            '<li><a href="' + itRoot('install.html') + '" data-i18n="footer.install">Installa</a></li>',
             '<li><a href="' + enRoot('how-it-works') + '" data-i18n="footer.howit">Come funziona</a></li>',
             '<li><a href="' + itRoot('guide') + '" data-i18n="footer.guide">Guida utente</a></li>',
             '<li><a href="' + enRoot('best-ad-blocker-2026') + '" data-i18n="footer.best">Migliori Ad Blocker 2026</a></li>',
@@ -106,7 +106,7 @@
             '<li><a href="/vs/" data-i18n="footer.vs.all">Tutti i confronti</a></li>',
             '<li><a href="' + (fLang === 'it' || !fLang ? '/chi-sono.html' : '/about.html' + fq) + '" data-i18n="footer.about">Chi sono</a></li>',
             '<li><a href="' + (fLang === 'it' ? '/it/about-data/' : '/about-data/') + '" data-i18n="footer.aboutdata">Live data</a></li>',
-            '<li><a href="/support' + fq + '" data-i18n="footer.support">Supporto</a></li>',
+            '<li><a href="' + itRoot('support.html') + '" data-i18n="footer.support">Supporto</a></li>',
             '<li><a href="' + enRoot('press') + '" data-i18n="footer.press">Press Kit</a></li>',
           '</ul>',
         '</div>',
@@ -153,7 +153,7 @@
   if (!window.__adoffChatLoaded) {
     var loadChat = function (attempt) {
       var cs = document.createElement('script');
-      cs.src = '/adoff-chat.js?v=260729';
+      cs.src = '/adoff-chat.js?v=260730';
       cs.async = true;
       cs.onerror = function () {
         cs.remove();

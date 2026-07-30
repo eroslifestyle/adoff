@@ -248,20 +248,20 @@
 
   // Build language-aware links
   var lq = (activeLang && activeLang !== 'it') ? '?lang=' + activeLang : '';
-  // premium & vpn-policy: EN-root canonicals, no /{lang}/ prefix ever
+  // homepage statica: /{lang}/ per ogni lingua, / per IT
+  var homeLink = (activeLang === 'it' || !activeLang) ? '/' : '/' + activeLang + '/';
+  // premium & vpn-policy: EN-root canonicals, nessuna versione /{lang}/ esiste
   var premiumLink = '/premium';
   var vpnPolicyLink = '/vpn-policy';
-  // pricing/install/support: dynamic pages, use ?lang=
+  // pricing: solo root, traduzione runtime
   var pricingLink = '/pricing.html' + lq;
-  var installLink = '/install.html' + lq;
-  var supportLink = '/support.html' + lq;
-  // community: EN-root, IT stays at /it/community, others at /{lang}/community
-  // community e' canonica inglese nella root; ogni altra lingua ha la sua pagina
-  // statica sotto /{lang}/ — italiano incluso (site/it/community.html esiste).
-  function enRoot(page) { return (activeLang === 'en') ? '/' + page : '/' + activeLang + '/' + page; }
-  var communityLink = enRoot('community');
-  // guide & privacy: IT-root, use itRoot convention
+  // install, support, guide, community, privacy: pagine statiche complete
+  // esistono in /{lang}/ per tutte le 14 lingue + IT in root
   function itRoot(page) { return (activeLang === 'it') ? '/' + page : '/' + activeLang + '/' + page; }
+  function enRoot(page) { return (activeLang === 'en') ? '/' + page : '/' + activeLang + '/' + page; }
+  var installLink = itRoot('install.html');
+  var supportLink = itRoot('support.html');
+  var communityLink = enRoot('community');
   var guideLink = itRoot('guide.html');
   var privacyLink = itRoot('privacy.html');
 
@@ -270,12 +270,12 @@
 
   root.innerHTML = [
     '<div class="sn-inner">',
-      '<a href="/' + lq + '" class="sn-logo" aria-label="AdOff">',
+      '<a href="' + homeLink + '" class="sn-logo" aria-label="AdOff">',
         'Ads? <span>Off</span><span class="sn-dot">!</span>',
       '</a>',
       '<ul class="sn-links">',
-        '<li><a href="/' + lq + '" data-i18n="nav.home">Home</a></li>',
-        '<li><a href="/' + lq + '#features" data-i18n="nav.features">Features</a></li>',
+        '<li><a href="' + homeLink + '" data-i18n="nav.home">Home</a></li>',
+        '<li><a href="' + homeLink + '#features" data-i18n="nav.features">Features</a></li>',
         '<li><a href="' + pricingLink + '" data-i18n="nav.pricing">Pricing</a></li>',
         '<li><div class="sn-premium-wrap" id="snPremiumWrap">',
           '<button class="sn-premium-btn" id="snPremiumBtn" data-i18n="nav.premium">Premium <span class="sn-premium-arrow">&#9660;</span></button>',
@@ -304,7 +304,7 @@
           '</button>',
           '<div class="sn-lang-dd" id="snLangDd">' + ddItems + '</div>',
         '</div></li>',
-        '<li><a href="/' + lq + '#pricing" class="sn-cta" data-i18n="nav.cta">Install Free</a></li>',
+        '<li><a href="' + homeLink + '#pricing" class="sn-cta" data-i18n="nav.cta">Install Free</a></li>',
       '</ul>',
       '<div class="sn-right">',
         '<button class="sn-burger" aria-label="Menu">',
@@ -313,8 +313,8 @@
       '</div>',
     '</div>',
     '<div class="sn-mobile">',
-      '<a href="/' + lq + '" data-i18n="nav.home">Home</a>',
-      '<a href="/' + lq + '#features" data-i18n="nav.features">Features</a>',
+      '<a href="' + homeLink + '" data-i18n="nav.home">Home</a>',
+      '<a href="' + homeLink + '#features" data-i18n="nav.features">Features</a>',
       '<a href="' + pricingLink + '" data-i18n="nav.pricing">Pricing</a>',
       '<a href="' + premiumLink + '" data-i18n="nav.premiumVpn">Premium VPN</a>',
       '<a href="' + vpnPolicyLink + '" data-i18n="nav.vpnPolicy">VPN Policy</a>',
@@ -327,7 +327,7 @@
         githubSvg,
         ' GitHub',
       '</a>',
-      '<a href="/' + lq + '#pricing" class="sn-cta" data-i18n="nav.cta">Install Free</a>',
+      '<a href="' + homeLink + '#pricing" class="sn-cta" data-i18n="nav.cta">Install Free</a>',
       '<div class="sn-mobile-theme">',
         '<button class="theme-toggle" id="snThemeToggleMobile" type="button" aria-label="Toggle theme">',
           '<span class="ico-sun">☀️</span><span class="ico-moon">🌙</span>',
