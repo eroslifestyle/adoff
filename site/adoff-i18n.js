@@ -117,6 +117,12 @@
 
   function applyTranslations(dict, lang) {
     applyTo(document.body, dict, lang);
+    // <title> sta in <head>, non in <body>: va processato esplicitamente
+    var titleEl = document.querySelector('title[data-i18n]');
+    if (titleEl) {
+      var tk = titleEl.getAttribute('data-i18n');
+      if (dict[tk] !== undefined) document.title = dict[tk];
+    }
   }
 
   // ─── Public API for nav/footer ─────────────────────────────────────────────
