@@ -120,9 +120,9 @@ function buildFunctions(window, CustomEvent, isFinite, Math) {
 const scenarios = [
     {
         id: 'T1',
-        desc: '1 chiamata con durata 15, readyState 4, video non in pausa',
+        desc: 'durata 15, readyState 4, video non in pausa',
         opts: { ct: 0, duration: 15, readyState: 4, paused: false, conSkip: false },
-        calls: 1,
+        calls: 3,
         after: null,
         check(m) {
             if (m.events.length !== 1) return 'events.length atteso 1, ottenuto ' + m.events.length;
@@ -165,9 +165,9 @@ const scenarios = [
     },
     {
         id: 'T5',
-        desc: 'Video in pausa, 1 chiamata deve invocare play',
+        desc: 'Video in pausa, deve invocare play',
         opts: { ct: 0, duration: 15, readyState: 4, paused: true, conSkip: false },
-        calls: 1,
+        calls: 3,
         after: null,
         check(m) {
             if (m.playCalls.n !== 1) return 'playCalls.n atteso 1, ottenuto ' + m.playCalls.n;
@@ -209,9 +209,9 @@ const scenarios = [
     },
     {
         id: 'T9',
-        desc: '1 chiamata deve impostare playbackRate a 16',
+        desc: 'deve impostare playbackRate a 16',
         opts: { ct: 0, duration: 15, readyState: 4, paused: false, conSkip: false },
-        calls: 1,
+        calls: 3,
         after: null,
         check(m) {
             if (m.video.playbackRate !== 16) return 'playbackRate atteso 16, ottenuto ' + m.video.playbackRate;
@@ -248,7 +248,7 @@ const scenarios = [
         opts: { ct: 0, duration: 40, readyState: 4, paused: false, conSkip: false, bufEnd: 12 },
         calls: 1,
         after(m) { m.opts.bufEnd = 40; },
-        callsDopo: 1,
+        callsDopo: 3,
         check(m) {
             if (!(Math.abs(m.video.currentTime - 39.85) < 0.01)) {
                 return 'currentTime atteso ~39.85 dopo la crescita del buffer, ottenuto ' + m.video.currentTime;
@@ -305,6 +305,56 @@ const scenarios = [
             }
             return null;
         }
+    },
+    {
+        // Il caso misurato sul browser dell'utente. Preroll: il player marca
+        // ad-showing PRIMA di scambiare la sorgente, quindi al primo tick il
+        // media montato e' ancora il contenuto — 1080s di durata con 152,9s di
+        // buffer. Col codice precedente quella durata veniva presa per la
+        // durata dell'annuncio e il contenuto finiva a 152,708s (bufEnd meno il
+        // margine), esattamente il valore letto nel ping atr del contenuto.
+        id: 'T14',
+        desc: 'preroll: al primo tick c e ancora il contenuto, non va toccato',
+        opts: { ct: 0, duration: 1080.121, readyState: 4, paused: false, conSkip: false, bufEnd: 152.958 },
+        calls: 5,
+        after: null,
+        check(m) {
+            if (m.video.currentTime !== 0) {
+                return 'il contenuto e stato spinto a ' + m.video.currentTime +
+                       ' invece di restare a 0 (il bug misurato dava 152.708)';
+            }
+            if (m.video.playbackRate !== 1) {
+                return 'il contenuto e stato accelerato a ' + m.video.playbackRate + 'x';
+            }
+            if (m.events.length !== 0) {
+                return 'annuncio dato per terminato mentre suonava il contenuto';
+            }
+            return null;
+        }
+    },
+    {
+        // Seguito naturale di T14: scambiata la sorgente, l'annuncio vero
+        // (15,041s come nel log) deve essere terminato.
+        id: 'T15',
+        desc: 'preroll: scambiata la sorgente, l annuncio vero viene terminato',
+        opts: { ct: 0, duration: 1080.121, readyState: 4, paused: false, conSkip: false, bufEnd: 152.958 },
+        calls: 2,
+        after(m) {
+            m.opts.duration = 15.041;
+            m.opts.bufEnd = 15.041;
+            m.video.duration = 15.041;
+            m.video.currentTime = 0;
+        },
+        callsDopo: 4,
+        check(m) {
+            if (!(Math.abs(m.video.currentTime - 14.891) < 0.01)) {
+                return 'annuncio non terminato: currentTime ' + m.video.currentTime + ', atteso ~14.891';
+            }
+            if (m.events.length !== 1) {
+                return 'events.length atteso 1, ottenuto ' + m.events.length;
+            }
+            return null;
+        }
     }
 ];
 
@@ -339,8 +389,12 @@ for (const scenario of scenarios) {
         if (scenario.manualSequence) {
             // Scenario T4: sequenza manuale
             instantSkip(mocks.player);
+            instantSkip(mocks.player);
+            instantSkip(mocks.player);
             resetAdSkipState();
             mocks.video.currentTime = 0;
+            instantSkip(mocks.player);
+            instantSkip(mocks.player);
             instantSkip(mocks.player);
         } else {
             for (let c = 0; c < scenario.calls; c++) {

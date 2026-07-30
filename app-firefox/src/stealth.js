@@ -421,105 +421,91 @@
     const AD_SEEK_MIN_GAIN_SEC = 0.1;   // sotto questo guadagno il seek non paga
     const AD_DURATION_EPSILON_SEC = 0.5;  // oltre questo scarto la sorgente e' cambiata
     const AD_MAX_PLAUSIBLE_SEC = 180;     // piu' lungo di cosi' non e' un annuncio
-    const AD_SWITCH_CONFIRM_TICKS = 2;    // tick di conferma prima di riarmare
+    const AD_STABLE_TICKS = 2;            // tick con durata ferma prima di agire
 
     let adEndForced = false;            // una sola terminazione per annuncio
-    let adDurationSeen = 0;             // durata della sorgente annuncio corrente
-    let adSwitchTicks = 0;              // tick consecutivi con una durata nuova
-    let adSourceLost = false;           // sorgente ormai passata al contenuto
+    let adDurationSeen = 0;             // durata del media attualmente montato
+    let adStableTicks = 0;              // tick consecutivi con la stessa durata
+
+    // Agisce sul media montato SOLO se e' davvero l'annuncio. Annuncio e
+    // contenuto condividono lo stesso elemento video (MSE source switching) e
+    // ad-showing non dice quale dei due stia suonando: compare PRIMA che la
+    // sorgente venga scambiata all'annuncio e resta addosso ancora per qualche
+    // decina di ms DOPO che e' tornata al contenuto. In entrambe le finestre un
+    // salto cade nel video vero.
+    function skipSeMediaAnnuncio(video) {
+      const dur = video.duration;
+      if (video.readyState < AD_END_MIN_READY_STATE || !isFinite(dur) || dur <= 0) return;
+
+      // Nessun annuncio dura piu' di qualche minuto: se il media montato e' piu'
+      // lungo, quello che sta suonando e' il contenuto e non si tocca. Misurato
+      // su un preroll: contenuto da 1080s spinto a 152,708s, cioe' esattamente
+      // il bordo del suo buffer meno il margine.
+      if (dur > AD_MAX_PLAUSIBLE_SEC) {
+        if (video.playbackRate !== 1) video.playbackRate = 1;
+        return;
+      }
+
+      // La durata deve restare ferma per qualche tick: mentre la sorgente viene
+      // scambiata cambia, e agire nel mezzo significa colpire il media
+      // sbagliato. A 50ms di polling l'attesa e' impercettibile.
+      if (Math.abs(dur - adDurationSeen) > AD_DURATION_EPSILON_SEC) {
+        adDurationSeen = dur;
+        adStableTicks = 1;
+        adEndForced = false;   // media nuovo: puo' essere il secondo spot
+        return;
+      }
+      if (adStableTicks < AD_STABLE_TICKS) { adStableTicks++; return; }
+
+      // Un annuncio in pausa non finisce mai.
+      if (video.paused) {
+        try {
+          const p = video.play();
+          if (p && typeof p.catch === "function") p.catch(() => {});
+        } catch (_) { /* ignore */ }
+      }
+
+      // Portare currentTime alla fine e' l'unico modo affidabile di terminare
+      // un annuncio: il pulsante di salto spesso non esiste (annunci non
+      // saltabili) e playbackRate viene rimesso a 1 dal player, quindi
+      // accelerare non basta. La posizione del contenuto viene poi
+      // ripristinata dal recupero gia' presente (savedContentTime + onAdEnd).
+      if (!adEndForced) {
+        const ctPrima = video.currentTime;
+        // Mai seekare oltre i dati gia' scaricati. Il player clampa un seek
+        // oltre il buffer e resta poi ad aspettare i segmenti mancanti, che per
+        // un annuncio possono tardare a lungo: al posto del salto si ottiene lo
+        // spinner. Misurato: annuncio da 10s interamente bufferizzato = saltato
+        // in 0,5s; annuncio da 40s con buffer corto = bloccato a 38s. Si insegue
+        // quindi il bordo del buffer, che il polling rilancia man mano che
+        // cresce mentre playbackRate=16 lo fa crescere in fretta.
+        const buf = video.buffered;
+        const bufEnd = buf && buf.length ? buf.end(buf.length - 1) : 0;
+        const fine = Math.max(0, dur - AD_END_OFFSET_SEC);
+        const target = bufEnd >= fine
+          ? fine
+          : Math.max(0, bufEnd - AD_SEEK_SAFETY_SEC);
+
+        if (target > ctPrima + AD_SEEK_MIN_GAIN_SEC) {
+          try { video.currentTime = target; } catch (_) { /* seek negato dal player */ }
+        }
+        // Terminato davvero solo quando il salto ha raggiunto la fine: finche'
+        // il buffer resta corto il rilevatore va lasciato armato, altrimenti
+        // l'annuncio non verrebbe piu' inseguito.
+        if (target >= fine) {
+          adEndForced = true;
+          window.dispatchEvent(new CustomEvent("adoff-ad-ended", {
+            detail: { adDuration: dur, ctPrima },
+          }));
+        }
+      }
+      // Rete di sicurezza se il seek viene bloccato o annullato dal player.
+      video.playbackRate = 16;
+    }
 
     function instantSkip(player) {
       const video = player.querySelector("video");
-      if (video) {
-        // Annuncio e contenuto condividono lo STESSO elemento video (MSE source
-        // switching): allo scambio di sorgente il player tiene addosso
-        // ad-showing ancora per qualche decina di ms. Toccare il video in quella
-        // finestra significa saltare dentro al contenuto, in un punto
-        // arbitrario. La durata e' il segnale che separa le due sorgenti.
-        // Una volta riconosciuto il contenuto non si tocca piu' nulla fino al
-        // prossimo annuncio: senza questa memoria i tick seguenti tornerebbero
-        // ad accelerarlo.
-        if (adSourceLost) {
-          if (video.playbackRate !== 1) video.playbackRate = 1;
-          return;
-        }
-
-        const dur = video.duration;
-        if (isFinite(dur) && dur > 0 && adDurationSeen > 0 &&
-            Math.abs(dur - adDurationSeen) > AD_DURATION_EPSILON_SEC) {
-          if (dur > AD_MAX_PLAUSIBLE_SEC) {
-            // Troppo lunga per essere un annuncio: siamo gia' nel contenuto.
-            adSourceLost = true;
-            adEndForced = true;
-            adDurationSeen = 0;
-            adSwitchTicks = 0;
-            if (video.playbackRate !== 1) video.playbackRate = 1;
-            return;
-          }
-          // Durata da annuncio: probabile secondo spot dello stesso blocco. Si
-          // attende comunque una conferma, perche' un contenuto breve entrerebbe
-          // in questo ramo e ad-showing potrebbe essere sul punto di sparire.
-          if (++adSwitchTicks < AD_SWITCH_CONFIRM_TICKS) return;
-          adDurationSeen = dur;
-          adEndForced = false;
-          adSwitchTicks = 0;
-        } else {
-          adSwitchTicks = 0;
-        }
-
-        // Un annuncio in pausa non finisce mai.
-        if (video.paused) {
-          try {
-            const p = video.play();
-            if (p && typeof p.catch === "function") p.catch(() => {});
-          } catch (_) { /* ignore */ }
-        }
-        // Portare currentTime alla fine e' l'unico modo affidabile di terminare
-        // un annuncio: il pulsante di salto spesso non esiste (annunci non
-        // saltabili) e playbackRate viene rimesso a 1 dal player, quindi
-        // accelerare non basta. La posizione del contenuto viene poi
-        // ripristinata dal recupero gia' presente (savedContentTime + onAdEnd).
-        if (!adEndForced && video.readyState >= AD_END_MIN_READY_STATE &&
-            isFinite(video.duration) && video.duration > 0) {
-          const ctPrima = video.currentTime;
-          // Prima durata osservata per questo annuncio: e' il riferimento con
-          // cui, nei tick successivi, si riconosce lo scambio di sorgente.
-          if (!adDurationSeen) adDurationSeen = video.duration;
-          // Mai seekare oltre i dati gia' scaricati. Il player clampa un seek
-          // oltre il buffer e resta poi ad aspettare i segmenti mancanti, che
-          // per un annuncio possono tardare a lungo: al posto del salto si
-          // ottiene lo spinner. Misurato: annuncio da 10s interamente
-          // bufferizzato = saltato in 0,5s; annuncio da 40s con buffer corto =
-          // bloccato a 38s. Si insegue quindi il bordo del buffer, che il
-          // polling a 50ms rilancia man mano che cresce mentre playbackRate=16
-          // lo fa crescere in fretta: un annuncio lungo si esaurisce in pochi
-          // secondi, senza mai fermarsi.
-          const buf = video.buffered;
-          const bufEnd = buf && buf.length ? buf.end(buf.length - 1) : 0;
-          const fine = Math.max(0, video.duration - AD_END_OFFSET_SEC);
-          // Buffer che arriva in fondo: si salta direttamente alla fine, e'
-          // l'annuncio corto gia' scaricato per intero. Buffer piu' corto: ci si
-          // ferma poco prima del suo bordo, mai oltre.
-          const target = bufEnd >= fine
-            ? fine
-            : Math.max(0, bufEnd - AD_SEEK_SAFETY_SEC);
-
-          if (target > ctPrima + AD_SEEK_MIN_GAIN_SEC) {
-            try { video.currentTime = target; } catch (_) { /* seek negato dal player */ }
-          }
-          // Terminato davvero solo quando il salto ha raggiunto la fine: finche'
-          // il buffer resta corto il rilevatore va lasciato armato, altrimenti
-          // l'annuncio non verrebbe piu' inseguito.
-          if (target >= fine) {
-            adEndForced = true;
-            window.dispatchEvent(new CustomEvent("adoff-ad-ended", {
-              detail: { adDuration: video.duration, ctPrima },
-            }));
-          }
-        }
-        // Rete di sicurezza se il seek viene bloccato o annullato dal player.
-        video.playbackRate = 16;
-      }
+      if (video) skipSeMediaAnnuncio(video);
       const skip = player.querySelector(
         ".ytp-skip-ad-button, .ytp-ad-skip-button, " +
         ".ytp-ad-skip-button-modern, .ytp-ad-skip-button-slot button, " +
@@ -536,8 +522,7 @@
     function resetAdSkipState() {
       adEndForced = false;
       adDurationSeen = 0;
-      adSwitchTicks = 0;
-      adSourceLost = false;
+      adStableTicks = 0;
     }
 
     function onAdStart(player) {
