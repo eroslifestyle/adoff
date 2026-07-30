@@ -568,12 +568,37 @@
       }
 
       // ---- POSITION RECOVERY ----
-      // After the ad, YouTube may resume from the wrong position
-      // (known YouTube bug + side-effect of ad source-swap). If the
-      // content video lands far from where the user was, we force-restore.
+      // After the ad, YouTube may resume from the wrong position.
       const target = savedContentTime;
-      if (!video || target <= 2) return;
+      if (!video) return;
 
+      // Preroll (video mai visto): savedContentTime e' 0. Lo skip ha lasciato
+      // currentTime alla fine dell'annuncio (es. 14.85s per un ad da 15s). Se
+      // YouTube non resetta a 0 il contenuto parte da li' — punto a caso.
+      // Lo correggiamo forzando currentTime=0 appena il contenuto e' montato.
+      if (target <= 2) {
+        let preAttempts = 0;
+        function tryPrerollReset() {
+          preAttempts++;
+          if (player.classList.contains("ad-showing") ||
+              player.classList.contains("ad-interrupting")) {
+            recoveryTimer = null; return;
+          }
+          if (!isFinite(video.currentTime) || video.readyState < 1) {
+            if (preAttempts < 15) { recoveryTimer = setTimeout(tryPrerollReset, 100); }
+            else { recoveryTimer = null; }
+            return;
+          }
+          if (video.currentTime > 2) {
+            try { video.currentTime = 0; } catch (_) { /* ignore */ }
+          }
+          recoveryTimer = null;
+        }
+        recoveryTimer = setTimeout(tryPrerollReset, 200);
+        return;
+      }
+
+      // Midroll: il contenuto deve riprendere da dove l'utente era rimasto.
       let attempts = 0;
       const maxAttempts = 30; // ~3s total
       let restored = false;
