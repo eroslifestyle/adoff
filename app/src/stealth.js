@@ -263,30 +263,39 @@
     // ---- LAYER A: Ad Prevention (strip ad config) ----
 
     // Mangle ad field names in JSON text — makes them unrecognizable
-    // to the player without breaking JSON structure
-    const AD_MANGLE = [
-      [/"adPlacements"/g, '"xdPlacements"'],
-      [/"playerAds"/g, '"playerXds"'],
-      [/"adSlots"/g, '"xdSlots"'],
-      [/"adBreakParams"/g, '"xdBreakParams"'],
-      [/"adBreakHeartbeatParams"/g, '"xdBreakHeartbeatParams"'],
-    ];
-
+    // to the player without breaking JSON structure. Pattern-based: qualsiasi
+    // chiave JSON che inizia con "ad" + maiuscola viene rinominata.
     function mangleAdFields(text) {
-      for (const [re, rep] of AD_MANGLE) text = text.replace(re, rep);
-      return text;
+      if (typeof text !== "string") return text;
+      // Renaming con regex: "adPlacements" -> "xdPlacements", ecc.
+      // Il gruppo cattura solo la parte dopo "ad", quindi adPlacements -> xdPlacements.
+      return text
+        .replace(/"ad([A-Z][a-zA-Z]*)"\s*:/g, '"xd$1":')
+        .replace(/"playerAds"\s*:/g, '"playerXds":')
+        .replace(/"midroll([a-zA-Z]*)"\s*:/g, '"xdroll$1":');
     }
 
-    // Object-level deletion for ytInitialPlayerResponse
-    const AD_KEYS = [
-      "adPlacements", "playerAds", "adSlots",
-      "adBreakParams", "adBreakHeartbeatParams",
-    ];
+    // Object-level deep deletion: rimuove ricorsivamente ogni chiave che segue
+    // la naming convention degli annunci di YouTube. Piu' robusta di una lista
+    // statica: nuovi campi vengono intercettati automaticamente.
+    function isAdKey(k) {
+      if (typeof k !== "string") return false;
+      if (k === "adaptiveFormats") return false;   // qualita' video, NON annunci
+      if (k === "additive") return false;
+      return /^ad[A-Z]/.test(k) || /^playerAds$/i.test(k) || /^midroll/i.test(k);
+    }
 
-    function stripAdObj(obj) {
+    function stripAdObj(obj, depth) {
       if (!obj || typeof obj !== "object") return obj;
-      for (const k of AD_KEYS) { if (k in obj) delete obj[k]; }
-      if (obj.playerResponse) stripAdObj(obj.playerResponse);
+      if (depth === undefined) depth = 0;
+      if (depth > 6) return obj;  // sicurezza anti-ciclo
+      for (const k of Object.keys(obj)) {
+        if (isAdKey(k)) {
+          delete obj[k];
+        } else if (typeof obj[k] === "object" && obj[k] !== null) {
+          stripAdObj(obj[k], depth + 1);
+        }
+      }
       return obj;
     }
 
