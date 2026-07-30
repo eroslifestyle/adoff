@@ -84,12 +84,35 @@ def looks_english(s):
     return len(s.strip()) >= 20 and len(EN_MARK.findall(s)) >= 2
 
 
+# Molte chiavi coincidono fra le lingue perche' NON vanno tradotte: nomi di
+# prodotto ("AdBlock Browser", "AdOff Android"), punteggi ("~ 10/20"), sigle,
+# etichette di una o due parole neutre. Tradurle sarebbe un errore, e provarci
+# brucia chiamate al modello che le restituisce identiche.
+# Stessa logica di _is_brandish() in sviluppo/scripts/i18n_manager.py.
+BRAND_KEY = re.compile(
+    r"\bvs\b|footer\.vs|store|chrome|firefox|edge|safari|opera|brave|vivaldi", re.I)
+NEUTRAL_VALUE = re.compile(r"^[A-Za-z0-9 ./+\-&%:()~,'\"]+$")
+
+
+def not_translatable(k, v):
+    if BRAND_KEY.search(k):
+        return True
+    if not re.search(r"[A-Za-zЀ-ӿ؀-ۿऀ-ॿ"
+                     r"぀-ヿ一-鿿가-힯]", v):
+        return True                      # nessuna lettera: numeri, simboli, punteggi
+    if NEUTRAL_VALUE.match(v) and len(v.split()) <= 3:
+        return True                      # etichetta corta e neutra (nomi propri, sigle)
+    return False
+
+
 def untranslated(lang, pub, it, en):
     d = json.loads((I18N / f"{lang}.json").read_text(encoding="utf-8"))
     out = {}
     for k in sorted(pub):
         v = d.get(k)
         if not isinstance(v, str) or not v.strip():
+            continue
+        if not_translatable(k, v):
             continue
         if lang == "it":
             # caso speciale: it.json contiene INGLESE. Criterio prudente — il valore
@@ -157,12 +180,14 @@ def run_lang(lang, pub, it, en, limit, dry):
     d, todo = untranslated(lang, pub, it, en)
     if limit:
         todo = dict(list(todo.items())[:limit])
-    print(f"\n=== {lang} — {len(todo)} chiavi da tradurre ===")
+    print(f"[{lang}] {len(todo)} chiavi da tradurre", flush=True)
     if dry or not todo:
         return 0, 0
 
     BACKUP.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(I18N / f"{lang}.json", BACKUP / f"{lang}.json.bak")
+    bak = BACKUP / f"{lang}.json.bak"
+    if not bak.exists():                 # conserva la baseline del primo giro
+        shutil.copy2(I18N / f"{lang}.json", bak)
 
     items = list(todo.items())
     done = skipped = 0
@@ -170,12 +195,12 @@ def run_lang(lang, pub, it, en, limit, dry):
         chunk = dict(items[b:b + BATCH])
         got, err = call_model(lang, chunk)
         if err or not isinstance(got, dict):
-            print(f"  lotto {b//BATCH+1}: SCARTATO ({err})")
+            print(f"[{lang}] lotto {b//BATCH+1}: SCARTATO ({err})", flush=True)
             skipped += len(chunk)
             continue
         if set(got.keys()) != set(chunk.keys()):
-            print(f"  lotto {b//BATCH+1}: SCARTATO (chiavi non corrispondenti: "
-                  f"{len(got)} contro {len(chunk)})")
+            print(f"[{lang}] lotto {b//BATCH+1}: SCARTATO (chiavi non corrispondenti: "
+                  f"{len(got)} contro {len(chunk)})", flush=True)
             skipped += len(chunk)
             continue
         ok = 0
@@ -192,8 +217,8 @@ def run_lang(lang, pub, it, en, limit, dry):
         json.dump(d, tmp, ensure_ascii=False, indent=1, sort_keys=True)
         tmp.close()
         os.replace(tmp.name, I18N / f"{lang}.json")
-        print(f"  lotto {b//BATCH+1}/{(len(items)+BATCH-1)//BATCH}: {ok}/{len(chunk)} accettate "
-              f"(totale {done})")
+        print(f"[{lang}] lotto {b//BATCH+1}/{(len(items)+BATCH-1)//BATCH}: "
+              f"{ok}/{len(chunk)} accettate (totale {done})", flush=True)
     return done, skipped
 
 
@@ -203,22 +228,41 @@ def main():
     ap.add_argument("--all", action="store_true")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--jobs", type=int, default=1,
+                    help="lingue da tradurre in parallelo (ogni lingua scrive un file "
+                         "diverso, quindi non c'e' stato condiviso)")
     a = ap.parse_args()
 
     it = json.loads((I18N / "it.json").read_text(encoding="utf-8"))
     en = json.loads((I18N / "en.json").read_text(encoding="utf-8"))
     pub = public_keys()
-    print(f"chiavi su pagine pubbliche: {len(pub)}")
+    print(f"chiavi su pagine pubbliche: {len(pub)}", flush=True)
 
     targets = LANGS if a.all else ([a.lang] if a.lang else [])
     if not targets:
         ap.error("serve --lang XX oppure --all")
 
     tot_done = tot_skip = 0
-    for lang in targets:
-        dn, sk = run_lang(lang, pub, it, en, a.limit, a.dry_run)
-        tot_done += dn
-        tot_skip += sk
+    if a.jobs > 1 and len(targets) > 1 and not a.dry_run:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        with ThreadPoolExecutor(max_workers=a.jobs) as ex:
+            futs = {ex.submit(run_lang, l, pub, it, en, a.limit, a.dry_run): l
+                    for l in targets}
+            for f in as_completed(futs):
+                lang = futs[f]
+                try:
+                    dn, sk = f.result()
+                except Exception as e:
+                    print(f"  [{lang}] ERRORE: {e}", flush=True)
+                    continue
+                tot_done += dn
+                tot_skip += sk
+                print(f"  [{lang}] CONCLUSA: {dn} tradotte, {sk} scartate", flush=True)
+    else:
+        for lang in targets:
+            dn, sk = run_lang(lang, pub, it, en, a.limit, a.dry_run)
+            tot_done += dn
+            tot_skip += sk
 
     if not a.dry_run:
         print(f"\n{'='*60}\ntradotte {tot_done} · scartate {tot_skip}")
