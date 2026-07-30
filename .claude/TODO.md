@@ -2,6 +2,23 @@
 
 > Consolidato 2026-07-19. I check sono cancellazioni, non aggiunte.
 
+## Sessione 2026-07-29/30 — schermo nero YouTube + bug critico licenze (v3.5.39→3.5.44)
+
+Checkpoint completo: `.claude/checkpoints/CP_20260730_0225.md`
+
+- [x] **REGOLA 178 RIMOSSA — causa del nero 10-15s** (v3.5.41, `46f64c2`). `googlevideo.com/videoplayback*ctier=L`, SEMPRE ATTIVA (non era tra `YT_AD_RULE_IDS`, quindi né Free né compatibilità la disattivavano): bloccava lo **stream del contenuto**, non la pubblicità. `ctier` = content tier. Log utente: `ERR_BLOCKED_BY_CLIENT` + retry `rn=37→38→39`. Regole 144→143. **Verificato dai dati utente: 1573ms contro 36488ms.** Segnale storico ignorato: `79bd308` aveva messo una toppa `excludedInitiatorDomains:[paramountplus.com]` su quella stessa regola.
+- [x] **BUG CRITICO LICENZE — ogni pagante declassato a Free a ogni avvio** (v3.5.44, `7ad602f`). `revalidateLicense()` riscriveva `adoffLicense` aggiornando `lastValidated` senza ricalcolare `adoffIntegrity` → `content.js` la considerava manomessa e negava Pro. Gira a ogni avvio browser + daily alarm. Il pannello mostrava "PRO Lifetime" comunque perché legge la licenza senza passare dal gate. **È la causa di tutti i `gate Pro NON attivo` nei test video.** Recupero per utenti già colpiti: riavviare l'estensione.
+- [x] **Instant-skip ripristinato** (v3.5.43, `ec4c06e`): `instantSkip` termina l'annuncio al primo tick con `readyState>=1`. Prima terminava solo gli annunci *impiantati*, quindi un annuncio che scorre non veniva fermato (pulsante skip spesso assente, `playbackRate=16` rimesso a 1 dal player). Dirette escluse.
+- [x] **TypeError ogni 50ms** (v3.5.40, `12ec3d6`): `skip?.offsetParent !== null` è vero anche con `skip===null` → eccezione che impediva la chiusura degli overlay.
+- [x] **Campo Account vuoto** (v3.5.42, `40896a6`): il server non inviava mai `email`, il client non la salvava (2 rami: `/activate` e `/validate`). Ora mascherata (`er***@gmail.com`).
+- [x] **Worker licenze deployato** — versione `ac8cd555`, su autorizzazione esplicita. **LIVE: trial 15 giorni (era 30)**, email mascherata, pricing rework `b822897`.
+- [x] **4 suite di test anti-regressione**, tutte estraggono il blocco reale dal sorgente e validate con mutazione: `test-license-integrity.js` 4/4 (T3 è il test che avrebbe intercettato il bug critico), `test-ad-skip.js` 9/9, `test-layer-d-watchdog.js` 7/7, `test-rules-no-content-block.js` 4/4.
+- [ ] **PROSSIMO PASSO — validare il gate Pro**: ricaricare l'estensione a 3.5.44, incollare `sviluppo/tests/diag-console-blackscreen.js` nella console su una pagina video. **Expected outcome: il report dice "gate Pro attivo"** (prima diceva sempre il contrario). Solo allora `playbackRate max` misura il Layer B in funzione: 16 = skip agisce, 1 = non parte.
+- [ ] **Decidere se promuovere la modalità compatibilità a DEFAULT** — ipotesi ancora NON verificata: con lo strip attivo il player potrebbe non marcare `ad-showing`, rendendo inerte il Layer B.
+- [ ] **Pubblicazione store v3.5.44** — sospesa su decisione utente. Argomento a favore: il bug licenze colpisce **tutti i clienti paganti adesso**.
+- [ ] **Regola 179** (`videoplayback*oad=`, Pro-only) non toccata: stessa famiglia della 178. Se il nero ricomparisse in Pro, è il sospetto numero uno.
+- [ ] **Hash integrità licenza fragile** (design): calcolato su TUTTO l'oggetto serializzato, quindi qualunque campo aggiunto/aggiornato la invalida. Valutare un hash su sottoinsieme stabile (`rawKey`, `plan`, `expires`) escludendo i volatili (`lastValidated`, `devices`).
+
 ## Release 3.5.38 — anti-detection fix (2026-07-28)
 
 - [x] **Fix spoof googletag/adsbygoogle** — commit b251624. I siti riassegnavano `window.googletag` cancellando lo spoof (1 chiave, `apiReady:false` = firma adblock). Ora merge-accessor: 18 chiavi stabili.
