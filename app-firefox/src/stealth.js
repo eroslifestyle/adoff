@@ -419,12 +419,54 @@
     const AD_END_MIN_READY_STATE = 1;   // bastano i metadati: serve solo duration
     const AD_SEEK_SAFETY_SEC = 0.25;    // margine dal bordo del buffer
     const AD_SEEK_MIN_GAIN_SEC = 0.1;   // sotto questo guadagno il seek non paga
+    const AD_DURATION_EPSILON_SEC = 0.5;  // oltre questo scarto la sorgente e' cambiata
+    const AD_MAX_PLAUSIBLE_SEC = 180;     // piu' lungo di cosi' non e' un annuncio
+    const AD_SWITCH_CONFIRM_TICKS = 2;    // tick di conferma prima di riarmare
 
     let adEndForced = false;            // una sola terminazione per annuncio
+    let adDurationSeen = 0;             // durata della sorgente annuncio corrente
+    let adSwitchTicks = 0;              // tick consecutivi con una durata nuova
+    let adSourceLost = false;           // sorgente ormai passata al contenuto
 
     function instantSkip(player) {
       const video = player.querySelector("video");
       if (video) {
+        // Annuncio e contenuto condividono lo STESSO elemento video (MSE source
+        // switching): allo scambio di sorgente il player tiene addosso
+        // ad-showing ancora per qualche decina di ms. Toccare il video in quella
+        // finestra significa saltare dentro al contenuto, in un punto
+        // arbitrario. La durata e' il segnale che separa le due sorgenti.
+        // Una volta riconosciuto il contenuto non si tocca piu' nulla fino al
+        // prossimo annuncio: senza questa memoria i tick seguenti tornerebbero
+        // ad accelerarlo.
+        if (adSourceLost) {
+          if (video.playbackRate !== 1) video.playbackRate = 1;
+          return;
+        }
+
+        const dur = video.duration;
+        if (isFinite(dur) && dur > 0 && adDurationSeen > 0 &&
+            Math.abs(dur - adDurationSeen) > AD_DURATION_EPSILON_SEC) {
+          if (dur > AD_MAX_PLAUSIBLE_SEC) {
+            // Troppo lunga per essere un annuncio: siamo gia' nel contenuto.
+            adSourceLost = true;
+            adEndForced = true;
+            adDurationSeen = 0;
+            adSwitchTicks = 0;
+            if (video.playbackRate !== 1) video.playbackRate = 1;
+            return;
+          }
+          // Durata da annuncio: probabile secondo spot dello stesso blocco. Si
+          // attende comunque una conferma, perche' un contenuto breve entrerebbe
+          // in questo ramo e ad-showing potrebbe essere sul punto di sparire.
+          if (++adSwitchTicks < AD_SWITCH_CONFIRM_TICKS) return;
+          adDurationSeen = dur;
+          adEndForced = false;
+          adSwitchTicks = 0;
+        } else {
+          adSwitchTicks = 0;
+        }
+
         // Un annuncio in pausa non finisce mai.
         if (video.paused) {
           try {
@@ -440,6 +482,9 @@
         if (!adEndForced && video.readyState >= AD_END_MIN_READY_STATE &&
             isFinite(video.duration) && video.duration > 0) {
           const ctPrima = video.currentTime;
+          // Prima durata osservata per questo annuncio: e' il riferimento con
+          // cui, nei tick successivi, si riconosce lo scambio di sorgente.
+          if (!adDurationSeen) adDurationSeen = video.duration;
           // Mai seekare oltre i dati gia' scaricati. Il player clampa un seek
           // oltre il buffer e resta poi ad aspettare i segmenti mancanti, che
           // per un annuncio possono tardare a lungo: al posto del salto si
@@ -490,6 +535,9 @@
 
     function resetAdSkipState() {
       adEndForced = false;
+      adDurationSeen = 0;
+      adSwitchTicks = 0;
+      adSourceLost = false;
     }
 
     function onAdStart(player) {

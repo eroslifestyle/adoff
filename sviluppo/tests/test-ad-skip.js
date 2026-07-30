@@ -258,6 +258,53 @@ const scenarios = [
             }
             return null;
         }
+    },
+    {
+        // La regressione: annuncio e contenuto condividono lo stesso elemento
+        // video. Se il player scambia la sorgente mentre ad-showing e' ancora
+        // addosso, un salto cade DENTRO al contenuto, in un punto arbitrario.
+        id: 'T12',
+        desc: 'sorgente passata al contenuto: il video vero non va toccato',
+        opts: { ct: 0, duration: 20, readyState: 4, paused: false, conSkip: false },
+        calls: 1,
+        after(m) {
+            // Lo switch: durata da contenuto lungo, posizione all'inizio.
+            m.opts.duration = 1600;
+            m.opts.bufEnd = 1600;
+            m.video.duration = 1600;
+            m.video.currentTime = 12;
+        },
+        callsDopo: 4,
+        check(m) {
+            if (m.video.currentTime !== 12) {
+                return 'il contenuto e stato spostato a ' + m.video.currentTime + ' invece di restare a 12';
+            }
+            if (m.video.playbackRate !== 1) {
+                return 'il contenuto resta accelerato a ' + m.video.playbackRate + 'x';
+            }
+            return null;
+        }
+    },
+    {
+        // Blocco con due spot: al secondo la durata cambia, ma resta da
+        // annuncio. Va inseguito anche quello, dopo la conferma.
+        id: 'T13',
+        desc: 'secondo spot dello stesso blocco: viene comunque saltato',
+        opts: { ct: 0, duration: 10, readyState: 4, paused: false, conSkip: false },
+        calls: 1,
+        after(m) {
+            m.opts.duration = 25;
+            m.opts.bufEnd = 25;
+            m.video.duration = 25;
+            m.video.currentTime = 0;
+        },
+        callsDopo: 3,
+        check(m) {
+            if (!(Math.abs(m.video.currentTime - 24.85) < 0.01)) {
+                return 'secondo spot non saltato: currentTime ' + m.video.currentTime + ', atteso ~24.85';
+            }
+            return null;
+        }
     }
 ];
 
