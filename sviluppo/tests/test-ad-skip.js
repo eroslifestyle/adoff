@@ -68,6 +68,16 @@ function makeMocks(opts) {
         readyState: opts.readyState,
         paused: !!opts.paused,
         playbackRate: 1,
+        // Il buffer copre per default l'intera durata — e' il caso dell'annuncio
+        // corto, gia' scaricato per intero. Gli scenari che simulano dati
+        // incompleti passano bufEnd esplicito e possono farlo crescere.
+        buffered: {
+            length: 1,
+            end() {
+                if (opts.bufEnd !== undefined) return opts.bufEnd;
+                return isFinite(opts.duration) ? opts.duration : 0;
+            }
+        },
         play() {
             playCalls.n++;
             return Promise.resolve();
@@ -91,7 +101,7 @@ function makeMocks(opts) {
         querySelectorAll() { return []; }
     };
 
-    return { window, CustomEvent, video, events, playCalls, skipButton, player };
+    return { window, CustomEvent, video, events, playCalls, skipButton, player, opts };
 }
 
 // ----------------------------------------------------------------------
@@ -207,6 +217,47 @@ const scenarios = [
             if (m.video.playbackRate !== 16) return 'playbackRate atteso 16, ottenuto ' + m.video.playbackRate;
             return null;
         }
+    },
+    {
+        // Il bug osservato: annuncio da 40s con buffer fermo a 12s. Seekando a
+        // 39.85 il player clampa al bordo del buffer e resta ad aspettare i
+        // segmenti mancanti — spinner al posto del salto.
+        id: 'T10',
+        desc: 'buffer corto: il salto non deve superare i dati scaricati',
+        opts: { ct: 0, duration: 40, readyState: 4, paused: false, conSkip: false, bufEnd: 12 },
+        calls: 3,
+        after: null,
+        check(m) {
+            if (m.video.currentTime > 12) {
+                return 'seek a ' + m.video.currentTime + ': oltre il buffer (12), il player si blocchera';
+            }
+            if (!(Math.abs(m.video.currentTime - 11.75) < 0.01)) {
+                return 'currentTime atteso ~11.75 (bordo buffer meno margine), ottenuto ' + m.video.currentTime;
+            }
+            if (m.events.length !== 0) {
+                return 'annuncio dato per terminato con il buffer a 12 su 40: non lo e';
+            }
+            return null;
+        }
+    },
+    {
+        // Il buffer cresce mentre l'annuncio scorre accelerato: il polling deve
+        // inseguirlo fino alla fine vera.
+        id: 'T11',
+        desc: 'buffer che cresce: il salto lo insegue fino a terminare l annuncio',
+        opts: { ct: 0, duration: 40, readyState: 4, paused: false, conSkip: false, bufEnd: 12 },
+        calls: 1,
+        after(m) { m.opts.bufEnd = 40; },
+        callsDopo: 1,
+        check(m) {
+            if (!(Math.abs(m.video.currentTime - 39.85) < 0.01)) {
+                return 'currentTime atteso ~39.85 dopo la crescita del buffer, ottenuto ' + m.video.currentTime;
+            }
+            if (m.events.length !== 1) {
+                return 'events.length atteso 1 a fine annuncio, ottenuto ' + m.events.length;
+            }
+            return null;
+        }
     }
 ];
 
@@ -249,6 +300,11 @@ for (const scenario of scenarios) {
                 instantSkip(mocks.player);
                 if (scenario.after) scenario.after(mocks);
             }
+            // Chiamate ulteriori dopo la modifica applicata da «after»: servono
+            // agli scenari in cui il buffer cresce fra un tentativo e l'altro.
+            for (let c = 0; c < (scenario.callsDopo || 0); c++) {
+                instantSkip(mocks.player);
+            }
         }
     } catch (e) {
         exception = e;
@@ -283,7 +339,7 @@ for (const line of results) {
 }
 
 const passed = results.filter(r => r.startsWith('PASS')).length;
-console.log('RISULTATO: ' + passed + '/9 passati');
-if (passed < 9) {
+console.log('RISULTATO: ' + passed + '/' + scenarios.length + ' passati');
+if (passed < scenarios.length) {
     process.exit(1);
 }

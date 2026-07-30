@@ -417,6 +417,8 @@
     // Terminazione immediata dell'annuncio: vedi il commento dentro instantSkip.
     const AD_END_OFFSET_SEC = 0.15;
     const AD_END_MIN_READY_STATE = 1;   // bastano i metadati: serve solo duration
+    const AD_SEEK_SAFETY_SEC = 0.25;    // margine dal bordo del buffer
+    const AD_SEEK_MIN_GAIN_SEC = 0.1;   // sotto questo guadagno il seek non paga
 
     let adEndForced = false;            // una sola terminazione per annuncio
 
@@ -438,13 +440,37 @@
         if (!adEndForced && video.readyState >= AD_END_MIN_READY_STATE &&
             isFinite(video.duration) && video.duration > 0) {
           const ctPrima = video.currentTime;
-          adEndForced = true;
-          try {
-            video.currentTime = Math.max(0, video.duration - AD_END_OFFSET_SEC);
-          } catch (_) { /* seek negato dal player */ }
-          window.dispatchEvent(new CustomEvent("adoff-ad-ended", {
-            detail: { adDuration: video.duration, ctPrima },
-          }));
+          // Mai seekare oltre i dati gia' scaricati. Il player clampa un seek
+          // oltre il buffer e resta poi ad aspettare i segmenti mancanti, che
+          // per un annuncio possono tardare a lungo: al posto del salto si
+          // ottiene lo spinner. Misurato: annuncio da 10s interamente
+          // bufferizzato = saltato in 0,5s; annuncio da 40s con buffer corto =
+          // bloccato a 38s. Si insegue quindi il bordo del buffer, che il
+          // polling a 50ms rilancia man mano che cresce mentre playbackRate=16
+          // lo fa crescere in fretta: un annuncio lungo si esaurisce in pochi
+          // secondi, senza mai fermarsi.
+          const buf = video.buffered;
+          const bufEnd = buf && buf.length ? buf.end(buf.length - 1) : 0;
+          const fine = Math.max(0, video.duration - AD_END_OFFSET_SEC);
+          // Buffer che arriva in fondo: si salta direttamente alla fine, e'
+          // l'annuncio corto gia' scaricato per intero. Buffer piu' corto: ci si
+          // ferma poco prima del suo bordo, mai oltre.
+          const target = bufEnd >= fine
+            ? fine
+            : Math.max(0, bufEnd - AD_SEEK_SAFETY_SEC);
+
+          if (target > ctPrima + AD_SEEK_MIN_GAIN_SEC) {
+            try { video.currentTime = target; } catch (_) { /* seek negato dal player */ }
+          }
+          // Terminato davvero solo quando il salto ha raggiunto la fine: finche'
+          // il buffer resta corto il rilevatore va lasciato armato, altrimenti
+          // l'annuncio non verrebbe piu' inseguito.
+          if (target >= fine) {
+            adEndForced = true;
+            window.dispatchEvent(new CustomEvent("adoff-ad-ended", {
+              detail: { adDuration: video.duration, ctPrima },
+            }));
+          }
         }
         // Rete di sicurezza se il seek viene bloccato o annullato dal player.
         video.playbackRate = 16;
