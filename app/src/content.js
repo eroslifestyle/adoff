@@ -146,7 +146,15 @@
       lic.plan === "pro" || lic.plan === "lifetime" ||
       lic.plan === "monthly" || lic.plan === "annual"
     )) || trialOk;
-    if (isPro) {
+    // adoffEnabled va letto PRIMA di scrivere nonce e flag: se l'utente ha
+    // messo in pausa, stealth.js non deve attivarsi affatto. Prima di questo
+    // fix il nonce veniva scritto comunque e il toggle fermava solo il DOM
+    // scan, lasciando strip + skip + IMA stub attivi.
+    enabled    = result.adoffEnabled !== false;
+    adsBlocked = result.adoffAdsBlocked || 0;
+
+    const stealthActive = enabled && isPro;
+    if (stealthActive) {
       // EB-7: usa nonce verificabile invece di "1" fisso
       document.documentElement.setAttribute("data-adoff-stealth", STEALTH_NONCE);
     }
@@ -165,11 +173,11 @@
       // scritto dopo storage.get + verifica ECDSA, ma stealth.js deve decidere
       // se ripulire la config ads PRIMA che la pagina la legga (pochi ms dopo
       // document_start). Scritto solo sulle piattaforme video: e' li' che serve.
-      try { localStorage.setItem("__adoff_pro", isPro ? "1" : "0"); } catch (_) { /* storage negato */ }
+      // Se l'estensione e' in pausa, il flag resta a "0": stealth.js fa
+      // passthrough completo e il video si comporta come senza AdOff.
+      try { localStorage.setItem("__adoff_pro", stealthActive ? "1" : "0"); } catch (_) { /* storage negato */ }
     }
 
-    enabled    = result.adoffEnabled !== false;
-    adsBlocked = result.adoffAdsBlocked || 0;
     if (enabled) start();
   });
 
