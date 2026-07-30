@@ -536,7 +536,10 @@
         const wasPro = (hasLicense || trialOn) ? "1" : "0";
         const v = chrome.runtime.getManifest().version;
         const deviceId = r.adoffDeviceId || "";
-        const url = `${API_BASE}/track/uninstall?deviceId=${encodeURIComponent(deviceId)}&v=${encodeURIComponent(v)}&pro=${wasPro}`;
+        // Puntiamo alla pagina HTML sul sito, non all'endpoint API: il worker
+        // non serve HTML via GET, restituirebbe JSON grezzo {"error":"Not found"}.
+        // La pagina del sito raccoglie il feedback e poi POSTa al worker.
+        const url = `https://adoff.app/uninstall.html?deviceId=${encodeURIComponent(deviceId)}&v=${encodeURIComponent(v)}&pro=${wasPro}`;
         if (chrome.runtime.setUninstallURL) chrome.runtime.setUninstallURL(url);
       });
     } catch (_) { /* best-effort, non bloccante */ }
