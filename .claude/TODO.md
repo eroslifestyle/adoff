@@ -2,6 +2,16 @@
 
 > Consolidato 2026-07-19. I check sono cancellazioni, non aggiunte.
 
+## Sessione 2026-07-31 — overlay invisibile SSAI + playbackRate (v3.5.54)
+
+- [x] **Diagnosi SSAI definitiva**: logging utente prova che i residual ~20% ad YouTube sono Server-Side (cuciti nello stream DASH). `adPlacements` strippato ✓, zero chiavi `ad[A-Z]` residue, gate Pro attivo, fast-forward 16x attivo, ad dura ~1s. Non strippabili dal JSON — solo fast-forward.
+- [x] **Overlay invisibile `setSkipOverlay()`** (v3.5.54, `8914ab8`): `<div id="adoff-skip-ov">` opaco nero brand "skipping ad" sopra `#movie_player` durante `ad-showing` (z-index 999999, pointer-events none). L'utente non vede il contenuto SSAI, solo ~1s nero. Zero seek.
+- [x] **Ripristino playbackRate**: `savedRate = video.playbackRate` in onAdStart, restore `savedRate || 1` in onAdEnd (non più hardcoded 1 → 1.5x/2x preservati). Mirrora `wasMuted`.
+- [x] **Sync 3 browser**: Chrome+Firefox+Safari (killer region byte-identica). `test-ad-skip.js` 6/6. Manifest bumped 3.5.54.
+- [x] **Commit + push**: `8914ab8` su `feat/premium-vpn` (+81/-6, 6 file).
+- [ ] **Deploy v3.5.54**: build 3 target + CWS + AMO + site + Telegram. Comandi in CLAUDE.md sezione Deploy Rule.
+- [ ] **Edge**: 404 (non 401 — chiave valida, product ID non accessibile). Upload manuale Partner Center OPPURE credenziali rigenerate dall'account proprietario.
+
 ## Sessione 2026-07-30 — annunci sempre attivi su piattaforma video (v3.5.45)
 
 - [x] **ROOT CAUSE: lo strip perdeva la corsa contro la pagina** (v3.5.45, `1a750b4`). L'hook A1 su `ytInitialPlayerResponse` decideva strip vs passthrough **dentro il setter**, che scatta pochi ms dopo `document_start`; il verdetto Pro arriva pero' da `content.js` solo dopo `storage.get` + `crypto.subtle.verify` (asincrone). Corsa persa quasi sempre → `adPlacements` intatti → il player schedula ogni annuncio. **Non e' una regressione: e' una race che il codice ha sempre corso**, da cui l'intermittenza storica e il fatto che Playwright non riproducesse. Fix: (a) strip **pigro** valutato al `get`, (b) canale **sincrono** `localStorage.__adoff_pro` scritto da content.js, stesso pattern di `__adoff_vc`. `isProSync` usata SOLO dal Layer A; stub IMA e anti-detection restano sul nonce.
