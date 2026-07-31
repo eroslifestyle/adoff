@@ -9,7 +9,7 @@
 - [x] **Ripristino playbackRate**: `savedRate = video.playbackRate` in onAdStart, restore `savedRate || 1` in onAdEnd (non più hardcoded 1 → 1.5x/2x preservati). Mirrora `wasMuted`.
 - [x] **Sync 3 browser**: Chrome+Firefox+Safari (killer region byte-identica). `test-ad-skip.js` 6/6. Manifest bumped 3.5.54.
 - [x] **Commit + push**: `8914ab8` su `feat/premium-vpn` (+81/-6, 6 file).
-- [ ] **Deploy v3.5.54**: build 3 target + CWS + AMO + site + Telegram. Comandi in CLAUDE.md sezione Deploy Rule.
+- [x] **Deploy v3.5.54** — CWS published (status OK), AMO public 3.5.54 (reviewed 16:41Z), site production live (chrome+firefox 3.5.54, `--branch main`), Telegram msg 93. Residui: Edge 404 (Partner Center), safari zip edge-cache stale (self-heal ≤4h). Dettagli: checkpoint `CP_20260731_1846.md`.
 - [ ] **Edge**: 404 (non 401 — chiave valida, product ID non accessibile). Upload manuale Partner Center OPPURE credenziali rigenerate dall'account proprietario.
 
 ## Sessione 2026-07-30 — annunci sempre attivi su piattaforma video (v3.5.45)
