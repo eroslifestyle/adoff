@@ -419,6 +419,7 @@
 
     let adActive = false;
     let wasMuted = false;
+    let savedRate = 1;
     let playerObs = null;
     let skipTimer = null;
 
@@ -447,6 +448,27 @@
       )) { if (btn.offsetParent !== null) btn.click(); }
     }
 
+    // Overlay opaco durante l'ad SSAI: l'utente non vede il contenuto
+    // pubblicitario, solo un breve "skipping…" nero mentre il fast-forward
+    // (16x) consuma l'annuncio. pointer-events:none => non blocca i click.
+    function setSkipOverlay(player, on) {
+      let ov = document.getElementById("adoff-skip-ov");
+      if (on) {
+        if (!ov) {
+          ov = document.createElement("div");
+          ov.id = "adoff-skip-ov";
+          ov.style.cssText =
+            "position:absolute;inset:0;background:#000;z-index:999999;" +
+            "display:flex;align-items:center;justify-content:center;" +
+            "color:#7252f8;font:600 16px system-ui,sans-serif;pointer-events:none;";
+          ov.textContent = "AdOff · skipping ad…";
+        }
+        if (!ov.parentNode) player.appendChild(ov);
+      } else if (ov) {
+        ov.remove();
+      }
+    }
+
     function onAdStart(player) {
       if (adActive) { instantSkip(player); return; }
       adActive = true;
@@ -454,8 +476,10 @@
       const video = player.querySelector("video");
       if (video) {
         video._adoffSkipping = true;
+        savedRate = video.playbackRate;
         if (!video.muted) { video.muted = true; wasMuted = true; }
       }
+      setSkipOverlay(player, true);
 
       instantSkip(player);
 
@@ -481,9 +505,10 @@
       const video = player.querySelector("video");
       if (video) {
         video._adoffSkipping = false;
-        video.playbackRate = 1;
+        video.playbackRate = savedRate || 1;
         if (wasMuted) { video.muted = false; wasMuted = false; }
       }
+      setSkipOverlay(player, false);
       // Nessun position recovery: l'annuncio e' finito NATURALMENTE a 16x,
       // YouTube ha gestito la transizione. Non tocchiamo currentTime.
     }
