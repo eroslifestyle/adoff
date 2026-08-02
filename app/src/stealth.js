@@ -455,7 +455,8 @@ if (!window.__adoffYtDiag) {
     adSeeks: 0,
     flagInjectedStringify: 0,
     flagInjectedAssign: 0,
-    coldLoads: 0
+    coldLoads: 0,
+    adReloads: 0
   };
 }
 
@@ -775,9 +776,22 @@ function setSkipOverlay(player, on) {
     }
 }
 
+let contentTime = 0;      // ultima posizione nota nel CONTENUTO (per la ricarica sui midroll)
+let savedQuality = null;
+let reloadTimer = null;
+let reloadCount = 0;
+let reloadVideoId = null;
+
 function onAdStart(player) {
     if (adActive) { instantSkip(player); return; }
     adActive = true;
+
+    // --- Meccanismo A: forza qualità minima durante l'annuncio ---
+    try {
+        if (typeof player.getPlaybackQuality === "function") savedQuality = player.getPlaybackQuality();
+        if (typeof player.setPlaybackQualityRange === "function") player.setPlaybackQualityRange("tiny", "tiny");
+        if (typeof player.setPlaybackQuality === "function") player.setPlaybackQuality("tiny");
+    } catch (_) {}
 
     const video = player.querySelector("video");
     if (video) {
@@ -800,6 +814,25 @@ function onAdStart(player) {
         instantSkip(player);
     }, 50);
 
+    // Meccanismo B: ricarica video se l'annuncio resiste
+    if (reloadTimer) clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(function () {
+        try {
+            if (!player.classList.contains("ad-showing") && !player.classList.contains("ad-interrupting")) return;
+            if (typeof player.getVideoData !== "function" || typeof player.loadVideoById !== "function") return;
+            var vd = player.getVideoData() || {};
+            var vid = vd.video_id;
+            if (!vid) return;
+            // contatore per video: max 2 ricariche
+            if (reloadVideoId !== vid) { reloadVideoId = vid; reloadCount = 0; }
+            if (reloadCount >= 2) return;
+            reloadCount++;
+            try { window.__adoffYtDiag.adReloads++; } catch (_) {}
+            var startAt = contentTime > 1 ? contentTime : 0;
+            player.loadVideoById({ videoId: vid, startSeconds: startAt });
+        } catch (_) {}
+    }, 1500);
+
     window.dispatchEvent(new CustomEvent("adoff-ad-skipped"));
 }
 
@@ -807,6 +840,9 @@ function onAdEnd(player) {
     if (!adActive) return;
     adActive = false;
     if (skipTimer) { clearInterval(skipTimer); skipTimer = null; }
+
+    // Azzera il timer di soccorso
+    if (reloadTimer) { clearTimeout(reloadTimer); reloadTimer = null; }
 
     const video = player.querySelector("video");
     if (video) {
@@ -821,6 +857,13 @@ function onAdEnd(player) {
         if (wasMuted) { video.muted = false; wasMuted = false; }
     }
     setSkipOverlay(player, false);
+
+    // Ripristina la qualità precedente
+    try {
+        if (typeof player.setPlaybackQualityRange === "function") player.setPlaybackQualityRange(savedQuality || "auto", savedQuality || "auto");
+        if (typeof player.setPlaybackQuality === "function") player.setPlaybackQuality(savedQuality || "auto");
+    } catch (_) {}
+
     // Reset delle guardie di stabilità per il prossimo annuncio.
     lastAdDuration = -1;
     stableTicks = 0;
@@ -862,6 +905,11 @@ function checkPlayer() {
         }
         if (video.currentSrc) {
           contentSrc = video.currentSrc;
+        }
+        // Posizione nel contenuto: serve alla ricarica sui midroll, per
+        // ripartire dal punto giusto invece che dall'inizio.
+        if (Number.isFinite(video.currentTime) && video.currentTime > 0) {
+          contentTime = video.currentTime;
         }
       } catch (e) {
         // ignore
