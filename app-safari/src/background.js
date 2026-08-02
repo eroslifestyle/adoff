@@ -910,13 +910,50 @@
   // id forzati in un range riservato, condition ricostruita con soli campi safe.
   const REMOTE_RULES_URL = "https://adoff.app/rules-feed.json";
   const REMOTE_RULES_BASE_ID = 60000;
-  const REMOTE_RULES_MAX = 35000;
-  const REMOTE_RULES_FETCH_TIMEOUT_MS = 8000;
+  const REMOTE_RULES_FETCH_TIMEOUT_MS = 20000;
+  const REMOTE_RULES_RESERVED = 100;
+  const REMOTE_RULES_CHUNK = 2000;
+  const REMOTE_RULES_MIN_INTERVAL_MS = 6 * 60 * 60 * 1000;
+  const REMOTE_RULES_ID_SPAN = 40000;
   const SAFE_REMOTE_ACTIONS = ["block", "allow"];
   const SAFE_REMOTE_RESOURCE_TYPES = [
     "main_frame", "sub_frame", "script", "image", "stylesheet",
     "xmlhttprequest", "media", "font", "object", "ping", "websocket", "other",
   ];
+
+  // Il feed contiene solo block/allow, quindi rientra nel budget delle regole "safe"
+  // (MAX_NUMBER_OF_DYNAMIC_RULES, 30.000 su Chrome) e non in quello legacy da 5.000.
+  // Firefox espone limiti piu bassi: leggiamo sempre la costante, mai un numero fisso.
+  function remoteRulesCap() {
+    try {
+      const dnr = chrome.declarativeNetRequest;
+      const limit = dnr.MAX_NUMBER_OF_DYNAMIC_RULES || dnr.MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES;
+      if (Number.isInteger(limit) && limit > 0) return Math.max(0, limit - REMOTE_RULES_RESERVED);
+    } catch (_) { /* nop */ }
+    return 4900;
+  }
+
+  function updateDynamicRulesAsync(opts) {
+    return new Promise((resolve) => {
+      chrome.declarativeNetRequest.updateDynamicRules(opts, () => {
+        resolve(chrome.runtime.lastError ? chrome.runtime.lastError.message : null);
+      });
+    });
+  }
+
+  function removeOldRemoteRules() {
+    return new Promise((resolve) => {
+      chrome.declarativeNetRequest.getDynamicRules((existing) => {
+        const ids = (existing || [])
+          .filter((r) => r.id >= REMOTE_RULES_BASE_ID && r.id < REMOTE_RULES_BASE_ID + REMOTE_RULES_ID_SPAN)
+          .map((r) => r.id);
+        if (!ids.length) return resolve(null);
+        chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: ids }, () => {
+          resolve(chrome.runtime.lastError ? chrome.runtime.lastError.message : null);
+        });
+      });
+    });
+  }
 
   function sanitizeRemoteRule(raw, assignedId) {
     if (!raw || typeof raw !== "object") return null;
@@ -941,50 +978,78 @@
   function clearRemoteRules() {
     chrome.declarativeNetRequest.getDynamicRules((existing) => {
       const oldIds = (existing || [])
-        .filter((r) => r.id >= REMOTE_RULES_BASE_ID && r.id < REMOTE_RULES_BASE_ID + REMOTE_RULES_MAX)
+        .filter((r) => r.id >= REMOTE_RULES_BASE_ID && r.id < REMOTE_RULES_BASE_ID + REMOTE_RULES_ID_SPAN)
         .map((r) => r.id);
       if (oldIds.length) chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: oldIds });
     });
   }
 
-  async function syncRemoteRules() {
+  function syncRemoteRules(force) {
     let enabled = true;
-    try {
-      const st = await chrome.storage.local.get(STORAGE_ENABLED);
-      enabled = st[STORAGE_ENABLED] !== false;
-    } catch (_) { /* default enabled */ }
-    if (!enabled) { clearRemoteRules(); return; }
+    chrome.storage.local.get([STORAGE_ENABLED], (st) => {
+      if (st[STORAGE_ENABLED] === false) { enabled = false; }
+      if (!enabled) { clearRemoteRules(); return; }
 
-    let data = null;
-    try {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), REMOTE_RULES_FETCH_TIMEOUT_MS);
-      const res = await fetch(REMOTE_RULES_URL + "?t=" + Date.now(), { signal: ctrl.signal, cache: "no-store" });
-      clearTimeout(t);
-      if (!res.ok) return;
-      data = await res.json();
-    } catch (_) {
-      return; // offline / errore di rete → mantieni le regole correnti, nessun crash
-    }
-    if (!data || !Array.isArray(data.rules)) return;
+      chrome.storage.local.get(["adoffRemoteRulesSync", "adoffRemoteRulesCount"], (st) => {
+        const lastSync = st.adoffRemoteRulesSync || 0;
+        const lastCount = st.adoffRemoteRulesCount || 0;
+        // Throttle: NON toccare adoffRemoteRulesSync qui, altrimenti ogni avvio del
+        // service worker sposterebbe in avanti la scadenza e il feed non si aggiornerebbe mai.
+        if (lastCount > 0 && (Date.now() - lastSync) < REMOTE_RULES_MIN_INTERVAL_MS && !force) return;
 
-    const addRules = [];
-    for (const raw of data.rules.slice(0, REMOTE_RULES_MAX)) {
-      const r = sanitizeRemoteRule(raw, REMOTE_RULES_BASE_ID + addRules.length);
-      if (r) addRules.push(r);
-    }
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), REMOTE_RULES_FETCH_TIMEOUT_MS);
+        fetch(REMOTE_RULES_URL + "?t=" + Date.now(), { signal: ctrl.signal, cache: "no-store" })
+          .then((res) => {
+            clearTimeout(t);
+            if (!res.ok) return null;
+            return res.json();
+          })
+          .then((data) => {
+            if (!data || !Array.isArray(data.rules)) return;
 
-    chrome.declarativeNetRequest.getDynamicRules((existing) => {
-      const oldIds = (existing || [])
-        .filter((r) => r.id >= REMOTE_RULES_BASE_ID && r.id < REMOTE_RULES_BASE_ID + REMOTE_RULES_MAX)
-        .map((r) => r.id);
-      chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: oldIds, addRules }, () => {
-        if (chrome.runtime.lastError) return;
-        chrome.storage.local.set({
-          adoffRemoteRulesVer: data.version || 0,
-          adoffRemoteRulesSync: Date.now(),
-          adoffRemoteRulesCount: addRules.length,
-        });
+            const cap = remoteRulesCap();
+            const addRules = [];
+            let skipped = 0;
+            for (const raw of data.rules) {
+              if (addRules.length >= cap) { skipped++; continue; }
+              const r = sanitizeRemoteRule(raw, REMOTE_RULES_BASE_ID + addRules.length);
+              if (r) addRules.push(r);
+            }
+            if (skipped > 0) console.warn("[adoff] Feed troncato: " + addRules.length + "/" + data.rules.length + " (cap " + cap + ", scartate " + skipped + ")");
+
+            removeOldRemoteRules().then((err) => {
+              if (err) {
+                chrome.storage.local.set({ adoffRemoteRulesError: err });
+                return;
+              }
+
+              let applied = 0;
+              const addChunk = (offset) => {
+                if (offset >= addRules.length) {
+                  chrome.storage.local.set({
+                    adoffRemoteRulesVer: data.version || 0,
+                    adoffRemoteRulesSync: Date.now(),
+                    adoffRemoteRulesCount: applied,
+                    adoffRemoteRulesError: null,
+                  });
+                  return;
+                }
+                const chunk = addRules.slice(offset, offset + REMOTE_RULES_CHUNK);
+                updateDynamicRulesAsync({ addRules: chunk }).then((err) => {
+                  if (err) {
+                    console.warn("[adoff] Blocco aggiunta fallito: " + chunk.length + " regole, da " + (offset + 1) + ", err: " + err);
+                    chrome.storage.local.set({ adoffRemoteRulesError: err });
+                    return;
+                  }
+                  applied += chunk.length;
+                  addChunk(offset + REMOTE_RULES_CHUNK);
+                });
+              };
+              addChunk(0);
+            });
+          })
+          .catch(() => {});
       });
     });
   }

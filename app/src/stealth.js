@@ -71,6 +71,9 @@
   const PREMIUM_STREAMING = [
     "paramountplus.com",
     "parampunt.com",
+    // SSAI proprietario (non Google IMA): lo stub e gli override stealth non
+    // servono e possono rompere la SPA o il player, come su netflix.com.
+    "primevideo.com",
   ];
 
   const isBroadcaster = BROADCASTER_SITES.some((d) => hostname.includes(d));

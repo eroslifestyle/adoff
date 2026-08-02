@@ -45,10 +45,11 @@ const launchOptions = {
     // ========== FASE 1: Download feed ==========
     console.log('\n--- FASE 1: Download feed ---');
     try {
+      await sw.evaluate((u) => { globalThis.__feedUrl = u; }, process.env.FEED_URL || 'https://adoff.app/rules-feed.json');
       const fase1 = await sw.evaluate(async () => {
         const t0 = Date.now();
         try {
-          const res = await fetch('https://adoff.app/rules-feed.json?t=' + Date.now(), { cache: 'no-store' });
+          const res = await fetch((globalThis.__feedUrl || 'https://adoff.app/rules-feed.json') + '?t=' + Date.now(), { cache: 'no-store' });
           const data = await res.json();
           return {
             ms: Date.now() - t0,
@@ -77,7 +78,7 @@ const launchOptions = {
     try {
       const fase2 = await sw.evaluate(async () => {
         // Riscarica feed
-        const feedRes = await fetch('https://adoff.app/rules-feed.json?t=' + Date.now(), { cache: 'no-store' });
+        const feedRes = await fetch((globalThis.__feedUrl || 'https://adoff.app/rules-feed.json') + '?t=' + Date.now(), { cache: 'no-store' });
         const feedData = await feedRes.json();
 
         if (!Array.isArray(feedData.rules)) {
@@ -202,7 +203,11 @@ const launchOptions = {
       { url: 'https://d1v5ir2lpwr8os.cloudfront.net/app.js', type: 'script' },
       { url: 'https://fls-eu.amazon.com/1/batch/1/OP/', type: 'xmlhttprequest' },
       { url: 'https://unagi-eu.amazon.com/1/events/com.amazon.csm.csa.prod', type: 'ping' },
-      { url: 'https://www.amazon.it/', type: 'main_frame' }
+      { url: 'https://www.amazon.it/', type: 'main_frame' },
+      // Controprova: questi DEVONO essere bloccati dal feed, altrimenti il feed e inerte
+      { url: 'https://popads.net/pop.js', type: 'script' },
+      { url: 'https://doubleclick.net/ad.js', type: 'script' },
+      { url: 'https://0019x.com/x.js', type: 'script' }
     ];
 
     try {
@@ -210,9 +215,9 @@ const launchOptions = {
         const risultati = [];
         for (const test of tests) {
           try {
+            // method va DENTRO la request: il secondo argomento e il callback
             const match = await chrome.declarativeNetRequest.testMatchOutcome(
-              { url: test.url, type: test.type },
-              { method: 'get' }
+              { url: test.url, type: test.type, method: 'get' }
             );
             risultati.push({
               url: test.url,

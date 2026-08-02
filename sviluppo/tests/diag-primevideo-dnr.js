@@ -104,7 +104,10 @@ const launchOptions = {
       { url: 'https://d1v5ir2lpwr8os.cloudfront.net/app.js', type: 'script' },
       { url: 'https://fls-eu.amazon.com/1/batch/1/OP/', type: 'xmlhttprequest' },
       { url: 'https://unagi-eu.amazon.com/1/events/com.amazon.csm.csa.prod', type: 'ping' },
-      { url: 'https://www.amazon.it/', type: 'main_frame' }
+      { url: 'https://www.amazon.it/', type: 'main_frame' },
+      // Controprova: presente SOLO nel feed remoto — se non matcha, il feed e inerte
+      { url: 'https://0019x.com/x.js', type: 'script' },
+      { url: 'https://popads.net/pop.js', type: 'script' }
     ];
 
     // Esegui testMatchOutcome per ogni caso
