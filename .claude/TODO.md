@@ -1,110 +1,153 @@
-# TODO — AdOff ChromePlugin
+# TODO GLOBALE — AdOff ChromePlugin
 
-> Consolidato 2026-07-19. I check sono cancellazioni, non aggiunte.
-
-## Sessione 2026-07-31 — overlay invisibile SSAI + playbackRate (v3.5.54)
-
-- [x] **Diagnosi SSAI definitiva**: logging utente prova che i residual ~20% ad YouTube sono Server-Side (cuciti nello stream DASH). `adPlacements` strippato ✓, zero chiavi `ad[A-Z]` residue, gate Pro attivo, fast-forward 16x attivo, ad dura ~1s. Non strippabili dal JSON — solo fast-forward.
-- [x] **Overlay invisibile `setSkipOverlay()`** (v3.5.54, `8914ab8`): `<div id="adoff-skip-ov">` opaco nero brand "skipping ad" sopra `#movie_player` durante `ad-showing` (z-index 999999, pointer-events none). L'utente non vede il contenuto SSAI, solo ~1s nero. Zero seek.
-- [x] **Ripristino playbackRate**: `savedRate = video.playbackRate` in onAdStart, restore `savedRate || 1` in onAdEnd (non più hardcoded 1 → 1.5x/2x preservati). Mirrora `wasMuted`.
-- [x] **Sync 3 browser**: Chrome+Firefox+Safari (killer region byte-identica). `test-ad-skip.js` 6/6. Manifest bumped 3.5.54.
-- [x] **Commit + push**: `8914ab8` su `feat/premium-vpn` (+81/-6, 6 file).
-- [x] **Deploy v3.5.54** — CWS published (status OK), AMO public 3.5.54 (reviewed 16:41Z), site production live (chrome+firefox 3.5.54, `--branch main`), Telegram msg 93. Residui: Edge 404 (Partner Center), safari zip edge-cache stale (self-heal ≤4h). Dettagli: checkpoint `CP_20260731_1846.md`.
-- [ ] **Edge**: 404 (non 401 — chiave valida, product ID non accessibile). Upload manuale Partner Center OPPURE credenziali rigenerate dall'account proprietario.
-
-## Sessione 2026-07-30 — annunci sempre attivi su piattaforma video (v3.5.45)
-
-- [x] **ROOT CAUSE: lo strip perdeva la corsa contro la pagina** (v3.5.45, `1a750b4`). L'hook A1 su `ytInitialPlayerResponse` decideva strip vs passthrough **dentro il setter**, che scatta pochi ms dopo `document_start`; il verdetto Pro arriva pero' da `content.js` solo dopo `storage.get` + `crypto.subtle.verify` (asincrone). Corsa persa quasi sempre → `adPlacements` intatti → il player schedula ogni annuncio. **Non e' una regressione: e' una race che il codice ha sempre corso**, da cui l'intermittenza storica e il fatto che Playwright non riproducesse. Fix: (a) strip **pigro** valutato al `get`, (b) canale **sincrono** `localStorage.__adoff_pro` scritto da content.js, stesso pattern di `__adoff_vc`. `isProSync` usata SOLO dal Layer A; stub IMA e anti-detection restano sul nonce.
-- [x] **Test anti-regressione** `test-yt-initial-response-race.js` 7/7, validato per mutazione (rimettendo il bug falliscono T1, T5, T6). T6 e' la guardia strutturale: il setter non deve consultare il gate.
-- [x] **Falso allarme diagnosticato**: l'interruttore "Compatibilita' piattaforme video" era rimasto **acceso** dopo il debug degli schermi neri. In quella modalita' Layer A e regole di rete YT sono disattivati e i ping annuncio **sbloccati**: gli annunci passano *by design*. La sua causa originale (regola 178) era gia' stata rimossa in 3.5.41.
-- [x] **Secondo difetto: l'annuncio lungo si bloccava** (v3.5.46, `8bc8731`). `instantSkip` seekava a `duration - 0.15` **senza guardare il buffer**. Il player clampa un seek oltre i dati scaricati e resta ad aspettare i segmenti mancanti → spinner. **Misura dal browser utente**: annuncio 10s con `bufEnd=10.02` su `dur=10.021` → saltato in **0,5s**; annuncio 40s con buffer corto → **bloccato a 38s**. Fix: il salto non supera mai il bordo del buffer, il polling a 50ms lo insegue mentre `playbackRate=16` lo fa crescere. `test-ad-skip.js` 11/11 (T10/T11 nuovi, validati per mutazione). **Regola generale: su MSE un seek e' utile solo dentro `buffered.end`.**
-- [x] **REGRESSIONE 3.5.46 e fix** (v3.5.47, `aa6b1b7`): il salto ripetuto cadeva **dentro al contenuto**, spostandolo in punti a caso. Annuncio e contenuto condividono lo stesso elemento video e allo scambio di sorgente il player tiene `ad-showing` addosso ancora per decine di ms. Col salto singolo la finestra era stretta; rendendolo ripetuto si e' allargata. Fix: la **durata** separa le sorgenti — se cambia ed e' > 180s e' il contenuto (`playbackRate` a 1, mani ferme fino al blocco successivo), se resta plausibile e' il secondo spot del pod (riarma dopo 2 tick di conferma). `test-ad-skip.js` 13/13, T12/T13 validati per mutazione. **Regola: su un player che riusa lo stesso elemento video, la classe CSS di stato non basta a sapere quale sorgente sta suonando.**
-- [x] **Terzo giro: il salto colpiva il contenuto anche in INGRESSO** (v3.5.48, `9528e09`). La guardia della 3.5.47 copriva solo l'uscita dall'annuncio. Il player marca `ad-showing` **prima** di scambiare la sorgente: al primo tick il media montato e' ancora il contenuto, la sua durata veniva presa per quella dell'annuncio e il salto finiva nel video vero. **Prova numerica dai ping `atr`**: preroll con `adunit cmt=14.891/len=15.041` (annuncio terminato bene) ma `detailpage cmt=152.708/len=1080.121` — contenuto partito da 152,708s, cioe' `bufEnd - AD_SEEK_SAFETY_SEC`. Fix: il controllo non e' piu' sul **cambio** di durata ma sulla **durata in se'** — nessun annuncio supera i 180s, quindi un media piu' lungo e' contenuto e non si tocca, a ogni tick; in piu' la durata deve restare ferma 2 tick prima di agire. `test-ad-skip.js` 15/15 (T14/T15 nuovi); la mutazione riproduce `152.708` al centesimo. **Regola: `ad-showing` non dice QUALE sorgente sta suonando, solo che il player e' in modalita' annuncio.**
-- [ ] **Validazione utente v3.5.48** — ricaricare l'estensione e verificare su un annuncio **lungo** (30-40s) che scorra accelerato fino in fondo senza spinner. Serve **una ricarica di pagina in piu'** al primo giro se `__adoff_pro` non e' ancora popolato.
-- [ ] **403 su `googlevideo.com/videoplayback` (itag=18) NON spiegato** — due richieste consecutive, la seconda senza `ctier`, entrambe `403 Forbidden` dal server. Verificato che `stealth.js` **non tocca** quegli URL (le righe 334/374 nello stack sono il wrapper fetch/XHR in passthrough). Sospetto VPN: URL con `ip=60.73.55.47` mentre la pagina e' `cr=IT`. Da indagare separatamente.
-- [ ] **Valutare se l'interruttore compatibilita' debba sopravvivere** — oggi il suo unico effetto pratico e' disarmare la protezione sulla piattaforma video; la causa per cui era nato non esiste piu'.
-
-## Sessione 2026-07-29/30 — schermo nero YouTube + bug critico licenze (v3.5.39→3.5.44)
-
-Checkpoint completo: `.claude/checkpoints/CP_20260730_0225.md`
-
-- [x] **REGOLA 178 RIMOSSA — causa del nero 10-15s** (v3.5.41, `46f64c2`). `googlevideo.com/videoplayback*ctier=L`, SEMPRE ATTIVA (non era tra `YT_AD_RULE_IDS`, quindi né Free né compatibilità la disattivavano): bloccava lo **stream del contenuto**, non la pubblicità. `ctier` = content tier. Log utente: `ERR_BLOCKED_BY_CLIENT` + retry `rn=37→38→39`. Regole 144→143. **Verificato dai dati utente: 1573ms contro 36488ms.** Segnale storico ignorato: `79bd308` aveva messo una toppa `excludedInitiatorDomains:[paramountplus.com]` su quella stessa regola.
-- [x] **BUG CRITICO LICENZE — ogni pagante declassato a Free a ogni avvio** (v3.5.44, `7ad602f`). `revalidateLicense()` riscriveva `adoffLicense` aggiornando `lastValidated` senza ricalcolare `adoffIntegrity` → `content.js` la considerava manomessa e negava Pro. Gira a ogni avvio browser + daily alarm. Il pannello mostrava "PRO Lifetime" comunque perché legge la licenza senza passare dal gate. **È la causa di tutti i `gate Pro NON attivo` nei test video.** Recupero per utenti già colpiti: riavviare l'estensione.
-- [x] **Instant-skip ripristinato** (v3.5.43, `ec4c06e`): `instantSkip` termina l'annuncio al primo tick con `readyState>=1`. Prima terminava solo gli annunci *impiantati*, quindi un annuncio che scorre non veniva fermato (pulsante skip spesso assente, `playbackRate=16` rimesso a 1 dal player). Dirette escluse.
-- [x] **TypeError ogni 50ms** (v3.5.40, `12ec3d6`): `skip?.offsetParent !== null` è vero anche con `skip===null` → eccezione che impediva la chiusura degli overlay.
-- [x] **Campo Account vuoto** (v3.5.42, `40896a6`): il server non inviava mai `email`, il client non la salvava (2 rami: `/activate` e `/validate`). Ora mascherata (`er***@gmail.com`).
-- [x] **Worker licenze deployato** — versione `ac8cd555`, su autorizzazione esplicita. **LIVE: trial 15 giorni (era 30)**, email mascherata, pricing rework `b822897`.
-- [x] **4 suite di test anti-regressione**, tutte estraggono il blocco reale dal sorgente e validate con mutazione: `test-license-integrity.js` 4/4 (T3 è il test che avrebbe intercettato il bug critico), `test-ad-skip.js` 9/9, `test-layer-d-watchdog.js` 7/7, `test-rules-no-content-block.js` 4/4.
-- [ ] **PROSSIMO PASSO — validare il gate Pro**: ricaricare l'estensione a 3.5.44, incollare `sviluppo/tests/diag-console-blackscreen.js` nella console su una pagina video. **Expected outcome: il report dice "gate Pro attivo"** (prima diceva sempre il contrario). Solo allora `playbackRate max` misura il Layer B in funzione: 16 = skip agisce, 1 = non parte.
-- [ ] **Decidere se promuovere la modalità compatibilità a DEFAULT** — ipotesi ancora NON verificata: con lo strip attivo il player potrebbe non marcare `ad-showing`, rendendo inerte il Layer B.
-- [ ] **Pubblicazione store v3.5.44** — sospesa su decisione utente. Argomento a favore: il bug licenze colpisce **tutti i clienti paganti adesso**.
-- [ ] **Regola 179** (`videoplayback*oad=`, Pro-only) non toccata: stessa famiglia della 178. Se il nero ricomparisse in Pro, è il sospetto numero uno.
-- [ ] **Hash integrità licenza fragile** (design): calcolato su TUTTO l'oggetto serializzato, quindi qualunque campo aggiunto/aggiornato la invalida. Valutare un hash su sottoinsieme stabile (`rawKey`, `plan`, `expires`) escludendo i volatili (`lastValidated`, `devices`).
-
-## Release 3.5.38 — anti-detection fix (2026-07-28)
-
-- [x] **Fix spoof googletag/adsbygoogle** — commit b251624. I siti riassegnavano `window.googletag` cancellando lo spoof (1 chiave, `apiReady:false` = firma adblock). Ora merge-accessor: 18 chiavi stabili.
-- [x] **Sito** — LIVE 3.5.38 (ZIP + 51 file HTML/JSON-LD)
-- [x] **CWS** — 3.5.38 pubblicata (`uploadState: SUCCESS` → publish `status: OK`, `crxVersion: 3.5.38`). La 3.5.37 intermedia conteneva già il fix.
-- [x] **AMO** — 3.5.38 canale **listed** (versions/6380919), riallinea il listing pubblico fermo a 3.5.35
-- [x] **Telegram** — annuncio EN + card (message_id 89)
-- [x] **CWS: 3.5.38 caricata e pubblicata** — review 3.5.37 chiusa, upload `SUCCESS`, publish `OK`, `crxVersion: 3.5.38` verificata.
-- [x] **Edge: 3.5.38 pubblicata** — review 3.5.36 chiusa, operazione publish `Succeeded`. Edge ora serve il fix (non più la 3.5.36 senza).
-
-**Release 3.5.38 allineata su tutti i canali automatizzabili**: sito, CWS, AMO, Edge, Telegram. Resta solo Safari (richiede Mac con Xcode).
-- [x] **Wall investing.com SPARITO** — confermato dall'utente 2026-07-28 sulla build col fix. Il merge-accessor su `googletag` era effettivamente la causa del rilevamento: root cause chiusa, non serve cercare altri vettori.
-
-## 🔴 Alta priorità (bloccanti revenue)
-
-- [x ~~] **Premium VPN — VPN provisioning nel webhook** — `VPNRESELLERS_API_KEY` secret impostato, provisioning gia' implementato
-  - Secret: `wrangler secret put VPNRESELLERS_API_KEY --name adoff-license-api` ✅
-  - refs: PROGRESS-vpn-premium.md §FASE 1bis
-- [x ~~] **Premium VPN — Multi-device test empirico** — balance insufficiente ($24.74)
-  - refs: PROGRESS-vpn-premium.md §FASE 1bis
-  - Prereq: ricaricare VPNresellers $100+
-- [ ] **Balance VPNresellers refill** — ~$24.74 → $100+. **Non è più un blocco ai test**: l'utente conferma 2026-07-28 che i test E2E Premium VPN sono stati eseguiti e funzionano. È ora un limite di **capienza in produzione**: a ~$1,99/account il saldo copre ~12 attivazioni (meno, se i test ne hanno già consumate). Oltre quella soglia il cliente paga e il provisioning VPN fallisce → incasso senza consegna. Da ricaricare PRIMA di aprire le vendite Premium, non dopo.
-
-## 🟡 Media priorità (store publish)
-
-- [x] **Edge publish v3.5.36** — pubblicata (senza fix). Superata: il draft ora contiene la 3.5.38, vedi la voce nella sezione Release 3.5.38.
-  - Nota API v1.1: i GET di lettura stato NON esistono (404 su `submissions/draft/package`). L'unico modo di sondare il canale è tentare l'upload/publish e leggere l'errorCode.
-- [x] **AMO Firefox** — RISOLTO 2026-07-28: canale listed riallineato con la 3.5.38.
-
-## 🟢 Bassa priorità (nice-to-have)
-
-- [x ~~] **i18n — 31 pagine** — TUTTE coperte (31/31), 2652 chiavi allineate su 15 lingue
-  - refs: `c6c5bfc` commit
-  - Script: `sviluppo/scripts/add_i18n_attrs.py` (batch 1/2)
-- [ ] **GA4 historical data** — crescono col tempo, non c'è azione
-
-## ✅ Completati (recenti)
-
-- [x] **Site restyle cleanup + i18n IT residui** (2026-07-20): fix miscuglio vecchio/nuovo (nav doppia unique-tech topbarNav→site-nav, affiliati orfana, footer condivisi android/success/uninstall/account, versione→3.5.36, VPN Founder €29,99/Standard €49,99, trial→15gg, regole→144); +audit ~178 chiavi/lingua×14 con testo IT non tradotto→tradotte tutte via 2 workflow. commit e86586b/58b2bf8/f12941e, deploy live
-- [x] **Site full audit + fix** (2026-07-18): 37 pagine senza i18n, nav versioni, CSP GTM — TUTTO RISOLTO
-- [x] **Post Telegram** changelog v3.5.36 (message_id: 78)
-- [x] **Redesign sito light+dark** (2026-07-14): stile AdBlock/ABP, 15 lingue
-- [x] **v3.5.36 release**: CWS published, trial 15gg, pricing congruente
-- [x] **VPN Sprint 2**: checkout Stripe Premium funzionante, gating deployed
-- [x] **Premium badge 3 livelli** nel popup (Free/Pro/Premium)
-- [x] **VPN Policy page** su adoff.app
-- [x] **Sezione Premium in options.html**
-- [x] **Trial anti-crack ECDSA P-256**
-- [x] **syncRemoteRules** riattivato (autofix Fase 0)
-
-## 🔒 Congelati (decisioni bloccanti)
-
-- **Premium FASE 2**: VPN mobile + Kill-switch + DNS Guard freemium (bloccato da provisioning + test E2E)
-- **Premium FASE 3**: SEO guide/FAQ AEO/analytics/anti-churn/GO-LIVE checklist (bloccato da FASE 2)
-- **Premium FASE 3**: Canali Telegram EN / email Pro / social / in-app (bloccato da FASE 2)
+> **Consolidato 2026-08-02.** Merge di tutte le sessioni 2026-07-28 → 2026-08-02 (checkpoint `CP_20260728_2204` → `CP_20260731_1846` + sessione SEO 02/08 senza checkpoint).
+> I check sono **cancellazioni**, non aggiunte. Le voci aperte sono ordinate per priorità reale.
+> Stato prodotto: **v3.5.54** live su CWS · AMO · sito. Branch `feat/premium-vpn`, HEAD `9fb1791` **non pushato**.
 
 ---
 
-## Merge info
+## 🔴 BLOCCANTI (soldi / produzione)
 
-Questo file sostituisce TODO.md frammentato. Checkpoints archiviati:
-- CP_20260718_0721/0825/0915 — site audit ✅
-- CP_20260718_1720 — site i18n + CSP ✅  
-- CP_20260719_i18n.md — 31 pagine pendenti (da fare)
-- CP_20260714_VPN_SPRINT2 — checkout ✅, provisioning pending
-- CP_20260715_0030 — redesign site ✅
-- RESTART-SESSION.md — Autopilot (vecchio progetto, non più attivo)
+- [ ] **Refill wallet VPNresellers: ~24,74 USD → 100+ USD.** A ~1,99 USD/account il saldo copre ~12 attivazioni (meno se i test ne hanno già consumate). Oltre soglia: **il cliente paga e il provisioning VPN fallisce** → incasso senza consegna. **Da fare PRIMA di aprire le vendite Premium, non dopo.** Non è più un blocco ai test (E2E Premium VPN già eseguiti e funzionanti, conferma utente 2026-07-28). Azione di pagamento dell'utente. Saldo verificabile via API (`VPNRESELLERS_API_KEY` già impostato sul worker `adoff-license-api`).
+  - refs: `CP_20260729_1757` §To-Do 1, `PROGRESS-vpn-premium.md`
+
+- [ ] **Sessione SEO 02/08 in sospeso: commit `9fb1791` NON pushato e NON deployato.** Il lavoro è committato ma il sito live non ha nessuna delle 6 correzioni (canonical, robots.txt, meta description, FAQPage, title, llms.txt). Fino al deploy, i segnali di ranking restano divisi tra `/about` e `/about.html`. *Expected outcome:* `git push` + `bash sviluppo/scripts/deploy-site.sh` (MAI `wrangler pages deploy site/` diretto — bypassa il gate i18n), poi verifica canonical su 2-3 URL live.
+  - refs: `sviluppo/seo-tools/.state/report_20260802.md`
+
+---
+
+## 🟠 RELEASE 3.5.54 — code residua
+
+- [ ] **Edge store: 3.5.54 non pubblicata — HTTP 404 (NON 401).** La chiave `UiQ7Nj…7llo` autentica correttamente; è il `EDGE_PRODUCT_ID` `00a23227-cb9a-415c-88bb-4e9636f7e94b` a non essere accessibile → product ID stantio **oppure** credenziali generate sotto un altro account Partner Center. **NON rinnovare la chiave pensando sia scaduta.** Due strade: upload manuale da Partner Center di `sviluppo/adoff-chrome-store.zip`, oppure Product ID + credenziali rigenerate dall'account proprietario e retry API.
+- [ ] **Safari: build + submit Mac App Store.** Non eseguibile da Linux: serve Mac con Xcode (`xcrun safari-web-extension-converter`). Ferma da 3.5.38.
+- [ ] **Monitorare review CWS/AMO della 3.5.54** (finestra 24-48h dal 31/07 16:41Z). In caso di rifiuto: leggere i log e rollback a 3.5.53.
+- [ ] **Purge cache edge Cloudflare** (dashboard → Caching → Purge Cache, i token API sono scoped Pages/D1 e danno `10000 Authentication error`):
+  - `adoff.app/adoff-safari.zip` — origine 3.5.54, cache serve 3.5.53 (self-heal ≤4h, probabilmente già rientrato)
+  - `/CLAUDE.md`, `/.claude/settings.json`, `/graphify-out` — artefatti interni rimossi dall'origine ma ancora serviti dalla CDN con HTTP 200
+- [ ] **Appendere la sezione Deploy** al vault `Memoria/progetti/chromeplugin/sessioni/sessione-20260731-overlay-ssa-v354.md` (riferimenti `[[amo-listed-sign-api-2026-07-31]]` + `CP_20260731_1846`).
+
+---
+
+## 🟡 TECNICI — decisioni e verifiche aperte
+
+- [ ] **Decidere il destino dell'interruttore "Compatibilità piattaforme video".** Oggi il suo unico effetto pratico è **disarmare** la protezione su YouTube (Layer A + regole di rete off, ping annuncio sbloccati). La causa per cui era nato — regola 178 che bloccava lo stream del contenuto — **non esiste più** (rimossa in 3.5.41). Due opzioni sul tavolo: rimuoverlo, oppure promuoverlo a default (ipotesi **mai verificata**: con lo strip attivo il player potrebbe non marcare `ad-showing`, rendendo inerte il Layer B). Rischio concreto se resta com'è: l'utente lo lascia acceso dopo un debug e crede che AdOff sia rotto (già successo il 30/07).
+- [ ] **Hash integrità licenza fragile (debito di design).** `adoffIntegrity` è calcolato su TUTTO l'oggetto licenza serializzato: qualunque campo aggiunto o aggiornato lo invalida. È la classe di bug che ha declassato tutti i paganti a Free (v3.5.44). Valutare un hash su sottoinsieme stabile (`rawKey`, `plan`, `expires`) escludendo i volatili (`lastValidated`, `devices`). **Decidere prima del prossimo cambio schema licenza.**
+- [ ] **Regola 179** (`videoplayback*oad=`, Pro-only) mai verificata: stessa famiglia della 178 rimossa. Se lo schermo nero ricomparisse in Pro, è il sospetto numero uno.
+- [ ] **`validate_site.py:46` ha un falso positivo su 233 file**: segnala "trial 15gg (ora 30)" mentre il prodotto reale fa **15** giorni (`app/src/background.js:13`, `constants.json`, `llms.txt`). È la regola del validatore a essere sbagliata, non il sito. Finché resta, inquina ogni run.
+- [ ] **Il cron SEO gira nella directory sbagliata**: `~/Dropbox/…/ChromePlugin` (quasi vuota) invece di `/mnt/backup/…`. Conseguenze già misurate: keyword research fallita da **5 settimane** e `site_backup_20260802.tar.gz` generato **vuoto** (0 file). Backup reale ricreato a mano: `site_backup_20260802_real.tar.gz` (681 file).
+- [ ] **`constants.json` è fermo a `version: 3.5.53`** mentre il manifest è 3.5.54. Non toccato di proposito: cambiarlo rigenera le 15 homepage per-lingua. Da allineare nel prossimo giro di build sito.
+
+---
+
+## 🟢 SITO / SEO / CONTENUTI
+
+- [ ] **Cluster keyword gap: YouTube / Chrome / Android / Twitch / "gratis"** — 581 keyword raccolte, **80 gap** (query cercate dove il sito non appare). Dominante il cluster video. Da coprire con contenuto nuovo, non con tweak di title.
+  - Da spingere (già in pos. 5-20): `adoff` (8,2 · 66 impr), `add off` (11), `ad off` (13,9), `adguard` (14,9), `ublock` (12,4)
+  - refs: `sviluppo/seo-tools/.state/keyword_report.md`
+- [ ] **4 pagine con testo italiano non tradotto nel markup**: `fr/license-guide`, `ru/license-guide`, `tr/license-guide`, `tr/adblock-detector`.
+- [ ] **`mockup.webp` ha "v3.1.0" stampato dentro l'immagine** — da rigenerare.
+- [ ] **GA4 historical data** — crescono col tempo, nessuna azione possibile.
+
+---
+
+## 🔒 CONGELATI (bloccati da dipendenze)
+
+- **Premium FASE 2**: VPN mobile + Kill-switch + DNS Guard freemium — bloccato dal refill wallet.
+- **Premium FASE 3**: SEO guide / FAQ AEO / analytics / anti-churn / GO-LIVE checklist — bloccato da FASE 2.
+- **Premium FASE 3**: canali Telegram EN / email Pro / social / in-app — bloccato da FASE 2.
+
+---
+
+## ⛔ DO NOT — vincoli permanenti (consolidati da tutti i checkpoint)
+
+- **MAI reintrodurre `video.currentTime =` in `activateYoutubeRuntimeKiller`.** Regola d'oro: 9 versioni di bug (3.5.46→3.5.51) nate dal seek. Rimosso in 3.5.52, approccio definitivo = solo `playbackRate=16` + click sul pulsante skip. Qualsiasi riga `currentTime =` che ricompaia in `stealth.js` è una regressione critica → revert immediato.
+- **MAI merge di `feat/premium-vpn` su `main`.** `main` è il repo pubblico open-core (`github.com/eroslifestyle/adoff`), fermo a 3.5.36.
+- **NON riattivare lo stall watchdog (Layer D)** — faceva seek.
+- **NON rimuovere l'instant-skip (`playbackRate=16`)** — è l'unico fallback per gli annunci che superano il Layer A.
+- **NON usare `wrangler pages deploy site/` diretto** — bypassa il gate i18n di `deploy-site.sh` e porta online artefatti interni. E quando si deploya, **serve `--branch main` esplicito**: senza, wrangler auto-rileva `feat/premium-vpn` e fa un deploy di preview, non production.
+- **NON deployare senza OK esplicito dell'utente.**
+- **NON rimuovere Safari dalle pagine del sito**: `constants.json → browsers_coming_soon` non significa "non esiste", `adoff-safari.zip` c'è ed è scaricabile (guard `guard_safari.py`).
+- **NON toccare `app/src/graphify-out/`** (84 MB nel posto sbagliato, fuori scope).
+- **NON forzare il commit di `.claude/checkpoints/` con `-f`**: è in `.gitignore` per scelta del progetto.
+- **NON rilassare le guardie di `translate_batch.py`** senza verifica dei tag HTML.
+- **NON aprire le vendite Premium prima del refill wallet.**
+
+---
+
+## ❌ FAILED APPROACHES — non riprovare
+
+**Video / YouTube**
+- **Seek su player MSE YouTube** (6 versioni di guardie: buffer-aware, source-detection, stable-ticks, preroll-reset). La causa era il seek stesso. Su MSE un seek è utile solo dentro `buffered.end`, ma la vera risposta è non seekare.
+- **Guardia sul *cambio* di durata** per distinguere annuncio da contenuto: `ad-showing` viene marcato **prima** dello scambio di sorgente, quindi al primo tick il media montato è ancora il contenuto. `ad-showing` dice solo che il player è in modalità annuncio, **non quale sorgente sta suonando**.
+- **Hardcoded `playbackRate = 1` in `onAdEnd`**: scartava la velocità scelta dall'utente (1,5x/2x). Fix in 3.5.54 con `savedRate`.
+- **403 su `googlevideo.com`**: NON è un bug di AdOff. Sono su `itag=18` (formato progressivo 360p deprecato), YouTube lo rifiuta e il player passa al DASH. Chiuso come rumore — non investigare oltre.
+- **Toggle pausa come test di isolamento** prima della 3.5.49: non fermava stealth.js, quindi tutti i test "in pausa" precedenti sono invalidi.
+
+**Store / deploy**
+- **`web-ext sign --channel listed`** → timeout infinito. Usare l'API REST diretta AMO (`POST /api/v5/addons/upload/` multipart con `channel=listed` + poll `GET /addons/upload/{uuid}/`).
+- **AMO version create con `guid` nel path** → HTTP 405. Usare slug `adoff` o numeric id `3003287`. **AMO upload senza `channel`** → HTTP 400.
+- **Upload CWS mentre la review precedente è aperta** → `ITEM_NOT_UPDATABLE`. Attendere la chiusura.
+- **`GET /submissions/draft/package` su Edge** → 404: l'endpoint di stato **non esiste**. L'unico modo di sapere se il canale è libero è tentare l'upload.
+- **Cache purge Cloudflare via `CLOUDFLARE_API_TOKEN` / `CF_API_KEY`** → `10000 Authentication error` (scope Pages/D1, non Zone.Cache Purge). Usare la dashboard.
+- **Inventare env var/host per il deploy** (`CWS_CLIENT_ID` come extension id, host `site-server`, `AMO_GUID`): i nomi reali stanno in `~/.secrets/adoff-stores.env`, i comandi in `CLAUDE.md` §Deploy Rule.
+
+**Sito / i18n**
+- **Filtro `not_translatable` troppo aggressivo**: escludeva "Overview" → "Panoramica". Serve l'eccezione sui prefissi di pagina.
+- **`data-i18n` su `<title>` gestito da `document.body`**: `<title>` sta in `<head>`, serve gestione esplicita in `applyTranslations`.
+
+**Test**
+- **Playwright con `channel:"chrome"` + `--load-extension`**: il Chrome di sistema non inietta content script in `world:MAIN`. Usare `chromium` bundled + `xvfb`.
+
+---
+
+## ✅ FATTO — storico per release
+
+### v3.5.54 — overlay SSAI + playbackRate (31/07)
+- Diagnosi SSAI definitiva: il residuo ~20% di ad YouTube è **Server-Side Ad Insertion**, cucito nello stream DASH. `adPlacements` strippato, zero chiavi `ad[A-Z]` residue, gate Pro attivo. **Non strippabile dal JSON** — nessun adblocker MV3 può bloccarlo senza seek.
+- `setSkipOverlay()`: `<div id="adoff-skip-ov">` nero brandizzato sopra `#movie_player` durante `ad-showing` (z-index 999999, pointer-events none). L'utente vede ~1s di nero invece dello spot. Zero seek.
+- `savedRate`: cattura in `onAdStart`, restore in `onAdEnd` → 1,5x/2x preservati.
+- Sync Chrome+Firefox+Safari (regione killer byte-identica), `test-ad-skip.js` 6/6, commit `8914ab8`.
+- **Deploy**: CWS published · AMO public (reviewed 31/07 16:41Z, version 6386843) · sito production (`--branch main`) · Telegram msg 93.
+
+### v3.5.45→3.5.53 — la saga YouTube (30/07)
+- **Race condition Layer A** (3.5.45): lo strip di `ytInitialPlayerResponse` decideva **dentro il setter** (pochi ms dopo `document_start`) mentre il verdetto Pro arriva dopo `storage.get` + verify ECDSA (asincroni). Corsa persa quasi sempre → `adPlacements` intatti. **Non era una regressione: è una race che il codice ha sempre corso** — da qui l'intermittenza storica e il fatto che Playwright non la riproducesse. Fix: strip **pigro** al getter + canale sincrono `localStorage.__adoff_pro`. Test 7/7 validati per mutazione.
+- **Toggle pausa non fermava stealth** (3.5.49): `content.js` scriveva il nonce prima di leggere `adoffEnabled`.
+- **Uninstall URL mostrava JSON grezzo** (3.5.50): puntava all'API invece che a `adoff.app/uninstall.html`.
+- **RIMOSSO IL SEEK** (3.5.52): da ~250 righe di logica a ~60, forma FadBlock pura.
+- **Layer A strip ricorsivo** (3.5.53): pattern `ad[A-Z]` + `playerAds` + `midroll*`, profondità 6, `adaptiveFormats` preservato. La lista statica di 5 campi lasciava passare `adBreaks`/`adConfig`. **Utente conferma: funziona** — midroll -80%, preroll eliminati.
+
+### v3.5.39→3.5.44 — schermo nero + bug critico licenze (29-30/07)
+- **REGOLA 178 RIMOSSA** (3.5.41) — causa del nero 10-15s. `googlevideo.com/videoplayback*ctier=L`, **sempre attiva** (non era in `YT_AD_RULE_IDS`, quindi né Free né compatibilità la disattivavano): bloccava lo **stream del contenuto**, non la pubblicità (`ctier` = content tier). Misurato dai dati utente: **1573ms contro 36488ms**. Segnale storico ignorato: `79bd308` aveva messo una toppa `excludedInitiatorDomains:[paramountplus.com]` sulla stessa regola. Regole 144→143.
+- **BUG CRITICO LICENZE** (3.5.44) — **ogni pagante declassato a Free a ogni avvio**. `revalidateLicense()` riscriveva `adoffLicense` aggiornando `lastValidated` **senza ricalcolare `adoffIntegrity`** → `content.js` la considerava manomessa. Girava a ogni avvio browser + daily alarm. Il pannello mostrava "PRO Lifetime" comunque perché legge la licenza senza passare dal gate. **È la causa di tutti i "gate Pro NON attivo" nei test video.**
+- Instant-skip ripristinato (3.5.43), TypeError ogni 50ms su `skip?.offsetParent` (3.5.40), campo Account vuoto → email mascherata (3.5.42).
+- Worker licenze deployato (`ac8cd555`): **trial 15 giorni LIVE** (era 30), pricing rework.
+- **4 suite anti-regressione**, tutte estraggono il blocco reale dal sorgente e validate per mutazione: `test-license-integrity.js` 4/4 (T3 avrebbe intercettato il bug critico), `test-ad-skip.js`, `test-layer-d-watchdog.js` 7/7, `test-rules-no-content-block.js` 4/4.
+
+### Audit forense sito (29-30/07)
+33 bug catalogati (6 P0) — report `sviluppo/audit-reports/2026-07/REPORT-AUDIT-SITO-20260729.md`. Nav che routava a pagine runtime parziali → statiche `/{lang}/`; 48 pagine con CSS relativo (rendering Times New Roman); 3 bug in `adoff-i18n.js`; 7700+ traduzioni in 13 lingue (copertura 100%); `deploy-site.sh` `cmd_build` reso additivo (era una mina: -2000 chiavi/lingua); artefatti interni rimossi; sitemap rigenerato (547 URL, 0 morti); 417 pagine agganciate a `adoff-i18n.js`. Toolchain riutilizzabile in `sviluppo/scripts/audit/`.
+
+### v3.5.38 — anti-detection (28-29/07)
+Merge-accessor su `googletag`/`adsbygoogle`: i siti riassegnavano `window.googletag` cancellando lo spoof (1 chiave, `apiReady:false` = firma adblock riconoscibile). Ora 18 chiavi stabili. **Wall investing.com sparito** (confermato dall'utente) → root cause chiusa. Pubblicata su sito, CWS, AMO listed, Edge, Telegram (msg 89).
+
+### SEO/AEO (02/08) — committato, non deployato
+Canonical `.html` → extensionless su 38 pagine (GSC mostrava `/about` e `/about.html` indicizzati separatamente, ranking diviso); `ja/license-guide` canonical puntava alla root italiana; `robots.txt` `Disallow /*?lang=*` rimosso (impediva ai crawler di leggere il canonical già corretto); meta description duplicata rimossa su 24 pagine (`how-it-works` serviva IT ed EN insieme); +3 Q&A FAQPage su `block-video-ads` EN+IT; `llms.txt`/`llms-full.txt` allineati (143 regole, 3.5.54). 714 JSON-LD parsati, 0 rotti.
+
+### Precedenti (consolidati)
+Premium VPN provisioning nel webhook · checkout Stripe Premium + gating · badge Premium 3 livelli · VPN Policy page · sezione Premium in options · trial anti-crack ECDSA P-256 · `syncRemoteRules` riattivato · i18n 31/31 pagine, 2652 chiavi × 15 lingue · redesign sito light+dark · site restyle cleanup (20/07).
+
+---
+
+## 📎 Riferimenti
+
+| Cosa | Dove |
+|---|---|
+| Checkpoint più recente (deploy 3.5.54) | `.claude/checkpoints/CP_20260731_1846.md` |
+| Checkpoint saga YouTube | `.claude/checkpoints/CP_20260730_1645.md`, `CP_20260730_0225.md` |
+| Checkpoint audit sito | `.claude/checkpoints/CP_20260730_2330.md` |
+| Checkpoint publish 3.5.38 | `.claude/checkpoints/CP_20260729_1757.md` |
+| Report audit sito | `sviluppo/audit-reports/2026-07/REPORT-AUDIT-SITO-20260729.md` |
+| Report SEO settimanale | `sviluppo/seo-tools/.state/report_20260802.md` |
+| Keyword gap | `sviluppo/seo-tools/.state/keyword_report.md` |
+| Piano VPN Premium | `.claude/PROGRESS-vpn-premium.md`, `.claude/PLAN-vpn-dns-redesign.md` |
+| Secrets store | `~/.secrets/adoff-stores.env` |
+| Vault progetto | `~/Obsidian/Memoria/progetti/chromeplugin/` |
