@@ -299,6 +299,43 @@
       return obj;
     }
 
+    // A0: Hook JSON.stringify per inject isInlinePlaybackNoAd
+    (function () {
+        var _origStringify = JSON.stringify;
+        JSON.stringify = function (value) {
+            var out = _origStringify.apply(JSON, arguments);
+            try {
+                if (isProSync() && !isVideoCompatMode() && typeof out === "string" &&
+                    out.indexOf("\"contentPlaybackContext\":{") !== -1 &&
+                    out.indexOf("isInlinePlaybackNoAd") === -1) {
+                    out = out.replace("\"contentPlaybackContext\":{", "\"contentPlaybackContext\":{\"isInlinePlaybackNoAd\":true,");
+                    try { window.__adoffYtDiag.flagInjectedStringify++; } catch (_) {}
+                }
+            } catch (_) { /* mai rompere JSON.stringify */ }
+            return out;
+        };
+    })();
+
+    // A0b: Hook Object.assign come fallback anti locker-script
+    (function () {
+        try {
+            window.Object.assign = new Proxy(window.Object.assign, {
+                apply: function (target, thisArg, args) {
+                    var res = Reflect.apply(target, thisArg, args);
+                    try {
+                        if (isProSync() && !isVideoCompatMode() && res && typeof res === "object" &&
+                            res.contentPlaybackContext && typeof res.contentPlaybackContext === "object" &&
+                            res.contentPlaybackContext.isInlinePlaybackNoAd === undefined) {
+                            res.contentPlaybackContext.isInlinePlaybackNoAd = true;
+                            try { window.__adoffYtDiag.flagInjectedAssign++; } catch (_) {}
+                        }
+                    } catch (_) {}
+                    return res;
+                }
+            });
+        } catch (_) { /* Object.assign puo essere non configurabile */ }
+    })();
+
     // A1: Hook ytInitialPlayerResponse before YouTube's inline script sets it
     // Gating runtime: Free passthrough (no strip), Pro/Trial strip.
     //
@@ -313,6 +350,20 @@
     // sincrono, che copre anche una lettura anticipata.
     let _ytResp = window.ytInitialPlayerResponse;
     let _ytStripped = false;
+    let _coldLoadDone = false;
+    let _hadAds = false;
+
+    function rilevaAds(r) {
+       // Lo strip cancella l'indizio, quindi va memorizzato prima.
+       try {
+           if (!r) return false;
+           if (r.adPlacements || r.adBreakHeartbeatParams || r.playerAds) return true;
+       } catch (_) {}
+       return false;
+    }
+
+    // Inizializzazione: copriamo il caso in cui la variabile esista già prima del nostro hook
+    _hadAds = rilevaAds(_ytResp);
 
     function stripYtRespIfPro() {
       if (_ytStripped || !_ytResp) return;
@@ -321,9 +372,63 @@
       _ytStripped = true;
     }
 
+    function coldLoadDisabilitato() {
+       // kill-switch manuale per debug: localStorage.__adoff_nocold = "1"
+       try { return localStorage.getItem("__adoff_nocold") === "1"; } catch (_) { return false; }
+    }
+
+    function isLiveResp(r) {
+       // le dirette NON vanno mai toccate: il cold-load le rompe
+       try {
+           if (!r) return false;
+           if (r.videoDetails && (r.videoDetails.isLive === true || r.videoDetails.isLiveContent === true)) return true;
+           if (r.playabilityStatus && r.playabilityStatus.liveStreamability) return true;
+       } catch (_) {}
+       return false;
+    }
+
+    function deveColdLoad(r) {
+       if (_coldLoadDone || coldLoadDisabilitato()) return false;
+       if (!isProSync() || isVideoCompatMode()) return false;
+       if (!r || isLiveResp(r)) return false;
+       // Lo strip ha già rimosso gli indizi, quindi controllo se erano presenti inizialmente
+       if (_hadAds || rilevaAds(r)) return true;
+       return false;
+    }
+
     Object.defineProperty(window, "ytInitialPlayerResponse", {
-      get() { stripYtRespIfPro(); return _ytResp; },
-      set(v) { _ytResp = v; _ytStripped = false; stripYtRespIfPro(); },
+      get() {
+        if (deveColdLoad(_ytResp)) {
+          _coldLoadDone = true;
+          try { window.__adoffYtDiag.coldLoads++; } catch (_) {}
+          // Restituiamo un oggetto minimale con i metadati necessari (videoDetails,
+          // playabilityStatus, microformat, captions, responseContext) ma senza
+          // streamingData, per obbligare il player a richiedere la configurazione
+          // via rete: tale richiesta passa dai nostri hook e parte senza annunci.
+          try {
+            var minimale = {
+              videoDetails: _ytResp.videoDetails,
+              playabilityStatus: _ytResp.playabilityStatus || { status: "OK" },
+              microformat: _ytResp.microformat,
+              captions: _ytResp.captions,
+              responseContext: _ytResp.responseContext
+            };
+            return minimale;
+          } catch (_) {}
+          // Se la costruzione del minimale fallisce, cadiamo sul comportamento
+          // normale: strip e restituzione dell'oggetto completo.
+          stripYtRespIfPro();
+          return _ytResp;
+        }
+        stripYtRespIfPro();
+        return _ytResp;
+      },
+      set(v) {
+        _hadAds = rilevaAds(v);
+        _ytResp = v;
+        _ytStripped = false;
+        stripYtRespIfPro();
+      },
       configurable: true,
     });
     stripYtRespIfPro();
@@ -347,7 +452,10 @@ if (!window.__adoffYtDiag) {
     flagMissedNonString: 0,
     respMangled: 0,
     respXhrMangled: 0,
-    adSeeks: 0
+    adSeeks: 0,
+    flagInjectedStringify: 0,
+    flagInjectedAssign: 0,
+    coldLoads: 0
   };
 }
 
