@@ -1,8 +1,8 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
-> **Consolidato 2026-08-02.** Merge di tutte le sessioni 2026-07-28 → 2026-08-02 (checkpoint `CP_20260728_2204` → `CP_20260731_1846` + sessione SEO 02/08 senza checkpoint).
+> **Consolidato 2026-08-02.** Merge di tutte le sessioni 2026-07-28 → 2026-08-02 (checkpoint `CP_20260728_2204` → `CP_20260731_1846` + sessione SEO 02/08 + sessione rule-feed `CP_20260802_1840`).
 > I check sono **cancellazioni**, non aggiunte. Le voci aperte sono ordinate per priorità reale.
-> Stato prodotto: **v3.5.54** live su CWS · AMO · sito. Branch `feat/premium-vpn`, HEAD `9fb1791` **non pushato**.
+> Stato prodotto: **3.5.58** su CWS (in review) · **3.5.59** su AMO e sito. Branch `feat/premium-vpn`, HEAD `2b077c4` pushato.
 
 ---
 
@@ -16,22 +16,31 @@
 3. **Qualita' forzata a 144p durante l'annuncio**: il 16x non salta l'annuncio, lo SCARICA — meno byte, attesa piu' breve. E' la leva che ha attaccato il sintomo.
 4. **Ricarica di soccorso** (`loadVideoById`) se l'annuncio resiste oltre 1,5s, max 2 per videoId.
 
-- [ ] **DEPLOY 3.5.58** — le versioni 3.5.55/56/57/58 NON sono pubblicate: gli utenti hanno ancora la 3.5.54 col problema. Canali: CWS, AMO, sito, Telegram (Edge resta bloccato, vedi sotto).
+- [x] **DEPLOY 3.5.58** — pubblicata su CWS e AMO (commit `746cbb9`). Poi 3.5.59 su AMO e sito.
 - [ ] *(opzionale)* Chiedere all'utente `window.__adoffYtDiag` ora che funziona, per sapere **quale** meccanismo ha agito (`coldLoads`, `adReloads`, `flagInjectedStringify`) e proteggerlo da regressioni future.
+
+## ✅ RISOLTO OGGI — il rule-feed remoto non arrivava a nessuno (v3.5.59)
+
+Due difetti indipendenti e silenziosi. **Client**: `syncRemoteRules()` passava 35.143 regole a una sola `updateDynamicRules()`; la chiamata è atomica, sfondava il limite, falliva in blocco e `chrome.runtime.lastError` veniva ingoiato — misurato `adoffRemoteRulesCount` = 0 dopo 120 s, dynamic rules = 2. **Feed**: 35.000 regole su 35.143 avevano pattern regex dentro `urlFilter`, che vuole sintassi ABP → inerti. Fix: cap letto a runtime da `MAX_NUMBER_OF_DYNAMIC_RULES` (30.000, non i 5.000 di `..._DYNAMIC_AND_SESSION_RULES`), blocchi da 2.000, `lastError` loggato, throttle 6 h + `sviluppo/scripts/normalize-rules-feed.js` (29.000 regole valide, 7,3 → 5,1 MB, v`2026.08.02.1`). Misurato dopo: 29.900 regole in 3 s; `0019x.com` bloccato end-to-end da regola remota id 60143. Dettaglio: `CP_20260802_1840`.
+
+- [ ] **Correggere il generatore del feed a monte**, che continua a emettere sintassi regex in `urlFilter`. Finché non è fatto, ogni nuovo feed nasce inerte e va passato per `normalize-rules-feed.js`. *Expected outcome:* un feed appena generato supera `testMatchOutcome` senza normalizzazione.
+- [ ] **Criterio di priorità per le 6.111 regole tagliate** dal cap 29.000: oggi si tronca la coda della lista, senza sapere cosa si perde.
+- [ ] **Caricare 3.5.59 su CWS** appena la review di 3.5.58 si chiude (`ITEM_NOT_UPDATABLE` finché è aperta). ZIP pronto: `sviluppo/adoff-chrome-store.zip`.
 
 ## 🔴 BLOCCANTI (soldi / produzione)
 
 - [ ] **Refill wallet VPNresellers: ~24,74 USD → 100+ USD.** A ~1,99 USD/account il saldo copre ~12 attivazioni (meno se i test ne hanno già consumate). Oltre soglia: **il cliente paga e il provisioning VPN fallisce** → incasso senza consegna. **Da fare PRIMA di aprire le vendite Premium, non dopo.** Non è più un blocco ai test (E2E Premium VPN già eseguiti e funzionanti, conferma utente 2026-07-28). Azione di pagamento dell'utente. Saldo verificabile via API (`VPNRESELLERS_API_KEY` già impostato sul worker `adoff-license-api`).
   - refs: `CP_20260729_1757` §To-Do 1, `PROGRESS-vpn-premium.md`
 
-- [ ] **Sessione SEO 02/08 in sospeso: commit `9fb1791` NON pushato e NON deployato.** Il lavoro è committato ma il sito live non ha nessuna delle 6 correzioni (canonical, robots.txt, meta description, FAQPage, title, llms.txt). Fino al deploy, i segnali di ranking restano divisi tra `/about` e `/about.html`. *Expected outcome:* `git push` + `bash sviluppo/scripts/deploy-site.sh` (MAI `wrangler pages deploy site/` diretto — bypassa il gate i18n), poi verifica canonical su 2-3 URL live.
+- [x] **Sessione SEO 02/08: commit `9fb1791` pushato e sito deployato** (verificato: HEAD `2b077c4` è a valle, ZIP 3.5.59 e feed `2026.08.02.1` live). Testo storico della voce:
+  ~~Sessione SEO 02/08 in sospeso: commit `9fb1791` NON pushato e NON deployato.~~ Il lavoro è committato ma il sito live non ha nessuna delle 6 correzioni (canonical, robots.txt, meta description, FAQPage, title, llms.txt). Fino al deploy, i segnali di ranking restano divisi tra `/about` e `/about.html`. *Expected outcome:* `git push` + `bash sviluppo/scripts/deploy-site.sh` (MAI `wrangler pages deploy site/` diretto — bypassa il gate i18n), poi verifica canonical su 2-3 URL live.
   - refs: `sviluppo/seo-tools/.state/report_20260802.md`
 
 ---
 
 ## 🟠 RELEASE 3.5.54 — code residua
 
-- [ ] **Edge store: 3.5.54 non pubblicata — HTTP 404 (NON 401).** La chiave `UiQ7Nj…7llo` autentica correttamente; è il `EDGE_PRODUCT_ID` `00a23227-cb9a-415c-88bb-4e9636f7e94b` a non essere accessibile → product ID stantio **oppure** credenziali generate sotto un altro account Partner Center. **NON rinnovare la chiave pensando sia scaduta.** Due strade: upload manuale da Partner Center di `sviluppo/adoff-chrome-store.zip`, oppure Product ID + credenziali rigenerate dall'account proprietario e retry API.
+- [ ] **Edge store: fermo alla 3.5.54.** Storico: `POST /submissions/draft/package` dava **404** (product ID non accessibile → stantio o credenziali di un altro account Partner Center). Il 02/08, stesso endpoint e stesse credenziali, ha risposto **401** — quindi ora è l'autenticazione a cadere, non solo il product ID. Prima di rigenerare qualcosa, rifare una prova e annotare il codice ottenuto: 404 e 401 puntano a cause diverse. Strada sicura nel frattempo: upload manuale da Partner Center di `sviluppo/adoff-chrome-store.zip`.
 - [ ] **Safari: build + submit Mac App Store.** Non eseguibile da Linux: serve Mac con Xcode (`xcrun safari-web-extension-converter`). Ferma da 3.5.38.
 - [ ] **Monitorare review CWS/AMO della 3.5.54** (finestra 24-48h dal 31/07 16:41Z). In caso di rifiuto: leggere i log e rollback a 3.5.53.
 - [ ] **Purge cache edge Cloudflare** (dashboard → Caching → Purge Cache, i token API sono scoped Pages/D1 e danno `10000 Authentication error`):
@@ -79,6 +88,8 @@
 - **NON rimuovere l'instant-skip (`playbackRate=16`)** — è l'unico fallback per gli annunci che superano il Layer A.
 - **NON usare `wrangler pages deploy site/` diretto** — bypassa il gate i18n di `deploy-site.sh` e porta online artefatti interni. E quando si deploya, **serve `--branch main` esplicito**: senza, wrangler auto-rileva `feat/premium-vpn` e fa un deploy di preview, non production.
 - **NON deployare senza OK esplicito dell'utente.**
+- **MAI passare l'intero feed a una sola `updateDynamicRules()`** e **mai usare `MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES` (5.000) come cap**: la chiamata è atomica, fallisce in blocco e l'errore non emerge. Il valore giusto per regole safe block/allow è `MAX_NUMBER_OF_DYNAMIC_RULES` (30.000), letto a runtime. L'unico indicatore affidabile che il feed sia arrivato è `adoffRemoteRulesCount` in storage, non il fetch riuscito.
+- **NON pubblicare `site/rules-feed.json` senza passarlo per `sviluppo/scripts/normalize-rules-feed.js`**: il generatore a monte emette pattern regex dentro `urlFilter`, che accetta solo sintassi ABP — regole inerti, zero errori visibili.
 - **NON rimuovere Safari dalle pagine del sito**: `constants.json → browsers_coming_soon` non significa "non esiste", `adoff-safari.zip` c'è ed è scaricabile (guard `guard_safari.py`).
 - **NON toccare `app/src/graphify-out/`** (84 MB nel posto sbagliato, fuori scope).
 - **NON forzare il commit di `.claude/checkpoints/` con `-f`**: è in `.gitignore` per scelta del progetto.
@@ -154,7 +165,9 @@ Premium VPN provisioning nel webhook · checkout Stripe Premium + gating · badg
 
 | Cosa | Dove |
 |---|---|
-| Checkpoint più recente (deploy 3.5.54) | `.claude/checkpoints/CP_20260731_1846.md` |
+| Checkpoint più recente (rule-feed 3.5.59) | `.claude/checkpoints/CP_20260802_1840.md` |
+| Sessione vault rule-feed | `~/Obsidian/Memoria/progetti/chromeplugin/sessioni/sessione-20260802-rulefeed-mai-applicato.md` |
+| Checkpoint deploy 3.5.54 | `.claude/checkpoints/CP_20260731_1846.md` |
 | Checkpoint saga YouTube | `.claude/checkpoints/CP_20260730_1645.md`, `CP_20260730_0225.md` |
 | Checkpoint audit sito | `.claude/checkpoints/CP_20260730_2330.md` |
 | Checkpoint publish 3.5.38 | `.claude/checkpoints/CP_20260729_1757.md` |
