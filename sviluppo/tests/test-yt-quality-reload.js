@@ -47,9 +47,9 @@ function mk(o) {
         querySelectorAll: () => [],
         classList: { contains: () => o.ad !== false },
         appendChild() {},
-        getPlaybackQuality: () => 'hd1080',
-        setPlaybackQuality: q => o.log.push('setQ:' + q),
-        setPlaybackQualityRange: x => o.log.push('setRange:' + x)
+        getPlaybackQuality: () => o.qualitaCorrente || 'hd1080',
+        setPlaybackQuality: q => { o.qualitaCorrente = q; o.log.push('setQ:' + q); },
+        setPlaybackQualityRange: (a, b) => o.log.push('setRange:' + a + '-' + b)
     };
     // Un player che non espone le API di ricarica non deve far esplodere nulla.
     if (!o.senzaApi) {
@@ -73,7 +73,7 @@ function mk(o) {
         const o = { log: [], ad: true }; const { p } = mk(o); const m = load();
         m.onAdStart(p);
         t('T1', 'qualita\' forzata al minimo durante l\'annuncio',
-            o.log.some(x => x === 'setRange:tiny' || x === 'setQ:tiny'));
+            o.log.some(x => x === 'setRange:tiny-tiny' || x === 'setQ:tiny'));
         m.onAdEnd(p);
     }
 
@@ -113,6 +113,41 @@ function mk(o) {
         try { m.onAdStart(p); await new Promise(r => setTimeout(r, 1900)); } catch (e) { err = e; }
         t('T5', 'nessun errore se il player non espone le API di ricarica', !err);
         m.onAdEnd(p);
+    }
+
+    // T6 — il difetto segnalato dall'utente: dopo l'annuncio il range deve
+    // tornare COMPLETO. Se restasse min=max il player non potrebbe piu'
+    // adattarsi; se restasse tiny-tiny il video resterebbe a 144p.
+    {
+        const o = { log: [], ad: true }; const { p } = mk(o); const m = load();
+        m.onAdStart(p); m.onAdEnd(p);
+        const ultimoRange = o.log.filter(x => x.startsWith('setRange:')).pop();
+        t('T6', 'range riaperto a fine annuncio (niente 144p permanenti)',
+            ultimoRange === 'setRange:tiny-highres');
+    }
+
+    // T7 — caso peggiore: il player non espone getPlaybackQuality, quindi non
+    // sappiamo quale qualita' ripristinare. Il range va riaperto lo stesso:
+    // era proprio questo il percorso che lasciava il video a 144p per sempre.
+    {
+        const o = { log: [], ad: true }; const { p } = mk(o); const m = load();
+        delete p.getPlaybackQuality;
+        m.onAdStart(p); m.onAdEnd(p);
+        const ultimoRange = o.log.filter(x => x.startsWith('setRange:')).pop();
+        t('T7', 'range riaperto anche senza qualita\' nota', ultimoRange === 'setRange:tiny-highres');
+    }
+
+    // T8 — due annunci consecutivi. Al secondo onAdStart la qualita' corrente
+    // e' gia' "tiny" (l'abbiamo abbassata noi): se la memorizzassimo come
+    // preferenza dell'utente, la ripristineremmo a 144p per sempre.
+    {
+        const o = { log: [], ad: true }; const { p } = mk(o); const m = load();
+        m.onAdStart(p); m.onAdEnd(p);          // primo annuncio
+        o.log.length = 0;
+        m.onAdStart(p); m.onAdEnd(p);          // secondo annuncio di fila
+        const qualitaFinale = o.log.filter(x => x.startsWith('setQ:')).pop();
+        t('T8', 'due annunci di fila non degradano la qualita\' a 144p',
+            qualitaFinale === 'setQ:hd1080');
     }
 
     console.log(pass + '/' + tot + ' PASS');

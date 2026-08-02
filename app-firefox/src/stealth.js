@@ -782,16 +782,47 @@ let reloadTimer = null;
 let reloadCount = 0;
 let reloadVideoId = null;
 
+
+// Un annuncio a 144p pesa circa un decimo che a 1080p: siccome il
+// fast-forward a 16x deve comunque SCARICARE l'annuncio, meno byte
+// significa attesa piu' breve. Vale solo per la durata dell'annuncio.
+function forzaQualitaMinima(player) {
+    try {
+        if (typeof player.getPlaybackQuality === "function") {
+            var q = player.getPlaybackQuality();
+            // Mai memorizzare "tiny": con due annunci di fila salveremmo 144p
+            // come preferenza dell'utente e la ripristineremmo per sempre.
+            if (q && q !== "tiny") savedQuality = q;
+        }
+        if (typeof player.setPlaybackQualityRange === "function") player.setPlaybackQualityRange("tiny", "tiny");
+        if (typeof player.setPlaybackQuality === "function") player.setPlaybackQuality("tiny");
+    } catch (_) {}
+}
+
+// Ripristino: si rimette il range COMPLETO, che e' il modo di restituire al
+// player la liberta' di adattarsi da solo. Rimettere min=max (come faceva la
+// prima stesura) congelerebbe la qualita': con rete peggiore il player non
+// potrebbe piu' scendere e andrebbe in buffering. E "auto" NON e' un valore
+// valido per setPlaybackQualityRange: passarlo lasciava il range a "tiny",
+// cioe' il video a 144p in modo permanente.
+function ripristinaQualita(player) {
+    try {
+        if (typeof player.setPlaybackQualityRange === "function") player.setPlaybackQualityRange("tiny", "highres");
+        var validi = ["tiny", "small", "medium", "large", "hd720", "hd1080", "hd1440", "hd2160", "highres"];
+        if (savedQuality && validi.indexOf(savedQuality) !== -1 &&
+            typeof player.setPlaybackQuality === "function") {
+            player.setPlaybackQuality(savedQuality);
+        }
+    } catch (_) {}
+    savedQuality = null;
+}
+
 function onAdStart(player) {
     if (adActive) { instantSkip(player); return; }
     adActive = true;
 
     // --- Meccanismo A: forza qualità minima durante l'annuncio ---
-    try {
-        if (typeof player.getPlaybackQuality === "function") savedQuality = player.getPlaybackQuality();
-        if (typeof player.setPlaybackQualityRange === "function") player.setPlaybackQualityRange("tiny", "tiny");
-        if (typeof player.setPlaybackQuality === "function") player.setPlaybackQuality("tiny");
-    } catch (_) {}
+    forzaQualitaMinima(player);
 
     const video = player.querySelector("video");
     if (video) {
@@ -859,10 +890,7 @@ function onAdEnd(player) {
     setSkipOverlay(player, false);
 
     // Ripristina la qualità precedente
-    try {
-        if (typeof player.setPlaybackQualityRange === "function") player.setPlaybackQualityRange(savedQuality || "auto", savedQuality || "auto");
-        if (typeof player.setPlaybackQuality === "function") player.setPlaybackQuality(savedQuality || "auto");
-    } catch (_) {}
+    ripristinaQualita(player);
 
     // Reset delle guardie di stabilità per il prossimo annuncio.
     lastAdDuration = -1;
