@@ -4,9 +4,11 @@
 User-agent: *
 Allow: /
 
-# ── Query-string duplication — block ?lang= parameter URLs ──
-# These duplicate the /xx/ subdirectory pages and waste crawl budget.
-Disallow: /*?lang=*
+# ── Query-string duplication — handled by rel=canonical, NOT by Disallow ──
+# ?lang= URLs already carry a self-referencing canonical to the clean URL
+# (e.g. /install?lang=ja -> https://adoff.app/install). Blocking them here
+# would stop crawlers from ever reading that canonical, leaving the already
+# indexed ?lang= URLs stranded instead of consolidated. Let them be crawled.
 
 Disallow: /*.json$
 Disallow: /adoff-chrome.zip
