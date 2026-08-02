@@ -60,7 +60,10 @@
 /robots.txt
   Cache-Control: public, max-age=86400
 
-# ZIP extension downloads
+# ZIP extension downloads — fixed filename, contents change every release.
+# max-age=3600 served the PREVIOUS version for up to an hour after a deploy
+# (hit on 3.5.58: site still handed out 3.5.54). no-cache still allows caching,
+# but forces ETag revalidation, so a download is never a stale build.
 /adoff-*.zip
-  Cache-Control: public, max-age=3600
+  Cache-Control: public, no-cache, must-revalidate
   Content-Disposition: attachment

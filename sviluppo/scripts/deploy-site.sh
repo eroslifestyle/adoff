@@ -43,6 +43,8 @@ STAGING="$(mktemp -d /tmp/adoff-site-deploy.XXXXXX)"
 trap 'rm -rf "$STAGING"' EXIT
 rsync -a --exclude='graphify-out' --exclude='CLAUDE.md' --exclude='.state' \
   --exclude='*.log' --exclude='*.tmp' site/ "$STAGING/"
-wrangler pages deploy "$STAGING" --project-name adoff-site
+# --branch main is REQUIRED: releases are cut from feat/premium-vpn, and without it
+# wrangler picks up the current git branch and ships a preview that never reaches adoff.app.
+wrangler pages deploy "$STAGING" --project-name adoff-site --branch main
 
 echo "✅ deploy complete (i18n gate passed)"
