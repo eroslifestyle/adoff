@@ -6,6 +6,19 @@
 
 ---
 
+## ✅ RISOLTO OGGI — YouTube skip annunci (v3.5.58, confermato dall'utente)
+
+**Causa vera: SABR.** Provato con dati sul video reale: `serverAbrStreamingUrl` presente, `adaptiveFormats` 30 **con URL diretto 0**, `formats` 0. YouTube non serve piu' URL diretti: ogni segmento va chiesto al server, che decide cosa mandare — annunci inclusi. Nessun filtro sul JSON puo' impedirlo.
+**Via del client alternativo VERIFICATA E CHIUSA**: ANDROID → HTTP 400 `FAILED_PRECONDITION` (attestation), WEB → `UNPLAYABLE "The page needs to be reloaded"` (PoToken), TVHTML5/embedded → ERROR.
+**Cosa ha risolto** (4 versioni, 3.5.55→3.5.58):
+1. Hook di **`JSON.stringify`** invece del solo wrapper `fetch`: il body del player request si costruisce li'. Misurato nel browser reale: `flagInjected 0` contro `flagInjectedStringify 1`.
+2. **Cold-load**: al primo caricamento `ytInitialPlayerResponse` arriva inline nell'HTML e non c'e' nessuna richiesta da intercettare. Restituendo un oggetto senza `streamingData` il player e' costretto a richiederlo, e quella richiesta passa dai nostri hook. NON si restituisce `undefined` (rompe chi legge `.videoDetails`, dimostrato da un test).
+3. **Qualita' forzata a 144p durante l'annuncio**: il 16x non salta l'annuncio, lo SCARICA — meno byte, attesa piu' breve. E' la leva che ha attaccato il sintomo.
+4. **Ricarica di soccorso** (`loadVideoById`) se l'annuncio resiste oltre 1,5s, max 2 per videoId.
+
+- [ ] **DEPLOY 3.5.58** — le versioni 3.5.55/56/57/58 NON sono pubblicate: gli utenti hanno ancora la 3.5.54 col problema. Canali: CWS, AMO, sito, Telegram (Edge resta bloccato, vedi sotto).
+- [ ] *(opzionale)* Chiedere all'utente `window.__adoffYtDiag` ora che funziona, per sapere **quale** meccanismo ha agito (`coldLoads`, `adReloads`, `flagInjectedStringify`) e proteggerlo da regressioni future.
+
 ## 🔴 BLOCCANTI (soldi / produzione)
 
 - [ ] **Refill wallet VPNresellers: ~24,74 USD → 100+ USD.** A ~1,99 USD/account il saldo copre ~12 attivazioni (meno se i test ne hanno già consumate). Oltre soglia: **il cliente paga e il provisioning VPN fallisce** → incasso senza consegna. **Da fare PRIMA di aprire le vendite Premium, non dopo.** Non è più un blocco ai test (E2E Premium VPN già eseguiti e funzionanti, conferma utente 2026-07-28). Azione di pagamento dell'utente. Saldo verificabile via API (`VPNRESELLERS_API_KEY` già impostato sul worker `adoff-license-api`).
