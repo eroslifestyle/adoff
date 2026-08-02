@@ -346,7 +346,8 @@ if (!window.__adoffYtDiag) {
     flagInjected: 0,
     flagMissedNonString: 0,
     respMangled: 0,
-    respXhrMangled: 0
+    respXhrMangled: 0,
+    adSeeks: 0
   };
 }
 
