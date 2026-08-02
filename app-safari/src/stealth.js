@@ -338,67 +338,174 @@
     // what the ad would have lasted.
     //
     // Reference: https://iter.ca/post/yt-adblock + uBO Smitty filter.
-    function injectNoAd(body) {
-      if (typeof body !== "string") return body;
-      if (!body.includes('"contentPlaybackContext":{')) return body;
-      if (body.includes('"isInlinePlaybackNoAd"')) return body;
-      return body.replace(
-        '"contentPlaybackContext":{',
-        '"contentPlaybackContext":{"isInlinePlaybackNoAd":true,'
-      );
-    }
+if (!window.__adoffYtDiag) {
+  window.__adoffYtDiag = {
+    reqTotal: 0,
+    reqFormRequest: 0,
+    reqFormInit: 0,
+    flagInjected: 0,
+    flagMissedNonString: 0,
+    respMangled: 0,
+    respXhrMangled: 0
+  };
+}
 
-    const _origFetch = window.fetch;
-    window.fetch = function (input, init) {
-      const url = typeof input === "string" ? input : (input?.url || "");
-      const isPlayerReq = url.includes("/youtubei/v1/player") ||
-                          url.includes("/youtubei/v1/next");
+function injectNoAd(body) {
+  if (typeof body === "string") {
+    if (!body.includes('"contentPlaybackContext":{')) return body;
+    if (body.includes('"isInlinePlaybackNoAd"')) return body;
+    var replaced = body.replace(
+      '"contentPlaybackContext":{',
+      '"contentPlaybackContext":{"isInlinePlaybackNoAd":true,'
+    );
+    try { window.__adoffYtDiag.flagInjected++; } catch (_) {}
+    return replaced;
+  }
+  if (typeof URLSearchParams !== "undefined" && body instanceof URLSearchParams) {
+    var str = body.toString();
+    if (!str.includes('"contentPlaybackContext":{')) return body;
+    var replacedStr = str.replace(
+      '"contentPlaybackContext":{',
+      '"contentPlaybackContext":{"isInlinePlaybackNoAd":true,'
+    );
+    try { window.__adoffYtDiag.flagInjected++; } catch (_) {}
+    return new URLSearchParams(replacedStr);
+  }
+  // Altri tipi: ritorno invariato, incremento contatore diagnostico.
+  try { window.__adoffYtDiag.flagMissedNonString++; } catch (_) {}
+  return body;
+}
 
-      // Free: passthrough completo sulle player API. Solo Pro/Trial modifica
-      // request body (isInlinePlaybackNoAd) e mangle response (adPlacements/...).
-      if (!isPlayerReq || !isProSync() || isVideoCompatMode()) {
-        return _origFetch.call(window, input, init);
+const _origFetch = window.fetch;
+window.fetch = async function (input, init) {
+  var url = typeof input === "string" ? input : (input instanceof Request ? input.url : (input && input.url) || "");
+  var isPlayerReq = url.includes("/youtubei/v1/player") ||
+                    url.includes("/youtubei/v1/next");
+
+  // Free: passthrough completo sulle player API. Solo Pro/Trial modifica
+  // request body (isInlinePlaybackNoAd) e mangle response (adPlacements/...).
+  if (!isPlayerReq || !isProSync() || isVideoCompatMode()) {
+    return _origFetch.call(window, input, init);
+  }
+
+  // Diagnostica per forma della richiesta
+  try { window.__adoffYtDiag.reqTotal++; } catch (_) {}
+  if (input instanceof Request) {
+    try { window.__adoffYtDiag.reqFormRequest++; } catch (_) {}
+  } else {
+    try { window.__adoffYtDiag.reqFormInit++; } catch (_) {}
+  }
+
+  var newInput = input;
+  var newInit = init;
+
+  if (input instanceof Request) {
+    // Request object form
+    if (!init || init.body === undefined) {
+      // Body is carried by the Request itself
+      var text = await input.clone().text();
+      var injected = injectNoAd(text);
+      if (injected !== text) {
+        newInput = new Request(input, { body: injected });
       }
-
-      // Inject isInlinePlaybackNoAd in the outbound request body
-      if (init && init.body) {
-        const newBody = injectNoAd(init.body);
-        if (newBody !== init.body) {
-          init = Object.assign({}, init, { body: newBody });
+    } else {
+      // init.body presente, trattamento classico
+      if (init.body) {
+        var injected = injectNoAd(init.body);
+        if (injected !== init.body) {
+          newInit = Object.assign({}, init, { body: injected });
         }
       }
+    }
+  } else {
+    // Forma classica (url, init)
+    if (init && init.body) {
+      var injected = injectNoAd(init.body);
+      if (injected !== init.body) {
+        newInit = Object.assign({}, init, { body: injected });
+      }
+    }
+  }
 
-      return _origFetch.call(window, input, init).then(function (resp) {
-        const clone = resp.clone();
-        return clone.text().then(function (txt) {
-          try {
-            return new Response(mangleAdFields(txt), {
-              status: resp.status,
-              statusText: resp.statusText,
-              headers: resp.headers,
+    var resp = await _origFetch.call(window, newInput, newInit);
+
+    // Mangle della risposta
+    try {
+        var clone = resp.clone();
+        var txt = await clone.text();
+        var mangled = mangleAdFields(txt);
+        if (mangled !== txt) {
+            try { window.__adoffYtDiag.respMangled++; } catch (_) {}
+            return new Response(mangled, {
+                status: resp.status,
+                statusText: resp.statusText,
+                headers: resp.headers
             });
-          } catch (_) { return resp; }
-        });
-      });
-    };
+        }
+    } catch (_) {
+        // fallback to original response
+    }
+    return resp;
+};
 
     // A3: XHR interception (some legacy YouTube paths use XMLHttpRequest)
     try {
-      const _xhrOpen = XMLHttpRequest.prototype.open;
-      const _xhrSend = XMLHttpRequest.prototype.send;
-      XMLHttpRequest.prototype.open = function (method, url) {
-        this._adoffUrl = String(url || "");
-        return _xhrOpen.apply(this, arguments);
-      };
-      XMLHttpRequest.prototype.send = function (body) {
-        // Free: passthrough. Pro/Trial inietta isInlinePlaybackNoAd.
-        if (isProSync() && !isVideoCompatMode() && this._adoffUrl &&
-            (this._adoffUrl.includes("/youtubei/v1/player") ||
-             this._adoffUrl.includes("/youtubei/v1/next"))) {
-          body = injectNoAd(body);
-        }
-        return _xhrSend.call(this, body);
-      };
+        const _xhrOpen = XMLHttpRequest.prototype.open;
+        const _xhrSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (method, url) {
+            this._adoffUrl = String(url || "");
+            return _xhrOpen.apply(this, arguments);
+        };
+        XMLHttpRequest.prototype.send = function (body) {
+            // Free: passthrough. Pro/Trial inietta isInlinePlaybackNoAd.
+            if (isProSync() && !isVideoCompatMode() && this._adoffUrl &&
+                (this._adoffUrl.includes("/youtubei/v1/player") ||
+                 this._adoffUrl.includes("/youtubei/v1/next"))) {
+                try { window.__adoffYtDiag.reqTotal++; } catch (_) {}
+                var newBody = injectNoAd(body);
+                if (newBody !== body) {
+                    body = newBody;
+                }
+                // Intercetta la risposta per mangle
+                var self = this;
+                var originalOnReadyStateChange = self.onreadystatechange;
+                self.onreadystatechange = function (ev) {
+                    if (self.readyState === 4) {
+                        try {
+                            if (!self._adoffOriginalResponseText) {
+                                self._adoffOriginalResponseText = self.responseText;
+                            }
+                            if (!self._adoffOriginalResponse) {
+                                self._adoffOriginalResponse = self.response;
+                            }
+                            var mangledText = mangleAdFields(self._adoffOriginalResponseText);
+                            var mangledResponse = mangleAdFields(self._adoffOriginalResponse);
+                            if (mangledText !== self._adoffOriginalResponseText) {
+                                try { window.__adoffYtDiag.respXhrMangled++; } catch (_) {}
+                            }
+                            self._adoffMangledResponseText = mangledText;
+                            self._adoffMangledResponse = mangledResponse;
+                            Object.defineProperty(self, 'responseText', {
+                                get: function () {
+                                    return self._adoffMangledResponseText;
+                                },
+                                configurable: true
+                            });
+                            Object.defineProperty(self, 'response', {
+                                get: function () {
+                                    return self._adoffMangledResponse;
+                                },
+                                configurable: true
+                            });
+                        } catch (_) {}
+                    }
+                    if (originalOnReadyStateChange) {
+                        return originalOnReadyStateChange.call(self, ev);
+                    }
+                };
+            }
+            return _xhrSend.call(this, body);
+        };
     } catch (_) { /* ignore — XHR may be locked on some pages */ }
 
     // Layer B/C/Observer — attivati dal proChecker solo se Pro/Trial confermato.
@@ -417,101 +524,200 @@
     // per un ad da 15s), YouTube gestisce la transizione e il contenuto parte
     // da 0. Niente seek = niente posizione sbagliata = niente stall sul buffer.
 
-    let adActive = false;
-    let wasMuted = false;
-    let savedRate = 1;
-    let playerObs = null;
-    let skipTimer = null;
+let adActive = false;
+let wasMuted = false;
+let savedRate = 1;
+let playerObs = null;
+let skipTimer = null;
 
-    function instantSkip(player) {
-      const video = player.querySelector("video");
-      if (video) {
+// Nuove variabili per il seek chirurgico.
+let contentDuration = 0;   // durata del contenuto in secondi
+let contentSrc = "";       // currentSrc del contenuto
+let lastAdDuration = -1;  // per la stabilità su 2 tick
+let stableTicks = 0;
+
+/**
+ * Restituisce la durata del video contenuto.
+ * Prova a leggere da window.ytInitialPlayerResponse, altrimenti
+ * restituisce il valore memorizzato in contentDuration.
+ */
+function getContentDuration() {
+    try {
+        const yt = window.ytInitialPlayerResponse?.videoDetails?.lengthSeconds;
+        if (yt !== undefined) {
+            const d = Number(yt);
+            if (Number.isFinite(d) && d > 0) return d;
+        }
+    } catch (_) { /* ignore */ }
+    return contentDuration || 0;
+}
+
+/**
+ * Verifica se è sicuro eseguire un seek sul media montato.
+ * Restituisce true solo se tutte le condizioni sono soddisfatte:
+ * a) il DOM dell'annuncio è presente,
+ * b) la durata del video è una durata plausibile per un annuncio,
+ * c) la durata non corrisponde a quella del contenuto (anti-regression 3.5.48),
+ * d) la sorgente corrente non è quella del contenuto,
+ * e) la durata è stabile per almeno 2 tick consecutivi.
+ */
+function canSeekAd(player, video) {
+    // a) early null guard – evita TypeError se player o video sono null.
+    if (!player || !video) return false;
+
+    // b) Il DOM dell'annuncio deve esistere.
+    const adOverlay = player.querySelector(
+        ".ytp-ad-player-overlay, .ytp-ad-player-overlay-layout, .ytp-ad-duration-remaining"
+    );
+    if (!adOverlay) return false;
+
+    // c) La durata deve essere un numero finito, > 0 e < 180 (annunci mai più lunghi).
+    if (!Number.isFinite(video.duration) || video.duration <= 0 || video.duration >= 180) return false;
+
+    // Riferimento al contenuto: durata e src.
+    var cd = getContentDuration();
+    // Se non abbiamo alcun riferimento sul contenuto (durata sconosciuta e contentSrc vuoto),
+    // meglio astenersi dal seek per non rischiare di seekare il contenuto.
+    if (cd <= 0 && !contentSrc) return false;
+
+    // d) Anti-regression 3.5.48 — se la durata del media montato coincide con quella del contenuto
+    //    il media è il contenuto, non l'annuncio; un seek qui causerebbe il bug del video
+    //    ripartito da 152.708s.
+    if (cd > 0 && Math.abs(video.duration - cd) < 1.5) return false;
+
+    // e) Se la sorgente corrente è la stessa del contenuto, non è un annuncio.
+    if (contentSrc && video.currentSrc === contentSrc) return false;
+
+    // f) Stabilità: la durata deve essere identica (entro 0.1) per almeno 2 tick.
+    //    Sono necessari almeno 3 tick (~150 ms) per garantire che la durata sia stabile:
+    //    il primo tick inizializza lastAdDuration, i successivi due confermano che
+    //    la durata non è cambiata. In questo modo si evita un seek su un media
+    //    la cui durata è ancora in fase di definizione.
+    if (Math.abs(video.duration - lastAdDuration) < 0.1) {
+        stableTicks++;
+    } else {
+        stableTicks = 0;
+        lastAdDuration = video.duration;
+    }
+    return stableTicks >= 2;
+}
+
+function instantSkip(player) {
+    const video = player.querySelector("video");
+    if (video) {
         // Un annuncio in pausa non finisce mai a 16x.
         if (video.paused) {
-          try {
-            const p = video.play();
-            if (p && typeof p.catch === "function") p.catch(() => {});
-          } catch (_) { /* ignore */ }
+            try {
+                const p = video.play();
+                if (p && typeof p.catch === "function") p.catch(() => {});
+            } catch (_) { /* ignore */ }
         }
         video.playbackRate = 16;
-      }
-      // Click sul pulsante di salto se esiste (annunci saltabili).
-      const skip = player.querySelector(
+    }
+    // Click sul pulsante di salto se esiste (annunci saltabili).
+    const skip = player.querySelector(
         ".ytp-skip-ad-button, .ytp-ad-skip-button, " +
         ".ytp-ad-skip-button-modern, .ytp-ad-skip-button-slot button, " +
         "[id^='skip-button'], .videoAdUiSkipButton"
-      );
-      if (skip && skip.offsetParent !== null) skip.click();
-      // Chiudi gli overlay ad (banner sovrapposti).
-      for (const btn of player.querySelectorAll(
+    );
+    if (skip && skip.offsetParent !== null) skip.click();
+    // Chiudi gli overlay ad (banner sovrapposti).
+    for (const btn of player.querySelectorAll(
         ".ytp-ad-overlay-close-button, .ytp-ad-overlay-close-container"
-      )) { if (btn.offsetParent !== null) btn.click(); }
-    }
+    )) { if (btn.offsetParent !== null) btn.click(); }
 
-    // Overlay opaco durante l'ad SSAI: l'utente non vede il contenuto
-    // pubblicitario, solo un breve "skipping…" nero mentre il fast-forward
-    // (16x) consuma l'annuncio. pointer-events:none => non blocca i click.
-    function setSkipOverlay(player, on) {
-      let ov = document.getElementById("adoff-skip-ov");
-      if (on) {
+    // Seek chirurgico solo se il media montato è sicuramente l'annuncio.
+    if (video && canSeekAd(player, video)) {
+        try {
+            // Calcola il bordo del buffer.
+            let bufEnd = 0;
+            if (video.buffered && video.buffered.length) {
+                bufEnd = video.buffered.end(video.buffered.length - 1);
+            }
+            const target = Math.min(bufEnd - 0.15, video.duration - 0.15);
+            // Esegui il seek solo se effettivamente avanti e valido.
+            if (target > video.currentTime + 0.3 && target > 0) {
+                video.currentTime = target;
+                window.dispatchEvent(new CustomEvent("adoff-ad-seeked"));
+                try { window.__adoffYtDiag.adSeeks++; } catch (_) {}
+            }
+        } catch (_) { /* ignore */ }
+    }
+}
+
+// Overlay opaco durante l'ad SSAI: l'utente non vede il contenuto
+// pubblicitario, solo un breve "skipping…" nero mentre il fast-forward
+// (16x) consuma l'annuncio. pointer-events:none => non blocca i click.
+function setSkipOverlay(player, on) {
+    let ov = document.getElementById("adoff-skip-ov");
+    if (on) {
         if (!ov) {
-          ov = document.createElement("div");
-          ov.id = "adoff-skip-ov";
-          ov.style.cssText =
-            "position:absolute;inset:0;background:#000;z-index:999999;" +
-            "display:flex;align-items:center;justify-content:center;" +
-            "color:#7252f8;font:600 16px system-ui,sans-serif;pointer-events:none;";
-          ov.textContent = "AdOff · skipping ad…";
+            ov = document.createElement("div");
+            ov.id = "adoff-skip-ov";
+            ov.style.cssText =
+                "position:absolute;inset:0;background:#000;z-index:999999;" +
+                "display:flex;align-items:center;justify-content:center;" +
+                "color:#7252f8;font:600 16px system-ui,sans-serif;pointer-events:none;";
+            ov.textContent = "AdOff · skipping ad…";
         }
         if (!ov.parentNode) player.appendChild(ov);
-      } else if (ov) {
+    } else if (ov) {
         ov.remove();
-      }
     }
+}
 
-    function onAdStart(player) {
-      if (adActive) { instantSkip(player); return; }
-      adActive = true;
+function onAdStart(player) {
+    if (adActive) { instantSkip(player); return; }
+    adActive = true;
 
-      const video = player.querySelector("video");
-      if (video) {
+    const video = player.querySelector("video");
+    if (video) {
         video._adoffSkipping = true;
         savedRate = video.playbackRate;
         if (!video.muted) { video.muted = true; wasMuted = true; }
-      }
-      setSkipOverlay(player, true);
+    }
+    setSkipOverlay(player, true);
 
-      instantSkip(player);
+    instantSkip(player);
 
-      // Polling a 50ms: mantiene playbackRate=16 finche' YouTube non lo
-      // rimette a 1, e clicka lo skip appena compare.
-      if (skipTimer) clearInterval(skipTimer);
-      skipTimer = setInterval(function () {
+    // Polling a 50ms: mantiene playbackRate=16 finche' YouTube non lo
+    // rimette a 1, e clicka lo skip appena compare.
+    if (skipTimer) clearInterval(skipTimer);
+    skipTimer = setInterval(function () {
         if (!player.classList.contains("ad-showing") &&
             !player.classList.contains("ad-interrupting")) {
-          clearInterval(skipTimer); skipTimer = null; return;
+            clearInterval(skipTimer); skipTimer = null; return;
         }
         instantSkip(player);
-      }, 50);
+    }, 50);
 
-      window.dispatchEvent(new CustomEvent("adoff-ad-skipped"));
-    }
+    window.dispatchEvent(new CustomEvent("adoff-ad-skipped"));
+}
 
-    function onAdEnd(player) {
-      if (!adActive) return;
-      adActive = false;
-      if (skipTimer) { clearInterval(skipTimer); skipTimer = null; }
+function onAdEnd(player) {
+    if (!adActive) return;
+    adActive = false;
+    if (skipTimer) { clearInterval(skipTimer); skipTimer = null; }
 
-      const video = player.querySelector("video");
-      if (video) {
+    const video = player.querySelector("video");
+    if (video) {
+        // Memorizza lo stato del contenuto per future verifiche di canSeekAd.
+        contentSrc = video.currentSrc;
+        if (Number.isFinite(video.duration) && video.duration > 0) {
+            contentDuration = video.duration;
+        }
+
         video._adoffSkipping = false;
         video.playbackRate = savedRate || 1;
         if (wasMuted) { video.muted = false; wasMuted = false; }
-      }
-      setSkipOverlay(player, false);
-      // Nessun position recovery: l'annuncio e' finito NATURALMENTE a 16x,
-      // YouTube ha gestito la transizione. Non tocchiamo currentTime.
     }
+    setSkipOverlay(player, false);
+    // Reset delle guardie di stabilità per il prossimo annuncio.
+    lastAdDuration = -1;
+    stableTicks = 0;
+    // Nessun position recovery: l'annuncio e' finito NATURALMENTE a 16x,
+    // YouTube ha gestito la transizione. Non tocchiamo currentTime.
+}
 
     // ---- LAYER C: Anti-detection (insurance) ----
 
@@ -530,30 +736,53 @@
 
     // ---- Observer + Polling ----
 
-    function checkPlayer() {
-      const p = document.getElementById("movie_player");
-      if (!p) return;
-      const isAd = p.classList.contains("ad-showing") ||
-                   p.classList.contains("ad-interrupting");
-      if (isAd) onAdStart(p); else onAdEnd(p);
+function checkPlayer() {
+  const p = document.getElementById("movie_player");
+  if (!p) return;
+  const isAd = p.classList.contains("ad-showing") ||
+               p.classList.contains("ad-interrupting");
+  if (isAd) {
+    onAdStart(p);
+  } else {
+    // Aggiorna i riferimenti del contenuto se il video è stabile
+    const video = p.querySelector("video");
+    if (video) {
+      try {
+        if (isFinite(video.duration) && video.duration > 0) {
+          contentDuration = video.duration;
+        }
+        if (video.currentSrc) {
+          contentSrc = video.currentSrc;
+        }
+      } catch (e) {
+        // ignore
+      }
     }
+    onAdEnd(p);
+  }
+}
 
-    function attachObs() {
-      const p = document.getElementById("movie_player");
-      if (!p) return false;
-      if (playerObs) playerObs.disconnect();
-      playerObs = new MutationObserver(checkPlayer);
-      playerObs.observe(p, { attributes: true, attributeFilter: ["class"] });
-      checkPlayer();
-      return true;
-    }
+function attachObs() {
+  const p = document.getElementById("movie_player");
+  if (!p) return false;
+  if (playerObs) playerObs.disconnect();
+  playerObs = new MutationObserver(checkPlayer);
+  playerObs.observe(p, { attributes: true, attributeFilter: ["class"] });
+  checkPlayer();
+  return true;
+}
 
-    (function poll() { if (!attachObs()) setTimeout(poll, 200); })();
+(function poll() { if (!attachObs()) setTimeout(poll, 200); })();
 
-    // SPA navigation: re-attach after page transition
-    document.addEventListener("yt-navigate-finish", function () {
-      setTimeout(attachObs, 100);
-    });
+// SPA navigation: re-attach after page transition
+document.addEventListener("yt-navigate-finish", function () {
+  // Azzera i riferimenti del video precedente per non usarli con il nuovo video
+  contentDuration = 0;
+  contentSrc = "";
+  lastAdDuration = -1;
+  stableTicks = 0;
+  setTimeout(attachObs, 100);
+});
 
     // Fast fallback polling (100ms)
     setInterval(checkPlayer, 100);

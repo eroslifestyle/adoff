@@ -1,6 +1,10 @@
 (function() {
 'use strict';
 console.log('Diagnostica avviata: guarda il video normalmente per 120 secondi. Per fermarla prima: window.__stop()');
+// Leggi i valori di diagnostica:
+// - reqTotal: se è 0 il gate Pro non è arrivato o siamo in modalità compatibilità.
+// - flagInjected: se è 0 mentre reqTotal > 0, il body non è stato riconosciuto; il server continua a cucire l'attesa nello stream (causa schermo nero).
+// - adSeeks: se resta 0 durante un annuncio, una delle guardie sta bloccando il seek chirurgico.
 const staticInfo={
 versioneEstensione:document.documentElement.getAttribute('data-adoff-stealth')?'gate Pro attivo':'gate Pro NON attivo',
 compatMode:(function(){try{return localStorage.getItem('__adoff_vc');}catch(e){return 'n/d';}})(),
@@ -8,7 +12,11 @@ adPlacementsPresenti:!!(window.ytInitialPlayerResponse&&window.ytInitialPlayerRe
 playerAdsPresenti:!!(window.ytInitialPlayerResponse&&window.ytInitialPlayerResponse.playerAds),
 formatiConUrlDiretto:(function(){const af=window.ytInitialPlayerResponse?.streamingData?.adaptiveFormats||[];return af.filter(f=>!!f.url).length+'/'+af.length;})(),
 haServerAbr:!!(window.ytInitialPlayerResponse?.streamingData?.serverAbrStreamingUrl),
-runtimeKillerAttivo:(function(){try{const fetchStr=window.fetch.toString();return fetchStr.includes('isProEnabled')?'hook fetch installato':'hook fetch NON installato';}catch(e){return 'hook fetch NON installato';}})()
+runtimeKillerAttivo:(function(){try{const fetchStr=window.fetch.toString();return fetchStr.includes('isProSync')?'hook fetch installato':'hook fetch NON installato';}catch(e){return 'hook fetch NON installato';}})(),
+contatoriLayerA:(function(){try{return window.__adoffYtDiag;}catch(e){return 'n/d';}})(),
+formaRichiestePlayer:(function(){try{const d=window.__adoffYtDiag;if(!d)return 'n/d';const n=d.reqFormRequest||0;const m=d.reqFormInit||0;return 'Request:'+n+' init:'+m;}catch(e){return 'n/d';}})(),
+flagAntiAttesaIniettato:(function(){try{return window.__adoffYtDiag?.flagInjected??'n/d';}catch(e){return 'n/d';}})(),
+seekEseguiti:(function(){try{return window.__adoffYtDiag?.adSeeks??'n/d';}catch(e){return 'n/d';}})()
 };
 let stallRecoveredCount=0;
 window.addEventListener('adoff-stall-recovered',()=>stallRecoveredCount++);
