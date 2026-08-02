@@ -4,7 +4,10 @@ const path = require('path');
 const fs = require('fs');
 
 // Percorso dell'estensione e directory di output
-const EXTENSION_PATH = path.resolve(__dirname, '../../app');
+// EXT_PATH=... per testare una build (es. sviluppo/build-chrome) invece dei sorgenti
+const EXTENSION_PATH = process.env.EXT_PATH
+  ? path.resolve(process.env.EXT_PATH)
+  : path.resolve(__dirname, '../../app');
 const OUT_DIR = path.resolve(__dirname, 'out');
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
