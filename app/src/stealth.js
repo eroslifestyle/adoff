@@ -1103,13 +1103,23 @@ document.addEventListener("yt-navigate-finish", function () {
     // Inietta PRIMA di qualsiasi altro script — Object.defineProperty
     // impedisce che il vero IMA SDK sovrascriva il nostro stub
     window.google = window.google || {};
-    Object.defineProperty(window.google, "ima", {
-      get() { return imaStub; },
-      set() { /* blocca sovrascrittura */ },
-      // configurable:true — con false la property resta intrappolata e ogni
-      // redefinizione altrui lancia TypeError, rompendo il render della pagina
-      configurable: true,
-    });
+    try {
+      Object.defineProperty(window.google, "ima", {
+        get() { return imaStub; },
+        set() { /* blocca sovrascrittura */ },
+        // configurable:true — con false la property resta intrappolata e ogni
+        // redefinizione altrui lancia TypeError, rompendo il render della pagina
+        configurable: true,
+      });
+    } catch (_) {
+      // Se il vero IMA SDK e' gia' caricato e ha definito google.ima come NON
+      // configurabile, defineProperty lancia "Cannot redefine property: ima".
+      // Senza questo catch l'eccezione interrompe injectImaStub e lo stub non
+      // viene installato. Fallback: assegnazione diretta (puo' fallire anch'essa).
+      try {
+        window.google.ima = imaStub;
+      } catch (_) {}
+    }
 
   }
   // Fine definizione injectImaStub

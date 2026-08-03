@@ -62,6 +62,10 @@
       /adnetworkperformance/i, /galaksion\.com/i, /adprofex\.com/i, /richpush/i, /datspush/i, /propush\.me/i,
       /pushground\.com/i, /kadam\.net/i, /adstart\.pro/i, /admaven\.com/i, /adf\.ly/i, /shorte\.st/i, /ouo\.io/i,
       /linkvertise\.com/i,
+      // Monetag / PropellerAds / RTmark — rilevati in campo su siti di streaming
+      /rtmark\.net/i, /monetag/i, /propellerclick/i, /onclickperformance/i,
+      /^https?:\/\/ay\d+\.com/i,        // dominio a rotazione Monetag (ay267.com...)
+      /[?&]zoneid=\d+/i,                // marcatore zona ad network nei popunder
       // TLD ad alto abuso. NON aggiungere TLD usati anche da siti legittimi
       // (.pro .store .shop .online .site .live .link .work .press .space .fun):
       // il Layer 1 e' attivo anche sui siti sicuri → falsi positivi.
