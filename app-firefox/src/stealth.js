@@ -159,7 +159,19 @@
     // Disabilita Layer 2/3 sui big tech / broadcaster / streaming premium
     // dove popup legittimi sono attesi
     const enableGestureCheck = !isStealhExcluded;
+    const GESTURE_WINDOW_MS = 5000;
 
+    // Un popup verso lo stesso sito non e' mai un popunder pubblicitario
+    function isSameSiteUrl(u) {
+      try {
+        const h = new URL(u, location.href).hostname;
+        return h === location.hostname ||
+               h.endsWith('.' + location.hostname) ||
+               location.hostname.endsWith('.' + h);
+      } catch (_) {
+        return false;
+      }
+    }
     const origOpen = window.open;
     function safeOpen(url, name, features) {
       try {
@@ -169,11 +181,13 @@
           try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: u } })); } catch (_) {}
           return null;
         }
+        // Popup verso lo stesso sito e about:blank sono sempre legittimi
+        if (!u || u === "about:blank" || isSameSiteUrl(u)) return origOpen.apply(this, arguments);
         // Layer 2/3: solo se non big tech
         if (enableGestureCheck) {
           const sinceClick = Date.now() - lastTrustedClick;
           // window.open senza gesto utente recente (>1.5s) → popunder
-          if (sinceClick > 1500) {
+          if (sinceClick > GESTURE_WINDOW_MS) {
             try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: u, reason: "no-gesture" } })); } catch (_) {}
             return null;
           }
@@ -193,8 +207,8 @@
     try {
       Object.defineProperty(window, "open", {
         value: safeOpen,
-        writable: false,
-        configurable: false,
+        writable: true,
+        configurable: true,
       });
     } catch (_) {
       try { window.open = safeOpen; } catch (__) {}
@@ -203,24 +217,27 @@
     // HTMLAnchorElement.click() programmatico verso ad networks
     // (popunder spesso fa: a = document.createElement('a'); a.href=ad; a.target='_blank'; a.click())
     const origAClick = HTMLAnchorElement.prototype.click;
-    HTMLAnchorElement.prototype.click = function () {
-      try {
-        const href = String(this.href || "");
-        if (isPopupAdUrl(href)) {
-          try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: href, reason: "anchor-click" } })); } catch (_) {}
-          return;
-        }
-        // target=_blank programmatico senza gesto recente
-        if (enableGestureCheck && (this.target === "_blank" || this.target === "_new")) {
-          const sinceClick = Date.now() - lastTrustedClick;
-          if (sinceClick > 1500) {
-            try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: href, reason: "anchor-no-gesture" } })); } catch (_) {}
+    if (!HTMLAnchorElement.prototype.click.__adoffPatched) {
+      HTMLAnchorElement.prototype.click = function () {
+        try {
+          const href = String(this.href || "");
+          if (isPopupAdUrl(href)) {
+            try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: href, reason: "anchor-click" } })); } catch (_) {}
             return;
           }
-        }
-      } catch (_) {}
-      return origAClick.apply(this, arguments);
-    };
+          // target=_blank programmatico senza gesto recente
+          if (enableGestureCheck && (this.target === "_blank" || this.target === "_new") && !isSameSiteUrl(href)) {
+            const sinceClick = Date.now() - lastTrustedClick;
+            if (sinceClick > GESTURE_WINDOW_MS) {
+              try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: href, reason: "anchor-no-gesture" } })); } catch (_) {}
+              return;
+            }
+          }
+        } catch (_) {}
+        return origAClick.apply(this, arguments);
+      };
+      HTMLAnchorElement.prototype.click.__adoffPatched = true;
+    }
 
     // Notifica content.js (ISOLATED) per incrementare contatore + badge
     window.addEventListener("adoff-popup-blocked", function () {
@@ -1247,7 +1264,9 @@ document.addEventListener("yt-navigate-finish", function () {
     Object.defineProperty(window.google, "ima", {
       get() { return imaStub; },
       set() { /* blocca sovrascrittura */ },
-      configurable: false,
+      // configurable:true — con false la property resta intrappolata e ogni
+      // redefinizione altrui lancia TypeError, rompendo il render della pagina
+      configurable: true,
     });
 
   }
@@ -1305,51 +1324,138 @@ document.addEventListener("yt-navigate-finish", function () {
     return BAIT_PATTERNS.some((re) => re.test(str));
   }
 
-  const origGetComputedStyle = window.getComputedStyle;
-  window.getComputedStyle = function (el, pseudo) {
-    const style = origGetComputedStyle.call(window, el, pseudo);
+  let isMeasurementSpoofInstalled = false;
 
-    if (el && (isBaitClass(el.className) || isBaitClass(el.id))) {
+  function installMeasurementSpoof() {
+    if (isMeasurementSpoofInstalled) return;
+    isMeasurementSpoofInstalled = true;
+
+    const origGetComputedStyle = window.getComputedStyle;
+    window.getComputedStyle = function (el, pseudo) {
+      const style = origGetComputedStyle.call(window, el, pseudo);
+
+      if (el && (isBaitClass(el.className) || isBaitClass(el.id))) {
+        try {
+          return new Proxy(style, {
+            get(target, prop) {
+              if (prop === "display") return "block";
+              if (prop === "visibility") return "visible";
+              if (prop === "opacity") return "1";
+              if (prop === "height") return "250px";
+              if (prop === "width") return "300px";
+              const val = target[prop];
+              return typeof val === "function" ? val.bind(target) : val;
+            },
+          });
+        } catch (_) {
+          return style;
+        }
+      }
+
+      return style;
+    };
+
+    const origOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
+    const origOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");
+
+    if (origOffsetHeight) {
       try {
-        return new Proxy(style, {
-          get(target, prop) {
-            if (prop === "display") return "block";
-            if (prop === "visibility") return "visible";
-            if (prop === "opacity") return "1";
-            if (prop === "height") return "250px";
-            if (prop === "width") return "300px";
-            const val = target[prop];
-            return typeof val === "function" ? val.bind(target) : val;
+        Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+          get() {
+            if (isBaitClass(this.className) || isBaitClass(this.id)) return 250;
+            return origOffsetHeight.get.call(this);
           },
+          configurable: true,
+          enumerable: true,
         });
-      } catch (_) {
-        return style;
+      } catch (e) {
+        // silently fail
       }
     }
 
-    return style;
-  };
-
-  const origOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
-  const origOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");
-
-  if (origOffsetHeight) {
-    Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
-      get() {
-        if (isBaitClass(this.className) || isBaitClass(this.id)) return 250;
-        return origOffsetHeight.get.call(this);
-      },
-    });
+    if (origOffsetWidth) {
+      try {
+        Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
+          get() {
+            if (isBaitClass(this.className) || isBaitClass(this.id)) return 300;
+            return origOffsetWidth.get.call(this);
+          },
+          configurable: true,
+          enumerable: true,
+        });
+      } catch (e) {
+        // silently fail
+      }
+    }
   }
 
-  if (origOffsetWidth) {
-    Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
-      get() {
-        if (isBaitClass(this.className) || isBaitClass(this.id)) return 300;
-        return origOffsetWidth.get.call(this);
-      },
-    });
+  function isBaitNode(node) {
+    try {
+      if (node.nodeType === 1) {
+        if (isBaitClass(String(node.className || '')) || isBaitClass(String(node.id || ''))) {
+          return true;
+        }
+      }
+      if (node.tagName === 'SCRIPT') {
+        const src = node.src || '';
+        const text = node.textContent || '';
+        const content = (src + ' ' + text).toLowerCase();
+        if (/blockadblock|fuckadblock|detectadblock|anti-adblock|fundingchoices/i.test(content)) {
+          return true;
+        }
+      }
+    } catch (_) {}
+    return false;
   }
+
+  function maybeInstallMeasurementSpoof(node) {
+    try {
+      if (!isMeasurementSpoofInstalled && isBaitNode(node)) {
+        installMeasurementSpoof();
+      }
+    } catch (_) {}
+  }
+
+  try {
+    const BAIT_WATCH_TIMEOUT_MS = 15000;
+
+    const existing = document.querySelectorAll("[class*=ad],[id*=ad],script");
+    let scanned = 0;
+    for (const node of existing) {
+      if (++scanned > 300) break;
+      maybeInstallMeasurementSpoof(node);
+      if (isMeasurementSpoofInstalled) break;
+    }
+
+    if (!isMeasurementSpoofInstalled) {
+      const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes) {
+            maybeInstallMeasurementSpoof(node);
+            if (isMeasurementSpoofInstalled) {
+              observer.disconnect();
+              return;
+            }
+            if (node.nodeType === 1 && node.children) {
+              for (const child of node.children) {
+                maybeInstallMeasurementSpoof(child);
+                if (isMeasurementSpoofInstalled) {
+                  observer.disconnect();
+                  return;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+
+      setTimeout(() => {
+        try { observer.disconnect(); } catch (_) {}
+      }, BAIT_WATCH_TIMEOUT_MS);
+    }
+  } catch (_) {}
 
   // ---- 2. FETCH / XHR INTERCEPTION ----
   const DETECTION_PATTERNS = [
@@ -1556,31 +1662,37 @@ document.addEventListener("yt-navigate-finish", function () {
   }
 
   // ---- 4. ANTI-ADBLOCK SCRIPT NEUTRALIZERS ----
-  const origCreateElement = document.createElement;
-  document.createElement = function (tag) {
-    const el = origCreateElement.call(document, tag);
-    if (typeof tag === "string" && tag.toLowerCase() === "script") {
-      const origSetSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, "src");
-      if (origSetSrc && origSetSrc.set) {
-        let _src = "";
-        Object.defineProperty(el, "src", {
-          get() { return _src; },
-          set(val) {
-            _src = val;
-            const lower = String(val).toLowerCase();
-            if (lower.includes("blockadblock") || lower.includes("fuckadblock") ||
-                lower.includes("detectadblock") || lower.includes("anti-adblock")) {
-              return;
-            }
-            origSetSrc.set.call(this, val);
-          },
-          configurable: true,
-        });
+  if (!document.createElement.__adoffPatched) {
+    const origCreateElement = document.createElement;
+    document.createElement = function (tag) {
+      const el = origCreateElement.apply(this, arguments);
+      if (typeof tag === "string" && tag.toLowerCase() === "script") {
+        const origSetSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, "src");
+        if (origSetSrc && origSetSrc.set) {
+          try {
+            let _src = "";
+            Object.defineProperty(el, "src", {
+              get() { return _src; },
+              set(val) {
+                _src = val;
+                const lower = String(val).toLowerCase();
+                if (lower.includes("blockadblock") || lower.includes("fuckadblock") ||
+                    lower.includes("detectadblock") || lower.includes("anti-adblock")) {
+                  return;
+                }
+                origSetSrc.set.call(this, val);
+              },
+              configurable: true,
+            });
+          } catch (e) {
+            // ignore
+          }
+        }
       }
-    }
-    return el;
-  };
-
+      return el;
+    };
+    document.createElement.__adoffPatched = true;
+  }
   // ---- 5. SCROLL LOCK PREVENTION ----
   // Blocca overflow:hidden su body/html SOLO se causato da un wall anti-adblock
   // NON bloccare se ci sono popup/dialog/modal legittimi aperti
@@ -1610,34 +1722,40 @@ document.addEventListener("yt-navigate-finish", function () {
   };
 
   // ---- 6. MUTATION PROTECTION ----
-  const origAppendChild = Node.prototype.appendChild;
-  Node.prototype.appendChild = function (child) {
-    if (child && child.tagName === "SCRIPT") {
-      const src = String(child.src || "");
-      const text = child.textContent || "";
-      const srcLower = src.toLowerCase();
-      const isAntiAdblockSrc = (
-        srcLower.includes("blockadblock") ||
-        srcLower.includes("fuckadblock") ||
-        srcLower.includes("detectadblock") ||
-        srcLower.includes("anti-adblock")
-      );
-      const isAntiAdblock = (
-        (text.includes("adblock") || text.includes("ad-block") || text.includes("adblocker")) &&
-        (text.includes("detected") || text.includes("disable") || text.includes("whitelist")) &&
-        text.length < 5000
-      );
-      if (isAntiAdblockSrc || isAntiAdblock) {
+  if (!Node.prototype.appendChild.__adoffPatched) {
+    const origAppendChild = Node.prototype.appendChild;
+    Node.prototype.appendChild = function (child) {
+      try {
+        if (child) maybeInstallMeasurementSpoof(child);
+      } catch (_) {}
+      if (child && child.tagName === "SCRIPT") {
+        const src = String(child.src || "");
+        const text = child.textContent || "";
+        const srcLower = src.toLowerCase();
+        const isAntiAdblockSrc = (
+          srcLower.includes("blockadblock") ||
+          srcLower.includes("fuckadblock") ||
+          srcLower.includes("detectadblock") ||
+          srcLower.includes("anti-adblock")
+        );
+        const isAntiAdblock = (
+          (text.includes("adblock") || text.includes("ad-block") || text.includes("adblocker")) &&
+          (text.includes("detected") || text.includes("disable") || text.includes("whitelist")) &&
+          text.length < 5000
+        );
+        if (isAntiAdblockSrc || isAntiAdblock) {
+          return child;
+        }
+      }
+      try {
+        return origAppendChild.call(this, child);
+      } catch (_) {
+        // Sandboxed iframe (about:blank senza allow-scripts) — passthrough silenzioso
         return child;
       }
-    }
-    try {
-      return origAppendChild.call(this, child);
-    } catch (_) {
-      // Sandboxed iframe (about:blank senza allow-scripts) — passthrough silenzioso
-      return child;
-    }
-  };
+    };
+    Node.prototype.appendChild.__adoffPatched = true;
+  }
 
   } // fine activateStealth()
 
