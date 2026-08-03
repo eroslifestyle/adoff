@@ -227,7 +227,9 @@
                 var sospetto = (op === '0') || (vw > 0 && area >= vw*0.5);
                 if (!sospetto) return;
                 e.preventDefault();
-                e.stopPropagation();
+                // NIENTE stopPropagation: preventDefault basta a non aprire la
+                // scheda, mentre fermare la propagazione toglie il click anche
+                // ai listener del player e il video non parte.
                 notifyBlocked(href, 'iframe-anchor-overlay');
             } catch (err) {}
         }, true);
