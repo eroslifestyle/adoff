@@ -1,17 +1,11 @@
 {
   "manifest_version": 3,
   "name": "AdOff",
-  "version": "3.5.60",
+  "version": "3.5.59",
   "description": "Ads? Off! Blocca pubblicita' su tutti i siti. Invisibile. Leggero. Veloce.",
   "browser_specific_settings": {
-    "gecko": {
-      "id": "adoff@adoff.app",
-      "strict_min_version": "128.0",
-      "data_collection_permissions": {
-        "required": [
-          "none"
-        ]
-      }
+    "safari": {
+      "strict_min_version": "16.4"
     }
   },
   "permissions": [
@@ -25,9 +19,7 @@
     "<all_urls>"
   ],
   "background": {
-    "scripts": [
-      "src/background.js"
-    ]
+    "service_worker": "src/background.js"
   },
   "content_scripts": [
     {
@@ -35,19 +27,10 @@
         "<all_urls>"
       ],
       "js": [
-        "src/popup-blocker-injector.js"
+        "src/stealth.js"
       ],
       "run_at": "document_start",
-      "all_frames": true
-    },
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "src/stealth-injector.js"
-      ],
-      "run_at": "document_start"
+      "world": "MAIN"
     },
     {
       "matches": [
@@ -59,7 +42,8 @@
       "css": [
         "src/ads-hide.css"
       ],
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "world": "ISOLATED"
     }
   ],
   "declarative_net_request": {
@@ -74,18 +58,6 @@
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none';"
   },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "src/stealth.js",
-        "src/popup-blocker.js",
-        "stubs/google-ima3.js"
-      ],
-      "matches": [
-        "<all_urls>"
-      ]
-    }
-  ],
   "options_page": "src/options.html",
   "action": {
     "default_popup": "src/popup.html",
@@ -95,6 +67,16 @@
       "128": "assets/icon128.png"
     }
   },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "stubs/google-ima3.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
   "icons": {
     "16": "assets/icon16.png",
     "48": "assets/icon48.png",

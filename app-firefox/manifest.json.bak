@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AdOff",
-  "version": "3.5.60",
+  "version": "3.5.59",
   "description": "Ads? Off! Blocca pubblicita' su tutti i siti. Invisibile. Leggero. Veloce.",
   "browser_specific_settings": {
     "gecko": {
@@ -30,16 +30,6 @@
     ]
   },
   "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "src/popup-blocker-injector.js"
-      ],
-      "run_at": "document_start",
-      "all_frames": true
-    },
     {
       "matches": [
         "<all_urls>"
@@ -78,7 +68,6 @@
     {
       "resources": [
         "src/stealth.js",
-        "src/popup-blocker.js",
         "stubs/google-ima3.js"
       ],
       "matches": [

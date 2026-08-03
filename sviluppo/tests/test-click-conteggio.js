@@ -168,6 +168,8 @@ async function main() {
   console.log('\n' + '='.repeat(60));
   console.log('CON ESTENSIONE - Click necessari:', resultCon.clickNecessari);
   console.log('Tabs pubblicitarie chiuse:', resultCon.tabs.length);
+  console.log('URL TAB RESIDUE (con estensione):', JSON.stringify(resultCon.tabs, null, 1));
+  console.log('URL TAB (senza estensione):', JSON.stringify(resultSenza.tabs, null, 1));
   console.log('='.repeat(60));
 
   console.log('\n' + '#'.repeat(60));
