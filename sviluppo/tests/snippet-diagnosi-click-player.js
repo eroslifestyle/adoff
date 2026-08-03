@@ -47,15 +47,29 @@
       }
     });
 
-    // Wrap di window.open per tracciare tentativi di apertura popup
+    // Alcuni player rendono window.open non scrivibile, quindi proviamo prima
+    // l'assegnazione diretta e poi Object.defineProperty come fallback
     var origOpen = window.open;
-    window.open = function (url) {
+    var trackOpen = function (url) {
       window.__adoffOpens.push({
         url: String(url).slice(0, 200),
         t: Date.now()
       });
       return origOpen.apply(window, arguments);
     };
+    try {
+      window.open = trackOpen;
+    } catch (e) {
+      try {
+        Object.defineProperty(window, 'open', {
+          value: trackOpen,
+          writable: true,
+          configurable: true
+        });
+      } catch (e2) {
+        console.warn('Impossibile tracciare window.open: proprietà protetta. I popup non verranno conteggiati, ma la diagnosi prosegue.');
+      }
+    }
 
     // Listener click su document in capture phase, passive
     document.addEventListener(

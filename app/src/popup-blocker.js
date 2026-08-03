@@ -179,7 +179,10 @@
         configurable: true
       });
     } catch(e) {
-      window.open = safeOpen;
+      // Alcuni player rendono window.open read-only per difendersi dagli adblocker.
+      // Se anche l'assegnazione lancia, il resto del blocker (patch anchor e
+      // listener anti-overlay) deve comunque installarsi.
+      try { window.open = safeOpen; } catch (_) {}
     }
 
     try {
