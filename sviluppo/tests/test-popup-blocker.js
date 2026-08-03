@@ -69,7 +69,16 @@ async function check(name, expectAllowed, ctxName, url, withGesture, page, resul
           }
         }, { once: true });
       }, url);
-      await page.mouse.click(600, 400);
+      // Se il contesto è iframe, clicchiamo dentro l'iframe
+      // altrimenti il listener di gesto dell'iframe non si aggiorna e il test passerebbe per il motivo sbagliato
+      if (ctxName === 'iframe') {
+        let box = null;
+        try { const h = await page.$('iframe'); if (h) box = await h.boundingBox(); } catch (e) {}
+        if (box) { await page.mouse.click(box.x + box.width/2, box.y + box.height/2); }
+        else { await page.mouse.click(600, 400); }
+      } else {
+        await page.mouse.click(600, 400);
+      }
       await new Promise(r => setTimeout(r, 600));
       got = await ctx.evaluate(() => window.__res);
     }
@@ -116,7 +125,9 @@ async function run() {
       ['Layer1 dentro IFRAME', false, 'iframe', 'https://popads.net/xyz', false],
       ['Layer2 dentro IFRAME', false, 'iframe', 'https://example.com/', false],
       ['TLD legittimo con gesto', true, 'main', 'https://negozio.store/', true],
-      ['ad network con gesto', false, 'main', 'https://popcash.net/x', true]
+      ['ad network con gesto', false, 'main', 'https://popcash.net/x', true],
+      ['IFRAME terze parti CON gesto (caso player)', false, 'iframe', 'https://tracker-esempio.com/promo', true],
+      ['IFRAME verso il sito ospite CON gesto', true, 'iframe', 'http://127.0.0.1:' + PORT + '/frame', true]
     ];
 
     for (const [name, expectAllowed, ctxName, url, withGesture] of checks) {

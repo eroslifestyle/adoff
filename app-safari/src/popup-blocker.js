@@ -48,6 +48,12 @@
 
     const isSafeContext = SAFE_SITES.some(d => hostname.includes(d) || topHost.includes(d));
 
+    // siamo dentro un iframe?
+    // i player video di terze parti non hanno motivi legittimi di aprire schede verso domini terzi;
+    // li' il popunder passa anche con un click vero perche' il Layer 3 concede la prima finestra per ogni gesto.
+    let isInIframe = false;
+    try { isInIframe = window.top !== window.self; } catch (e) { isInIframe = true; }
+
     const POPUP_AD_PATTERNS = [
       /popads\.net/i, /popcash\.net/i, /propellerads\.com/i, /adsterra\.com/i, /exoclick\.com/i, /juicyads\.com/i,
       /trafficjunky\.(?:com|net)/i, /clickadu\.com/i, /hilltopads\.net/i, /onclickadnow\.com/i, /onclkds\.com/i,
@@ -143,6 +149,12 @@
         if (!url || url === 'about:blank' || isSameSiteUrl(url)) {
           return origOpen.apply(this, arguments);
         }
+        // dentro un iframe non fidato una scheda verso un dominio terzo e' un popunder
+        // anche col click vero; i widget legittimi che aprono popup sono gia' coperti da SAFE_SITES.
+        if (isInIframe && enableGestureCheck) {
+          notifyBlocked(url, 'iframe-thirdparty');
+          return null;
+        }
         if (enableGestureCheck) {
           if (Date.now() - lastTrustedClick > GESTURE_WINDOW_MS) {
             notifyBlocked(url, 'no-gesture');
@@ -193,6 +205,33 @@
         HTMLAnchorElement.prototype.click.__adoffPatched = true;
       }
     } catch(e) {}
+    // I click reali su <a target="_blank"> negli iframe non vengono gestiti da window.open
+    // ma direttamente dal browser, quindi vanno intercettati qui per bloccare i popup overlay
+    // Si blocca SOLO se l'anchor e' sospetto (invisibile o che copre mezzo schermo)
+    // altrimenti si romperebbero i link legittimi dentro gli iframe di widget di terze parti
+    if (isInIframe && enableGestureCheck) {
+        document.addEventListener('click', function(e) {
+            try {
+                if (!e.isTrusted) return;
+                var a = e.target && typeof e.target.closest === 'function' ? e.target.closest('a') : null;
+                if (!a) return;
+                var t = a.target;
+                if (t !== '_blank' && t !== '_new') return;
+                var href = String(a.href || '');
+                if (!href || isSameSiteUrl(href)) return;
+                var r = a.getBoundingClientRect();
+                var area = (r.width||0)*(r.height||0);
+                var op = '';
+                try { op = getComputedStyle(a).opacity; } catch(e2) {}
+                var vw = (window.innerWidth||0)*(window.innerHeight||0);
+                var sospetto = (op === '0') || (vw > 0 && area >= vw*0.5);
+                if (!sospetto) return;
+                e.preventDefault();
+                e.stopPropagation();
+                notifyBlocked(href, 'iframe-anchor-overlay');
+            } catch (err) {}
+        }, true);
+    }
 
     window.addEventListener('adoff-popup-blocked', function() {
       try {
