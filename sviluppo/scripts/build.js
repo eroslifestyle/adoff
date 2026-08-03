@@ -77,7 +77,7 @@ const TARGETS = {
     appDir: path.join(PROJECT_ROOT, "app-firefox"),
     buildDir: path.join(PROJECT_ROOT, "sviluppo", "build-firefox"),
     hasStubs: false,
-    extraFiles: ["stealth-injector.js"],  // Firefox-specific: MAIN world workaround
+    extraFiles: ["stealth-injector.js", "popup-blocker-injector.js"],  // Firefox-specific: MAIN world workaround
   },
   safari: {
     appDir: path.join(PROJECT_ROOT, "app-safari"),
@@ -326,6 +326,7 @@ const PROFILES = {
 // Mappa file → profilo
 const FILE_PROFILES = {
   "stealth.js":        "high",
+  "popup-blocker.js":  "high",
   "license-client.js": "high",
   "content.js":        "medium",
   "background.js":     "medium",
@@ -540,7 +541,7 @@ function checkSync() {
   const SHARED_FILES = [
     "src/content.js", "src/popup.js", "src/popup.html", "src/popup.css",
     "src/options.js", "src/options.html", "src/options.css", "src/onboarding.js",
-    "src/license-client.js", "src/i18n.js", "src/ads-hide.css",
+    "src/license-client.js", "src/i18n.js", "src/ads-hide.css", "src/popup-blocker.js",
     "rules/adblock-rules.json",
   ];
   const dirs = { chrome: "app", firefox: "app-firefox", safari: "app-safari" };
