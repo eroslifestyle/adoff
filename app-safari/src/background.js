@@ -41,6 +41,11 @@
 
   // Changelog per versione (ultime 3 voci per popup)
   const CHANGELOGS = {
+      "3.5.64": [
+        "Protezione confermata contro le finestre che si aprono al clic sul play",
+        "Riconoscimento dei circuiti pubblicitari dal loro indirizzo",
+        "Difesa attiva anche dentro i lettori video incorporati",
+      ],
       "3.5.63": [
         "Blocco delle finestre pubblicitarie che si aprono al primo clic",
         "Riconoscimento dei circuiti di affiliazione dal loro indirizzo",
