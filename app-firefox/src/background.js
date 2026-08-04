@@ -1086,6 +1086,72 @@
     // EA-6: rifiuta messaggi da estensioni esterne o pagine web
     if (sender.id !== chrome.runtime.id) return false;
 
+    // Lo script anti-pubblico è dichiarato nel manifest solo per il frame principale,
+    // quindi nei player ospitati in un iframe di terze parti non arriva; il sottoframe
+    // chiede qui il verdetto invece di ricalcolarlo per conto suo, così la decisione
+    // resta in un punto solo.
+    if (message.action === "richiediStealthFrame") {
+      chrome.storage.local.get([
+        "adoffLicense", "adoffTrialEnd", "adoffTrialToken",
+        "adoffTrialExpired", "adoffDeviceId", "adoffIntegrity",
+        "adoffWhitelist", STORAGE_ENABLED
+      ], (stored) => {
+        if (stored[STORAGE_ENABLED] === false) {
+          sendResponse({ pro: false });
+          return;
+        }
+
+        // Pausa sito: verifica whitelist
+        let tabUrl;
+        try {
+          tabUrl = sender.tab && sender.tab.url ? new URL(sender.tab.url) : null;
+        } catch (_) {
+          tabUrl = null;
+        }
+        if (tabUrl) {
+          const hostname = tabUrl.hostname;
+          const whitelist = stored.adoffWhitelist || [];
+          const whitelisted = whitelist.some(entry => {
+            if (entry === hostname) return true;
+            if (hostname.endsWith("." + entry)) return true;
+            return false;
+          });
+          if (whitelisted) {
+            sendResponse({ pro: false });
+            return;
+          }
+        }
+
+        const lic = stored.adoffLicense || {};
+        const storedIntegrity = stored.adoffIntegrity;
+        // Il campo reale e' "valid": su un nome inesistente la negazione risulta
+        // sempre vera e il controllo di integrita' viene scavalcato del tutto.
+        const integrityValid =
+          !lic.valid ||
+          (storedIntegrity != null && storedIntegrity === computeIntegrity(lic));
+
+        isTrialActive(stored, Date.now()).then(trialActive => {
+          const pro =
+            integrityValid &&
+            (
+              ["pro", "lifetime", "monthly", "annual"].includes(lic.type) ||
+              ["pro", "lifetime", "monthly", "annual"].includes(lic.plan) ||
+              trialActive
+            );
+
+          if (!pro) {
+            sendResponse({ pro: false });
+            return;
+          }
+
+          const rand = Math.random();
+          const hex = ("0000000" + Math.floor(rand * 0xffffffff).toString(16)).slice(-8);
+          sendResponse({ pro: true, nonce: "ao_" + hex });
+        });
+      });
+      return true;
+    }
+
     // EM-6: incremento atomico contatore ads bloccati (evita race condition in content.js)
     if (message.action === "incrementAdsBlocked") {
       const count = (typeof message.count === "number" && message.count > 0) ? message.count : 0;
@@ -1095,7 +1161,6 @@
       sendResponse({ ok: true });
       return false;
     }
-
     if (message.action === "addToWhitelist") {
       const domain = message.domain;
       if (!domain) { sendResponse({ ok: false, error: "missing domain" }); return true; }

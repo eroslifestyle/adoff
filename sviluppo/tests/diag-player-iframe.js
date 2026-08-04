@@ -146,7 +146,10 @@ function filterAdRequests(requests) {
     // Si usa il token vero del server perche' il controllo di integrita'
     // declassa a Free una licenza scritta a mano senza il suo hash,
     // mentre il token firmato e' la strada che segue anche un utente reale
-    const deviceId = 'adoffDeviceIdTest' + require('crypto').randomBytes(8).toString('hex');
+    // DEVE essere un UUID: con altri formati il server emette un token che
+    // porta dentro un proprio identificativo "fb_", e il client lo rifiuta
+    // perche' non combacia con quello locale. Il trial resterebbe spento.
+    const deviceId = require('crypto').randomUUID();
     try {
         const response = await fetch('https://api.adoff.app/trial', {
             method: 'POST',
