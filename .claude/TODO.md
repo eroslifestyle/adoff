@@ -1,8 +1,9 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
-> **Consolidato 2026-08-04.** Merge di tutte le sessioni dal 2026-07-28 al 2026-08-04 (dai checkpoint `CP_20260728_2204` e `CP_20260731_1846`, sessione SEO del 02/08, sessione rule-feed `CP_20260802_1840`, sessione popunder `CP_20260804_0230`).
+> **Consolidato 2026-08-04.** Merge di tutte le sessioni dal 2026-07-28 al 2026-08-04 (dai checkpoint `CP_20260728_2204` e `CP_20260731_1846`, sessione SEO del 02/08, sessione rule-feed `CP_20260802_1840`, sessione popunder `CP_20260804_0230`, sessione audit del 04/08 con checkpoint `CP_20260804_0451`).
 > I check sono **cancellazioni**, non aggiunte. Le voci aperte sono ordinate per priorità reale.
-> Stato prodotto: **3.5.60** pubblicata su CWS, Edge, AMO e sito. Branch `feat/premium-vpn`, HEAD `c9b6973` pushato.
+> Stato prodotto: **3.5.61** — CWS in review, Edge submission inviata, Firefox AMO firmato e sito live. Branch `feat/premium-vpn`, HEAD `b32e6e6` pushato.
+> Esiste un gate di test obbligatorio: `node sviluppo/tests/test-security-invariants.js` deve dare 58 su 58 prima di ogni deploy.
 
 ---
 
@@ -18,6 +19,24 @@
 
 - [x] **DEPLOY 3.5.58** — pubblicata su CWS e AMO (commit `746cbb9`). Poi 3.5.59 su AMO e sito.
 - [ ] *(opzionale)* Chiedere all'utente `window.__adoffYtDiag` ora che funziona, per sapere **quale** meccanismo ha agito (`coldLoads`, `adReloads`, `flagInjectedStringify`) e proteggerlo da regressioni future.
+
+## ✅ RISOLTO 04/08 — audit riga per riga: due bypass del gate Pro chiusi (v3.5.61)
+
+Analisi integrale dei quattro core su richiesta dell'utente (`background.js` 1143 righe, `content.js` 735, `stealth.js` 1614, `popup-blocker.js` 248). Sei bug trovati, tutti confermati sul sorgente prima di toccare qualsiasi cosa.
+
+**I due critici erano entrambi bypass reali del gate Pro, sfruttabili a costo zero:**
+1. `content.js` leggeva l'attributo DOM `data-adoff-loaded` accettando **qualsiasi** valore, mentre il commento prometteva di confrontare il nonce `LOAD_NONCE` (generato e mai usato). Un sito che scriveva `<html data-adoff-loaded="x">` spegneva cosmetic filtering e gate Pro. Ora il gate vive su `window.__adoffContentLoaded` dell'ISOLATED world, che la pagina non può leggere né scrivere.
+2. `isTrialActive()` in `content.js` aveva un fallback su `adoffTrialEnd`, scrivibile da DevTools: bastava rinnovarlo per avere Pro a vita. Rimosso — l'autorità è solo il token firmato ECDSA, come già faceva `background.js`.
+
+**Lezione strutturale**: la stessa funzione esisteva in tre copie con tre comportamenti diversi. `background.js` era corretto, `content.js` no. I bug 1-2-3 nascono tutti da quella duplicazione.
+
+- [x] Altri quattro fix: matching domini da `hostname.includes(d)` (rendeva `youtube.com.malware.tk` un sito "sicuro") a match esatto/suffisso con regex dedicata per `google.co`; `.bak` esclusi dal pacchetto (`adblock-rules.json.bak` era il 26% dello ZIP pubblicato, 41 KB su 156); `stop()` ripristinava 3 delle 6 proprietà scritte da `collapseElement`; changelog fermo alla 3.1.0 da 22 versioni.
+- [x] Test anti-regressione `sviluppo/tests/test-security-invariants.js` (commit `b1c7842`): 58 asserzioni, Node puro, exit 1 se fallisce. Legge i **sorgenti reali** invece di duplicare la logica; per `matchDominio` estrae la funzione e la valuta con `new Function`. Validato con **mutation testing**: reintrodotti a mano i quattro bug, il test li ha colti tutti.
+- [x] Pulizia `app/`: da **158 MB a 784 KB** (157 MB di `graphify-out` orfano — il canonico resta in `sviluppo/license-system/` — più `docs/chat` e i `.bak`).
+- [x] `CLAUDE.md` allineato: il trial è **15 giorni** (`worker.js:641`), diceva 30 in due punti.
+- [x] Release 3.5.61 su tutti i canali: CWS `publish OK` in review, Edge submission `202`, AMO `adoff-3.5.61.xpi` firmato, sito live con ZIP verificato in produzione (md5 identico al locale), Telegram `@adoffapp` msg 101 con card nuova. **Safari no**: serve Mac con Xcode.
+- [ ] **Estrazione `src/shared/`** per deduplicare `isTrialActive`, `matchDominio`, `computeIntegrity` — oggi tre copie divergenti per tre target. È la cura vera, non l'ennesimo cerotto. *Expected outcome:* un solo punto di verità per funzione, test ancora 58/58. **Decisione dell'utente**, non ancora presa.
+- [ ] Agganciare il test agli hook di pre-deploy, così che 58/58 rosso **impedisca** la pubblicazione invece di essere una buona intenzione.
 
 ## ✅ RISOLTO 03-04/08 — popunder su streaming-community.red (v3.5.60, chiuso a zero)
 
@@ -56,7 +75,7 @@ Due difetti indipendenti e silenziosi. **Client**: `syncRemoteRules()` passava 3
 
 ## 🟠 RELEASE 3.5.54 — code residua
 
-- [ ] **Edge store: fermo alla 3.5.54.** Storico: `POST /submissions/draft/package` dava **404** (product ID non accessibile → stantio o credenziali di un altro account Partner Center). Il 02/08, stesso endpoint e stesse credenziali, ha risposto **401** — quindi ora è l'autenticazione a cadere, non solo il product ID. Prima di rigenerare qualcosa, rifare una prova e annotare il codice ottenuto: 404 e 401 puntano a cause diverse. Strada sicura nel frattempo: upload manuale da Partner Center di `sviluppo/adoff-chrome-store.zip`.
+- [x] **Edge store.** Il 04/08 la 3.5.61 è passata dall'API senza errori, package operation Succeeded e submission accettata HTTP 202 con operation 671c3f94-2937-400b-bb21-599bdb132af4, usando la chiave rigenerata dall'utente. ~~Era fermo alla 3.5.54.~~ Storico: `POST /submissions/draft/package` dava **404** (product ID non accessibile → stantio o credenziali di un altro account Partner Center). Il 02/08, stesso endpoint e stesse credenziali, ha risposto **401** — quindi ora era l'autenticazione a cadere, non solo il product ID. Diagnosi: 404 e 401 su quell'endpoint puntano a cause diverse, il 404 è product ID non accessibile mentre il 401 è chiave scaduta da rigenerare da Partner Center, quindi prima di rigenerare qualcosa va annotato quale codice si è ottenuto.
 - [ ] **Safari: build + submit Mac App Store.** Non eseguibile da Linux: serve Mac con Xcode (`xcrun safari-web-extension-converter`). Ferma da 3.5.38.
 - [ ] **Monitorare review CWS/AMO della 3.5.54** (finestra 24-48h dal 31/07 16:41Z). In caso di rifiuto: leggere i log e rollback a 3.5.53.
 - [ ] **Purge cache edge Cloudflare** (dashboard → Caching → Purge Cache, i token API sono scoped Pages/D1 e danno `10000 Authentication error`):
