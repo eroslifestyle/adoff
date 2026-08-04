@@ -46,7 +46,12 @@
       'hcaptcha.com', 'gstatic.com', 'bankid.com', 'id.apple.com'
     ];
 
-    const isSafeContext = SAFE_SITES.some(d => hostname.includes(d) || topHost.includes(d));
+    // il matching per sottostringa faceva passare youtube.com.malware.tk come contesto sicuro disattivando il blocco popunder
+    const matchDominio = (host, d) => {
+      if (d === 'google.co') return /(^|\.)google\.[a-z]{2,3}(\.[a-z]{2})?$/.test(host);
+      return host === d || host.endsWith('.' + d);
+    };
+    const isSafeContext = SAFE_SITES.some(d => matchDominio(hostname, d) || matchDominio(topHost, d));
 
     // siamo dentro un iframe?
     // i player video di terze parti non hanno motivi legittimi di aprire schede verso domini terzi;

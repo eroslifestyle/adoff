@@ -262,6 +262,11 @@
 
   // Changelogs (stesso del background.js)
   const CHANGELOGS = {
+    "3.5.60": [
+      "Blocco popunder da iframe di player video",
+      "Correzione crash stub IMA durante navigazione",
+      "Aggiornamento automatico filtri dal server",
+    ],
     "3.1.0": [
       "Sistema referral: invita amici, guadagna Pro gratis",
       "Prompt recensioni intelligente",

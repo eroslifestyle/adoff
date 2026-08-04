@@ -25,7 +25,7 @@ const LicenseClient = (function () {
   ]);
 
   // Durata trial — deve coincidere col server (TRIAL_DURATION_MS nel worker).
-  const TRIAL_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
+  const TRIAL_DURATION_MS = 15 * 24 * 60 * 60 * 1000;
   const TRIAL_MARGIN_MS = 72 * 60 * 60 * 1000; // 3g di tolleranza per il cap ottimistico
 
   // Chiave PUBBLICA ECDSA P-256 per verificare i token trial firmati dal server.

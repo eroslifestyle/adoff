@@ -4,10 +4,11 @@
   // EB-6: Nonce casuale per prevenire clobbering del flag di caricamento
   const LOAD_NONCE = Math.random().toString(36).slice(2, 10);
 
-  // Previeni istanze multiple — verifica che il valore sia il nostro nonce (non uno iniettato dal sito)
-  const existingNonce = document.documentElement.getAttribute("data-adoff-loaded");
-  if (existingNonce) return; // Già caricato
-  document.documentElement.setAttribute("data-adoff-loaded", LOAD_NONCE);
+  // Previeni istanze multiple. Il gate vive su window dell'ISOLATED world, che
+  // la pagina NON puo' leggere ne' scrivere: un attributo sul DOM e' invece
+  // condiviso col sito, che scrivendolo nell'HTML iniziale disattivava AdOff.
+  if (window.__adoffContentLoaded) return; // Già caricato in questo world
+  window.__adoffContentLoaded = LOAD_NONCE;
 
   const hostname = location.hostname;
   const isOfficialSite = hostname === "adoff.app" || hostname === "www.adoff.app" || hostname.endsWith(".adoff-site.pages.dev");
@@ -68,8 +69,6 @@
   // L'autorità del trial è il server. Il gate Pro/Trial in-page si fida SOLO
   // di un token firmato verificato con la chiave pubblica embeddata; un
   // adoffTrialEnd gonfiato via DevTools non abilita le feature Pro.
-  const TRIAL_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
-  const TRIAL_MARGIN_MS = 24 * 60 * 60 * 1000;
   const TRIAL_PUBKEY_JWK = {
     kty: "EC", crv: "P-256",
     x: "FnIroHHVzo3v01gENPaA2U70c58sduDD6hGS0EhCATc",
@@ -107,15 +106,13 @@
       return payload;
     } catch (_) { return null; }
   }
-  // Trial attivo? Autorità = token firmato; fallback ottimistico ≤30g da ora.
+  // Autorità = token firmato dal server, no fallback locali.
   async function isTrialActive(result, now) {
     const payload = result.adoffTrialToken
       ? await verifyTrialToken(result.adoffTrialToken, result.adoffDeviceId)
       : null;
     if (payload) return payload.trialEnd > now;
-    const te = result.adoffTrialEnd || 0;
-    return !result.adoffTrialExpired && te > now
-      && te <= now + TRIAL_DURATION_MS + TRIAL_MARGIN_MS;
+    return false;
   }
 
   // --- Controlla whitelist, stato e licenza prima di avviare ---
@@ -191,7 +188,7 @@
     // Aggiorna in tempo reale se la whitelist cambia mentre la pagina e' aperta
     if (changes.adoffWhitelist) {
       const whitelist = changes.adoffWhitelist.newValue || [];
-      const isPaused  = whitelist.some((d) => hostname.includes(d) || d.includes(hostname));
+      const isPaused  = whitelist.some((d) => hostname === d || hostname.endsWith("." + d));
       if (isPaused && enabled) stop();
     }
   });
@@ -726,8 +723,13 @@
     }
     const hidden = document.querySelectorAll("[data-adoff-hidden]");
     for (const el of hidden) {
+      // Tutte e sei quelle scritte da collapseElement: fermarsi a tre lasciava
+      // il layout collassato (min-height/margin/padding) a protezione spenta.
       el.style.removeProperty("display");
       el.style.removeProperty("height");
+      el.style.removeProperty("min-height");
+      el.style.removeProperty("margin");
+      el.style.removeProperty("padding");
       el.style.removeProperty("overflow");
       el.removeAttribute("data-adoff-hidden");
     }

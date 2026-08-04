@@ -76,9 +76,18 @@
     "primevideo.com",
   ];
 
-  const isBroadcaster = BROADCASTER_SITES.some((d) => hostname.includes(d));
-  const isPremiumStreaming = PREMIUM_STREAMING.some((d) => hostname.includes(d));
-  const isStealhExcluded = isBroadcaster || isPremiumStreaming || STEALTH_EXCLUDED.some((d) => hostname.includes(d));
+  // hostname.includes rendeva youtube.com.malware.tk un sito considerato sicuro ed esente dalle difese
+  const matchDominio = (host, d) => {
+    if (d === 'google.co') {
+      // Copre i domini nazionali (google.co.uk, google.com.au) ma NON
+      // google.co.evil.tk: dopo "google." accetta solo 1-2 label finali.
+      return /(^|\.)google\.[a-z]{2,3}(\.[a-z]{2})?$/.test(host);
+    }
+    return host === d || host.endsWith('.' + d);
+  };
+  const isBroadcaster = BROADCASTER_SITES.some((d) => matchDominio(hostname, d));
+  const isPremiumStreaming = PREMIUM_STREAMING.some((d) => matchDominio(hostname, d));
+  const isStealhExcluded = isBroadcaster || isPremiumStreaming || STEALTH_EXCLUDED.some((d) => matchDominio(hostname, d));
 
   // =============================================
   // POPUP / POPUNDER BLOCKER → spostato in src/popup-blocker.js

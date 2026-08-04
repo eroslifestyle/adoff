@@ -714,6 +714,9 @@ function copyDir(relativePath, appDir, buildDir) {
   for (const file of fs.readdirSync(src)) {
     const srcFile = path.join(src, file);
     const dstFile = path.join(dst, file);
+    // Mai spedire backup/scarti nel pacchetto: un .bak finiva negli ZIP di
+    // store e sito (41 KB su 156 KB) ed esponeva la versione precedente delle regole.
+    if (/\.(bak|orig|rej|tmp|swp)$|~$|^\./.test(file)) continue;
     if (fs.statSync(srcFile).isFile()) {
       fs.copyFileSync(srcFile, dstFile);
     }

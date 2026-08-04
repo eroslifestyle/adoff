@@ -41,6 +41,11 @@
 
   // Changelog per versione (ultime 3 voci per popup)
   const CHANGELOGS = {
+    "3.5.60": [
+      "Blocco popunder da iframe di player video",
+      "Correzione crash stub IMA durante navigazione",
+      "Aggiornamento automatico filtri dal server",
+    ],
     "3.1.0": [
       "Sistema referral: invita amici, guadagna Pro gratis",
       "Prompt recensioni intelligente",
@@ -574,7 +579,7 @@
 
       // Primo install
       if (details.reason === "install") {
-        // Trial 30 giorni
+        // Trial: durata da TRIAL_DAYS (autorita' vera = token firmato dal server)
         if (result[STORAGE_TRIAL_END] === undefined) {
           defaults[STORAGE_TRIAL_END] = Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000;
         }

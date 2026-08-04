@@ -19,9 +19,9 @@ L'estensione opera su 4 livelli:
 
 Il trial è **ancorato al server** e non manomettibile via DevTools/storage, e **non si resetta più sugli update**.
 
-- **Autorità = server**: `POST /trial { deviceId }` (worker `handleTrial`) fissa `trial_start` la prima volta in tabella D1 `trials` (keyed su `device_id` = `adoffDeviceId` stabile), poi è idempotente. Calcola `trial_end = trial_start + 30g` e ritorna un **token firmato ECDSA P-256** (`payloadB64.sigB64`, payload `{deviceId,trialStart,trialEnd,iat,v}`).
+- **Autorità = server**: `POST /trial { deviceId }` (worker `handleTrial`) fissa `trial_start` la prima volta in tabella D1 `trials` (keyed su `device_id` = `adoffDeviceId` stabile), poi è idempotente. Calcola `trial_end = trial_start + 15g` (`TRIAL_DURATION_MS`, worker.js:641) e ritorna un **token firmato ECDSA P-256** (`payloadB64.sigB64`, payload `{deviceId,trialStart,trialEnd,iat,v}`).
 - **Chiave**: privata nel Worker (`env.ADOFF_TRIAL_PRIVKEY`, PKCS8 b64, in `~/.secrets/adoff-stores.env`); **pubblica embeddata** (stessa JWK) in `background.js`, `content.js`, `license-client.js`. Avere la pubblica NON permette di forgiare un token con più giorni.
-- **Gate client**: ogni punto che abilita Pro/Trial verifica la firma del token con `crypto.subtle.verify` e confronta `payload.deviceId` col locale (anti token-sharing). `adoffTrialEnd` è solo cache di display + **fallback ottimistico limitato** (onorato solo se ≤ `now + 30g + 1g` → un valore gonfiato via DevTools è ignorato).
+- **Gate client**: ogni punto che abilita Pro/Trial verifica la firma del token con `crypto.subtle.verify` e confronta `payload.deviceId` col locale (anti token-sharing). **Nessun fallback su `adoffTrialEnd` nei gate delle feature** (`background.js` e `content.js`): quel valore è scrivibile da DevTools e permetteva di riattivare Pro all'infinito rinnovandolo — rimosso il 2026-08-04. Resta solo come cache di display in `license-client.js` (popup/options), con cap ≤ `now + 15g + 3g`.
 - **Fix reset-on-update**: `syncTrialBg()` gira a install/update/startup/daily-alarm → su update RIPRISTINA la scadenza dal server anche se lo storage locale fosse azzerato. Il countdown non riparte mai.
 - **Punti di verifica** (tutti col token): `background.js` `isTrialActive()`/`updateImaRules()` (gate IMA redirect), `content.js` gate `data-adoff-stealth` (stealth/cosmetic Pro), `license-client.js` `checkPro()` (popup/options). Guardia clock-rollback via `adoffTrialSeen`.
 - **Residuo noto**: un reinstall completo azzera `adoffDeviceId` → trial nuovo (accettato); un programmatore che patcha il JS dell'estensione bypassa qualsiasi gate client-side (limite intrinseco — difesa totale = servire la funzionalità Pro dal server).
@@ -192,7 +192,7 @@ Usa `chrome.storage.local` con prefisso `adoff`:
 | Annuale — standard (dopo i 100) | **24,99 EUR/anno** |
 | Founder Lifetime (offerta limitata) | **99 EUR** una tantum |
 
-- Trial: 30gg gratis Pro · piano UNICO (fino a ~3 dispositivi personali; tier 3/5/10 rimandati)
+- Trial: 15gg gratis Pro (`TRIAL_DAYS` in background.js; autorità = token firmato dal server) · piano UNICO (fino a ~3 dispositivi personali; tier 3/5/10 rimandati)
 - **Counter reale "Posti Founder X/100"** dal backend (`GET /founder-status`, tabella D1 `founder_seats`); niente numeri finti
 - Prezzo deciso **server-side** dal worker (price_data inline, gating Founder) — NON si usano Price ID Stripe fissi
 - Dettaglio completo: `docs/PRICING-PLAN.md`. Vecchi prezzi 2,69/29,59/67,90 + tier device = SUPERATI.
