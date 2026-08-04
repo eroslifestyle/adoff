@@ -60,7 +60,11 @@ async function prova(conEstensione) {
     });
 
     context.on('page', p => {
-      tabs.push(p.url());
+      const url = p.url();
+      // L'onboarding aperto all'install falsava la misura
+      if (!/^(chrome-extension:|moz-extension:|about:)/i.test(url)) {
+        tabs.push(url);
+      }
       try { p.close(); } catch (e) {}
     });
 
