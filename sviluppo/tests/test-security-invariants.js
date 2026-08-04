@@ -455,6 +455,130 @@ function testaSincronizzazioneBrowser() {
 }
 
 // =============================================================================
+// TEST 9: Regole di rete non appuntate a domini a rotazione
+// =============================================================================
+// Le regole popunder erano legate a un dominio con numero fisso.
+// Quando il numero cambia la regola diventa inerte senza segnalazione.
+// Questo test impedisce la regressione.
+// =============================================================================
+function testaRegoleNonPinnate() {
+  console.log('\n=== TEST 9: Regole di rete non appuntate a domini a rotazione ===');
+
+  const fileRules = TARGETS.map(t => path.join(t, 'rules', 'adblock-rules.json'));
+  const contents = [];
+
+  // Legge tutti i file di regole
+  // Normalizzazione: il file è un array JSON al primo livello.
+  // Senza questa normalizzazione .rules sarebbe undefined e il test sarebbe cieco.
+  for (let i = 0; i < fileRules.length; i++) {
+    const file = fileRules[i];
+    try {
+      const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+      contents.push(Array.isArray(parsed) ? parsed : (parsed.rules || []));
+    } catch (e) {
+      fail('T9', file, `Impossibile leggere: ${e.message}`);
+      return;
+    }
+  }
+
+  // a) Nessun urlFilter deve appuntare un dominio di famiglia numerata
+  // Pattern: lettere+ cifre+ . tld (es. abc123.example.com)
+  const reDominioNumerato = /^(\|\|)?[a-zA-Z]{2,}\d+\.[a-zA-Z]{2,}$/;
+  for (let i = 0; i < contents.length; i++) {
+    const rules = contents[i];
+    let trovato = false;
+    for (const rule of rules) {
+      if (rule.action && rule.action.type === 'block' && rule.condition && rule.condition.urlFilter) {
+        const filtro = rule.condition.urlFilter;
+        if (reDominioNumerato.test(filtro)) {
+          fail('T9a', fileRules[i], `Regola ${rule.id} appunta dominio numerato: ${filtro}`);
+          trovato = true;
+        }
+      }
+    }
+    // OK: nessun dominio numerato pinnato in questo file
+    if (!trovato) {
+      ok('T9a', fileRules[i], 'Nessun dominio numerato pinnato');
+    }
+  }
+
+  // b) Regole 931, 932, 933 devono avere regexFilter e NON urlFilter
+  for (let i = 0; i < contents.length; i++) {
+    const rules = contents[i];
+    const idsAttesi = [931, 932, 933];
+    for (const idAtteso of idsAttesi) {
+      const rule = rules.find(r => r.id === idAtteso);
+      if (!rule) {
+        fail('T9b', fileRules[i], `Manca regola id=${idAtteso}`);
+      } else if (rule.condition) {
+        const haRegex = !!rule.condition.regexFilter;
+        const haUrl = !!rule.condition.urlFilter;
+        if (!haRegex) {
+          fail('T9b', fileRules[i], `Regola ${idAtteso} manca regexFilter`);
+        } else if (haUrl) {
+          fail('T9b', fileRules[i], `Regola ${idAtteso} ha urlFilter (incompatibile con regexFilter)`);
+        } else {
+          // OK: regola presente con regexFilter e senza urlFilter
+          ok('T9b', fileRules[i], `Regola ${idAtteso} ha regexFilter e nessun urlFilter`);
+        }
+      } else {
+        fail('T9b', fileRules[i], `Regola ${idAtteso} senza condition`);
+      }
+    }
+  }
+
+  // c) Ogni regexFilter richiede resourceTypes non vuoto
+  for (let i = 0; i < contents.length; i++) {
+    const rules = contents[i];
+    let difettose = 0;
+    for (const rule of rules) {
+      if (rule.condition && rule.condition.regexFilter) {
+        const rt = rule.condition.resourceTypes;
+        if (!rt || rt.length === 0) {
+          fail('T9c', fileRules[i], `Regola ${rule.id} ha regexFilter senza resourceTypes`);
+          difettose++;
+        }
+      }
+    }
+    // OK: tutte le regexFilter hanno resourceTypes valorizzati
+    if (difettose === 0) {
+      ok('T9c', fileRules[i], 'Tutti i regexFilter hanno resourceTypes');
+    }
+  }
+
+  // d) Id univoci dentro ogni file
+  for (let i = 0; i < contents.length; i++) {
+    const rules = contents[i];
+    const ids = rules.map(r => r.id).filter(id => id !== undefined);
+    const unici = new Set(ids);
+    if (ids.length !== unici.size) {
+      const duplicati = ids.filter((id, idx) => ids.indexOf(id) !== idx);
+      fail('T9d', fileRules[i], `Id duplicati: ${[...new Set(duplicati)].join(', ')}`);
+    } else {
+      // OK: id univoci in questo file
+      ok('T9d', fileRules[i], 'Id univoci');
+    }
+  }
+
+  // e) I tre file devono essere identici
+  if (contents[0] && contents[1] && contents[2]) {
+    const c0 = JSON.stringify(contents[0], null, 0);
+    const c1 = JSON.stringify(contents[1], null, 0);
+    const c2 = JSON.stringify(contents[2], null, 0);
+    if (c0 !== c1) {
+      fail('T9e', fileRules[0], `File diverso da ${fileRules[1]}`);
+    }
+    if (c0 !== c2) {
+      fail('T9e', fileRules[0], `File diverso da ${fileRules[2]}`);
+    }
+    // OK: tutti e tre i file sono identici
+    if (c0 === c1 && c0 === c2) {
+      ok('T9e', 'Tre target identici');
+    }
+  }
+}
+
+// =============================================================================
 // MAIN
 // =============================================================================
 function main() {
@@ -472,6 +596,7 @@ function main() {
   testaStopRipristina();
   testaBuildEscludeBackup();
   testaSincronizzazioneBrowser();
+  testaRegoleNonPinnate();
 
   console.log('\n' + '='.repeat(70));
   console.log(`RIEPILOGO: ${passati} passati / ${falliti} falliti`);
