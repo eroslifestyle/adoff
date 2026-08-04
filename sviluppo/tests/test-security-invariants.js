@@ -577,6 +577,48 @@ function testaRegoleNonPinnate() {
     }
   }
 }
+// =============================================================================
+// TEST 10 - La mappa è una lista manuale: un file mancante non produce alcun
+// avviso, il pacchetto esce silenziosamente incompleto.
+// =============================================================================
+function testaBuildIncludeContentScript() {
+  console.log('\n=== TEST 10: Ogni content script finisce nel pacchetto ===');
+
+  // Legge build.js una sola volta fuori dal ciclo
+  const buildJsPath = path.join(ROOT, 'sviluppo', 'scripts', 'build.js');
+  let buildJsContent;
+  try {
+    buildJsContent = fs.readFileSync(buildJsPath, 'utf8');
+  } catch (e) {
+    fail('T10', 'sviluppo/scripts/build.js', 'impossibile leggere: ' + e.message);
+    return;
+  }
+
+  for (const target of TARGETS) {
+    const manifestPath = path.join(ROOT, target, 'manifest.json');
+    let manifest;
+    try {
+      manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    } catch (e) {
+      fail('T10', target, 'non leggo manifest.json - ' + e.message);
+      continue;
+    }
+
+    const entries = manifest.content_scripts || [];
+    for (const entry of entries) {
+      const files = entry.js || [];
+      for (const src of files) {
+        const fileName = path.basename(src);
+        const quoted = `"${fileName}"`;
+        if (buildJsContent.includes(quoted)) {
+          ok('T10', `${target}/${fileName}`);
+        } else {
+          fail('T10', `${target}/${fileName}`, 'content script dichiarato nel manifest ma assente dalla mappa dei profili di build.js: non verrebbe copiato nel pacchetto');
+        }
+      }
+    }
+  }
+}
 
 // =============================================================================
 // MAIN
@@ -597,6 +639,7 @@ function main() {
   testaBuildEscludeBackup();
   testaSincronizzazioneBrowser();
   testaRegoleNonPinnate();
+  testaBuildIncludeContentScript();
 
   console.log('\n' + '='.repeat(70));
   console.log(`RIEPILOGO: ${passati} passati / ${falliti} falliti`);
