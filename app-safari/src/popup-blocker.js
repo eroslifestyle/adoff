@@ -92,6 +92,7 @@
 
     let lastTrustedClick = 0;
     let windowsThisGesture = 0;
+    let lastTrustedAnchorHost = '';
     let gestureTimer = null;
     const GESTURE_WINDOW_MS = 5000;
     const enableGestureCheck = !isSafeContext;
@@ -100,9 +101,25 @@
       if (!e.isTrusted) return;
       lastTrustedClick = Date.now();
       windowsThisGesture = 0;
+      lastTrustedAnchorHost = '';
+      try {
+        var anchor = e.target.closest('a');
+        if (anchor && anchor.href) {
+          var rect = anchor.getBoundingClientRect();
+          var area = rect.width * rect.height;
+          var opacity = window.getComputedStyle(anchor).opacity;
+          if (area > 0 && opacity !== '0') {
+            var parsed = new URL(anchor.href, location.href);
+            lastTrustedAnchorHost = parsed.hostname;
+          }
+        }
+      } catch(ex) {
+        lastTrustedAnchorHost = '';
+      }
       if (gestureTimer) clearTimeout(gestureTimer);
       gestureTimer = setTimeout(function() {
         windowsThisGesture = 0;
+        lastTrustedAnchorHost = '';
       }, 1000);
     }
 
@@ -122,6 +139,16 @@
         if (targetHost.endsWith('.' + topHost)) return true;
         if (topHost.endsWith('.' + targetHost)) return true;
         return false;
+      } catch(e) {
+        return false;
+      }
+    }
+
+    function isSafeTargetHost(u) {
+      try {
+        const parsed = new URL(u, location.href);
+        const targetHost = parsed.hostname;
+        return SAFE_SITES.some(function(d) { return matchDominio(targetHost, d); });
       } catch(e) {
         return false;
       }
@@ -154,6 +181,10 @@
         if (!url || url === 'about:blank' || isSameSiteUrl(url)) {
           return origOpen.apply(this, arguments);
         }
+        // Valvola per login federato e checkout: domini gia verificati come legittimi.
+        if (isSafeTargetHost(url)) {
+          return origOpen.apply(this, arguments);
+        }
         // dentro un iframe non fidato una scheda verso un dominio terzo e' un popunder
         // anche col click vero; i widget legittimi che aprono popup sono gia' coperti da SAFE_SITES.
         if (isInIframe && enableGestureCheck) {
@@ -163,6 +194,18 @@
         if (enableGestureCheck) {
           if (Date.now() - lastTrustedClick > GESTURE_WINDOW_MS) {
             notifyBlocked(url, 'no-gesture');
+            return null;
+          }
+          // Un popunder nasce da un click su un elemento qualunque (bottone play, sfondo,
+          // banner) che non punta alla destinazione della nuova finestra. Il link cliccato
+          // e la finestra aperta devono avere lo stesso hostname: questo distingue la
+          // navigazione voluta dall'abuso, senza dipendere da liste di domini.
+          var targetHost = '';
+          try {
+            targetHost = new URL(url, location.href).hostname;
+          } catch(e) {}
+          if (!lastTrustedAnchorHost || lastTrustedAnchorHost !== targetHost) {
+            notifyBlocked(url, 'no-anchor-match');
             return null;
           }
           if (windowsThisGesture >= 1) {

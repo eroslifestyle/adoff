@@ -2492,12 +2492,43 @@
       "type": "block"
     },
     "condition": {
-      "urlFilter": "||ay267.com",
+      "regexFilter": "^https?://ay[0-9]{1,5}[.]com/",
       "resourceTypes": [
         "script",
         "xmlhttprequest",
         "sub_frame",
-        "ping"
+        "ping",
+        "main_frame"
+      ]
+    }
+  },
+  {
+    "id": 932,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "regexFilter": "^https?://[^/]+/[0-9]{1,2}/[0-9]{7,}$",
+      "resourceTypes": [
+        "main_frame",
+        "sub_frame"
+      ]
+    }
+  },
+  {
+    "id": 933,
+    "priority": 1,
+    "action": {
+      "type": "block"
+    },
+    "condition": {
+      "regexFilter": "[?&]zoneid=[0-9]{3,}",
+      "resourceTypes": [
+        "script",
+        "sub_frame",
+        "xmlhttprequest",
+        "main_frame"
       ]
     }
   }

@@ -52,6 +52,47 @@ async function check(name, expectAllowed, ctxName, url, withGesture, page, resul
           return false;
         }
       }, url);
+    } else if (withGesture === 'anchor') {
+      const linkCoords = await ctx.evaluate(u => {
+        window.__res = null;
+        const a = document.createElement('a');
+        a.href = u;
+        a.target = '_blank';
+        a.textContent = 'link di prova';
+        a.style.cssText = 'position:fixed;left:40px;top:40px;width:300px;height:60px;background:#d3d3d3;z-index:2147483647;opacity:1;display:block;';
+        document.body.appendChild(a);
+        const rect = a.getBoundingClientRect();
+        const coords = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        document.addEventListener('click', () => {
+          try {
+            const w = window.open(u);
+            if (w) {
+              try { w.close(); } catch (e) {}
+              window.__res = true;
+            } else {
+              window.__res = false;
+            }
+          } catch (e) {
+            window.__res = false;
+          }
+        }, { once: true });
+        return coords;
+      }, url);
+      if (ctxName === 'iframe') {
+        let box = null;
+        try { const h = await page.$('iframe'); if (h) box = await h.boundingBox(); } catch (e) {}
+        if (box) { await page.mouse.click(box.x + linkCoords.x, box.y + linkCoords.y); }
+        else { await page.mouse.click(linkCoords.x, linkCoords.y); }
+      } else {
+        await page.mouse.click(linkCoords.x, linkCoords.y);
+      }
+      await new Promise(r => setTimeout(r, 600));
+      got = await ctx.evaluate(() => {
+        const res = window.__res;
+        const links = document.querySelectorAll('a[href][target="_blank"]');
+        links.forEach(l => { if (l.textContent === 'link di prova') l.remove(); });
+        return res;
+      });
     } else {
       await ctx.evaluate(u => {
         window.__res = null;
@@ -69,8 +110,6 @@ async function check(name, expectAllowed, ctxName, url, withGesture, page, resul
           }
         }, { once: true });
       }, url);
-      // Se il contesto è iframe, clicchiamo dentro l'iframe
-      // altrimenti il listener di gesto dell'iframe non si aggiorna e il test passerebbe per il motivo sbagliato
       if (ctxName === 'iframe') {
         let box = null;
         try { const h = await page.$('iframe'); if (h) box = await h.boundingBox(); } catch (e) {}
@@ -117,6 +156,7 @@ async function run() {
 
     const results = [];
 
+    // Policy: verso un dominio terzo si passa solo con un link visibile cliccato che punta la', oppure se la destinazione e' un dominio di autenticazione o pagamento.
     const checks = [
       ['Layer1 ad network', false, 'main', 'https://popads.net/xyz', false],
       ['Layer1 TLD abuso', false, 'main', 'https://abc123.xyz/promo', false],
@@ -124,10 +164,14 @@ async function run() {
       ['same-site permesso', true, 'main', '/frame', false],
       ['Layer1 dentro IFRAME', false, 'iframe', 'https://popads.net/xyz', false],
       ['Layer2 dentro IFRAME', false, 'iframe', 'https://example.com/', false],
-      ['TLD legittimo con gesto', true, 'main', 'https://negozio.store/', true],
+      // Click generico non su un link verso la destinazione: il popup verso terzi viene bloccato.
+      ['terza parte con gesto generico', false, 'main', 'https://negozio.store/', true],
       ['ad network con gesto', false, 'main', 'https://popcash.net/x', true],
       ['IFRAME terze parti CON gesto (caso player)', false, 'iframe', 'https://tracker-esempio.com/promo', true],
-      ['IFRAME verso il sito ospite CON gesto', true, 'iframe', 'http://127.0.0.1:' + PORT + '/frame', true]
+      ['IFRAME verso il sito ospite CON gesto', true, 'iframe', 'http://127.0.0.1:' + PORT + '/frame', true],
+      ['terza parte con link visibile cliccato', true, 'main', 'https://negozio.store/', 'anchor'],
+      ['destinazione di pagamento senza link', true, 'main', 'https://checkout.stripe.com/pay/xyz', true],
+      ['destinazione di autenticazione senza link', true, 'main', 'https://accounts.google.com/signin', true]
     ];
 
     for (const [name, expectAllowed, ctxName, url, withGesture] of checks) {
