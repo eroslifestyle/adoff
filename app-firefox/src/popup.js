@@ -262,6 +262,11 @@
 
   // Changelogs (stesso del background.js)
   const CHANGELOGS = {
+      "3.5.63": [
+        "Blocco delle finestre pubblicitarie che si aprono al primo clic",
+        "Riconoscimento dei circuiti di affiliazione dal loro indirizzo",
+        "Difesa piu' severa sui link invisibili sovrapposti al video",
+      ],
       "3.5.62": [
       "Protezione attiva anche dentro i player incorporati",
       "Blocco degli annunci a comparsa indipendente dal sito",
