@@ -1,12 +1,26 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
-> **Consolidato 2026-08-04.** Merge di tutte le sessioni dal 2026-07-28 al 2026-08-04 (dai checkpoint `CP_20260728_2204` e `CP_20260731_1846`, sessione SEO del 02/08, sessione rule-feed `CP_20260802_1840`, sessione popunder `CP_20260804_0230`, sessione audit del 04/08 con checkpoint `CP_20260804_0451`).
-> I check sono **cancellazioni**, non aggiunte. Le voci aperte sono ordinate per priorità reale.
-> Stato prodotto: **3.5.61** — CWS in review, Edge submission inviata, Firefox AMO firmato e sito live. Branch `feat/premium-vpn`, HEAD `b32e6e6` pushato.
-> Esiste un gate di test obbligatorio: `node sviluppo/tests/test-security-invariants.js` deve dare 58 su 58 prima di ogni deploy.
+> **Consolidato 2026-08-04.** Merge di tutte le sessioni dal 2026-07-28 al 2026-08-04 (dai checkpoint `CP_20260728_2204` e `CP_20260731_1846`, sessione SEO del 02/08, sessione rule-feed `CP_20260802_1840`, sessione popunder `CP_20260804_0230`, sessione audit del 04/08 con checkpoint `CP_20260804_0451`), piu la sessione serale sulla difesa popunder universale.
+> I check sono **cancellazioni**, non aggiunte. Le voci aperte sono ordinate per priorita reale.
+> Stato prodotto: **3.5.64** — manifests alla 3.5.64, sito e Firefox alla 3.5.64, CWS fermo alla 3.5.63 in review (non accetta caricamenti mentre una versione e in revisione), Edge submission inviata, Safari mai sottomesso. Branch `feat/premium-vpn`, HEAD `08020bf` pushato.
+> Esiste un gate di test obbligatorio: `node sviluppo/tests/test-security-invariants.js` deve dare 92 su 92 prima di ogni deploy.
 
 ---
 
+## ✅ RISOLTO 04/08 sera — difesa popunder universale, validata dall'utente (v3.5.62 3.5.63 3.5.64)
+
+Il problema: i siti di streaming cambiano indirizzo ogni poche settimane e ogni difesa appuntata a un nome muore al trasloco. Tre criteri universali adottati, in ordine di robustezza: famiglie di domini invece di singole istanze nelle regole di rete; marcatori di affiliazione nell'indirizzo di PARTENZA che identificano il circuito qualunque dominio lo serva, cioe pid=pprworker, cps_sk=, aff_short_key=, aff_plateform=; e il piu forte, la corrispondenza fra gesto e risultato, per cui verso un dominio terzo si passa solo se l'utente ha cliccato un link visibile che porta proprio li.
+Chiuso anche il buco del player: le difese video erano dichiarate solo per il frame principale e non entravano nell'iframe di terze parti che ospita il lettore. Ora un content script leggero gira su tutti i frame e carica lo stub completo solo dove rileva davvero un player, chiedendo il verdetto a pagamento al service worker.
+
+- [x] difesa universale e invarianti, commit 868904c e 6e454ae
+- [x] difese dentro gli iframe dei player, commit f1f9fd4, senza aggiungere permessi al manifest
+- [x] marcatori di affiliazione e criterio piu severo sui link sovrapposti al video, commit 5fafefa e 71838d0
+- [x] suite invarianti da 58 a 92 asserzioni, tutte validate con mutation testing
+- [x] fix critico intercettato prima di pubblicare: build.js copiava solo i file elencati nella sua mappa e player-probe.js non c'era, i primi pacchetti lo dichiaravano nel manifest senza contenerlo e l'estensione non si sarebbe caricata. Coperto ora dal TEST 10
+- [x] tre versioni rilasciate, 3.5.62 3.5.63 3.5.64, con la 3.5.63 confermata funzionante dall'utente sul campo
+- [ ] a revisione conclusa su Chrome Web Store, decidere se ricaricare la 3.5.64 per allineare quel canale oppure lasciare che arrivi la 3.5.63 che ha lo stesso codice
+- [ ] decidere se pubblicare l'annuncio Telegram della 3.5.64, non inviato perche la versione non e disponibile sul canale principale e non porta modifiche rispetto al messaggio 104
+- [ ] ottenere un token Cloudflare con permesso di purge della cache: nessuna credenziale disponibile ce l'ha, l'API risponde Authentication error, e serve per invalidare gli ZIP del sito dopo un deploy
 ## ✅ RISOLTO 02/08 — YouTube skip annunci (v3.5.58, confermato dall'utente)
 
 **Causa vera: SABR.** Provato con dati sul video reale: `serverAbrStreamingUrl` presente, `adaptiveFormats` 30 **con URL diretto 0**, `formats` 0. YouTube non serve piu' URL diretti: ogni segmento va chiesto al server, che decide cosa mandare — annunci inclusi. Nessun filtro sul JSON puo' impedirlo.
