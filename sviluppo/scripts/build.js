@@ -327,6 +327,7 @@ const PROFILES = {
 const FILE_PROFILES = {
   "stealth.js":        "high",
   "popup-blocker.js":  "high",
+  "player-probe.js":   "high",
   "license-client.js": "high",
   "content.js":        "medium",
   "background.js":     "medium",

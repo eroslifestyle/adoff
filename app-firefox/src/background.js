@@ -41,6 +41,11 @@
 
   // Changelog per versione (ultime 3 voci per popup)
   const CHANGELOGS = {
+      "3.5.62": [
+      "Protezione attiva anche dentro i player incorporati",
+      "Blocco degli annunci a comparsa indipendente dal sito",
+      "Riconoscimento dei circuiti pubblicitari che cambiano indirizzo"
+      ],
     "3.5.61": [
       "Protezione piu' solida contro i siti che provano a disattivarla",
       "Riconoscimento dei domini piu' rigoroso",
