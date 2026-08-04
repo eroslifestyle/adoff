@@ -262,6 +262,11 @@
 
   // Changelogs (stesso del background.js)
   const CHANGELOGS = {
+    "3.5.61": [
+      "Protezione piu' solida contro i siti che provano a disattivarla",
+      "Riconoscimento dei domini piu' rigoroso",
+      "Il ripristino del layout a protezione spenta ora e' completo",
+    ],
     "3.5.60": [
       "Blocco popunder da iframe di player video",
       "Correzione crash stub IMA durante navigazione",
