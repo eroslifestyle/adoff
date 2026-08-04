@@ -257,9 +257,13 @@
       }
     } catch(e) {}
     // I click reali su <a target="_blank"> negli iframe non vengono gestiti da window.open
-    // ma direttamente dal browser, quindi vanno intercettati qui per bloccare i popup overlay
-    // Si blocca SOLO se l'anchor e' sospetto (invisibile o che copre mezzo schermo)
-    // altrimenti si romperebbero i link legittimi dentro gli iframe di widget di terze parti
+    // ma direttamente dal browser, quindi vanno intercettati qui per bloccare i popup overlay.
+    // Un link verso terze parti e' considerato sospetto se ricorre ALMENO UNA di queste condizioni:
+    // 1) e' invisibile (opacita' minore di 0.1) o non ha un'opacita' valida;
+    // 2) copre almeno un quarto dell'area della finestra;
+    // 3) si sovrappone per almeno il 30% all'area del video. Quest'ultimo criterio e' necessario
+    //    perche' un link verso un dominio terzo steso sopra il lettore video intercetta il primo
+    //    click dell'utente ed e' la forma piu' diffusa di popunder/popup overlay nascosto.
     if (isInIframe && enableGestureCheck) {
         document.addEventListener('click', function(e) {
             try {
@@ -274,8 +278,23 @@
                 var area = (r.width||0)*(r.height||0);
                 var op = '';
                 try { op = getComputedStyle(a).opacity; } catch(e2) {}
+                var opNumeric = parseFloat(op);
+                var invisibile = isNaN(opNumeric) || opNumeric < 0.1;
                 var vw = (window.innerWidth||0)*(window.innerHeight||0);
-                var sospetto = (op === '0') || (vw > 0 && area >= vw*0.5);
+                var grande = vw > 0 && area >= vw*0.25;
+                var sovrappostoVideo = false;
+                var video = document.querySelector('video');
+                if (video) {
+                    var vr = video.getBoundingClientRect();
+                    var vArea = (vr.width||0)*(vr.height||0);
+                    if (vArea > 0) {
+                        var intW = Math.min(r.right, vr.right) - Math.max(r.left, vr.left);
+                        var intH = Math.min(r.bottom, vr.bottom) - Math.max(r.top, vr.top);
+                        var intArea = Math.max(0, intW) * Math.max(0, intH);
+                        sovrappostoVideo = intArea >= vArea * 0.3;
+                    }
+                }
+                var sospetto = invisibile || grande || sovrappostoVideo;
                 if (!sospetto) return;
                 e.preventDefault();
                 // NIENTE stopPropagation: preventDefault basta a non aprire la
