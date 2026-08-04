@@ -1,12 +1,12 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
-> **Consolidato 2026-08-02.** Merge di tutte le sessioni 2026-07-28 → 2026-08-02 (checkpoint `CP_20260728_2204` → `CP_20260731_1846` + sessione SEO 02/08 + sessione rule-feed `CP_20260802_1840`).
+> **Consolidato 2026-08-04.** Merge di tutte le sessioni dal 2026-07-28 al 2026-08-04 (dai checkpoint `CP_20260728_2204` e `CP_20260731_1846`, sessione SEO del 02/08, sessione rule-feed `CP_20260802_1840`, sessione popunder `CP_20260804_0230`).
 > I check sono **cancellazioni**, non aggiunte. Le voci aperte sono ordinate per priorità reale.
-> Stato prodotto: **3.5.58** su CWS (in review) · **3.5.59** su AMO e sito. Branch `feat/premium-vpn`, HEAD `2b077c4` pushato.
+> Stato prodotto: **3.5.60** pubblicata su CWS, Edge, AMO e sito. Branch `feat/premium-vpn`, HEAD `c9b6973` pushato.
 
 ---
 
-## ✅ RISOLTO OGGI — YouTube skip annunci (v3.5.58, confermato dall'utente)
+## ✅ RISOLTO 02/08 — YouTube skip annunci (v3.5.58, confermato dall'utente)
 
 **Causa vera: SABR.** Provato con dati sul video reale: `serverAbrStreamingUrl` presente, `adaptiveFormats` 30 **con URL diretto 0**, `formats` 0. YouTube non serve piu' URL diretti: ogni segmento va chiesto al server, che decide cosa mandare — annunci inclusi. Nessun filtro sul JSON puo' impedirlo.
 **Via del client alternativo VERIFICATA E CHIUSA**: ANDROID → HTTP 400 `FAILED_PRECONDITION` (attestation), WEB → `UNPLAYABLE "The page needs to be reloaded"` (PoToken), TVHTML5/embedded → ERROR.
@@ -19,7 +19,19 @@
 - [x] **DEPLOY 3.5.58** — pubblicata su CWS e AMO (commit `746cbb9`). Poi 3.5.59 su AMO e sito.
 - [ ] *(opzionale)* Chiedere all'utente `window.__adoffYtDiag` ora che funziona, per sapere **quale** meccanismo ha agito (`coldLoads`, `adReloads`, `flagInjectedStringify`) e proteggerlo da regressioni future.
 
-## ✅ RISOLTO OGGI — il rule-feed remoto non arrivava a nessuno (v3.5.59)
+## ✅ RISOLTO 03-04/08 — popunder su streaming-community.red (v3.5.60, chiuso a zero)
+
+Root cause: il popup blocker viveva dentro stealth.js senza all_frames, quindi girava solo nel frame principale, mentre i popunder partono dall'iframe del player. Misurato con Playwright: top frame patchedOpen true, iframe patchedOpen false. Fix in tre mosse: estrazione in app/src/popup-blocker.js con all_frames true in MAIN world (commit e0df48e), regole DNR sul tag Monetag alla fonte llvpn.com rtmark.net ay267.com, numeri 929-931 (commit 82051ec), difese aggressive solo dentro gli iframe non fidati (commit 49c51f8).
+
+- [x] Rilasciata la 3.5.60 su tutti i canali: CWS, Edge, AMO con adoff-3.5.60.xpi firmato, Cloudflare Pages, Telegram @adoffapp message_id 100.
+- [x] Risolto il crash `TypeError Cannot redefine property ima` nello stub IMA, con try/catch e fallback (commit 2c733b1). Confermato sparito dalla console dell'utente.
+- [x] Chiuso il buco per cui il fallback `window.open` uguale `safeOpen` dentro il catch non era protetto: i player anti-adblock rendono `window.open` read-only, l'eccezione risaliva e spegneva tutto il blocker (commit c7df18d).
+- [x] Il presunto popunder residuo NON esisteva. La scheda che il banco di prova contava come pubblicitaria era `chrome-extension://.../src/onboarding.html`, cioè la pagina che l'estensione apre da sé all'installazione (background.js riga 637). La prova: senza estensione il contatore saliva 1, 2, 3 a ogni click, con estensione era già fermo a 1 dal primo click. Metrica corretta con commit c9b6973.
+- [x] Misura finale ripetuta due volte con la metrica corretta: con estensione zero schede pubblicitarie e video che parte al terzo click, senza estensione tre schede (crn77.com, ke.ducatflapper.com). Suite test-popup-blocker.js dieci su dieci.
+
+*Nessun bump di versione e nessun deploy sono seguiti alla chiusura del 04/08, perché il codice di produzione della 3.5.60 non è cambiato: l'unico file toccato è un test sotto sviluppo/.*
+
+## ✅ RISOLTO 02/08 — il rule-feed remoto non arrivava a nessuno (v3.5.59)
 
 Due difetti indipendenti e silenziosi. **Client**: `syncRemoteRules()` passava 35.143 regole a una sola `updateDynamicRules()`; la chiamata è atomica, sfondava il limite, falliva in blocco e `chrome.runtime.lastError` veniva ingoiato — misurato `adoffRemoteRulesCount` = 0 dopo 120 s, dynamic rules = 2. **Feed**: 35.000 regole su 35.143 avevano pattern regex dentro `urlFilter`, che vuole sintassi ABP → inerti. Fix: cap letto a runtime da `MAX_NUMBER_OF_DYNAMIC_RULES` (30.000, non i 5.000 di `..._DYNAMIC_AND_SESSION_RULES`), blocchi da 2.000, `lastError` loggato, throttle 6 h + `sviluppo/scripts/normalize-rules-feed.js` (29.000 regole valide, 7,3 → 5,1 MB, v`2026.08.02.1`). Misurato dopo: 29.900 regole in 3 s; `0019x.com` bloccato end-to-end da regola remota id 60143. Dettaglio: `CP_20260802_1840`.
 
@@ -99,6 +111,11 @@ Due difetti indipendenti e silenziosi. **Client**: `syncRemoteRules()` passava 3
 - **NON forzare il commit di `.claude/checkpoints/` con `-f`**: è in `.gitignore` per scelta del progetto.
 - **NON rilassare le guardie di `translate_batch.py`** senza verifica dei tag HTML.
 - **NON aprire le vendite Premium prima del refill wallet.**
+- **MAI rimuovere il try/catch annidato attorno a `window.open = safeOpen` in `popup-blocker.js`**: i player anti-adblock rendono `window.open` read-only, senza quel try/catch l'eccezione risale e spegne TUTTO il blocker, proprio sui siti che si difendono.
+- **NON applicare `configurable: false` su `window.open`**: valutata e rigettata il 04/08. Una volta corretta la misura i popunder erano già zero, quindi il rischio (TypeError a ogni redefinizione altrui, possibile rottura del rendering) non aveva alcun beneficio a fronte.
+- **MAI aggiungere alla blacklist del Layer 1 i TLD usati anche da siti legittimi (.pro .store .shop .online .live .link .work .press)**: il Layer 1 è attivo anche sui siti sicuri, quindi un falso positivo rompe popup veri come login e pagamenti.
+- **NON mettere `all_frames` su `stealth.js`**: farebbe girare IMA stub e logica video in ogni iframe, con regressioni sui player. Il popup blocker sta apposta in un file separato.
+- **NON bloccare `v.vidxgo.co` con una regola di rete**: è il player, si romperebbe il video.
 
 ---
 
@@ -125,6 +142,9 @@ Due difetti indipendenti e silenziosi. **Client**: `syncRemoteRules()` passava 3
 
 **Test**
 - **Playwright con `channel:"chrome"` + `--load-extension`**: il Chrome di sistema non inietta content script in `world:MAIN`. Usare `chromium` bundled + `xvfb`.
+- **Contare le schede aperte in Playwright senza escludere gli URL chrome-extension**: la pagina di onboarding che l'estensione apre da se' all'installazione viene scambiata per un popunder; e' costato un'intera indagine su window.open per un bug inesistente. Se il contatore e' gia' a N prima del primo click, quelle schede non le hanno aperte i click: guardare sempre l'URL.
+- **Verificare i file generati solo con `node --check`**: i delimitatori markdown lasciati dal generatore passano il check di sintassi e poi falliscono a runtime con TypeError stringa vuota non e' una funzione. Serve anche un grep dei tre backtick.
+- **Riprodurre i popunder di streaming-community.red su home o pagina del titolo**: non succede nulla, partono solo su /titles/<id>-<slug>/watching.html; e scaricare quella pagina con curl e' inutile, l'HTML servito e' pulito per cloaking su UA e cookie.
 
 ---
 
@@ -169,7 +189,9 @@ Premium VPN provisioning nel webhook · checkout Stripe Premium + gating · badg
 
 | Cosa | Dove |
 |---|---|
-| Checkpoint più recente (rule-feed 3.5.59) | `.claude/checkpoints/CP_20260802_1840.md` |
+| Checkpoint piu' recente (popunder chiuso 04/08) | `.claude/checkpoints/CP_20260804_0230.md` |
+| Pagina vault popunder | `~/Obsidian/Memoria/progetti/chromeplugin/popunder-iframe-window-open.md` |
+| Checkpoint rule-feed 3.5.59 | `.claude/checkpoints/CP_20260802_1840.md` |
 | Sessione vault rule-feed | `~/Obsidian/Memoria/progetti/chromeplugin/sessioni/sessione-20260802-rulefeed-mai-applicato.md` |
 | Checkpoint deploy 3.5.54 | `.claude/checkpoints/CP_20260731_1846.md` |
 | Checkpoint saga YouTube | `.claude/checkpoints/CP_20260730_1645.md`, `CP_20260730_0225.md` |
