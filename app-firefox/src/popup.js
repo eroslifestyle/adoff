@@ -262,6 +262,11 @@
 
   // Changelogs (stesso del background.js)
   const CHANGELOGS = {
+      "3.5.67": [
+        "Bloccato il caricatore pubblicitario servito dal sito stesso e non dal suo circuito",
+        "La difesa contro le finestre aperte dai riquadri raggiunge ora gli utenti",
+        "Riconosciuti i circuiti anche quando cambiano indirizzo con un sottodominio",
+      ],
       "3.5.66": [
         "Bloccate le finestre pubblicitarie aperte da un riquadro creato al momento",
         "Riconosciuti i circuiti anche quando cambiano indirizzo con un sottodominio",
