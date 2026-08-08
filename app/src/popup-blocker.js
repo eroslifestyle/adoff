@@ -275,6 +275,105 @@
       try { window.open = safeOpen; } catch (_) {}
     }
 
+    // La protezione va estesa ai contesti figli: un iframe appena creato porta con se'
+    // una funzione open nuova, non ancora sostituita da safeOpen, ed e' la via con cui
+    // la pubblicita' aggira il blocco dell'apertura finestre.
+    var proteggiFinestraFiglia = function(win) {
+        try {
+            if (!win) {
+                return;
+            }
+            if (win.__adoffFiglioProtetto) {
+                return;
+            }
+            win.__adoffFiglioProtetto = true;
+            var nuovaOpen = function() {
+                return safeOpen.apply(null, arguments);
+            };
+            try {
+                Object.defineProperty(win, 'open', {
+                    value: nuovaOpen,
+                    writable: true,
+                    configurable: true
+                });
+            } catch (e) {
+                try {
+                    win.open = nuovaOpen;
+                } catch (e2) {
+                }
+            }
+        } catch (e) {
+        }
+    };
+
+    try {
+        var descrittoreContentWindow = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'contentWindow');
+        if (descrittoreContentWindow && descrittoreContentWindow.get) {
+            var getOriginaleContentWindow = descrittoreContentWindow.get;
+            Object.defineProperty(HTMLIFrameElement.prototype, 'contentWindow', {
+                get: function() {
+                    var win = getOriginaleContentWindow.call(this);
+                    proteggiFinestraFiglia(win);
+                    return win;
+                },
+                enumerable: descrittoreContentWindow.enumerable,
+                configurable: true
+            });
+        }
+    } catch (e) {
+    }
+
+    try {
+        var descrittoreContentDocument = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, 'contentDocument');
+        if (descrittoreContentDocument && descrittoreContentDocument.get) {
+            var getOriginaleContentDocument = descrittoreContentDocument.get;
+            Object.defineProperty(HTMLIFrameElement.prototype, 'contentDocument', {
+                get: function() {
+                    var doc = getOriginaleContentDocument.call(this);
+                    if (doc) {
+                        try {
+                            proteggiFinestraFiglia(doc.defaultView);
+                        } catch (e) {
+                        }
+                    }
+                    return doc;
+                },
+                enumerable: descrittoreContentDocument.enumerable,
+                configurable: true
+            });
+        }
+    } catch (e) {
+    }
+
+    try {
+        if (document.documentElement) {
+            var proteggiIframePresenti = function() {
+                try {
+                    var iframes = document.querySelectorAll('iframe');
+                    for (var i = 0; i < iframes.length; i++) {
+                        try {
+                            proteggiFinestraFiglia(iframes[i].contentWindow);
+                        } catch (e) {
+                        }
+                    }
+                } catch (e) {
+                }
+            };
+            proteggiIframePresenti();
+            var osservatore = new MutationObserver(function() {
+                proteggiIframePresenti();
+            });
+            osservatore.observe(document, { childList: true, subtree: true });
+            setTimeout(function() {
+                try {
+                    osservatore.disconnect();
+                } catch (e) {
+                }
+            }, 30000);
+        }
+    } catch (e) {
+    }
+
     try {
       if (!HTMLAnchorElement.prototype.click.__adoffPatched) {
         const origAClick = HTMLAnchorElement.prototype.click;

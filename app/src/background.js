@@ -41,6 +41,11 @@
 
   // Changelog per versione (ultime 3 voci per popup)
   const CHANGELOGS = {
+      "3.5.66": [
+        "Bloccate le finestre pubblicitarie aperte da un riquadro creato al momento",
+        "Riconosciuti i circuiti anche quando cambiano indirizzo con un sottodominio",
+        "Le difese seguono il lettore dentro i riquadri di altri siti",
+      ],
       "3.5.65": [
         "Il comando arriva al lettore al primo clic anche quando la pubblicita' prova a rubarlo",
         "Riconosciuti i collegamenti invisibili stesi sopra il video anche fuori dai lettori incorporati",
