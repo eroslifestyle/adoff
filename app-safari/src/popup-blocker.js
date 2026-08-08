@@ -80,7 +80,9 @@
       // TLD ad alto abuso. NON aggiungere TLD usati anche da siti legittimi
       // (.pro .store .shop .online .site .live .link .work .press .space .fun):
       // il Layer 1 e' attivo anche sui siti sicuri → falsi positivi.
-      /^https?:\/\/[a-z0-9-]+\.(?:tk|ml|ga|cf|gq|click|loan|win|men|trade|top|gdn|surf|date|stream|cricket|science|party|review|kim|country|faith|racing|bid|webcam|download|accountant|xyz|club|icu|buzz|cyou|rest|quest|monster|sbs|lol|autos|bond|cfd|makeup|skin|hair|mom|beauty|su)\//i,
+      // (?:[a-z0-9-]+\.)+ e non [a-z0-9-]+\. : col singolo segmento un sottodominio
+      // faceva sfuggire il dominio (zc.esempio.cyou passava, esempio.cfd no). Misurato in campo.
+      /^https?:\/\/(?:[a-z0-9-]+\.)+(?:tk|ml|ga|cf|gq|click|loan|win|men|trade|top|gdn|surf|date|stream|cricket|science|party|review|kim|country|faith|racing|bid|webcam|download|accountant|xyz|club|icu|buzz|cyou|rest|quest|monster|sbs|lol|autos|bond|cfd|makeup|skin|hair|mom|beauty|su)\//i,
       /[?&](?:url|u|to|goto|dest|target|out|link)=https?%3A/i
     ];
 
