@@ -33,14 +33,20 @@ Segnalazione critica dell'utente: sul sito di streaming segnalato si aprivano co
 - Regola di rete 938: blocca il loader OpenX first-party (openx_async.js) per NOME FILE non per dominio. Su tre testate: 1 richiesta ad passante → 0. NON ANCORA RILASCIATA (vedi Attivo).
 - Lezioni durissime: tre verifiche verdi senza provare nulla in questa sessione (grep nome prodotto che matchava il titolo della pagina di prova; file vuoto che passava node --check; browser di prova partito senza estensione perche' il percorso si troncava sullo spazio). Registra: prima di fidarti di un verde, chiediti cosa lo renderebbe rosso.
 
-## 🔴 ATTIVO — regola 938 da rilasciare come 3.5.67
+## ✅ RISOLTO 08/08 sera II — regola 938 rilasciata come 3.5.67
 
-La regola 938 e' pronta nei tre file di regole (153 per target) ma NON committata e NON rilasciata. E' invisibile agli utenti finche' non esce la 3.5.67.
-- [ ] validare localmente: node sviluppo/tests/test-security-invariants.js (atteso 95/95)
-- [ ] costruire pacchetti, misurare sul PACCHETTO COSTRUITO (non sorgenti): zero richieste openx_async.js sulle testate
-- [ ] prepare-release.js 3.5.66 → 3.5.67, build --store + build, deploy-site.sh
-- [ ] risottomettere store principale, Firefox, Edge; annuncio canale
-- [ ] chiedere conferma sul campo della 3.5.66 all'utente (gia' disponibile su Firefox)
+La regola 938 (blocca openx_async.js per nome file) e' ora distribuita a tutti gli utenti. Misurata sul PACCHETTO COSTRUITO prima del rilascio: zero richieste verso il caricatore sulle tre testate, zero popunder sul sito segnalato. Commit 8e27ee9, pubblicata su Chrome (in review), Firefox (pubblica), Edge (submission), sito. Annuncio messaggio 111.
+- [x] validare localmente: 95/95
+- [x] costruire pacchetti, misurare sul PACCHETTO COSTRUITO: zero richieste openx_async.js
+- [x] prepare-release.js 3.5.66 → 3.5.67, build, deploy-site.sh
+- [x] risottomesso store principale, Firefox, Edge; annuncio canale (111)
+- [ ] chiedere conferma sul campo della 3.5.66/67 all'utente (gia' disponibile su Firefox) sul sito che aveva segnalato
+
+## 🟡 ATTIVO — debito tecnico residuo (nessuna urgenza produttiva)
+- [ ] agganciare i test agli hook di pre-deploy: una suite rossa deve IMPEDIRE la pubblicazione invece di essere una buona intenzione
+- [ ] estrazione di src/shared/ per deduplicare isTrialActive, matchDominio, computeIntegrity e il verdetto Pro (ora in TRE punti: content.js, updateImaRules, richiediStealthFrame). Decisione dell'utente, mai presa
+- [ ] ottenere una credenziale Cloudflare con permesso Zone → Cache Purge: nessuna disponibile ce l'ha, l'API risponde Authentication error. Nella sessione dell'08/08 la cache si e' invalidata da sola
+- [ ] Safari: submit Mac App Store, richiede un Mac con Xcode. ZIP pronto in site/adoff-safari.zip
 ## ✅ RISOLTO 02/08 — YouTube skip annunci (v3.5.58, confermato dall'utente)
 
 **Causa vera: SABR.** Provato con dati sul video reale: `serverAbrStreamingUrl` presente, `adaptiveFormats` 30 **con URL diretto 0**, `formats` 0. YouTube non serve piu' URL diretti: ogni segmento va chiesto al server, che decide cosa mandare — annunci inclusi. Nessun filtro sul JSON puo' impedirlo.
