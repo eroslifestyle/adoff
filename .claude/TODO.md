@@ -18,9 +18,29 @@ Chiuso anche il buco del player: le difese video erano dichiarate solo per il fr
 - [x] suite invarianti da 58 a 92 asserzioni, tutte validate con mutation testing
 - [x] fix critico intercettato prima di pubblicare: build.js copiava solo i file elencati nella sua mappa e player-probe.js non c'era, i primi pacchetti lo dichiaravano nel manifest senza contenerlo e l'estensione non si sarebbe caricata. Coperto ora dal TEST 10
 - [x] tre versioni rilasciate, 3.5.62 3.5.63 3.5.64, con la 3.5.63 confermata funzionante dall'utente sul campo
-- [ ] a revisione conclusa su Chrome Web Store, decidere se ricaricare la 3.5.64 per allineare quel canale oppure lasciare che arrivi la 3.5.63 che ha lo stesso codice
-- [ ] decidere se pubblicare l'annuncio Telegram della 3.5.64, non inviato perche la versione non e disponibile sul canale principale e non porta modifiche rispetto al messaggio 104
-- [ ] ottenere un token Cloudflare con permesso di purge della cache: nessuna credenziale disponibile ce l'ha, l'API risponde Authentication error, e serve per invalidare gli ZIP del sito dopo un deploy
+- [x] a revisione conclusa su Chrome Web Store: la 3.5.63 approvata, poi 3.5.64 caricata e pubblicata (commit 63ce249)
+- [x] annuncio Telegram della 3.5.64 pubblicato, messaggio 105 (commit 63ce249)
+- [ ] ottenere un token Cloudflare con permesso di purge della cache: nessuna credenziale disponibile ce l'ha, l'API risponde Authentication error, e serve per invalidare gli ZIP del sito dopo un deploy (nella sessione dell'08/08 la cache si e' invalidata da sola, non ha bloccato)
+
+## ✅ RISOLTO 08/08 sera — popunder via contesti figli + loader OpenX first-party (v3.5.66)
+
+Segnalazione critica dell'utente: sul sito di streaming segnalato si aprivano continuamente pagine pubblicitarie e ogni comando richiedeva piu' clic, nonostante la 3.5.64.
+- CAUSA VERA (misurata): lo script crea un iframe e usa la `open` di QUEL realm, mai sostituita. Ogni difesa su window.open del documento principale non veniva nemmeno interpellata. Scoperta censendo tutti i meccanismi di apertura: zero window.open, zero anchor.click, solo createElement('iframe') da script di terze parti dentro l'iframe del player.
+- 3.5.65 (commit 1a7a73a): restituisce il gesto rubato — prima bloccavamo la finestra ma il clic restava consumato. Banco: 3/2 clic → 1 clic.
+- 3.5.66 (commit 4dc0949): protezione estesa ai contesti figli via descrittore di contentWindow/contentDocument sul prototipo. Misure sul sito reale ripetute DUE volte con domini diversi: 2 popunder → 0.
+- Corretto anche un criterio sui suffissi ad alto abuso che ignorava i sottodomini (commit 83e3bee): giusto ma da solo non bastava.
+- TEST 11 (commit 256bdd6): invariante che presidia la protezione dei contesti figli. Suite 92 → 95, validato con mutation testing.
+- Regola di rete 938: blocca il loader OpenX first-party (openx_async.js) per NOME FILE non per dominio. Su tre testate: 1 richiesta ad passante → 0. NON ANCORA RILASCIATA (vedi Attivo).
+- Lezioni durissime: tre verifiche verdi senza provare nulla in questa sessione (grep nome prodotto che matchava il titolo della pagina di prova; file vuoto che passava node --check; browser di prova partito senza estensione perche' il percorso si troncava sullo spazio). Registra: prima di fidarti di un verde, chiediti cosa lo renderebbe rosso.
+
+## 🔴 ATTIVO — regola 938 da rilasciare come 3.5.67
+
+La regola 938 e' pronta nei tre file di regole (153 per target) ma NON committata e NON rilasciata. E' invisibile agli utenti finche' non esce la 3.5.67.
+- [ ] validare localmente: node sviluppo/tests/test-security-invariants.js (atteso 95/95)
+- [ ] costruire pacchetti, misurare sul PACCHETTO COSTRUITO (non sorgenti): zero richieste openx_async.js sulle testate
+- [ ] prepare-release.js 3.5.66 → 3.5.67, build --store + build, deploy-site.sh
+- [ ] risottomettere store principale, Firefox, Edge; annuncio canale
+- [ ] chiedere conferma sul campo della 3.5.66 all'utente (gia' disponibile su Firefox)
 ## ✅ RISOLTO 02/08 — YouTube skip annunci (v3.5.58, confermato dall'utente)
 
 **Causa vera: SABR.** Provato con dati sul video reale: `serverAbrStreamingUrl` presente, `adaptiveFormats` 30 **con URL diretto 0**, `formats` 0. YouTube non serve piu' URL diretti: ogni segmento va chiesto al server, che decide cosa mandare — annunci inclusi. Nessun filtro sul JSON puo' impedirlo.
