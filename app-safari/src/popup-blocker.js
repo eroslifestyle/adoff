@@ -127,6 +127,45 @@
       window.addEventListener(evt, markGesture, { capture: true, passive: true });
     });
 
+    /*
+     * Alcuni circuiti pubblicitari registrano un gestore in cattura che apre una finestra
+     * e poi ferma la propagazione, consumando il gesto. Quando abbiamo bloccato la finestra
+     * e il gesto non è arrivato in fondo lo restituiamo all'elemento sottostante il puntatore.
+     */
+    let finestraBloccataInQuestoGesto = false;
+    let gestoArrivatoInFondo = false;
+    let riemissioniGesto = 0;
+    let ultimoX = 0;
+    let ultimoY = 0;
+
+    function sorvegliaGesto(e) {
+      if (!e.isTrusted) return;
+      finestraBloccataInQuestoGesto = false;
+      gestoArrivatoInFondo = false;
+      ultimoX = e.clientX;
+      ultimoY = e.clientY;
+      setTimeout(function() {
+        if (gestoArrivatoInFondo) return;
+        if (!finestraBloccataInQuestoGesto) return;
+        if (riemissioniGesto >= 2) return;
+        riemissioniGesto++;
+        finestraBloccataInQuestoGesto = false;
+        gestoArrivatoInFondo = false;
+        var elem = document.elementFromPoint(ultimoX, ultimoY);
+        if (elem) {
+          try {
+            elem.click();
+          } catch(errClick) {}
+        }
+        setTimeout(function() {
+          riemissioniGesto = 0;
+        }, 800);
+      }, 0);
+    }
+
+    window.addEventListener('click', sorvegliaGesto, { capture: true, passive: true });
+    window.addEventListener('click', function() { gestoArrivatoInFondo = true; }, { capture: false, passive: true });
+
     function isSameSiteUrl(u) {
       try {
         const parsed = new URL(u, location.href);
@@ -155,6 +194,7 @@
     }
 
     function notifyBlocked(url, reason) {
+      finestraBloccataInQuestoGesto = true;
       try {
         window.dispatchEvent(new CustomEvent('adoff-popup-blocked', {
           detail: { url: url, reason: reason }
@@ -256,53 +296,66 @@
         HTMLAnchorElement.prototype.click.__adoffPatched = true;
       }
     } catch(e) {}
-    // I click reali su <a target="_blank"> negli iframe non vengono gestiti da window.open
-    // ma direttamente dal browser, quindi vanno intercettati qui per bloccare i popup overlay.
-    // Un link verso terze parti e' considerato sospetto se ricorre ALMENO UNA di queste condizioni:
-    // 1) e' invisibile (opacita' minore di 0.1) o non ha un'opacita' valida;
-    // 2) copre almeno un quarto dell'area della finestra;
-    // 3) si sovrappone per almeno il 30% all'area del video. Quest'ultimo criterio e' necessario
-    //    perche' un link verso un dominio terzo steso sopra il lettore video intercetta il primo
-    //    click dell'utente ed e' la forma piu' diffusa di popunder/popup overlay nascosto.
-    if (isInIframe && enableGestureCheck) {
-        document.addEventListener('click', function(e) {
-            try {
-                if (!e.isTrusted) return;
-                var a = e.target && typeof e.target.closest === 'function' ? e.target.closest('a') : null;
-                if (!a) return;
-                var t = a.target;
-                if (t !== '_blank' && t !== '_new') return;
-                var href = String(a.href || '');
-                if (!href || isSameSiteUrl(href)) return;
-                var r = a.getBoundingClientRect();
-                var area = (r.width||0)*(r.height||0);
-                var op = '';
-                try { op = getComputedStyle(a).opacity; } catch(e2) {}
-                var opNumeric = parseFloat(op);
-                var invisibile = isNaN(opNumeric) || opNumeric < 0.1;
-                var vw = (window.innerWidth||0)*(window.innerHeight||0);
-                var grande = vw > 0 && area >= vw*0.25;
-                var sovrappostoVideo = false;
-                var video = document.querySelector('video');
-                if (video) {
-                    var vr = video.getBoundingClientRect();
-                    var vArea = (vr.width||0)*(vr.height||0);
-                    if (vArea > 0) {
-                        var intW = Math.min(r.right, vr.right) - Math.max(r.left, vr.left);
-                        var intH = Math.min(r.bottom, vr.bottom) - Math.max(r.top, vr.top);
-                        var intArea = Math.max(0, intW) * Math.max(0, intH);
-                        sovrappostoVideo = intArea >= vArea * 0.3;
-                    }
-                }
-                var sospetto = invisibile || grande || sovrappostoVideo;
-                if (!sospetto) return;
-                e.preventDefault();
-                // NIENTE stopPropagation: preventDefault basta a non aprire la
-                // scheda, mentre fermare la propagazione toglie il click anche
-                // ai listener del player e il video non parte.
-                notifyBlocked(href, 'iframe-anchor-overlay');
-            } catch (err) {}
-        }, true);
+
+    /*
+     * L'ancora stesa sopra il lettore video compare anche nei frame figli della pagina principale,
+     * quindi la difesa vale in tutti i frame. Dopo aver impedito l'apertura della finestra si
+     * disattivano i puntatori sull'ancora e si ripete il click sull'elemento sottostante;
+     * altrimenti il comando dell'utente andrebbe perso e il lettore non risponderebbe.
+     * Senza questa restituzione l'utente è costretto a cliccare più volte.
+     */
+    if (enableGestureCheck) {
+      let riemissioniInCorso = 0;
+      document.addEventListener('click', function(e) {
+        try {
+          if (!e.isTrusted) return;
+          var a = e.target && typeof e.target.closest === 'function' ? e.target.closest('a') : null;
+          if (!a) return;
+          var t = a.target;
+          if (t !== '_blank' && t !== '_new') return;
+          var href = String(a.href || '');
+          if (!href || isSameSiteUrl(href)) return;
+          var r = a.getBoundingClientRect();
+          var area = (r.width||0)*(r.height||0);
+          var op = '';
+          try { op = getComputedStyle(a).opacity; } catch(e2) {}
+          var opNumeric = parseFloat(op);
+          var invisibile = isNaN(opNumeric) || opNumeric < 0.1;
+          var vw = (window.innerWidth||0)*(window.innerHeight||0);
+          var grande = vw > 0 && area >= vw*0.25;
+          var sovrappostoVideo = false;
+          var video = document.querySelector('video');
+          if (video) {
+            var vr = video.getBoundingClientRect();
+            var vArea = (vr.width||0)*(vr.height||0);
+            if (vArea > 0) {
+              var intW = Math.min(r.right, vr.right) - Math.max(r.left, vr.left);
+              var intH = Math.min(r.bottom, vr.bottom) - Math.max(r.top, vr.top);
+              var intArea = Math.max(0, intW) * Math.max(0, intH);
+              sovrappostoVideo = intArea >= vArea * 0.3;
+            }
+          }
+          var sospetto = invisibile || grande || sovrappostoVideo;
+          if (!sospetto) return;
+          // NIENTE stopPropagation: preventDefault basta a non aprire la scheda,
+          // mentre fermare la propagazione toglie il click anche ai listener del
+          // player e il video non parte.
+          e.preventDefault();
+          notifyBlocked(href, 'anchor-overlay');
+          finestraBloccataInQuestoGesto = false;
+          a.style.pointerEvents = 'none';
+          if (riemissioniInCorso === 0) {
+            riemissioniInCorso++;
+            var elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+            if (elemBelow && elemBelow !== a && !a.contains(elemBelow)) {
+              try {
+                elemBelow.click();
+              } catch(errRe) {}
+            }
+            riemissioniInCorso = 0;
+          }
+        } catch (err) {}
+      }, true);
     }
 
     window.addEventListener('adoff-popup-blocked', function() {

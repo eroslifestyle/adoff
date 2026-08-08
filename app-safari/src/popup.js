@@ -262,6 +262,11 @@
 
   // Changelogs (stesso del background.js)
   const CHANGELOGS = {
+      "3.5.65": [
+        "Il comando arriva al lettore al primo clic anche quando la pubblicita' prova a rubarlo",
+        "Riconosciuti i collegamenti invisibili stesi sopra il video anche fuori dai lettori incorporati",
+        "Un clic dell'utente resta una sola azione: nessun comando ripetuto",
+      ],
       "3.5.64": [
         "Protezione confermata contro le finestre che si aprono al clic sul play",
         "Riconoscimento dei circuiti pubblicitari dal loro indirizzo",
