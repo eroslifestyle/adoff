@@ -623,6 +623,44 @@ function testaBuildIncludeContentScript() {
 // =============================================================================
 // MAIN
 // =============================================================================
+/*
+Un circuito pubblicitario apriva le finestre creando un riquadro
+e usando la funzione di apertura di QUEL contesto, mai sostituita.
+Perciò ogni difesa costruita sul solo documento principale
+non veniva neppure interpellata: questo invariante impedisce
+che la protezione dei contesti figli venga rimossa per sbaglio.
+*/
+function testaProtezioneContestiFigli() {
+    console.log('\n=== TEST 11: La protezione si estende ai contesti figli ===');
+    
+    const condizioni = [
+        'contentWindow',
+        'contentDocument',
+        'Object.getOwnPropertyDescriptor',
+        'HTMLIFrameElement.prototype'
+    ];
+    
+    for (const voce of TARGETS) {
+        const filePath = path.join(ROOT, voce, 'src', 'popup-blocker.js');
+        
+        let contenuto;
+        try {
+            contenuto = fs.readFileSync(filePath, 'utf8');
+        } catch (e) {
+            fail('test11', voce, 'file illeggibile');
+            continue;
+        }
+        
+        const mancanti = condizioni.filter(c => !contenuto.includes(c));
+        
+        if (mancanti.length === 0) {
+            ok('test11', voce);
+        } else {
+            fail('test11', voce, 'mancano: ' + mancanti.join(', '));
+        }
+    }
+}
+
 function main() {
   console.log('='.repeat(70));
   console.log('ADOFF SECURITY INVARIANTS TEST');
@@ -640,6 +678,7 @@ function main() {
   testaSincronizzazioneBrowser();
   testaRegoleNonPinnate();
   testaBuildIncludeContentScript();
+  testaProtezioneContestiFigli();
 
   console.log('\n' + '='.repeat(70));
   console.log(`RIEPILOGO: ${passati} passati / ${falliti} falliti`);
