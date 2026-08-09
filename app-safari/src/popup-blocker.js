@@ -165,11 +165,32 @@
     })();
 
 
+
+    // Restituisce il registrable domain (eTLD+1) per il confronto cross-sottodominio.
+    // Gestisce i double-TLD comuni (es. co.uk, co.jp).
+    // Restituisce il registrable domain (eTLD+1) per il confronto cross-sottodominio.
+    // Gestisce i double-TLD comuni (es. co.uk, co.jp).
+    function registrableDomain(host) {
+      const parts = host.split('.');
+      if (parts.length <= 2) return host;
+      const DOUBLE_TLDS = ['co.uk','co.jp','com.au','co.nz','com.br','co.in','com.mx',
+                           'co.kr','com.cn','gov.uk','ac.uk','org.uk','com.tr','co.za','com.sg'];
+      const last2 = parts.slice(-2).join('.');
+      if (DOUBLE_TLDS.includes(last2) && parts.length >= 3) {
+        return parts.slice(-3).join('.');
+      }
+      return last2;
+    }
+
     function isSameSiteUrl(u) {
       try {
         const parsed = new URL(u, location.href);
         const targetHost = parsed.hostname;
         const selfHost = location.hostname;
+        // Confronto basato su registrable domain per OAuth login (account.minimax.io -> platform.minimax.io)
+        if (registrableDomain(targetHost) === registrableDomain(selfHost)) return true;
+        if (registrableDomain(targetHost) === registrableDomain(topHost)) return true;
+        // Fallback ai check esatti originali per sicurezza.
         if (targetHost === selfHost) return true;
         if (targetHost.endsWith('.' + selfHost)) return true;
         if (selfHost.endsWith('.' + targetHost)) return true;

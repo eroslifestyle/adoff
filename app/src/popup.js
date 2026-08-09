@@ -262,6 +262,11 @@
 
   // Changelogs (stesso del background.js)
   const CHANGELOGS = {
+      "3.5.69": [
+        "Risolto il blocco dei login con Google e di altri provider su alcuni siti",
+        "I siti con piu' sottodomini vengono riconosciuti correttamente",
+        "Verificato che non indebolisce il blocco dei popunder",
+      ],
       "3.5.68": [
         "Ridotti a uno solo i clic necessari per avviare o fermare il video",
         "Rimossa la restituzione del gesto che causava un passaggio di stato di troppo",
