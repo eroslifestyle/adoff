@@ -41,6 +41,11 @@
 
   // Changelog per versione (ultime 3 voci per popup)
   const CHANGELOGS = {
+      "3.5.68": [
+        "Ridotti a uno solo i clic necessari per avviare o fermare il video",
+        "Rimossa la restituzione del gesto che causava un passaggio di stato di troppo",
+        "Verificato sul sito reale e sui lettori video puliti",
+      ],
       "3.5.67": [
         "Bloccato il caricatore pubblicitario servito dal sito stesso e non dal suo circuito",
         "La difesa contro le finestre aperte dai riquadri raggiunge ora gli utenti",

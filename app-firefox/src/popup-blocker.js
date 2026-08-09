@@ -129,44 +129,41 @@
       window.addEventListener(evt, markGesture, { capture: true, passive: true });
     });
 
-    /*
-     * Alcuni circuiti pubblicitari registrano un gestore in cattura che apre una finestra
-     * e poi ferma la propagazione, consumando il gesto. Quando abbiamo bloccato la finestra
-     * e il gesto non è arrivato in fondo lo restituiamo all'elemento sottostante il puntatore.
-     */
-    let finestraBloccataInQuestoGesto = false;
-    let gestoArrivatoInFondo = false;
-    let riemissioniGesto = 0;
-    let ultimoX = 0;
-    let ultimoY = 0;
-
-    function sorvegliaGesto(e) {
-      if (!e.isTrusted) return;
-      finestraBloccataInQuestoGesto = false;
-      gestoArrivatoInFondo = false;
-      ultimoX = e.clientX;
-      ultimoY = e.clientY;
-      setTimeout(function() {
-        if (gestoArrivatoInFondo) return;
-        if (!finestraBloccataInQuestoGesto) return;
-        if (riemissioniGesto >= 2) return;
-        riemissioniGesto++;
-        finestraBloccataInQuestoGesto = false;
-        gestoArrivatoInFondo = false;
-        var elem = document.elementFromPoint(ultimoX, ultimoY);
-        if (elem) {
-          try {
-            elem.click();
-          } catch(errClick) {}
-        }
+    // Fallback play/pause: se un click fiducioso sul video non ne cambia lo stato
+    // (un popunder ha fermato la propagazione), si attua direttamente il comando.
+    // Sicuro per i siti puliti: se il video risponde al click, lo stato cambia e il fallback non agisce.
+    (function() {
+      if (isSafeContext) return;
+      var statoClickPrecedente = null;
+      window.addEventListener('click', function(e) {
+        if (!e.isTrusted) return;
+        var video = null;
+        try { video = document.querySelector('video'); } catch (err) { return; }
+        if (!video) return;
+        try {
+          var rect = video.getBoundingClientRect();
+          if (e.clientX < rect.left - 40 || e.clientX > rect.right + 40 ||
+              e.clientY < rect.top - 40 || e.clientY > rect.bottom + 40) return;
+        } catch (err2) { return; }
+        var eraInPausa = video.paused;
+        statoClickPrecedente = { eraInPausa: eraInPausa, tempo: video.currentTime };
         setTimeout(function() {
-          riemissioniGesto = 0;
-        }, 800);
-      }, 0);
-    }
+          if (!statoClickPrecedente) return;
+          try {
+            var v2 = document.querySelector('video');
+            if (!v2) return;
+            if (v2.paused !== statoClickPrecedente.eraInPausa) return;
+            if (!statoClickPrecedente.eraInPausa && v2.currentTime > statoClickPrecedente.tempo + 0.5) return;
+            if (statoClickPrecedente.eraInPausa) {
+              var p = v2.play();
+              if (p && typeof p.catch === 'function') p.catch(function() {});
+            } else { v2.pause(); }
+          } catch (err3) {}
+          statoClickPrecedente = null;
+        }, 150);
+      }, true);
+    })();
 
-    window.addEventListener('click', sorvegliaGesto, { capture: true, passive: true });
-    window.addEventListener('click', function() { gestoArrivatoInFondo = true; }, { capture: false, passive: true });
 
     function isSameSiteUrl(u) {
       try {
@@ -196,7 +193,7 @@
     }
 
     function notifyBlocked(url, reason) {
-      finestraBloccataInQuestoGesto = true;
+      // ponytail: removed gesture re-emission flag
       try {
         window.dispatchEvent(new CustomEvent('adoff-popup-blocked', {
           detail: { url: url, reason: reason }
@@ -443,7 +440,6 @@
           // player e il video non parte.
           e.preventDefault();
           notifyBlocked(href, 'anchor-overlay');
-          finestraBloccataInQuestoGesto = false;
           a.style.pointerEvents = 'none';
           if (riemissioniInCorso === 0) {
             riemissioniInCorso++;

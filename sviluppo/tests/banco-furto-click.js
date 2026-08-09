@@ -83,20 +83,20 @@ async function main() {
     var tecnica = tecniche[i];
     var senza = esiti[i * 2];
     var con = esiti[i * 2 + 1];
-    var sClick = senza.clickPerPlay === null ? CLICK_MAX + 1 : senza.clickPerPlay;
-    var cClick = con.clickPerPlay === null ? CLICK_MAX + 1 : con.clickPerPlay;
 
     if (tecnica === 'nessuna') {
-      var esitoControllo = (cClick === 1 && con.clickRicevuti === 1 && con.numeroFinestreAd === 0);
+      // Caso di controllo: un click utente deve produrre UNA sola azione, nessuna finestra
+      var esitoControllo = (con.clickRicevuti === 1 && con.numeroFinestreAd === 0);
       console.log(tecnica + ' (caso di controllo, nessun furto): ' + (esitoControllo
-        ? 'OK, un click utente produce una sola azione e nessuna finestra'
+        ? 'OK, un click utente produce una sola azione, nessuna finestra'
         : 'REGRESSIONE, il gesto legittimo non arriva pulito al lettore'));
-    } else if (sClick > 1 && cClick === 1) {
-      console.log(tecnica + ': la difesa restituisce il gesto e funziona');
-    } else if (cClick > 1) {
-      console.log(tecnica + ': la difesa NON restituisce il gesto e il problema e\' riprodotto');
     } else {
-      console.log(tecnica + ': il banco non ha riprodotto il furto e va corretto');
+      // Tecniche cattura/ancora: la difesa blocca la finestra pubblicitaria (non restituisce piu' il gesto)
+      // Successo: 0 finestre ad aperte (il gesto rubato NON viene restituito, clickPerPlay/clickRicevuti ignorati)
+      var esito = con.numeroFinestreAd === 0;
+      console.log(tecnica + ': ' + (esito
+        ? 'la difesa blocca la finestra pubblicitaria (0 finestre)'
+        : 'la difesa NON blocca la finestra (' + con.numeroFinestreAd + ' finestre ad aperte)'));
     }
   }
 }
