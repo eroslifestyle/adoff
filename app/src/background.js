@@ -41,6 +41,11 @@
 
   // Changelog per versione (ultime 3 voci per popup)
   const CHANGELOGS = {
+      "3.5.70": [
+        "Risolto un problema che su YouTube mostrava di nuovo tutte le pubblicita' agli abbonati Premium",
+        "Il riconoscimento dell'abbonamento Premium ora funziona anche sulle piattaforme video",
+        "Nessun impatto sugli altri piani: Pro, Trial e Free restano invariati",
+      ],
       "3.5.69": [
         "Risolto il blocco dei login con Google e di altri provider su alcuni siti",
         "I siti con piu' sottodomini vengono riconosciuti correttamente",
@@ -878,7 +883,7 @@
       const enabled = result[STORAGE_ENABLED] !== false;
       const trialOk = await isTrialActive(result, Date.now());
       const isPro = lic.type === "pro" || lic.type === "lifetime"
-        || (lic.valid && ["pro", "lifetime", "monthly", "annual"].includes(lic.plan))
+        || (lic.valid && ["pro", "lifetime", "monthly", "annual", "premium"].includes(lic.plan))
         || trialOk;
       // Ping degli annunci sulla piattaforma video: vedi AD_PING_ALLOW_RULES.
       // A protezione spenta le regole vengono rimosse, per non lasciarle appese.
@@ -1174,8 +1179,8 @@
           const pro =
             integrityValid &&
             (
-              ["pro", "lifetime", "monthly", "annual"].includes(lic.type) ||
-              ["pro", "lifetime", "monthly", "annual"].includes(lic.plan) ||
+              ["pro", "lifetime", "monthly", "annual", "premium"].includes(lic.type) ||
+              ["pro", "lifetime", "monthly", "annual", "premium"].includes(lic.plan) ||
               trialActive
             );
 

@@ -262,6 +262,11 @@
 
   // Changelogs (stesso del background.js)
   const CHANGELOGS = {
+      "3.5.70": [
+        "Risolto un problema che su YouTube mostrava di nuovo tutte le pubblicita' agli abbonati Premium",
+        "Il riconoscimento dell'abbonamento Premium ora funziona anche sulle piattaforme video",
+        "Nessun impatto sugli altri piani: Pro, Trial e Free restano invariati",
+      ],
       "3.5.69": [
         "Risolto il blocco dei login con Google e di altri provider su alcuni siti",
         "I siti con piu' sottodomini vengono riconosciuti correttamente",
