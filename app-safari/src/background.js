@@ -41,6 +41,12 @@
 
   // Changelog per versione (ultime 3 voci per popup)
   const CHANGELOGS = {
+      
+      "3.5.71": [
+        "Corretto il riconoscimento del piano Premium: ora i piani premium_monthly, premium_annual e premium_annual_founder attivano correttamente il blocco pubblicita' su YouTube",
+        "Il controllo usa ora un match prefisso (startsWith premium) invece di un match esatto che non scattava mai con i nomi reali dei piani",
+        "Verificato su tutti e tre i browser (Chrome, Firefox, Safari)",
+      ],
       "3.5.70": [
         "Risolto un problema che su YouTube mostrava di nuovo tutte le pubblicita' agli abbonati Premium",
         "Il riconoscimento dell'abbonamento Premium ora funziona anche sulle piattaforme video",
@@ -883,7 +889,7 @@
       const enabled = result[STORAGE_ENABLED] !== false;
       const trialOk = await isTrialActive(result, Date.now());
       const isPro = lic.type === "pro" || lic.type === "lifetime"
-        || (lic.valid && ["pro", "lifetime", "monthly", "annual", "premium"].includes(lic.plan))
+        || (lic.valid && (["pro", "lifetime", "monthly", "annual"].includes(lic.plan) || (typeof lic.plan === "string" && lic.plan.startsWith("premium"))))
         || trialOk;
       // Ping degli annunci sulla piattaforma video: vedi AD_PING_ALLOW_RULES.
       // A protezione spenta le regole vengono rimosse, per non lasciarle appese.
@@ -1179,8 +1185,8 @@
           const pro =
             integrityValid &&
             (
-              ["pro", "lifetime", "monthly", "annual", "premium"].includes(lic.type) ||
-              ["pro", "lifetime", "monthly", "annual", "premium"].includes(lic.plan) ||
+              ["pro", "lifetime", "monthly", "annual"].includes(lic.type) ||
+              (["pro", "lifetime", "monthly", "annual"].includes(lic.plan) || (typeof lic.plan === "string" && lic.plan.startsWith("premium"))) ||
               trialActive
             );
 

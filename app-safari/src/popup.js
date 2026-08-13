@@ -262,6 +262,12 @@
 
   // Changelogs (stesso del background.js)
   const CHANGELOGS = {
+      
+      "3.5.71": [
+        "Corretto il riconoscimento del piano Premium: ora i piani premium_monthly, premium_annual e premium_annual_founder attivano correttamente il blocco pubblicita' su YouTube",
+        "Il controllo usa ora un match prefisso (startsWith premium) invece di un match esatto che non scattava mai con i nomi reali dei piani",
+        "Verificato su tutti e tre i browser (Chrome, Firefox, Safari)",
+      ],
       "3.5.70": [
         "Risolto un problema che su YouTube mostrava di nuovo tutte le pubblicita' agli abbonati Premium",
         "Il riconoscimento dell'abbonamento Premium ora funziona anche sulle piattaforme video",

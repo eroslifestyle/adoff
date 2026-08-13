@@ -141,7 +141,7 @@
     const isPro = (integrityOk && (
       lic.type === "pro" || lic.type === "lifetime" ||
       lic.plan === "pro" || lic.plan === "lifetime" ||
-      lic.plan === "monthly" || lic.plan === "annual" || lic.plan === "premium"
+      lic.plan === "monthly" || (typeof lic.plan === "string" && lic.plan.startsWith("premium"))
     )) || trialOk;
     // adoffEnabled va letto PRIMA di scrivere nonce e flag: se l'utente ha
     // messo in pausa, stealth.js non deve attivarsi affatto. Prima di questo

@@ -223,7 +223,7 @@ const LicenseClient = (function () {
 
           // ponytail: tier derivato dal plan; VPN/Premium gated server-side
           const planToTier = (plan) => {
-            if (plan === "premium") return "premium";
+            if (typeof plan === "string" && plan.startsWith("premium")) return "premium";
             if (["pro", "lifetime", "monthly", "annual", "referral", "trial"].includes(plan)) return "pro";
             return "free";
           };
@@ -267,7 +267,7 @@ const LicenseClient = (function () {
           }
 
           // 2. Licenza Pro/Lifetime valida?
-          const isValidPlan = ["pro", "lifetime", "monthly", "annual", "premium"].includes(lic.plan);
+          const isValidPlan = ["pro", "lifetime", "monthly", "annual"].includes(lic.plan) || (typeof lic.plan === "string" && lic.plan.startsWith("premium"));
           if (lic.valid && isValidPlan) {
             // Integrity check — la licenza e' stata manomessa?
             const integrityOk = verifyIntegrity(lic, result[STORAGE.INTEGRITY]);
