@@ -61,7 +61,7 @@ const LicenseClient = (function () {
    * La vera protezione e' la validazione server-side.
    */
   function computeIntegrity(licData) {
-    const raw = JSON.stringify(licData);
+    const raw = JSON.stringify(licData, licData && typeof licData === "object" ? Object.keys(licData).sort() : null);
     let hash = 0x811c9dc5; // FNV offset basis
     for (let i = 0; i < raw.length; i++) {
       hash ^= raw.charCodeAt(i);

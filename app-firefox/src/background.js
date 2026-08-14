@@ -523,7 +523,7 @@
   // divergono, il gate Pro si chiude su licenze valide: e' un hash di
   // integrita' calcolato su TUTTO l'oggetto licenza serializzato.
   function computeIntegrity(licData) {
-    const raw = JSON.stringify(licData);
+    const raw = JSON.stringify(licData, licData && typeof licData === "object" ? Object.keys(licData).sort() : null);
     let hash = 0x811c9dc5;
     for (let i = 0; i < raw.length; i++) {
       hash ^= raw.charCodeAt(i);

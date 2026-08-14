@@ -52,7 +52,7 @@
 
   // EM-4: Verifica integrity hash dello stato licenza (FNV inline)
   function computeIntegrity(licData) {
-    const raw = JSON.stringify(licData);
+    const raw = JSON.stringify(licData, licData && typeof licData === "object" ? Object.keys(licData).sort() : null);
     let hash = 0x811c9dc5;
     for (let i = 0; i < raw.length; i++) {
       hash ^= raw.charCodeAt(i);
