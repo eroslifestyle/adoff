@@ -264,6 +264,11 @@
   const CHANGELOGS = {
       
 
+      "3.5.76": [
+        "Reintegrato il fix dell'hash di integrita' della licenza perso accidentalmente nel merge della 3.5.75",
+        "Senza questo fix il blocco pubblicita' su YouTube restava disattivato per tutti gli abbonati Pro, Lifetime e Premium",
+        "Verificata la presenza del fix su tutti i file dell'estensione per Chrome, Firefox e Safari"
+      ],
       "3.5.75": [
         "Risolto il bug che impediva il caricamento dell'estensione su Chrome: un campo deprecato nelle regole faceva rifiutare l'intero ruleset",
         "Le regole dei negozi (936/937) usano ora excludedInitiatorDomains al posto del campo excludedDomains non piu' supportato",
