@@ -263,7 +263,12 @@
   // Changelogs (stesso del background.js)
   const CHANGELOGS = {
       
-      "3.5.71": [
+
+      "3.5.75": [
+        "Risolto il bug che impediva il caricamento dell'estensione su Chrome: un campo deprecato nelle regole faceva rifiutare l'intero ruleset",
+        "Le regole dei negozi (936/937) usano ora excludedInitiatorDomains al posto del campo excludedDomains non piu' supportato",
+        "Verificato il ruleset completo: nessun altro campo deprecato presente su Chrome, Firefox e Safari"
+      ],      "3.5.71": [
         "Corretto il riconoscimento del piano Premium: ora i piani premium_monthly, premium_annual e premium_annual_founder attivano correttamente il blocco pubblicita' su YouTube",
         "Il controllo usa ora un match prefisso (startsWith premium) invece di un match esatto che non scattava mai con i nomi reali dei piani",
         "Verificato su tutti e tre i browser (Chrome, Firefox, Safari)",

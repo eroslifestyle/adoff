@@ -42,7 +42,12 @@
   // Changelog per versione (ultime 3 voci per popup)
   const CHANGELOGS = {
       
-      "3.5.73": [
+
+      "3.5.75": [
+        "Risolto il bug che impediva il caricamento dell'estensione su Chrome: un campo deprecato nelle regole faceva rifiutare l'intero ruleset",
+        "Le regole dei negozi (936/937) usano ora excludedInitiatorDomains al posto del campo excludedDomains non piu' supportato",
+        "Verificato il ruleset completo: nessun altro campo deprecato presente su Chrome, Firefox e Safari"
+      ],      "3.5.73": [
         "Risolto definitivamente il bug degli spot residui su YouTube per gli abbonati Premium/Pro",
         "Il cold-load (rimozione aggressiva streamingData) e' stato disabilitato perche' corrompeva la negoziazione qualita' con i server YouTube",
         "Lo strip adPlacements + mangle + inject isInlinePlaybackNoAd bastano a rimuovere gli spot client-side senza side-effect",
