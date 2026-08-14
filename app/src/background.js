@@ -42,6 +42,11 @@
   // Changelog per versione (ultime 3 voci per popup)
   const CHANGELOGS = {
       
+      "3.5.73": [
+        "Risolto definitivamente il bug degli spot residui su YouTube per gli abbonati Premium/Pro",
+        "Il cold-load (rimozione aggressiva streamingData) e' stato disabilitato perche' corrompeva la negoziazione qualita' con i server YouTube",
+        "Lo strip adPlacements + mangle + inject isInlinePlaybackNoAd bastano a rimuovere gli spot client-side senza side-effect",
+      ],
       "3.5.71": [
         "Corretto il riconoscimento del piano Premium: ora i piani premium_monthly, premium_annual e premium_annual_founder attivano correttamente il blocco pubblicita' su YouTube",
         "Il controllo usa ora un match prefisso (startsWith premium) invece di un match esatto che non scattava mai con i nomi reali dei piani",

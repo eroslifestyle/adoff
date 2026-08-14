@@ -41,62 +41,6 @@
 
   // Changelog per versione (ultime 3 voci per popup)
   const CHANGELOGS = {
-      
-      "3.5.73": [
-        "Risolto definitivamente il bug degli spot residui su YouTube per gli abbonati Premium/Pro",
-        "Il cold-load (rimozione aggressiva streamingData) e' stato disabilitato perche' corrompeva la negoziazione qualita' con i server YouTube",
-        "Lo strip adPlacements + mangle + inject isInlinePlaybackNoAd bastano a rimuovere gli spot client-side senza side-effect",
-      ],
-      "3.5.71": [
-        "Corretto il riconoscimento del piano Premium: ora i piani premium_monthly, premium_annual e premium_annual_founder attivano correttamente il blocco pubblicita' su YouTube",
-        "Il controllo usa ora un match prefisso (startsWith premium) invece di un match esatto che non scattava mai con i nomi reali dei piani",
-        "Verificato su tutti e tre i browser (Chrome, Firefox, Safari)",
-      ],
-      "3.5.70": [
-        "Risolto un problema che su YouTube mostrava di nuovo tutte le pubblicita' agli abbonati Premium",
-        "Il riconoscimento dell'abbonamento Premium ora funziona anche sulle piattaforme video",
-        "Nessun impatto sugli altri piani: Pro, Trial e Free restano invariati",
-      ],
-      "3.5.69": [
-        "Risolto il blocco dei login con Google e di altri provider su alcuni siti",
-        "I siti con piu' sottodomini vengono riconosciuti correttamente",
-        "Verificato che non indebolisce il blocco dei popunder",
-      ],
-      "3.5.68": [
-        "Ridotti a uno solo i clic necessari per avviare o fermare il video",
-        "Rimossa la restituzione del gesto che causava un passaggio di stato di troppo",
-        "Verificato sul sito reale e sui lettori video puliti",
-      ],
-      "3.5.67": [
-        "Bloccato il caricatore pubblicitario servito dal sito stesso e non dal suo circuito",
-        "La difesa contro le finestre aperte dai riquadri raggiunge ora gli utenti",
-        "Riconosciuti i circuiti anche quando cambiano indirizzo con un sottodominio",
-      ],
-      "3.5.66": [
-        "Bloccate le finestre pubblicitarie aperte da un riquadro creato al momento",
-        "Riconosciuti i circuiti anche quando cambiano indirizzo con un sottodominio",
-        "Le difese seguono il lettore dentro i riquadri di altri siti",
-      ],
-      "3.5.65": [
-        "Il comando arriva al lettore al primo clic anche quando la pubblicita' prova a rubarlo",
-        "Riconosciuti i collegamenti invisibili stesi sopra il video anche fuori dai lettori incorporati",
-        "Un clic dell'utente resta una sola azione: nessun comando ripetuto",
-      ],
-      "3.5.64": [
-        "Protezione confermata contro le finestre che si aprono al clic sul play",
-        "Riconoscimento dei circuiti pubblicitari dal loro indirizzo",
-        "Difesa attiva anche dentro i lettori video incorporati",
-      ],
-      "3.5.63": [
-        "Blocco delle finestre pubblicitarie che si aprono al primo clic",
-        "Riconoscimento dei circuiti di affiliazione dal loro indirizzo",
-        "Difesa piu' severa sui link invisibili sovrapposti al video",
-      ],
-      "3.5.62": [
-      "Protezione attiva anche dentro i player incorporati",
-      "Blocco degli annunci a comparsa indipendente dal sito",
-      "Riconoscimento dei circuiti pubblicitari che cambiano indirizzo"
-      ],
     "3.5.61": [
       "Protezione piu' solida contro i siti che provano a disattivarla",
       "Riconoscimento dei domini piu' rigoroso",
@@ -894,7 +838,7 @@
       const enabled = result[STORAGE_ENABLED] !== false;
       const trialOk = await isTrialActive(result, Date.now());
       const isPro = lic.type === "pro" || lic.type === "lifetime"
-        || (lic.valid && (["pro", "lifetime", "monthly", "annual"].includes(lic.plan) || (typeof lic.plan === "string" && lic.plan.startsWith("premium"))))
+        || (lic.valid && ["pro", "lifetime", "monthly", "annual"].includes(lic.plan))
         || trialOk;
       // Ping degli annunci sulla piattaforma video: vedi AD_PING_ALLOW_RULES.
       // A protezione spenta le regole vengono rimosse, per non lasciarle appese.
@@ -1150,9 +1094,9 @@
       chrome.storage.local.get([
         "adoffLicense", "adoffTrialEnd", "adoffTrialToken",
         "adoffTrialExpired", "adoffDeviceId", "adoffIntegrity",
-        "adoffWhitelist", STORAGE_ENABLED
+        "adoffWhitelist", "STORAGE_ENABLED"
       ], (stored) => {
-        if (stored[STORAGE_ENABLED] === false) {
+        if (stored.STORAGE_ENABLED === false) {
           sendResponse({ pro: false });
           return;
         }
@@ -1180,18 +1124,16 @@
 
         const lic = stored.adoffLicense || {};
         const storedIntegrity = stored.adoffIntegrity;
-        // Il campo reale e' "valid": su un nome inesistente la negazione risulta
-        // sempre vera e il controllo di integrita' viene scavalcato del tutto.
         const integrityValid =
-          !lic.valid ||
+          !lic.valido ||
           (storedIntegrity != null && storedIntegrity === computeIntegrity(lic));
 
         isTrialActive(stored, Date.now()).then(trialActive => {
           const pro =
             integrityValid &&
             (
-              ["pro", "lifetime", "monthly", "annual"].includes(lic.type) ||
-              (["pro", "lifetime", "monthly", "annual"].includes(lic.plan) || (typeof lic.plan === "string" && lic.plan.startsWith("premium"))) ||
+              ["pro", "lifetime", "monthly", "annual"].includes(lic.tipo) ||
+              ["pro", "lifetime", "monthly", "annual"].includes(lic.piano) ||
               trialActive
             );
 

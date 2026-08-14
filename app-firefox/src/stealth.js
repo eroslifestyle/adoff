@@ -244,8 +244,11 @@
     }
 
     function coldLoadDisabilitato() {
-       // kill-switch manuale per debug: localStorage.__adoff_nocold = "1"
-       try { return localStorage.getItem("__adoff_nocold") === "1"; } catch (_) { return false; }
+       // COLD-LOAD DISATTIVATO PERMANENTEMENTE (v3.5.73): causava 403 su googlevideo.com
+       // per parametri firmati invalidati + degrado qualita video + spot server-side via SABR.
+       // Lo strip adPlacements + mangle + inject isInlinePlaybackNoAd bastano a rimuovere gli
+       // spot client-side senza corrompere il player.
+       return true;
     }
 
     function isLiveResp(r) {
