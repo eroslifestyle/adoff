@@ -6,6 +6,17 @@
  */
 const LicenseClient = (function () {
   "use strict";
+  // Tier canonico del piano. UNICA fonte di verita sui nomi di piano emessi dal
+  // server (worker.js): monthly | annual | referral | premium_monthly |
+  // premium_annual | premium_annual_founder | trial | lifetime | free.
+  // Ogni copia deve restare IDENTICA: sviluppo/tests/test-plan-tier-consistency.js
+  // fallisce se una diverge o se ricompare una lista di piani hardcoded.
+  function adoffPlanTier(plan) {
+    if (typeof plan === "string" && plan.startsWith("premium")) return "premium";
+    if (["pro", "lifetime", "monthly", "annual", "referral", "trial"].includes(plan)) return "pro";
+    return "free";
+  }
+
 
   // API endpoint
   const API_URL = "https://api.adoff.app";
@@ -221,12 +232,6 @@ const LicenseClient = (function () {
           const referralDays = result[STORAGE.REFERRAL_DAYS] || 0;
           const now = Date.now();
 
-          // ponytail: tier derivato dal plan; VPN/Premium gated server-side
-          const planToTier = (plan) => {
-            if (typeof plan === "string" && plan.startsWith("premium")) return "premium";
-            if (["pro", "lifetime", "monthly", "annual", "referral", "trial"].includes(plan)) return "pro";
-            return "free";
-          };
 
           // 1. TRIAL — autorità = token firmato dal server (non falsificabile).
           const tokenPayload = result[STORAGE.TRIAL_TOKEN]
@@ -267,7 +272,7 @@ const LicenseClient = (function () {
           }
 
           // 2. Licenza Pro/Lifetime valida?
-          const isValidPlan = ["pro", "lifetime", "monthly", "annual"].includes(lic.plan) || (typeof lic.plan === "string" && lic.plan.startsWith("premium"));
+          const isValidPlan = adoffPlanTier(lic.plan) !== "free";
           if (lic.valid && isValidPlan) {
             // Integrity check — la licenza e' stata manomessa?
             const integrityOk = verifyIntegrity(lic, result[STORAGE.INTEGRITY]);
@@ -276,7 +281,7 @@ const LicenseClient = (function () {
               if (lic.rawKey) {
                 validateOnline(lic.rawKey).then((onlineResult) => {
                   if (onlineResult.valid) {
-                    resolve({ isPro: true, plan: lic.plan, tier: planToTier(lic.plan), daysLeft: null, source: "revalidated" });
+                    resolve({ isPro: true, plan: lic.plan, tier: adoffPlanTier(lic.plan), daysLeft: null, source: "revalidated" });
                   } else {
                     // Licenza manomessa e non valida server-side
                     saveLicense({ valid: false, plan: "tampered", lastValidated: now });
@@ -307,7 +312,7 @@ const LicenseClient = (function () {
             }
 
             const daysLeft = lic.expires ? Math.ceil((lic.expires * 1000 - now) / 86400000) : null;
-            resolve({ isPro: true, plan: lic.plan, tier: planToTier(lic.plan), daysLeft, source: "cache" });
+            resolve({ isPro: true, plan: lic.plan, tier: adoffPlanTier(lic.plan), daysLeft, source: "cache" });
             return;
           }
 

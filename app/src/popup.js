@@ -1,5 +1,16 @@
 (function () {
   "use strict";
+  // Tier canonico del piano. UNICA fonte di verita sui nomi di piano emessi dal
+  // server (worker.js): monthly | annual | referral | premium_monthly |
+  // premium_annual | premium_annual_founder | trial | lifetime | free.
+  // Ogni copia deve restare IDENTICA: sviluppo/tests/test-plan-tier-consistency.js
+  // fallisce se una diverge o se ricompare una lista di piani hardcoded.
+  function adoffPlanTier(plan) {
+    if (typeof plan === "string" && plan.startsWith("premium")) return "premium";
+    if (["pro", "lifetime", "monthly", "annual", "referral", "trial"].includes(plan)) return "pro";
+    return "free";
+  }
+
 
   // ===== COSTANTI =====
   const PAUSE_LABELS = {
@@ -206,11 +217,10 @@
   function normalizeLicense(lic, trialEnd, trialBlocked) {
     const out = Object.assign({}, lic);
     const plan = out.plan || "";
-    if (plan === "premium") {
+    if (adoffPlanTier(plan) === "premium") {
       out.type = "premium";
     } else {
-      const hasValidPro = out.valid &&
-        (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
+      const hasValidPro = out.valid && adoffPlanTier(plan) === "pro" && plan !== "trial";
       if (hasValidPro) {
         out.type = plan === "lifetime" ? "lifetime" : "pro";
       } else if (trialBlocked) {
@@ -264,6 +274,10 @@
   const CHANGELOGS = {
       
 
+      "3.5.77": [
+        "Fix: gli abbonamenti annuali e Premium non venivano riconosciuti in alcune schermate e su alcune piattaforme video, riattivando gli annunci",
+        "Riconoscimento del piano unificato in un unico punto, identico su tutti i browser"
+      ],
       "3.5.76": [
         "Reintegrato il fix dell'hash di integrita' della licenza perso accidentalmente nel merge della 3.5.75",
         "Senza questo fix il blocco pubblicita' su YouTube restava disattivato per tutti gli abbonati Pro, Lifetime e Premium",
@@ -471,7 +485,7 @@
     renderLicenseBanner();
     renderTrialBlockedBanner();
     renderPauseSection();
-    renderPremiumUpsell(license.type === "premium");
+    renderPremiumUpsell(adoffPlanTier(license.plan) === "premium");
     renderFounderBadge(data);
     renderChangelog(data);
     renderReviewPrompt(data);

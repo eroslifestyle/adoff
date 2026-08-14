@@ -1,3 +1,14 @@
+// Tier canonico del piano. UNICA fonte di verità sui nomi di piano emessi dal
+// server (worker.js): monthly | annual | referral | premium_monthly |
+// premium_annual | premium_annual_founder | trial | lifetime | free.
+// Ogni copia deve restare IDENTICA: sviluppo/tests/test-plan-tier-consistency.js
+// fallisce se una diverge o se ricompare una lista di piani hardcoded.
+function adoffPlanTier(plan) {
+  if (typeof plan === "string" && plan.startsWith("premium")) return "premium";
+  if (["pro", "lifetime", "monthly", "annual", "referral", "trial"].includes(plan)) return "pro";
+  return "free";
+}
+
 // Detect browser
 function detectBrowser() {
   const ua = navigator.userAgent;
@@ -99,8 +110,7 @@ function renderTrialCountdown() {
     const trialEnd = r.adoffTrialEnd || 0;
     const lic = r.adoffLicense || {};
     const plan = lic.plan || "";
-    const hasValidPro = lic.valid &&
-      (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
+    const hasValidPro = lic.valid && adoffPlanTier(plan) === "pro" && plan !== "trial";
     if (hasValidPro) {
       // Utente Pro: nasconde trial msg + countdown
       const trialMsg = document.getElementById("trialMsg");

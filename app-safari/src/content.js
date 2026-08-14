@@ -1,5 +1,16 @@
 (function () {
   "use strict";
+  // Tier canonico del piano. UNICA fonte di verita sui nomi di piano emessi dal
+  // server (worker.js): monthly | annual | referral | premium_monthly |
+  // premium_annual | premium_annual_founder | trial | lifetime | free.
+  // Ogni copia deve restare IDENTICA: sviluppo/tests/test-plan-tier-consistency.js
+  // fallisce se una diverge o se ricompare una lista di piani hardcoded.
+  function adoffPlanTier(plan) {
+    if (typeof plan === "string" && plan.startsWith("premium")) return "premium";
+    if (["pro", "lifetime", "monthly", "annual", "referral", "trial"].includes(plan)) return "pro";
+    return "free";
+  }
+
 
   // EB-6: Nonce casuale per prevenire clobbering del flag di caricamento
   const LOAD_NONCE = Math.random().toString(36).slice(2, 10);
@@ -139,9 +150,8 @@
     // Comunica al MAIN world (stealth.js) se lo stealth e' abilitato (Pro/Trial)
     // Se l'integrity fallisce, trattare come Free (no stealth)
     const isPro = (integrityOk && (
-      lic.type === "pro" || lic.type === "lifetime" ||
-      lic.plan === "pro" || lic.plan === "lifetime" ||
-      lic.plan === "monthly" || (typeof lic.plan === "string" && lic.plan.startsWith("premium"))
+      adoffPlanTier(lic.type) !== "free" ||
+      adoffPlanTier(lic.plan) !== "free"
     )) || trialOk;
     // adoffEnabled va letto PRIMA di scrivere nonce e flag: se l'utente ha
     // messo in pausa, stealth.js non deve attivarsi affatto. Prima di questo

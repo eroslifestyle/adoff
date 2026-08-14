@@ -1,5 +1,16 @@
 (function () {
   "use strict";
+  // Tier canonico del piano. UNICA fonte di verita sui nomi di piano emessi dal
+  // server (worker.js): monthly | annual | referral | premium_monthly |
+  // premium_annual | premium_annual_founder | trial | lifetime | free.
+  // Ogni copia deve restare IDENTICA: sviluppo/tests/test-plan-tier-consistency.js
+  // fallisce se una diverge o se ricompare una lista di piani hardcoded.
+  function adoffPlanTier(plan) {
+    if (typeof plan === "string" && plan.startsWith("premium")) return "premium";
+    if (["pro", "lifetime", "monthly", "annual", "referral", "trial"].includes(plan)) return "pro";
+    return "free";
+  }
+
 
   // ===== COSTANTI =====
   const TYPE_LABELS = {
@@ -381,11 +392,10 @@
   function normalizeLicense(lic, trialEnd) {
     const out = Object.assign({}, lic);
     const plan = out.plan || "";
-    if (plan === "premium") {
+    if (adoffPlanTier(plan) === "premium") {
       out.type = "premium";
     } else {
-      const hasValidPro = out.valid &&
-        (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
+      const hasValidPro = out.valid && adoffPlanTier(plan) === "pro" && plan !== "trial";
       if (hasValidPro) {
         out.type = plan === "lifetime" ? "lifetime" : "pro";
       } else if (trialEnd && trialEnd > Date.now()) {
@@ -442,9 +452,8 @@
   /** Render sezione licenza con 3 stati: Pro attivo / Trial attivo / No license. */
   function renderLicenseSection() {
     const plan  = license.plan || "";
-    const isPremium = license.valid && plan === "premium";
-    const isPro = license.valid &&
-      (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
+    const isPremium = license.valid && adoffPlanTier(plan) === "premium";
+    const isPro = license.valid && adoffPlanTier(plan) === "pro" && plan !== "trial";
     const isTrial = !isPro && !isPremium && license.type === "trial" && license.trialEndsAt && license.trialEndsAt > Date.now();
     const t = isPremium ? "premium" : isPro ? (plan === "lifetime" ? "lifetime" : "pro") : (isTrial ? "trial" : (license.type || "free"));
 

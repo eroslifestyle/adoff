@@ -1,5 +1,16 @@
 (function () {
   "use strict";
+  // Tier canonico del piano. UNICA fonte di verita sui nomi di piano emessi dal
+  // server (worker.js): monthly | annual | referral | premium_monthly |
+  // premium_annual | premium_annual_founder | trial | lifetime | free.
+  // Ogni copia deve restare IDENTICA: sviluppo/tests/test-plan-tier-consistency.js
+  // fallisce se una diverge o se ricompare una lista di piani hardcoded.
+  function adoffPlanTier(plan) {
+    if (typeof plan === "string" && plan.startsWith("premium")) return "premium";
+    if (["pro", "lifetime", "monthly", "annual", "referral", "trial"].includes(plan)) return "pro";
+    return "free";
+  }
+
 
   // ---- Costanti storage ----
   const STORAGE_ENABLED    = "adoffEnabled";
@@ -43,6 +54,10 @@
   const CHANGELOGS = {
       
 
+      "3.5.77": [
+        "Fix: gli abbonamenti annuali e Premium non venivano riconosciuti in alcune schermate e su alcune piattaforme video, riattivando gli annunci",
+        "Riconoscimento del piano unificato in un unico punto, identico su tutti i browser"
+      ],
       "3.5.76": [
         "Reintegrato il fix dell'hash di integrita' della licenza perso accidentalmente nel merge della 3.5.75",
         "Senza questo fix il blocco pubblicita' su YouTube restava disattivato per tutti gli abbonati Pro, Lifetime e Premium",
@@ -904,7 +919,7 @@
       const enabled = result[STORAGE_ENABLED] !== false;
       const trialOk = await isTrialActive(result, Date.now());
       const isPro = lic.type === "pro" || lic.type === "lifetime"
-        || (lic.valid && (["pro", "lifetime", "monthly", "annual"].includes(lic.plan) || (typeof lic.plan === "string" && lic.plan.startsWith("premium"))))
+        || (lic.valid && adoffPlanTier(lic.plan) !== "free")
         || trialOk;
       // Ping degli annunci sulla piattaforma video: vedi AD_PING_ALLOW_RULES.
       // A protezione spenta le regole vengono rimosse, per non lasciarle appese.
@@ -1200,8 +1215,8 @@
           const pro =
             integrityValid &&
             (
-              ["pro", "lifetime", "monthly", "annual"].includes(lic.type) ||
-              (["pro", "lifetime", "monthly", "annual"].includes(lic.plan) || (typeof lic.plan === "string" && lic.plan.startsWith("premium"))) ||
+              adoffPlanTier(lic.type) !== "free" ||
+              adoffPlanTier(lic.plan) !== "free" ||
               trialActive
             );
 
