@@ -274,6 +274,10 @@
   const CHANGELOGS = {
       
 
+      "3.5.78": [
+        "Fix: all'avvio di un video la qualita' poteva restare bassa dopo l'annuncio, facendo perdere l'alta definizione",
+        "La qualita' viene ora rilevata mentre scorre il contenuto, non durante l'annuncio"
+      ],
       "3.5.77": [
         "Fix: gli abbonamenti annuali e Premium non venivano riconosciuti in alcune schermate e su alcune piattaforme video, riattivando gli annunci",
         "Riconoscimento del piano unificato in un unico punto, identico su tutti i browser"

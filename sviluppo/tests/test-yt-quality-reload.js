@@ -32,7 +32,7 @@ function load() {
         createElement: () => ({ style: {}, remove() {} })
     };
     return new Function('window', 'document', 'CustomEvent', 'setInterval', 'clearInterval',
-        blocco + '\nreturn {onAdStart,onAdEnd};')(win, doc, function () {}, setInterval, clearInterval);
+        blocco + '\nreturn {onAdStart,onAdEnd,campionaQualitaContenuto};')(win, doc, function () {}, setInterval, clearInterval);
 }
 
 function mk(o) {
@@ -80,6 +80,7 @@ function mk(o) {
     // T2 — e va ripristinata, altrimenti l'utente si ritrova il contenuto a 144p.
     {
         const o = { log: [], ad: true }; const { p } = mk(o); const m = load();
+        m.campionaQualitaContenuto(p);         // contenuto in hd1080 prima dell'annuncio
         m.onAdStart(p); o.log.length = 0; m.onAdEnd(p);
         t('T2', 'qualita\' ripristinata a fine annuncio', o.log.some(x => x.includes('hd1080')));
     }
@@ -142,12 +143,27 @@ function mk(o) {
     // preferenza dell'utente, la ripristineremmo a 144p per sempre.
     {
         const o = { log: [], ad: true }; const { p } = mk(o); const m = load();
+        m.campionaQualitaContenuto(p);         // contenuto in hd1080 prima del primo annuncio
         m.onAdStart(p); m.onAdEnd(p);          // primo annuncio
         o.log.length = 0;
         m.onAdStart(p); m.onAdEnd(p);          // secondo annuncio di fila
         const qualitaFinale = o.log.filter(x => x.startsWith('setQ:')).pop();
         t('T8', 'due annunci di fila non degradano la qualita\' a 144p',
             qualitaFinale === 'setQ:hd1080');
+    }
+
+    // T9 — pre-roll: nessun contenuto e' mai partito prima dell'annuncio,
+    // quindi l'UNICA qualita' leggibile a onAdStart e' quella dell'ANNUNCIO
+    // stesso (qui 'medium'). forzaQualitaMinima la salva come se fosse la
+    // preferenza dell'utente e ripristinaQualita() la riapplica al contenuto:
+    // l'utente perde l'HD. Non c'e' fase di contenuto precedente da simulare.
+    {
+        const o = { ad: true, qualitaCorrente: 'medium', log: [] }; const { p } = mk(o); const m = load();
+        m.onAdStart(p);
+        m.onAdEnd(p);
+        t('T9', 'al pre-roll non viene ripristinata la qualita\' dell\'annuncio sul contenuto',
+            !o.log.includes('setQ:medium') &&
+            o.log.filter(x => x.startsWith('setRange:')).pop() === 'setRange:tiny-highres');
     }
 
     console.log(pass + '/' + tot + ' PASS');

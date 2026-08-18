@@ -651,7 +651,7 @@ function setSkipOverlay(player, on) {
 }
 
 let contentTime = 0;      // ultima posizione nota nel CONTENUTO (per la ricarica sui midroll)
-let savedQuality = null;
+let contentQuality = null;   // qualita' osservata mentre andava il CONTENUTO
 let reloadTimer = null;
 let reloadCount = 0;
 let reloadVideoId = null;
@@ -662,12 +662,6 @@ let reloadVideoId = null;
 // significa attesa piu' breve. Vale solo per la durata dell'annuncio.
 function forzaQualitaMinima(player) {
     try {
-        if (typeof player.getPlaybackQuality === "function") {
-            var q = player.getPlaybackQuality();
-            // Mai memorizzare "tiny": con due annunci di fila salveremmo 144p
-            // come preferenza dell'utente e la ripristineremmo per sempre.
-            if (q && q !== "tiny") savedQuality = q;
-        }
         if (typeof player.setPlaybackQualityRange === "function") player.setPlaybackQualityRange("tiny", "tiny");
         if (typeof player.setPlaybackQuality === "function") player.setPlaybackQuality("tiny");
     } catch (_) {}
@@ -683,12 +677,25 @@ function ripristinaQualita(player) {
     try {
         if (typeof player.setPlaybackQualityRange === "function") player.setPlaybackQualityRange("tiny", "highres");
         var validi = ["tiny", "small", "medium", "large", "hd720", "hd1080", "hd1440", "hd2160", "highres"];
-        if (savedQuality && validi.indexOf(savedQuality) !== -1 &&
+        // Nessuna qualita' campionata = pre-roll: il contenuto non e' mai partito
+        // e l'unico valore leggibile sarebbe quello dell'annuncio. Riaprire il
+        // range basta: decide la preferenza dell'utente.
+        if (contentQuality && validi.indexOf(contentQuality) !== -1 &&
             typeof player.setPlaybackQuality === "function") {
-            player.setPlaybackQuality(savedQuality);
+            player.setPlaybackQuality(contentQuality);
         }
     } catch (_) {}
-    savedQuality = null;
+}
+
+// Qualita' del CONTENUTO: si campiona solo fuori dagli annunci, perche' e'
+// l'unico momento in cui il valore letto appartiene davvero al video che
+// l'utente sta guardando. Al pre-roll non esiste ancora, ed e' corretto cosi'.
+function campionaQualitaContenuto(player) {
+    try {
+        if (typeof player.getPlaybackQuality !== "function") return;
+        var q = player.getPlaybackQuality();
+        if (q && q !== "tiny" && q !== "unknown") contentQuality = q;
+    } catch (_) {}
 }
 
 function onAdStart(player) {
@@ -817,6 +824,7 @@ function checkPlayer() {
         // ignore
       }
     }
+    campionaQualitaContenuto(p);
     onAdEnd(p);
   }
 }
@@ -838,6 +846,7 @@ document.addEventListener("yt-navigate-finish", function () {
   // Azzera i riferimenti del video precedente per non usarli con il nuovo video
   contentDuration = 0;
   contentSrc = "";
+  contentQuality = null;
   lastAdDuration = -1;
   stableTicks = 0;
   setTimeout(attachObs, 100);
