@@ -1,4 +1,11 @@
 'use strict';
+// Cold-load DISATTIVATO PERMANENTEMENTE dalla v3.5.73 (causava 403 su googlevideo.com
+// per parametri firmati invalidati + degrado qualita' video, vedi coldLoadDisabilitato()
+// in app/src/stealth.js). Questi test presidiano quella decisione: T1/T2/T7 verificano
+// che il get restituisca SEMPRE l'oggetto completo (con streamingData), ripulito dei
+// campi pubblicitari; T8 e' la guardia che fallisce se coldLoadDisabilitato() smette
+// di ritornare true. T3-T6 restano invariati (casi in cui il cold-load non scatterebbe
+// comunque anche se fosse riattivato).
 // Lettura del file sorgente
 const fs = require('fs');
 const FILE_PATH = '/mnt/backup/Dropbox/1 Programmazione/Progetti/ChromePlugin/app/src/stealth.js';
@@ -109,24 +116,23 @@ function runTest(id, desc, testFn) {
 // Esecuzione dei test
 let passed = 0;
 
-passed += runTest('T1', 'cold-load: primo get senza streamingData ne annunci, ma con i metadati', function() {
-    // Il cold-load NON restituisce piu' undefined: quello rompeva chiunque
-    // leggesse .videoDetails senza guardia (incluso il player di YouTube).
-    // Restituisce un oggetto valido ma privo dei dati di riproduzione, cosi'
-    // il player e' costretto a richiederli via rete.
+passed += runTest('T1', 'col cold-load disattivato, il primo get restituisce loggetto completo con streamingData', function() {
+    // coldLoadDisabilitato() ritorna sempre true (v3.5.73): il get non regala
+    // piu' un oggetto minimale senza streamingData, restituisce sempre
+    // l'oggetto pieno, solo ripulito dei campi pubblicitari.
     const { mod } = mkEnv({ preset: respConAds() });
     const r = mod.get();
     return !!r && r.videoDetails !== undefined
-        && r.streamingData === undefined
+        && r.streamingData !== undefined
         && r.adPlacements === undefined;
 });
 
-passed += runTest('T2', 'il secondo get restituisce loggetto (nessuna pagina rotta)', function() {
+passed += runTest('T2', 'ogni get ripetuto ritorna lo stesso oggetto completo (nessun minimale)', function() {
     const { mod } = mkEnv({ preset: respConAds() });
-    const first = mod.get();   // minimale, senza streamingData
-    const second = mod.get();  // oggetto completo
-    return first.streamingData === undefined && second !== undefined
-        && second.streamingData !== undefined;
+    const first = mod.get();
+    const second = mod.get();
+    return first !== undefined && first.streamingData !== undefined
+        && second !== undefined && second.streamingData !== undefined;
 });
 
 passed += runTest('T3', 'cold-load NON scatta sulle dirette', function() {
@@ -149,15 +155,31 @@ passed += runTest('T6', 'senza annunci nessun cold-load', function() {
     return mod.get() !== undefined;
 });
 
-passed += runTest('T7', 'cold-load anche quando lassegnazione avviene DOPO (via setter)', function() {
+passed += runTest('T7', 'anche quando lassegnazione avviene DOPO (via setter), il get ritorna loggetto completo', function() {
     const { mod } = mkEnv({});
     mod.set(respConAds());
     const r = mod.get();
-    return !!r && r.streamingData === undefined && r.adPlacements === undefined;
+    return !!r && r.streamingData !== undefined && r.adPlacements === undefined;
+});
+
+passed += runTest('T8', 'guardia: coldLoadDisabilitato() deve ritornare true (riattivarlo causa 403 googlevideo + degrado qualita, regressione 3.5.73)', function() {
+    const m = content.match(/function\s+coldLoadDisabilitato\s*\(\s*\)\s*{([\s\S]*?)\n\s*}/);
+    if (!m) {
+        console.error('coldLoadDisabilitato() non trovata nel sorgente');
+        return false;
+    }
+    const body = m[1];
+    const ok = /return\s+true\s*;/.test(body) && !/return\s+false\s*;/.test(body);
+    if (!ok) {
+        console.error('ATTENZIONE: coldLoadDisabilitato() non ritorna piu\' true incondizionatamente. '
+            + 'Riattivare il cold-load causa 403 su googlevideo.com (parametri firmati invalidati) '
+            + 'e degrado della qualita video (regressione 3.5.73). Vedi app/src/stealth.js.');
+    }
+    return ok;
 });
 
 // Risultato finale
-console.log(passed + '/7 PASS');
-if (passed < 7) {
+console.log(passed + '/8 PASS');
+if (passed < 8) {
     process.exit(1);
 }
