@@ -54,6 +54,10 @@
   const CHANGELOGS = {
       
 
+      "3.5.83": [
+        "Gli annunci inseriti dentro il video vengono ora saltati invece che accelerati",
+        "Attesa iniziale ridotta al minimo"
+      ],
       "3.5.82": [
         "Attesa iniziale piu' breve: gli annunci vengono scaricati alla risoluzione minima",
         "Il video torna subito alla massima qualita' appena l'annuncio finisce"

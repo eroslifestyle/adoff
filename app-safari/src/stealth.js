@@ -331,7 +331,8 @@ if (!window.__adoffYtDiag) {
     flagInjectedStringify: 0,
     flagInjectedAssign: 0,
     coldLoads: 0,
-    adReloads: 0
+    adReloads: 0,
+    ssaiSalti: 0
   };
 }
 
@@ -549,10 +550,13 @@ function instantSkip(player) {
         ".ytp-ad-overlay-close-button, .ytp-ad-overlay-close-container"
     )) { if (btn.offsetParent !== null) btn.click(); }
 
-    // NESSUN seek: annuncio e contenuto condividono lo stesso elemento <video>
-    // (MSE source switching). Toccare currentTime e' stata la causa radice di sei
-    // versioni di bug di posizione (rimosso in v3.5.52, rientrato per errore in
-    // v3.5.55). L'annuncio finisce da solo a 16x e YouTube gestisce la transizione.
+    // NESSUN seek generico: annuncio e contenuto condividono lo stesso elemento
+    // <video> (MSE source switching). Toccare currentTime e' stata la causa
+    // radice di sei versioni di bug di posizione (rimosso in v3.5.52, rientrato
+    // per errore in v3.5.55). L'annuncio finisce da solo a 16x e YouTube gestisce
+    // la transizione. Eccezione unica: gli annunci SSAI (stream unico, nessuno
+    // scambio di sorgente in corso) vengono avanzati da saltaAnnuncioCucito.
+    if (video) saltaAnnuncioCucito(player, video);
 }
 
 // Overlay opaco durante l'ad SSAI: l'utente non vede il contenuto
@@ -639,6 +643,7 @@ function onAdEnd(player) {
         if (wasMuted) { video.muted = false; wasMuted = false; }
     }
     setSkipOverlay(player, false);
+    ssaiSaltatoTot = 0;
 
     // Nessun position recovery: l'annuncio e' finito NATURALMENTE a 16x,
     // YouTube ha gestito la transizione. Non tocchiamo currentTime.
@@ -719,6 +724,38 @@ function forzaQualitaMassima(player) {
     } catch (_) { /* mai rompere il player */ }
 }
 
+// Annuncio SSAI: cucito nello stesso stream del contenuto. Lo si riconosce dal
+// fatto che, mentre il player segnala "ad-showing", la sorgente montata e la
+// durata NON cambiano: e' sempre lo stesso media (vedi contentSrc/contentDuration
+// sopra). In quel caso saltare avanti e' sicuro quanto trascinare la barra a
+// mano, perche' non c'e' nessuno scambio di sorgente MSE in corso -- che e'
+// invece la situazione da cui nasce il divieto storico di toccare currentTime.
+const SSAI_PASSO_S = 2;          // salto per tentativo: piccolo, per non superare l'annuncio
+const SSAI_MAX_SALTO_S = 200;    // tetto complessivo per interruzione pubblicitaria
+let ssaiSaltatoTot = 0;
+
+function eSsai(video) {
+    // Stesso src e stessa durata del contenuto = stream unico, nessuno switch.
+    if (!video || !video.currentSrc || !isFinite(video.duration)) return false;
+    if (!contentSrc || !contentDuration) return false;
+    if (video.currentSrc !== contentSrc) return false;
+    return Math.abs(video.duration - contentDuration) < 0.5;
+}
+
+function saltaAnnuncioCucito(player, video) {
+    try {
+        if (!eSsai(video)) return false;
+        if (ssaiSaltatoTot >= SSAI_MAX_SALTO_S) return false;
+        var meta = video.duration - 0.3;
+        var destinazione = Math.min(video.currentTime + SSAI_PASSO_S, meta);
+        if (!(destinazione > video.currentTime)) return false;
+        ssaiSaltatoTot += (destinazione - video.currentTime);
+        video.currentTime = destinazione;
+        try { window.__adoffYtDiag.ssaiSalti++; } catch (_) {}
+        return true;
+    } catch (_) { return false; }
+}
+
     // ---- LAYER C: Anti-detection (insurance) ----
 
     // Mask ratechange events during ad skip to avoid detection
@@ -786,6 +823,7 @@ document.addEventListener("yt-navigate-finish", function () {
   contentDuration = 0;
   contentSrc = "";
   ultimoControlloQualita = 0;
+  ssaiSaltatoTot = 0;
   setTimeout(attachObs, 100);
 });
 

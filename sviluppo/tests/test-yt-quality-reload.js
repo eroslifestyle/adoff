@@ -122,6 +122,49 @@ function buildQualityFns(funcSrc) {
     return factory();
 }
 
+// Estrae "let contentDuration = 0;" + "let contentSrc = \"\";" (stato di
+// riferimento del contenuto) seguiti dal blocco SSAI reale (costanti, eSsai,
+// saltaAnnuncioCucito), cosi' il test funzionale esegue il vero codice del
+// sorgente con lo stato di modulo che gli serve, senza doppiarne la logica.
+function extractSsaiFuncSrc(strippedSrc) {
+    const durMarker = 'let contentDuration = 0;';
+    const durIdx = strippedSrc.indexOf(durMarker);
+    if (durIdx < 0) return null;
+    const srcMarker = 'let contentSrc = "";';
+    const srcIdx = strippedSrc.indexOf(srcMarker, durIdx);
+    if (srcIdx < 0) return null;
+    const blockStart = strippedSrc.indexOf('const SSAI_PASSO_S', srcIdx);
+    if (blockStart < 0) return null;
+    const sig = 'function saltaAnnuncioCucito(';
+    const fnStart = strippedSrc.indexOf(sig, blockStart);
+    if (fnStart < 0) return null;
+    const braceStart = strippedSrc.indexOf('{', fnStart);
+    if (braceStart < 0) return null;
+    let depth = 0;
+    for (let i = braceStart; i < strippedSrc.length; i++) {
+        if (strippedSrc[i] === '{') depth++;
+        else if (strippedSrc[i] === '}') {
+            depth--;
+            if (depth === 0) {
+                return durMarker + '\n' + srcMarker + '\n' +
+                    strippedSrc.slice(blockStart, i + 1);
+            }
+        }
+    }
+    return null;
+}
+
+// Costruisce eSsai/saltaAnnuncioCucito reali con closure persistente su
+// contentSrc/contentDuration/ssaiSaltatoTot, esposte tramite setter/getter
+// per pilotare lo stato nel test senza toccare la logica.
+function buildSsaiFns(funcSrc) {
+    const factory = new Function(funcSrc +
+        '\nreturn { eSsai: eSsai, saltaAnnuncioCucito: saltaAnnuncioCucito, ' +
+        'setContent: function (s, d) { contentSrc = s; contentDuration = d; }, ' +
+        'getTot: function () { return ssaiSaltatoTot; } };');
+    return factory();
+}
+
 let pass = 0, tot = 0;
 function t(target, id, desc, ok) {
     tot++;
@@ -378,6 +421,74 @@ for (const [target, file] of TARGETS) {
         }
     }
     t(target, 'T25', "sequenza abbassaQualitaAnnuncio->forzaQualitaMassima: torna a hd2160 anche dentro il throttle", t25ok);
+
+    // T26-T32: SSAI (annuncio cucito nello stesso stream). Unica eccezione al
+    // divieto di seek: lecita SOLO quando src e durata coincidono col
+    // contenuto (nessuno switch di sorgente MSE in corso, vedi commento nel
+    // sorgente).
+    const eSsaiBody = extractFunctionBody(src, 'eSsai');
+    const saltaBody = extractFunctionBody(src, 'saltaAnnuncioCucito');
+    const saltaOccorrenze = (src.match(/saltaAnnuncioCucito\s*\(/g) || []).length;
+    t(target, 'T26', "saltaAnnuncioCucito esiste ed e' chiamata solo da instantSkip",
+        saltaBody !== null &&
+        body !== null && /saltaAnnuncioCucito\s*\(\s*player\s*,\s*video\s*\)/.test(body) &&
+        saltaOccorrenze === 2);
+
+    t(target, 'T27', "eSsai confronta sia currentSrc sia duration col riferimento del contenuto",
+        eSsaiBody !== null &&
+        eSsaiBody.includes('currentSrc') && eSsaiBody.includes('contentSrc') &&
+        eSsaiBody.includes('duration') && eSsaiBody.includes('contentDuration'));
+
+    t(target, 'T28', "ssaiSaltatoTot azzerato in onAdEnd e in yt-navigate-finish",
+        onAdEndBody !== null && /ssaiSaltatoTot\s*=\s*0/.test(onAdEndBody) &&
+        /yt-navigate-finish[\s\S]{0,400}?ssaiSaltatoTot\s*=\s*0/.test(src));
+
+    const ssaiFuncSrc = extractSsaiFuncSrc(src);
+
+    // Ogni test costruisce una closure FRESCA (ssaiSaltatoTot riparte da 0):
+    // il budget e' stato di modulo, condividerlo tra i test lo farebbe
+    // dipendere dall'ordine di esecuzione invece che dalla logica.
+    let t29ok = false;
+    if (ssaiFuncSrc) {
+        const fns = buildSsaiFns(ssaiFuncSrc);
+        const video = { currentSrc: 'blob:adoff-ssai', duration: 600, currentTime: 100 };
+        fns.setContent('blob:adoff-ssai', 600);
+        const r = fns.saltaAnnuncioCucito({}, video);
+        t29ok = r === true && Math.abs(video.currentTime - 102) < 0.001;
+    }
+    t(target, 'T29', 'src e durata coincidono col riferimento (SSAI): avanza currentTime di ~2s e torna true', t29ok);
+
+    let t30ok = false;
+    if (ssaiFuncSrc) {
+        const fns = buildSsaiFns(ssaiFuncSrc);
+        const video = { currentSrc: 'blob:adoff-ad', duration: 600, currentTime: 100 };
+        fns.setContent('blob:adoff-content', 600);
+        const r = fns.saltaAnnuncioCucito({}, video);
+        t30ok = r === false && video.currentTime === 100;
+    }
+    t(target, 'T30', "currentSrc diverso dal riferimento (annuncio con sorgente propria): non tocca currentTime, torna false", t30ok);
+
+    let t31ok = false;
+    if (ssaiFuncSrc) {
+        const fns = buildSsaiFns(ssaiFuncSrc);
+        const video = { currentSrc: 'blob:adoff-ssai', duration: 601, currentTime: 100 };
+        fns.setContent('blob:adoff-ssai', 600);
+        const r = fns.saltaAnnuncioCucito({}, video);
+        t31ok = r === false && video.currentTime === 100;
+    }
+    t(target, 'T31', "durata diversa di oltre 0.5s dal riferimento: non tocca currentTime, torna false", t31ok);
+
+    let t32ok = false;
+    if (ssaiFuncSrc) {
+        const fns = buildSsaiFns(ssaiFuncSrc);
+        const video = { currentSrc: 'blob:adoff-ssai', duration: 10000, currentTime: 0 };
+        fns.setContent('blob:adoff-ssai', 10000);
+        for (let i = 0; i < 100; i++) fns.saltaAnnuncioCucito({}, video);
+        const reachedCap = video.currentTime === 200 && fns.getTot() === 200;
+        const r = fns.saltaAnnuncioCucito({}, video);
+        t32ok = reachedCap && r === false && video.currentTime === 200;
+    }
+    t(target, 'T32', "superato SSAI_MAX_SALTO_S: smette di saltare (nessun salto infinito nel contenuto)", t32ok);
 }
 
 console.log(pass + '/' + tot + ' PASS');
