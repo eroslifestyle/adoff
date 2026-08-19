@@ -600,14 +600,9 @@ function onAdStart(player) {
         overlayTimer = null;
     }, OVERLAY_MAX_MS);
 
-    // L'annuncio deve poter essere riprodotto a qualunque risoluzione: se il
-    // range restasse limitato in alto, il player non troverebbe una traccia
-    // compatibile e resterebbe bloccato dietro l'overlay.
-    try {
-        if (typeof player.setPlaybackQualityRange === "function") {
-            player.setPlaybackQualityRange("tiny", "highres");
-        }
-    } catch (_) { /* mai rompere il player */ }
+    // Annuncio alla risoluzione minima: si scarica prima, quindi il 16x lo
+    // consuma quasi subito e l'attesa iniziale si accorcia.
+    abbassaQualitaAnnuncio(player);
 
     instantSkip(player);
 
@@ -657,12 +652,47 @@ function onAdEnd(player) {
 // gratuita nel caso normale: se siamo gia' al massimo non si tocca nulla.
 let ultimoControlloQualita = 0;
 const INTERVALLO_CONTROLLO_QUALITA_MS = 2000;
+// Ultimo currentSrc per cui la qualita' massima e' stata confermata. Un
+// annuncio a 16x puo' durare meno del throttle sopra (un ad da 15s finisce in
+// ~0.9s), quindi appena finisce va bypassato il throttle una volta sola per
+// rialzare subito, invece di aspettare fino a 2s. abbassaQualitaAnnuncio lo
+// azzera per marcare "da riconfermare"; qui si rimette al valore corrente
+// appena la conferma avviene.
+let qualitaAlzataPer = null;
+
+// Durante l'ANNUNCIO conviene la risoluzione minima: un annuncio a 144p pesa
+// circa un decimo e arriva dalla rete molto prima, quindi il fast-forward a 16x
+// lo consuma quasi subito invece di aspettare i segmenti. Vale SOLO per la
+// durata dell'annuncio: appena torna il contenuto, forzaQualitaMassima() lo
+// rialza al massimo entro pochi secondi (e' il presidio che nella 3.5.57
+// mancava, ed e' il motivo per cui allora si restava a 144p).
+function abbassaQualitaAnnuncio(player) {
+    try {
+        // Il range resta aperto: mai bloccare il player su un livello assente.
+        if (typeof player.setPlaybackQualityRange === "function") {
+            player.setPlaybackQualityRange("tiny", "highres");
+        }
+        if (typeof player.setPlaybackQuality === "function") {
+            player.setPlaybackQuality("tiny");
+        }
+        // Il contenuto va rialzato appena l'annuncio finisce: azzero la guardia
+        // per video, altrimenti il rialzo si considererebbe gia' fatto.
+        qualitaAlzataPer = null;
+    } catch (_) { /* mai rompere il player */ }
+}
 
 function forzaQualitaMassima(player) {
     try {
         if (typeof player.getAvailableQualityLevels !== "function") return;
+        // currentSrc identifica il video corrente: se e' diverso dall'ultimo
+        // per cui la qualita' massima e' stata confermata (o e' stato appena
+        // azzerato da un annuncio) il throttle sotto viene bypassato una volta,
+        // cosi' il rialzo post-annuncio non aspetta fino a 2s.
+        var video = typeof player.querySelector === "function" ? player.querySelector("video") : null;
+        var src = video && video.currentSrc;
+        var bypassThrottle = src !== qualitaAlzataPer;
         var ora = Date.now();
-        if (ora - ultimoControlloQualita < INTERVALLO_CONTROLLO_QUALITA_MS) return;
+        if (!bypassThrottle && ora - ultimoControlloQualita < INTERVALLO_CONTROLLO_QUALITA_MS) return;
         ultimoControlloQualita = ora;
         // I livelli arrivano dal migliore al peggiore; "auto" non e' impostabile.
         var livelli = (player.getAvailableQualityLevels() || []).filter(function (q) {
@@ -671,7 +701,10 @@ function forzaQualitaMassima(player) {
         if (!livelli.length) return;   // player non ancora pronto: si riprova al giro dopo
         var migliore = livelli[0];
         if (typeof player.getPlaybackQuality === "function" &&
-            player.getPlaybackQuality() === migliore) return;   // gia' al massimo
+            player.getPlaybackQuality() === migliore) {
+            qualitaAlzataPer = src;
+            return;   // gia' al massimo
+        }
         // Range APERTO verso il basso: congelarlo sul massimo mandava in stallo
         // il player quando partiva un annuncio privo di quella risoluzione
         // (schermo nero infinito, 3.5.80). A tenere alta la qualita' ci pensa il
@@ -682,6 +715,7 @@ function forzaQualitaMassima(player) {
         if (typeof player.setPlaybackQuality === "function") {
             player.setPlaybackQuality(migliore);
         }
+        qualitaAlzataPer = src;
     } catch (_) { /* mai rompere il player */ }
 }
 

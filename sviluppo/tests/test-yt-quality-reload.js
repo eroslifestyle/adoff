@@ -111,6 +111,17 @@ function buildForzaQualitaMassima(funcSrc) {
     return factory();
 }
 
+// Come buildForzaQualitaMassima ma restituisce anche abbassaQualitaAnnuncio.
+// funcSrc (estratto da extractQualityFuncSrc) contiene gia' entrambe le
+// funzioni in testo, perche' abbassaQualitaAnnuncio e' dichiarata tra il
+// marker e forzaQualitaMassima: condividono lo stato di modulo
+// (qualitaAlzataPer), necessario per T24/T25.
+function buildQualityFns(funcSrc) {
+    const factory = new Function(funcSrc +
+        '\nreturn { abbassaQualitaAnnuncio: typeof abbassaQualitaAnnuncio === "function" ? abbassaQualitaAnnuncio : null, forzaQualitaMassima: forzaQualitaMassima };');
+    return factory();
+}
+
 let pass = 0, tot = 0;
 function t(target, id, desc, ok) {
     tot++;
@@ -130,19 +141,29 @@ for (const [target, file] of TARGETS) {
     t(target, 'T2', 'nessun reload video (loadVideoById)',
         !raw.includes('loadVideoById'));
 
-    // T3: la qualita' si puo' solo ALZARE, mai abbassare. "tiny" come MINIMO
-    // di un range (bordo basso aperto, vedi forzaQualitaMassima/onAdStart) e'
-    // legittimo: allarga il range verso il basso per non bloccare l'annuncio
-    // su una risoluzione assente, non abbassa nulla (fix 3.5.81). E' vietato
-    // invece: setPlaybackQuality diretto a "tiny", o un range il cui MASSIMO
-    // (secondo argomento) sia "tiny" -- quello si' abbasserebbe il tetto.
+    // T3: la qualita' si abbassa SOLO dentro abbassaQualitaAnnuncio (unica
+    // finestra, per la durata dell'annuncio); ovunque altro si puo' solo
+    // ALZARE. "tiny" come MINIMO di un range (bordo basso aperto, vedi
+    // forzaQualitaMassima/abbassaQualitaAnnuncio) resta legittimo ovunque: non
+    // abbassa nulla, allarga il range verso il basso per non bloccare
+    // l'annuncio o il contenuto su una risoluzione assente (fix 3.5.81). E'
+    // vietato: setPlaybackQuality diretto a "tiny" fuori da
+    // abbassaQualitaAnnuncio, o un range il cui MASSIMO (secondo argomento)
+    // sia "tiny" -- quello si' abbasserebbe il tetto ovunque si trovi.
+    const abbassaRange = extractFunctionRange(src, 'abbassaQualitaAnnuncio');
     const DIRECT_LOW_QUALITY = /setPlaybackQuality(?!Range)\s*\(\s*["']tiny["']/g;
+    let directLowQualityOk = true;
+    let dlqMatch;
+    while ((dlqMatch = DIRECT_LOW_QUALITY.exec(src)) !== null) {
+        const insideAbbassa = abbassaRange !== null &&
+            dlqMatch.index >= abbassaRange.start && dlqMatch.index < abbassaRange.end;
+        if (!insideAbbassa) { directLowQualityOk = false; break; }
+    }
     const RANGE_MAX_TINY = /setPlaybackQualityRange\s*\([^,]+,\s*["']tiny["']\s*\)/g;
-    const noDirectLowQuality = !DIRECT_LOW_QUALITY.test(src);
     const noRangeMaxTiny = !RANGE_MAX_TINY.test(src);
     const noForzaQualitaMinima = !src.includes('forzaQualitaMinima');
-    t(target, 'T3', 'la qualita\' si puo\' solo alzare, mai abbassare',
-        noDirectLowQuality && noRangeMaxTiny && noForzaQualitaMinima);
+    t(target, 'T3', 'la qualita\' si abbassa SOLO dentro abbassaQualitaAnnuncio, altrove solo alzare',
+        abbassaRange !== null && directLowQualityOk && noRangeMaxTiny && noForzaQualitaMinima);
 
     t(target, 'T4', 'playbackRate = 16 assegnato dentro instantSkip (unico fallback Layer B)',
         body !== null && /\bplaybackRate\s*=\s*16\b/.test(body));
@@ -255,11 +276,15 @@ for (const [target, file] of TARGETS) {
         !/setPlaybackQualityRange\s*\(\s*migliore\s*,\s*migliore\s*\)/.test(forzaQualitaBody) &&
         /setPlaybackQualityRange\s*\(\s*["']tiny["']\s*,\s*migliore\s*\)/.test(forzaQualitaBody));
 
-    // T18: onAdStart riapre il range a qualunque risoluzione prima dello skip,
-    // cosi' l'annuncio trova sempre una traccia compatibile.
-    t(target, 'T18', 'onAdStart riapre il range con setPlaybackQualityRange("tiny", "highres")',
-        onAdStartBody !== null &&
-        /setPlaybackQualityRange\s*\(\s*["']tiny["']\s*,\s*["']highres["']\s*\)/.test(onAdStartBody));
+    // T18: onAdStart riapre il range a qualunque risoluzione prima dello skip
+    // (ora tramite abbassaQualitaAnnuncio, che dalla 3.5.82 gestisce anche
+    // l'abbassamento a "tiny"), cosi' l'annuncio trova sempre una traccia
+    // compatibile.
+    const abbassaQualitaAnnuncioBody = extractFunctionBody(src, 'abbassaQualitaAnnuncio');
+    t(target, 'T18', 'onAdStart riapre il range con ("tiny","highres") tramite abbassaQualitaAnnuncio',
+        onAdStartBody !== null && /abbassaQualitaAnnuncio\s*\(\s*player\s*\)/.test(onAdStartBody) &&
+        abbassaQualitaAnnuncioBody !== null &&
+        /setPlaybackQualityRange\s*\(\s*["']tiny["']\s*,\s*["']highres["']\s*\)/.test(abbassaQualitaAnnuncioBody));
 
     // T19: rete di sicurezza sull'overlay -- non deve mai restare a vita.
     const onAdEndBody = extractFunctionBody(src, 'onAdEnd');
@@ -285,6 +310,74 @@ for (const [target, file] of TARGETS) {
         t20ok = rangeCalls.length === 1 && rangeCalls[0][0] === 'tiny';
     }
     t(target, 'T20', 'chiamata reale a setPlaybackQualityRange: primo argomento sempre "tiny"', t20ok);
+
+    // T21: abbassaQualitaAnnuncio esiste ed e' chiamata SOLO da onAdStart --
+    // mai da checkPlayer ne' dal ramo contenuto.
+    const abbassaOccorrenze = (src.match(/abbassaQualitaAnnuncio\s*\(/g) || []).length;
+    t(target, 'T21', "abbassaQualitaAnnuncio esiste ed e' chiamata solo da onAdStart",
+        abbassaQualitaAnnuncioBody !== null &&
+        onAdStartBody !== null && /abbassaQualitaAnnuncio\s*\(\s*player\s*\)/.test(onAdStartBody) &&
+        checkPlayerBody !== null && !/abbassaQualitaAnnuncio/.test(checkPlayerBody) &&
+        abbassaOccorrenze === 2);
+
+    // T22: il range va riaperto PRIMA di abbassare la qualita' (anti-stallo):
+    // altrimenti un annuncio privo del livello corrente resta bloccato.
+    let t22ok = false;
+    if (abbassaQualitaAnnuncioBody !== null) {
+        const rangeMatch = /setPlaybackQualityRange\s*\(\s*["']tiny["']\s*,\s*["']highres["']\s*\)/.exec(abbassaQualitaAnnuncioBody);
+        const qualityMatch = /setPlaybackQuality\s*\(\s*["']tiny["']\s*\)/.exec(abbassaQualitaAnnuncioBody);
+        t22ok = rangeMatch !== null && qualityMatch !== null && rangeMatch.index < qualityMatch.index;
+    }
+    t(target, 'T22', "abbassaQualitaAnnuncio riapre il range (tiny,highres) prima di abbassare", t22ok);
+
+    // T23: azzera la guardia per-video, altrimenti dopo l'annuncio
+    // forzaQualitaMassima crederebbe il rialzo gia' fatto (vedi T25).
+    t(target, 'T23', "abbassaQualitaAnnuncio azzera qualitaAlzataPer",
+        abbassaQualitaAnnuncioBody !== null && /qualitaAlzataPer\s*=\s*null/.test(abbassaQualitaAnnuncioBody));
+
+    // T24: funzionale -- il player finto riceve davvero setPlaybackQuality("tiny")
+    // e un setPlaybackQualityRange il cui SECONDO argomento e' "highres".
+    let t24ok = false;
+    if (funcSrc) {
+        const built24 = buildQualityFns(funcSrc);
+        if (built24.abbassaQualitaAnnuncio) {
+            const calls = [];
+            const rangeCalls = [];
+            built24.abbassaQualitaAnnuncio({
+                setPlaybackQuality: function (q) { calls.push(q); },
+                setPlaybackQualityRange: function (min, max) { rangeCalls.push([min, max]); },
+            });
+            t24ok = calls.includes('tiny') &&
+                rangeCalls.length > 0 && rangeCalls[rangeCalls.length - 1][1] === 'highres';
+        }
+    }
+    t(target, 'T24', 'abbassaQualitaAnnuncio: player riceve setPlaybackQuality("tiny") e range con 2° arg "highres"', t24ok);
+
+    // T25: sequenza completa, anti-regressione del "144p persistente" (3.5.57).
+    // Un annuncio a 16x puo' durare meno del throttle di forzaQualitaMassima
+    // (2s): la prima chiamata arma il throttle sul video corrente, poi
+    // l'annuncio abbassa la qualita' e SUBITO DOPO (dentro la finestra di
+    // throttle) forzaQualitaMassima deve comunque rialzare al massimo.
+    let t25ok = false;
+    if (funcSrc) {
+        const built25 = buildQualityFns(funcSrc);
+        if (built25.abbassaQualitaAnnuncio && built25.forzaQualitaMassima) {
+            let quality = 'hd2160';
+            const fakeVideo = { currentSrc: 'blob:adoff-test-video' };
+            const player = {
+                querySelector: function () { return fakeVideo; },
+                getAvailableQualityLevels: function () { return ['hd2160', 'hd1080', 'tiny', 'auto']; },
+                getPlaybackQuality: function () { return quality; },
+                setPlaybackQuality: function (q) { quality = q; },
+                setPlaybackQualityRange: function () {},
+            };
+            built25.forzaQualitaMassima(player);      // gia' al massimo: arma il throttle
+            built25.abbassaQualitaAnnuncio(player);    // ANNUNCIO: qualita' scende a tiny
+            built25.forzaQualitaMassima(player);       // subito dopo, dentro il throttle: deve rialzare
+            t25ok = quality === 'hd2160';
+        }
+    }
+    t(target, 'T25', "sequenza abbassaQualitaAnnuncio->forzaQualitaMassima: torna a hd2160 anche dentro il throttle", t25ok);
 }
 
 console.log(pass + '/' + tot + ' PASS');
