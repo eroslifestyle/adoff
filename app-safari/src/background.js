@@ -54,6 +54,11 @@
   const CHANGELOGS = {
       
 
+      "3.5.79": [
+        "Risolti i salti di posizione: il video non riparte piu' da un punto sbagliato dopo un annuncio",
+        "La qualita' del video non viene piu' abbassata durante gli annunci: resta sempre quella scelta",
+        "Rimossa la ricarica di soccorso che poteva far ripartire il video dall'inizio"
+      ],
       "3.5.78": [
         "Fix: all'avvio di un video la qualita' poteva restare bassa dopo l'annuncio, facendo perdere l'alta definizione",
         "La qualita' viene ora rilevata mentre scorre il contenuto, non durante l'annuncio"

@@ -108,12 +108,13 @@
   //   /youtubei/v1/player API (SPA navigation) before the player
   //   reads it. Result: zero ads scheduled, zero delay, zero black screen.
   //
-  // Layer B: INSTANT SKIP — Fallback for any ads that slip through.
-  //   video.currentTime = video.duration ends the ad instantly.
-  //   playbackRate = 16 as insurance if seeking is blocked.
+  // Layer B: FAST-FORWARD — Fallback for any ads that slip through.
+  //   playbackRate = 16 lets the ad finish on its own in about a second,
+  //   hidden behind an opaque overlay, and YouTube handles the transition.
   //   Immediate skip button click, 50ms polling.
-  //   NOTE: currentTime on ad video is safe — the player handles
-  //   content position restoration internally after ad completion.
+  //   NEVER seek currentTime: ad and content share the same <video> element
+  //   (MSE source switching). Seeking caused six versions of position bugs
+  //   (removed in v3.5.52, reintroduced by mistake in v3.5.55, removed again).
   //
   // Layer C: ANTI-DETECTION — ratechange masking, overlay closing.
   // =============================================
@@ -514,77 +515,13 @@ let savedRate = 1;
 let playerObs = null;
 let skipTimer = null;
 
-// Nuove variabili per il seek chirurgico.
+// contentDuration/contentSrc/contentTime restano: usati per aggiornare i
+// riferimenti sul contenuto (vedi checkPlayer/onAdEnd). Le guardie per il
+// seek chirurgico (canSeekAd, getContentDuration, lastAdDuration,
+// stableTicks) sono state rimosse: il seek stesso e' stato rimosso.
 let contentDuration = 0;   // durata del contenuto in secondi
 let contentSrc = "";       // currentSrc del contenuto
-let lastAdDuration = -1;  // per la stabilità su 2 tick
-let stableTicks = 0;
-
-/**
- * Restituisce la durata del video contenuto.
- * Prova a leggere da window.ytInitialPlayerResponse, altrimenti
- * restituisce il valore memorizzato in contentDuration.
- */
-function getContentDuration() {
-    try {
-        const yt = window.ytInitialPlayerResponse?.videoDetails?.lengthSeconds;
-        if (yt !== undefined) {
-            const d = Number(yt);
-            if (Number.isFinite(d) && d > 0) return d;
-        }
-    } catch (_) { /* ignore */ }
-    return contentDuration || 0;
-}
-
-/**
- * Verifica se è sicuro eseguire un seek sul media montato.
- * Restituisce true solo se tutte le condizioni sono soddisfatte:
- * a) il DOM dell'annuncio è presente,
- * b) la durata del video è una durata plausibile per un annuncio,
- * c) la durata non corrisponde a quella del contenuto (anti-regression 3.5.48),
- * d) la sorgente corrente non è quella del contenuto,
- * e) la durata è stabile per almeno 2 tick consecutivi.
- */
-function canSeekAd(player, video) {
-    // a) early null guard – evita TypeError se player o video sono null.
-    if (!player || !video) return false;
-
-    // b) Il DOM dell'annuncio deve esistere.
-    const adOverlay = player.querySelector(
-        ".ytp-ad-player-overlay, .ytp-ad-player-overlay-layout, .ytp-ad-duration-remaining"
-    );
-    if (!adOverlay) return false;
-
-    // c) La durata deve essere un numero finito, > 0 e < 180 (annunci mai più lunghi).
-    if (!Number.isFinite(video.duration) || video.duration <= 0 || video.duration >= 180) return false;
-
-    // Riferimento al contenuto: durata e src.
-    var cd = getContentDuration();
-    // Se non abbiamo alcun riferimento sul contenuto (durata sconosciuta e contentSrc vuoto),
-    // meglio astenersi dal seek per non rischiare di seekare il contenuto.
-    if (cd <= 0 && !contentSrc) return false;
-
-    // d) Anti-regression 3.5.48 — se la durata del media montato coincide con quella del contenuto
-    //    il media è il contenuto, non l'annuncio; un seek qui causerebbe il bug del video
-    //    ripartito da 152.708s.
-    if (cd > 0 && Math.abs(video.duration - cd) < 1.5) return false;
-
-    // e) Se la sorgente corrente è la stessa del contenuto, non è un annuncio.
-    if (contentSrc && video.currentSrc === contentSrc) return false;
-
-    // f) Stabilità: la durata deve essere identica (entro 0.1) per almeno 2 tick.
-    //    Sono necessari almeno 3 tick (~150 ms) per garantire che la durata sia stabile:
-    //    il primo tick inizializza lastAdDuration, i successivi due confermano che
-    //    la durata non è cambiata. In questo modo si evita un seek su un media
-    //    la cui durata è ancora in fase di definizione.
-    if (Math.abs(video.duration - lastAdDuration) < 0.1) {
-        stableTicks++;
-    } else {
-        stableTicks = 0;
-        lastAdDuration = video.duration;
-    }
-    return stableTicks >= 2;
-}
+let contentTime = 0;       // ultima posizione nota nel contenuto
 
 function instantSkip(player) {
     const video = player.querySelector("video");
@@ -610,23 +547,10 @@ function instantSkip(player) {
         ".ytp-ad-overlay-close-button, .ytp-ad-overlay-close-container"
     )) { if (btn.offsetParent !== null) btn.click(); }
 
-    // Seek chirurgico solo se il media montato è sicuramente l'annuncio.
-    if (video && canSeekAd(player, video)) {
-        try {
-            // Calcola il bordo del buffer.
-            let bufEnd = 0;
-            if (video.buffered && video.buffered.length) {
-                bufEnd = video.buffered.end(video.buffered.length - 1);
-            }
-            const target = Math.min(bufEnd - 0.15, video.duration - 0.15);
-            // Esegui il seek solo se effettivamente avanti e valido.
-            if (target > video.currentTime + 0.3 && target > 0) {
-                video.currentTime = target;
-                window.dispatchEvent(new CustomEvent("adoff-ad-seeked"));
-                try { window.__adoffYtDiag.adSeeks++; } catch (_) {}
-            }
-        } catch (_) { /* ignore */ }
-    }
+    // NESSUN seek: annuncio e contenuto condividono lo stesso elemento <video>
+    // (MSE source switching). Toccare currentTime e' stata la causa radice di sei
+    // versioni di bug di posizione (rimosso in v3.5.52, rientrato per errore in
+    // v3.5.55). L'annuncio finisce da solo a 16x e YouTube gestisce la transizione.
 }
 
 // Overlay opaco durante l'ad SSAI: l'utente non vede il contenuto
@@ -650,60 +574,13 @@ function setSkipOverlay(player, on) {
     }
 }
 
-let contentTime = 0;      // ultima posizione nota nel CONTENUTO (per la ricarica sui midroll)
-let contentQuality = null;   // qualita' osservata mentre andava il CONTENUTO
-let reloadTimer = null;
-let reloadCount = 0;
-let reloadVideoId = null;
-
-
-// Un annuncio a 144p pesa circa un decimo che a 1080p: siccome il
-// fast-forward a 16x deve comunque SCARICARE l'annuncio, meno byte
-// significa attesa piu' breve. Vale solo per la durata dell'annuncio.
-function forzaQualitaMinima(player) {
-    try {
-        if (typeof player.setPlaybackQualityRange === "function") player.setPlaybackQualityRange("tiny", "tiny");
-        if (typeof player.setPlaybackQuality === "function") player.setPlaybackQuality("tiny");
-    } catch (_) {}
-}
-
-// Ripristino: si rimette il range COMPLETO, che e' il modo di restituire al
-// player la liberta' di adattarsi da solo. Rimettere min=max (come faceva la
-// prima stesura) congelerebbe la qualita': con rete peggiore il player non
-// potrebbe piu' scendere e andrebbe in buffering. E "auto" NON e' un valore
-// valido per setPlaybackQualityRange: passarlo lasciava il range a "tiny",
-// cioe' il video a 144p in modo permanente.
-function ripristinaQualita(player) {
-    try {
-        if (typeof player.setPlaybackQualityRange === "function") player.setPlaybackQualityRange("tiny", "highres");
-        var validi = ["tiny", "small", "medium", "large", "hd720", "hd1080", "hd1440", "hd2160", "highres"];
-        // Nessuna qualita' campionata = pre-roll: il contenuto non e' mai partito
-        // e l'unico valore leggibile sarebbe quello dell'annuncio. Riaprire il
-        // range basta: decide la preferenza dell'utente.
-        if (contentQuality && validi.indexOf(contentQuality) !== -1 &&
-            typeof player.setPlaybackQuality === "function") {
-            player.setPlaybackQuality(contentQuality);
-        }
-    } catch (_) {}
-}
-
-// Qualita' del CONTENUTO: si campiona solo fuori dagli annunci, perche' e'
-// l'unico momento in cui il valore letto appartiene davvero al video che
-// l'utente sta guardando. Al pre-roll non esiste ancora, ed e' corretto cosi'.
-function campionaQualitaContenuto(player) {
-    try {
-        if (typeof player.getPlaybackQuality !== "function") return;
-        var q = player.getPlaybackQuality();
-        if (q && q !== "tiny" && q !== "unknown") contentQuality = q;
-    } catch (_) {}
-}
-
 function onAdStart(player) {
     if (adActive) { instantSkip(player); return; }
     adActive = true;
 
-    // --- Meccanismo A: forza qualità minima durante l'annuncio ---
-    forzaQualitaMinima(player);
+    // Nessuna forzatura di qualita': degradava il contenuto e la preferenza
+    // dell'utente. L'annuncio dura ~1s a 16x, i byte risparmiati non valgono
+    // un video che riparte in bassa risoluzione.
 
     const video = player.querySelector("video");
     if (video) {
@@ -726,25 +603,6 @@ function onAdStart(player) {
         instantSkip(player);
     }, 50);
 
-    // Meccanismo B: ricarica video se l'annuncio resiste
-    if (reloadTimer) clearTimeout(reloadTimer);
-    reloadTimer = setTimeout(function () {
-        try {
-            if (!player.classList.contains("ad-showing") && !player.classList.contains("ad-interrupting")) return;
-            if (typeof player.getVideoData !== "function" || typeof player.loadVideoById !== "function") return;
-            var vd = player.getVideoData() || {};
-            var vid = vd.video_id;
-            if (!vid) return;
-            // contatore per video: max 2 ricariche
-            if (reloadVideoId !== vid) { reloadVideoId = vid; reloadCount = 0; }
-            if (reloadCount >= 2) return;
-            reloadCount++;
-            try { window.__adoffYtDiag.adReloads++; } catch (_) {}
-            var startAt = contentTime > 1 ? contentTime : 0;
-            player.loadVideoById({ videoId: vid, startSeconds: startAt });
-        } catch (_) {}
-    }, 1500);
-
     window.dispatchEvent(new CustomEvent("adoff-ad-skipped"));
 }
 
@@ -753,12 +611,9 @@ function onAdEnd(player) {
     adActive = false;
     if (skipTimer) { clearInterval(skipTimer); skipTimer = null; }
 
-    // Azzera il timer di soccorso
-    if (reloadTimer) { clearTimeout(reloadTimer); reloadTimer = null; }
-
     const video = player.querySelector("video");
     if (video) {
-        // Memorizza lo stato del contenuto per future verifiche di canSeekAd.
+        // Memorizza lo stato del contenuto (contentSrc/contentDuration).
         contentSrc = video.currentSrc;
         if (Number.isFinite(video.duration) && video.duration > 0) {
             contentDuration = video.duration;
@@ -770,12 +625,6 @@ function onAdEnd(player) {
     }
     setSkipOverlay(player, false);
 
-    // Ripristina la qualità precedente
-    ripristinaQualita(player);
-
-    // Reset delle guardie di stabilità per il prossimo annuncio.
-    lastAdDuration = -1;
-    stableTicks = 0;
     // Nessun position recovery: l'annuncio e' finito NATURALMENTE a 16x,
     // YouTube ha gestito la transizione. Non tocchiamo currentTime.
 }
@@ -824,7 +673,6 @@ function checkPlayer() {
         // ignore
       }
     }
-    campionaQualitaContenuto(p);
     onAdEnd(p);
   }
 }
@@ -846,9 +694,6 @@ document.addEventListener("yt-navigate-finish", function () {
   // Azzera i riferimenti del video precedente per non usarli con il nuovo video
   contentDuration = 0;
   contentSrc = "";
-  contentQuality = null;
-  lastAdDuration = -1;
-  stableTicks = 0;
   setTimeout(attachObs, 100);
 });
 

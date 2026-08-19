@@ -1,171 +1,110 @@
 'use strict';
-// Anti-regressione per i due meccanismi anti-tempo-morto della v3.5.57:
-//  A) qualita' forzata al minimo durante l'annuncio (un ad a 144p si scarica
-//     in una frazione del tempo, quindi il fast-forward a 16x diventa davvero
-//     istantaneo invece di aspettare la rete);
-//  B) ricarica del video con loadVideoById se dopo 1,5s l'annuncio resiste
-//     (la nuova richiesta player passa dai nostri hook e puo' arrivare pulita).
-// Esegue davvero il codice estratto dal sorgente, con player e video finti.
+// Anti-regressione architetturale FadBlock (Layer A + Layer B), sui 3 target.
+//
+// Layer A (isAdKey/stripAdObj): strip preventivo dei campi ad-scheduling dalla
+// risposta player PRIMA che il player la legga. adaptiveFormats (qualita'
+// video) e' esplicitamente escluso -- e' la difesa piu' stabile del progetto,
+// non deve mai regredire.
+//
+// Layer B (instantSkip): fallback per gli annunci che superano il Layer A.
+// SOLO playbackRate=16 dietro un overlay opaco + click sul bottone skip.
+// Banditi in questa funzione:
+//   - seek (currentTime =): l'annuncio e il contenuto condividono lo stesso
+//     <video> (MSE source switching); seekare causava salti di posizione.
+//     Rimosso in v3.5.52, rientrato per errore in v3.5.55, ri-rimosso il
+//     2026-08-19. Regola d'oro del progetto: MAI seekare currentTime su un
+//     player MSE che condivide il <video> tra ad e contenuto.
+//   - reload (loadVideoById): ripartiva da un punto casuale del contenuto.
+//   - forzatura qualita' (setPlaybackQuality/setPlaybackQualityRange):
+//     degradava il video del contenuto dopo l'annuncio.
+//
+// Verifica leggendo i sorgenti reali (fs), non un mock dell'architettura.
 
 const fs = require('fs');
 const path = require('path');
 
-const SRC = path.resolve(__dirname, '../../app/src/stealth.js');
-const src = fs.readFileSync(SRC, 'utf8');
+const TARGETS = [
+    ['chrome', path.resolve(__dirname, '../../app/src/stealth.js')],
+    ['firefox', path.resolve(__dirname, '../../app-firefox/src/stealth.js')],
+    ['safari', path.resolve(__dirname, '../../app-safari/src/stealth.js')],
+];
 
-const a = src.indexOf('let adActive = false;');
-const b = src.indexOf('// ---- LAYER C:');
-if (a < 0 || b < 0) {
-    console.error('Marcatori della sezione Layer B non trovati: il test non puo\' validare nulla');
-    process.exit(1);
-}
-const blocco = src.slice(a, b);
-
-function load() {
-    const win = {
-        ytInitialPlayerResponse: { videoDetails: { lengthSeconds: '600' } },
-        dispatchEvent() {},
-        __adoffYtDiag: {}
-    };
-    const doc = {
-        getElementById: () => null,
-        createElement: () => ({ style: {}, remove() {} })
-    };
-    return new Function('window', 'document', 'CustomEvent', 'setInterval', 'clearInterval',
-        blocco + '\nreturn {onAdStart,onAdEnd,campionaQualitaContenuto};')(win, doc, function () {}, setInterval, clearInterval);
-}
-
-function mk(o) {
-    const v = {
-        duration: 30, currentTime: 0, currentSrc: 'blob:ad', playbackRate: 1,
-        muted: false, paused: false,
-        buffered: { length: 1, end: () => 12 },
-        play: () => Promise.resolve()
-    };
-    const p = {
-        querySelector: s => s === 'video' ? v : (s.includes('ytp-ad-player-overlay') ? {} : null),
-        querySelectorAll: () => [],
-        classList: { contains: () => o.ad !== false },
-        appendChild() {},
-        getPlaybackQuality: () => o.qualitaCorrente || 'hd1080',
-        setPlaybackQuality: q => { o.qualitaCorrente = q; o.log.push('setQ:' + q); },
-        setPlaybackQualityRange: (a, b) => o.log.push('setRange:' + a + '-' + b)
-    };
-    // Un player che non espone le API di ricarica non deve far esplodere nulla.
-    if (!o.senzaApi) {
-        p.getVideoData = () => ({ video_id: 'VID123' });
-        p.loadVideoById = x => o.log.push('load:' + x.videoId + '@' + x.startSeconds);
+// Estrae il corpo di `function name(...) { ... }` contando le graffe,
+// non con una regex sull'intero file (evita falsi positivi/negativi su
+// codice fuori dalla funzione).
+function extractFunctionBody(src, name) {
+    const sig = 'function ' + name + '(';
+    const start = src.indexOf(sig);
+    if (start < 0) return null;
+    const braceStart = src.indexOf('{', start);
+    if (braceStart < 0) return null;
+    let depth = 0;
+    for (let i = braceStart; i < src.length; i++) {
+        if (src[i] === '{') depth++;
+        else if (src[i] === '}') {
+            depth--;
+            if (depth === 0) return src.slice(braceStart + 1, i);
+        }
     }
-    return { p, v };
+    return null;
 }
 
-(async () => {
-    let pass = 0, tot = 0;
-    const t = (id, d, ok) => {
-        tot++;
-        if (ok) { pass++; console.log('PASS ' + id + ': ' + d); }
-        else console.log('FAIL ' + id + ': ' + d);
-    };
+// Rimuove i commenti (// e /* */) prima di ogni asserzione: un test non deve
+// mai poter passare perche' una stringa compare solo in un commento.
+function stripComments(src) {
+    return src
+        .replace(/\/\*.*?\*\//g, ' ')
+        .replace(/\/\/.*$/gm, '');
+}
 
-    // T1 — la qualita' scende all'inizio dell'annuncio: e' cio' che rende
-    // efficace il fast-forward, perche' i byte da scaricare crollano.
-    {
-        const o = { log: [], ad: true }; const { p } = mk(o); const m = load();
-        m.onAdStart(p);
-        t('T1', 'qualita\' forzata al minimo durante l\'annuncio',
-            o.log.some(x => x === 'setRange:tiny-tiny' || x === 'setQ:tiny'));
-        m.onAdEnd(p);
-    }
+// Assegnazione a currentTime (esclude ==, ===, >=, <=, !=).
+const CURRENT_TIME_ASSIGN = /(?<![=!<>])\bcurrentTime\b\s*=(?!=)/;
 
-    // T2 — e va ripristinata, altrimenti l'utente si ritrova il contenuto a 144p.
-    {
-        const o = { log: [], ad: true }; const { p } = mk(o); const m = load();
-        m.campionaQualitaContenuto(p);         // contenuto in hd1080 prima dell'annuncio
-        m.onAdStart(p); o.log.length = 0; m.onAdEnd(p);
-        t('T2', 'qualita\' ripristinata a fine annuncio', o.log.some(x => x.includes('hd1080')));
-    }
+let pass = 0, tot = 0;
+function t(target, id, desc, ok) {
+    tot++;
+    const label = '[' + target + '] ' + id;
+    if (ok) { pass++; console.log('PASS ' + label + ': ' + desc); }
+    else console.log('FAIL ' + label + ': ' + desc);
+}
 
-    // T3 — se l'annuncio resiste oltre 1,5s si ricarica il video.
-    {
-        const o = { log: [], ad: true }; const { p } = mk(o); const m = load();
-        m.onAdStart(p);
-        await new Promise(r => setTimeout(r, 1900));
-        t('T3', 'ricarica del video se l\'annuncio resiste oltre 1,5s',
-            o.log.some(x => x.startsWith('load:VID123')));
-        m.onAdEnd(p);
-    }
+for (const [target, file] of TARGETS) {
+    const raw = fs.readFileSync(file, 'utf8');
+    const src = stripComments(raw);
 
-    // T4 — ma NON si ricarica se l'annuncio e' finito da solo: una ricarica
-    // a sproposito interromperebbe il contenuto gia' ripartito.
-    {
-        const o = { log: [], ad: true }; const { p } = mk(o); const m = load();
-        m.onAdStart(p);
-        await new Promise(r => setTimeout(r, 200));
-        o.ad = false; m.onAdEnd(p);
-        await new Promise(r => setTimeout(r, 1900));
-        t('T4', 'nessuna ricarica se l\'annuncio finisce prima',
-            !o.log.some(x => x.startsWith('load:')));
-    }
+    const body = extractFunctionBody(src, 'instantSkip');
+    t(target, 'T1', 'instantSkip non seeka currentTime',
+        body !== null && !CURRENT_TIME_ASSIGN.test(body));
 
-    // T5 — player senza le API di ricarica: nessuna eccezione.
-    {
-        const o = { log: [], ad: true, senzaApi: true }; const { p } = mk(o); const m = load();
-        let err = null;
-        try { m.onAdStart(p); await new Promise(r => setTimeout(r, 1900)); } catch (e) { err = e; }
-        t('T5', 'nessun errore se il player non espone le API di ricarica', !err);
-        m.onAdEnd(p);
-    }
+    t(target, 'T2', 'nessun reload video (loadVideoById)',
+        !raw.includes('loadVideoById'));
 
-    // T6 — il difetto segnalato dall'utente: dopo l'annuncio il range deve
-    // tornare COMPLETO. Se restasse min=max il player non potrebbe piu'
-    // adattarsi; se restasse tiny-tiny il video resterebbe a 144p.
-    {
-        const o = { log: [], ad: true }; const { p } = mk(o); const m = load();
-        m.onAdStart(p); m.onAdEnd(p);
-        const ultimoRange = o.log.filter(x => x.startsWith('setRange:')).pop();
-        t('T6', 'range riaperto a fine annuncio (niente 144p permanenti)',
-            ultimoRange === 'setRange:tiny-highres');
-    }
+    t(target, 'T3', 'nessuna forzatura qualita\' (setPlaybackQuality)',
+        !raw.includes('setPlaybackQuality'));
 
-    // T7 — caso peggiore: il player non espone getPlaybackQuality, quindi non
-    // sappiamo quale qualita' ripristinare. Il range va riaperto lo stesso:
-    // era proprio questo il percorso che lasciava il video a 144p per sempre.
-    {
-        const o = { log: [], ad: true }; const { p } = mk(o); const m = load();
-        delete p.getPlaybackQuality;
-        m.onAdStart(p); m.onAdEnd(p);
-        const ultimoRange = o.log.filter(x => x.startsWith('setRange:')).pop();
-        t('T7', 'range riaperto anche senza qualita\' nota', ultimoRange === 'setRange:tiny-highres');
-    }
+    t(target, 'T4', 'playbackRate = 16 assegnato dentro instantSkip (unico fallback Layer B)',
+        body !== null && /\bplaybackRate\s*=\s*16\b/.test(body));
 
-    // T8 — due annunci consecutivi. Al secondo onAdStart la qualita' corrente
-    // e' gia' "tiny" (l'abbiamo abbassata noi): se la memorizzassimo come
-    // preferenza dell'utente, la ripristineremmo a 144p per sempre.
-    {
-        const o = { log: [], ad: true }; const { p } = mk(o); const m = load();
-        m.campionaQualitaContenuto(p);         // contenuto in hd1080 prima del primo annuncio
-        m.onAdStart(p); m.onAdEnd(p);          // primo annuncio
-        o.log.length = 0;
-        m.onAdStart(p); m.onAdEnd(p);          // secondo annuncio di fila
-        const qualitaFinale = o.log.filter(x => x.startsWith('setQ:')).pop();
-        t('T8', 'due annunci di fila non degradano la qualita\' a 144p',
-            qualitaFinale === 'setQ:hd1080');
-    }
+    t(target, 'T5', 'overlay skip attivato e disattivato (setSkipOverlay true/false)',
+        /setSkipOverlay\s*\([^)]*,\s*true\s*\)/.test(src) &&
+        /setSkipOverlay\s*\([^)]*,\s*false\s*\)/.test(src));
 
-    // T9 — pre-roll: nessun contenuto e' mai partito prima dell'annuncio,
-    // quindi l'UNICA qualita' leggibile a onAdStart e' quella dell'ANNUNCIO
-    // stesso (qui 'medium'). forzaQualitaMinima la salva come se fosse la
-    // preferenza dell'utente e ripristinaQualita() la riapplica al contenuto:
-    // l'utente perde l'HD. Non c'e' fase di contenuto precedente da simulare.
-    {
-        const o = { ad: true, qualitaCorrente: 'medium', log: [] }; const { p } = mk(o); const m = load();
-        m.onAdStart(p);
-        m.onAdEnd(p);
-        t('T9', 'al pre-roll non viene ripristinata la qualita\' dell\'annuncio sul contenuto',
-            !o.log.includes('setQ:medium') &&
-            o.log.filter(x => x.startsWith('setRange:')).pop() === 'setRange:tiny-highres');
-    }
+    t(target, 'T6', 'savedRate assegnato e riusato nel ripristino',
+        /\bsavedRate\s*=\s*video\.playbackRate/.test(src) &&
+        /video\.playbackRate\s*=\s*savedRate/.test(src));
 
-    console.log(pass + '/' + tot + ' PASS');
-    process.exit(pass === tot ? 0 : 1);
-})();
+    t(target, 'T7', 'wasMuted presente (ripristino audio a fine annuncio)',
+        src.includes('wasMuted'));
+
+    t(target, 'T8', 'click sul pulsante skip presente',
+        src.includes('.ytp-ad-skip-button') && src.includes('skip.click()'));
+
+    const isAdKeyBody = extractFunctionBody(src, 'isAdKey');
+    t(target, 'T9', 'Layer A intatto: isAdKey con /^ad[A-Z]/ e adaptiveFormats escluso',
+        isAdKeyBody !== null &&
+        isAdKeyBody.includes('/^ad[A-Z]/') &&
+        /adaptiveFormats/.test(isAdKeyBody));
+}
+
+console.log(pass + '/' + tot + ' PASS');
+process.exit(pass === tot ? 0 : 1);

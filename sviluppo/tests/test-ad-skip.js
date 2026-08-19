@@ -41,60 +41,25 @@ const scenarios = [
     },
     {
         id: 'T3',
-        desc: 'ogni seek è protetto da canSeekAd',
-        // Il seek è tornato per eliminare i tempi morti del fast‑forward (a 16x il player deve comunque scaricare l'annuncio, quindi l'attesa resta) e le guardie sono ciò che lo rende sicuro.
+        desc: 'nessun seek chirurgico residuo (rimosso il 2026-08-19, causava salti di posizione su player MSE)',
         check() {
-            // Trova righe con assegnazione a currentTime (escludendo confronti)
             const seekLines = codeLines
-                .map((l, i) => ({ line: l, idx: i }))
-                .filter(({ line }) => /currentTime\s*=/.test(line) && !/(?:===|!==|==|!=)/.test(line));
-            if (seekLines.length === 0) {
-                return "nessuna assegnazione a currentTime trovata: il seek chirurgico deve esistere per eliminare i tempi morti del fast‑forward (a 16x il player deve comunque scaricare l'annuncio, quindi l'attesa resta)";
-            }
-            if (seekLines.length > 1) {
-                return "trovate " + seekLines.length + " assegnazioni a currentTime: " + seekLines.map(s => s.line.trim()).join('; ') + " (deve essercene esattamente una, quella dentro instantSkip)";
-            }
-            // Esattamente un seek: verifica che la guardia canSeekAd lo preceda
-            const seekIdx = seekLines[0].idx;
-            const guardIdx = codeLines.findIndex(l => /canSeekAd\s*\(/.test(l) && !/function\s+canSeekAd/.test(l) && /\bif\s*\(/.test(l));
-            if (guardIdx === -1) {
-                return "nessuna chiamata a canSeekAd( nel blocco: il seek deve essere protetto da una guardia";
-            }
-            if (!(guardIdx < seekIdx)) {
-                return "seek precede la guardia canSeekAd: la protezione deve essere verificata prima del seek";
+                .filter(l => /currentTime\s*=/.test(l) && !/(?:===|!==|==|!=)/.test(l));
+            if (seekLines.length > 0) {
+                return "trovate " + seekLines.length + " assegnazioni a currentTime: " + seekLines.map(l => l.trim()).join('; ') + " (il seek e' stato rimosso, non deve rientrare)";
             }
             return null;
         }
     },
     {
         id: 'T3b',
-        desc: 'il target del seek è limitato dal buffer',
-        // Limitare il target al fine del buffer impedisce stalli infiniti (v3.5.46)
+        desc: 'nessuna guardia/logica di seek residua (canSeekAd, bufEnd, getContentDuration, stableTicks)',
         check() {
-            const hasTargetLimit = codeLines.some(l => /Math\.min\s*\(/.test(l) && /bufEnd/.test(l));
-            if (!hasTargetLimit) {
-                return "nel blocco manca il calcolo del target con Math.min( che limiti il seek a bufEnd: un seek oltre buffered.end causava lo stallo infinito della v3.5.46";
-            }
-            return null;
-        }
-    },
-    {
-        id: 'T3c',
-        desc: 'le guardie anti-regressione sono presenti',
-        // Le guardie anti-regressione assicurano che il seek non causi comportamenti indesiderati
-        check() {
-            const required = [
-                { pattern: /180/, name: 'confronto con 180 (nessun annuncio supera i 180s)' },
-                { pattern: /ytp-ad-player-overlay/, name: 'ytp-ad-player-overlay (il DOM dell\'annuncio deve esistere)' },
-                { pattern: /contentSrc/, name: 'contentSrc (confronto con la sorgente del contenuto)' },
-                { pattern: /stableTicks/, name: 'stableTicks (stabilità della durata su più tick)' },
-                { pattern: /getContentDuration/, name: 'getContentDuration (anti-regressione 3.5.48)' }
-            ];
-            const missing = required
-                .filter(r => !codeLines.some(l => r.pattern.test(l)))
-                .map(r => r.name);
-            if (missing.length > 0) {
-                return "mancano le seguenti guardie anti-regressione: " + missing.join('; ');
+            const residual = codeLines.filter(l =>
+                /canSeekAd|getContentDuration|stableTicks|bufEnd/.test(l)
+            );
+            if (residual.length > 0) {
+                return "trovati " + residual.length + " riferimenti al meccanismo di seek rimosso: " + residual.map(l => l.trim()).join('; ');
             }
             return null;
         }
