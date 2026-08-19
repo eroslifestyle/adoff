@@ -332,7 +332,7 @@ if (!window.__adoffYtDiag) {
     flagInjectedAssign: 0,
     coldLoads: 0,
     adReloads: 0,
-    ssaiSalti: 0
+    adSkipIntegrali: 0
   };
 }
 
@@ -554,9 +554,9 @@ function instantSkip(player) {
     // <video> (MSE source switching). Toccare currentTime e' stata la causa
     // radice di sei versioni di bug di posizione (rimosso in v3.5.52, rientrato
     // per errore in v3.5.55). L'annuncio finisce da solo a 16x e YouTube gestisce
-    // la transizione. Eccezione unica: gli annunci SSAI (stream unico, nessuno
-    // scambio di sorgente in corso) vengono avanzati da saltaAnnuncioCucito.
-    if (video) saltaAnnuncioCucito(player, video);
+    // la transizione. Prima si prova a uscire subito dall'annuncio; il 16x resta
+    // come ripiego per i casi in cui la guardia non da' certezze.
+    if (video) skipIntegrale(player, video);
 }
 
 // Overlay opaco durante l'ad SSAI: l'utente non vede il contenuto
@@ -643,7 +643,6 @@ function onAdEnd(player) {
         if (wasMuted) { video.muted = false; wasMuted = false; }
     }
     setSkipOverlay(player, false);
-    ssaiSaltatoTot = 0;
 
     // Nessun position recovery: l'annuncio e' finito NATURALMENTE a 16x,
     // YouTube ha gestito la transizione. Non tocchiamo currentTime.
@@ -724,34 +723,41 @@ function forzaQualitaMassima(player) {
     } catch (_) { /* mai rompere il player */ }
 }
 
-// Annuncio SSAI: cucito nello stesso stream del contenuto. Lo si riconosce dal
-// fatto che, mentre il player segnala "ad-showing", la sorgente montata e la
-// durata NON cambiano: e' sempre lo stesso media (vedi contentSrc/contentDuration
-// sopra). In quel caso saltare avanti e' sicuro quanto trascinare la barra a
-// mano, perche' non c'e' nessuno scambio di sorgente MSE in corso -- che e'
-// invece la situazione da cui nasce il divieto storico di toccare currentTime.
-const SSAI_PASSO_S = 2;          // salto per tentativo: piccolo, per non superare l'annuncio
-const SSAI_MAX_SALTO_S = 200;    // tetto complessivo per interruzione pubblicitaria
-let ssaiSaltatoTot = 0;
-
-function eSsai(video) {
-    // Stesso src e stessa durata del contenuto = stream unico, nessuno switch.
-    if (!video || !video.currentSrc || !isFinite(video.duration)) return false;
-    if (!contentSrc || !contentDuration) return false;
-    if (video.currentSrc !== contentSrc) return false;
-    return Math.abs(video.duration - contentDuration) < 0.5;
+// Durata del CONTENUTO secondo i metadati del player: e' il riferimento per
+// capire quale media e' montato nell'elemento <video>. Durante un annuncio la
+// durata del media montato e' quella dell'annuncio (pochi secondi), non questa.
+function durataContenuto() {
+    try {
+        var r = window.ytInitialPlayerResponse;
+        var n = r && r.videoDetails && parseFloat(r.videoDetails.lengthSeconds);
+        return (isFinite(n) && n > 0) ? n : 0;
+    } catch (_) { return 0; }
 }
 
-function saltaAnnuncioCucito(player, video) {
+// Il media montato e' davvero l'ANNUNCIO? YouTube marca "ad-showing" PRIMA di
+// scambiare la sorgente MSE: in quell'istante l'elemento <video> contiene ancora
+// il contenuto, e saltare lo manderebbe avanti nel video dell'utente. E' la
+// causa di nove versioni di bug di posizione. Quindi: si salta SOLO se la durata
+// del media montato e' diversa da quella del contenuto. Senza un riferimento
+// sul contenuto non si salta affatto.
+function mediaMontatoEAnnuncio(video) {
+    if (!video || !isFinite(video.duration) || video.duration <= 0) return false;
+    var dc = durataContenuto();
+    if (!dc) return false;                       // nessun riferimento: mai saltare
+    return Math.abs(video.duration - dc) > 2;    // durate diverse = e' l'annuncio
+}
+
+// Salto INTEGRALE: portare currentTime alla fine dell'annuncio in un colpo solo.
+// Accelerare a 16x non basta, perche' a 16x il player deve comunque SCARICARE
+// l'annuncio: l'attesa e' quella della rete. Qui invece si esce subito e YouTube
+// gestisce da solo la transizione al contenuto.
+function skipIntegrale(player, video) {
     try {
-        if (!eSsai(video)) return false;
-        if (ssaiSaltatoTot >= SSAI_MAX_SALTO_S) return false;
-        var meta = video.duration - 0.3;
-        var destinazione = Math.min(video.currentTime + SSAI_PASSO_S, meta);
-        if (!(destinazione > video.currentTime)) return false;
-        ssaiSaltatoTot += (destinazione - video.currentTime);
-        video.currentTime = destinazione;
-        try { window.__adoffYtDiag.ssaiSalti++; } catch (_) {}
+        if (!mediaMontatoEAnnuncio(video)) return false;
+        var fine = video.duration - 0.1;
+        if (!(fine > video.currentTime)) return false;
+        video.currentTime = fine;
+        try { window.__adoffYtDiag.adSkipIntegrali++; } catch (_) {}
         return true;
     } catch (_) { return false; }
 }
@@ -823,7 +829,6 @@ document.addEventListener("yt-navigate-finish", function () {
   contentDuration = 0;
   contentSrc = "";
   ultimoControlloQualita = 0;
-  ssaiSaltatoTot = 0;
   setTimeout(attachObs, 100);
 });
 

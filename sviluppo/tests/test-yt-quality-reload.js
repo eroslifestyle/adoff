@@ -7,13 +7,15 @@
 // non deve mai regredire.
 //
 // Layer B (instantSkip): fallback per gli annunci che superano il Layer A.
-// SOLO playbackRate=16 dietro un overlay opaco + click sul bottone skip.
-// Banditi in questa funzione:
-//   - seek (currentTime =): l'annuncio e il contenuto condividono lo stesso
-//     <video> (MSE source switching); seekare causava salti di posizione.
-//     Rimosso in v3.5.52, rientrato per errore in v3.5.55, ri-rimosso il
-//     2026-08-19. Regola d'oro del progetto: MAI seekare currentTime su un
-//     player MSE che condivide il <video> tra ad e contenuto.
+// playbackRate=16 dietro un overlay opaco + click sul bottone skip, PIU' lo
+// skip integrale (skipIntegrale): un seek diretto alla fine dell'annuncio,
+// ma SOLO quando la guardia mediaMontatoEAnnuncio conferma che il media
+// montato e' davvero l'annuncio (durata diversa da quella del contenuto,
+// letta da ytInitialPlayerResponse). Un seek cieco durante l'ad-showing
+// colpiva ancora il contenuto (YouTube marca "ad-showing" PRIMA di scambiare
+// la sorgente MSE) ed e' la causa documentata di nove versioni di bug di
+// posizione -- la guardia, non l'assenza di seek, e' cio' che li previene.
+// Banditi in instantSkip:
 //   - reload (loadVideoById): ripartiva da un punto casuale del contenuto.
 //   - forzatura qualita' verso il basso (setPlaybackQuality/Range su "tiny"):
 //     degradava il video del contenuto dopo l'annuncio. L'API si usa
@@ -122,46 +124,41 @@ function buildQualityFns(funcSrc) {
     return factory();
 }
 
-// Estrae "let contentDuration = 0;" + "let contentSrc = \"\";" (stato di
-// riferimento del contenuto) seguiti dal blocco SSAI reale (costanti, eSsai,
-// saltaAnnuncioCucito), cosi' il test funzionale esegue il vero codice del
-// sorgente con lo stato di modulo che gli serve, senza doppiarne la logica.
-function extractSsaiFuncSrc(strippedSrc) {
-    const durMarker = 'let contentDuration = 0;';
-    const durIdx = strippedSrc.indexOf(durMarker);
-    if (durIdx < 0) return null;
-    const srcMarker = 'let contentSrc = "";';
-    const srcIdx = strippedSrc.indexOf(srcMarker, durIdx);
-    if (srcIdx < 0) return null;
-    const blockStart = strippedSrc.indexOf('const SSAI_PASSO_S', srcIdx);
-    if (blockStart < 0) return null;
-    const sig = 'function saltaAnnuncioCucito(';
-    const fnStart = strippedSrc.indexOf(sig, blockStart);
-    if (fnStart < 0) return null;
-    const braceStart = strippedSrc.indexOf('{', fnStart);
+// Estrae "function durataContenuto(" ... "function skipIntegrale(...) { ... }"
+// (le 3 funzioni dello skip integrale), cosi' il test funzionale esegue il
+// vero codice del sorgente, non un suo doppione.
+function extractIntegralFuncSrc(strippedSrc) {
+    const sig = 'function durataContenuto(';
+    const start = strippedSrc.indexOf(sig);
+    if (start < 0) return null;
+    const endSig = 'function skipIntegrale(';
+    const endStart = strippedSrc.indexOf(endSig, start);
+    if (endStart < 0) return null;
+    const braceStart = strippedSrc.indexOf('{', endStart);
     if (braceStart < 0) return null;
     let depth = 0;
     for (let i = braceStart; i < strippedSrc.length; i++) {
         if (strippedSrc[i] === '{') depth++;
         else if (strippedSrc[i] === '}') {
             depth--;
-            if (depth === 0) {
-                return durMarker + '\n' + srcMarker + '\n' +
-                    strippedSrc.slice(blockStart, i + 1);
-            }
+            if (depth === 0) return strippedSrc.slice(start, i + 1);
         }
     }
     return null;
 }
 
-// Costruisce eSsai/saltaAnnuncioCucito reali con closure persistente su
-// contentSrc/contentDuration/ssaiSaltatoTot, esposte tramite setter/getter
-// per pilotare lo stato nel test senza toccare la logica.
-function buildSsaiFns(funcSrc) {
-    const factory = new Function(funcSrc +
-        '\nreturn { eSsai: eSsai, saltaAnnuncioCucito: saltaAnnuncioCucito, ' +
-        'setContent: function (s, d) { contentSrc = s; contentDuration = d; }, ' +
-        'getTot: function () { return ssaiSaltatoTot; } };');
+// Costruisce durataContenuto/mediaMontatoEAnnuncio/skipIntegrale reali, con
+// un `window` finto iniettato nella closure (il sorgente legge
+// window.ytInitialPlayerResponse e window.__adoffYtDiag) pilotabile da setter.
+function buildIntegralFns(funcSrc) {
+    const factory = new Function(
+        'var window = { ytInitialPlayerResponse: null, __adoffYtDiag: { adSkipIntegrali: 0 } };\n' +
+        funcSrc +
+        '\nreturn { durataContenuto: durataContenuto, mediaMontatoEAnnuncio: mediaMontatoEAnnuncio, ' +
+        'skipIntegrale: skipIntegrale, ' +
+        'setLength: function (n) { window.ytInitialPlayerResponse = { videoDetails: { lengthSeconds: n } }; }, ' +
+        'clearLength: function () { window.ytInitialPlayerResponse = null; }, ' +
+        'getDiag: function () { return window.__adoffYtDiag; } };');
     return factory();
 }
 
@@ -422,73 +419,67 @@ for (const [target, file] of TARGETS) {
     }
     t(target, 'T25', "sequenza abbassaQualitaAnnuncio->forzaQualitaMassima: torna a hd2160 anche dentro il throttle", t25ok);
 
-    // T26-T32: SSAI (annuncio cucito nello stesso stream). Unica eccezione al
-    // divieto di seek: lecita SOLO quando src e durata coincidono col
-    // contenuto (nessuno switch di sorgente MSE in corso, vedi commento nel
-    // sorgente).
-    const eSsaiBody = extractFunctionBody(src, 'eSsai');
-    const saltaBody = extractFunctionBody(src, 'saltaAnnuncioCucito');
-    const saltaOccorrenze = (src.match(/saltaAnnuncioCucito\s*\(/g) || []).length;
-    t(target, 'T26', "saltaAnnuncioCucito esiste ed e' chiamata solo da instantSkip",
-        saltaBody !== null &&
-        body !== null && /saltaAnnuncioCucito\s*\(\s*player\s*,\s*video\s*\)/.test(body) &&
-        saltaOccorrenze === 2);
+    // T26-T32: skip integrale (currentTime alla fine dell'annuncio in un
+    // colpo solo). Guardia: il media montato deve avere una durata diversa
+    // da quella del contenuto (letta da ytInitialPlayerResponse), altrimenti
+    // e' ancora il contenuto e non si tocca -- e' la salvaguardia dei nove
+    // bug di posizione: senza di essa il video salta in avanti.
+    t(target, 'T26', "saltaAnnuncioCucito/eSsai non esistono piu'",
+        !/\beSsai\b/.test(src) && !/\bsaltaAnnuncioCucito\b/.test(src));
 
-    t(target, 'T27', "eSsai confronta sia currentSrc sia duration col riferimento del contenuto",
-        eSsaiBody !== null &&
-        eSsaiBody.includes('currentSrc') && eSsaiBody.includes('contentSrc') &&
-        eSsaiBody.includes('duration') && eSsaiBody.includes('contentDuration'));
+    const skipIntegraleOccorrenze = (src.match(/skipIntegrale\s*\(/g) || []).length;
+    t(target, 'T27', "skipIntegrale e' chiamata solo da instantSkip",
+        body !== null && /skipIntegrale\s*\(\s*player\s*,\s*video\s*\)/.test(body) &&
+        skipIntegraleOccorrenze === 2);
 
-    t(target, 'T28', "ssaiSaltatoTot azzerato in onAdEnd e in yt-navigate-finish",
-        onAdEndBody !== null && /ssaiSaltatoTot\s*=\s*0/.test(onAdEndBody) &&
-        /yt-navigate-finish[\s\S]{0,400}?ssaiSaltatoTot\s*=\s*0/.test(src));
+    const mediaMontatoBody = extractFunctionBody(src, 'mediaMontatoEAnnuncio');
+    t(target, 'T28', "mediaMontatoEAnnuncio confronta video.duration con durataContenuto() e torna false se il riferimento e' 0",
+        mediaMontatoBody !== null &&
+        mediaMontatoBody.includes('video.duration') &&
+        mediaMontatoBody.includes('durataContenuto()') &&
+        /if\s*\(\s*!dc\s*\)\s*return\s*false/.test(mediaMontatoBody));
 
-    const ssaiFuncSrc = extractSsaiFuncSrc(src);
+    const integralFuncSrc = extractIntegralFuncSrc(src);
 
-    // Ogni test costruisce una closure FRESCA (ssaiSaltatoTot riparte da 0):
-    // il budget e' stato di modulo, condividerlo tra i test lo farebbe
-    // dipendere dall'ordine di esecuzione invece che dalla logica.
     let t29ok = false;
-    if (ssaiFuncSrc) {
-        const fns = buildSsaiFns(ssaiFuncSrc);
-        const video = { currentSrc: 'blob:adoff-ssai', duration: 600, currentTime: 100 };
-        fns.setContent('blob:adoff-ssai', 600);
-        const r = fns.saltaAnnuncioCucito({}, video);
-        t29ok = r === true && Math.abs(video.currentTime - 102) < 0.001;
+    if (integralFuncSrc) {
+        const fns = buildIntegralFns(integralFuncSrc);
+        fns.setLength(600);
+        const video = { duration: 15, currentTime: 3 };
+        const r = fns.skipIntegrale({}, video);
+        t29ok = r === true && Math.abs(video.currentTime - 14.9) < 0.001;
     }
-    t(target, 'T29', 'src e durata coincidono col riferimento (SSAI): avanza currentTime di ~2s e torna true', t29ok);
+    t(target, 'T29', 'contenuto 600s, media montato 15s (annuncio): porta currentTime a 14.9 e torna true', t29ok);
 
     let t30ok = false;
-    if (ssaiFuncSrc) {
-        const fns = buildSsaiFns(ssaiFuncSrc);
-        const video = { currentSrc: 'blob:adoff-ad', duration: 600, currentTime: 100 };
-        fns.setContent('blob:adoff-content', 600);
-        const r = fns.saltaAnnuncioCucito({}, video);
+    if (integralFuncSrc) {
+        const fns = buildIntegralFns(integralFuncSrc);
+        fns.setLength(600);
+        const video = { duration: 600, currentTime: 100 };
+        const r = fns.skipIntegrale({}, video);
         t30ok = r === false && video.currentTime === 100;
     }
-    t(target, 'T30', "currentSrc diverso dal riferimento (annuncio con sorgente propria): non tocca currentTime, torna false", t30ok);
+    t(target, 'T30', "contenuto 600s, media montato 600s (e' il contenuto): non tocca currentTime, torna false", t30ok);
 
     let t31ok = false;
-    if (ssaiFuncSrc) {
-        const fns = buildSsaiFns(ssaiFuncSrc);
-        const video = { currentSrc: 'blob:adoff-ssai', duration: 601, currentTime: 100 };
-        fns.setContent('blob:adoff-ssai', 600);
-        const r = fns.saltaAnnuncioCucito({}, video);
-        t31ok = r === false && video.currentTime === 100;
+    if (integralFuncSrc) {
+        const fns = buildIntegralFns(integralFuncSrc);
+        fns.clearLength();
+        const video = { duration: 15, currentTime: 3 };
+        const r = fns.skipIntegrale({}, video);
+        t31ok = r === false && video.currentTime === 3;
     }
-    t(target, 'T31', "durata diversa di oltre 0.5s dal riferimento: non tocca currentTime, torna false", t31ok);
+    t(target, 'T31', "nessun lengthSeconds disponibile (riferimento 0): non tocca currentTime, torna false", t31ok);
 
     let t32ok = false;
-    if (ssaiFuncSrc) {
-        const fns = buildSsaiFns(ssaiFuncSrc);
-        const video = { currentSrc: 'blob:adoff-ssai', duration: 10000, currentTime: 0 };
-        fns.setContent('blob:adoff-ssai', 10000);
-        for (let i = 0; i < 100; i++) fns.saltaAnnuncioCucito({}, video);
-        const reachedCap = video.currentTime === 200 && fns.getTot() === 200;
-        const r = fns.saltaAnnuncioCucito({}, video);
-        t32ok = reachedCap && r === false && video.currentTime === 200;
+    if (integralFuncSrc) {
+        const fns = buildIntegralFns(integralFuncSrc);
+        fns.setLength(600);
+        const video = { duration: 598.5, currentTime: 100 };
+        const r = fns.skipIntegrale({}, video);
+        t32ok = r === false && video.currentTime === 100;
     }
-    t(target, 'T32', "superato SSAI_MAX_SALTO_S: smette di saltare (nessun salto infinito nel contenuto)", t32ok);
+    t(target, 'T32', "durata che differisce di meno di 2s dal contenuto: trattata come contenuto, nessun salto", t32ok);
 }
 
 console.log(pass + '/' + tot + ' PASS');
