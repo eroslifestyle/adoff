@@ -629,34 +629,35 @@ function onAdEnd(player) {
     // YouTube ha gestito la transizione. Non tocchiamo currentTime.
 }
 
-// L'utente vuole sempre la massima risoluzione disponibile. Non basta aver
-// smesso di abbassarla: fino alla 3.5.78 l'estensione imponeva "tiny" durante
-// gli annunci e YouTube ha memorizzato quel livello come preferenza, quindi va
-// riportata su attivamente. Una sola volta per video: il range viene fissato
-// sul massimo, altrimenti l'adattamento automatico tornerebbe a scendere.
-let qualitaAlzataPer = null;
+// L'utente vuole sempre la massima risoluzione disponibile. Non basta alzarla
+// una volta: YouTube riapplica la propria preferenza memorizzata anche dopo il
+// nostro intervento (fino alla 3.5.78 gliela abbiamo insegnata noi, imponendo
+// "tiny" a ogni annuncio). Quindi si ricontrolla di continuo e si rialza ogni
+// volta che e' scesa. Il confronto con il livello migliore rende l'operazione
+// gratuita nel caso normale: se siamo gia' al massimo non si tocca nulla.
+let ultimoControlloQualita = 0;
+const INTERVALLO_CONTROLLO_QUALITA_MS = 2000;
 
 function forzaQualitaMassima(player) {
     try {
         if (typeof player.getAvailableQualityLevels !== "function") return;
-        var vid = "";
-        if (typeof player.getVideoData === "function") {
-            vid = (player.getVideoData() || {}).video_id || "";
-        }
-        if (!vid || qualitaAlzataPer === vid) return;
+        var ora = Date.now();
+        if (ora - ultimoControlloQualita < INTERVALLO_CONTROLLO_QUALITA_MS) return;
+        ultimoControlloQualita = ora;
         // I livelli arrivano dal migliore al peggiore; "auto" non e' impostabile.
         var livelli = (player.getAvailableQualityLevels() || []).filter(function (q) {
             return q && q !== "auto";
         });
-        if (!livelli.length) return;   // player non ancora pronto: si riprova al tick dopo
+        if (!livelli.length) return;   // player non ancora pronto: si riprova al giro dopo
         var migliore = livelli[0];
+        if (typeof player.getPlaybackQuality === "function" &&
+            player.getPlaybackQuality() === migliore) return;   // gia' al massimo
         if (typeof player.setPlaybackQualityRange === "function") {
             player.setPlaybackQualityRange(migliore, migliore);
         }
         if (typeof player.setPlaybackQuality === "function") {
             player.setPlaybackQuality(migliore);
         }
-        qualitaAlzataPer = vid;
     } catch (_) { /* mai rompere il player */ }
 }
 
@@ -726,7 +727,7 @@ document.addEventListener("yt-navigate-finish", function () {
   // Azzera i riferimenti del video precedente per non usarli con il nuovo video
   contentDuration = 0;
   contentSrc = "";
-  qualitaAlzataPer = null;
+  ultimoControlloQualita = 0;
   setTimeout(attachObs, 100);
 });
 

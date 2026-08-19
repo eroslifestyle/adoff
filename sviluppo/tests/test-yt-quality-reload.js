@@ -81,11 +81,11 @@ function stripComments(src) {
 // Assegnazione a currentTime (esclude ==, ===, >=, <=, !=).
 const CURRENT_TIME_ASSIGN = /(?<![=!<>])\bcurrentTime\b\s*=(?!=)/;
 
-// Estrae "let qualitaAlzataPer = null;" + la funzione forzaQualitaMassima
+// Estrae "let ultimoControlloQualita = 0;" + la funzione forzaQualitaMassima
 // che la chiude, cosi' il test funzionale puo' eseguire il vero codice del
 // sorgente (non un suo doppione) con lo stato di modulo intatto.
 function extractQualityFuncSrc(strippedSrc) {
-    const marker = 'let qualitaAlzataPer = null;';
+    const marker = 'let ultimoControlloQualita = 0;';
     const idx = strippedSrc.indexOf(marker);
     if (idx < 0) return null;
     const sig = 'function forzaQualitaMassima(';
@@ -105,7 +105,7 @@ function extractQualityFuncSrc(strippedSrc) {
 }
 
 // Costruisce una istanza di forzaQualitaMassima con closure persistente su
-// qualitaAlzataPer, per poterla chiamare piu' volte nello stesso test (T14).
+// ultimoControlloQualita, per poterla chiamare piu' volte nello stesso test.
 function buildForzaQualitaMassima(funcSrc) {
     const factory = new Function(funcSrc + '\nreturn forzaQualitaMassima;');
     return factory();
@@ -179,8 +179,8 @@ for (const [target, file] of TARGETS) {
         checkPlayerBody !== null && /forzaQualitaMassima\s*\(\s*p\s*\)/.test(checkPlayerBody) &&
         onAdStartBody !== null && !/forzaQualitaMassima/.test(onAdStartBody));
 
-    t(target, 'T12', 'qualitaAlzataPer azzerata nel listener yt-navigate-finish',
-        /yt-navigate-finish[\s\S]{0,400}?qualitaAlzataPer\s*=\s*null/.test(src));
+    t(target, 'T12', 'ultimoControlloQualita azzerata nel listener yt-navigate-finish',
+        /yt-navigate-finish[\s\S]{0,400}?ultimoControlloQualita\s*=\s*0/.test(src));
 
     // T13-T15: esecuzione funzionale del codice reale (non un doppione).
     const funcSrc = extractQualityFuncSrc(src);
@@ -199,22 +199,37 @@ for (const [target, file] of TARGETS) {
     }
     t(target, 'T13', 'con livelli [hd2160,hd1080,hd720,tiny,auto] chiama setPlaybackQuality("hd2160")', t13ok);
 
+    // T14: throttle a parte (0 all'istanziazione della closure, quindi la
+    // prima chiamata passa sempre), verifica l'invariante centrale della
+    // correzione: se la qualita' e' scesa sotto il massimo -- YouTube la
+    // riapplica anche a video gia' avviato -- va rialzata, non ignorata.
     let t14ok = false;
     if (funcSrc) {
         const calls = [];
         const fn14 = buildForzaQualitaMassima(funcSrc);
-        const player = {
-            getAvailableQualityLevels: function () { return ['hd2160', 'hd1080', 'hd720']; },
-            getVideoData: function () { return { video_id: 'vid1' }; },
+        fn14({
+            getAvailableQualityLevels: function () { return ['hd2160', 'hd1080', 'tiny', 'auto']; },
+            getPlaybackQuality: function () { return 'tiny'; },
             setPlaybackQuality: function (q) { calls.push(q); },
             setPlaybackQualityRange: function () {},
-        };
-        fn14(player);
-        const afterFirst = calls.length;
-        fn14(player);
-        t14ok = afterFirst > 0 && calls.length === afterFirst;
+        });
+        t14ok = calls.includes('hd2160');
     }
-    t(target, 'T14', 'stesso video_id chiamato due volte: la seconda non fa nulla', t14ok);
+    t(target, 'T14', 'qualita\' scesa sotto il massimo: viene rialzata anche a video gia\' avviato', t14ok);
+
+    let t16ok = false;
+    if (funcSrc) {
+        const calls = [];
+        const fn16 = buildForzaQualitaMassima(funcSrc);
+        fn16({
+            getAvailableQualityLevels: function () { return ['hd2160', 'hd1080', 'tiny', 'auto']; },
+            getPlaybackQuality: function () { return 'hd2160'; },
+            setPlaybackQuality: function (q) { calls.push(q); },
+            setPlaybackQualityRange: function () {},
+        });
+        t16ok = calls.length === 0;
+    }
+    t(target, 'T16', 'qualita\' gia\' al massimo: nessuna chiamata a setPlaybackQuality', t16ok);
 
     let t15ok = false;
     if (funcSrc) {
