@@ -54,6 +54,10 @@
   const CHANGELOGS = {
       
 
+      "3.5.81": [
+        "Risolto il blocco su schermo nero durante gli annunci",
+        "L'annuncio puo' essere riprodotto a qualsiasi risoluzione, il contenuto resta al massimo"
+      ],
       "3.5.80": [
         "Il video parte sempre alla massima risoluzione disponibile",
         "Recuperata la qualita' bassa che era rimasta memorizzata dalle versioni precedenti"

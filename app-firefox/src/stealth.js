@@ -514,6 +514,8 @@ let wasMuted = false;
 let savedRate = 1;
 let playerObs = null;
 let skipTimer = null;
+let overlayTimer = null;
+const OVERLAY_MAX_MS = 6000;   // oltre questa soglia l'overlay va tolto comunque
 
 // contentDuration/contentSrc/contentTime restano: usati per aggiornare i
 // riferimenti sul contenuto (vedi checkPlayer/onAdEnd). Le guardie per il
@@ -590,6 +592,23 @@ function onAdStart(player) {
     }
     setSkipOverlay(player, true);
 
+    // Rete di sicurezza: se dopo 6s l'annuncio e' ancora li', l'overlay viene
+    // tolto lo stesso. Uno schermo nero perenne e' peggio di un annuncio visibile.
+    if (overlayTimer) clearTimeout(overlayTimer);
+    overlayTimer = setTimeout(function () {
+        setSkipOverlay(player, false);
+        overlayTimer = null;
+    }, OVERLAY_MAX_MS);
+
+    // L'annuncio deve poter essere riprodotto a qualunque risoluzione: se il
+    // range restasse limitato in alto, il player non troverebbe una traccia
+    // compatibile e resterebbe bloccato dietro l'overlay.
+    try {
+        if (typeof player.setPlaybackQualityRange === "function") {
+            player.setPlaybackQualityRange("tiny", "highres");
+        }
+    } catch (_) { /* mai rompere il player */ }
+
     instantSkip(player);
 
     // Polling a 50ms: mantiene playbackRate=16 finche' YouTube non lo
@@ -610,6 +629,7 @@ function onAdEnd(player) {
     if (!adActive) return;
     adActive = false;
     if (skipTimer) { clearInterval(skipTimer); skipTimer = null; }
+    if (overlayTimer) { clearTimeout(overlayTimer); overlayTimer = null; }
 
     const video = player.querySelector("video");
     if (video) {
@@ -652,8 +672,12 @@ function forzaQualitaMassima(player) {
         var migliore = livelli[0];
         if (typeof player.getPlaybackQuality === "function" &&
             player.getPlaybackQuality() === migliore) return;   // gia' al massimo
+        // Range APERTO verso il basso: congelarlo sul massimo mandava in stallo
+        // il player quando partiva un annuncio privo di quella risoluzione
+        // (schermo nero infinito, 3.5.80). A tenere alta la qualita' ci pensa il
+        // controllo continuo qui sotto, non il vincolo sul range.
         if (typeof player.setPlaybackQualityRange === "function") {
-            player.setPlaybackQualityRange(migliore, migliore);
+            player.setPlaybackQualityRange("tiny", migliore);
         }
         if (typeof player.setPlaybackQuality === "function") {
             player.setPlaybackQuality(migliore);

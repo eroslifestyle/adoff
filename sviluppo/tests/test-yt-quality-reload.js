@@ -130,21 +130,19 @@ for (const [target, file] of TARGETS) {
     t(target, 'T2', 'nessun reload video (loadVideoById)',
         !raw.includes('loadVideoById'));
 
-    // T3: la qualita' si puo' solo ALZARE, mai abbassare.
-    const LOW_QUALITY_CALL = /setPlaybackQuality(Range)?\s*\(\s*["']tiny["']/g;
-    const noLowQualityCall = !LOW_QUALITY_CALL.test(src);
+    // T3: la qualita' si puo' solo ALZARE, mai abbassare. "tiny" come MINIMO
+    // di un range (bordo basso aperto, vedi forzaQualitaMassima/onAdStart) e'
+    // legittimo: allarga il range verso il basso per non bloccare l'annuncio
+    // su una risoluzione assente, non abbassa nulla (fix 3.5.81). E' vietato
+    // invece: setPlaybackQuality diretto a "tiny", o un range il cui MASSIMO
+    // (secondo argomento) sia "tiny" -- quello si' abbasserebbe il tetto.
+    const DIRECT_LOW_QUALITY = /setPlaybackQuality(?!Range)\s*\(\s*["']tiny["']/g;
+    const RANGE_MAX_TINY = /setPlaybackQualityRange\s*\([^,]+,\s*["']tiny["']\s*\)/g;
+    const noDirectLowQuality = !DIRECT_LOW_QUALITY.test(src);
+    const noRangeMaxTiny = !RANGE_MAX_TINY.test(src);
     const noForzaQualitaMinima = !src.includes('forzaQualitaMinima');
-    const massimaRange = extractFunctionRange(src, 'forzaQualitaMassima');
-    const QUALITY_CALL = /setPlaybackQuality(Range)?\s*\(/g;
-    let allCallsInsideMassima = massimaRange !== null;
-    let match;
-    while ((match = QUALITY_CALL.exec(src)) !== null) {
-        if (match.index < massimaRange.start || match.index >= massimaRange.end) {
-            allCallsInsideMassima = false;
-        }
-    }
     t(target, 'T3', 'la qualita\' si puo\' solo alzare, mai abbassare',
-        noLowQualityCall && noForzaQualitaMinima && allCallsInsideMassima);
+        noDirectLowQuality && noRangeMaxTiny && noForzaQualitaMinima);
 
     t(target, 'T4', 'playbackRate = 16 assegnato dentro instantSkip (unico fallback Layer B)',
         body !== null && /\bplaybackRate\s*=\s*16\b/.test(body));
@@ -248,6 +246,45 @@ for (const [target, file] of TARGETS) {
         }
     }
     t(target, 'T15', 'lista livelli vuota: nessuna eccezione e nessuna chiamata a setPlaybackQuality', t15ok);
+
+    // T17: il range non viene mai congelato sul massimo (causa dello stallo
+    // 3.5.80: un annuncio senza quella risoluzione mandava il player in
+    // stallo dietro l'overlay nero).
+    t(target, 'T17', 'forzaQualitaMassima non congela il range: mai setPlaybackQualityRange(migliore, migliore), il minimo resta "tiny"',
+        forzaQualitaBody !== null &&
+        !/setPlaybackQualityRange\s*\(\s*migliore\s*,\s*migliore\s*\)/.test(forzaQualitaBody) &&
+        /setPlaybackQualityRange\s*\(\s*["']tiny["']\s*,\s*migliore\s*\)/.test(forzaQualitaBody));
+
+    // T18: onAdStart riapre il range a qualunque risoluzione prima dello skip,
+    // cosi' l'annuncio trova sempre una traccia compatibile.
+    t(target, 'T18', 'onAdStart riapre il range con setPlaybackQualityRange("tiny", "highres")',
+        onAdStartBody !== null &&
+        /setPlaybackQualityRange\s*\(\s*["']tiny["']\s*,\s*["']highres["']\s*\)/.test(onAdStartBody));
+
+    // T19: rete di sicurezza sull'overlay -- non deve mai restare a vita.
+    const onAdEndBody = extractFunctionBody(src, 'onAdEnd');
+    t(target, 'T19', 'overlayTimer + OVERLAY_MAX_MS: armato in onAdStart, azzerato in onAdEnd',
+        src.includes('let overlayTimer = null;') &&
+        src.includes('const OVERLAY_MAX_MS') &&
+        onAdStartBody !== null && /overlayTimer\s*=\s*setTimeout/.test(onAdStartBody) &&
+        onAdEndBody !== null && /overlayTimer\s*=\s*null/.test(onAdEndBody));
+
+    // T20: funzionale -- con livelli [hd2160,hd1080,tiny,auto], il PRIMO
+    // argomento di setPlaybackQualityRange deve essere "tiny", mai il
+    // migliore: il basso resta sempre raggiungibile anche durante un annuncio.
+    let t20ok = false;
+    if (funcSrc) {
+        const rangeCalls = [];
+        const fn20 = buildForzaQualitaMassima(funcSrc);
+        fn20({
+            getAvailableQualityLevels: function () { return ['hd2160', 'hd1080', 'tiny', 'auto']; },
+            getPlaybackQuality: function () { return 'tiny'; },
+            setPlaybackQuality: function () {},
+            setPlaybackQualityRange: function (min, max) { rangeCalls.push([min, max]); },
+        });
+        t20ok = rangeCalls.length === 1 && rangeCalls[0][0] === 'tiny';
+    }
+    t(target, 'T20', 'chiamata reale a setPlaybackQualityRange: primo argomento sempre "tiny"', t20ok);
 }
 
 console.log(pass + '/' + tot + ' PASS');
