@@ -1,5 +1,23 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
+## Release 3.5.84 — PUBBLICATA (2026-08-19)
+
+- [x] Chrome Web Store: uploadState SUCCESS, publish OK
+- [x] Firefox AMO: versione 3.5.84 creata, canale listed, 0 errori di validazione
+- [x] Edge Add-ons: submission 1152921505701692005 caricata, in review
+- [x] adoff.app: deploy completato, i 3 ZIP riscaricati dal sito live sono a 3.5.84
+- [x] Telegram @adoffapp: post pubblicato in inglese con logo (message_id 130)
+- [ ] Verificare l'esito della review Edge
+
+### Aperto: gate Pro intermittente
+Gate chiuso in 1 esecuzione su 4 a parita' di build e licenza. ESCLUSE: service worker
+dormiente (il nonce e' generato localmente in `content.js:77`) e integrity corrotta (hash
+salvato e ricalcolato coincidono). SOSPETTO: e' in parte una corsa del BANCO — togliendo
+l'attesa fra scrittura licenza e apertura pagina i fallimenti passano da 1/4 a 3/3.
+PROVA PULITA: scrivere la licenza, RIAVVIARE il browser, poi misurare piu' volte.
+Checkpoint: `.claude/checkpoints/CP_20260819_1230.md`
+
+
 > **Consolidato 2026-08-11.** Merge sessione fix piano Premium YouTube + release v3.5.70.
 > Stato prodotto: **3.5.70** — CWS in review, Edge in review, AMO public, sito live su feat/premium-vpn. Branch `feat/premium-vpn`, HEAD `4eed2be` pushato.
 > Esiste un gate di test obbligatorio: `node sviluppo/tests/test-security-invariants.js` deve dare 58 su 58 prima di ogni deploy.
