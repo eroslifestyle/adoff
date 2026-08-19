@@ -123,6 +123,13 @@ Merge-accessor su `googletag`/`adsbygoogle`: i siti sovrascrivevano lo spoof. Or
 
 ## ⛔ DO NOT — vincoli permanenti
 
+> Documentazione completa architettura video 3.5.84: `Memoria/progetti/AdOff/decisioni/architettura-video-3584.md`.
+
+- **MAI duplicare a mano la lista dei nomi di piano** — usare sempre `adoffPlanTier()`. Otto gate con liste diverse tenevano gli abbonati `annual` e `premium_*` senza NESSUNA difesa attiva (fix 3.5.77, presidiato da `sviluppo/tests/test-plan-tier-consistency.js`).
+- **MAI congelare il range di qualita' sul massimo** (`setPlaybackQualityRange(max, max)`): manda in stallo il player quando parte un annuncio privo di quella risoluzione → schermo nero perenne (regressione 3.5.80, corretta in 3.5.81). Il range va tenuto aperto verso il basso.
+- **MAI abbassare la qualita' fuori da `abbassaQualitaAnnuncio`**: l'abbassamento e' lecito SOLO per la durata dell'annuncio, e SOLO perche' esiste `forzaQualitaMassima` che rialza. Senza quel presidio si torna al "144p persistente" della 3.5.57.
+- **MAI seekare senza la guardia su `videoDetails.lengthSeconds`**: se `video.duration` coincide con la durata del contenuto, il media montato E' il contenuto (YouTube marca `ad-showing` PRIMA di scambiare la sorgente) e saltare manda avanti il video dell'utente. Nove versioni di bug hanno questa causa. Senza riferimento sulla durata del contenuto → nessun seek.
+- **NON dedurre "e' SSAI" da una differenza di durata**: con vero SSAI il player non marca nemmeno `ad-showing`. La deduzione affrettata ha prodotto la guardia invertita della 3.5.83, che saltava dentro il contenuto.
 - **MAI reintrodurre `video.currentTime =` in `activateYoutubeRuntimeKiller`.** Regola d'oro: 9 versioni di bug (3.5.46→3.5.51) nate dal seek.
 - **MAI merge di `feat/premium-vpn` su `main`.** `main` e' il repo pubblico open-core (`github.com/eroslifestyle/adoff`), fermo a 3.5.36.
 - **NON riattivare lo stall watchdog (Layer D)** — faceva seek.
@@ -152,6 +159,11 @@ Merge-accessor su `googletag`/`adsbygoogle`: i siti sovrascrivevano lo spoof. Or
 - **Hardcoded `playbackRate = 1` in `onAdEnd`**: scartava la velocita' scelta dall'utente. Fix con `savedRate`.
 - **403 su `googlevideo.com`**: NON e' un bug AdOff. Sono su `itag=18` deprecato.
 - **Test diag-yt-skipads.js** (forza Pro via nonce): non probante, player headless non parte mai per autoplay policy.
+
+**Video / YouTube (2026-08-19)**
+- **`eSsai`/`saltaAnnuncioCucito` (3.5.83)**: guardia invertita, saltava quando il media montato era il contenuto. Rimosso in 3.5.84.
+- **Alzare la qualita' UNA SOLA VOLTA per video** (prima stesura di `forzaQualitaMassima`): YouTube riapplica la propria preferenza dopo di noi, quindi serve un controllo continuo con throttle.
+- **Il fast-forward a 16x come soluzione all'attesa**: non salta l'annuncio, lo SCARICA (16 secondi di stream per secondo reale) — l'attesa e' di rete e nessuna taratura la elimina. Resta valido solo come ripiego.
 
 **Store / deploy**
 - **`web-ext sign --channel listed`** → timeout infinito. Usare API REST diretta AMO.
