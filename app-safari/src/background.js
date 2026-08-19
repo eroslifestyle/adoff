@@ -54,6 +54,10 @@
   const CHANGELOGS = {
       
 
+      "3.5.80": [
+        "Il video parte sempre alla massima risoluzione disponibile",
+        "Recuperata la qualita' bassa che era rimasta memorizzata dalle versioni precedenti"
+      ],
       "3.5.79": [
         "Risolti i salti di posizione: il video non riparte piu' da un punto sbagliato dopo un annuncio",
         "La qualita' del video non viene piu' abbassata durante gli annunci: resta sempre quella scelta",

@@ -629,6 +629,37 @@ function onAdEnd(player) {
     // YouTube ha gestito la transizione. Non tocchiamo currentTime.
 }
 
+// L'utente vuole sempre la massima risoluzione disponibile. Non basta aver
+// smesso di abbassarla: fino alla 3.5.78 l'estensione imponeva "tiny" durante
+// gli annunci e YouTube ha memorizzato quel livello come preferenza, quindi va
+// riportata su attivamente. Una sola volta per video: il range viene fissato
+// sul massimo, altrimenti l'adattamento automatico tornerebbe a scendere.
+let qualitaAlzataPer = null;
+
+function forzaQualitaMassima(player) {
+    try {
+        if (typeof player.getAvailableQualityLevels !== "function") return;
+        var vid = "";
+        if (typeof player.getVideoData === "function") {
+            vid = (player.getVideoData() || {}).video_id || "";
+        }
+        if (!vid || qualitaAlzataPer === vid) return;
+        // I livelli arrivano dal migliore al peggiore; "auto" non e' impostabile.
+        var livelli = (player.getAvailableQualityLevels() || []).filter(function (q) {
+            return q && q !== "auto";
+        });
+        if (!livelli.length) return;   // player non ancora pronto: si riprova al tick dopo
+        var migliore = livelli[0];
+        if (typeof player.setPlaybackQualityRange === "function") {
+            player.setPlaybackQualityRange(migliore, migliore);
+        }
+        if (typeof player.setPlaybackQuality === "function") {
+            player.setPlaybackQuality(migliore);
+        }
+        qualitaAlzataPer = vid;
+    } catch (_) { /* mai rompere il player */ }
+}
+
     // ---- LAYER C: Anti-detection (insurance) ----
 
     // Mask ratechange events during ad skip to avoid detection
@@ -673,6 +704,7 @@ function checkPlayer() {
         // ignore
       }
     }
+    forzaQualitaMassima(p);
     onAdEnd(p);
   }
 }
@@ -694,6 +726,7 @@ document.addEventListener("yt-navigate-finish", function () {
   // Azzera i riferimenti del video precedente per non usarli con il nuovo video
   contentDuration = 0;
   contentSrc = "";
+  qualitaAlzataPer = null;
   setTimeout(attachObs, 100);
 });
 
