@@ -77,7 +77,24 @@ Decisioni prese dall'utente in sessione di analisi (20 domande).
    zero devanagari su 278 stringhe, scartato e rifatto.
    Trappola chiusa: le chiavi il cui testo INGLESE era cambiato restavano con la vecchia
    traduzione e nessun controllo le segnalava, perche' non risultavano "non tradotte".
-7. [~] **Comunicazione sostenitori + pubblicazione**: testi pronti in
+7. [x] **Comunicazione sostenitori + pubblicazione** (fatto 2026-08-20): tutto pubblicato.
+   - **Worker**: deployato (`e272c7bd`), tabella `newsletter` creata su `adoff-db`.
+     Il primo deploy aveva ROTTO la produzione — 500 su ogni rotta, anche le
+     preesistenti — per una guardia finita dentro `fetch` e replicata in 27 punti:
+     `body` in TDZ. Rollback immediato, causa trovata con `wrangler dev --local`,
+     rotte riscritte e rideployate. **Lezione: il worker si prova in locale PRIMA.**
+   - **Store**: Chrome Web Store pubblicata (status OK), Edge submission accettata
+     (202), Firefox AMO 3.6.0 caricata e in review. Su AMO il primo tentativo era
+     riuscito nonostante l'errore nel polling: verificare lo stato prima di riprovare.
+   - **Sito**: deployato, gate i18n superato, 396 file. Redirect VPN attivi
+     (`/premium` → home, `/vs/nordvpn` → `/vs/`, `/vpn-policy` → `/privacy`).
+   - **Comunicazione**: email inviate ai **4 sostenitori** via Resend (ognuna col suo
+     id di consegna), post pubblicato su `@adoffapp` (message_id 133).
+     Nota: Resend rifiuta le richieste da `urllib` di Python con errore Cloudflare
+     1010 — va usato `curl`.
+
+   Testi in `sviluppo/COMUNICAZIONE-SOSTENITORI.md`; sequenza in
+   `sviluppo/scripts/pubblica-3.6.0.sh`. Storico:
    `sviluppo/COMUNICAZIONE-SOSTENITORI.md` (email IT/EN firmate da Eros in prima persona,
    post Telegram in inglese, risposta per il supporto, checklist operativa). Versione
    bumpata a **3.6.0** con l'avviso nel popup che raggiunge tutti gli utenti (`b31d629`),
