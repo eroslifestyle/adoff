@@ -1,12 +1,12 @@
-// Tier canonico del piano. UNICA fonte di verità sui nomi di piano emessi dal
-// server (worker.js): monthly | annual | referral | premium_monthly |
-// premium_annual | premium_annual_founder | trial | lifetime | free.
-// Ogni copia deve restare IDENTICA: sviluppo/tests/test-plan-tier-consistency.js
-// fallisce se una diverge o se ricompare una lista di piani hardcoded.
-function adoffPlanTier(plan) {
-  if (typeof plan === "string" && plan.startsWith("premium")) return "premium";
-  if (["pro", "lifetime", "monthly", "annual", "referral", "trial"].includes(plan)) return "pro";
-  return "free";
+// Tier canonico del piano. Da quando AdOff e' gratuito per tutti questa
+// funzione ritorna sempre "premium": ogni funzione e' sbloccata senza
+// licenza e senza scadenza. La firma resta invariata perche' i chiamanti
+// passano ancora il nome del piano, e per poter tornare indietro toccando
+// un punto solo. Il grado di sostenitore NON si deduce da qui: usa
+// adoffSupporterKind(). Invariante presidiato da
+// sviluppo/tests/test-plan-tier-consistency.js.
+function adoffPlanTier() {
+  return "premium";
 }
 
 // Detect browser
@@ -103,47 +103,18 @@ i18n.init(() => {
   renderVersion();
 });
 
-// Render countdown dinamico del trial (resiliente: legge storage, no hardcoded)
+// Trial non piu' mostrato: tutto e' gratis e attivo.
 function renderTrialCountdown() {
-  if (!chrome.storage || !chrome.storage.local) return;
-  chrome.storage.local.get(["adoffTrialEnd", "adoffLicense"], (r) => {
-    const trialEnd = r.adoffTrialEnd || 0;
-    const lic = r.adoffLicense || {};
-    const plan = lic.plan || "";
-    const hasValidPro = lic.valid && adoffPlanTier(plan) === "pro" && plan !== "trial";
-    if (hasValidPro) {
-      // Utente Pro: nasconde trial msg + countdown
-      const trialMsg = document.getElementById("trialMsg");
-      if (trialMsg) trialMsg.style.display = "none";
-      return;
-    }
-    if (!trialEnd || trialEnd <= Date.now()) {
-      // Trial scaduto: aggiorna messaggio
-      const trialMsg = document.getElementById("trialMsg");
-      if (trialMsg) {
-        trialMsg.innerHTML = "";
-        const span = document.createElement("span");
-        span.setAttribute("data-i18n", "onb.trialExpired");
-        const expiredText = i18n && i18n.t ? i18n.t("onb.trialExpired") : "Trial expired. Activate Pro to keep all features.";
-        span.textContent = (expiredText && expiredText !== "onb.trialExpired") ? expiredText : "Trial expired. Activate Pro to keep all features.";
-        trialMsg.appendChild(span);
-      }
-      return;
-    }
-    // Trial attivo: calcola giorni e mostra countdown
-    const diff = trialEnd - Date.now();
-    const daysLeft = Math.max(0, Math.ceil(diff / 86400000));
-    const dateEl = document.getElementById("trialCountdownDate");
-    const daysEl = document.getElementById("trialCountdownDays");
-    const countdownEl = document.getElementById("trialCountdown");
-    if (daysEl) daysEl.textContent = String(daysLeft);
-    if (dateEl) {
-      const d = new Date(trialEnd);
-      const pad = n => String(n).padStart(2, "0");
-      dateEl.textContent = pad(d.getDate()) + "/" + pad(d.getMonth()+1) + "/" + d.getFullYear();
-    }
-    if (countdownEl) countdownEl.style.display = "block";
-  });
+  const trialMsg = document.getElementById("trialMsg");
+  const countdown = document.getElementById("trialCountdown");
+  if (trialMsg) {
+    trialMsg.innerHTML = "";
+    const span = document.createElement("span");
+    span.setAttribute("data-i18n", "onb.allFree");
+    span.textContent = i18n && i18n.t ? i18n.t("onb.allFree") : "Every feature is on, free, no account needed.";
+    trialMsg.appendChild(span);
+  }
+  if (countdown) countdown.style.display = "none";
 }
 
 // Render versione corrente da manifest (no hardcoded)

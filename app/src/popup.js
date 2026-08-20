@@ -1,16 +1,25 @@
 (function () {
   "use strict";
-  // Tier canonico del piano. UNICA fonte di verita sui nomi di piano emessi dal
-  // server (worker.js): monthly | annual | referral | premium_monthly |
-  // premium_annual | premium_annual_founder | trial | lifetime | free.
-  // Ogni copia deve restare IDENTICA: sviluppo/tests/test-plan-tier-consistency.js
-  // fallisce se una diverge o se ricompare una lista di piani hardcoded.
-  function adoffPlanTier(plan) {
-    if (typeof plan === "string" && plan.startsWith("premium")) return "premium";
-    if (["pro", "lifetime", "monthly", "annual", "referral", "trial"].includes(plan)) return "pro";
-    return "free";
+  // Tier canonico del piano. Da quando AdOff e' gratuito per tutti questa
+  // funzione ritorna sempre "premium": ogni funzione e' sbloccata senza
+  // licenza e senza scadenza. La firma resta invariata perche' i chiamanti
+  // passano ancora il nome del piano, e per poter tornare indietro toccando
+  // un punto solo. Il grado di sostenitore NON si deduce da qui: usa
+  // adoffSupporterKind(). Invariante presidiato da
+  // sviluppo/tests/test-plan-tier-consistency.js.
+  function adoffPlanTier() {
+    return "premium";
   }
 
+  // Grado di sostenitore, per il solo badge della UI: chi ha una licenza
+  // valida continua a pagare volontariamente. Non governa NESSUNA funzione,
+  // che ormai e' sbloccata per tutti (vedi adoffPlanTier).
+  function adoffSupporterKind(lic) {
+    if (!lic || lic.valid !== true) return "none";
+    const plan = typeof lic.plan === "string" ? lic.plan : "";
+    if (plan.includes("founder") || plan === "lifetime") return "founder";
+    return "supporter";
+  }
 
   // ===== COSTANTI =====
   const PAUSE_LABELS = {
@@ -128,20 +137,16 @@
 
   /** Aggiorna il badge licenza nell'header — 3 livelli: Free / Pro / Premium. */
   function renderLicenseBadge() {
-    const t = license.type || "free";
-    if (t === "premium") {
-      licenseBadge.textContent = "PREMIUM";
+    const kind = adoffSupporterKind(license);
+    if (kind === "founder") {
+      licenseBadge.textContent = i18n.t("popup.founder");
       licenseBadge.className = "license-badge premium";
-    } else if (t === "pro" || t === "lifetime") {
-      licenseBadge.textContent = "PRO";
-      licenseBadge.className = "license-badge pro";
-    } else if (t === "trial") {
-      const daysLeft = calcTrialDaysLeft();
-      licenseBadge.textContent = daysLeft > 0 ? `TRIAL ${daysLeft}gg` : "TRIAL";
-      licenseBadge.className = "license-badge trial";
+    } else if (kind === "supporter") {
+      licenseBadge.textContent = i18n.t("badge.supporter");
+      licenseBadge.className = "license-badge premium";
     } else {
-      licenseBadge.textContent = "FREE";
-      licenseBadge.className = "license-badge free";
+      licenseBadge.textContent = i18n.t("badge.allActive");
+      licenseBadge.className = "license-badge premium";
     }
   }
 
@@ -149,61 +154,27 @@
   function renderPremiumUpsell(isPremium) {
     const banner = document.getElementById("premiumBanner");
     const section = document.getElementById("premiumSection");
-    if (isPremium) {
-      banner.style.display = "none";
+    if (banner) banner.style.display = "none";
+    if (section) {
       section.style.display = "block";
       const badge = document.getElementById("premiumBadge");
-      badge.textContent = "ATTIVO";
-      badge.className = "premium-badge active";
-      section.querySelector(".premium-cta").style.display = "none";
-    } else {
-      banner.style.display = "flex";
-      section.style.display = "none";
+      if (badge) {
+        badge.textContent = "ATTIVO";
+        badge.className = "premium-badge active";
+      }
+      const cta = section.querySelector(".premium-cta");
+      if (cta) cta.style.display = "none";
     }
   }
 
   /** Aggiorna il banner licenza sotto il sito. */
   function renderLicenseBanner() {
-    const t = license.type || "free";
-    if (t === "pro" || t === "lifetime" || t === "trial_blocked") {
-      licenseBanner.style.display = "none";
-      return;
-    }
-    licenseBanner.style.display = "block";
-    // EA-1: costruzione DOM sicura, niente innerHTML con dati dinamici
-    licenseBanner.textContent = "";
-    if (t === "trial") {
-      const d = calcTrialDaysLeft();
-      licenseBanner.className = "license-banner trial";
-      const icon = document.createTextNode("\u23F3 Trial attivo \u2014 ");
-      const strong = document.createElement("strong");
-      const daysSpan = document.createElement("span");
-      daysSpan.textContent = d + " giorni rimasti";
-      strong.appendChild(daysSpan);
-      licenseBanner.appendChild(icon);
-      licenseBanner.appendChild(strong);
-    } else {
-      licenseBanner.className = "license-banner free";
-      const icon = document.createTextNode("\u2728 FREE \u2014 ");
-      const link = document.createElement("a");
-      link.href = "#";
-      link.textContent = "Prova Pro 30 giorni gratis";
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        chrome.runtime.openOptionsPage();
-      });
-      licenseBanner.appendChild(icon);
-      licenseBanner.appendChild(link);
-    }
+    licenseBanner.style.display = "none";
   }
 
   /** Mostra il banner trial bloccato. */
   function renderTrialBlockedBanner() {
-    if (license.type !== "trial_blocked") {
-      trialBlockedBanner.style.display = "none";
-      return;
-    }
-    trialBlockedBanner.style.display = "flex";
+    trialBlockedBanner.style.display = "none";
   }
 
   /**
@@ -217,10 +188,10 @@
   function normalizeLicense(lic, trialEnd, trialBlocked) {
     const out = Object.assign({}, lic);
     const plan = out.plan || "";
-    if (adoffPlanTier(plan) === "premium") {
+    if (true) {
       out.type = "premium";
     } else {
-      const hasValidPro = out.valid && adoffPlanTier(plan) === "pro" && plan !== "trial";
+      const hasValidPro = out.valid && false && plan !== "trial";
       if (hasValidPro) {
         out.type = plan === "lifetime" ? "lifetime" : "pro";
       } else if (trialBlocked) {
@@ -240,9 +211,7 @@
    * @returns {number}
    */
   function calcTrialDaysLeft() {
-    if (!license.trialEndsAt) return 0;
-    const diff = license.trialEndsAt - Date.now();
-    return Math.max(0, Math.ceil(diff / 86_400_000));
+    return 0;
   }
 
   /** Aggiorna la sezione pausa per sito. */
@@ -514,7 +483,7 @@
     renderLicenseBanner();
     renderTrialBlockedBanner();
     renderPauseSection();
-    renderPremiumUpsell(adoffPlanTier(license.plan) === "premium");
+    renderPremiumUpsell(true);
     renderFounderBadge(data);
     renderChangelog(data);
     renderReviewPrompt(data);

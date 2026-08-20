@@ -1,16 +1,25 @@
 (function () {
   "use strict";
-  // Tier canonico del piano. UNICA fonte di verita sui nomi di piano emessi dal
-  // server (worker.js): monthly | annual | referral | premium_monthly |
-  // premium_annual | premium_annual_founder | trial | lifetime | free.
-  // Ogni copia deve restare IDENTICA: sviluppo/tests/test-plan-tier-consistency.js
-  // fallisce se una diverge o se ricompare una lista di piani hardcoded.
-  function adoffPlanTier(plan) {
-    if (typeof plan === "string" && plan.startsWith("premium")) return "premium";
-    if (["pro", "lifetime", "monthly", "annual", "referral", "trial"].includes(plan)) return "pro";
-    return "free";
+  // Tier canonico del piano. Da quando AdOff e' gratuito per tutti questa
+  // funzione ritorna sempre "premium": ogni funzione e' sbloccata senza
+  // licenza e senza scadenza. La firma resta invariata perche' i chiamanti
+  // passano ancora il nome del piano, e per poter tornare indietro toccando
+  // un punto solo. Il grado di sostenitore NON si deduce da qui: usa
+  // adoffSupporterKind(). Invariante presidiato da
+  // sviluppo/tests/test-plan-tier-consistency.js.
+  function adoffPlanTier() {
+    return "premium";
   }
 
+  // Grado di sostenitore, per il solo badge della UI: chi ha una licenza
+  // valida continua a pagare volontariamente. Non governa NESSUNA funzione,
+  // che ormai e' sbloccata per tutti (vedi adoffPlanTier).
+  function adoffSupporterKind(lic) {
+    if (!lic || lic.valid !== true) return "none";
+    const plan = typeof lic.plan === "string" ? lic.plan : "";
+    if (plan.includes("founder") || plan === "lifetime") return "founder";
+    return "supporter";
+  }
 
   // ===== COSTANTI =====
   const TYPE_LABELS = {
@@ -391,20 +400,8 @@
    */
   function normalizeLicense(lic, trialEnd) {
     const out = Object.assign({}, lic);
-    const plan = out.plan || "";
-    if (adoffPlanTier(plan) === "premium") {
-      out.type = "premium";
-    } else {
-      const hasValidPro = out.valid && adoffPlanTier(plan) === "pro" && plan !== "trial";
-      if (hasValidPro) {
-        out.type = plan === "lifetime" ? "lifetime" : "pro";
-      } else if (trialEnd && trialEnd > Date.now()) {
-        out.type = "trial";
-        out.trialEndsAt = trialEnd;
-      } else {
-        out.type = "free";
-      }
-    }
+    // Tutto e' premium ora: la licenza server esiste solo per il badge.
+    out.type = "premium";
     return out;
   }
 
@@ -452,58 +449,38 @@
   /** Render sezione licenza con 3 stati: Pro attivo / Trial attivo / No license. */
   function renderLicenseSection() {
     const plan  = license.plan || "";
-    const isPremium = license.valid && adoffPlanTier(plan) === "premium";
-    const isPro = license.valid && adoffPlanTier(plan) === "pro" && plan !== "trial";
-    const isTrial = !isPro && !isPremium && license.type === "trial" && license.trialEndsAt && license.trialEndsAt > Date.now();
-    const t = isPremium ? "premium" : isPro ? (plan === "lifetime" ? "lifetime" : "pro") : (isTrial ? "trial" : (license.type || "free"));
+    const isPremium = true;
+    const isPro = false && plan !== "trial";
+    const isTrial = false;
+    const t = "premium";
 
     updateHeaderBadge(t);
 
     // Premium section visibility
     const premiumShowcase = document.getElementById("premiumShowcaseSection");
     const premiumActive = document.getElementById("premiumActiveCard");
-    if (premiumShowcase) premiumShowcase.style.display = isPremium ? "none" : "block";
-    if (premiumActive) premiumActive.style.display = isPremium ? "block" : "none";
+    if (premiumShowcase) premiumShowcase.style.display = "none";
+    if (premiumActive) premiumActive.style.display = "block";
 
-    if (isPremium) {
-      // Premium attivo
-      showAuthState("premium");
-      document.getElementById("premiumPlanName").textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
-      const expText = license.expiresHuman ? license.expiresHuman : "—";
-      document.getElementById("premiumExpiry").textContent = expText;
-      return;
+    // Tutti gli utenti vedono la sezione premium attivo
+    showAuthState("premium");
+    // Il piano mostrato: chi ha licenza vede il suo piano, altrimenti "Tutto attivo"
+    const planNameEl = document.getElementById("premiumPlanName");
+    if (planNameEl) {
+      planNameEl.textContent = license.valid ? (plan.charAt(0).toUpperCase() + plan.slice(1)) : i18n.t("badge.allActive");
     }
-
-    if (isPro) {
-      // Stato B: Pro attivo
-      showAuthState("pro");
-      const expText = license.expiresHuman === "LIFETIME" || !license.expiresHuman
-        ? "Mai (Lifetime)"
-        : license.expiresHuman;
-      document.getElementById("proStatePlan").textContent    = plan.charAt(0).toUpperCase() + plan.slice(1);
-      document.getElementById("proStateExpiry").textContent  = expText;
-      document.getElementById("proStateEmail").textContent   = license.email || "—";
-
-      // Barra dispositivi
-      const maxDev  = license.maxDevices || 3;
-      const usedDev = license.devices || 0;
-      const pct     = Math.min(100, Math.round((usedDev / maxDev) * 100));
-      const barFill = document.getElementById("proDevicesBar");
-      const devCount = document.getElementById("proDevicesCount");
-      if (barFill) barFill.style.width = pct + "%";
-      if (devCount) devCount.textContent = usedDev + "/" + maxDev;
-
-    } else if (isTrial) {
-      // Stato T: Trial attivo
-      showAuthState("trial");
-      renderTrialState();
-    } else {
-      // Stato A: No license — solo input codice licenza
-      showAuthState("none");
-    }
+    // Nessuna scadenza: il supporto e' volontario
+    const expiryEl = document.getElementById("premiumExpiry");
+    if (expiryEl) expiryEl.textContent = i18n.t("badge.noExpiry");
+    return;
   }
 
-  /** Render dettagli stato trial: countdown giorni, barra progresso, scadenza. */
+  /** Trial non piu' mostrato: tutto e' attivo di default. */
+  function renderTrialState() {
+    const el = document.getElementById("stateTrialActive");
+    if (el) el.style.display = "none";
+  }
+
   function renderTrialState() {
     const daysLeft = trialDaysLeft();
     const TRIAL_TOTAL_DAYS = 15;
