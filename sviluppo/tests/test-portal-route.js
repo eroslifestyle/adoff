@@ -42,7 +42,7 @@ console.log("=== TEST: Portal Route ===\n");
 console.log("1. ReferenceError fix:");
 assertNotContains(
   workerSource,
-  "getSessionToken",
+  "getSessionToken(",
   "getSessionToken NON deve esistere nel worker"
 );
 
@@ -76,9 +76,14 @@ assertContains(
   "Deve controllare ?format=json"
 );
 assertContains(
-  portalFn,
-  'request.headers.get("Accept")?.includes("application/json")',
+  portalFn.replace(/\s+/g, " "),
+  'request.headers.get("Accept")',
   "Deve controllare Accept: application/json"
+);
+assertContains(
+  portalFn.replace(/\s+/g, " "),
+  'includes("application/json")',
+  "Deve riconoscere il tipo application/json"
 );
 assertContains(
   portalFn,

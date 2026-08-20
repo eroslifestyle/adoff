@@ -67,14 +67,17 @@ fase_worker() {
   verifica
   log "Tabella newsletter su D1"
   echo "  (idempotente: CREATE TABLE IF NOT EXISTS)"
-  npx wrangler d1 execute adoff-licenses --remote \
-    --command "$(python3 - <<'SQL'
+  # il database si chiama adoff-db (vedi d1_databases in license-system/wrangler.toml)
+  SQL_NEWSLETTER="$(python3 - <<'SQL'
 import re
 s=open('sviluppo/license-system/schema.sql',encoding='utf-8').read()
 m=re.search(r'CREATE TABLE IF NOT EXISTS newsletter.*?\);', s, re.S)
 print(m.group(0) if m else '')
 SQL
 )"
+  [ -n "$SQL_NEWSLETTER" ] || die "non trovo la CREATE TABLE newsletter in schema.sql"
+  ( cd sviluppo/license-system && npx wrangler d1 execute adoff-db --remote --yes \
+      --command "$SQL_NEWSLETTER" )
   log "Deploy del worker"
   ( cd sviluppo/license-system && npx wrangler deploy )
   log "Fatto. Il worker e' live; per gli utenti non cambia ancora nulla."

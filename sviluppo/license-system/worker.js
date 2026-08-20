@@ -620,21 +620,6 @@ async function generateDeviceId(request, body, env) {
   // Fallback (client legacy senza UUID): hash SHA-256 keyed con il secret server,
   // così l'id non è predicibile/forgiabile offline. CF-Connecting-IP è impostato
   // da Cloudflare (non spoofabile dal client).
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
   const ip = request.headers.get("CF-Connecting-IP") || "unknown";
   const ua = request.headers.get("User-Agent") || "unknown";
   const secret = (env && env.ADOFF_SECRET) || "";
@@ -3737,6 +3722,62 @@ async function revokeByCustomerId(customerId, env, reason) {
 // STRIPE CUSTOMER PORTAL — crea sessione per gestione abbonamento
 // =============================================
 
+/**
+ * Iscrizione alla newsletter. Senza consenso esplicito non si scrive nulla:
+ * e' il punto GDPR non negoziabile.
+ */
+async function handleNewsletter(body, request, env) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
+  }
+  const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
+
+  // Honeypot: qualunque valore non-stringa-vuota e' sospetto. Rispondiamo ok
+  // senza scrivere, per non far capire al bot di essere stato riconosciuto.
+  if (body.website !== undefined &&
+      !(typeof body.website === "string" && body.website.trim() === "")) {
+    return jsonResponse({ ok: true });
+  }
+
+  if (body.consent !== true) {
+    return jsonResponse({ ok: false, error: "Consenso esplicito richiesto" }, 400);
+  }
+
+  const rawEmail = body.email;
+  if (!rawEmail || typeof rawEmail !== "string") {
+    return jsonResponse({ ok: false, error: "Email richiesta" }, 400);
+  }
+  const email = rawEmail.toLowerCase().trim().replace(/\s+/g, "");
+  if (email.length > 254) return jsonResponse({ ok: false, error: "Email troppo lunga" }, 400);
+  if (/[\x00-\x1f\x7f]/.test(email)) return jsonResponse({ ok: false, error: "Email non valida" }, 400);
+  if (!EMAIL_RE.test(email)) return jsonResponse({ ok: false, error: "Formato email non valido" }, 400);
+
+  if (!checkRateLimit(ip)) {
+    return jsonResponse({ ok: false, error: "Troppe richieste. Riprova piu' tardi." }, 429);
+  }
+
+  // Turnstile: quando la chiave e' configurata la verifica parte SEMPRE.
+  // Renderla condizionale al token permetteva di saltarla omettendolo.
+  if (env.TURNSTILE_SECRET_KEY) {
+    if (!await verifyTurnstile(body.turnstileToken, ip, env)) {
+      return jsonResponse({ ok: false, error: "Verifica anti-bot fallita" }, 400);
+    }
+  }
+
+  try {
+    await env.DB.prepare(
+      "INSERT INTO newsletter (email, lang, source, consent, subscribed_at, unsubscribed_at) " +
+      "VALUES (?, ?, ?, ?, ?, NULL) " +
+      "ON CONFLICT(email) DO UPDATE SET lang=excluded.lang, source=excluded.source, " +
+      "consent=excluded.consent, subscribed_at=excluded.subscribed_at, unsubscribed_at=NULL"
+    ).bind(email, (body.lang || "").slice(0, 10), (body.source || "").slice(0, 50), 1, Date.now()).run();
+  } catch (e) {
+    console.error("Newsletter DB error:", e.message);
+    return jsonResponse({ ok: false, error: "Errore interno" }, 500);
+  }
+  return jsonResponse({ ok: true });
+}
+
 async function handlePortalSession(request, env) {
   // Estrae customerId: da query param (account già loggato) o da auth session
   const url = new URL(request.url);
@@ -3745,8 +3786,9 @@ async function handlePortalSession(request, env) {
   let customerId = customerIdFromQuery;
 
   // Se non c'è customerId in query, prova a ricavarlo dall'auth session
-  // Usa X-Account-Token header (coerente con gli altri handler come handleAccountDevices)
   if (!customerId) {
+    // getSessionToken non esiste in questo worker: la sessione del sito viaggia
+    // nell'header X-Account-Token (vedi gli altri handler).
     const sessionToken = request.headers.get("X-Account-Token");
     if (sessionToken) {
       const session = await sessionGet(env, "account", sessionToken);
@@ -3779,14 +3821,13 @@ async function handlePortalSession(request, env) {
     return jsonResponse({ error: data.error.message }, 400);
   }
 
-  // Se ?format=json o Accept: application/json, rispondi con JSON (per fetch dal frontend)
-  const wantsJson = url.searchParams.get("format") === "json" ||
-    request.headers.get("Accept")?.includes("application/json");
-  if (wantsJson) {
-    return jsonResponse({ ok: true, url: data.url });
-  }
-
   // Redirect al portale Stripe
+  // Un <a href> non puo' inviare header personalizzati: il pulsante del sito
+  // chiama in fetch con ?format=json e riceve l'url, poi ci porta l'utente.
+  // Il vecchio redirect resta per non rompere eventuali chiamanti.
+  const wantsJson = url.searchParams.get("format") === "json" ||
+    (request.headers.get("Accept") || "").includes("application/json");
+  if (wantsJson) return jsonResponse({ ok: true, url: data.url });
   return Response.redirect(data.url, 302);
 }
 
@@ -4589,21 +4630,6 @@ async function reverseRevenueStats(env, amount, plan, saleDate) {
 }
 
 async function handleTrackInstall(request, env) {
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
   const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
   const rlKey = `ratelimit:install:${ip}`;
   const rlVal = await kvGet(env.ADOFF_LICENSES, rlKey);
@@ -4669,21 +4695,6 @@ async function handleTrackInstall(request, env) {
 }
 
 async function handleTrackDownload(request, env) {
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
   const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
   const rlKey = `ratelimit:download:${ip}`;
   const rlVal = await kvGet(env.ADOFF_LICENSES, rlKey);
@@ -4722,21 +4733,6 @@ const UNINSTALL_REASONS = ["broken_site", "ads_visible", "confusing", "performan
 async function handleUninstall(request, env) {
   // Rate-limit largo per IP: l'utente sta già andando via, vogliamo le risposte,
   // ma evitiamo flood. Max ~5/ora per IP.
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
   const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
   const rlKey = `ratelimit:uninstall:${ip}`;
   const rlVal = parseInt(await kvGet(env.ADOFF_LICENSES, rlKey) || "0");
@@ -6295,21 +6291,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * Body: {email, password}
  */
 async function handleAuthRegister(body, env, request) {
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
   const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
   if (!await checkAuthRateLimit(ip, env)) {
     return jsonResponse({ ok: false, error: "Too many attempts. Try again in 1 hour." }, 429);
@@ -6409,21 +6390,6 @@ async function handleAuthVerifyEmail(body, env) {
  * Body: {email, password}
  */
 async function handleAuthLogin(body, env, request) {
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
   const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
   if (!await checkAuthRateLimit(ip, env)) {
     return jsonResponse({ ok: false, error: "Too many attempts. Try again in 1 hour." }, 429);
@@ -6499,21 +6465,6 @@ async function handleAuthLogin(body, env, request) {
  * Skips Turnstile (extension cannot render widgets), keeps rate limiting.
  */
 async function handleAuthGoogleExtension(body, env, request) {
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
   const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
   if (!await checkAuthRateLimit(ip, env)) {
     return jsonResponse({ ok: false, error: "Too many attempts. Try again in 1 hour." }, 429);
@@ -6610,21 +6561,6 @@ async function handleAuthGoogleExtension(body, env, request) {
  * Body: {email}
  */
 async function handleAuthForgotPassword(body, env, request) {
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
   const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
 
   if (!await verifyTurnstile(body.turnstileToken, ip, env)) {
@@ -7857,77 +7793,6 @@ async function buildAutofixDashboard(env) {
 }
 
 /** ─────────────────────────────────────────────────────────────────────────────
- * POST /newsletter — iscrizione newsletter (honeypot + Turnstile + D1 upsert)
- ───────────────────────────────────────────────────────────────────────────── */
-async function handleNewsletter(body, request, env) {
-  const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
-
-  // === DIFETTO 2: honeypot robusto — qualsiasi tipo non-stringa è sospetto ===
-  if (body.website !== undefined && !(typeof body.website === "string" && body.website.trim() === "")) {
-    return jsonResponse({ ok: true });
-  }
-
-  // Consenso esplicito OBBLIGATORIO
-  if (body.consent !== true) {
-    return jsonResponse({ ok: false, error: "Consenso esplicito richiesto" }, 400);
-  }
-
-  // Validazione email
-  const rawEmail = body.email;
-  if (!rawEmail || typeof rawEmail !== "string") {
-    return jsonResponse({ ok: false, error: "Email richiesta" }, 400);
-  }
-  const email = rawEmail.toLowerCase().trim().replace(/\s+/g, "");
-  if (email.length > 254) {
-    return jsonResponse({ ok: false, error: "Email troppo lunga" }, 400);
-  }
-  if (/[\x00-\x1f\x7f]/.test(email)) {
-    return jsonResponse({ ok: false, error: "Email non valida" }, 400);
-  }
-  if (!EMAIL_RE.test(email)) {
-    return jsonResponse({ ok: false, error: "Formato email non valido" }, 400);
-  }
-
-  // Rate limit
-  if (!checkRateLimit(ip)) {
-    return jsonResponse({ ok: false, error: "Troppe richieste. Riprova piu tardi." }, 429);
-  }
-
-  // === DIFETTO 3: Turnstile SEMPRE quando configurato — mai saltare ===
-  if (env.TURNSTILE_SECRET_KEY) {
-    if (!await verifyTurnstile(body.turnstileToken, ip, env)) {
-      return jsonResponse({ ok: false, error: "Verifica anti-bot fallita" }, 400);
-    }
-  }
-
-  // Scrittura D1: upsert (riattiva se disiscritto)
-  const now = Date.now();
-  try {
-    await env.DB.prepare(`
-      INSERT INTO newsletter (email, lang, source, consent, subscribed_at, unsubscribed_at)
-      VALUES (?, ?, ?, ?, ?, NULL)
-      ON CONFLICT(email) DO UPDATE SET
-        lang = excluded.lang,
-        source = excluded.source,
-        consent = excluded.consent,
-        subscribed_at = excluded.subscribed_at,
-        unsubscribed_at = NULL
-    `).bind(
-      email,
-      (body.lang || "").slice(0, 10),
-      (body.source || "").slice(0, 50),
-      1,
-      now
-    ).run();
-  } catch (e) {
-    console.error("Newsletter DB error:", e.message);
-    return jsonResponse({ ok: false, error: "Errore interno" }, 500);
-  }
-
-  return jsonResponse({ ok: true });
-}
-
-/** ─────────────────────────────────────────────────────────────────────────────
  * POST /admin/autofix/ingest — ingestisce leak dal crawler.
  ───────────────────────────────────────────────────────────────────────────── */
 async function handleAutofixIngest(request, env) {
@@ -8350,22 +8215,7 @@ export default {
     // Rate limiting solo per endpoint pubblici
     const isAdminEndpoint = path.startsWith("/admin");
     if (!isAdminEndpoint) {
-      // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  // === DIFETTO 1: body deve essere un oggetto non-null ===
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return jsonResponse({ ok: false, error: "Richiesta non valida" }, 400);
-  }
-
-  const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
+      const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
       const allowed = checkRateLimit(ip);
       if (!allowed) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
@@ -8453,12 +8303,6 @@ export default {
     }
 
     // POST admin endpoints — autofix
-    if (path === "/newsletter" && request.method === "POST") {
-      let body;
-      try { body = await request.json(); } catch { return withCors(jsonResponse({ ok: false, error: "Richiesta non valida" }, 400)); }
-      return withCors(handleNewsletter(body, request, env));
-    }
-
     if (request.method === "POST") {
       if (path === "/admin/autofix/ingest") return withCors(handleAutofixIngest(request, env));
       if (path === "/admin/autofix/decision") return withCors(handleAutofixDecision(request, env));
@@ -8548,6 +8392,13 @@ export default {
     }
 
     // Checkout session (crea sessione Stripe con dark mode)
+    if (path === "/newsletter" && request.method === "POST") {
+      let nlBody = null;
+      try { nlBody = await request.json(); }
+      catch { return withCors(jsonResponse({ ok: false, error: "JSON non valido" }, 400)); }
+      return withCors(handleNewsletter(nlBody, request, env));
+    }
+
     if (path === "/checkout" && request.method === "POST") {
       let checkoutBody;
       try { checkoutBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }

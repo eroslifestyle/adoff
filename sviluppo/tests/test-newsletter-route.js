@@ -36,6 +36,10 @@ function assertNotContains(source, substring, message) {
 const WORKER_PATH = path.resolve(__dirname, "../license-system/worker.js");
 const workerSource = fs.readFileSync(WORKER_PATH, "utf8");
 
+// Confronti indipendenti dalla formattazione: un a-capo diverso non deve
+// far fallire un'asserzione che riguarda la logica.
+const workerSourceFlat = workerSource.replace(/\s+/g, ' ');
+
 console.log("=== TEST: Newsletter Route ===\n");
 
 // Test 1: Route registrata nel dispatch
@@ -47,14 +51,14 @@ assertContains(
 );
 assertContains(
   workerSource,
-  "handleNewsletter(body, request, env)",
+  "handleNewsletter(nlBody, request, env)",
   'Dispatch deve chiamare handleNewsletter'
 );
 
 // Test 2: Honeypot
 console.log("\n2. Honeypot:");
 assertContains(
-  workerSource,
+  workerSourceFlat,
   'body.website !== undefined && !(typeof body.website === "string" && body.website.trim() === "")',
   'Honeypot robusto: body.website non-stringa attiva il bot trap'
 );
@@ -131,8 +135,8 @@ assertNotContains(
 // Test 6: On conflict gestisce riattivazione
 console.log("\n6. Riattivazione su re-iscrizione:");
 assertContains(
-  workerSource,
-  "unsubscribed_at = NULL",
+  workerSourceFlat.replace(/\s*=\s*/g, "="),
+  "unsubscribed_at=NULL",
   "ON CONFLICT azzera unsubscribed_at"
 );
 
