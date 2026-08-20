@@ -1,13 +1,30 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
-## Release 3.5.84 — PUBBLICATA (2026-08-19)
+## Release 3.6.0 — PUBBLICATA (2026-08-20) — AdOff e' gratuito per tutti
 
-- [x] Chrome Web Store: uploadState SUCCESS, publish OK
-- [x] Firefox AMO: versione 3.5.84 creata, canale listed, 0 errori di validazione
-- [x] Edge Add-ons: submission 1152921505701692005 caricata, in review
-- [x] adoff.app: deploy completato, i 3 ZIP riscaricati dal sito live sono a 3.5.84
-- [x] Telegram @adoffapp: post pubblicato in inglese con logo (message_id 130)
-- [ ] Verificare l'esito della review Edge
+Ogni funzione sbloccata per chiunque: nessun piano, nessuna scadenza, nessun account.
+Piano completato: `sviluppo/PIANO-FREE-PER-TUTTI.md` (tutti e sette i punti).
+
+- [x] Estensione sbloccata: `adoffPlanTier()` sempre "premium" in 18 copie, unico punto di decisione
+- [x] Sito riscritto: nucleo, 146 pagine SEO ripulite da 527 claim obsoleti, stessi URL
+- [x] VPN rimossa dal sito: 9 pagine archiviate con redirect 301
+- [x] 15 lingue allineate: ~8.200 celle tradotte in `site/i18n/_matrix.json`
+- [x] Worker: rotta `POST /newsletter` + tabella su D1, riparato il portale di disdetta
+- [x] Chrome Web Store: upload SUCCESS, publish OK
+- [x] Edge Add-ons: submission accettata (202)
+- [x] Firefox AMO: 3.6.0 caricata, stato `unreviewed`
+- [x] adoff.app: deploy completato, i 3 ZIP sono a 3.6.0
+- [x] Email ai 4 sostenitori (Resend) + post Telegram @adoffapp (message_id 133)
+- [ ] Verificare l'esito delle review: Chrome, Edge, AMO
+- [ ] Provare l'iscrizione newsletter dal browser reale (il Turnstile richiede il widget)
+
+### Da non ripetere (imparato in questa release)
+- Il worker si prova con `wrangler dev --local` PRIMA del deploy: un errore di
+  inizializzazione passa `node --check` e passa i test statici, ma rompe ogni rotta in
+  produzione. E' successo: 500 ovunque, rollback con `wrangler rollback <version-id>`.
+- Non si rimuovono elementi o id dall'HTML dell'estensione: `options.js` ne cerca 39, uno
+  senza guardia. Si cambiano i testi e si usa `display:none`.
+- Il database D1 si chiama `adoff-db`; Resend rifiuta `urllib` di Python (errore 1010): curl.
 
 ### Aperto: gate Pro intermittente
 Gate chiuso in 1 esecuzione su 4 a parita' di build e licenza. ESCLUSE: service worker
@@ -15,6 +32,7 @@ dormiente (il nonce e' generato localmente in `content.js:77`) e integrity corro
 salvato e ricalcolato coincidono). SOSPETTO: e' in parte una corsa del BANCO — togliendo
 l'attesa fra scrittura licenza e apertura pagina i fallimenti passano da 1/4 a 3/3.
 PROVA PULITA: scrivere la licenza, RIAVVIARE il browser, poi misurare piu' volte.
+Ora irrilevante per gli utenti (tutto e' gratuito) ma non compreso.
 Checkpoint: `.claude/checkpoints/CP_20260819_1230.md`
 
 
