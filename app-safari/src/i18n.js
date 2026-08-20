@@ -185,8 +185,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "Invita amici",
-      "ref.heroTitle": "Guadagna Pro gratis!",
-      "ref.heroDesc": "Per ogni amico che passa a Pro, ricevi 15 giorni di AdOff Pro gratis. Piu' amici porti, piu' giorni accumuli.",
+      "ref.heroTitle": "Invita un amico",
+      "ref.heroDesc": "Condividi il tuo link: piu' persone navigano senza pubblicita'.",
       "ref.linkTitle": "Il tuo link referral",
       "ref.copy": "Copia",
       "ref.yourCode": "Il tuo codice",
@@ -199,7 +199,7 @@ const i18n = (function () {
       "ref.howTitle": "Come funziona",
       "ref.step1": "Condividi il tuo link con gli amici",
       "ref.step2": "Il tuo amico installa AdOff",
-      "ref.step3": "Quando passa a Pro, tu ricevi +15 giorni gratis",
+      "ref.step3": "Il tuo amico installa AdOff e naviga senza pubblicita'",
       "ref.step4": "I giorni si accumulano senza limiti!",
       "ref.inviteTitle": "Invita un amico",
       "ref.inviteDesc": "Condividi il tuo link: piu' persone navigano senza pubblicita'.",
@@ -213,11 +213,11 @@ const i18n = (function () {
       "help.chipBroken": "Un sito non funziona",
       "help.chipVideoAds": "Le piattaforme video mostrano ancora ads",
       "help.chipWhitelist": "Come escludo un sito?",
-      "help.chipFreePro": "Differenza Free vs Pro",
+      "help.chipFreePro": "AdOff e' gratis",
       "help.chipPrivacy": "Privacy e dati personali",
       "help.chipSlow": "AdOff rallenta il browser?",
       "help.chipAntiblock": "Siti con anti-adblock",
-      "help.chipLicense": "Come attivo la licenza Pro?",
+      "help.chipLicense": "Ho una licenza, come la attivo?",
       "help.chipUninstall": "Come disinstallo AdOff?",
 
       // Report
@@ -245,7 +245,7 @@ const i18n = (function () {
 
       // Onboarding
       "onb.installed": "AdOff e' stato installato con successo!",
-      "onb.trial": "Hai 30 giorni di prova gratuita con tutte le funzionalita' Pro attive.",
+      "onb.trial": "Tutte le funzioni sono attive, gratis e senza account.",
       "onb.pinTitle": "Pinna AdOff nella barra",
       "onb.pinDesc": "Per accedere velocemente ad AdOff, pinnalo nella toolbar del browser:",
       "onb.step1": "Clicca l'icona puzzle",
@@ -263,7 +263,7 @@ const i18n = (function () {
       "onb.feat4": "Ultra Leggero",
       "onb.feat4d": "Estensione leggerissima — zero rallentamenti, lavora in silenzio",
       "onb.feat5": "Video senza Ads",
-      "onb.feat5d": "Pubblicita' video neutralizzate — il player parte subito (Pro)",
+      "onb.feat5d": "Pubblicita' video neutralizzate",
       "onb.feat6": "Privacy Totale",
       "onb.feat6d": "Zero telemetria, zero log: nemmeno noi sappiamo cosa fai",
       "onb.start": "Inizia a navigare",
@@ -463,8 +463,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "Invite friends",
-      "ref.heroTitle": "Earn Pro for free!",
-      "ref.heroDesc": "For every friend who upgrades to Pro, you get 30 days of AdOff Pro free. The more friends you bring, the more days you earn.",
+      "ref.heroTitle": "Invite a friend",
+      "ref.heroDesc": "Share your link: more people browsing without ads.",
       "ref.linkTitle": "Your referral link",
       "ref.copy": "Copy",
       "ref.yourCode": "Your code",
@@ -477,7 +477,7 @@ const i18n = (function () {
       "ref.howTitle": "How it works",
       "ref.step1": "Share your link with friends",
       "ref.step2": "Your friend installs AdOff",
-      "ref.step3": "When they upgrade to Pro, you get +15 free days",
+      "ref.step3": "Your friend installs AdOff and browses without ads",
       "ref.step4": "Days accumulate with no limits!",
       "ref.inviteTitle": "Invite a friend",
       "ref.inviteDesc": "Share your link: more people browsing without ads.",
@@ -491,11 +491,11 @@ const i18n = (function () {
       "help.chipBroken": "A site doesn't work",
       "help.chipVideoAds": "Video platforms still show ads",
       "help.chipWhitelist": "How do I exclude a site?",
-      "help.chipFreePro": "Free vs Pro difference",
+      "help.chipFreePro": "AdOff is free",
       "help.chipPrivacy": "Privacy and personal data",
       "help.chipSlow": "Does AdOff slow down the browser?",
       "help.chipAntiblock": "Sites with anti-adblock",
-      "help.chipLicense": "How do I activate Pro license?",
+      "help.chipLicense": "I have a license, how do I activate it?",
       "help.chipUninstall": "How do I uninstall AdOff?",
 
       // Report
@@ -523,7 +523,7 @@ const i18n = (function () {
 
       // Onboarding
       "onb.installed": "AdOff has been installed successfully!",
-      "onb.trial": "You have a 30-day free trial with all Pro features enabled.",
+      "onb.trial": "Every feature is on, free, no account needed.",
       "onb.pinTitle": "Pin AdOff to your toolbar",
       "onb.pinDesc": "For quick access, pin AdOff to your browser toolbar:",
       "onb.step1": "Click the puzzle icon",
@@ -541,7 +541,7 @@ const i18n = (function () {
       "onb.feat4": "Ultra Light",
       "onb.feat4d": "Minimal footprint — no slowdowns, runs silently",
       "onb.feat5": "Ad-Free Video",
-      "onb.feat5d": "Video ads neutralized — the player starts instantly (Pro)",
+      "onb.feat5d": "Video ads neutralized",
       "onb.feat6": "Total Privacy",
       "onb.feat6d": "Zero telemetry, zero logs: not even we know what you do",
       "onb.start": "Start browsing",
@@ -728,8 +728,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "Freunde einladen",
-      "ref.heroTitle": "Verdiene Pro kostenlos!",
-      "ref.heroDesc": "Fur jeden Freund, der auf Pro upgradet, erhaltst du 30 Tage AdOff Pro kostenlos.",
+      "ref.heroTitle": "Invite a friend",
+      "ref.heroDesc": "Share your link: more people browsing without ads.",
       "ref.linkTitle": "Dein Empfehlungslink",
       "ref.copy": "Kopieren",
       "ref.codeLabel": "Code:",
@@ -741,7 +741,7 @@ const i18n = (function () {
       "ref.howTitle": "So funktioniert's",
       "ref.step1": "Teile deinen Link mit Freunden",
       "ref.step2": "Dein Freund installiert AdOff",
-      "ref.step3": "Wenn er auf Pro upgradet, erhaltst du +15 Tage gratis",
+      "ref.step3": "Your friend installs AdOff and browses without ads",
       "ref.step4": "Tage sammeln sich unbegrenzt!",
 
       // Hilfe / FAQ
@@ -753,11 +753,11 @@ const i18n = (function () {
       "help.chipBroken": "Eine Seite funktioniert nicht",
       "help.chipVideoAds": "Video-Plattformen zeigen noch Werbung",
       "help.chipWhitelist": "Wie schliesse ich eine Seite aus?",
-      "help.chipFreePro": "Unterschied Free vs Pro",
+      "help.chipFreePro": "AdOff ist kostenlos",
       "help.chipPrivacy": "Datenschutz und personliche Daten",
       "help.chipSlow": "Verlangsamt AdOff den Browser?",
       "help.chipAntiblock": "Seiten mit Anti-Adblock",
-      "help.chipLicense": "Wie aktiviere ich die Pro-Lizenz?",
+      "help.chipLicense": "Ich habe eine Lizenz, wie aktiviere ich sie?",
       "help.chipUninstall": "Wie deinstalliere ich AdOff?",
 
       // Report
@@ -785,7 +785,7 @@ const i18n = (function () {
 
       // Onboarding
       "onb.installed": "AdOff wurde erfolgreich installiert!",
-      "onb.trial": "Du hast eine 30-tagige kostenlose Testversion mit allen Pro-Funktionen.",
+      "onb.trial": "Alle Funktionen sind aktiv, kostenlos und ohne Konto.",
       "onb.pinTitle": "AdOff in die Leiste pinnen",
       "onb.pinDesc": "Fur schnellen Zugriff, pinne AdOff in die Browser-Toolbar:",
       "onb.step1": "Klicke das Puzzle-Symbol",
@@ -803,7 +803,7 @@ const i18n = (function () {
       "onb.feat4": "Ultra-leicht",
       "onb.feat4d": "Minimaler Footprint — keine Verlangsamungen, lautlos im Hintergrund",
       "onb.feat5": "Werbefreie Videos",
-      "onb.feat5d": "Video-Werbung neutralisiert — der Player startet sofort (Pro)",
+      "onb.feat5d": "Video ads neutralized — the player starts instantly",
       "onb.feat6": "Vollstandige Privatsphare",
       "onb.feat6d": "Keine Telemetrie, keine Logs: nicht einmal wir wissen, was du tust",
       "onb.start": "Jetzt surfen",
@@ -990,8 +990,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "Inviter des amis",
-      "ref.heroTitle": "Gagnez Pro gratuitement!",
-      "ref.heroDesc": "Pour chaque ami qui passe a Pro, vous recevez 30 jours d'AdOff Pro gratuit.",
+      "ref.heroTitle": "Invite a friend",
+      "ref.heroDesc": "Share your link: more people browsing without ads.",
       "ref.linkTitle": "Votre lien de parrainage",
       "ref.copy": "Copier",
       "ref.codeLabel": "Code:",
@@ -1003,7 +1003,7 @@ const i18n = (function () {
       "ref.howTitle": "Comment ca marche",
       "ref.step1": "Partagez votre lien avec des amis",
       "ref.step2": "Votre ami installe AdOff",
-      "ref.step3": "Quand il passe a Pro, vous recevez +15 jours gratuits",
+      "ref.step3": "Your friend installs AdOff and browses without ads",
       "ref.step4": "Les jours s'accumulent sans limites!",
 
       // Aide / FAQ
@@ -1015,11 +1015,11 @@ const i18n = (function () {
       "help.chipBroken": "Un site ne fonctionne pas",
       "help.chipVideoAds": "Les plateformes video montrent encore des pubs",
       "help.chipWhitelist": "Comment exclure un site?",
-      "help.chipFreePro": "Difference Free vs Pro",
+      "help.chipFreePro": "AdOff ist kostenlos",
       "help.chipPrivacy": "Vie privee et donnees personnelles",
       "help.chipSlow": "AdOff ralentit le navigateur?",
       "help.chipAntiblock": "Sites avec anti-adblock",
-      "help.chipLicense": "Comment activer la licence Pro?",
+      "help.chipLicense": "J'ai une licence, comment l'activer?",
       "help.chipUninstall": "Comment desinstaller AdOff?",
 
       // Report
@@ -1047,7 +1047,7 @@ const i18n = (function () {
 
       // Onboarding
       "onb.installed": "AdOff a ete installe avec succes!",
-      "onb.trial": "Vous avez un essai gratuit de 30 jours avec toutes les fonctionnalites Pro.",
+      "onb.trial": "Toutes les fonctions sont activees, gratuites et sans compte.",
       "onb.pinTitle": "Epinglez AdOff dans la barre",
       "onb.pinDesc": "Pour un acces rapide, epinglez AdOff dans la barre d'outils du navigateur:",
       "onb.step1": "Cliquez l'icone puzzle",
@@ -1065,7 +1065,7 @@ const i18n = (function () {
       "onb.feat4": "Ultra leger",
       "onb.feat4d": "Empreinte minimale — sans ralentissements, fonctionne en silence",
       "onb.feat5": "Video sans pub",
-      "onb.feat5d": "Pubs video neutralisees — le lecteur demarre aussitot (Pro)",
+      "onb.feat5d": "Pubs video neutralisees",
       "onb.feat6": "Confidentialite totale",
       "onb.feat6d": "Zero telemetrie, zero journaux : meme nous ne savons pas ce que tu fais",
       "onb.start": "Commencer a naviguer",
@@ -1252,8 +1252,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "Invitar amigos",
-      "ref.heroTitle": "Gana Pro gratis!",
-      "ref.heroDesc": "Por cada amigo que pase a Pro, recibes 30 dias de AdOff Pro gratis.",
+      "ref.heroTitle": "Invite a friend",
+      "ref.heroDesc": "Share your link: more people browsing without ads.",
       "ref.linkTitle": "Tu enlace de referido",
       "ref.copy": "Copiar",
       "ref.codeLabel": "Codigo:",
@@ -1265,7 +1265,7 @@ const i18n = (function () {
       "ref.howTitle": "Como funciona",
       "ref.step1": "Comparte tu enlace con amigos",
       "ref.step2": "Tu amigo instala AdOff",
-      "ref.step3": "Cuando pasa a Pro, recibes +15 dias gratis",
+      "ref.step3": "Your friend installs AdOff and browses without ads",
       "ref.step4": "Los dias se acumulan sin limites!",
 
       // Ayuda / FAQ
@@ -1277,11 +1277,11 @@ const i18n = (function () {
       "help.chipBroken": "Un sitio no funciona",
       "help.chipVideoAds": "Las plataformas de video siguen mostrando anuncios",
       "help.chipWhitelist": "Como excluyo un sitio?",
-      "help.chipFreePro": "Diferencia Free vs Pro",
+      "help.chipFreePro": "AdOff es gratis",
       "help.chipPrivacy": "Privacidad y datos personales",
       "help.chipSlow": "AdOff ralentiza el navegador?",
       "help.chipAntiblock": "Sitios con anti-adblock",
-      "help.chipLicense": "Como activo la licencia Pro?",
+      "help.chipLicense": "Tengo una licencia, como la activo?",
       "help.chipUninstall": "Como desinstalo AdOff?",
 
       // Report
@@ -1309,7 +1309,7 @@ const i18n = (function () {
 
       // Onboarding
       "onb.installed": "AdOff ha sido instalado con exito!",
-      "onb.trial": "Tienes una prueba gratuita de 30 dias con todas las funciones Pro.",
+      "onb.trial": "Todas las funciones estan activas, gratis y sin cuenta.",
       "onb.pinTitle": "Fija AdOff en la barra",
       "onb.pinDesc": "Para acceso rapido, fija AdOff en la barra de herramientas del navegador:",
       "onb.step1": "Haz clic en el icono puzzle",
@@ -1327,7 +1327,7 @@ const i18n = (function () {
       "onb.feat4": "Ultra ligero",
       "onb.feat4d": "Huella mínima — sin ralentizaciones, funciona silenciosamente",
       "onb.feat5": "Video sin anuncios",
-      "onb.feat5d": "Anuncios de video neutralizados — el reproductor arranca al instante (Pro)",
+      "onb.feat5d": "Anuncios de video neutralizados",
       "onb.feat6": "Privacidad total",
       "onb.feat6d": "Cero telemetria, cero registros: ni siquiera nosotros sabemos que haces",
       "onb.start": "Empezar a navegar",
@@ -1514,8 +1514,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "Convidar amigos",
-      "ref.heroTitle": "Ganhe Pro gratis!",
-      "ref.heroDesc": "Para cada amigo que passar para Pro, voce recebe 30 dias de AdOff Pro gratis.",
+      "ref.heroTitle": "Invite a friend",
+      "ref.heroDesc": "Share your link: more people browsing without ads.",
       "ref.linkTitle": "Seu link de indicacao",
       "ref.copy": "Copiar",
       "ref.codeLabel": "Codigo:",
@@ -1527,7 +1527,7 @@ const i18n = (function () {
       "ref.howTitle": "Como funciona",
       "ref.step1": "Compartilhe seu link com amigos",
       "ref.step2": "Seu amigo instala o AdOff",
-      "ref.step3": "Quando passa para Pro, voce recebe +15 dias gratis",
+      "ref.step3": "Your friend installs AdOff and browses without ads",
       "ref.step4": "Os dias se acumulam sem limites!",
 
       // Ajuda / FAQ
@@ -1539,11 +1539,11 @@ const i18n = (function () {
       "help.chipBroken": "Um site nao funciona",
       "help.chipVideoAds": "As plataformas de video ainda mostram anuncios",
       "help.chipWhitelist": "Como excluo um site?",
-      "help.chipFreePro": "Diferenca Free vs Pro",
+      "help.chipFreePro": "AdOff e gratis",
       "help.chipPrivacy": "Privacidade e dados pessoais",
       "help.chipSlow": "O AdOff deixa o navegador lento?",
       "help.chipAntiblock": "Sites com anti-adblock",
-      "help.chipLicense": "Como ativo a licenca Pro?",
+      "help.chipLicense": "Tenho uma licenca, como ativo?",
       "help.chipUninstall": "Como desinstalo o AdOff?",
 
       // Report
@@ -1571,7 +1571,7 @@ const i18n = (function () {
 
       // Onboarding
       "onb.installed": "AdOff foi instalado com sucesso!",
-      "onb.trial": "Voce tem um periodo de teste gratuito de 30 dias com todos os recursos Pro.",
+      "onb.trial": "Todas as funcoes estao ativas, gratis e sem conta.",
       "onb.pinTitle": "Fixe o AdOff na barra",
       "onb.pinDesc": "Para acesso rapido, fixe o AdOff na barra de ferramentas do navegador:",
       "onb.step1": "Clique no icone puzzle",
@@ -1589,7 +1589,7 @@ const i18n = (function () {
       "onb.feat4": "Ultra leve",
       "onb.feat4d": "Pegada mínima — sem lentidão, funciona silenciosamente",
       "onb.feat5": "Video sem anuncios",
-      "onb.feat5d": "Anuncios de video neutralizados — o player comeca na hora (Pro)",
+      "onb.feat5d": "Video ads neutralized — the player starts instantly",
       "onb.feat6": "Privacidade total",
       "onb.feat6d": "Zero telemetria, zero registos: nem nos sabemos o que fazes",
       "onb.start": "Comecar a navegar",
@@ -1776,8 +1776,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "Пригласить друзей",
-      "ref.heroTitle": "Получите Pro бесплатно!",
-      "ref.heroDesc": "За каждого друга, который перейдёт на Pro, вы получите 30 дней AdOff Pro бесплатно. Чем больше друзей — тем больше дней.",
+      "ref.heroTitle": "Invite a friend",
+      "ref.heroDesc": "Share your link: more people browsing without ads.",
       "ref.linkTitle": "Ваша реферальная ссылка",
       "ref.copy": "Копировать",
       "ref.codeLabel": "Код:",
@@ -1789,7 +1789,7 @@ const i18n = (function () {
       "ref.howTitle": "Как это работает",
       "ref.step1": "Поделитесь ссылкой с друзьями",
       "ref.step2": "Друг устанавливает AdOff",
-      "ref.step3": "Когда он переходит на Pro, вы получаете +15 бесплатных дней",
+      "ref.step3": "Your friend installs AdOff and browses without ads",
       "ref.step4": "Дни накапливаются без ограничений!",
 
       // Help / FAQ
@@ -1801,11 +1801,11 @@ const i18n = (function () {
       "help.chipBroken": "Сайт не работает",
       "help.chipVideoAds": "Видеоплатформы всё ещё показывают рекламу",
       "help.chipWhitelist": "Как исключить сайт?",
-      "help.chipFreePro": "Отличие Free от Pro",
+      "help.chipFreePro": "AdOff besplatno",
       "help.chipPrivacy": "Конфиденциальность и личные данные",
       "help.chipSlow": "AdOff замедляет браузер?",
       "help.chipAntiblock": "Сайты с антиблокировкой",
-      "help.chipLicense": "Как активировать лицензию Pro?",
+      "help.chipLicense": "U menya est' licenziya, kak aktivirovat'?",
       "help.chipUninstall": "Как удалить AdOff?",
 
       // Report
@@ -1833,7 +1833,7 @@ const i18n = (function () {
 
       // Onboarding
       "onb.installed": "AdOff успешно установлен!",
-      "onb.trial": "У вас есть 30-дневный бесплатный пробный период со всеми функциями Pro.",
+      "onb.trial": "Все функции активны, бесплатно и без аккаунта.",
       "onb.pinTitle": "Закрепите AdOff на панели",
       "onb.pinDesc": "Для быстрого доступа закрепите AdOff на панели инструментов браузера:",
       "onb.step1": "Нажмите на иконку пазла",
@@ -1851,7 +1851,7 @@ const i18n = (function () {
       "onb.feat4": "Сверхлёгкий",
       "onb.feat4d": "Минимальный след — без замедлений, работает тихо",
       "onb.feat5": "Видео без рекламы",
-      "onb.feat5d": "Видеореклама нейтрализована — плеер запускается сразу (Pro)",
+      "onb.feat5d": "Видеореклама нейтрализована",
       "onb.feat6": "Полная приватность",
       "onb.feat6d": "Ноль телеметрии, ноль логов: даже мы не знаем, что ты делаешь",
       "onb.start": "Начать просмотр",
@@ -2038,8 +2038,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "دعوة الأصدقاء",
-      "ref.heroTitle": "احصل على Pro مجاناً!",
-      "ref.heroDesc": "مقابل كل صديق ينتقل إلى Pro، ستحصل على 30 يوماً من AdOff Pro مجاناً. كلما دعوت أكثر، كلما راكمت أياماً أكثر.",
+      "ref.heroTitle": "Invite a friend",
+      "ref.heroDesc": "Share your link: more people browsing without ads.",
       "ref.linkTitle": "رابط الإحالة الخاص بك",
       "ref.copy": "نسخ",
       "ref.codeLabel": "الكود:",
@@ -2051,7 +2051,7 @@ const i18n = (function () {
       "ref.howTitle": "كيف يعمل",
       "ref.step1": "شارك رابطك مع الأصدقاء",
       "ref.step2": "يقوم صديقك بتثبيت AdOff",
-      "ref.step3": "عندما ينتقل إلى Pro، تحصل على +15 يوماً مجاناً",
+      "ref.step3": "Your friend installs AdOff and browses without ads",
       "ref.step4": "تتراكم الأيام بلا حدود!",
 
       // Help / FAQ
@@ -2067,7 +2067,7 @@ const i18n = (function () {
       "help.chipPrivacy": "الخصوصية والبيانات الشخصية",
       "help.chipSlow": "هل AdOff يُبطئ المتصفح؟",
       "help.chipAntiblock": "المواقع ذات حجب الإعلانات المضاد",
-      "help.chipLicense": "كيف أُفعِّل ترخيص Pro؟",
+      "help.chipLicense": "indhini lycens, kayf 'ufeedl?",
       "help.chipUninstall": "كيف أُزيل AdOff؟",
 
       // Report
@@ -2095,7 +2095,7 @@ const i18n = (function () {
 
       // Onboarding
       "onb.installed": "تم تثبيت AdOff بنجاح!",
-      "onb.trial": "لديك فترة تجريبية مجانية لمدة 30 يوماً مع جميع ميزات Pro.",
+      "onb.trial": "جميع الميزات مفعلة ومجانية بدون حساب.",
       "onb.pinTitle": "ثبِّت AdOff في شريط الأدوات",
       "onb.pinDesc": "للوصول السريع، ثبِّت AdOff في شريط أدوات المتصفح:",
       "onb.step1": "انقر على أيقونة الأحجية",
@@ -2113,7 +2113,7 @@ const i18n = (function () {
       "onb.feat4": "خفيف للغاية",
       "onb.feat4d": "بصمة صغيرة — لا تأخير، يعمل بصمت",
       "onb.feat5": "فيديو بلا إعلانات",
-      "onb.feat5d": "تحييد إعلانات الفيديو — يبدأ المشغّل فورًا (Pro)",
+      "onb.feat5d": "تحييد إعلانات الفيديو",
       "onb.feat6": "خصوصية كاملة",
       "onb.feat6d": "صفر تتبّع، صفر سجلات: حتى نحن لا نعرف ماذا تفعل",
       "onb.start": "ابدأ التصفح",
@@ -2300,8 +2300,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "邀请好友",
-      "ref.heroTitle": "免费获得 Pro！",
-      "ref.heroDesc": "每邀请一位升级 Pro 的好友，您将获得 30 天免费 AdOff Pro。邀请越多，获得越多。",
+      "ref.heroTitle": "Invite a friend",
+      "ref.heroDesc": "Share your link: more people browsing without ads.",
       "ref.linkTitle": "您的推荐链接",
       "ref.copy": "复制",
       "ref.codeLabel": "代码：",
@@ -2313,7 +2313,7 @@ const i18n = (function () {
       "ref.howTitle": "如何运作",
       "ref.step1": "将您的链接分享给好友",
       "ref.step2": "好友安装 AdOff",
-      "ref.step3": "当他们升级到 Pro，您将获得 +15 天免费",
+      "ref.step3": "Your friend installs AdOff and browses without ads",
       "ref.step4": "天数无限累积！",
 
       // Help / FAQ
@@ -2325,11 +2325,11 @@ const i18n = (function () {
       "help.chipBroken": "某个网站无法正常使用",
       "help.chipVideoAds": "视频平台仍在显示广告",
       "help.chipWhitelist": "如何排除某个网站？",
-      "help.chipFreePro": "免费版与 Pro 的区别",
+      "help.chipFreePro": "AdOff mianfei",
       "help.chipPrivacy": "隐私与个人数据",
       "help.chipSlow": "AdOff 会让浏览器变慢吗？",
       "help.chipAntiblock": "具有反广告拦截的网站",
-      "help.chipLicense": "如何激活 Pro 许可证？",
+      "help.chipLicense": "Wo you lichenzheng, ruhe jihuo?",
       "help.chipUninstall": "如何卸载 AdOff？",
 
       // Report
@@ -2357,7 +2357,7 @@ const i18n = (function () {
 
       // Onboarding
       "onb.installed": "AdOff 安装成功！",
-      "onb.trial": "您有 30 天免费试用期，所有 Pro 功能均已启用。",
+      "onb.trial": "所有功能已启用，免费，无需账户。",
       "onb.pinTitle": "将 AdOff 固定到工具栏",
       "onb.pinDesc": "为了快速访问，请将 AdOff 固定到浏览器工具栏：",
       "onb.step1": "点击拼图图标",
@@ -2375,7 +2375,7 @@ const i18n = (function () {
       "onb.feat4": "超轻量",
       "onb.feat4d": "极小占用 — 无延迟，静默运行",
       "onb.feat5": "无广告视频",
-      "onb.feat5d": "视频广告被中和 — 播放器立即开始（Pro）",
+      "onb.feat5d": "Video ads neutralized — the player starts instantly",
       "onb.feat6": "全面隐私",
       "onb.feat6d": "零遥测、零日志：连我们也不知道你做了什么",
       "onb.start": "开始浏览",
@@ -2562,8 +2562,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "Arkadas davet et",
-      "ref.heroTitle": "Pro'yu ucretsiz kazan!",
-      "ref.heroDesc": "Pro'ya gecen her arkadas icin 15 gun ucretsiz AdOff Pro kazanirsin. Ne kadar cok arkadas getirirsen, o kadar cok gun birikir.",
+      "ref.heroTitle": "Invite a friend",
+      "ref.heroDesc": "Share your link: more people browsing without ads.",
       "ref.linkTitle": "Referans baglantini",
       "ref.copy": "Kopyala",
       "ref.codeLabel": "Kod:",
@@ -2575,7 +2575,7 @@ const i18n = (function () {
       "ref.howTitle": "Nasil calisir",
       "ref.step1": "Baglantini arkadaslarinla paylas",
       "ref.step2": "Arkadasin AdOff'u yukler",
-      "ref.step3": "Pro'ya gectiginde +15 ucretsiz gun alirsin",
+      "ref.step3": "Your friend installs AdOff and browses without ads",
       "ref.step4": "Gunler sinir olmaksizin birikir!",
 
       // Yardim / SSS
@@ -2587,11 +2587,11 @@ const i18n = (function () {
       "help.chipBroken": "Bir site calismıyor",
       "help.chipVideoAds": "Video platformlari hala reklam gosteriyor",
       "help.chipWhitelist": "Bir siteyi nasil haric tutarim?",
-      "help.chipFreePro": "Free ve Pro farki",
+      "help.chipFreePro": "AdOff ucretsizdir",
       "help.chipPrivacy": "Gizlilik ve kisisel veriler",
       "help.chipSlow": "AdOff tarayicimi yavaslatıyor mu?",
       "help.chipAntiblock": "Anti-adblock olan siteler",
-      "help.chipLicense": "Pro lisansini nasil etkinlestiririm?",
+      "help.chipLicense": "Lisansim var, nasil etkinlestiririm?",
       "help.chipUninstall": "AdOff'u nasil kaldiririm?",
 
       // Rapor
@@ -2619,7 +2619,7 @@ const i18n = (function () {
 
       // Katilim
       "onb.installed": "AdOff basariyla yuklendi!",
-      "onb.trial": "Tum Pro ozellikleriyle 30 gunluk ucretsiz deneme sureniz var.",
+      "onb.trial": "Tum ozellikler aktif, ucretsiz ve hesap gerektirmez.",
       "onb.pinTitle": "AdOff'u cubuga sabitle",
       "onb.pinDesc": "Hizli erisim icin AdOff'u tarayici arac cubuguna sabitleyin:",
       "onb.step1": "Yapboz simgesine tiklayin",
@@ -2637,7 +2637,7 @@ const i18n = (function () {
       "onb.feat4": "Ultra Hafif",
       "onb.feat4d": "Minimum etki — yavaşlama yok, sessizce çalışır",
       "onb.feat5": "Reklamsiz Video",
-      "onb.feat5d": "Video reklamlari etkisiz hale getirilir — oynatici aninda baslar (Pro)",
+      "onb.feat5d": "Video reklamlari etkisiz hale getirilir",
       "onb.feat6": "Tam Gizlilik",
       "onb.feat6d": "Sifir telemetri, sifir kayit: ne yaptigini biz bile bilmiyoruz",
       "onb.start": "Gezmeye basla",
@@ -2824,8 +2824,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "Undang teman",
-      "ref.heroTitle": "Dapatkan Pro gratis!",
-      "ref.heroDesc": "Untuk setiap teman yang upgrade ke Pro, Anda mendapat 30 hari AdOff Pro gratis. Semakin banyak teman, semakin banyak hari yang terkumpul.",
+      "ref.heroTitle": "Invite a friend",
+      "ref.heroDesc": "Share your link: more people browsing without ads.",
       "ref.linkTitle": "Tautan referral Anda",
       "ref.copy": "Salin",
       "ref.codeLabel": "Kode:",
@@ -2837,7 +2837,7 @@ const i18n = (function () {
       "ref.howTitle": "Cara kerjanya",
       "ref.step1": "Bagikan tautan Anda ke teman",
       "ref.step2": "Teman Anda menginstal AdOff",
-      "ref.step3": "Ketika mereka upgrade ke Pro, Anda mendapat +15 hari gratis",
+      "ref.step3": "Your friend installs AdOff and browses without ads",
       "ref.step4": "Hari terus bertambah tanpa batas!",
 
       // Bantuan / FAQ
@@ -2849,11 +2849,11 @@ const i18n = (function () {
       "help.chipBroken": "Situs tidak berfungsi",
       "help.chipVideoAds": "Platform video masih menampilkan iklan",
       "help.chipWhitelist": "Bagaimana cara mengecualikan situs?",
-      "help.chipFreePro": "Perbedaan Free vs Pro",
+      "help.chipFreePro": "AdOff gratis",
       "help.chipPrivacy": "Privasi dan data pribadi",
       "help.chipSlow": "Apakah AdOff memperlambat browser?",
       "help.chipAntiblock": "Situs dengan anti-adblock",
-      "help.chipLicense": "Bagaimana cara mengaktifkan lisensi Pro?",
+      "help.chipLicense": "Saya punya lisensi, bagaimana mengaktifkannya?",
       "help.chipUninstall": "Bagaimana cara menghapus AdOff?",
 
       // Laporan
@@ -2881,7 +2881,7 @@ const i18n = (function () {
 
       // Orientasi
       "onb.installed": "AdOff telah berhasil diinstal!",
-      "onb.trial": "Anda memiliki uji coba gratis 30 hari dengan semua fitur Pro aktif.",
+      "onb.trial": "Semua fitur aktif, gratis dan tanpa akun.",
       "onb.pinTitle": "Sematkan AdOff ke bilah alat",
       "onb.pinDesc": "Untuk akses cepat, sematkan AdOff ke bilah alat browser Anda:",
       "onb.step1": "Klik ikon puzzle",
@@ -2899,7 +2899,7 @@ const i18n = (function () {
       "onb.feat4": "Ultra Ringan",
       "onb.feat4d": "Jejak minimal — tanpa perlambatan, berjalan diam-diam",
       "onb.feat5": "Video Tanpa Iklan",
-      "onb.feat5d": "Iklan video dinetralkan — pemutar langsung mulai (Pro)",
+      "onb.feat5d": "Iklan video dinetralkan",
       "onb.feat6": "Privasi Penuh",
       "onb.feat6d": "Nol telemetri, nol log: kami pun tidak tahu apa yang kamu lakukan",
       "onb.start": "Mulai menjelajah",
@@ -3086,8 +3086,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "Zapraszaj znajomych",
-      "ref.heroTitle": "Zdobadz Pro za darmo!",
-      "ref.heroDesc": "Za kazdego znajomego, ktory przejdzie na Pro, otrzymujesz 30 dni AdOff Pro za darmo. Im wiecej znajomych przyciagniesz, tym wiecej dni zbierasz.",
+      "ref.heroTitle": "Invite a friend",
+      "ref.heroDesc": "Share your link: more people browsing without ads.",
       "ref.linkTitle": "Twoj link referralny",
       "ref.copy": "Kopiuj",
       "ref.codeLabel": "Kod:",
@@ -3099,7 +3099,7 @@ const i18n = (function () {
       "ref.howTitle": "Jak to dziala",
       "ref.step1": "Udostepnij swoj link znajomym",
       "ref.step2": "Twoj znajomy instaluje AdOff",
-      "ref.step3": "Gdy przejdzie na Pro, otrzymujesz +15 darmowych dni",
+      "ref.step3": "Your friend installs AdOff and browses without ads",
       "ref.step4": "Dni kumuluja sie bez ograniczen!",
 
       // Pomoc / FAQ
@@ -3111,11 +3111,11 @@ const i18n = (function () {
       "help.chipBroken": "Strona nie dziala",
       "help.chipVideoAds": "Platformy wideo nadal pokazuja reklamy",
       "help.chipWhitelist": "Jak wykluczyc strone?",
-      "help.chipFreePro": "Roznica Free vs Pro",
+      "help.chipFreePro": "AdOff jest darmowe",
       "help.chipPrivacy": "Prywatnosc i dane osobowe",
       "help.chipSlow": "Czy AdOff spowalnia przegladarke?",
       "help.chipAntiblock": "Strony z anti-adblock",
-      "help.chipLicense": "Jak aktywowac licencje Pro?",
+      "help.chipLicense": "Mam licencje, jak ja aktywowac?",
       "help.chipUninstall": "Jak odinstalowac AdOff?",
 
       // Raport
@@ -3143,7 +3143,7 @@ const i18n = (function () {
 
       // Wdrozenie
       "onb.installed": "AdOff zostal pomyslnie zainstalowany!",
-      "onb.trial": "Masz 30-dniowy bezplatny okres probny ze wszystkimi funkcjami Pro.",
+      "onb.trial": "Wszystkie funkcje sa aktywne, za darmo i bez konta.",
       "onb.pinTitle": "Przypnij AdOff do paska",
       "onb.pinDesc": "Aby uzyskac szybki dostep, przypnij AdOff do paska narzedzi przegladarki:",
       "onb.step1": "Kliknij ikone ukladanki",
@@ -3161,7 +3161,7 @@ const i18n = (function () {
       "onb.feat4": "Ultra Lekki",
       "onb.feat4d": "Minimalny ślad — bez spowolnień, działa cicho",
       "onb.feat5": "Wideo bez reklam",
-      "onb.feat5d": "Reklamy wideo zneutralizowane — odtwarzacz startuje od razu (Pro)",
+      "onb.feat5d": "Video ads neutralized — the player starts instantly",
       "onb.feat6": "Pelna prywatnosc",
       "onb.feat6d": "Zero telemetrii, zero logow: nawet my nie wiemy, co robisz",
       "onb.start": "Zacznij przegladac",
@@ -3347,8 +3347,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "दोस्त आमंत्रित करें",
-      "ref.heroTitle": "मुफ्त में Pro पाएं!",
-      "ref.heroDesc": "हर दोस्त के Pro में अपग्रेड करने पर आपको 30 दिन का AdOff Pro मुफ्त मिलता है। जितने अधिक दोस्त, उतने अधिक दिन।",
+      "ref.heroTitle": "Invite a friend",
+      "ref.heroDesc": "Share your link: more people browsing without ads.",
       "ref.linkTitle": "आपका रेफरल लिंक",
       "ref.copy": "कॉपी करें",
       "ref.codeLabel": "कोड:",
@@ -3360,7 +3360,7 @@ const i18n = (function () {
       "ref.howTitle": "यह कैसे काम करता है",
       "ref.step1": "दोस्तों के साथ अपना लिंक शेयर करें",
       "ref.step2": "आपका दोस्त AdOff इंस्टॉल करे",
-      "ref.step3": "जब वे Pro में अपग्रेड करें, आपको +15 मुफ्त दिन मिलेंगे",
+      "ref.step3": "Your friend installs AdOff and browses without ads",
       "ref.step4": "दिन बिना किसी सीमा के जुड़ते रहते हैं!",
 
       // Help / FAQ
@@ -3372,11 +3372,11 @@ const i18n = (function () {
       "help.chipBroken": "एक साइट काम नहीं कर रही",
       "help.chipVideoAds": "वीडियो प्लेटफ़ॉर्म अभी भी विज्ञापन दिखाते हैं",
       "help.chipWhitelist": "साइट को कैसे बाहर करें?",
-      "help.chipFreePro": "Free और Pro का अंतर",
+      "help.chipFreePro": "AdOff muft hai",
       "help.chipPrivacy": "गोपनीयता और व्यक्तिगत डेटा",
       "help.chipSlow": "क्या AdOff ब्राउज़र धीमा करता है?",
       "help.chipAntiblock": "एंटी-एडब्लॉक वाली साइटें",
-      "help.chipLicense": "Pro लाइसेंस कैसे सक्रिय करें?",
+      "help.chipLicense": "Mere paas lisens hai, kaise activate karein?",
       "help.chipUninstall": "AdOff को अनइंस्टॉल कैसे करें?",
 
       // Report
@@ -3404,7 +3404,7 @@ const i18n = (function () {
 
       // Onboarding
       "onb.installed": "AdOff सफलतापूर्वक इंस्टॉल हो गया!",
-      "onb.trial": "आपके पास सभी Pro सुविधाओं के साथ 30 दिन का मुफ्त Trial है।",
+      "onb.trial": "सभी सुविधाएं सक्रिय हैं, मुफ्त हैं और बिना खाता के।",
       "onb.pinTitle": "AdOff को टूलबार में पिन करें",
       "onb.pinDesc": "त्वरित पहुंच के लिए, AdOff को अपने ब्राउज़र टूलबार में पिन करें:",
       "onb.step1": "पज़ल आइकन पर क्लिक करें",
@@ -3422,7 +3422,7 @@ const i18n = (function () {
       "onb.feat4": "अत्यंत हल्का",
       "onb.feat4d": "न्यूनतम फ़ुटप्रिंट — कोई मंदी नहीं, चुपचाप चलता है",
       "onb.feat5": "बिना विज्ञापन वीडियो",
-      "onb.feat5d": "वीडियो विज्ञापन निष्क्रिय — प्लेयर तुरंत शुरू होता है (Pro)",
+      "onb.feat5d": "वीडियो विज्ञापन निष्क्रिय",
       "onb.feat6": "पूर्ण गोपनीयता",
       "onb.feat6d": "शून्य टेलीमेट्री, शून्य लॉग: हमें भी नहीं पता आप क्या करते हैं",
       "onb.start": "ब्राउज़िंग शुरू करें",
@@ -3608,8 +3608,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "友達を招待",
-      "ref.heroTitle": "無料でProをゲット！",
-      "ref.heroDesc": "友達がProにアップグレードするたびに、AdOff Pro 30日間が無料でもらえます。招待するほど日数が増えます。",
+      "ref.heroTitle": "Invite a friend",
+      "ref.heroDesc": "Share your link: more people browsing without ads.",
       "ref.linkTitle": "あなたの紹介リンク",
       "ref.copy": "コピー",
       "ref.codeLabel": "コード：",
@@ -3621,7 +3621,7 @@ const i18n = (function () {
       "ref.howTitle": "使い方",
       "ref.step1": "友達にリンクをシェア",
       "ref.step2": "友達がAdOffをインストール",
-      "ref.step3": "Proにアップグレードしたら +15日間無料",
+      "ref.step3": "Your friend installs AdOff and browses without ads",
       "ref.step4": "日数は無制限に積み上がります！",
 
       // Help / FAQ
@@ -3633,11 +3633,11 @@ const i18n = (function () {
       "help.chipBroken": "サイトが正常に動かない",
       "help.chipVideoAds": "動画プラットフォームで広告が表示される",
       "help.chipWhitelist": "サイトを除外するには？",
-      "help.chipFreePro": "FreeとProの違い",
+      "help.chipFreePro": "AdOff wa muryo",
       "help.chipPrivacy": "プライバシーと個人データ",
       "help.chipSlow": "AdOffはブラウザを遅くする？",
       "help.chipAntiblock": "広告ブロック検知サイト",
-      "help.chipLicense": "Proライセンスの有効化方法は？",
+      "help.chipLicense": "ライセンサーがいますが、有効化方法は？",
       "help.chipUninstall": "AdOffのアンインストール方法は？",
 
       // Report
@@ -3665,7 +3665,7 @@ const i18n = (function () {
 
       // Onboarding
       "onb.installed": "AdOffのインストールが完了しました！",
-      "onb.trial": "すべてのPro機能が使える30日間の無料Trialが有効です。",
+      "onb.trial": "すべての機能が有効で無料、アカウント不要です。",
       "onb.pinTitle": "AdOffをツールバーにピン留め",
       "onb.pinDesc": "素早くアクセスするために、AdOffをブラウザのツールバーにピン留めしてください：",
       "onb.step1": "パズルアイコンをクリック",
@@ -3683,7 +3683,7 @@ const i18n = (function () {
       "onb.feat4": "超軽量",
       "onb.feat4d": "最小フットプリント — 速度低下なし、静かに動作",
       "onb.feat5": "広告なし動画",
-      "onb.feat5d": "動画広告を無効化 — プレーヤーがすぐに再生（Pro）",
+      "onb.feat5d": "動画広告を無効化",
       "onb.feat6": "完全なプライバシー",
       "onb.feat6d": "テレメトリゼロ、ログゼロ：あなたの行動は私たちにも分かりません",
       "onb.start": "ブラウジングを開始",
@@ -3869,8 +3869,8 @@ const i18n = (function () {
 
       // Referral
       "ref.title": "친구 초대",
-      "ref.heroTitle": "무료로 Pro 받기!",
-      "ref.heroDesc": "친구가 Pro로 업그레이드할 때마다 AdOff Pro 30일이 무료로 제공됩니다. 더 많은 친구를 초대할수록 더 많은 일수를 받습니다.",
+      "ref.heroTitle": "Invite a friend",
+      "ref.heroDesc": "Share your link: more people browsing without ads.",
       "ref.linkTitle": "내 추천 링크",
       "ref.copy": "복사",
       "ref.codeLabel": "코드:",
@@ -3882,7 +3882,7 @@ const i18n = (function () {
       "ref.howTitle": "사용 방법",
       "ref.step1": "친구들에게 링크 공유",
       "ref.step2": "친구가 AdOff 설치",
-      "ref.step3": "Pro로 업그레이드하면 +15일 무료",
+      "ref.step3": "Your friend installs AdOff and browses without ads",
       "ref.step4": "일수는 제한 없이 누적됩니다!",
 
       // Help / FAQ
@@ -3894,11 +3894,11 @@ const i18n = (function () {
       "help.chipBroken": "사이트가 제대로 작동하지 않음",
       "help.chipVideoAds": "동영상 플랫폼에서 광고가 계속 표시됨",
       "help.chipWhitelist": "사이트를 제외하는 방법?",
-      "help.chipFreePro": "Free와 Pro의 차이",
+      "help.chipFreePro": "AdOff neun mulyeo",
       "help.chipPrivacy": "개인정보 및 개인 데이터",
       "help.chipSlow": "AdOff가 브라우저를 느리게 만드나요?",
       "help.chipAntiblock": "광고 차단 감지 사이트",
-      "help.chipLicense": "Pro 라이선스 활성화 방법?",
+      "help.chipLicense": "라이선스가 있는데 활성화하는 법?",
       "help.chipUninstall": "AdOff 제거 방법?",
 
       // Report
@@ -3926,7 +3926,7 @@ const i18n = (function () {
 
       // Onboarding
       "onb.installed": "AdOff가 성공적으로 설치되었습니다!",
-      "onb.trial": "모든 Pro 기능이 활성화된 30일 무료 Trial이 있습니다.",
+      "onb.trial": "모든 기능이 활성화되어 있고 무료이며 계정이 필요하지 않습니다.",
       "onb.pinTitle": "AdOff를 툴바에 고정",
       "onb.pinDesc": "빠른 액세스를 위해 AdOff를 브라우저 툴바에 고정하세요:",
       "onb.step1": "퍼즐 아이콘 클릭",
@@ -3944,7 +3944,7 @@ const i18n = (function () {
       "onb.feat4": "초경량",
       "onb.feat4d": "최소 메모리 — 속도 저하 없음, 조용히 실행",
       "onb.feat5": "광고 없는 동영상",
-      "onb.feat5d": "동영상 광고 무력화 — 플레이어가 즉시 재생 (Pro)",
+      "onb.feat5d": "Video ads neutralized — the player starts instantly",
       "onb.feat6": "완전한 프라이버시",
       "onb.feat6d": "텔레메트리 제로, 로그 제로: 당신이 뭘 하는지 우리도 모릅니다",
       "onb.start": "브라우징 시작",
