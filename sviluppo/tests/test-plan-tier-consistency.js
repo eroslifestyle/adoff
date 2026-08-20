@@ -164,16 +164,22 @@ for (const t of TARGETS) {
       (|| true / && true / const isPro = true ...)
    ============================================================ */
 const GATE_CONST_PATTERNS = [
-  [/\|\| true\b/, "`|| true` semplifica il gate"],
-  [/\&\& true\b/, "`&& true` semplifica il gate"],
+  [/\|\| true/, "`|| true` semplifica il gate"],
+  [/\&\& true/, "`&& true` semplifica il gate"],
+  [/true \|\|/, "`true ||` semplifica il gate"],
+  [/true \&\&/, "`true &&` semplifica il gate"],
   [/(?:const|let|var)\s+(isPro|isPremium|isValidPlan|hasValidPro)\s*=\s*true/, "`const isX = true` fora il gate"],
 ];
 for (const t of TARGETS) {
   for (const f of FILES) {
     const src = fs.readFileSync(path.join(ROOT, t, "src", f), "utf8");
-    for (const [re, what] of GATE_CONST_PATTERNS) {
+    // Normalizza whitespace multi-riga: tab/space/newline -> spazio singolo.
+    // Così "const pro =\n  (\n    true ||" diventa "const pro = ( true ||" su una riga.
+    const flat = src.replace(/[\t ]+/g, " ").replace(/\n/g, " ");
+    for (const pair of GATE_CONST_PATTERNS) {
+      const re = pair[0], what = pair[1];
       checks++;
-      if (re.test(src)) { console.log(`FAIL ${t}/${f}: ${what}`); fail++; }
+      if (re.test(flat)) { console.log(`FAIL ${t}/${f}: ${what}`); fail++; }
     }
   }
 }

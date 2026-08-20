@@ -1247,8 +1247,8 @@
           const pro =
             integrityValid &&
             (
-              true ||
-              true ||
+              adoffPlanTier(lic.type) !== "free" ||
+              adoffPlanTier(lic.plan) !== "free" ||
               trialActive
             );
 
