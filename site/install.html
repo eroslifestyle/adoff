@@ -76,7 +76,8 @@
   }
   </script>
   <link rel="stylesheet" href="style.css?v=260714b">
-  <style>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<style>
     .install-page { max-width: 860px; margin: 0 auto; padding: 80px 24px 60px; }
 
     .install-hero {
@@ -327,6 +328,24 @@
 
     /* OS-specific instructions */
     .os-note { font-size: 13px; color: var(--text-muted); margin-top: 6px; font-style: italic; }
+      /* Stay in touch */
+    .stay-section { margin: 48px 0; }
+    .stay-title { font-size: 24px; font-weight: 700; margin-bottom: 24px; text-align: center; }
+    .stay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 640px) { .stay-grid { grid-template-columns: 1fr; } }
+    .stay-card { background: #12122a; border: 1px solid #2a2a4a; border-radius: 16px; padding: 28px 24px; text-align: center; }
+    .stay-icon { font-size: 36px; margin-bottom: 12px; }
+    .stay-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+    .stay-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px; }
+    .consent-label { display: flex; align-items: flex-start; gap: 8px; text-align: left; font-size: 12px; color: var(--text-muted); cursor: pointer; margin-top: 10px; }
+    .consent-label input { margin-top: 2px; flex-shrink: 0; }
+    .consent-label a { color: #7c5cfc; }
+    .newsletter-form { display: flex; flex-direction: column; gap: 4px; }
+    .newsletter-form input[type=email] { width: 100%; background: #0a0a1a; border: 1px solid #2a2a4a; border-radius: 10px; padding: 12px 14px; color: var(--text); font-size: 14px; font-family: inherit; box-sizing: border-box; }
+    .newsletter-form input[type=email]:focus { outline: none; border-color: #7c5cfc; }
+    .msg { padding: 12px 16px; border-radius: 8px; margin-top: 10px; display: none; font-size: 13px; font-weight: 500; text-align: left; }
+    .msg.success { display: block; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: #4ade80; }
+    .msg.error { display: block; background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.3); color: #f43f5e; }
   </style>
   </head>
 <body>
@@ -988,6 +1007,39 @@
       </div>
     </div>
 
+    <!-- Stay in touch -->
+    <section class="stay-section">
+      <h2 class="stay-title" data-i18n="install.stay.title">Resta in contatto</h2>
+      <div class="stay-grid">
+        <div class="stay-card">
+          <div class="stay-icon">&#128172;</div>
+          <h3 data-i18n="install.telegram.title">Community Telegram</h3>
+          <p data-i18n="install.telegram.desc">Annunci sulle nuove versioni e supporto diretto dagli sviluppatori.</p>
+          <a href="https://t.me/adoffapp" target="_blank" rel="noopener noreferrer" class="download-btn" data-i18n="install.telegram.cta">Unisciti alla community</a>
+        </div>
+        <div class="stay-card">
+          <div class="stay-icon">&#128231;</div>
+          <h3 data-i18n="install.newsletter.title">Newsletter</h3>
+          <p data-i18n="install.newsletter.desc">Aggiornamenti e novità su AdOff, niente spam.</p>
+          <form id="newsletterForm" onsubmit="return submitNewsletter(event)">
+            <div class="newsletter-form">
+              <input type="email" id="nl-email" name="email" required data-i18n-placeholder="install.newsletter.ph" placeholder="La tua email">
+              <label class="consent-label">
+                <input type="checkbox" id="nl-consent" required>
+                <span data-i18n-html="install.newsletter.consent">Acconsento a ricevere aggiornamenti su AdOff via email. <a href="/privacy" target="_blank">Privacy Policy</a></span>
+              </label>
+              <div style="position:absolute;left:-9999px;top:-9999px" aria-hidden="true">
+                <input type="text" id="nl-website" name="website" tabindex="-1" autocomplete="off" value="">
+              </div>
+              <div class="cf-turnstile" data-sitekey="0x4AAAAAADAtLsfOV1PCgWx_" data-callback="onNlTurnstileDone" style="margin-bottom:12px;"></div>
+              <div class="msg" id="nl-msg"></div>
+              <button type="submit" class="download-btn" id="nl-btn" data-i18n="install.newsletter.cta" style="margin-top:8px;">Iscriviti</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
     <!-- FAQ -->
     <div class="faq-section">
       <h2 class="faq-title" data-i18n="install.faq.title">Domande frequenti</h2>
@@ -1135,6 +1187,60 @@
         if (steps) steps.classList.add('active');
       });
     });
+
+    // ─── Newsletter form ───
+    var API = 'https://api.adoff.app';
+    var _nlLoadTime = Date.now();
+    var _nlTsToken = '';
+    window.onNlTurnstileDone = function(token) { _nlTsToken = token; };
+    function submitNewsletter(e) {
+      e.preventDefault();
+      var btn = document.getElementById('nl-btn');
+      var msg = document.getElementById('nl-msg');
+      var dict = window.AdOffI18n && window.AdOffI18n.dict;
+      var lang = window.AdOffI18n && window.AdOffI18n.lang || 'it';
+      if (Date.now() - _nlLoadTime < 3000) { return false; }
+      var hp = document.getElementById('nl-website');
+      if (hp && hp.value) { return false; }
+      if (!_nlTsToken) {
+        msg.className = 'msg error';
+        msg.textContent = dict && dict['install.newsletter.needVerify'] || 'Completa la verifica anti-bot.';
+        return false;
+      }
+      var consent = document.getElementById('nl-consent');
+      if (!consent.checked) {
+        msg.className = 'msg error';
+        msg.textContent = dict && dict['install.newsletter.needConsent'] || 'Devi accettare la privacy policy per iscriverti.';
+        return false;
+      }
+      btn.disabled = true;
+      btn.textContent = dict && dict['install.newsletter.cta'] || '...';
+      msg.className = 'msg';
+      msg.style.display = 'none';
+      var email = document.getElementById('nl-email').value;
+      var tsToken = _nlTsToken; _nlTsToken = '';
+      fetch(API + '/newsletter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email, lang: lang, source: 'install', consent: true, website: '', turnstileToken: tsToken }) })
+      .then(function(r) { return r.json(); })
+      .then(function(res) {
+        if (res.ok) {
+          msg.className = 'msg success';
+          msg.textContent = dict && dict['install.newsletter.ok'] || 'Iscrizione registrata. Grazie!';
+          document.getElementById('newsletterForm').style.display = 'none';
+        } else {
+          msg.className = 'msg error';
+          msg.textContent = (dict && dict['install.newsletter.error']) || 'Errore di connessione. Riprova.';
+          btn.disabled = false;
+          btn.textContent = dict && dict['install.newsletter.cta'] || 'Iscriviti';
+        }
+      })
+      .catch(function() {
+        msg.className = 'msg error';
+        msg.textContent = (dict && dict['install.newsletter.error']) || 'Errore di connessione. Riprova.';
+        btn.disabled = false;
+        btn.textContent = dict && dict['install.newsletter.cta'] || 'Iscriviti';
+      });
+      return false;
+    }
 
     // ─── FAQ accordion ───
     document.querySelectorAll('.faq-item').forEach(function(item) {
