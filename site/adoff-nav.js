@@ -160,18 +160,6 @@
     '#site-nav .sn-links a.sn-cta:hover{background:var(--accent-dim);color:var(--text-on-accent)}',
 
     /* Premium dropdown */
-    '#site-nav .sn-premium-wrap{position:relative}',
-    '#site-nav .sn-premium-btn{color:var(--text-muted);font-size:14px;font-weight:500;text-decoration:none;padding:6px 12px;border-radius:8px;transition:color .2s,background .2s;background:transparent;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;white-space:nowrap}',
-    '#site-nav .sn-premium-btn:hover{color:var(--text);background:var(--accent-soft)}',
-    '#site-nav .sn-premium-wrap.open .sn-premium-btn{color:var(--text)}',
-    '#site-nav .sn-premium-arrow{font-size:10px;transition:transform .2s;opacity:0.7}',
-    '#site-nav .sn-premium-wrap.open .sn-premium-arrow{transform:rotate(180deg)}',
-    '#site-nav .sn-premium-dd{display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:10px;min-width:180px;box-shadow:0 8px 24px rgba(20,20,45,0.12);overflow:hidden;z-index:100}',
-    '#site-nav .sn-premium-wrap.open .sn-premium-dd{display:block}',
-    '#site-nav .sn-premium-dd a{display:block;padding:12px 16px;color:var(--text-muted);font-size:14px;font-weight:500;text-decoration:none;transition:all .15s}',
-    '#site-nav .sn-premium-dd a:hover{background:var(--accent-soft);color:var(--text)}',
-    '#site-nav .sn-premium-dd a:first-child{border-radius:10px 10px 0 0}',
-    '#site-nav .sn-premium-dd a:last-child{border-radius:0 0 10px 10px}',
 
     '#site-nav .sn-right{display:flex;align-items:center;gap:12px;flex-shrink:0}',
 
@@ -251,8 +239,6 @@
   // homepage statica: /{lang}/ per ogni lingua, / per IT
   var homeLink = (activeLang === 'it' || !activeLang) ? '/' : '/' + activeLang + '/';
   // premium & vpn-policy: EN-root canonicals, nessuna versione /{lang}/ esiste
-  var premiumLink = '/premium';
-  var vpnPolicyLink = '/vpn-policy';
   // pricing: solo root, traduzione runtime
   var pricingLink = '/pricing.html' + lq;
   // install, support, guide, community, privacy: pagine statiche complete
@@ -277,13 +263,6 @@
         '<li><a href="' + homeLink + '" data-i18n="nav.home">Home</a></li>',
         '<li><a href="' + homeLink + '#features" data-i18n="nav.features">Features</a></li>',
         '<li><a href="' + pricingLink + '" data-i18n="nav.pricing">Pricing</a></li>',
-        '<li><div class="sn-premium-wrap" id="snPremiumWrap">',
-          '<button class="sn-premium-btn" id="snPremiumBtn" data-i18n="nav.premium">Premium <span class="sn-premium-arrow">&#9660;</span></button>',
-          '<div class="sn-premium-dd" id="snPremiumDd">',
-            '<a href="' + premiumLink + '" data-i18n="nav.premiumVpn">Premium VPN</a>',
-            '<a href="' + vpnPolicyLink + '" data-i18n="nav.vpnPolicy">VPN Policy</a>',
-          '</div>',
-        '</div></li>',
         '<li><a href="' + communityLink + '" data-i18n="nav.community">Community</a></li>',
         '<li><a href="' + supportLink + '" data-i18n="nav.support">Support</a></li>',
         '<li><a href="' + installLink + '" data-i18n="nav.install">Install</a></li>',
@@ -316,8 +295,6 @@
       '<a href="' + homeLink + '" data-i18n="nav.home">Home</a>',
       '<a href="' + homeLink + '#features" data-i18n="nav.features">Features</a>',
       '<a href="' + pricingLink + '" data-i18n="nav.pricing">Pricing</a>',
-      '<a href="' + premiumLink + '" data-i18n="nav.premiumVpn">Premium VPN</a>',
-      '<a href="' + vpnPolicyLink + '" data-i18n="nav.vpnPolicy">VPN Policy</a>',
       '<a href="' + communityLink + '" data-i18n="nav.community">Community</a>',
       '<a href="' + supportLink + '" data-i18n="nav.support">Support</a>',
       '<a href="' + installLink + '" data-i18n="nav.install">Install</a>',
@@ -348,18 +325,10 @@
   // ─── Event handlers ─────────────────────────────────────────────────────────
   var langWrap = document.getElementById('snLangWrap');
   var langBtn = document.getElementById('snLangBtn');
-  var premiumWrap = document.getElementById('snPremiumWrap');
   var premiumBtn = document.getElementById('snPremiumBtn');
   var burger = root.querySelector('.sn-burger');
   var themeToggles = root.querySelectorAll('.theme-toggle');
 
-  // Toggle premium dropdown
-  if (premiumBtn) {
-    premiumBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      premiumWrap.classList.toggle('open');
-    });
-  }
 
   // Theme toggle (desktop + mobile)
   for (var t = 0; t < themeToggles.length; t++) {
@@ -394,7 +363,6 @@
     if (!root.contains(e.target)) {
       root.classList.remove('open');
       langWrap.classList.remove('open');
-      if (premiumWrap) premiumWrap.classList.remove('open');
     }
   });
 
