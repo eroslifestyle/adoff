@@ -36,9 +36,23 @@ Decisioni prese dall'utente in sessione di analisi (20 domande).
 
 1. [x] **Archiviazione**: `site/` copiato in `site-old/` (626 file). Aggiunto a `.gitignore`:
    la storia completa resta nei commit git, la copia serve solo da consultazione rapida.
-2. [ ] **Sblocco estensione**: `adoffPlanTier` sempre `"premium"`; UI ripulita da scadenze e
-   piani; badge sostenitore/founder. I test sui piani vanno RISCRITTI (cambiano significato),
-   non disattivati. Mutation testing obbligatorio.
+2. [x] **Sblocco estensione** (fatto 2026-08-20, commit `01a3c30` + `a7d487a`):
+   `adoffPlanTier()` ritorna sempre `"premium"` in tutte e 18 le copie, e resta l'unico
+   punto da cui passa la decisione — nessun gate e' stato ridotto a costante, cosi' per
+   tornare indietro si tocca un posto solo. Aperti i gate che richiedevano anche una
+   licenza valida (`background.js` regole IMA, `content.js` stealth/cosmetic,
+   `license-client.js` `checkPro()` nel caso senza licenza). I rami sulla licenza
+   manomessa restano invariati: li presidiano i test di sicurezza.
+   Aggiunta `adoffSupporterKind()` (6 copie): distingue founder/sostenitore per il SOLO
+   badge, non governa alcuna funzione. UI ripulita da countdown, scadenze e nomi di piano
+   in popup, opzioni e onboarding; badge "Tutto attivo".
+   `test-plan-tier-consistency.js` riscritto: presidia "ogni piano da' premium",
+   633 asserzioni (erano 415), 6 mutazioni provate e tutte catturate.
+   i18n: 6 chiavi nuove in IT ed EN; le altre 13 lingue al punto 6, quando i testi
+   saranno congelati.
+   **Punto aperto**: il sistema referral promette ancora "30 giorni di Pro" per ogni
+   amico che paga. Che senso abbia ora che e' tutto gratuito e' una decisione di
+   prodotto, non tecnica: non e' stato toccato.
 3. [ ] **Nuovo sito, nucleo**: home, installazione, guida, supporto, privacy, termini.
    Tono diretto, pubblico non esperto, zero gergo tecnico.
 4. [ ] **Pagine SEO e `vs/`**: aggiornate al messaggio "gratis", stessi URL, nessuna perdita
