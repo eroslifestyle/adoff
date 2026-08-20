@@ -3745,8 +3745,9 @@ async function handlePortalSession(request, env) {
   let customerId = customerIdFromQuery;
 
   // Se non c'è customerId in query, prova a ricavarlo dall'auth session
+  // Usa X-Account-Token header (coerente con gli altri handler come handleAccountDevices)
   if (!customerId) {
-    const sessionToken = getSessionToken(request);
+    const sessionToken = request.headers.get("X-Account-Token");
     if (sessionToken) {
       const session = await sessionGet(env, "account", sessionToken);
       customerId = session?.stripeCustomerId || session?.customerId || customerId;
@@ -3776,6 +3777,13 @@ async function handlePortalSession(request, env) {
   const data = await res.json();
   if (data.error) {
     return jsonResponse({ error: data.error.message }, 400);
+  }
+
+  // Se ?format=json o Accept: application/json, rispondi con JSON (per fetch dal frontend)
+  const wantsJson = url.searchParams.get("format") === "json" ||
+    request.headers.get("Accept")?.includes("application/json");
+  if (wantsJson) {
+    return jsonResponse({ ok: true, url: data.url });
   }
 
   // Redirect al portale Stripe
