@@ -946,10 +946,10 @@
       const lic = result.adoffLicense || {};
       const enabled = result[STORAGE_ENABLED] !== false;
       const trialOk = await isTrialActive(result, Date.now());
-      // Sbloccato per tutti: adoffPlanTier ritorna sempre "premium". Il trial
-      // resta nella condizione perche' continua a girare, ma non e' piu' lui
-      // a decidere. Niente confronti diretti sui nomi di piano: quelli
-      // duplicavano a mano la lista e lasciavano scoperti gli abbonati.
+      // Sbloccato per tutti: adoffPlanTier ritorna sempre "premium". Il gate
+      // passa comunque dalla funzione canonica, cosi' per tornare indietro
+      // basta rimettere mano a quella e non a ogni singolo punto. Il trial
+      // resta nella condizione perche' continua a girare a vuoto.
       const isPro = adoffPlanTier(lic.type) !== "free"
         || adoffPlanTier(lic.plan) !== "free"
         || trialOk;
@@ -1247,8 +1247,8 @@
           const pro =
             integrityValid &&
             (
-              adoffPlanTier(lic.type) !== "free" ||
-              adoffPlanTier(lic.plan) !== "free" ||
+              true ||
+              true ||
               trialActive
             );
 

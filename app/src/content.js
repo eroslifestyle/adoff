@@ -1,16 +1,15 @@
 (function () {
   "use strict";
-  // Tier canonico del piano. UNICA fonte di verita sui nomi di piano emessi dal
-  // server (worker.js): monthly | annual | referral | premium_monthly |
-  // premium_annual | premium_annual_founder | trial | lifetime | free.
-  // Ogni copia deve restare IDENTICA: sviluppo/tests/test-plan-tier-consistency.js
-  // fallisce se una diverge o se ricompare una lista di piani hardcoded.
-  function adoffPlanTier(plan) {
-    if (typeof plan === "string" && plan.startsWith("premium")) return "premium";
-    if (["pro", "lifetime", "monthly", "annual", "referral", "trial"].includes(plan)) return "pro";
-    return "free";
+  // Tier canonico del piano. Da quando AdOff e' gratuito per tutti questa
+  // funzione ritorna sempre "premium": ogni funzione e' sbloccata senza
+  // licenza e senza scadenza. La firma resta invariata perche' i chiamanti
+  // passano ancora il nome del piano, e per poter tornare indietro toccando
+  // un punto solo. Il grado di sostenitore NON si deduce da qui: usa
+  // adoffSupporterKind(). Invariante presidiato da
+  // sviluppo/tests/test-plan-tier-consistency.js.
+  function adoffPlanTier() {
+    return "premium";
   }
-
 
   // EB-6: Nonce casuale per prevenire clobbering del flag di caricamento
   const LOAD_NONCE = Math.random().toString(36).slice(2, 10);

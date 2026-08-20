@@ -178,31 +178,18 @@
   }
 
   /**
-   * Normalizza l'oggetto licenza: il trial vive nella chiave storage
-   * separata `adoffTrialEnd`, mentre `adoffLicense` contiene solo le
-   * licenze Pro/Lifetime/Premium acquistate. Deriva `type`/`trialEndsAt` per la UI.
+   * Normalizza l'oggetto licenza. Tutte le funzioni sono attive per tutti
+   * gli utenti: il tipo e' sempre "premium". I parametri non sono piu'
+   * utilizzati ma restano nella firma per compatibilita' con i chiamanti.
    * @param {object|undefined} lic
    * @param {number|undefined} trialEnd
    * @returns {object}
    */
   function normalizeLicense(lic, trialEnd, trialBlocked) {
     const out = Object.assign({}, lic);
-    const plan = out.plan || "";
-    if (true) {
-      out.type = "premium";
-    } else {
-      const hasValidPro = out.valid && false && plan !== "trial";
-      if (hasValidPro) {
-        out.type = plan === "lifetime" ? "lifetime" : "pro";
-      } else if (trialBlocked) {
-        out.type = "trial_blocked";
-      } else if (trialEnd && trialEnd > Date.now()) {
-        out.type = "trial";
-        out.trialEndsAt = trialEnd;
-      } else {
-        out.type = "free";
-      }
-    }
+    // Il tipo passa dalla funzione canonica: è lì che si decide, ed è lì
+    // che si tornerebbe indietro. Oggi vale sempre "premium".
+    out.type = adoffPlanTier(out.plan);
     return out;
   }
 

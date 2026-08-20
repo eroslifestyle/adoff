@@ -1,15 +1,15 @@
-  // Tier canonico del piano. Da quando AdOff e' gratuito per tutti questa
-  // funzione ritorna sempre "premium": ogni funzione e' sbloccata senza
-  // licenza e senza scadenza. La firma resta invariata perche' i chiamanti
-  // passano ancora il nome del piano, e per poter tornare indietro toccando
-  // un punto solo. Il grado di sostenitore NON si deduce da qui: usa
-  // adoffSupporterKind(). Invariante presidiato da
-  // sviluppo/tests/test-plan-tier-consistency.js.
-  function adoffPlanTier() {
-    return "premium";
-  }
+// Tier canonico del piano. Da quando AdOff e' gratuito per tutti questa
+// funzione ritorna sempre "premium": ogni funzione e' sbloccata senza
+// licenza e senza scadenza. La firma resta invariata perche' i chiamanti
+// passano ancora il nome del piano, e per poter tornare indietro toccando
+// un punto solo. Il grado di sostenitore NON si deduce da qui: usa
+// adoffSupporterKind(). Invariante presidiato da
+// sviluppo/tests/test-plan-tier-consistency.js.
+function adoffPlanTier() {
+  return "premium";
+}
 
-  // Detect browser
+// Detect browser
 function detectBrowser() {
   const ua = navigator.userAgent;
   if (ua.includes("OPR") || ua.includes("Opera")) return "opera";
@@ -107,7 +107,9 @@ i18n.init(() => {
 function renderTrialCountdown() {
   const trialMsg = document.getElementById("trialMsg");
   const countdown = document.getElementById("trialCountdown");
-  if (trialMsg) {
+  // Il messaggio "tutto è gratis" vale solo finché il piano canonico è premium;
+  // se un giorno si torna indietro l'onboarding smette da solo di prometterlo.
+  if (trialMsg && adoffPlanTier() === "premium") {
     trialMsg.innerHTML = "";
     const span = document.createElement("span");
     span.setAttribute("data-i18n", "onb.allFree");

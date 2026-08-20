@@ -946,12 +946,12 @@
       const lic = result.adoffLicense || {};
       const enabled = result[STORAGE_ENABLED] !== false;
       const trialOk = await isTrialActive(result, Date.now());
-      // Sbloccato per tutti: adoffPlanTier ritorna sempre "premium". Il trial
-      // resta nella condizione perche' continua a girare, ma non e' piu' lui
-      // a decidere. Niente confronti diretti sui nomi di piano: quelli
-      // duplicavano a mano la lista e lasciavano scoperti gli abbonati.
-      const isPro = true
-        || true
+      // Sbloccato per tutti: adoffPlanTier ritorna sempre "premium". Il gate
+      // passa comunque dalla funzione canonica, cosi' per tornare indietro
+      // basta rimettere mano a quella e non a ogni singolo punto. Il trial
+      // resta nella condizione perche' continua a girare a vuoto.
+      const isPro = adoffPlanTier(lic.type) !== "free"
+        || adoffPlanTier(lic.plan) !== "free"
         || trialOk;
       // Ping degli annunci sulla piattaforma video: vedi AD_PING_ALLOW_RULES.
       // A protezione spenta le regole vengono rimosse, per non lasciarle appese.

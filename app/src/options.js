@@ -400,15 +400,10 @@
    */
   function normalizeLicense(lic, trialEnd) {
     const out = Object.assign({}, lic);
-    // Tutto e' premium ora: la licenza server esiste solo per il badge.
-    out.type = "premium";
+    // Il tipo passa dalla funzione canonica: è lì che si decide, ed è lì
+    // che si tornerebbe indietro. Oggi vale sempre "premium".
+    out.type = adoffPlanTier(out.plan);
     return out;
-  }
-
-  /** Calcola giorni trial rimasti. */
-  function trialDaysLeft() {
-    if (!license.trialEndsAt) return 0;
-    return Math.max(0, Math.ceil((license.trialEndsAt - Date.now()) / 86_400_000));
   }
 
   /**
@@ -427,34 +422,25 @@
   }
 
   /**
-   * Aggiorna il badge header in base al piano corrente.
-   * @param {string} t — 'pro'|'lifetime'|'trial'|'free'|'premium'
+   * Badge header. Non esistono piu' livelli di piano: tutto e' attivo per
+   * tutti. Il badge distingue solo chi sostiene volontariamente il progetto.
    */
-  function updateHeaderBadge(t) {
-    if (t === "premium") {
-      headerLicenseBadge.textContent = "PREMIUM";
-      headerLicenseBadge.className = "license-badge-header premium";
-    } else if (t === "pro" || t === "lifetime") {
-      headerLicenseBadge.textContent = "PRO";
-      headerLicenseBadge.className = "license-badge-header pro";
-    } else if (t === "trial") {
-      headerLicenseBadge.textContent = "TRIAL " + trialDaysLeft() + "gg";
-      headerLicenseBadge.className = "license-badge-header trial";
+  function updateHeaderBadge() {
+    const kind = adoffSupporterKind(license);
+    if (kind === "founder") {
+      headerLicenseBadge.textContent = i18n.t("popup.founder");
+    } else if (kind === "supporter") {
+      headerLicenseBadge.textContent = i18n.t("badge.supporter");
     } else {
-      headerLicenseBadge.textContent = "FREE";
-      headerLicenseBadge.className = "license-badge-header free";
+      headerLicenseBadge.textContent = i18n.t("badge.allActive");
     }
+    headerLicenseBadge.className = "license-badge-header premium";
   }
 
-  /** Render sezione licenza con 3 stati: Pro attivo / Trial attivo / No license. */
+  /** Render sezione licenza: ora tutti sono premium, senza scadenza. */
   function renderLicenseSection() {
-    const plan  = license.plan || "";
-    const isPremium = true;
-    const isPro = false && plan !== "trial";
-    const isTrial = false;
-    const t = "premium";
+    updateHeaderBadge();
 
-    updateHeaderBadge(t);
 
     // Premium section visibility
     const premiumShowcase = document.getElementById("premiumShowcaseSection");
@@ -463,11 +449,11 @@
     if (premiumActive) premiumActive.style.display = "block";
 
     // Tutti gli utenti vedono la sezione premium attivo
-    showAuthState("premium");
+    showAuthState(adoffPlanTier(license.plan));
     // Il piano mostrato: chi ha licenza vede il suo piano, altrimenti "Tutto attivo"
     const planNameEl = document.getElementById("premiumPlanName");
     if (planNameEl) {
-      planNameEl.textContent = license.valid ? (plan.charAt(0).toUpperCase() + plan.slice(1)) : i18n.t("badge.allActive");
+      planNameEl.textContent = i18n.t("badge.allActive");
     }
     // Nessuna scadenza: il supporto e' volontario
     const expiryEl = document.getElementById("premiumExpiry");
@@ -481,50 +467,6 @@
     if (el) el.style.display = "none";
   }
 
-  function renderTrialState() {
-    const daysLeft = trialDaysLeft();
-    const TRIAL_TOTAL_DAYS = 15;
-    const daysUsed = Math.max(0, Math.min(TRIAL_TOTAL_DAYS, TRIAL_TOTAL_DAYS - daysLeft));
-    const pct = Math.round((daysLeft / TRIAL_TOTAL_DAYS) * 100);
-
-    const badge = document.getElementById("trialBadge");
-    const countdownEl = document.getElementById("trialCountdownDays");
-    const expiryEl = document.getElementById("trialExpiryDate");
-    const barFill = document.getElementById("trialProgressBar");
-    const barLabel = document.getElementById("trialProgressLabel");
-
-    if (badge) badge.textContent = daysLeft + " GG";
-    if (countdownEl) {
-      // Mostra "X giorni rimasti" in formato grande
-      const num = document.createElement("span");
-      num.style.fontSize = "28px";
-      num.style.fontWeight = "700";
-      num.textContent = daysLeft;
-      const lbl = document.createElement("span");
-      lbl.style.fontSize = "12px";
-      lbl.style.opacity = "0.7";
-      lbl.style.marginLeft = "6px";
-      lbl.textContent = daysLeft === 1 ? "giorno" : "giorni";
-      countdownEl.textContent = "";
-      countdownEl.appendChild(num);
-      countdownEl.appendChild(lbl);
-    }
-    if (expiryEl && license.trialEndsAt) {
-      const d = new Date(license.trialEndsAt);
-      // Formato locale dd/mm/yyyy hh:mm
-      const pad = n => String(n).padStart(2, "0");
-      expiryEl.textContent = pad(d.getDate()) + "/" + pad(d.getMonth()+1) + "/" + d.getFullYear() +
-        " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
-    }
-    if (barFill) {
-      barFill.style.width = pct + "%";
-      // Colore graduale: verde >7gg, giallo 3-7gg, rosso <=2gg
-      if (daysLeft <= 2) barFill.style.background = "#ef4444";
-      else if (daysLeft <= 7) barFill.style.background = "#f59e0b";
-      else barFill.style.background = "#3b82f6";
-    }
-    if (barLabel) barLabel.textContent = daysUsed + "/" + TRIAL_TOTAL_DAYS + " gg usati";
-  }
 
 
   /**

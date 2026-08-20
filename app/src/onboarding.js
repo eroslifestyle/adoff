@@ -107,7 +107,9 @@ i18n.init(() => {
 function renderTrialCountdown() {
   const trialMsg = document.getElementById("trialMsg");
   const countdown = document.getElementById("trialCountdown");
-  if (trialMsg) {
+  // Il messaggio "tutto è gratis" vale solo finché il piano canonico è premium;
+  // se un giorno si torna indietro l'onboarding smette da solo di prometterlo.
+  if (trialMsg && adoffPlanTier() === "premium") {
     trialMsg.innerHTML = "";
     const span = document.createElement("span");
     span.setAttribute("data-i18n", "onb.allFree");

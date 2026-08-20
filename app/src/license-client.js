@@ -6,15 +6,15 @@
  */
 const LicenseClient = (function () {
   "use strict";
-  // Tier canonico del piano. UNICA fonte di verita sui nomi di piano emessi dal
-  // server (worker.js): monthly | annual | referral | premium_monthly |
-  // premium_annual | premium_annual_founder | trial | lifetime | free.
-  // Ogni copia deve restare IDENTICA: sviluppo/tests/test-plan-tier-consistency.js
-  // fallisce se una diverge o se ricompare una lista di piani hardcoded.
-  function adoffPlanTier(plan) {
-    if (typeof plan === "string" && plan.startsWith("premium")) return "premium";
-    if (["pro", "lifetime", "monthly", "annual", "referral", "trial"].includes(plan)) return "pro";
-    return "free";
+  // Tier canonico del piano. Da quando AdOff e' gratuito per tutti questa
+  // funzione ritorna sempre "premium": ogni funzione e' sbloccata senza
+  // licenza e senza scadenza. La firma resta invariata perche' i chiamanti
+  // passano ancora il nome del piano, e per poter tornare indietro toccando
+  // un punto solo. Il grado di sostenitore NON si deduce da qui: usa
+  // adoffSupporterKind(). Invariante presidiato da
+  // sviluppo/tests/test-plan-tier-consistency.js.
+  function adoffPlanTier() {
+    return "premium";
   }
 
 
@@ -272,6 +272,7 @@ const LicenseClient = (function () {
           }
 
           // 2. Licenza Pro/Lifetime valida?
+          // Sbloccato per tutti, ma sempre attraverso la funzione canonica.
           const isValidPlan = adoffPlanTier(lic.plan) !== "free";
           if (lic.valid && isValidPlan) {
             // Integrity check — la licenza e' stata manomessa?
@@ -281,7 +282,7 @@ const LicenseClient = (function () {
               if (lic.rawKey) {
                 validateOnline(lic.rawKey).then((onlineResult) => {
                   if (onlineResult.valid) {
-                    resolve({ isPro: true, plan: lic.plan, tier: adoffPlanTier(lic.plan), daysLeft: null, source: "revalidated" });
+                    resolve({ isPro: true, plan: lic.plan, tier: "premium", daysLeft: null, source: "revalidated" });
                   } else {
                     // Licenza manomessa e non valida server-side
                     saveLicense({ valid: false, plan: "tampered", lastValidated: now });
@@ -312,7 +313,7 @@ const LicenseClient = (function () {
             }
 
             const daysLeft = lic.expires ? Math.ceil((lic.expires * 1000 - now) / 86400000) : null;
-            resolve({ isPro: true, plan: lic.plan, tier: adoffPlanTier(lic.plan), daysLeft, source: "cache" });
+            resolve({ isPro: true, plan: lic.plan, tier: "premium", daysLeft, source: "cache" });
             return;
           }
 
@@ -334,9 +335,14 @@ const LicenseClient = (function () {
             });
           }
 
-          // 5. Free
+          // 5. Nessuna licenza: da quando AdOff e' gratuito per tutti questo
+          // non e' piu' uno stato limitato. Tutte le funzioni sono attive e
+          // non c'e' scadenza. `plan` resta "free" perche' descrive il fatto
+          // che non c'e' un abbonamento: e' cosi' che la UI distingue chi
+          // sostiene il progetto (vedi adoffSupporterKind), NON cio' che
+          // l'utente puo' fare.
           const wasTrialUser = trialEnd > 0;
-          resolve({ isPro: false, plan: "free", tier: "free", daysLeft: 0, source: "none", wasTrialUser });
+          resolve({ isPro: true, plan: "free", tier: "premium", daysLeft: null, source: "free-for-all", wasTrialUser });
         }
       );
     });
