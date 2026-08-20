@@ -3779,21 +3779,16 @@ async function handleNewsletter(body, request, env) {
 }
 
 async function handlePortalSession(request, env) {
-  // Estrae customerId: da query param (account già loggato) o da auth session
   const url = new URL(request.url);
-  const customerIdFromQuery = url.searchParams.get("customer_id");
 
-  let customerId = customerIdFromQuery;
-
-  // Se non c'è customerId in query, prova a ricavarlo dall'auth session
-  if (!customerId) {
-    // getSessionToken non esiste in questo worker: la sessione del sito viaggia
-    // nell'header X-Account-Token (vedi gli altri handler).
-    const sessionToken = request.headers.get("X-Account-Token");
-    if (sessionToken) {
-      const session = await sessionGet(env, "account", sessionToken);
-      customerId = session?.stripeCustomerId || session?.customerId || customerId;
-    }
+  // Il customerId si ricava SOLO dalla sessione. Accettarlo dalla query
+  // permetteva a chiunque conoscesse un cus_... di aprire il portale di
+  // fatturazione altrui (dati, metodo di pagamento, disdetta) senza login.
+  let customerId = null;
+  const sessionToken = request.headers.get("X-Account-Token");
+  if (sessionToken) {
+    const session = await sessionGet(env, "account", sessionToken);
+    customerId = session?.stripeCustomerId || session?.customerId || null;
   }
 
   if (!customerId) {
@@ -6211,13 +6206,16 @@ async function handleOAuthCallback(provider, request, env) {
 
     // Resolve first active license for session
     const firstRaw = user.licenses.length > 0 ? user.licenses[0] : null;
+    // Il customerId Stripe deve viaggiare nella sessione: senza, /portal non
+    // sa per chi aprire il portale e risponde 400 a ogni utente loggato.
+    const licData = firstRaw ? await kvGet(env.ADOFF_LICENSES, `lic:${firstRaw}`, "json") : null;
 
     // Generate session token
     const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
     const sessionToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, "0")).join("");
     const expiresAt = now + 24 * 60 * 60 * 1000;
 
-    await sessionPut(env, "account", sessionToken, { raw: firstRaw, email, createdAt: now, expiresAt }, 86400);
+    await sessionPut(env, "account", sessionToken, { raw: firstRaw, email, createdAt: now, expiresAt, stripeCustomerId: licData?.stripeCustomerId || null }, 86400);
 
     return Response.redirect(
       "https://adoff.app/account/?token=" + encodeURIComponent(sessionToken),
@@ -6433,7 +6431,7 @@ async function handleAuthLogin(body, env, request) {
   const now = Date.now();
   const expiresAt = now + 24 * 60 * 60 * 1000;
 
-  await sessionPut(env, "account", sessionToken, { raw: firstRaw, email: normalEmail, createdAt: now, expiresAt }, 86400);
+  await sessionPut(env, "account", sessionToken, { raw: firstRaw, email: normalEmail, createdAt: now, expiresAt, stripeCustomerId: licData?.stripeCustomerId || null }, 86400);
 
   const expires = licData?.expires || 0;
   const devices = normalizeDeviceList(licData?.devices || []);
