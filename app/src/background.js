@@ -1244,13 +1244,15 @@
           (storedIntegrity != null && storedIntegrity === computeIntegrity(lic));
 
         isTrialActive(stored, Date.now()).then(trialActive => {
+          // L'integrita' non governa piu' l'accesso: da quando tutto e'
+          // gratuito una licenza manomessa non fa ottenere niente che non
+          // si abbia gia', mentre spegnere le difese colpiva l'utente
+          // legittimo con lo storage corrotto. `integrityValid` resta
+          // calcolato: serve alla revoca server-side, non al gate.
           const pro =
-            integrityValid &&
-            (
-              adoffPlanTier(lic.type) !== "free" ||
-              adoffPlanTier(lic.plan) !== "free" ||
-              trialActive
-            );
+            adoffPlanTier(lic.type) !== "free" ||
+            adoffPlanTier(lic.plan) !== "free" ||
+            trialActive;
 
           if (!pro) {
             sendResponse({ pro: false });

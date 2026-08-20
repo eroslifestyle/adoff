@@ -146,19 +146,11 @@
     // Trial: gate basato su token firmato dal server (non falsificabile).
     const trialOk = await isTrialActive(result, Date.now());
 
-    // Comunica al MAIN world (stealth.js) se lo stealth e' abilitato (Pro/Trial)
-    // Se l'integrity fallisce, trattare come Free (no stealth)
-    const isPro = (integrityOk && (
+    // Come in background.js: l'integrita' non governa piu' l'accesso.
+    const isPro =
       adoffPlanTier(lic.type) !== "free" ||
-      adoffPlanTier(lic.plan) !== "free"
-    )) || trialOk;
-    // adoffEnabled va letto PRIMA di scrivere nonce e flag: se l'utente ha
-    // messo in pausa, stealth.js non deve attivarsi affatto. Prima di questo
-    // fix il nonce veniva scritto comunque e il toggle fermava solo il DOM
-    // scan, lasciando strip + skip + IMA stub attivi.
-    enabled    = result.adoffEnabled !== false;
-    adsBlocked = result.adoffAdsBlocked || 0;
-
+      adoffPlanTier(lic.plan) !== "free" ||
+      trialOk;
     const stealthActive = enabled && isPro;
     if (stealthActive) {
       // EB-7: usa nonce verificabile invece di "1" fisso
