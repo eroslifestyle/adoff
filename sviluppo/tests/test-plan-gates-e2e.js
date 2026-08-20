@@ -33,6 +33,8 @@ const TEST_PAGE_HTML =
   '<!doctype html><html><head><title>t</title></head><body><div id="x">test</div></body></html>';
 const STEALTH_POLL_TIMEOUT_MS = 3000;
 const STEALTH_POLL_INTERVAL_MS = 100;
+const SETUP_WAIT_MS = Number(process.env.GATE_SETUP_WAIT_MS ?? 1500);
+const RELOAD_WAIT_MS = Number(process.env.GATE_RELOAD_WAIT_MS ?? 500);
 
 let asserted = 0;
 let failed = 0;
@@ -193,14 +195,14 @@ async function runCase(kase, port) {
     await setupStorage(optionsPage, kase, deviceId);
 
     // Attesa per update asincrono delle regole
-    await optionsPage.waitForTimeout(1500);
+    await optionsPage.waitForTimeout(SETUP_WAIT_MS);
     await optionsPage.reload({ timeout: 15000 });
-    await optionsPage.waitForTimeout(500);
+    await optionsPage.waitForTimeout(RELOAD_WAIT_MS);
 
     // Reload extra per il caso B
     if (kase.doReload) {
       await optionsPage.reload({ timeout: 15000 });
-      await optionsPage.waitForTimeout(500);
+      await optionsPage.waitForTimeout(RELOAD_WAIT_MS);
     }
 
     // ---- A1: regole dinamiche declarativeNetRequest ----
