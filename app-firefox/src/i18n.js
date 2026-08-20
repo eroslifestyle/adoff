@@ -201,6 +201,8 @@ const i18n = (function () {
       "ref.step2": "Il tuo amico installa AdOff",
       "ref.step3": "Quando passa a Pro, tu ricevi +15 giorni gratis",
       "ref.step4": "I giorni si accumulano senza limiti!",
+      "ref.inviteTitle": "Invita un amico",
+      "ref.inviteDesc": "Condividi il tuo link: piu' persone navigano senza pubblicita'.",
 
       // Help / FAQ
       "help.title": "Aiuto",
@@ -477,6 +479,8 @@ const i18n = (function () {
       "ref.step2": "Your friend installs AdOff",
       "ref.step3": "When they upgrade to Pro, you get +15 free days",
       "ref.step4": "Days accumulate with no limits!",
+      "ref.inviteTitle": "Invite a friend",
+      "ref.inviteDesc": "Share your link: more people browsing without ads.",
 
       // Help / FAQ
       "help.title": "Help",
