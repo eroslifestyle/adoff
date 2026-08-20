@@ -228,6 +228,13 @@
 
   // Changelogs (stesso del background.js)
   const CHANGELOGS = {
+      "3.6.0": [
+        "AdOff e' ora gratuito per tutti: ogni funzione e' attiva senza account e senza scadenze",
+        "Non serve fare nulla: e' gia' tutto sbloccato",
+        "Se avevi un abbonamento attivo, sei passato a Sostenitore: puoi interromperlo quando vuoi senza perdere nessuna funzione"
+      ],
+
+      
       
 
       "3.5.84": [
