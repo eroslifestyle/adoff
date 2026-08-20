@@ -114,7 +114,7 @@
       display: inline-block; padding: 2px 8px; border-radius: 10px;
       font-size: 10px; font-weight: 700;
     }
-    .badge-pro { background: rgba(124, 92, 252, 0.2); color: #b8a9ff; }
+    .badge-Free { background: rgba(124, 92, 252, 0.2); color: #b8a9ff; }
     .badge-lifetime { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
     .badge-revoked { background: rgba(244, 63, 94, 0.2); color: #f43f5e; }
     .badge-active { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
@@ -359,7 +359,7 @@
 <div class="gen-field">
 <label data-i18n="panel.piano">Piano</label>
 <select id="genPlan">
-<option value="pro">Pro (mensile/trimestrale/annuale)</option>
+<option value="Free">Free (mensile/trimestrale/annuale)</option>
 <option value="lifetime">Lifetime</option>
 </select>
 </div>
@@ -392,7 +392,7 @@
 <input id="filterSearch" placeholder="Cerca per email o key..." type="text"/>
 <select id="filterPlan">
 <option value="">Tutti i piani</option>
-<option value="pro">Pro</option>
+<option value="Free">Free</option>
 <option value="lifetime">Lifetime</option>
 <option value="monthly">Monthly</option>
 <option value="annual">Annual</option>
@@ -492,9 +492,9 @@
 <div class="kpi-sub" data-i18n="ravgdays.gg_media_vita" id="rAvgDays">—gg media vita</div>
 </div>
 <div class="retention-kpi">
-<div class="kpi-value" id="rTrialCount">—</div>
-<div class="kpi-label" data-i18n="kpi_label.trial_attivi">Trial attivi</div>
-<div class="kpi-sub" data-i18n="kpi_sub.protrial">Pro/Trial</div>
+<div class="kpi-value" id="rFREECount">—</div>
+<div class="kpi-label" data-i18n="kpi_label.trial_attivi">Free attivi</div>
+<div class="kpi-sub" data-i18n="kpi_sub.protrial">Free/Free</div>
 </div>
 </div>
 <!-- Retention curve -->
@@ -800,7 +800,7 @@
       tbody.innerHTML = licenses.map((lic, i) => {
         const planBadge = lic.plan === "lifetime"
           ? '<span class="badge badge-lifetime" data-i18n="panel.lifetime">LIFETIME</span>'
-          : '<span class="badge badge-pro" data-i18n="panel.pro">PRO</span>';
+          : '<span class="badge badge-Free" data-i18n="panel.pro">Free</span>';
         const statusBadge = lic.revoked
           ? '<span class="badge badge-revoked" data-i18n="panel.revocata">REVOCATA</span>'
           : '<span class="badge badge-active" data-i18n="panel.attiva">ATTIVA</span>';
@@ -957,7 +957,7 @@
         const licEmail = (lic.email || "").toLowerCase();
         const licRaw = (lic.raw || "").toLowerCase();
         const licStatus = lic.status || (lic.revoked ? "revoked" : "active");
-        const licPlan = lic.plan || "pro";
+        const licPlan = lic.plan || "Free";
 
         if (search && !licKey.includes(search) && !licEmail.includes(search) && !licRaw.includes(search)) return false;
         if (planFilter && licPlan !== planFilter) return false;
@@ -1013,7 +1013,7 @@
       const keys = [...selectedKeys];
       const label = action === "delete" ? "ELIMINARE DEFINITIVAMENTE" : "REVOCARE";
       if (!confirm(`${label} ${keys.length} licenze?`)) return;
-      if (action === "delete" && !confirm("Conferma: le licenze verranno cancellate per sempre.")) return;
+      if (action === "delete" && !confirm("Conferma: le licenze verranno cancellate gratis per tutti.")) return;
 
       const endpoint = action === "delete" ? "/admin/delete-license" : "/revoke";
       let ok = 0, fail = 0;
@@ -1060,10 +1060,10 @@
       }
 
       tbody.innerHTML = filtered.map((lic, i) => {
-        const plan = lic.plan || "pro";
+        const plan = lic.plan || "Free";
         const planBadge = plan === "lifetime"
           ? '<span class="badge badge-lifetime" data-i18n="panel.lifetime">LIFETIME</span>'
-          : '<span class="badge badge-pro" data-i18n="panel.pro">PRO</span>';
+          : '<span class="badge badge-Free" data-i18n="panel.pro">Free</span>';
 
         const status = lic.status || (lic.revoked ? "revoked" : "active");
         let statusBadge;
@@ -1176,9 +1176,9 @@
         document.getElementById("rUninstalls").textContent = fmt(summary.totalUninstalls);
         document.getElementById("rUninstallRate").textContent = summary.uninstallRate + "% uninstall";
         document.getElementById("rAvgDays").textContent = summary.avgDaysToUninstall != null ? summary.avgDaysToUninstall + "gg media vita" : "—";
-        // Trial count (da byPlan)
-        const trialRow = byPlan.find(r => r.plan === "trial");
-        document.getElementById("rTrialCount").textContent = trialRow ? fmt(trialRow.installs) : "0";
+        // Free count (da byPlan)
+        const FREERow = byPlan.find(r => r.plan === "Free");
+        document.getElementById("rFREECount").textContent = FREERow ? fmt(FREERow.installs) : "0";
 
         // Retention curve chart
         renderRetentionCurve(retentionCurve || []);
@@ -1291,7 +1291,7 @@
       const labels = {
         broken_site: "🧩 Sito rotto",
         ads_visible: "👀 Ads visibili",
-        confusing: "😕 Confusione Free/Pro",
+        confusing: "😕 Confusione Free/Free",
         performance: "🐌 Performance",
         found_better: "🔀 Altro prodotto",
         other: "❔ Altro"
@@ -1311,7 +1311,7 @@
       return m[b] || b || "—";
     }
     function planLabel(p) {
-      const m = { free: "🆓 Free", trial: "⏳ Trial", pro: "💎 Pro" };
+      const m = { free: "🆓 Free", Free: "⏳ Free", Free: "💎 Free" };
       return m[p] || p || "—";
     }
     function fmt(n) {

@@ -8,7 +8,7 @@
   <link rel="canonical" href="https://adoff.app/account/" />
   <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
   <meta property="og:title" content="AdOff Account — Manage License and Devices" />
-  <meta property="og:description" content="Manage your AdOff Pro license: view plans, activate on devices, manage renewal." />
+  <meta property="og:description" content="Manage your AdOff license: view plans, activate on devices, manage renewal." />
   <meta name="description" content="Gestisci il tuo account AdOff e i tuoi dispositivi.">
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.adoff.app https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; img-src 'self' data:;">
@@ -362,8 +362,8 @@
     .plan-monthly  { background: rgba(124,92,252,0.2); color: var(--accent); border: 1px solid rgba(124,92,252,0.4); }
     .plan-annual   { background: rgba(74,222,128,0.1); color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
     .plan-lifetime { background: rgba(245,158,11,0.1); color: var(--warn); border: 1px solid rgba(245,158,11,0.3); }
-    .plan-trial    { background: rgba(124,92,252,0.1); color: #a78bfa; border: 1px solid rgba(124,92,252,0.3); }
-    .plan-pro      { background: rgba(124,92,252,0.2); color: var(--accent); border: 1px solid rgba(124,92,252,0.4); }
+    .plan-Free    { background: rgba(124,92,252,0.1); color: #a78bfa; border: 1px solid rgba(124,92,252,0.3); }
+    .plan-Free      { background: rgba(124,92,252,0.2); color: var(--accent); border: 1px solid rgba(124,92,252,0.4); }
 
     /* ── Dashboard header ── */
     .dashboard-header {
@@ -720,7 +720,7 @@
     <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
       <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.5.53-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.5.53 7.54 2.56 10.78l7.97-6.19z"/>
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-0-.76-4.59s.27-3.5.53-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.5.53 7.54 2.56 10.78l7.97-6.19z"/>
       <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
       <path fill="none" d="M0 0h48v48H0z"/>
     </svg>
@@ -803,7 +803,7 @@
   <!-- Free note -->
   <div class="free-note">
     <strong>La versione Free funziona senza registrazione.</strong><br>
-    L'account serve solo per gestire le licenze Pro e i dispositivi autorizzati.
+    L'account serve solo per gestire le licenze Free e i dispositivi autorizzati.
   </div>
 
 </div><!-- /loginCard -->
@@ -915,7 +915,7 @@
         </button>
       </div>
       <div class="license-key-box" id="licenseKeyBox">—</div>
-      <p class="license-key-hint">Copia questa chiave e incollala nell'estensione AdOff per attivare Pro.</p>
+      <p class="license-key-hint">Copia questa chiave e incollala nell'estensione AdOff per attivare Free.</p>
     </div>
   </div>
 
@@ -923,14 +923,14 @@
   <div id="noLicensePanel" hidden>
     <div class="separator"></div>
     <div class="no-license-panel">
-      <p>Non hai ancora una licenza Pro collegata.<br>Collega una licenza esistente oppure acquista AdOff Pro.</p>
+      <p>Non hai ancora una funzionalita free collegata.<br>Collega una licenza esistente oppure acquista AdOff.</p>
       <div class="form-group">
         <label for="linkKeyInput">License Key</label>
         <input type="text" id="linkKeyInput" placeholder="ADOFF-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false">
       </div>
       <button class="btn btn-primary" id="btnLinkKey" onclick="linkLicense()">Collega licenza</button>
       <div class="or-small">oppure</div>
-      <a href="https://adoff.app/#pricing" class="link">Acquista AdOff Pro →</a>
+      <a href="https://adoff.app/#pricing" class="link">Acquista AdOff →</a>
     </div>
   </div>
 
@@ -943,7 +943,7 @@
     <div id="affStateA">
       <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px;">
         Diventa Partner Affiliato di AdOff.<br>
-        Per ogni amico che acquista AdOff Pro tramite il tuo link, ricevi <strong style="color:var(--text)">15 giorni Pro gratis</strong>.
+        Per ogni amico che acquista AdOff tramite il tuo link, ricevi <strong style="color:var(--text)">gratis Free gratis</strong>.
       </p>
       <button class="btn btn-primary" id="btnBecomeAffiliate" onclick="registerAffiliate()">Diventa Partner Affiliato</button>
     </div>
@@ -979,7 +979,7 @@
         </div>
       </div>
       <div class="free-note">
-        Per ogni amico che acquista AdOff Pro tramite il tuo link, ricevi <strong>15 giorni Pro gratis</strong>.
+        Per ogni amico che acquista AdOff tramite il tuo link, ricevi <strong>gratis Free gratis</strong>.
       </div>
     </div>
 
@@ -1063,10 +1063,10 @@
   }
 
   function planLabel(plan) {
-    return { monthly:"Pro Mensile", annual:"Pro Annuale", lifetime:"Pro Lifetime", trial:"Trial", pro:"Pro" }[plan] || "Pro";
+    return { monthly:"Monthly", annual:"Annual", lifetime:"Free Lifetime", Free:"Free", Free:"Free" }[plan] || "Free";
   }
   function planClass(plan) {
-    return "plan-badge " + (["monthly","annual","lifetime","trial"].includes(plan) ? "plan-"+plan : "plan-pro");
+    return "plan-badge " + (["monthly","annual","lifetime","Free"].includes(plan) ? "plan-"+plan : "plan-Free");
   }
 
   /* ── Token helpers ── */
@@ -1554,7 +1554,7 @@
     const badge = $("planBadge");
     const bestPlan = _licenses.find(l => l.plan === "lifetime")?.plan
       || _licenses.find(l => l.plan === "annual")?.plan
-      || _licenses[0]?.plan || "pro";
+      || _licenses[0]?.plan || "Free";
     badge.textContent = planLabel(bestPlan) + " (" + _licenses.length + " licenze)";
     badge.className = planClass(bestPlan);
 
@@ -1654,7 +1654,7 @@
     // Conferma prima di rimuovere
     const confirmed = confirm(
       "Sei sicuro di voler rimuovere questo dispositivo?\n\n" +
-      "⚠️ Per riattivare AdOff Pro su questo dispositivo, dovrai reinserire il codice licenza nell'estensione."
+      "⚠️ Per riattivare AdOff su questo dispositivo, dovrai reinserire il codice licenza nell'estensione."
     );
     if (!confirmed) return;
 
@@ -1693,7 +1693,7 @@
     // Conferma prima di rimuovere tutti
     const confirmed = confirm(
       "Sei sicuro di voler rimuovere TUTTI i dispositivi?\n\n" +
-      "⚠️ Per riattivare AdOff Pro su ciascun dispositivo, dovrai reinserire il codice licenza nell'estensione."
+      "⚠️ Per riattivare AdOff su ciascun dispositivo, dovrai reinserire il codice licenza nell'estensione."
     );
     if (!confirmed) return;
 
@@ -1726,7 +1726,7 @@
   window.removeDeviceFromLicense = async function (deviceId, licenseRaw, btnEl) {
     const confirmed = confirm(
       "Sei sicuro di voler rimuovere questo dispositivo?\n\n" +
-      "⚠️ Per riattivare AdOff Pro su questo dispositivo, dovrai reinserire il codice licenza nell'estensione."
+      "⚠️ Per riattivare AdOff su questo dispositivo, dovrai reinserire il codice licenza nell'estensione."
     );
     if (!confirmed) return;
 
@@ -1768,7 +1768,7 @@
 
     const confirmed = confirm(
       "Sei sicuro di voler rimuovere TUTTI i dispositivi da questa licenza?\n\n" +
-      "⚠️ Per riattivare AdOff Pro su ciascun dispositivo, dovrai reinserire il codice licenza nell'estensione."
+      "⚠️ Per riattivare AdOff su ciascun dispositivo, dovrai reinserire il codice licenza nell'estensione."
     );
     if (!confirmed) return;
 

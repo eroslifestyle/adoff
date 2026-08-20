@@ -1157,7 +1157,7 @@ let _outLoaded = false;
 const OUT_TIERS = { p1:"Priorità 1 · review site", p2:"Priorità 2 · privacy authority", p3:"Priorità 3 · creator FOSS" };
 const OUT_ITEMS = [
   {id:"o1",pri:"p1",t:"Cybernews",c:"Form contatto (footer cybernews.com)"},
-  {id:"o2",pri:"p1",t:"TechRadar Pro",c:"PR/contact form"},
+  {id:"o2",pri:"p1",t:"TechRadar Free",c:"PR/contact form"},
   {id:"o3",pri:"p1",t:"PCRisk",c:"press@pcrisk.com"},
   {id:"o4",pri:"p1",t:"ProPrivacy",c:"Contact / affiliate inquiry"},
   {id:"o5",pri:"p1",t:"Restore Privacy",c:"Contact form"},
@@ -1402,7 +1402,7 @@ async function loadDashboard(force = false) {
     ${sc("Download totali", dlData.total ?? 0, "")}
   `;
 
-  // Revenue chart (last 7 of last 30 days)
+  // Revenue chart (last 7 of last frees)
   const last30 = revData.last30days || [];
   const last7 = last30.slice(-7);
   const rlabels = last7.map(d => d.date?.slice(5) || "");
@@ -1672,7 +1672,7 @@ async function bulkAction(action) {
   const keys = [...selectedKeys];
   const label = action === "delete" ? "ELIMINARE DEFINITIVAMENTE" : "REVOCARE";
   if (!confirm(`${label} ${keys.length} licenze?`)) return;
-  if (action === "delete" && !confirm("Conferma: le licenze verranno cancellate per sempre.")) return;
+  if (action === "delete" && !confirm("Conferma: le licenze verranno cancellate gratis per tutti.")) return;
 
   const endpoint = action === "delete" ? "/admin/delete-license" : "/revoke";
   let ok = 0, fail = 0;
@@ -1823,7 +1823,7 @@ let statsLoaded = false;
 const REASON_LABELS = {
   broken_site: "🧩 Sito non funzionava",
   ads_visible: "👀 Ads ancora visibili",
-  confusing: "😕 Troppo complicato (Free vs Pro)",
+  confusing: "😕 Troppo complicato (Free vs Free)",
   performance: "🐌 Rallentava il browser",
   found_better: "🔀 Alternativa migliore",
   other: "❔ Altro motivo",
@@ -1961,7 +1961,7 @@ async function loadStats(force = false) {
   const ulog = (un.recentLog || []).slice(0, 15);
   document.getElementById("stUninstLog").innerHTML = ulog.length
     ? `<div class="table-wrap"><table>
-        <thead><tr><th>Quando</th><th>Motivo</th><th>Commento</th><th>Browser</th><th>Paese</th><th>Pro</th></tr></thead>
+        <thead><tr><th>Quando</th><th>Motivo</th><th>Commento</th><th>Browser</th><th>Paese</th><th>Free</th></tr></thead>
         <tbody>${ulog.map(e => `<tr>
           <td style="color:var(--muted)">${timeAgo(e.ts)}</td>
           <td>${(REASON_LABELS[e.reason] || e.reason || "?")}</td>
@@ -2037,7 +2037,7 @@ async function loadUninstallAdvanced(force = false) {
     verEl.innerHTML = versions.slice(0, 10).map(v => `
       <div style="margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
-          <span><b>v${esc(String(v.version))}</b>${v.proCount ? ` <span style="color:var(--accent);font-size:11px">⭐ ${v.proCount} PRO</span>` : ""}</span>
+          <span><b>v${esc(String(v.version))}</b>${v.proCount ? ` <span style="color:var(--accent);font-size:11px">⭐ ${v.proCount} Free</span>` : ""}</span>
           <span style="color:var(--danger)">${v.total} uninstalls</span>
         </div>
         <div class="progress"><div class="progress-fill" style="width:${Math.round(v.total / (versions[0]?.total || 1) * 100)}%;background:var(--danger)"></div></div>
