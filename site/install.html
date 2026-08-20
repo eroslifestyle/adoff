@@ -1005,10 +1005,10 @@
                 <input type="text" id="nl-website" name="website" tabindex="-1" autocomplete="off" value="">
               </div>
               <div class="cf-turnstile" data-sitekey="0x4AAAAAADAtLsfOV1PCgWx_" data-callback="onNlTurnstileDone" style="margin-bottom:12px;"></div>
-              <div class="msg" id="nl-msg"></div>
               <button type="submit" class="download-btn" id="nl-btn" data-i18n="install.newsletter.cta" style="margin-top:8px;">Iscriviti</button>
             </div>
           </form>
+          <div class="msg" id="nl-msg"></div>
         </div>
       </div>
     </section>
@@ -1189,7 +1189,6 @@
       btn.disabled = true;
       btn.textContent = dict && dict['install.newsletter.cta'] || '...';
       msg.className = 'msg';
-      msg.style.display = 'none';
       var email = document.getElementById('nl-email').value;
       var tsToken = _nlTsToken; _nlTsToken = '';
       fetch(API + '/newsletter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email, lang: lang, source: 'install', consent: true, website: '', turnstileToken: tsToken }) })
