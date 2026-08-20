@@ -157,3 +157,16 @@ CREATE TABLE IF NOT EXISTS kv_backup_meta (
     kv_version INTEGER DEFAULT 1,
     total_keys INTEGER DEFAULT 0
 );
+
+
+-- =============================================
+-- NEWSLETTER (GDPR-compliant, consent-based)
+-- =============================================
+CREATE TABLE IF NOT EXISTS newsletter (
+    email TEXT PRIMARY KEY,           -- unico per indirizzo
+    lang TEXT,                        -- lingua del sito al momento dell'iscrizione
+    source TEXT,                      -- pagina sorgente (es. 'install', 'homepage')
+    consent INTEGER NOT NULL,         -- 1 = consenso esplicito prestato
+    subscribed_at INTEGER NOT NULL,   -- Unix ms
+    unsubscribed_at INTEGER           -- NULL finché iscritto
+);
