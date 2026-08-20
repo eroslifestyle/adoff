@@ -213,7 +213,7 @@ const i18n = (function () {
       "help.chipBroken": "Un sito non funziona",
       "help.chipVideoAds": "Le piattaforme video mostrano ancora ads",
       "help.chipWhitelist": "Come escludo un sito?",
-      "help.chipFreePro": "AdOff e' gratis",
+      "help.chipFreePro": "AdOff e' gratis?",
       "help.chipPrivacy": "Privacy e dati personali",
       "help.chipSlow": "AdOff rallenta il browser?",
       "help.chipAntiblock": "Siti con anti-adblock",
@@ -491,11 +491,11 @@ const i18n = (function () {
       "help.chipBroken": "A site doesn't work",
       "help.chipVideoAds": "Video platforms still show ads",
       "help.chipWhitelist": "How do I exclude a site?",
-      "help.chipFreePro": "AdOff is free",
+      "help.chipFreePro": "Is AdOff free?",
       "help.chipPrivacy": "Privacy and personal data",
       "help.chipSlow": "Does AdOff slow down the browser?",
       "help.chipAntiblock": "Sites with anti-adblock",
-      "help.chipLicense": "I have a license, how do I activate it?",
+      "help.chipLicense": "I have a licence, how do I activate it?",
       "help.chipUninstall": "How do I uninstall AdOff?",
 
       // Report
@@ -753,11 +753,11 @@ const i18n = (function () {
       "help.chipBroken": "Eine Seite funktioniert nicht",
       "help.chipVideoAds": "Video-Plattformen zeigen noch Werbung",
       "help.chipWhitelist": "Wie schliesse ich eine Seite aus?",
-      "help.chipFreePro": "AdOff ist kostenlos",
+      "help.chipFreePro": "Is AdOff free?",
       "help.chipPrivacy": "Datenschutz und personliche Daten",
       "help.chipSlow": "Verlangsamt AdOff den Browser?",
       "help.chipAntiblock": "Seiten mit Anti-Adblock",
-      "help.chipLicense": "Ich habe eine Lizenz, wie aktiviere ich sie?",
+      "help.chipLicense": "I have a licence, how do I activate it?",
       "help.chipUninstall": "Wie deinstalliere ich AdOff?",
 
       // Report
@@ -1015,11 +1015,11 @@ const i18n = (function () {
       "help.chipBroken": "Un site ne fonctionne pas",
       "help.chipVideoAds": "Les plateformes video montrent encore des pubs",
       "help.chipWhitelist": "Comment exclure un site?",
-      "help.chipFreePro": "AdOff ist kostenlos",
+      "help.chipFreePro": "Is AdOff free?",
       "help.chipPrivacy": "Vie privee et donnees personnelles",
       "help.chipSlow": "AdOff ralentit le navigateur?",
       "help.chipAntiblock": "Sites avec anti-adblock",
-      "help.chipLicense": "J'ai une licence, comment l'activer?",
+      "help.chipLicense": "I have a licence, how do I activate it?",
       "help.chipUninstall": "Comment desinstaller AdOff?",
 
       // Report
@@ -1277,11 +1277,11 @@ const i18n = (function () {
       "help.chipBroken": "Un sitio no funciona",
       "help.chipVideoAds": "Las plataformas de video siguen mostrando anuncios",
       "help.chipWhitelist": "Como excluyo un sitio?",
-      "help.chipFreePro": "AdOff es gratis",
+      "help.chipFreePro": "Is AdOff free?",
       "help.chipPrivacy": "Privacidad y datos personales",
       "help.chipSlow": "AdOff ralentiza el navegador?",
       "help.chipAntiblock": "Sitios con anti-adblock",
-      "help.chipLicense": "Tengo una licencia, como la activo?",
+      "help.chipLicense": "I have a licence, how do I activate it?",
       "help.chipUninstall": "Como desinstalo AdOff?",
 
       // Report
@@ -1539,11 +1539,11 @@ const i18n = (function () {
       "help.chipBroken": "Um site nao funciona",
       "help.chipVideoAds": "As plataformas de video ainda mostram anuncios",
       "help.chipWhitelist": "Como excluo um site?",
-      "help.chipFreePro": "AdOff e gratis",
+      "help.chipFreePro": "Is AdOff free?",
       "help.chipPrivacy": "Privacidade e dados pessoais",
       "help.chipSlow": "O AdOff deixa o navegador lento?",
       "help.chipAntiblock": "Sites com anti-adblock",
-      "help.chipLicense": "Tenho uma licenca, como ativo?",
+      "help.chipLicense": "I have a licence, how do I activate it?",
       "help.chipUninstall": "Como desinstalo o AdOff?",
 
       // Report
@@ -1801,11 +1801,11 @@ const i18n = (function () {
       "help.chipBroken": "Сайт не работает",
       "help.chipVideoAds": "Видеоплатформы всё ещё показывают рекламу",
       "help.chipWhitelist": "Как исключить сайт?",
-      "help.chipFreePro": "AdOff besplatno",
+      "help.chipFreePro": "Is AdOff free?",
       "help.chipPrivacy": "Конфиденциальность и личные данные",
       "help.chipSlow": "AdOff замедляет браузер?",
       "help.chipAntiblock": "Сайты с антиблокировкой",
-      "help.chipLicense": "U menya est' licenziya, kak aktivirovat'?",
+      "help.chipLicense": "I have a licence, how do I activate it?",
       "help.chipUninstall": "Как удалить AdOff?",
 
       // Report
@@ -2063,11 +2063,11 @@ const i18n = (function () {
       "help.chipBroken": "موقع لا يعمل",
       "help.chipVideoAds": "منصات الفيديو لا تزال تعرض إعلانات",
       "help.chipWhitelist": "كيف أستثني موقعاً؟",
-      "help.chipFreePro": "الفرق بين Free وPro",
+      "help.chipFreePro": "Is AdOff free?",
       "help.chipPrivacy": "الخصوصية والبيانات الشخصية",
       "help.chipSlow": "هل AdOff يُبطئ المتصفح؟",
       "help.chipAntiblock": "المواقع ذات حجب الإعلانات المضاد",
-      "help.chipLicense": "indhini lycens, kayf 'ufeedl?",
+      "help.chipLicense": "I have a licence, how do I activate it?",
       "help.chipUninstall": "كيف أُزيل AdOff؟",
 
       // Report
@@ -2325,11 +2325,11 @@ const i18n = (function () {
       "help.chipBroken": "某个网站无法正常使用",
       "help.chipVideoAds": "视频平台仍在显示广告",
       "help.chipWhitelist": "如何排除某个网站？",
-      "help.chipFreePro": "AdOff mianfei",
+      "help.chipFreePro": "Is AdOff free?",
       "help.chipPrivacy": "隐私与个人数据",
       "help.chipSlow": "AdOff 会让浏览器变慢吗？",
       "help.chipAntiblock": "具有反广告拦截的网站",
-      "help.chipLicense": "Wo you lichenzheng, ruhe jihuo?",
+      "help.chipLicense": "I have a licence, how do I activate it?",
       "help.chipUninstall": "如何卸载 AdOff？",
 
       // Report
@@ -2587,11 +2587,11 @@ const i18n = (function () {
       "help.chipBroken": "Bir site calismıyor",
       "help.chipVideoAds": "Video platformlari hala reklam gosteriyor",
       "help.chipWhitelist": "Bir siteyi nasil haric tutarim?",
-      "help.chipFreePro": "AdOff ucretsizdir",
+      "help.chipFreePro": "Is AdOff free?",
       "help.chipPrivacy": "Gizlilik ve kisisel veriler",
       "help.chipSlow": "AdOff tarayicimi yavaslatıyor mu?",
       "help.chipAntiblock": "Anti-adblock olan siteler",
-      "help.chipLicense": "Lisansim var, nasil etkinlestiririm?",
+      "help.chipLicense": "I have a licence, how do I activate it?",
       "help.chipUninstall": "AdOff'u nasil kaldiririm?",
 
       // Rapor
@@ -2849,11 +2849,11 @@ const i18n = (function () {
       "help.chipBroken": "Situs tidak berfungsi",
       "help.chipVideoAds": "Platform video masih menampilkan iklan",
       "help.chipWhitelist": "Bagaimana cara mengecualikan situs?",
-      "help.chipFreePro": "AdOff gratis",
+      "help.chipFreePro": "Is AdOff free?",
       "help.chipPrivacy": "Privasi dan data pribadi",
       "help.chipSlow": "Apakah AdOff memperlambat browser?",
       "help.chipAntiblock": "Situs dengan anti-adblock",
-      "help.chipLicense": "Saya punya lisensi, bagaimana mengaktifkannya?",
+      "help.chipLicense": "I have a licence, how do I activate it?",
       "help.chipUninstall": "Bagaimana cara menghapus AdOff?",
 
       // Laporan
@@ -3111,11 +3111,11 @@ const i18n = (function () {
       "help.chipBroken": "Strona nie dziala",
       "help.chipVideoAds": "Platformy wideo nadal pokazuja reklamy",
       "help.chipWhitelist": "Jak wykluczyc strone?",
-      "help.chipFreePro": "AdOff jest darmowe",
+      "help.chipFreePro": "Is AdOff free?",
       "help.chipPrivacy": "Prywatnosc i dane osobowe",
       "help.chipSlow": "Czy AdOff spowalnia przegladarke?",
       "help.chipAntiblock": "Strony z anti-adblock",
-      "help.chipLicense": "Mam licencje, jak ja aktywowac?",
+      "help.chipLicense": "I have a licence, how do I activate it?",
       "help.chipUninstall": "Jak odinstalowac AdOff?",
 
       // Raport
@@ -3372,11 +3372,11 @@ const i18n = (function () {
       "help.chipBroken": "एक साइट काम नहीं कर रही",
       "help.chipVideoAds": "वीडियो प्लेटफ़ॉर्म अभी भी विज्ञापन दिखाते हैं",
       "help.chipWhitelist": "साइट को कैसे बाहर करें?",
-      "help.chipFreePro": "AdOff muft hai",
+      "help.chipFreePro": "Is AdOff free?",
       "help.chipPrivacy": "गोपनीयता और व्यक्तिगत डेटा",
       "help.chipSlow": "क्या AdOff ब्राउज़र धीमा करता है?",
       "help.chipAntiblock": "एंटी-एडब्लॉक वाली साइटें",
-      "help.chipLicense": "Mere paas lisens hai, kaise activate karein?",
+      "help.chipLicense": "I have a licence, how do I activate it?",
       "help.chipUninstall": "AdOff को अनइंस्टॉल कैसे करें?",
 
       // Report
@@ -3633,11 +3633,11 @@ const i18n = (function () {
       "help.chipBroken": "サイトが正常に動かない",
       "help.chipVideoAds": "動画プラットフォームで広告が表示される",
       "help.chipWhitelist": "サイトを除外するには？",
-      "help.chipFreePro": "AdOff wa muryo",
+      "help.chipFreePro": "Is AdOff free?",
       "help.chipPrivacy": "プライバシーと個人データ",
       "help.chipSlow": "AdOffはブラウザを遅くする？",
       "help.chipAntiblock": "広告ブロック検知サイト",
-      "help.chipLicense": "ライセンサーがいますが、有効化方法は？",
+      "help.chipLicense": "I have a licence, how do I activate it?",
       "help.chipUninstall": "AdOffのアンインストール方法は？",
 
       // Report
@@ -3894,11 +3894,11 @@ const i18n = (function () {
       "help.chipBroken": "사이트가 제대로 작동하지 않음",
       "help.chipVideoAds": "동영상 플랫폼에서 광고가 계속 표시됨",
       "help.chipWhitelist": "사이트를 제외하는 방법?",
-      "help.chipFreePro": "AdOff neun mulyeo",
+      "help.chipFreePro": "Is AdOff free?",
       "help.chipPrivacy": "개인정보 및 개인 데이터",
       "help.chipSlow": "AdOff가 브라우저를 느리게 만드나요?",
       "help.chipAntiblock": "광고 차단 감지 사이트",
-      "help.chipLicense": "라이선스가 있는데 활성화하는 법?",
+      "help.chipLicense": "I have a licence, how do I activate it?",
       "help.chipUninstall": "AdOff 제거 방법?",
 
       // Report
