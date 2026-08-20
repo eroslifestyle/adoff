@@ -1,81 +1,57 @@
 ---
-name: piano-free-per-tutti-aggiornamento-2026-08-20
-description: Aggiornamento del piano operativo PIANO-FREE-PER-TUTTI con i risultati del rifacimento messaggio, pulizia SEO, rimozione VPN, traduzioni 15 lingue e comunicazione (non ancora pubblicati)
+name: piano-free-per-tutti-update
+description: Update punto 6 del piano FREE-PER-TUTTI: completamento 15 lingue con commit, verifica alfabeto, bug hindi/italiano scartato, trappola chiavi modificate
 updated: 2026-08-20
 metadata:
   type: project
 ---
 
-# Piano Free per Tutti — Aggiornamento 2026-08-20
+# Piano FREE-PER-TUTTI — update punto 6 (15 lingue completate)
 
-File: `/mnt/backup/Dropbox/1 Programmazione/Progetti/ChromePlugin/sviluppo/PIANO-FREE-PER-TUTTI.md`
+Aggiornamento del punto 6 del file `sviluppo/PIANO-FREE-PER-TUTTI.md`. Il task "[~]" (in corso) diventa "[x]" (fatto) con nuovi dettagli su commit, verifica e bug incontrati.
 
-Aggiornamento della sezione "Piano operativo" (punti 3-7) del piano. I punti 1-2 restano invariati.
+**Why:** il punto 6 risultava ancora "[~]" mentre le 15 lingue erano di fatto pronte — senza update il piano non riflette lo stato reale del lavoro e nasconde i problemi emersi durante la traduzione.
 
-**Why:** Il piano "free per tutti" richiede un rifacimento del messaggio, non dell'impianto tecnico, per non perdere hreflang, JSON-LD, critical CSS e accessibilità già fatti.
+**How to apply:** sostituire il blocco con una singola Edit su `sviluppo/PIANO-FREE-PER-TUTTI.md`. `old_string` = vecchio testo da "6. [~] **15 lingue** (in corso, commit `c203384`)" fino a prima di "7. [~] **Comunicazione e pubblicazione**". `new_string` = testo fornito nel brief.
 
-**How to apply:** Sostituire i punti 3-7 della sezione "Piano operativo" con il testo esatto sotto; mantenere l'indentazione a 3 spazi per le righe di continuazione.
+## Nuovo testo del punto 6
 
-## Piano operativo
+6. [x] **15 lingue** (fatto 2026-08-20, commit `c203384` + `f8ee2dd` + `81e6f54`): tutte e
+   tredici le lingue tradotte davvero — tedesco, francese, spagnolo, portoghese, russo,
+   polacco, cinese, giapponese, coreano, arabo, hindi, turco, indonesiano. Circa 8.200
+   celle di `_matrix.json`.
+   Ogni file e' stato accettato solo dopo aver verificato l'ALFABETO delle stringhe lunghe
+   (93-99% a seconda della lingua), non il report dell'agente: e' cosi' che e' emerso un
+   file "hindi" che conteneva testo italiano, con zero caratteri devanagari su 278
+   stringhe — scartato e rifatto.
+   Trappola trovata e chiusa: le chiavi il cui testo INGLESE era cambiato restavano con la
+   vecchia traduzione e nessun controllo le segnalava, perche' non risultavano "non
+   tradotte". Giapponese e russo mostravano ancora il messaggio vecchio. Si trovano solo
+   confrontando la matrice con un commit precedente.
 
-3. [x] **Nuovo sito, nucleo** (fatto 2026-08-20, commit `8fcc071` + `0e3dddf`): home, listino,
-   installazione, guida, supporto, privacy e termini riscritti col messaggio nuovo — titolo
-   "Blocca la pubblicita', gratis", sottotitolo "Video senza interruzioni", formula
-   "gratis, senza account e senza limiti". Le tre card dei piani diventano una sola
-   "Tutto incluso". Ripuliti anche i dati strutturati: un prezzo stantio nel JSON-LD
-   finisce nei risultati di ricerca. Termini e privacy trattati come documenti legali:
-   riscritte solo le clausole su piani, trial e rimborso; la privacy ora dichiara il
-   trattamento della newsletter.
-   Scelta dichiarata: e' stato rifatto il MESSAGGIO, non l'impianto tecnico — rifare
-   l'HTML da zero avrebbe buttato hreflang, JSON-LD, critical CSS e il lavoro di
-   accessibilita' gia' fatti.
-4. [x] **Pagine SEO e `vs/`** (fatto 2026-08-20, commit `b1d04e8`): erano 146 pagine con 527
-   claim obsoleti, ora zero su 561 pagine. Nessun URL cambiato, nessuna pagina archiviata.
-   Nelle pagine di confronto il prezzo dei CONCORRENTI resta intatto: e' un fatto su di
-   loro, e ora e' il nostro vantaggio.
-5. [x] **Rimozione VPN** (fatto 2026-08-20, commit `d1de281`): nove pagine spostate in
-   `sviluppo/archive/site-vpn-pages/` con `git mv`, ognuna con il suo redirect 301 in
-   `site/_redirects` (con e senza `.html`). Tolti menu, footer, listino, indici e sitemap.
-   `android.html` NON toccato: li' "VPN" indica il meccanismo di sistema per il DNS.
-6. [~] **15 lingue** (in corso, commit `c203384`): tradotte davvero tedesco, francese,
-   spagnolo, portoghese, russo, polacco, cinese, giapponese, coreano e arabo. Ogni file
-   verificato controllando l'ALFABETO, non il report: 96-99% delle stringhe lunghe usa lo
-   script giusto. L'hindi e' stato scartato e rifatto perche' conteneva testo italiano.
-   **Restano da completare hindi, turco e indonesiano**: finche' non sono pronte quelle
-   lingue mostrano il testo inglese, che il fallback di `t()` serve correttamente.
-7. [~] **Comunicazione e pubblicazione**: i testi sono pronti in
-   `sviluppo/COMUNICAZIONE-SOSTENITORI.md` (email IT/EN firmate da Eros in prima persona,
-   post Telegram in inglese, risposta per il supporto, checklist operativa). Versione
-   bumpata a **3.6.0** con l'avviso nel popup che raggiunge tutti gli utenti (commit
-   `b31d629`), pacchetti ricostruiti (commit `13f5f61`), disdetta resa funzionante e
-   visibile nell'area account (commit `9395789`).
-   **NULLA E' STATO PUBBLICATO NE' INVIATO**: sito, store e comunicazione aspettano la
-   conferma dell'utente dal browser reale. Il worker va deployato perche' la disdetta e
-   la newsletter funzionino.
+## Decisioni e fix chiave
 
-## Decisioni chiave
+- **Criterio di accettazione:** verifica dell'alfabeto caratteristico delle stringhe lunghe (93-99% per lingua), non il report dell'agente.
+- **Bug scoperto:** un file dichiarato "hindi" era in realta' testo italiano — zero caratteri devanagari su 278 stringhe. Scartato e rifatto.
+- **Trappola chiusa:** chiavi con testo inglese modificato restavano con la vecchia traduzione; i controlli di "non tradotto" non le intercettavano. Per giapponese e russo il messaggio vecchio era ancora visibile.
+- **Metodo di rilevazione della trappola:** confronto della `_matrix.json` con un commit precedente (non controllo automatico basato su celle vuote).
 
-- Rifare il MESSAGGIO, non l'impianto tecnico del sito (preserva hreflang, JSON-LD, critical CSS, accessibilità).
-- Nessun URL cambiato nelle pagine SEO/`vs/`; nessuna pagina archiviata.
-- Prezzo dei concorrenti nelle pagine di confronto lasciato intatto (dato fattuale su di loro).
-- 15 lingue target: 10 complete, 3 ancora da completare (hindi, turco, indonesiano); hindi scartato e rifatto perché conteneva testo italiano.
+## Entita'/tool coinvolti
 
-## Contraddizioni / fallimenti
+- File: `sviluppo/PIANO-FREE-PER-TUTTI.md`
+- Commit: `c203384`, `f8ee2dd`, `81e6f54`
+- Artefatto dati: `_matrix.json` (~8.200 celle)
+- 13 lingue tradotte: tedesco, francese, spagnolo, portoghese, russo, polacco, cinese, giapponese, coreano, arabo, hindi, turco, indonesiano
 
-- Hindi prima passata: conteneva testo italiano → scartata e rifatta.
-- 96-99% delle stringhe lunghe usa lo script giusto (non 100%): verificato controllando l'ALFABETO, non il report.
-- Pagina `android.html`: "VPN" intoccata perché indica il meccanismo DNS di sistema.
+## Cosa NON ha funzionato (fallimenti)
 
-## Entità / file / commit rilevati
+- **Report dell'agente:** non affidabile come unico criterio — il file "hindi" conteneva italiano nonostante il via libera dell'agente.
+- **Controllo "non tradotto":** insufficiente — non intercettava chiavi con traduzione vecchia su testo inglese aggiornato (giaiapponese e russo mostravano il messaggio vecchio).
+- **Nessun check alfabetico automatico** era in place: e' stato introdotto proprio per impedire che il bug hindi si ripetesse.
 
-- File aggiornato: `/mnt/backup/Dropbox/1 Programmazione/Progetti/ChromePlugin/sviluppo/PIANO-FREE-PER-TUTTI.md`
-- Archivio pagine VPN: `sviluppo/archive/site-vpn-pages/`
-- Redirect: `site/_redirects`
-- Comunicazione: `sviluppo/COMUNICAZIONE-SOSTENITORI.md`
-- Commit: `8fcc071`, `0e3dddf`, `b1d04e8`, `d1de281`, `c203384`, `b31d629`, `13f5f61`, `9395789`
-- Versione plugin: 3.6.0
+## Note operative per la Edit
 
-## Stato pubblicazione
-
-- **Nulla è stato pubblicato né inviato.** Tutto (sito, store, comunicazione) aspetta conferma dell'utente dal browser reale.
-- Worker ancora da deployare: senza, disdetta e newsletter non funzionano.
+- Tipo: singola Edit su `sviluppo/PIANO-FREE-PER-TUTTI.md`.
+- `old_string`: dal primo carattere di "6. [~] **15 lingue** (in corso, commit `c203384`)" fino all'ultimo carattere prima dell'inizio di "7. [~] **Comunicazione e pubblicazione**" (escluso).
+- `new_string`: il blocco completo riportato sopra nella sezione "Nuovo testo del punto 6".
+- Nessun altro punto del piano va modificato in questo task.
