@@ -1,5 +1,45 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
+## Release 3.6.1 + bonifica sito (2026-08-21)
+
+Rilasciata 3.6.1, bonificato il sito dai residui dei vecchi piani a pagamento.
+
+**Fatto:**
+- [x] Service worker: HTML network-first, VERSION v3 (era cache-first con v2 pinnata)
+- [x] CDN Cloudflare: token nav/footer bumpato da v=260730 a v=260821 su 627 file
+- [x] Pagina /pricing eliminata con redirect 301 verso /
+- [x] 82 link in 76 file ripuntati alla pagina di installazione della lingua corretta
+- [x] Copyright con escape non decodificati su 21 chiavi dizionario
+- [x] Bonifica claim sui tre strati: dizionari (240 file, 15 lingue), template (9), pagine a mano (guide, license-guide, about-data, press, salesletter, vs/)
+- [x] Difetto generatore: replace con limite 1 (prose_i18n.py riga 173) — rimosso il limite
+- [x] Recupero 1033 chiavi perse da 16 file JSON (backup `prose-backup-20260821/`)
+- [x] ZIP ricostruiti per allineamento 3.6.1
+- [x] Firefox AMO ripubblicato in 6 lingue (de, en-US, es-ES, fr, it, pt-BR)
+
+**Filone recensioni (stessa release, sessione parallela — checkpoint `CP_20260822_0009.md`):**
+- [x] Escluso il blocco CWS: listing indicizzato su `chromewebstore.google.com/search/adoff`, badge buona reputazione, 53 utenti, 5 valutazioni 5/5, API `uploadState: NOT_FOUND`
+- [x] Escluso che AdOff rompa la pagina recensioni: `sviluppo/tests/diag-cws-reviews.js` con e senza estensione da' metriche identiche (commit `94fd1ee`)
+- [x] Bug — `detectReviewUrl()` usava `chrome.runtime.id`: negli install da ZIP l'ID e' locale, il link portava a una pagina store inesistente. Ora `CWS_ITEM_ID` hardcoded (commit `4764ab3`)
+- [x] Bug — il prompt recensione chiedeva 100 ads cosmetic + 10 giorni e non compariva mai. Ora 30 blocchi (ads + richieste di rete) + 3 giorni (commit `5582ed4`)
+- [x] Bug — `amo-sign.sh` notificava come errore una submission AMO riuscita (commit `a9b08e1`)
+- [x] Gate `node sviluppo/tests/test-security-invariants.js`: 95 passati / 0 falliti
+
+**Aperto:**
+- [ ] **Recensioni** — farsi dare il sintomo esatto da chi non riesce a recensire (pulsante assente vs messaggio d'errore) e il browser. Expected outcome: una causa fra (a) browser non-Chrome, (b) account Google non autorizzato, (c) profilo Chrome diverso
+- [ ] Se la causa e' (a): estendere `detectReviewUrl()` a Opera/Brave/Vivaldi, che oggi ricadono sul link Chrome
+- [ ] Valutare se degradare lo ZIP a fallback in fondo a `site/install.html`: ogni install da ZIP e' una recensione persa per sempre (Google la consente solo agli install da store)
+- [ ] Chrome Web Store ed Edge: schede da aggiornare a mano (API copre solo il pacchetto)
+- [ ] Due pagine account (`/account` e `/account/`): da consolidare senza spezzare il referral
+- [ ] Codice prezzi morto in options.js/html: `PRICES` riga 45, `purchasePlan()` riga 484, `#pricingCard` riga 359 — richiede release
+- [ ] 2176 stringhe non tradotte su pagine pubbliche
+
+**Da non ripetere:**
+- Il gate `test-security-invariants.js` va eseguito PRIMA del deploy, non dopo. Questa volta e' passato (95/95) ma l'ordine era sbagliato.
+- Un test che misura 0 dove ci sono 4 elementi non e' verde, e' una trappola: le stelline dello store sono esposte via `aria-label`, non `alt`.
+- Per le card PIL usare `anchor="mm"` con coordinate fisse: `textbbox` non corrisponde ai pixel disegnati e produce testi sovrapposti.
+
+---
+
 ## Release 3.6.0 — PUBBLICATA (2026-08-20) — AdOff e' gratuito per tutti
 
 Ogni funzione sbloccata per chiunque: nessun piano, nessuna scadenza, nessun account.
@@ -15,8 +55,8 @@ Piano completato: `sviluppo/PIANO-FREE-PER-TUTTI.md` (tutti e sette i punti).
 - [x] Firefox AMO: 3.6.0 caricata, stato `unreviewed`
 - [x] adoff.app: deploy completato, i 3 ZIP sono a 3.6.0
 - [x] Email ai 4 sostenitori (Resend) + post Telegram @adoffapp (message_id 133)
-- [ ] Verificare l'esito delle review: Chrome, Edge, AMO
-- [ ] Provare l'iscrizione newsletter dal browser reale (il Turnstile richiede il widget)
+- [x] Verificare l'esito delle review: Chrome pubblicata, AMO respinto (rifatto e ripubblicato)
+- [x] Provare l'iscrizione newsletter dal browser reale: iscrizione registrata su D1
 
 ### Da non ripetere (imparato in questa release)
 - Il worker si prova con `wrangler dev --local` PRIMA del deploy: un errore di
@@ -26,13 +66,13 @@ Piano completato: `sviluppo/PIANO-FREE-PER-TUTTI.md` (tutti e sette i punti).
   senza guardia. Si cambiano i testi e si usa `display:none`.
 - Il database D1 si chiama `adoff-db`; Resend rifiuta `urllib` di Python (errore 1010): curl.
 
-### Aperto: gate Pro intermittente
-Gate chiuso in 1 esecuzione su 4 a parita' di build e licenza. ESCLUSE: service worker
-dormiente (il nonce e' generato localmente in `content.js:77`) e integrity corrotta (hash
-salvato e ricalcolato coincidono). SOSPETTO: e' in parte una corsa del BANCO — togliendo
-l'attesa fra scrittura licenza e apertura pagina i fallimenti passano da 1/4 a 3/3.
-PROVA PULITA: scrivere la licenza, RIAVVIARE il browser, poi misurare piu' volte.
-Ora irrilevante per gli utenti (tutto e' gratuito) ma non compreso.
+### Chiarito: gate Pro intermittente
+Il meccanismo era che `pro` dipendeva dal piano letto da storage e il banco faceva
+letture secche dopo attese fisse. Dalla 3.6.0 `adoffPlanTier()` ritorna sempre
+"premium" quindi l'esito non dipende piu' dal timing. Misurato 6 esecuzioni su 6
+verdi, due delle quali con le attese azzerate. LIMITE ONESTO: il bug non e' mai stato
+riprodotto neanche sul build 3.5.84, quindi la spiegazione poggia sulla lettura del
+codice e non su una riproduzione. Chiuso come "compreso ma non riprodotto".
 Checkpoint: `.claude/checkpoints/CP_20260819_1230.md`
 
 
