@@ -79,7 +79,6 @@
         '<div>',
           '<p class="footer__col-title" data-i18n="footer.col.product">Prodotto</p>',
           '<ul class="footer__links">',
-            '<li><a href="/pricing.html' + fq + '" data-i18n="footer.pricing">Prezzi</a></li>',
             '<li><a href="' + itRoot('install.html') + '" data-i18n="footer.install">Installa</a></li>',
             '<li><a href="' + enRoot('how-it-works') + '" data-i18n="footer.howit">Come funziona</a></li>',
             '<li><a href="' + itRoot('guide') + '" data-i18n="footer.guide">Guida utente</a></li>',

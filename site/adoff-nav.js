@@ -240,7 +240,7 @@
   var homeLink = (activeLang === 'it' || !activeLang) ? '/' : '/' + activeLang + '/';
   // premium & vpn-policy: EN-root canonicals, nessuna versione /{lang}/ esiste
   // pricing: solo root, traduzione runtime
-  var pricingLink = '/pricing.html' + lq;
+  // pagina prezzi rimossa: AdOff e' gratis per tutti
   // install, support, guide, community, privacy: pagine statiche complete
   // esistono in /{lang}/ per tutte le 14 lingue + IT in root
   function itRoot(page) { return (activeLang === 'it') ? '/' + page : '/' + activeLang + '/' + page; }
@@ -262,7 +262,6 @@
       '<ul class="sn-links">',
         '<li><a href="' + homeLink + '" data-i18n="nav.home">Home</a></li>',
         '<li><a href="' + homeLink + '#features" data-i18n="nav.features">Features</a></li>',
-        '<li><a href="' + pricingLink + '" data-i18n="nav.pricing">Pricing</a></li>',
         '<li><a href="' + communityLink + '" data-i18n="nav.community">Community</a></li>',
         '<li><a href="' + supportLink + '" data-i18n="nav.support">Support</a></li>',
         '<li><a href="' + installLink + '" data-i18n="nav.install">Install</a></li>',
@@ -283,7 +282,7 @@
           '</button>',
           '<div class="sn-lang-dd" id="snLangDd">' + ddItems + '</div>',
         '</div></li>',
-        '<li><a href="' + homeLink + '#pricing" class="sn-cta" data-i18n="nav.cta">Install Free</a></li>',
+        '<li><a href="' + installLink + '" class="sn-cta" data-i18n="nav.cta">Install Free</a></li>',
       '</ul>',
       '<div class="sn-right">',
         '<button class="sn-burger" aria-label="Menu">',
@@ -294,7 +293,6 @@
     '<div class="sn-mobile">',
       '<a href="' + homeLink + '" data-i18n="nav.home">Home</a>',
       '<a href="' + homeLink + '#features" data-i18n="nav.features">Features</a>',
-      '<a href="' + pricingLink + '" data-i18n="nav.pricing">Pricing</a>',
       '<a href="' + communityLink + '" data-i18n="nav.community">Community</a>',
       '<a href="' + supportLink + '" data-i18n="nav.support">Support</a>',
       '<a href="' + installLink + '" data-i18n="nav.install">Install</a>',
@@ -304,7 +302,7 @@
         githubSvg,
         ' GitHub',
       '</a>',
-      '<a href="' + homeLink + '#pricing" class="sn-cta" data-i18n="nav.cta">Install Free</a>',
+      '<a href="' + installLink + '" class="sn-cta" data-i18n="nav.cta">Install Free</a>',
       '<div class="sn-mobile-theme">',
         '<button class="theme-toggle" id="snThemeToggleMobile" type="button" aria-label="Toggle theme">',
           '<span class="ico-sun">☀️</span><span class="ico-moon">🌙</span>',

@@ -1,6 +1,6 @@
 // AdOff Service Worker — minimal offline-capable shell
 // Caches the homepage shell + critical assets; everything else is network-first.
-const VERSION = "v2";
+const VERSION = "v3";
 const CACHE = `adoff-shell-${VERSION}`;
 
 const PRECACHE = [
@@ -54,7 +54,25 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Everything else: cache-first
+  // HTML: network-first. Cache-first sui documenti ha tenuto online la versione
+  // pre-riscrittura per ogni visitatore di ritorno, senza mai interrogare la rete.
+  // La cache resta come ripiego offline.
+  if (req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html")) {
+    event.respondWith(
+      fetch(req)
+        .then((resp) => {
+          if (resp && resp.status === 200) {
+            const copy = resp.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy));
+          }
+          return resp;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Everything else (asset statici): cache-first
   event.respondWith(
     caches.match(req).then(
       (cached) =>
