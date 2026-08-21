@@ -399,14 +399,16 @@
     return "https://chromewebstore.google.com/detail/" + CWS_ITEM_ID + "/reviews";
   }
 
-  // Trigger su USO ATTIVO: almeno 100 ads bloccate (proxy d'uso reale) e 10 giorni dall'install.
-  const REVIEW_MIN_ADS = 100;
-  const REVIEW_MIN_DAYS = 10;
+  // Trigger su USO ATTIVO. Soglia bassa di proposito: `adoffAdsBlocked` conta solo le ads
+  // cosmetic, quindi 100 ads + 10 giorni era irraggiungibile per quasi tutti gli utenti e
+  // il prompt non compariva mai. Ora si sommano anche le richieste di rete bloccate.
+  const REVIEW_MIN_BLOCKED = 30;
+  const REVIEW_MIN_DAYS = 3;
   const REVIEW_COOLDOWN_DAYS = 7;   // un solo promemoria dopo ~7 giorni
   const REVIEW_MAX_PROMPTS = 2;     // 1 prompt + 1 reminder, poi mai più
 
   function shouldShowReviewPrompt(data) {
-    const adsBlocked = data.adoffAdsBlocked || 0;
+    const blocked = (data.adoffAdsBlocked || 0) + (data.adoffReqBlocked || 0);
     const installDate = data.adoffInstallDate || 0;
     const promptCount = data.adoffReviewPromptCount || 0;
     const dismissed = data.adoffReviewDismissed || false;
@@ -416,7 +418,7 @@
 
     if (done || dismissed) return false;
     if (promptCount >= REVIEW_MAX_PROMPTS) return false;
-    if (adsBlocked < REVIEW_MIN_ADS) return false;
+    if (blocked < REVIEW_MIN_BLOCKED) return false;
 
     const daysSinceInstall = (now - installDate) / 86400000;
     if (daysSinceInstall < REVIEW_MIN_DAYS) return false;
