@@ -94,7 +94,7 @@
       { "@type": "ListItem", "position": 2, "name": "स्टेल्थ एंटी-डिटेक्शन", "description": "AdOff में सक्रिय एंटी-एडब्लॉक इवेज़न शामिल है। Chrome पर uBlock Origin Lite में कोई समकक्ष स्टेल्थ लेयर नहीं है।" },
       { "@type": "ListItem", "position": 3, "name": "एक्सटेंशन साइज़", "description": "AdOff बेहद हल्का है। uBlock Origin Lite काफी अधिक भारी है।" },
       { "@type": "ListItem", "position": 4, "name": "Chrome पर ब्लॉकिंग प्रभावशीलता", "description": "AdOff उन साइटों पर विज्ञापन ब्लॉक करता है जिनमें आक्रामक एंटी-एडब्लॉक डिटेक्शन है। MV3 API बाधाओं के कारण uBO Lite की प्रभावशीलता 5–10% कम है।" },
-      { "@type": "ListItem", "position": 5, "name": "मूल्य", "description": "uBlock Origin Lite मुफ्त है। AdOff 30-दिन का फ्री ट्रायल देता है, फिर 0 EUR/माह से शुरू होता है।" }
+      { "@type": "ListItem", "position": 5, "name": "मूल्य", "description": "uBlock Origin Lite मुफ़्त है। AdOff सभी के लिए पूर्ण रूप से मुफ़्त है, सभी सुविधाएं पहले दिन से उपलब्ध।" }
     ]
   }
   </script>
@@ -132,7 +132,7 @@
         "name": "uBlock Origin में filter control अधिक क्यों है AdOff से?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes — uBlock Origin offers granular filter lists, dynamic rules and an element picker for power users. AdOff trades that complexity for a curated 138-rule set."
+          "text": "Yes — uBlock Origin offers granular filter lists, dynamic rules and an element picker for power users. AdOff trades that complexity for a curated 153-rule set."
         }
       },
       {
@@ -140,7 +140,7 @@
         "name": "AdOff और uBlock Origin का free Free है?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "AdOff offers a free with a 30-day money-back guarantee, then €0/month or €99 lifetime. uBlock Origin is free and open-source."
+          "text": "AdOff सभी के लिए पूर्ण रूप से मुफ़्त है — €0/माह, €0/वर्ष, सभी सुविधाएं बिना खाते। uBlock Origin मुफ़्त और ओपन-सोर्स है, इसलिए कोई परीक्षण अवधि नहीं — प्रत्येक सुविधा लागत के बिना उपलब्ध है।"
         }
       }
     ]
@@ -193,7 +193,7 @@
       AdOff को MV3 में लीगेसी कोडबेस पोर्ट करने की समस्या का सामना नहीं करना पड़ा। इसे MV3 आर्किटेक्चर के लिए शुरू से डिज़ाइन किया गया था। इसका मतलब कोई समझौता नहीं, कोई "lite" मोड नहीं — बस एक एक्सटेंशन जो MV3 को पूरी तरह से एक्सप्लॉइट करता है जबकि एक स्टेल्थ लेयर जोड़ता है जिसे MV3 रोकता नहीं है।
     </p>
     <p>
-      AdOff नेटवर्क-लेवल ब्लॉकिंग के लिए 138 declarativeNetRequest नियम, DOM हाइडिंग के लिए एक CSS कॉस्मेटिक लेयर, और — सबसे महत्वपूर्ण — <strong>MAIN world में चलने वाली एक स्टेल्थ एंटी-डिटेक्शन स्क्रिप्ट</strong> का उपयोग करता है। यह अंतिम घटक AdOff को किसी भी MV3 एक्सटेंशन से अलग करता है जो केवल पुरानी लॉजिक को आगे पोर्ट करता है।
+      AdOff नेटवर्क-लेवल ब्लॉकिंग के लिए 153 declarativeNetRequest नियम, DOM हाइडिंग के लिए एक CSS कॉस्मेटिक लेयर, और — सबसे महत्वपूर्ण — <strong>MAIN world में चलने वाली एक स्टेल्थ एंटी-डिटेक्शन स्क्रिप्ट</strong> का उपयोग करता है। यह अंतिम घटक AdOff को किसी भी MV3 एक्सटेंशन से अलग करता है जो केवल पुरानी लॉजिक को आगे पोर्ट करता है।
     </p>
 
     <h2>स्टेल्थ एंटी-डिटेक्शन: वह फीचर जो uBlock Origin Lite के पास नहीं है</h2>
@@ -224,7 +224,7 @@
       यह अंतर कुछ कारणों से महत्वपूर्ण है। बड़े एक्सटेंशन स्टार्टअप पर और फ़िल्टर लिस्ट अपडेट के दौरान अधिक मेमोरी का उपयोग करते हैं। लो-एंड मशीनों या Chromebook पर, एक छोटा एक्सटेंशन सीधे अधिक रिस्पॉन्सिव ब्राउज़र में बदलता है। इससे भी महत्वपूर्ण, एक छोटा कोडबेस गोपनीयता और सुरक्षा के लिए ऑडिट करना आसान है — बस कम कोड है जो अप्रत्याशित रूप से व्यवहार कर सकता है।
     </p>
     <p>
-      AdOff बहु-मेगाबाइट फ़िल्टर लिस्ट डेटाबेस आयात करने के बजाय 138 ब्लॉकिंग नियमों का एक क्यूरेटेड, हाथ से चुना गया सेट बनाए रखकर अपना छोटा फुटप्रिंट हासिल करता है। यह एक जानबूझकर डिज़ाइन विकल्प है जो कच्चे नियम गणना पर प्रदर्शन और सरलता को प्राथमिकता देता है।
+      AdOff बहु-मेगाबाइट फ़िल्टर लिस्ट डेटाबेस आयात करने के बजाय 153 ब्लॉकिंग नियमों का एक क्यूरेटेड, हाथ से चुना गया सेट बनाए रखकर अपना छोटा फुटप्रिंट हासिल करता है। यह एक जानबूझकर डिज़ाइन विकल्प है जो कच्चे नियम गणना पर प्रदर्शन और सरलता को प्राथमिकता देता है।
     </p>
 
     <h2>फीचर-दर-फीचर तुलना</h2>
@@ -245,7 +245,7 @@
         </tr>
         <tr>
           <td>नेटवर्क विज्ञापन ब्लॉकिंग</td>
-          <td class="check">✔ 138 क्यूरेटेड नियम</td>
+          <td class="check">✔ 153 क्यूरेटेड नियम</td>
           <td class="check">✔ बड़ा नियम डेटाबेस</td>
         </tr>
         <tr>
@@ -290,7 +290,7 @@
         </tr>
         <tr>
           <td>ट्रायल के बाद मूल्य</td>
-          <td class="partial">0 EUR/माह से</td>
+          <td class="partial">0 EUR/माह</td>
           <td class="check">✔ मुफ्त (ओपन सोर्स)</td>
         </tr>
         <tr>
@@ -364,7 +364,7 @@
 
     <div class="cta-box">
       <h3>AdOff को 30 दिनों के लिए मुफ्त आज़माएं</h3>
-      <p>कोई क्रेडिट कार्ड आवश्यक नहीं। ट्रायल के दौरान पूर्ण freeीचर — स्टेल्थ एंटी-डिटेक्शन, वीडियो विज्ञापन स्किप, और सभी 138 ब्लॉकिंग नियम शामिल। खुद अंतर देखें।</p>
+      <p>कोई क्रेडिट कार्ड आवश्यक नहीं। सभी सुविधाएं — स्टेल्थ एंटी-डिटेक्शन, वीडियो विज्ञापन स्किप, और सभी 153 ब्लॉकिंग नियम — मुफ़्त, बिना खाते, बिना सीमा के उपलब्ध हैं। खुद अंतर देखें।</p>
       <a href="../../install.html" class="btn">AdOff मुफ्त प्राप्त करें →</a>
     </div>
 
@@ -388,9 +388,9 @@
       <h3>AdOff क्या उBlock Origin से कर सकता है?</h3>
       <p>AdOff universal IMA stub, so players skip straight to the content. AdOff's stealth layer evades anti-adblock walls.</p>
       <h3>uBlock Origin में filter control अधिक क्यों है AdOff से?</h3>
-      <p>Yes — uBlock Origin offers granular filter lists, dynamic rules and an element picker for power users. AdOff trades that complexity for a curated 138-rule set.</p>
+      <p>Yes — uBlock Origin offers granular filter lists, dynamic rules and an element picker for power users. AdOff trades that complexity for a curated 153-rule set.</p>
       <h3>AdOff और uBlock Origin का free Free है?</h3>
-      <p>AdOff offers a free with a 30-day money-back guarantee, then €0/month or €99 lifetime. uBlock Origin is free and open-source.</p>
+      <p>AdOff सभी के लिए पूर्ण रूप से मुफ़्त है — €0/माह, €0/वर्ष, सभी सुविधाएं बिना खाते। uBlock Origin मुफ़्त और ओपन-सोर्स है, इसलिए कोई परीक्षण अवधि नहीं — प्रत्येक सुविधा लागत के बिना उपलब्ध है।</p>
 
 </article>
   

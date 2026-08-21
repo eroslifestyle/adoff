@@ -126,7 +126,7 @@
         "name": "How much does AdOff cost versus AdBlock Plus?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "AdBlock Plus has a free (with Acceptable Ads on by default) and a paid Premium tier. AdOff is €0/month, €0/year for the first 100 Founders (€0 afterwards), or €99 lifetime, with a free and 30-day money-back guarantee."
+          "text": "AdBlock Plus has a free tier (with Acceptable Ads on by default) and a paid Premium tier. AdOff is free, with no account and no limits."
         }
       },
       {
@@ -197,7 +197,7 @@
       This is not a trivial difference. A 3.2 MB extension loads more data into memory, takes longer to initialise when Chrome starts, and requires more resources to process and update filter lists. On machines with limited RAM — Chromebooks, older laptops, shared office computers — this overhead is felt as real browser slowdown.
     </p>
     <p>
-      The size gap also reflects a philosophical difference. AdBlock Plus includes a large infrastructure of filter list management, Acceptable Ads logic, analytics, and user interface components that serve purposes beyond pure blocking. AdOff is lean by design: 138 network blocking rules, a stealth script, a cosmetic filter layer, and the popup interface. Nothing more.
+      The size gap also reflects a philosophical difference. AdBlock Plus includes a large infrastructure of filter list management, Acceptable Ads logic, analytics, and user interface components that serve purposes beyond pure blocking. AdOff is lean by design: 153 network blocking rules, a stealth script, a cosmetic filter layer, and the popup interface. Nothing more.
     </p>
     <p>
       From a security and privacy standpoint, a smaller codebase is also a <strong>smaller attack surface</strong>. Every additional line of code in an extension is a potential vulnerability. AdOff's minimalism is not just a performance feature — it is a security feature.
@@ -219,7 +219,7 @@
       The user's perception may be "I have an ad blocker" while they are still receiving a curated selection of ads from paying partners. This is not full blocking — it is managed filtering with commercial exceptions.
     </p>
     <p>
-      AdOff blocks unconditionally. The 138 rules target known ad network domains, ad server endpoints, and tracking infrastructure. There is no whitelist, no approved exception list, no partner program. If a request matches a blocking rule, it is blocked.
+      AdOff blocks unconditionally. The 153 rules target known ad network domains, ad server endpoints, and tracking infrastructure. There is no whitelist, no approved exception list, no partner program. If a request matches a blocking rule, it is blocked.
     </p>
 
     <h2>Video Ad Neutralization: A free AdBlock Plus Cannot Match</h2>
@@ -291,7 +291,7 @@
         </tr>
         <tr>
           <td>Network ad blocking</td>
-          <td class="check">✔ 138 curated rules</td>
+          <td class="check">✔ 153 curated rules</td>
           <td class="check">✔ Large filter lists</td>
         </tr>
         <tr>
@@ -390,7 +390,7 @@
       <h3>Does AdBlock Plus evade anti-adblock detection like AdOff?</h3>
       <p>No. AdBlock Plus has no stealth layer, so sites with anti-adblock walls can detect it. AdOff runs a MAIN-world stealth script that spoofs detection signals, staying invisible to those systems.</p>
       <h3>How much does AdOff cost versus AdBlock Plus?</h3>
-      <p>AdBlock Plus has a free (with Acceptable Ads on by default) and a paid Premium tier. AdOff is €0/month, €0/year for the first 100 Founders (€0 afterwards), or €99 lifetime, with a free and 30-day money-back guarantee.</p>
+      <p>AdBlock Plus has a free tier (with Acceptable Ads on by default) and a paid Premium tier. AdOff is free, with no account and no limits.</p>
       <h3>Do both AdBlock Plus and AdOff have free versions?</h3>
       <p>Yes. AdBlock Plus&#x27;s free version enables Acceptable Ads by default, so some ads still appear unless you turn it off. AdOff&#x27;s free tier blocks ads on every site (network + cosmetic) with no account and no advertiser exceptions.</p>
       <h3>What makes AdOff different from AdBlock Plus?</h3>

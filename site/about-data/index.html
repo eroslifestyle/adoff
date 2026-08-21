@@ -4,17 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AdOff · Live data — real numbers, in public</title>
-  <meta name="description" content="AdOff publishes real numbers: founder seats remaining, GitHub repo activity, latest release. No inflated figures, no fake testimonials — just verifiable data, refreshed automatically." />
+  <meta name="description" content="AdOff publishes real numbers: GitHub repo activity, latest release. No inflated figures, no fake testimonials — just verifiable data, refreshed automatically." />
   <meta content="index, follow, max-image-preview:large, max-snippet:-1" name="robots"/>
   <link rel="canonical" href="https://adoff.app/about-data/" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="AdOff · Live data — real numbers, in public" />
-  <meta property="og:description" content="Real numbers, no inflated figures. Founder seats, GitHub repo activity, latest release." />
+  <meta property="og:description" content="Real numbers, no inflated figures. GitHub repo activity, latest release." />
   <meta property="og:url" content="https://adoff.app/about-data/" />
   <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="AdOff · Live data — real numbers, in public" />
-  <meta name="twitter:description" content="Real numbers, no inflated figures. Founder seats, GitHub repo activity, latest release." />
+  <meta name="twitter:description" content="Real numbers, no inflated figures. GitHub repo activity, latest release." />
   <link rel="icon" href="/assets/icon128.png" type="image/png" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#0a0a1a" />
@@ -48,8 +48,8 @@
   <p class="subtitle">Real numbers, in public. Auto-refreshed every visit — no inflated figures, no fake testimonials.</p>
 
   <div class="data-grid" id="grid">
-    <div class="data-card">
-      <div class="label">Founder seats</div>
+    <div class="data-card" style="display:none">
+      <div class="label">Early supporters</div>
       <div class="value"><span class="skeleton" id="founder-taken">…</span> / 100</div>
       <div class="meta"><span id="founder-remaining">…</span> remaining · €0/yr</div>
     </div>
@@ -94,7 +94,7 @@
     <h2>What we publish</h2>
     <p>This page exists for one reason: <strong>trust</strong>. Most ad blockers inflate their numbers to look bigger. AdOff shows what's real, even when the numbers are small. Today:</p>
     <ul>
-      <li><strong>0 paying customers yet</strong> — AdOff launched publicly in mid-2026. Founder pricing is open for the first 100 seats at €0/yr instead of €0.</li>
+      <li><strong>0 paying customers yet</strong> — AdOff launched publicly in mid-2026.</li>
       <li><strong>0 GitHub stars</strong> — the repository is public but new. We don't buy stars.</li>
       <li><strong>1 active developer</strong> — Eros, from Sicily. <a href="/about.html" style="color:#7252f8">Read the full story →</a></li>
     </ul>
@@ -107,23 +107,14 @@
     </ul>
   </section>
 
-  <p class="refresh-stamp">Page auto-refreshes on visit · data fetched live from founder-status API + GitHub · last refresh: <span id="stamp">…</span></p>
+  <p class="refresh-stamp">Page auto-refreshes on visit · data fetched live from GitHub · last refresh: <span id="stamp">…</span></p>
 </main>
 
 <script>
 (async () => {
   const stamp = () => document.getElementById('stamp').textContent = new Date().toISOString().replace('T',' ').slice(0,19) + ' UTC';
 
-  // 1) Founder seats
-  try {
-    const r = await fetch('https://api.adoff.app/founder-status', {cache: 'no-store'});
-    const d = await r.json();
-    document.getElementById('founder-taken').textContent = d.taken ?? '?';
-    document.getElementById('founder-remaining').textContent = (d.remaining ?? '?') + ' seats left';
-    document.querySelector('#founder-taken').classList.remove('skeleton');
-  } catch(e) { document.getElementById('founder-taken').textContent = '—'; }
-
-  // 2) GitHub repo stats
+  // 1) GitHub repo stats
   try {
     const r = await fetch('https://api.github.com/repos/eroslifestyle/adoff', {cache: 'no-store'});
     const d = await r.json();
@@ -136,7 +127,7 @@
     document.querySelector('#gh-pushed').classList.remove('skeleton');
   } catch(e) { document.getElementById('gh-stars').textContent = '—'; }
 
-  // 3) Current extension version (from manifest on site root)
+  // 2) Current extension version (from manifest on site root)
   try {
     const r = await fetch('/manifest.webmanifest', {cache: 'no-store'});
     const d = await r.json();

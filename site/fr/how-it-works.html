@@ -138,7 +138,7 @@
       <h3>🔧 API Chrome : declarativeNetRequest</h3>
       <p>
         AdOff utilise l'API <strong>declarativeNetRequest</strong> de Chrome ,  la même API moderne qu'utilisent les
-        outils de sécurité d'entreprise. Contrairement à l'ancienne API <code>webRequest</code>, declarativeNetRequest
+        outils de sécurité d'entreprise. Contrairement à l'ancienne API <code>webRequest</code>declarativeNetRequest
         est évaluée nativement par le moteur du navigateur sans aucun overhead JavaScript. Les règles sont compilées
         une fois à l'installation et appliquées à un coût CPU quasi nul pour chaque requête ultérieure.
       </p>
@@ -146,22 +146,22 @@
 
     <h3>107+ règles de blocage de précision</h3>
     <p>
-      AdOff est livré avec <strong>138 règles réseau sélectionnées à la main</strong> ciblant l'infrastructure de
+      AdOff est livré avec <strong>153 règles réseau sélectionnées à la main</strong> ciblant l'infrastructure de
       diffusion publicitaire utilisée par les réseaux publicitaires les plus courants. Plutôt que de maintenir une
       énorme liste de domaines individuels nécessitant une maintenance constante, les règles d'AdOff ciblent les
       schémas structurels de la diffusion publicitaire :
     </p>
     <ul>
-      <li><strong>Domaines de serveurs publicitaires</strong> ,  les noms d'hôtes qui servent des bannières, des pré-rolls vidéo et du contenu sponsorisé</li>
-      <li><strong>Points de terminaison de traçage et d'analyse</strong> ,  pixels, balises et collecteurs d'événements qui profilent votre comportement</li>
-      <li><strong>Infrastructure de reciblage</strong> ,  traceurs inter-sites qui vous suivent de site en site</li>
-      <li><strong>URL d'échanges publicitaires programmatiques</strong> ,  points de terminaison d'enchères en temps réel pour les impressions publicitaires</li>
-      <li><strong>Chemins CDN utilisés exclusivement pour les publicités</strong> ,  schémas de diffusion de contenu spécifiques aux charges utiles publicitaires</li>
+      <li><strong>Domaines de serveurs publicitaires</strong> les noms d'hôtes qui servent des bannières, des pré-rolls vidéo et du contenu sponsorisé</li>
+      <li><strong>Points de terminaison de traçage et d'analyse</strong> pixels, balises et collecteurs d'événements qui profilent votre comportement</li>
+      <li><strong>Infrastructure de reciblage</strong> traceurs inter-sites qui vous suivent de site en site</li>
+      <li><strong>URL d'échanges publicitaires programmatiques</strong> points de terminaison d'enchères en temps réel pour les impressions publicitaires</li>
+      <li><strong>Chemins CDN utilisés exclusivement pour les publicités</strong> schémas de diffusion de contenu spécifiques aux charges utiles publicitaires</li>
     </ul>
 
     <h3>Pourquoi le blocage au niveau réseau est important</h3>
     <p>
-      Lorsqu'une publicité est bloquée au niveau réseau, <strong>la page se charge plus vite</strong>. Il ne s'agit
+      Lorsqu'une publicité est bloquée au niveau réseau <strong>la page se charge plus vite</strong>Il ne s'agit
       pas seulement de supprimer une bannière visible ,  cela signifie que le navigateur n'a jamais à ouvrir de
       connexions TCP vers des serveurs publicitaires, n'effectue jamais de requêtes DNS vers des domaines de traçage
       et n'exécute jamais le JavaScript tiers dont les publicités dépendent pour s'afficher et se mesurer.
@@ -190,7 +190,7 @@
     <p>
       Toutes les publicités n'arrivent pas via des requêtes réseau qui peuvent être pré-bloquées. Certaines publicités
       sont rendues directement dans le HTML de la page, chargées depuis le même domaine que le contenu, ou injectées
-      par du JavaScript propriétaire. Pour celles-ci, AdOff utilise le <strong>filtrage cosmétique</strong> ,  la
+      par du JavaScript propriétaire. Pour celles-ci, AdOff utilise le <strong>filtrage cosmétique</strong> la
       technique consistant à masquer les éléments publicitaires du DOM via CSS, sans perturber la mise en page environnante.
     </p>
 
@@ -228,7 +228,7 @@
       Vous ne verrez pas les publicités apparaître brièvement avant de disparaître.
     </p>
 
-    <h3>Neutralisation des publicités vidéo <span style="font-size:0.75rem;color:#f59e0b;">(free)</span></h3>
+    <h3>Neutralisation des publicités vidéo <span style="font-size:0.75rem;color:#f59e0b;">(gratuit)</span></h3>
     <p>
       La plupart des lecteurs vidéo sur les plateformes de streaming s'appuient sur un SDK publicitaire standard
       pour gérer les interruptions publicitaires pre-roll, mid-roll et post-roll. AdOff remplace ce SDK par un
@@ -239,12 +239,12 @@
       Cela fonctionne via deux mécanismes complémentaires :
     </p>
     <ul>
-      <li><strong>Redirection au niveau réseau</strong> ,  les requêtes de chargement du SDK publicitaire sont interceptées et redirigées vers un fichier stub local intégré à l'extension</li>
-      <li><strong>Injection au niveau de la page</strong> ,  le stub est injecté avant l'exécution de tout script du site, de sorte que même les lecteurs qui intègrent le SDK publicitaire en interne trouvent d'abord la version neutre</li>
+      <li><strong>Redirection au niveau réseau</strong> les requêtes de chargement du SDK publicitaire sont interceptées et redirigées vers un fichier stub local intégré à l'extension</li>
+      <li><strong>Injection au niveau de la page</strong> le stub est injecté avant l'exécution de tout script du site, de sorte que même les lecteurs qui intègrent le SDK publicitaire en interne trouvent d'abord la version neutre</li>
     </ul>
     <p>
       Le stub implémente l'intégralité de la surface API du SDK d'origine mais ne diffuse jamais aucune publicité.
-      Lorsque le lecteur appelle <code>start()</code>, le stub déclenche immédiatement le signal « publicité
+      Lorsque le lecteur appelle <code>start()</code>le stub déclenche immédiatement le signal « publicité
       terminée » ,  le lecteur reprend la vidéo comme si la coupure publicitaire s'était terminée naturellement.
       C'est universel : cela fonctionne sur n'importe quel site web dans le monde utilisant ce SDK, sans
       nécessiter une liste manuelle de sites.
@@ -255,7 +255,7 @@
     </p>
 
     <!-- ===================== LAYER 3 ===================== -->
-    <h2>Couche 3 ,  Anti-détection furtive <span style="font-size:0.8rem;color:#f59e0b;">(free)</span></h2>
+    <h2>Couche 3 ,  Anti-détection furtive <span style="font-size:0.8rem;color:#f59e0b;">(gratuit)</span></h2>
     <span class="layer-badge pro-badge">Pro &amp; Essai</span>
 
     <p>
@@ -348,7 +348,7 @@
       </li>
       <li>
         <strong>L'anti-détection furtive</strong> enveloppe les deux autres couches dans un manteau d'invisibilité,
-        convainquant la page qu'aucun bloqueur n'est présent ,  de sorte que le mur anti-adblock ne se déclenche jamais.
+        convinquant la page qu'aucun bloqueur n'est présent ,  de sorte que le mur anti-adblock ne se déclenche jamais.
       </li>
     </ul>
 
@@ -393,7 +393,7 @@
       </li>
       <li>
         <strong>Naviguez normalement.</strong> Les trois couches s'activent automatiquement sur chaque page
-        que vous visitez. Cliquez à tout moment sur l'icône AdOff pour voir combien de publicités et de
+        que vous visitiez. Cliquez à tout moment sur l'icône AdOff pour voir combien de publicités et de
         requêtes ont été bloquées, ou pour mettre en pause la protection sur un site spécifique.
       </li>
     </ol>
@@ -401,13 +401,13 @@
     <p>
       Aucune configuration n'est requise pour l'expérience par défaut. Les utilisateurs avancés peuvent
       explorer la page des options pour gérer leur liste blanche, ajuster le comportement du blocage par site
-      ou activer les fonctionnalités Pro furtives pendant l'essai gratuit de 30 jours.
+      ou activer le Mode Furtif. Tout est inclus, sans compte et sans limites.
     </p>
 
     <!-- ===================== CTA ===================== -->
     <div class="cta-box">
       <h3>Prêt à ressentir la différence ?</h3>
-      <p>Essayez les trois couches de protection gratuitement pendant 30 jours. Aucune carte bancaire requise.</p>
+      <p>Les trois couches de protection vous accompagnent sans engagement. Aucune carte bancaire requise.</p>
       <a href="../install.html" class="btn">Installer AdOff gratuitement →</a>
     </div>
 

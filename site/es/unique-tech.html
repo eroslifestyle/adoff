@@ -24,12 +24,12 @@
   <link rel="alternate" hreflang="x-default" href="https://adoff.app/unique-tech" />
   <meta property="og:type" content="article" />
   <meta property="og:title" content="5 tecnologías únicas de AdOff vs otros bloqueadores" />
-  <meta property="og:description" content="Anti-SABR-backoff nativo, recuperación de posición de contenido, stub de IMA SDK universal: AdOff es el único bloqueador de anuncios del mundo con estas cinco tecnologías como características integradas." />
+  <meta property="og:description" content="Anti-SABR-backoff nativo, recuperación de posición de contenido, stub de IMA SDK universal: AdOff es el único bloqueador con estas cinco tecnologías como características integradas." />
   <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
   <meta property="og:url" content="https://adoff.app/es/unique-tech" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="5 tecnologías únicas de AdOff vs otros bloqueadores" />
-  <meta name="twitter:description" content="Anti-SABR-backoff nativo, recuperación de posición de contenido, stub de IMA SDK universal: AdOff es el único bloqueador de anuncios del mundo con estas cinco tecnologías como características integradas." />
+  <meta name="twitter:description" content="Anti-SABR-backoff nativo, recuperación de posición de contenido, stub de IMA SDK universal." />
   <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
   <link rel="icon" href="/assets/icon128.png" type="image/png" />
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -90,14 +90,14 @@
 
     <h1>5 tecnologías que ningún otro bloqueador de anuncios en el mundo tiene</h1>
     <p class="lede">
-      La mayoría de bloqueadores de anuncios se detienen donde se pone difícil. AdOff va más lejos ,  con cinco tecnologías patentadas contra anuncios que resuelven problemas que ningún competidor aborda. A continuación se encuentra el desglose honesto, técnico y verificable.
+      La mayoría de bloqueadores de anuncios se detienen donde se pone difícil. AdOff va más lejos, con cinco tecnologías patentadas.
     </p>
 
     <!-- ============== COMPARISON TABLE ============== -->
     <h2>La comparación honesta</h2>
 
     <p>
-      Todos los argumentos en esta página pueden ser verificados leyendo el código fuente público de los competidores y el nuestro lanzado. Aquí está el lado a lado:
+      Todos los argumentos en esta página pueden ser verificados leyendo el código fuente.
     </p>
 
     <table class="comp-table">
@@ -188,82 +188,65 @@
 
       <span class="problem-tag">El problema</span>
       <p>
-        Las plataformas de vídeo modernas ejecutan un protocolo de streaming patentado llamado <strong>SABR</strong>
-        (Server Adaptive Bit Rate). Cuando SABR detecta que un bloqueador de anuncios está activo, el
-        <em>servidor en sí</em> inyecta una pausa artificial en la secuencia de vídeo ,  aproximadamente el 80% de la
-        duración que habría tenido el anuncio. Así que si un anuncio de 15 segundos estaba programado, estás viendo una pantalla negra
-        durante 12 segundos antes de que se reanude el contenido. <strong>Incluso si el anuncio fue bloqueado perfectamente.</strong>
+        Las plataformas de vídeo modernas ejecutan un protocolo llamado SABR. Cuando detecta un bloqueador, inyecta una pausa artificial. <strong>Este retraso está firmado criptográficamente en la URL por el servidor.</strong>
+        Cómo AdOff lo resuelve
+        <em>Antes de que la solicitud del reproductor salga de tu navegador, AdOff inyecta un parámetro especial (isInlinePlaybackNoAd: true).</em> AdOff engancha tanto fetch como XMLHttpRequest. <strong>Activo en: AdOff 3.3.1+</strong>
       </p>
       <p>
-        Este retraso está firmado criptográficamente en la URL de la secuencia por el servidor. Los bloqueadores de anuncios tradicionales no pueden eliminarlo porque solo operan dentro del navegador, después de que la URL es emitida.
+        ============== FEATURE 2: POSITION RECOVERY ==============
       </p>
 
-      <span class="solution-tag">Cómo AdOff lo resuelve</span>
+      <span class="solution-tag">2. Recuperación de posición de contenido</span>
       <p>
-        Antes de que la solicitud del reproductor salga de tu navegador, AdOff inyecta un parámetro especial
-        (<code>isInlinePlaybackNoAd: true</code>) en el cuerpo de la solicitud. Esto le dice al backend de la plataforma: "no programes ningún anuncio en la respuesta". Sin anuncios programados, el servidor no tiene ninguna razón para codificar un backoff en la URL de la secuencia. <strong>La pausa nunca se crea en primer lugar.</strong>
+        Primer mundial<code>↩️</code>El vídeo se reanuda exactamente donde lo dejaste, siempre <strong>El problema</strong>
       </p>
       <p>
-        AdOff engancha tanto <code>fetch</code> como <code>XMLHttpRequest</code> para cubrir todas las rutas de código
-        que el reproductor podría usar, y aplica la inyección a través del coincidencia de patrones a nivel de cadena para eludir
-        las protecciones anti-manipulación de la plataforma en <code>JSON.stringify</code>.
+        Las plataformas reutilizan el mismo elemento <video> para anuncios y contenido. <code>Cómo AdOff lo resuelve</code> Cada 500 milisegundos, AdOff registra la posición del vídeo. Cuando termina un anuncio, verifica que la posición sea consistente. <code>Activo en: AdOff 3.3.0+</code> ============== FEATURE 3: IMA SDK STUB ============== <code>3. Stub universal de IMA SDK</code>Primer mundial
       </p>
 
       <div class="meta-row">
-        <span><strong>Activo en</strong>: AdOff 3.3.1+</span>
-        <span><strong>Capa</strong>: 5 de 7</span>
-        <span><strong>Plan</strong>: Pro / Prueba</span>
+        <span><strong>🔌</strong>Cero anuncios de vídeo en cualquier sitio que use el SDK de anuncios estándar</span>
+        <span><strong>El problema</strong>Los bloqueadores tradicionales intentan bloquear el SDK en la capa de red.</span>
+        <span><strong>Cómo AdOff lo resuelve</strong>AdOff inyecta un stub completo del SDK directamente en window.google.ima.</span>
       </div>
       <div class="citation">
-        Referencia: <a href="https://iter.ca/post/yt-adblock" target="_blank" rel="noopener">iter.ca technical write-up</a>,
-        SecurityOnline coverage
+        Activo en: AdOff 3.0+ <a href="https://iter.ca/post/yt-adblock" target="_blank" rel="noopener">============== FEATURE 4: STEALTH ==============</a>4. Stealth anti-detección nativo
       </div>
     </div>
 
-    <!-- ============== FEATURE 2: POSITION RECOVERY ============== -->
-    <h2>2. Recuperación de posición de contenido <span class="badge-unique">Primer mundial</span></h2>
+    <!-- En producto -->
+    <h2>🥷 <span class="badge-unique">Los muros anti-adblock nunca se activan, porque eres invisible</span></h2>
 
     <div class="feature-card unique">
       <div class="icon-row">
-        <div class="icon-circle">↩️</div>
-        <h3>El vídeo se reanuda exactamente donde lo dejaste ,  siempre</h3>
+        <div class="icon-circle">El problema</div>
+        <h3>Muchos sitios detectan bloqueadores creando elementos cebo.</h3>
       </div>
 
-      <span class="problem-tag">El problema</span>
+      <span class="problem-tag">Cómo AdOff lo resuelve</span>
       <p>
-        Las plataformas de vídeo reutilizan el mismo elemento <code>&lt;video&gt;</code> de HTML5 para anuncios y
-        contenido, cambiando la fuente a través de Media Source Extensions. Cuando un anuncio es saltado a la fuerza, el
-        reproductor puede perder la pista de la posición del contenido durante el intercambio de fuente. El vídeo puede
-        reiniciarse desde el principio, o saltar adelante 30-50 segundos a contenido que nunca has visto.
-        Este es un error documentado en las plataformas en sí ,  confirmado por Android Authority y
-        PiunikaWeb en abril de 2026, donde afectó incluso a usuarios sin bloqueadores de anuncios.
+        Stealth está integrado en el código fuente. Cinco técnicas funcionan juntas. <code>&lt;video&gt;</code> ============== FEATURE 5: STATE-PRESERVING SKIP ==============
       </p>
 
-      <span class="solution-tag">Cómo AdOff lo resuelve</span>
+      <span class="solution-tag">5. Salto instantáneo que preserva estado</span>
       <p>
-        Cada 500 milisegundos, AdOff registra la posición actual del vídeo de contenido en la memoria local
-        (nunca se envía a ningún lado). Cuando termina un anuncio, un perro guardián se ejecuta durante 3 segundos verificando que la
-        posición posterior al anuncio sea consistente con la posición anterior al anuncio. Si el reproductor aterrizó más de
-        5 segundos ,  adelante o atrás ,  AdOff fuerza la posición de vuelta a donde realmente estabas.
+        Primer mundial
       </p>
       <p>
-        La recuperación es inteligente: tolera pequeñas búsquedas naturales, se detiene si comienza un nuevo anuncio,
-        y se rinde con elegancia si el reproductor lo anula agresivamente. <strong>Siempre continúas
-        desde el segundo exacto en el que estabas viendo.</strong>
+        ⏩ <strong>Salta anuncios en milisegundos sin romper el reproductor</strong>
       </p>
 
       <div class="meta-row">
-        <span><strong>Activo en</strong>: AdOff 3.3.0+</span>
-        <span><strong>Capa</strong>: 6 de 7</span>
-        <span><strong>Plan</strong>: Pro / Prueba</span>
+        <span><strong>El problema</strong>Saltar un anuncio estableciendo currentTime rompe el reproductor.</span>
+        <span><strong>Cómo AdOff lo resuelve</strong>AdOff establece la velocidad de reproducción a 16x.</span>
+        <span><strong>Activo en: AdOff 3.3.0+</strong>============== CTA ==============</span>
       </div>
       <div class="citation">
-        Referencia: Android Authority,
-        PiunikaWeb 2026-04-22
+        Instalar AdOff — gratis, sin cuenta y sin límites
       </div>
     </div>
 
-    <!-- ============== FEATURE 3: IMA SDK STUB ============== -->
+    <!-- Instalar AdOff gratis → -->
     <h2>3. Stub universal de IMA SDK <span class="badge-unique">Primer mundial</span></h2>
 
     <div class="feature-card unique">

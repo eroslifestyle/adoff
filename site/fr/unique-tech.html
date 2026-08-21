@@ -212,17 +212,16 @@
       <p>
         AdOff intercepte à la fois <code>fetch</code> et <code>XMLHttpRequest</code> pour couvrir tous les chemins de code
         que le lecteur pourrait utiliser, et applique l'injection via la mise en correspondance des motifs au niveau des chaînes
-        pour contourner les protections anti-tampering de la plateforme sur <code>JSON.stringify</code>.
+        pour contourner les protections anti-tampering de la plateforme sur <code>JSON.stringify</code>
       </p>
 
       <div class="meta-row">
         <span><strong>Actif depuis</strong> : AdOff 3.3.1+</span>
         <span><strong>Couche</strong> : 5 sur 7</span>
-        <span><strong>Plan</strong> : Pro / Essai</span>
+        <span><strong>Plan</strong> : Inclus</span>
       </div>
       <div class="citation">
-        Référence : <a href="https://iter.ca/post/yt-adblock" target="_blank" rel="noopener">article technique iter.ca</a>,
-        couverture SecurityOnline
+        Référence : <a href="https://iter.ca/post/yt-adblock" target="_blank" rel="noopener">article technique iter.ca</a>couverture SecurityOnline
       </div>
     </div>
 
@@ -262,7 +261,7 @@
       <div class="meta-row">
         <span><strong>Actif depuis</strong> : AdOff 3.3.0+</span>
         <span><strong>Couche</strong> : 6 sur 7</span>
-        <span><strong>Plan</strong> : Pro / Essai</span>
+        <span><strong>Plan</strong> : Inclus</span>
       </div>
       <div class="citation">
         Référence : Android Authority,
@@ -291,15 +290,15 @@
       <span class="solution-tag">Comment AdOff le résout</span>
       <p>
         AdOff injecte un stub complet et entièrement fonctionnel du SDK de pub directement dans
-        <code>window.google.ima</code> <em>avant que n'importe quel script du site ne s'exécute</em>. Le stub
+        <code>window.google.ima</code> <em>avant que n'importe quel script du site ne s'exécute</em>Le stub
         implémente l'API entière ,  plus de 30 classes, 60+ événements, 200+ méthodes ,  donc n'importe quel
         lecteur qui appelle le SDK obtient un objet fonctionnel. Quand le lecteur demande une pub, le stub
-        déclenche immédiatement les quatre événements du cycle de vie (<code>CONTENT_PAUSE_REQUESTED</code>,
-        <code>STARTED</code>, <code>COMPLETE</code>, <code>CONTENT_RESUME_REQUESTED</code>) en 16 millisecondes.
+        déclenche immédiatement les quatre événements du cycle de vie (<code>CONTENT_PAUSE_REQUESTED</code>
+        <code>STARTED</code> <code>COMPLETE</code> <code>CONTENT_RESUME_REQUESTED</code>) en 16 millisecondes.
         Le lecteur pense que la pub a joué et s'est terminée. L'utilisateur ne voit rien.
       </p>
       <p>
-        <strong>Fonctionne sur n'importe quelle plateforme vidéo au monde utilisant ce SDK</strong>, sans listes de
+        <strong>Fonctionne sur n'importe quelle plateforme vidéo au monde utilisant ce SDK</strong>sans listes de
         domaines, sans règles manuelles et sans mises à jour constantes. Les sites qui bundle le SDK localement
         sont couverts exactement comme les sites qui le chargent depuis le réseau.
       </p>
@@ -307,7 +306,7 @@
       <div class="meta-row">
         <span><strong>Actif depuis</strong> : AdOff 3.0+</span>
         <span><strong>Couche</strong> : 7 sur 7</span>
-        <span><strong>Plan</strong> : Pro / Essai</span>
+        <span><strong>Plan</strong> : Inclus</span>
       </div>
     </div>
 
@@ -336,7 +335,7 @@
         version. Cinq techniques travaillent ensemble :
       </p>
       <ul>
-        <li><strong>Usurpation CSS</strong> : <code>display</code>, <code>visibility</code>, <code>opacity</code>, <code>width</code>, <code>height</code> sur les éléments leurres signalent les fausses valeurs</li>
+        <li><strong>Usurpation CSS</strong> : <code>display</code> <code>visibility</code> <code>opacity</code> <code>width</code> <code>height</code> sur les éléments leurres signalent les fausses valeurs</li>
         <li><strong>Usurpation de variables</strong> : les globales du SDK de pub sont pré-remplies avec des stubs réalistes</li>
         <li><strong>Neutralisation réseau</strong> : les URL des scripts de détection connues reçoivent les réponses 200 vides</li>
         <li><strong>Neutralisation de scripts</strong> : les scripts anti-bloqueur de pubs sont interceptés avant l'exécution</li>
@@ -350,7 +349,7 @@
       <div class="meta-row">
         <span><strong>Actif depuis</strong> : AdOff 2.0+</span>
         <span><strong>Couche</strong> : 4 sur 7</span>
-        <span><strong>Plan</strong> : Pro / Essai</span>
+        <span><strong>Plan</strong> : Inclus</span>
       </div>
     </div>
 
@@ -366,7 +365,7 @@
       <span class="problem-tag">Le problème</span>
       <p>
         Le moyen le plus simple d'ignorer une pub vidéo est de définir <code>currentTime</code> de la vidéo à sa
-        <code>duration</code>, la terminant immédiatement. La plupart des marque-pages de skip de pubs et de
+        <code>duration</code>la terminant immédiatement. La plupart des marque-pages de skip de pubs et de
         nombreuses extensions utilisent ce truc. <strong>Cela casse le lecteur.</strong> Parce que la pub et
         le contenu partagent le même élément vidéo, cette recherche corrompt l'état interne du lecteur,
         et la vidéo de contenu commence à une mauvaise position quand elle reprend.
@@ -389,7 +388,7 @@
       <div class="meta-row">
         <span><strong>Actif depuis</strong> : AdOff 3.3.0+</span>
         <span><strong>Couche</strong> : B (Skip instantané)</span>
-        <span><strong>Plan</strong> : Pro / Essai</span>
+        <span><strong>Plan</strong> : Inclus</span>
       </div>
     </div>
 
@@ -403,7 +402,7 @@
         <li><strong>La vidéo reprend exactement où vous l'aviez laissée.</strong> Toujours. Même quand la plateforme a des bugs.</li>
         <li><strong>Fonctionne sur n'importe quel site utilisant le SDK standard de l'industrie.</strong> Pas de listes de domaines. Pas de règles manuelles. Pas de mises à jour constantes.</li>
         <li><strong>Mises à jour en jours, pas en mois.</strong> Quand les plateformes envoient une nouvelle contre-mesure, nous envoyons un correctif dans la prochaine version ,  pas « quand le mainteneur de la liste de filtres le fera ».</li>
-        <li><strong>Zéro collecte de données.</strong> Pas de télémétrie. Pas de suivi. Tout s'exécute localement dans votre navigateur. Pour toujours.</li>
+        <li><strong>Zéro collecte de données.</strong> Pas de télémétrie. Pas de suivi. Tout s'exécute localement dans votre navigateur. Gratuit.</li>
       </ul>
     </div>
 
@@ -414,7 +413,7 @@
       Les couches 5, 6 et 7 ,  prévention du backoff SABR, récupération de la position du contenu et le stub
       IMA SDK universel ,  sont le résultat de mois d'ingénierie inverse du comportement des lecteurs vidéo
       modernes. Ce ne sont pas des tricks ponctuels : ce sont des architectures qui gèrent des centaines
-      de cas limites (échanges de sources dynamiques, proxies anti-tampering sur les fonctions globales,
+      de cas limites (échanges de sources dynamiques, proxies anti-tampering sur les fonctions globales
       <code>JSON.stringify</code> verrouillé, lecteurs chargés paresseusement, les flux SSAI premium
       qui ont besoin du vrai SDK, et ainsi de suite).
     </p>
@@ -431,7 +430,7 @@
     <!-- ============== CTA ============== -->
     <div class="cta-box">
       <h3>Essayez le seul bloqueur de pubs avec les 7 couches</h3>
-      <p>30 jours d'accès Pro complet. Pas de carte de crédit. Annulez à tout moment.</p>
+      <p>Gratuit pour tous, sans limites et sans engagement.</p>
       <a href="/install.html" class="btn">Installer AdOff gratuitement →</a>
     </div>
 

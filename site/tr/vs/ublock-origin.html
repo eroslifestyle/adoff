@@ -94,7 +94,7 @@
       { "@type": "ListItem", "position": 2, "name": "Gizli anti-tespit", "description": "AdOff aktif reklam engelleyici tespitinden kaçınma özelliği içerir. Chrome'daki uBlock Origin Lite'ın eşdeğer bir gizlilik katmanı yoktur." },
       { "@type": "ListItem", "position": 3, "name": "Eklenti boyutu", "description": "AdOff ultra hafif. uBlock Origin Lite çok daha ağır." },
       { "@type": "ListItem", "position": 4, "name": "Chrome'da engelleme etkinliği", "description": "AdOff, agresif anti-reklam engelleyici tespiti olan sitelerde reklamları engeller. uBO Lite, MV3 API kısıtlamaları nedeniyle %5–10 daha az etkindir." },
-      { "@type": "ListItem", "position": 5, "name": "Fiyat", "description": "uBlock Origin Lite ücretsizdir. AdOff 30 günlük ücretsiz deneme sunar, ardından aylık 2,0 EUR'dan başlar." }
+      { "@type": "ListItem", "position": 5, "name": "Fiyat", "description": "uBlock Origin Lite ücretsizdir. AdOff tamamen ücretsizdir; hesap gerekmez ve sınır yoktur." }
     ]
   }
   </script>
@@ -132,7 +132,7 @@
         "name": "uBlock Origin AdOff'a göre daha fazla filtre kontrolü sağlıyor mu?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Evet — uBlock Origin, ileri düzey kullanıcılar için ayrıntılı filtre listeleri ve dinamik kurallar sunar. AdOff ise bu karmaşıklığı bir 138-rul setine indirgeyen, otomatik stealth layer ile basit arayüzü olan free bırakır."
+          "text": "Evet — uBlock Origin, ileri düzey kullanıcılar için ayrıntılı filtre listeleri ve dinamik kurallar sunar. AdOff ise bu karmaşıklığı bir 153-rul setine indirgeyen, otomatik stealth layer ile basit arayüzü olan free bırakır."
         }
       },
       {
@@ -140,7 +140,7 @@
         "name": "AdOff uBlock Origin'e karşı ücretsiz deneme sürumu mevcut mu?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "AdOff 30 günlük tamamen ücretsiz free sürümünü sunar ve bu süre boyunca para iade garantisine sahiptir, daha sonra €0/ay veya €99 ömür boyu abonelik seçeneğine geçebilirsiniz. uBlock Origin ise tamamen ücretsiz ve açık kaynaklı olduğu için deneme sürümü yoktur — her özellik ücretsiz olarak mevcuttur."
+          "text": "AdOff tamamen ücretsizdir; hesap gerekmez ve sınır yoktur. 30 günlük para iade garantisi de sunulmaktadır. uBlock Origin ise tamamen ücretsiz ve açık kaynaklı olduğu için deneme sürümü yoktur — her özellik ücretsiz olarak mevcuttur."
         }
       }
     ]
@@ -193,7 +193,7 @@
       AdOff, eski bir kod tabanını MV3'e taşıma sorunuyla karşılaşmadı. MV3 mimarisi için sıfırdan tasarlandı. Bu, hiçbir uzlaşı olmadığı, "lite" modu olmadığı anlamına gelir — sadece MV3'ün izin verdiklerini tam anlamıyla kullanan ve MV3'ün engellemediği bir gizlilik katmanı ekleyen bir eklenti.
     </p>
     <p>
-      AdOff, ağ düzeyinde engelleme için 138 declarativeNetRequest kuralı, DOM gizleme için bir CSS kozmetik katmanı ve — kritik olarak — <strong>MAIN world'de çalışan bir gizli anti-tespit betiği</strong> kullanır. Bu son bileşen, AdOff'u yalnızca eski mantığı ileri taşıyan herhangi bir MV3 eklentisinden ayıran şeydir.
+      AdOff, ağ düzeyinde engelleme için 153 declarativeNetRequest kuralı, DOM gizleme için bir CSS kozmetik katmanı ve — kritik olarak — <strong>MAIN world'de çalışan bir gizli anti-tespit betiği</strong> kullanır. Bu son bileşen, AdOff'u yalnızca eski mantığı ileri taşıyan herhangi bir MV3 eklentisinden ayıran şeydir.
     </p>
 
     <h2>Gizli Anti-Tespit: uBlock Origin Lite'ın Sahip Olmadığı Özellik</h2>
@@ -224,7 +224,7 @@
       Bu fark birkaç nedenden dolayı önemlidir. Daha büyük eklentiler başlangıçta ve filtre listesi güncellemeleri sırasında daha fazla bellek tüketir. Düşük özellikli makinelerde veya Chromebook'larda, daha küçük bir eklenti doğrudan daha hızlı tepki veren bir tarayıcıya dönüşür. Daha da önemlisi, daha küçük bir kod tabanı gizlilik ve güvenlik açısından denetlemesi daha kolaydır — beklenmedik şekilde davranabilecek daha az kod vardır.
     </p>
     <p>
-      AdOff, çok megabaytlık filtre listesi veritabanlarını içe aktarmak yerine özenle seçilmiş 138 engelleme kuralından oluşan küratörlü bir set tutarak küçük boyutunu korur. Bu, ham kural sayısı yerine performans ve sadeliği öne çıkaran bilinçli bir tasarım tercihidir.
+      AdOff, çok megabaytlık filtre listesi veritabanlarını içe aktarmak yerine özenle seçilmiş 153 engelleme kuralından oluşan küratörlü bir set tutarak küçük boyutunu korur. Bu, ham kural sayısı yerine performans ve sadeliği öne çıkaran bilinçli bir tasarım tercihidir.
     </p>
 
     <h2>Özellik Bazında Karşılaştırma</h2>
@@ -245,7 +245,7 @@
         </tr>
         <tr>
           <td>Ağ reklam engelleme</td>
-          <td class="check">✔ 138 küratörlü kural</td>
+          <td class="check">✔ 153 küratörlü kural</td>
           <td class="check">✔ Büyük kural veritabanı</td>
         </tr>
         <tr>
@@ -290,7 +290,7 @@
         </tr>
         <tr>
           <td>Deneme sonrası fiyat</td>
-          <td class="partial">aylık 2,0 EUR'dan</td>
+          <td class="partial">ücretsizdir</td>
           <td class="check">✔ Ücretsiz (açık kaynak)</td>
         </tr>
         <tr>
@@ -364,7 +364,7 @@
 
     <div class="cta-box">
       <h3>AdOff'u 30 Gün Ücretsiz Deneyin</h3>
-      <p>Kredi kartı gerekmez. Deneme süresince tam free — gizli anti-tespit, video reklam atlama (free) ve 138 engelleme kuralının tamamı dahil. Farkı kendiniz görün.</p>
+      <p>Kredi kartı gerekmez. Deneme süresince tam free — gizli anti-tespit, video reklam atlama (free) ve 153 engelleme kuralının tamamı dahil. Farkı kendiniz görün.</p>
       <a href="../../install.html" class="btn">AdOff'u Ücretsiz Edinin →</a>
     </div>
 
@@ -388,9 +388,9 @@
       <h3>AdOff uBlock Origin&#x27;in yapamadığı şey nedir?</h3>
       <p>free, IMA stub yoluyla SDK düzeyinde universal video-ad neutralization sağlar ve anti-adblock duvarları geçer — bu sayede oynatıcılar doğrudan içeriklere ulaşabilir. uBlock ise filtre listelerine dayalı çalışır; platformların reklam alanlarını döndürdüğünde bunlar bozulur.</p>
       <h3>uBlock Origin AdOff&#x27;a göre daha fazla filtre kontrolü sağlıyor mu?</h3>
-      <p>Evet — uBlock Origin, ileri düzey kullanıcılar için ayrıntılı filtre listeleri ve dinamik kurallar sunar. AdOff ise bu karmaşıklığı bir 138-rul setine indirgeyen, otomatik stealth layer ile basit arayüzü olan free bırakır.</p>
+      <p>Evet — uBlock Origin, ileri düzey kullanıcılar için ayrıntılı filtre listeleri ve dinamik kurallar sunar. AdOff ise bu karmaşıklığı bir 153-rul setine indirgeyen, otomatik stealth layer ile basit arayüzü olan free bırakır.</p>
       <h3>AdOff uBlock Origin&#x27;e karşı ücretsiz deneme sürumu mevcut mu?</h3>
-      <p>AdOff 30 günlük tamamen ücretsiz free sürümünü sunar ve bu süre boyunca para iade garantisine sahiptir, daha sonra €0/ay veya €99 ömür boyu abonelik seçeneğine geçebilirsiniz. uBlock Origin ise tamamen ücretsiz ve açık kaynaklı olduğu için deneme sürümü yoktur — her özellik ücretsiz olarak mevcuttur.</p>
+      <p>AdOff tamamen ücretsizdir; hesap gerekmez ve sınır yoktur. 30 günlük para iade garantisi de sunulmaktadır. uBlock Origin ise tamamen ücretsiz ve açık kaynaklı olduğu için deneme sürümü yoktur — her özellik ücretsiz olarak mevcuttur.</p>
 
 </article>
   

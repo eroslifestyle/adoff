@@ -94,7 +94,7 @@
       { "@type": "ListItem", "position": 2, "name": "Sigilo anti-detección", "description": "AdOff incluye evasión activa de anti-adblock. uBlock Origin Lite en Chrome no dispone de una capa de sigilo equivalente." },
       { "@type": "ListItem", "position": 3, "name": "Tamaño de la extensión", "description": "AdOff es ultraligero. uBlock Origin Lite pesa aproximadamente 890 KB." },
       { "@type": "ListItem", "position": 4, "name": "Efectividad de bloqueo en Chrome", "description": "AdOff bloquea anuncios en sitios con detección anti-adblock agresiva. uBO Lite pierde entre un 5 y un 10% de efectividad debido a las limitaciones de la API MV3." },
-      { "@type": "ListItem", "position": 5, "name": "Precio", "description": "uBlock Origin Lite es gratuito. AdOff ofrece 30 días de prueba gratuita, y luego parte desde 2,0 EUR/mes." }
+      { "@type": "ListItem", "position": 5, "name": "Precio", "description": "AdOff es completamente gratuito para todos. uBlock Origin Lite es gratuito y de código abierto." }
     ]
   }
   </script>
@@ -129,18 +129,18 @@
       },
       {
         "@type": "Question",
-        "name": "¿uBlock Origin ofrece más control sobre los filtros que AdOff?",
+        "name": "Sí, uBlock Origin proporciona listas de filtros granulares, reglas dinámicas y un selector de elementos para usuarios avanzados. AdOff simplifica esa complejidad con un conjunto de 153 reglas curadas, sigilo automático e interfaz minimalista.",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Sí, uBlock Origin proporciona listas de filtros granulares, reglas dinámicas y un selector de elementos para usuarios avanzados. AdOff simplifica esa complejidad con un conjunto de 138 reglas curadas, stealth automático e interfaz más simple."
+          "text": "Sí, uBlock Origin proporciona listas de filtros granulares, reglas dinámicas y un selector de elementos para usuarios avanzados. AdOff simplifica esa complejidad con un conjunto de 153 reglas curadas, sigilo automático e interfaz minimalista."
         }
       },
       {
         "@type": "Question",
-        "name": "¿Hay una prueba gratuita tanto para AdOff como para uBlock Origin?",
+        "name": "AdOff es completamente gratuito para todos — sin período de prueba, sin cuenta y sin límites. uBlock Origin es gratuito y de código abierto.",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "AdOff ofrece una prueba free de 30 días con garantía de devolución del dinero durante 30 días; luego €0/mes o €99 por vida. uBlock Origin es gratuito y de código abierto, así que no hay pruebas — cada función está disponible sin costo."
+          "text": "AdOff es completamente gratuito para todos — sin cuenta, sin período de prueba y sin límites. uBlock Origin es gratuito y de código abierto."
         }
       }
     ]
@@ -193,7 +193,7 @@
       AdOff no tuvo que afrontar el problema de migrar una base de código heredada a MV3. Fue diseñado desde cero para la arquitectura MV3. Eso significa sin compromisos, sin modo "lite" — simplemente una extensión que aprovecha al máximo lo que MV3 permite, añadiendo además una capa de sigilo que MV3 no impide.
     </p>
     <p>
-      AdOff utiliza 138 reglas declarativeNetRequest para el bloqueo a nivel de red, una capa CSS cosmética para ocultar elementos del DOM y — de forma decisiva — un <strong>script de sigilo anti-detección que se ejecuta en el mundo MAIN</strong>. Este último componente es lo que diferencia a AdOff de cualquier extensión MV3 que simplemente migra lógica antigua.
+      AdOff utiliza 153 reglas declarativeNetRequest para el bloqueo a nivel de red, una capa CSS cosmética para anuncios DOM y un script MAIN-world de sigilo anti-detección. <strong>script de sigilo anti-detección que se ejecuta en el mundo MAIN</strong>. Este último componente es lo que diferencia a AdOff de cualquier extensión MV3 que simplemente migra lógica antigua.
     </p>
 
     <h2>Sigilo anti-detección: la función que uBlock Origin Lite no tiene</h2>
@@ -224,7 +224,7 @@
       Esta diferencia importa por varias razones. Las extensiones más pesadas consumen más memoria al arrancar y durante las actualizaciones de las listas de filtros. En máquinas de gama baja o Chromebooks, una extensión más pequeña se traduce directamente en un navegador más ágil. Además, una base de código más pequeña es más fácil de auditar en materia de privacidad y seguridad — simplemente hay menos código que podría comportarse de forma inesperada.
     </p>
     <p>
-      AdOff logra su empreinte ultraligera manteniendo un conjunto cuidadosamente seleccionado de 138 reglas de bloqueo en lugar de importar bases de datos de listas de filtros de varios megabytes. Se trata de una elección de diseño deliberada que prioriza el rendimiento y la simplicidad sobre la cantidad bruta de reglas.
+      AdOff logra su huella ultraligera manteniendo un conjunto cuidadosamente seleccionado de 153 reglas curadas, en lugar de miles de filtros.
     </p>
 
     <h2>Comparativa función por función</h2>
@@ -245,7 +245,7 @@
         </tr>
         <tr>
           <td>Bloqueo de anuncios en red</td>
-          <td class="check">✔ 138 reglas curadas</td>
+          <td class="check">✔ 153 reglas curadas</td>
           <td class="check">✔ Gran base de datos de reglas</td>
         </tr>
         <tr>
@@ -285,12 +285,12 @@
         </tr>
         <tr>
           <td>Período de prueba</td>
-          <td class="check">✔ 30 días gratis</td>
+          <td class="check">✔ Gratuito para todos</td>
           <td class="check">✔ Siempre gratuito</td>
         </tr>
         <tr>
           <td>Precio tras la prueba</td>
-          <td class="partial">desde 2,0 EUR/mes</td>
+          <td class="partial">Gratis</td>
           <td class="check">✔ Gratis (código abierto)</td>
         </tr>
         <tr>
@@ -355,13 +355,13 @@
       <li>Quieres la <strong>empreinte más ligera posible</strong> — ultraligero frente a casi 900 KB</li>
       <li>Quieres un bloqueador de anuncios <strong>diseñado nativamente para MV3 de Chrome</strong>, no migrado desde una arquitectura más antigua</li>
       <li>Visitas frecuentemente sitios que detectan y bloquean los bloqueadores de anuncios de forma agresiva</li>
-      <li>Quieres una <strong>prueba gratuita de 30 días</strong> antes de comprometerte con ningún pago</li>
-      <li>Valoras un producto activo con un equipo comercial que actualiza continuamente las reglas de sigilo</li>
+      <li>Quieres la extensión más ligera posible <strong>sin pagar nada</strong> y sin período de prueba</li>
+      <li>Descarga AdOff gratis</li>
     </ul>
 
     <div class="cta-box">
-      <h3>Prueba AdOff gratis durante 30 días</h3>
-      <p>Sin tarjeta de crédito. Funciones free durante la prueba — incluyendo sigilo anti-detección, salto de anuncios en vídeo y las 138 reglas de bloqueo. Comprueba la diferencia tú mismo.</p>
+      <h3>Gratis, sin cuenta y sin límites. Bloqueo de red, cosmético, modo sigilo anti-detección y salto de anuncios en vídeo — todo incluido.</h3>
+      <p>Obtén AdOff gratis →</p>
       <a href="../../install.html" class="btn">Obtén AdOff gratis →</a>
     </div>
 
@@ -385,9 +385,9 @@
       <h3>¿Qué puede hacer AdOff que uBlock Origin no pueda?</h3>
       <p>La versión free AdOff neutraliza anuncios de videos al nivel del SDK mediante un stub universal IMA, permitiendo a los reproductores pasar directamente al contenido; su capa furtiva evita las paredes anti-bloqueo. uBlock se basa en listas de filtros que fallan cuando las plataformas rotan sus dominios publicitarios.</p>
       <h3>¿uBlock Origin ofrece más control sobre los filtros que AdOff?</h3>
-      <p>Sí, uBlock Origin proporciona listas de filtros granulares, reglas dinámicas y un selector de elementos para usuarios avanzados. AdOff simplifica esa complejidad con un conjunto de 138 reglas curadas, stealth automático e interfaz más simple.</p>
-      <h3>¿Hay una prueba gratuita tanto para AdOff como para uBlock Origin?</h3>
-      <p>AdOff ofrece una prueba free de 30 días con garantía de devolución del dinero durante 30 días; luego €0/mes o €99 por vida. uBlock Origin es gratuito y de código abierto, así que no hay pruebas — cada función está disponible sin costo.</p>
+      <p>¿Cuántas reglas de bloqueo utiliza AdOff?</p>
+      <h3>¿AdOff es completamente gratuito?</h3>
+      <p>Sí. AdOff es completamente gratuito para todos — sin cuenta, sin período de prueba y sin límites.</p>
 
 </article>
   

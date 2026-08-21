@@ -170,7 +170,7 @@ def render(tmpl, content, slug, lang):
     for key, val in content.items():
         if key.startswith("_"):
             continue
-        out = out.replace("{{" + key + "}}", val, 1)
+        out = out.replace("{{" + key + "}}", val)
     # localized internal links
     def lp(m):
         s = m.group(1)
