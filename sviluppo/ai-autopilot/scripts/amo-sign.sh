@@ -33,7 +33,7 @@ OUT=$(npx --no-install web-ext sign \
   --artifacts-dir=sviluppo/amo-artifacts 2>&1) || true
 echo "$OUT" | tail -20
 
-if echo "$OUT" | grep -qiE "Signed and ready|submitted|downloaded to|listed on"; then
+if echo "$OUT" | grep -qiE "Signed and ready|Signed xpi downloaded|submitted|downloaded to|listed on"; then
   notify "✅ <b>AMO $VER</b>: submission inviata (listed). In review su addons.mozilla.org."
   echo "[$(date -Iseconds)] AMO sign OK"
 elif echo "$OUT" | grep -qi "throttled"; then
