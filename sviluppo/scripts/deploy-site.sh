@@ -16,6 +16,8 @@ python3 sviluppo/scripts/prose_i18n.py check-all  # exits non-zero on content dr
 python3 sviluppo/scripts/i18n_manager.py build
 python3 sviluppo/scripts/i18n_manager.py check   # exits non-zero on missing/HTML-desync
 python3 sviluppo/scripts/i18n_manager.py pages   # baked SEO prose: exist/lang/hreflang per lang
+# lingua REALE delle pagine EN (root): check-all vede struttura e contenuto, non la lingua
+python3 sviluppo/scripts/check_en_pages_language.py
 
 echo "── 2/3 · leak checks ────────────────────────────────────────"
 if grep -rniE "erosdegrande|LeoDg|mailto:support" site/ --include="*.html" --include="*.js" 2>/dev/null; then
@@ -29,6 +31,14 @@ echo "── perf · critical CSS inline + async /style.css ──────�
 # (penthouse → .state/critical.css) e carica style.css async (preload→onload).
 # Idempotente/re-eseguibile: gira sull'output finale di site/ prima del deploy.
 python3 sviluppo/seo-tools/inline_critical_css.py
+
+echo "── cache · ?v= = hash del contenuto ─────────────────────────"
+# _headers marca /*.js e /*.css `immutable, max-age=1y` e i nomi file non cambiano:
+# l'unico cache-buster e' la query ?v=. Bumpata a mano restava disallineata tra le
+# pagine (2026-08-22: 228 pagine su 556 servivano ancora il menu con Premium/Pricing
+# da /adoff-nav.js?v=260613b, cachato prima della rimozione di quelle pagine).
+# Dopo il critical CSS, che riscrive i link a style.css.
+python3 sviluppo/scripts/bump_asset_versions.py
 
 echo "── 3/3 · deploy ─────────────────────────────────────────────"
 export PATH="$HOME/.local/bin:$PATH"

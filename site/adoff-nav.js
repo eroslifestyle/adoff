@@ -159,8 +159,6 @@
     '#site-nav .sn-links a.sn-cta{background:var(--accent);color:var(--text-on-accent);padding:7px 16px;border-radius:8px;font-weight:700}',
     '#site-nav .sn-links a.sn-cta:hover{background:var(--accent-dim);color:var(--text-on-accent)}',
 
-    /* Premium dropdown */
-
     '#site-nav .sn-right{display:flex;align-items:center;gap:12px;flex-shrink:0}',
 
     /* Theme toggle (in nav, sizing/layout definiti in style.css .theme-toggle) */
@@ -323,7 +321,6 @@
   // ─── Event handlers ─────────────────────────────────────────────────────────
   var langWrap = document.getElementById('snLangWrap');
   var langBtn = document.getElementById('snLangBtn');
-  var premiumBtn = document.getElementById('snPremiumBtn');
   var burger = root.querySelector('.sn-burger');
   var themeToggles = root.querySelectorAll('.theme-toggle');
 
