@@ -386,11 +386,17 @@
 
   // Deep-link alla pagina recensioni dello store giusto, in base al browser rilevato.
   const SUPPORT_URL = "https://adoff.app/support.html";
+  // ID pubblicato sul Chrome Web Store. NON usare chrome.runtime.id: negli install
+  // da ZIP (unpacked) è un ID locale diverso e il deep-link finisce su una pagina inesistente.
+  // ponytail: chi ha installato da ZIP vedrà la scheda ma non il widget recensione — Google
+  // richiede l'install dallo store; per loro il link serve a reinstallare da lì.
+  const CWS_ITEM_ID = "fcjfpfhdcpbjmihiikbblcokmjnhedhp";
+
   function detectReviewUrl() {
     const ua = navigator.userAgent || "";
     if (/Firefox\//.test(ua)) return "https://addons.mozilla.org/firefox/addon/adoff/reviews/";
     if (/Edg\//.test(ua))     return "https://microsoftedge.microsoft.com/addons/detail/00a23227-cb9a-415c-88bb-4e9636f7e94b";
-    return "https://chromewebstore.google.com/detail/" + chrome.runtime.id + "/reviews";
+    return "https://chromewebstore.google.com/detail/" + CWS_ITEM_ID + "/reviews";
   }
 
   // Trigger su USO ATTIVO: almeno 100 ads bloccate (proxy d'uso reale) e 10 giorni dall'install.
