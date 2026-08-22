@@ -167,9 +167,49 @@
     }
   }
 
-  /** Aggiorna il banner licenza sotto il sito. */
+  /** Avviso licenza free: giorni rimasti o protezione ferma. */
   function renderLicenseBanner() {
     licenseBanner.style.display = "none";
+  
+    chrome.storage.local.get(["adoffFreeExpired", "adoffFreeGrantEnd", "adoffFreeRegistered", "adoffDeviceId"], function(data) {
+      void chrome.runtime.lastError;
+    
+      if (data.adoffFreeRegistered) return;
+    
+      var daysLeft = Math.max(0, Math.ceil((Number(data.adoffFreeGrantEnd || 0) - Date.now()) / 86400000));
+      var text = "";
+      var classe = "";
+    
+      if (data.adoffFreeExpired) {
+        text = i18n.t("onb.regExpiredTitle");
+        if (text === "onb.regExpiredTitle") text = "Your free period has expired.";
+        classe = "license-banner expired";
+      } else if (data.adoffFreeGrantEnd && daysLeft <= 7) {
+        text = i18n.t("onb.regDaysLeft").replace("{n}", String(daysLeft));
+        if (text === "onb.regDaysLeft") text = "Your free period expires in " + daysLeft + " days.";
+        classe = "license-banner warn";
+      } else {
+        return;
+      }
+    
+      licenseBanner.textContent = "";
+    
+      var span = document.createElement("span");
+      span.textContent = text;
+    
+      var btn = document.createElement("button");
+      btn.textContent = i18n.t("onb.regBtn");
+      if (btn.textContent === "onb.regBtn") btn.textContent = "Register";
+      btn.className = "license-banner-btn";
+      btn.addEventListener("click", function() {
+        var deviceParam = data.adoffDeviceId ? "&device=" + encodeURIComponent(data.adoffDeviceId) : "";
+        chrome.tabs.create({ url: "https://adoff.app/account/?signup=1&source=popup" + deviceParam });
+      });
+    
+      licenseBanner.appendChild(span);
+      licenseBanner.appendChild(btn);
+      licenseBanner.style.display = "block";
+    });
   }
 
   /** Mostra il banner trial bloccato. */

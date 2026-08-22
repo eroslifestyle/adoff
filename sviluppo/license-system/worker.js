@@ -1252,6 +1252,157 @@ async function handleTrialLinkAccount(body, env) {
   });
 }
 
+
+// =============================================
+// LICENZA FREE — 30 giorni, poi serve la registrazione
+// =============================================
+// Stessa firma ECDSA del trial: la scadenza la decide il server, il client
+// verifica la firma con la chiave pubblica embeddata. La finestra parte dalla
+// PRIMA richiesta del device (= aggiornamento alla versione col gate), non
+// dalla data di installazione: chi ha gia' AdOff non si ritrova spento.
+
+const FREE_GRACE_MS = 30*24*60*60*1000;
+const FREE_REGISTERED_MS = 365*24*60*60*1000;
+
+async function handleFreeLicense(body, env, request) {
+  const deviceId = await generateDeviceId(request, body, env);
+  const now = Date.now();
+  
+  try {
+    await env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS free_licenses (
+        device_id TEXT PRIMARY KEY,
+        gate_start INTEGER NOT NULL,
+        account_id TEXT,
+        linked_at INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `).run();
+  } catch (e) {
+    console.error("CREATE TABLE error:", e);
+    return jsonResponse({ ok: false, error: "Database error" }, 500);
+  }
+  
+  let row = await env.DB.prepare(
+    "SELECT gate_start, account_id FROM free_licenses WHERE device_id = ?"
+  ).bind(deviceId).first();
+  
+  let gateStart = now;
+  
+  if (!row) {
+    await env.DB.prepare(
+      "INSERT OR IGNORE INTO free_licenses (device_id, gate_start) VALUES (?, ?)"
+    ).bind(deviceId, now).run();
+    row = await env.DB.prepare(
+      "SELECT gate_start, account_id FROM free_licenses WHERE device_id = ?"
+    ).bind(deviceId).first();
+  }
+  
+  if (row) {
+    gateStart = row.gate_start;
+  }
+  
+  const accountId = row?.account_id || null;
+  const registered = !!accountId;
+  const grantEnd = registered ? now + FREE_REGISTERED_MS : gateStart + FREE_GRACE_MS;
+  const active = now < grantEnd;
+  const daysLeft = active ? Math.ceil((grantEnd - now) / 86400000) : 0;
+  
+  const token = await signTrialToken({
+    deviceId,
+    kind: "free",
+    gateStart,
+    grantEnd,
+    registered,
+    iat: now,
+    v: 1
+  }, env);
+  
+  return jsonResponse({
+    ok: true,
+    active,
+    registered,
+    gateStart,
+    grantEnd,
+    daysLeft,
+    now,
+    token
+  });
+}
+
+async function handleLinkDevice(body, env, request) {
+  const { accountToken } = body || {};
+  
+  if (!accountToken) {
+    return jsonResponse({ ok: false, error: "Missing accountToken" }, 400);
+  }
+  
+  const session = await sessionGet(env, "account", accountToken);
+  
+  if (!session) {
+    return jsonResponse({ ok: false, error: "Invalid session" }, 401);
+  }
+  
+  const accountId = session.accountId;
+  
+  if (!accountId) {
+    return jsonResponse({ ok: false, error: "Invalid session data" }, 400);
+  }
+  
+  const deviceId = await generateDeviceId(request, body, env);
+  const now = Date.now();
+  
+  try {
+    await env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS free_licenses (
+        device_id TEXT PRIMARY KEY,
+        gate_start INTEGER NOT NULL,
+        account_id TEXT,
+        linked_at INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `).run();
+  } catch (e) {
+    console.error("CREATE TABLE error:", e);
+    return jsonResponse({ ok: false, error: "Database error" }, 500);
+  }
+  
+  await env.DB.prepare(`
+    INSERT INTO free_licenses (device_id, gate_start, account_id, linked_at)
+    VALUES (?, ?, ?, ?)
+    ON CONFLICT(device_id) DO UPDATE SET
+      account_id = excluded.account_id,
+      linked_at = excluded.linked_at
+  `).bind(deviceId, now, accountId, now).run();
+  
+  const row = await env.DB.prepare(
+    "SELECT gate_start FROM free_licenses WHERE device_id = ?"
+  ).bind(deviceId).first();
+  
+  const gateStart = row?.gate_start || now;
+  const grantEnd = now + FREE_REGISTERED_MS;
+  
+  const token = await signTrialToken({
+    deviceId,
+    kind: "free",
+    gateStart,
+    grantEnd,
+    registered: true,
+    iat: now,
+    v: 1
+  }, env);
+  
+  return jsonResponse({
+    ok: true,
+    linked: true,
+    registered: true,
+    gateStart,
+    grantEnd,
+    token,
+    daysLeft: Math.ceil(FREE_REGISTERED_MS / 86400000)
+  });
+}
+
 /**
  * Parses User-Agent to produce a human-readable device name.
  * E.g. "Chrome on Windows 11", "Firefox on macOS"
@@ -8454,6 +8605,18 @@ export default {
     }
 
     // Trial link-account (via di fuga per falsi positivi anti-abuse)
+    if (path === "/free-license" && request.method === "POST") {
+      let freeBody;
+      try { freeBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleFreeLicense(freeBody, env, request));
+    }
+
+    if (path === "/account/link-device" && request.method === "POST") {
+      let linkDevBody;
+      try { linkDevBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleLinkDevice(linkDevBody, env, request));
+    }
+
     if (path === "/trial/link-account" && request.method === "POST") {
       let linkBody;
       try { linkBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }

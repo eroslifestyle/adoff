@@ -127,7 +127,7 @@
 
   // --- Controlla whitelist, stato e licenza prima di avviare ---
   if (!isExtensionValid()) return;
-  chrome.storage.local.get(["adoffEnabled", "adoffAdsBlocked", "adoffWhitelist", "adoffTrialEnd", "adoffTrialToken", "adoffTrialExpired", "adoffDeviceId", "adoffLicense", "adoffIntegrity", "adoffYtCompat"], async (result) => {
+  chrome.storage.local.get(["adoffEnabled", "adoffAdsBlocked", "adoffWhitelist", "adoffTrialEnd", "adoffTrialToken", "adoffTrialExpired", "adoffDeviceId", "adoffLicense", "adoffIntegrity", "adoffYtCompat", "adoffFreeExpired"], async (result) => {
     if (chrome.runtime.lastError || !isExtensionValid()) return;
     const whitelist = result.adoffWhitelist || [];
     // EA-7: suffix matching corretto (non bidirezionale)
@@ -146,12 +146,17 @@
     // Trial: gate basato su token firmato dal server (non falsificabile).
     const trialOk = await isTrialActive(result, Date.now());
 
+    // Licenza free scaduta (30 giorni senza registrazione): AdOff non tocca
+    // piu' la pagina finche' l'utente non crea l'account. Lo stato lo decide
+    // background.js dal token firmato, qui si obbedisce e basta.
+    const freeExpired = result.adoffFreeExpired === true;
+
     // Come in background.js: l'integrita' non governa piu' l'accesso.
     const isPro =
       adoffPlanTier(lic.type) !== "free" ||
       adoffPlanTier(lic.plan) !== "free" ||
       trialOk;
-    const stealthActive = enabled && isPro;
+    const stealthActive = enabled && !freeExpired && isPro;
     if (stealthActive) {
       // EB-7: usa nonce verificabile invece di "1" fisso
       document.documentElement.setAttribute("data-adoff-stealth", STEALTH_NONCE);
@@ -176,7 +181,7 @@
       try { localStorage.setItem("__adoff_pro", stealthActive ? "1" : "0"); } catch (_) { /* storage negato */ }
     }
 
-    if (enabled) start();
+    if (enabled && !freeExpired) start();
   });
 
   if (!isExtensionValid()) return;
@@ -185,6 +190,9 @@
     if (changes.adoffEnabled) {
       enabled = changes.adoffEnabled.newValue !== false;
       enabled ? start() : stop();
+    }
+    if (changes.adoffFreeExpired) {
+      changes.adoffFreeExpired.newValue === true ? stop() : (enabled && start());
     }
     // Aggiorna in tempo reale se la whitelist cambia mentre la pagina e' aperta
     if (changes.adoffWhitelist) {

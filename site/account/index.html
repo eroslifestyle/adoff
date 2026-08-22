@@ -802,8 +802,10 @@
 
   <!-- Free note -->
   <div class="free-note">
-    <strong>La versione Free funziona senza registrazione.</strong><br>
-    L'account serve solo per gestire i tuoi dispositivi autorizzati. AdOff è gratis, senza account e senza limiti.
+    <strong>Per usare AdOff gratis per sempre devi registrarti.</strong><br>
+    Dopo l'installazione AdOff funziona 30 giorni senza account: passati quelli, la protezione si ferma
+    finché non crei il tuo account gratuito. La registrazione riattiva subito il blocco e resta gratuita —
+    nessuna carta, nessun pagamento, nessun limite.
   </div>
 
 </div><!-- /loginCard -->
@@ -1071,7 +1073,22 @@
 
   /* ── Token helpers ── */
   function getToken()   { return sessionStorage.getItem(SESSION_KEY); }
-  function saveToken(t) { _token = t; sessionStorage.setItem(SESSION_KEY, t); }
+  function saveToken(t) { _token = t; sessionStorage.setItem(SESSION_KEY, t); linkPendingDevice(); }
+
+  /* ── Collega il dispositivo che ha aperto la registrazione dall'estensione ──
+     Unico punto: saveToken e' attraversato da login email, Google e registrazione.
+     Senza questa chiamata l'utente si registra ma AdOff resta "non registrato". */
+  function linkPendingDevice() {
+    const deviceId = sessionStorage.getItem("adoff_pending_device");
+    if (!deviceId || !_token) return;
+    apiFetch("/account/link-device", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deviceId: deviceId, accountToken: _token }),
+    }).then((r) => r.json()).then((d) => {
+      if (d && d.ok) sessionStorage.removeItem("adoff_pending_device");
+    }).catch(() => { /* riprovera' al prossimo accesso */ });
+  }
   function dropToken()  { _token = ""; sessionStorage.removeItem(SESSION_KEY); }
 
   /* ── Loading state ── */
@@ -1163,6 +1180,9 @@
     // Arrivo dall'onboarding dell'estensione (?signup=1&email=...): apre subito
     // la scheda di registrazione con l'email del profilo browser gia' scritta.
     // L'email si assegna con .value, mai in HTML: e' input non fidato.
+    if (p.get("device")) {
+      sessionStorage.setItem("adoff_pending_device", p.get("device").slice(0, 64));
+    }
     if (p.get("signup")) {
       const presetEmail = (p.get("email") || "").trim().slice(0, 254);
       setTimeout(() => {

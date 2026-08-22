@@ -136,6 +136,10 @@ async function openRegistration() {
   if (btn) btn.disabled = true;
   let url = ACCOUNT_URL + "?signup=1&source=onboarding";
   try {
+    const deviceId = await readDeviceId();
+    if (deviceId) url += "&device=" + encodeURIComponent(deviceId);
+  } catch (_) {}
+  try {
     const email = await Promise.race([
       getProfileEmail(),
       new Promise((r) => setTimeout(() => r(""), PERMISSION_TIMEOUT_MS)),
@@ -148,6 +152,80 @@ async function openRegistration() {
     window.open(url, "_blank", "noopener");
   }
   if (btn) btn.disabled = false;
+}
+
+function readDeviceId() {
+  return new Promise(function(resolve) {
+    if (typeof chrome === "undefined" || !chrome.storage) {
+      resolve("");
+      return;
+    }
+    chrome.storage.local.get("adoffDeviceId", function(items) {
+      void chrome.runtime.lastError;
+      resolve(items && items.adoffDeviceId ? items.adoffDeviceId : "");
+    });
+  });
+}
+
+function applyOnboardingMode() {
+  var params = new URLSearchParams(location.search);
+  var expired = params.get("expired");
+  var remind = params.get("remind");
+
+  if (!expired && !remind) {
+    return;
+  }
+
+  var regSection = document.querySelector(".reg-section");
+  if (!regSection) {
+    return;
+  }
+
+  var h2 = regSection.querySelector("h2");
+  var p = regSection.querySelector("p");
+  var deadline = document.getElementById("regDeadline");
+
+  if (expired === "1") {
+    var expiredTitle = i18n.t("onb.regExpiredTitle");
+    if (h2 && expiredTitle !== "onb.regExpiredTitle") {
+      h2.textContent = expiredTitle;
+    }
+    var expiredDesc = i18n.t("onb.regExpiredDesc");
+    if (p && expiredDesc !== "onb.regExpiredDesc") {
+      p.textContent = expiredDesc;
+    }
+    if (deadline) {
+      deadline.style.display = "none";
+    }
+    regSection.classList.add("reg-section--urgent");
+  } else if (remind !== null) {
+    var remindTitle = i18n.t("onb.regRemindTitle");
+    if (h2 && remindTitle !== "onb.regRemindTitle") {
+      h2.textContent = remindTitle;
+    }
+    var remindDesc = i18n.t("onb.regRemindDesc");
+    if (p && remindDesc !== "onb.regRemindDesc") {
+      p.textContent = remindDesc.replace("{n}", remind);
+    }
+  }
+
+  regSection.scrollIntoView({ block: "center" });
+}
+
+function watchRegistrationReturn() {
+  document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "visible") {
+      try {
+        chrome.runtime.sendMessage(
+          { action: "refreshFreeLicense" },
+          function() {
+            void chrome.runtime.lastError;
+          }
+        );
+      } catch (e) {
+      }
+    }
+  });
 }
 
 // Giorni che restano prima che serva l'account. Senza data di install
@@ -173,6 +251,8 @@ i18n.init(() => {
   renderTrialCountdown();
   renderSignupDeadline();
   renderVersion();
+  applyOnboardingMode();
+  watchRegistrationReturn();
   const regBtn = document.getElementById("registerBtn");
   if (regBtn) regBtn.addEventListener("click", openRegistration);
 });

@@ -563,6 +563,164 @@
     } catch (_) { /* offline — riprova al prossimo trigger */ }
   }
 
+
+  // ---- LICENZA FREE — 30 giorni, poi serve la registrazione ----
+  // Autorita' = token firmato dal server (stessa chiave del trial). Senza
+  // token verificabile NON si blocca mai: un server irraggiungibile non deve
+  // spegnere l'ad blocking a chi l'ha gia'.
+  // chrome.storage con promise non esiste su Firefox: si passa dai callback.
+  function storageGet(keys) {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(keys, (r) => { void chrome.runtime.lastError; resolve(r || {}); });
+    });
+  }
+  function storageSet(obj) {
+    return new Promise((resolve) => {
+      chrome.storage.local.set(obj, () => { void chrome.runtime.lastError; resolve(); });
+    });
+  }
+
+  const FREE_DAY_MS = 24 * 60 * 60 * 1000;
+  const FREE_REMINDER_DAYS = [7, 14, 21, 28];
+  const FREE_BADGE_WARN_DAYS = 7;
+
+  async function syncFreeLicense() {
+    try {
+      const stored = await storageGet(["adoffDeviceId"]);
+
+      let deviceId = stored.adoffDeviceId;
+      if (!deviceId) {
+        deviceId = generateDeviceUuid();
+        await storageSet({ adoffDeviceId: deviceId });
+      }
+
+      const fingerprint = await generateResilientFingerprint();
+
+      const response = await fetch(API_BASE + "/free-license", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceId, fingerprint })
+      });
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+
+      if (!data.token) return;
+
+      const payload = await verifyTrialToken(data.token, deviceId);
+      if (!payload) return;
+
+      await storageSet({
+        adoffFreeToken: data.token,
+        adoffFreeGateStart: payload.gateStart,
+        adoffFreeGrantEnd: payload.grantEnd,
+        adoffFreeRegistered: payload.registered === true,
+        adoffFreeSyncedAt: Date.now()
+      });
+
+      await applyFreeGate();
+    } catch (_) {}
+  }
+
+  async function readFreeState() {
+    const stored = await storageGet([
+      "adoffFreeToken",
+      "adoffDeviceId",
+      "adoffFreeGateStart",
+      "adoffFreeGrantEnd",
+      "adoffFreeRegistered"
+    ]);
+
+    const token = stored.adoffFreeToken;
+    const deviceId = stored.adoffDeviceId;
+
+    if (!token || !deviceId) {
+      return {
+        valid: false,
+        registered: false,
+        grantEnd: 0,
+        gateStart: 0,
+        daysLeft: 0,
+        expired: false
+      };
+    }
+
+    const payload = await verifyTrialToken(token, deviceId);
+
+    if (!payload) {
+      return {
+        valid: false,
+        registered: false,
+        grantEnd: 0,
+        gateStart: 0,
+        daysLeft: 0,
+        expired: false
+      };
+    }
+
+    const registered = payload.registered === true;
+    const grantEnd = payload.grantEnd;
+    const gateStart = payload.gateStart;
+    const expired = !registered && Date.now() >= grantEnd;
+    const daysLeft = Math.max(0, Math.ceil((grantEnd - Date.now()) / FREE_DAY_MS));
+
+    return { valid: true, registered, grantEnd, gateStart, daysLeft, expired };
+  }
+
+  async function applyFreeGate() {
+    const state = await readFreeState();
+
+    await storageSet({ adoffFreeExpired: state.expired });
+
+    if (state.expired) {
+      toggleNetworkRules(false);
+
+      chrome.action.setBadgeBackgroundColor({ color: "#e74c3c" });
+      chrome.action.setBadgeText({ text: "!" });
+
+      const notified = await storageGet(["adoffFreeExpiredNotified"]);
+      if (!notified.adoffFreeExpiredNotified) {
+        chrome.tabs.create({ url: chrome.runtime.getURL("src/onboarding.html?expired=1") });
+        await storageSet({ adoffFreeExpiredNotified: true });
+      }
+    } else {
+      await storageSet({ adoffFreeExpiredNotified: false });
+
+      const enabled = await storageGet(["adoffEnabled"]);
+      toggleNetworkRules(enabled.adoffEnabled !== false);
+
+      if (state.valid && !state.registered && state.daysLeft <= FREE_BADGE_WARN_DAYS) {
+        chrome.action.setBadgeBackgroundColor({ color: "#f39c12" });
+        chrome.action.setBadgeText({ text: state.daysLeft + "g" });
+      } else {
+        refreshBadge();
+      }
+    }
+  }
+
+  async function checkFreeReminders() {
+    const state = await readFreeState();
+
+    if (!state.valid || state.registered || state.expired) return;
+
+    const elapsedDays = Math.floor((Date.now() - state.gateStart) / FREE_DAY_MS);
+
+    const stored = await storageGet(["adoffFreeRemindersShown"]);
+    const shown = stored.adoffFreeRemindersShown || [];
+
+    const milestone = FREE_REMINDER_DAYS
+      .filter(function(d) { return d <= elapsedDays && shown.indexOf(d) === -1; })
+      .pop();
+
+    if (milestone !== undefined) {
+      chrome.tabs.create({ url: chrome.runtime.getURL("src/onboarding.html?remind=" + milestone) });
+
+      shown.push(milestone);
+      await storageSet({ adoffFreeRemindersShown: shown });
+    }
+  }
+
   // ---- Validazione licenza (centralizzata) ----
   // Errori server fatali → invalida cache. "Device limit reached" NON e' qui (ritryable).
   const FATAL_LIC_ERRORS = new Set([
@@ -676,6 +834,7 @@
   chrome.runtime.onStartup.addListener(() => {
     revalidateLicense("startup");
     syncTrialBg();
+    syncFreeLicense().then(checkFreeReminders);
     updateUninstallURL();
     syncRemoteRules();
   });
@@ -768,6 +927,7 @@
     // scadenza autorevole dal server anche se lo storage locale fosse stato
     // azzerato → il countdown non si resetta mai più tra un aggiornamento e l'altro.
     syncTrialBg();
+    syncFreeLicense().then(checkFreeReminders);
     updateUninstallURL();
   });
 
@@ -815,7 +975,7 @@
         changes[STORAGE_SHOW_BADGE] || changes[STORAGE_SHOW_COUNTER]) {
       refreshBadge();
       if (changes[STORAGE_ENABLED]) {
-        toggleNetworkRules(changes[STORAGE_ENABLED].newValue !== false);
+        applyFreeGate();
       }
     }
   });
@@ -852,6 +1012,7 @@
     if (alarm.name === ALARM_LIC_CHECK) {
       revalidateLicense("daily-alarm");
       syncTrialBg();
+      syncFreeLicense().then(checkFreeReminders);
       updateUninstallURL();
       syncRemoteRules();
       return;
@@ -1205,6 +1366,14 @@
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // EA-6: rifiuta messaggi da estensioni esterne o pagine web
     if (sender.id !== chrome.runtime.id) return false;
+
+    // L'onboarding chiede un ricontrollo quando l'utente torna sulla scheda
+    // dopo essersi registrato: senza, il nuovo stato arriverebbe solo col
+    // sync giornaliero.
+    if (message && message.action === "refreshFreeLicense") {
+      syncFreeLicense();
+      return false;
+    }
 
     // Lo script anti-pubblico è dichiarato nel manifest solo per il frame principale,
     // quindi nei player ospitati in un iframe di terze parti non arriva; il sottoframe
