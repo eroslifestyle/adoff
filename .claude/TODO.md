@@ -1,5 +1,25 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
+## Release 3.6.1 — sessione 2 (2026-08-22): bonifica menu i18n + CSP + repo GitHub
+
+Un generatore di pagine rieseguito con template vecchio aveva sovrascritto 240
+pagine statiche (guide/privacy/community/vs/* × 15 lingue) DOPO il commit
+`081fda8` di oggi, reintroducendo tre regressioni insieme.
+
+**Fatto:**
+- [x] Menu tradotto solo in inglese su 240 pagine: mancava l'include di `adoff-i18n.js` — aggiunto (commit `b9a04f3`)
+- [x] Link "Prezzi/Premium" fantasma tornato nel menu: query-string di `adoff-nav.js`/`footer.js`/`i18n.js` incoerenti tra pagine, ognuna bloccata un anno dalla cache `immutable` di Cloudflare — normalizzate tutte su `?v=e75acee8`/`?v=21299afa`/`?v=623d521a` (commit `b9a04f3`)
+- [x] CSS critico inline + font-preload perso sulle stesse 240 pagine (regressione LCP) — ripristinato da HEAD (commit `b9a04f3`)
+- [x] CSP bloccava ogni richiesta Google Analytics (`connect-src` non includeva `google-analytics.com`) — fix (commit `731d996`)
+- [x] Descrizione repo GitHub aggiornata al modello free reale (30gg poi account gratuito, non piu' "open core" generico)
+- [x] README.md (IT+EN): aggiunta sezione "Sempre gratis/Always free" allineata al commit `87551e2` (commit `1726984`)
+
+**Aperto:**
+- [ ] **Il sito dichiara ancora "senza account e senza scadenze"** in piu' punti (es. FAQ homepage) — falso rispetto al codice reale (`applyFreeGate()`, 30 giorni poi serve un account gratuito, commit `87551e2`). Serve un audit copy su tutte le 15 lingue per allinearla al vero modello ("gratis per sempre, account gratuito dopo 30gg").
+- [ ] **894 chiavi in `en.json` identiche a `it.json`** (valore italiano non tradotto sotto una chiave EN, es. `account.accedi = "Accedi"`) — serve audit dedicato (fonte: vault AdOff, sessione 2026-08-20).
+
+---
+
 ## Release 3.6.1 + bonifica sito (2026-08-21)
 
 Rilasciata 3.6.1, bonificato il sito dai residui dei vecchi piani a pagamento.
