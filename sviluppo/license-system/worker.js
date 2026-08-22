@@ -3093,9 +3093,20 @@ async function handleChat(body, request, env) {
 
   const llm = await callLocalLLM(messages, env);
 
-  // Fallback: LLM non disponibile -> il client mostra il form ticket
+  // LLM non disponibile: tratta come escalation forzata verso un umano (ticket + Telegram),
+  // stesso pattern di "escalate" sotto — cosi il messaggio non va mai perso.
   if (!llm.ok) {
-    return jsonResponse({ ok: true, sessionId, fallback: true, reply: CHAT_FALLBACK_MSG[lang] });
+    history.push({ role: "user", content: message });
+    if (!email) {
+      await logChat(sessionId, lang, history, { escalated: false, email }, env);
+      return jsonResponse({ ok: true, sessionId, escalate: true, needEmail: true, reply: CHAT_NEED_EMAIL_MSG[lang] });
+    }
+    const transcript = history.map(m => (m.role === "user" ? "Utente" : "AI") + ": " + m.content).join("\n");
+    const ticket = await createTicketFromChat({
+      category: "other", email, lang, reason: "Assistente AI non disponibile", transcript, sessionId,
+    }, env);
+    await logChat(sessionId, lang, history, { escalated: true, ticketId: ticket.ticketId, email }, env);
+    return jsonResponse({ ok: true, sessionId, escalate: true, ticketId: ticket.ticketId, reply: CHAT_FALLBACK_MSG[lang] });
   }
 
   let { reply, escalate, category, reason } = parseEscalation(llm.content);
