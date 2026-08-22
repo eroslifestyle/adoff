@@ -1160,6 +1160,19 @@
     if (p.get("link_referral")) {
       sessionStorage.setItem("adoff_pending_referral", p.get("link_referral"));
     }
+    // Arrivo dall'onboarding dell'estensione (?signup=1&email=...): apre subito
+    // la scheda di registrazione con l'email del profilo browser gia' scritta.
+    // L'email si assegna con .value, mai in HTML: e' input non fidato.
+    if (p.get("signup")) {
+      const presetEmail = (p.get("email") || "").trim().slice(0, 254);
+      setTimeout(() => {
+        switchTab("register");
+        const emailEl = $("regEmail");
+        if (emailEl && presetEmail) emailEl.value = presetEmail;
+        const pwEl = $("regPassword");
+        if (pwEl) pwEl.focus();
+      }, 0);
+    }
     return false;
   }
 

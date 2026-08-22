@@ -94,13 +94,87 @@ function initSourceSelect() {
   });
 }
 
+// Giorni concessi prima che serva l'account gratuito.
+const SIGNUP_GRACE_DAYS = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const ACCOUNT_URL = "https://adoff.app/account/";
+
+// Email del profilo del browser, per precompilare la registrazione.
+// Il permesso e' OPZIONALE e si chiede solo al click: metterlo tra i permessi
+// fissi del manifest disattiverebbe l'estensione a tutti gli utenti gia'
+// installati finche' non riaccettano. Se l'utente lo nega, o il browser non
+// espone l'API (Firefox), si apre comunque la registrazione, senza email.
+function getProfileEmail() {
+  return new Promise((resolve) => {
+    // getProfileUserInfo esiste solo sui browser Chromium: altrove il permesso
+    // non e' nemmeno dichiarato e chiederlo aprirebbe un popup inutile.
+    const CHROMIUM = ["chrome", "edge", "opera", "brave"];
+    if (!CHROMIUM.includes(detectBrowser())) return resolve("");
+    if (!chrome.permissions || !chrome.permissions.request) return resolve("");
+    try {
+      chrome.permissions.request({ permissions: ["identity", "identity.email"] }, (granted) => {
+        void chrome.runtime.lastError;
+        if (!granted || !chrome.identity || !chrome.identity.getProfileUserInfo) return resolve("");
+        try {
+          chrome.identity.getProfileUserInfo({ accountStatus: "ANY" }, (info) => {
+            void chrome.runtime.lastError;
+            resolve((info && info.email) || "");
+          });
+        } catch (_) { resolve(""); }
+      });
+    } catch (_) { resolve(""); }
+  });
+}
+
+// Oltre questo tempo si apre comunque la registrazione, senza email:
+// il dialog dei permessi puo' restare aperto o non rispondere mai, e la CTA
+// principale non puo' dipendere da quella risposta.
+const PERMISSION_TIMEOUT_MS = 8000;
+
+async function openRegistration() {
+  const btn = document.getElementById("registerBtn");
+  if (btn) btn.disabled = true;
+  let url = ACCOUNT_URL + "?signup=1&source=onboarding";
+  try {
+    const email = await Promise.race([
+      getProfileEmail(),
+      new Promise((r) => setTimeout(() => r(""), PERMISSION_TIMEOUT_MS)),
+    ]);
+    if (email) url += "&email=" + encodeURIComponent(email);
+  } catch (_) {}
+  try {
+    chrome.tabs.create({ url });
+  } catch (_) {
+    window.open(url, "_blank", "noopener");
+  }
+  if (btn) btn.disabled = false;
+}
+
+// Giorni che restano prima che serva l'account. Senza data di install
+// (storage non ancora scritto) si lascia il testo statico dell'HTML.
+function renderSignupDeadline() {
+  const el = document.getElementById("regDeadline");
+  if (!el || !chrome.storage || !chrome.storage.local) return;
+  chrome.storage.local.get("adoffInstallDate", (r) => {
+    void chrome.runtime.lastError;
+    const installed = Number(r && r.adoffInstallDate);
+    if (!installed) return;
+    const left = Math.max(0, SIGNUP_GRACE_DAYS - Math.floor((Date.now() - installed) / DAY_MS));
+    const tpl = i18n.t("onb.regDaysLeft");
+    if (tpl && tpl !== "onb.regDaysLeft") el.textContent = tpl.replace("{n}", String(left));
+  });
+}
+
 // Init: translate page then apply browser-specific instructions
 i18n.init(() => {
   i18n.applyToDOM();
   applyBrowserSteps(detectBrowser());
   initSourceSelect();
   renderTrialCountdown();
+  renderSignupDeadline();
   renderVersion();
+  const regBtn = document.getElementById("registerBtn");
+  if (regBtn) regBtn.addEventListener("click", openRegistration);
 });
 
 // Trial non piu' mostrato: tutto e' gratis e attivo.
