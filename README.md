@@ -37,6 +37,14 @@ resta privato, perché è la nostra protezione, non un dato dell'utente.
 3. **Dalla parte dell'utente.** Il permesso "tutti i siti" serve solo a rimuovere
    gli annunci in-page; il codice ispezionabile lo dimostra.
 
+### Sempre gratis
+
+AdOff è gratis e resta gratis. Nessuna carta, nessun pagamento, nessun piano Pro
+a pagamento per il blocco pubblicità: i primi 30 giorni sono liberi da subito,
+poi basta un **account gratuito** (venti secondi, senza carta) per continuare a
+usarlo senza limiti. Nessun server irraggiungibile spegne mai il blocco: senza
+un token verificabile l'estensione non si disattiva da sola.
+
 ### Cosa c'è in questo repo
 
 | Cartella | Contenuto |
@@ -103,6 +111,14 @@ because that's our protection, not your data.
 2. **No paid "acceptable ads".** We don't sell whitelists to advertisers.
 3. **On the user's side.** The "all sites" permission only serves in-page ad
    removal; the inspectable code proves it.
+
+### Always free
+
+AdOff is free and stays free. No card, no payment, no paid Pro tier for ad
+blocking: the first 30 days are free from the start, then a **free account**
+(twenty seconds, no card) keeps it running with no limits. No unreachable
+server ever turns blocking off: without a verifiable token, the extension
+never disables itself.
 
 ### What's in this repo
 
