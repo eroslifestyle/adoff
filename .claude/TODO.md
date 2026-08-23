@@ -1,5 +1,33 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
+## Release 3.6.4-3.6.5 (2026-08-23): copy 100% gratis + fix bug video 16x
+
+**Fatto:**
+- [x] Copy allineata al modello "100% gratuito": rimossi tutti i residui Free/Pro/Trial dal sito (41 pagine, 15 lingue) e store-listing
+- [x] Conteggio regole corretto a 153 (trovati e corretti 138/144/146 stantii)
+- [x] Bug fix reali emersi durante il processo: SyntaxError in admin-console.html, traduzioni infiltrate in 6 lingue, riferimento trial 30gg residuo in turco
+- [x] Bug video: playbackRate bloccato a 16x dopo skip ad — causa `adActive` non resettato, fix in `onAdEnd`
+- [x] Suite test esistente `test-yt-quality-reload.js`: 96/96 PASS
+
+**Bug trovati e corretti:**
+- SyntaxError JS in `site/admin-console.html`: `${e."?" "⭐" : "–"}` invece di `${e.wasPro ? "⭐" : "–"}`
+- Traduzioni italiane infiltrate in hindi/indonesiano/russo/portoghese/turco/tedesco
+- Riferimento trial 30 giorni residuo in turco
+
+**Aperto:**
+- [ ] **Chrome Web Store v3.6.5**: in coda di revisione, pubblicazione automatica impostata, NON ancora live
+- [ ] **Edge**: API key scaduta (rigenerare da Partner Center)
+- [ ] **Safari**: richiede Xcode su Mac
+- [ ] **Telegram**: NON postato — aspettare CWS live
+- [ ] `privacy.html`/`terms.html`: da riscrivere con testo verificato sul modello "sostegno volontario legacy" per vecchi abbonati Stripe
+- [ ] Problema APERTO non risolto: gate video difese si accende in modo intermittente (problema nonce service worker)
+
+**Lezioni:**
+- Subagent che dichiarano "fatto" senza verificare: sempre controllare con `git diff`/Read diretto
+- Fix minimo che ripristina solo il sintomo visivo senza resettare tutto lo stato correlato fallisce su sequenze reali (ad multipli)
+
+---
+
 ## Release 3.6.3 (2026-08-23): sistema di messaggistica in-estensione
 
 Piano completo: `~/.claude/plans/iridescent-foraging-zephyr.md` (STATO AVANZAMENTO in cima, fonte di verità cross-sessione). Backend (`worker.js`, thread `MSG-`, D1, traduzione, retention) era già stato completato e deployato in una sessione precedente (commit `0dc2d22`). Questa sessione ha completato tutto il resto.
@@ -22,7 +50,7 @@ Piano completo: `~/.claude/plans/iridescent-foraging-zephyr.md` (STATO AVANZAMEN
 4. `background.js` (solo Chrome): mancava `async` nel listener `chrome.alarms.onAlarm` — SyntaxError reale
 
 **Aperto — richiede azione manuale dellutente:**
-- [ ] **Chrome Web Store**: pubblicazione bloccata — compilare Privacy practices nel Developer Dashboard
+- [x] **Chrome Web Store**: Privacy practices compilate, v3.6.5 inviata per revisione (in coda, pubblicazione automatica impostata, non ancora live)
 - [ ] **Edge Add-ons**: API key scaduta — rigenerare da Partner Center
 - [ ] **Safari**: richiede Xcode su Mac
 - [ ] **Annuncio Telegram**: non pubblicato — aspettare sblocco CWS
