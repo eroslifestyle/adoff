@@ -536,6 +536,25 @@ const EMAIL_TEMPLATES = {
       ),
     };
   },
+
+  // --- RISPOSTA THREAD MESSAGGI (in-estensione) ---
+  message_reply(email, threadId, replyText) {
+    const safeId = escapeHtml(threadId);
+    const safeReply = escapeHtml(replyText);
+    return {
+      subject: `AdOff — Nuova risposta ai tuoi messaggi`,
+      html: emailTemplate(
+        "Hai una nuova risposta 💬",
+        `<p>Il team AdOff ti ha risposto:</p>
+        <div style="background:#f7f5ff;border-left:3px solid #7c5cfc;padding:16px;margin:16px 0;border-radius:0 8px 8px 0">
+          <p style="color:#333;margin:0;white-space:pre-wrap">${safeReply}</p>
+        </div>
+        <p style="color:#888;font-size:13px">Puoi continuare la conversazione dalla tab "Messaggi" nelle Opzioni dell'estensione, o rispondendo a questa email.</p>`,
+        "Apri AdOff",
+        "https://adoff.app/support"
+      ),
+    };
+  },
 };
 
 async function sendEmail(to, subject, html, env) {
@@ -2310,6 +2329,336 @@ async function handleUpdateTicket(body, env, request, ticketId) {
 }
 
 // =============================================
+// MESSAGGISTICA IN-ESTENSIONE (thread persistenti, D1 — MSG-...)
+// =============================================
+
+const MSG_ID_FIND_RE = /MSG-\d{8}-[A-F0-9]{8}/;
+const MAX_ATTACHMENT_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+const ATTACHMENT_ALLOWED_TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+const ATTACHMENT_URL_TTL_S = 3600; // 1 ora
+const MESSAGE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000; // 30 giorni
+
+/** Crea le tabelle message_threads/messages se non esistono (idempotente). */
+async function initMessagesTable(env) {
+  if (!env.DB) return false;
+  await env.DB.prepare(
+    "CREATE TABLE IF NOT EXISTS message_threads (" +
+    "id TEXT PRIMARY KEY, email TEXT NOT NULL, subject TEXT, status TEXT DEFAULT 'open', " +
+    "lang TEXT DEFAULT 'en', unread_by_user INTEGER DEFAULT 0, " +
+    "created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP)"
+  ).run();
+  await env.DB.prepare(
+    "CREATE INDEX IF NOT EXISTS idx_threads_email ON message_threads(email, updated_at)"
+  ).run();
+  await env.DB.prepare(
+    "CREATE TABLE IF NOT EXISTS messages (" +
+    "id TEXT PRIMARY KEY, thread_id TEXT NOT NULL, sender TEXT NOT NULL, text TEXT, " +
+    "text_translated TEXT, attachment_key TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)"
+  ).run();
+  await env.DB.prepare(
+    "CREATE INDEX IF NOT EXISTS idx_messages_thread ON messages(thread_id, created_at)"
+  ).run();
+  return true;
+}
+
+function generateMessageThreadId() {
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
+  const randBytes = crypto.getRandomValues(new Uint8Array(4));
+  const rand = Array.from(randBytes).map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+  return `MSG-${dateStr}-${rand}`;
+}
+
+function generateMessageId() {
+  const randBytes = crypto.getRandomValues(new Uint8Array(8));
+  return "m_" + Array.from(randBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** Token opaco d'accesso a un thread: HMAC(threadId, ADOFF_SECRET). Va salvato client-side
+ * (chrome.storage.local) — e' la vera credenziale di lettura, l'email da sola non basta. */
+async function makeThreadToken(threadId, env) {
+  return await hmacSign(threadId, env.ADOFF_SECRET);
+}
+
+async function verifyThreadToken(threadId, token, env) {
+  if (!token) return false;
+  const expected = await makeThreadToken(threadId, env);
+  return constantTimeEqual(expected, token);
+}
+
+/** URL firmato temporaneo per un allegato R2 (un tag <img> non puo' portare header custom,
+ * quindi l'unica auth praticabile per un allegato inline e' la firma nell'URL). */
+async function signAttachmentUrl(key, env) {
+  const exp = Math.floor(Date.now() / 1000) + ATTACHMENT_URL_TTL_S;
+  const sig = await hmacSign(`${key}:${exp}`, env.ADOFF_SECRET);
+  return `https://api.adoff.app/attachments/${key}?exp=${exp}&sig=${sig}`;
+}
+
+/** Traduce un testo (fallback silenzioso al testo originale se l'LLM fallisce — non deve
+ * mai bloccare l'invio). targetLang "it" o mancante = nessuna traduzione. */
+async function translateText(text, targetLang, env) {
+  if (!text || !targetLang || targetLang === "it") return text;
+  const messages = [
+    { role: "system", content: `Traduci il testo seguente in ${targetLang}. Restituisci SOLO la traduzione, nessun commento aggiuntivo.` },
+    { role: "user", content: text },
+  ];
+  const r = await callLocalLLM(messages, env);
+  return r.ok && r.content ? r.content.trim() : text;
+}
+
+/** Valida e carica un allegato immagine su R2. Ritorna la key (senza prefisso, la route
+ * /attachments/ la implica) o un errore di validazione (Rule 18 sicurezza upload). */
+async function uploadAttachment(base64Data, contentType, threadId, env) {
+  const ext = ATTACHMENT_ALLOWED_TYPES[contentType];
+  if (!ext) return { ok: false, error: "Tipo file non supportato" };
+  let bytes;
+  try {
+    const bin = atob(base64Data);
+    bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  } catch (e) {
+    return { ok: false, error: "Allegato non valido" };
+  }
+  if (bytes.length > MAX_ATTACHMENT_SIZE_BYTES) return { ok: false, error: "File troppo grande" };
+  if (!env.ADOFF_ATTACHMENTS) return { ok: false, error: "Storage allegati non disponibile" };
+  const randBytes = crypto.getRandomValues(new Uint8Array(8));
+  const uuid = Array.from(randBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+  const key = `${threadId}/${uuid}.${ext}`;
+  await env.ADOFF_ATTACHMENTS.put(key, bytes, { httpMetadata: { contentType } });
+  return { ok: true, key };
+}
+
+/** Applica una risposta admin a un thread messaggi: traduce, salva, invia email, riapre il
+ * badge lato utente. Condivisa tra POST /admin/messages/:id/reply e l'approvazione via
+ * Telegram (handleSupportDraftCommand), stesso ruolo di applyTicketReply per i ticket. */
+async function applyMessageReply(threadId, replyText, env) {
+  await initMessagesTable(env);
+  const thread = await env.DB.prepare("SELECT * FROM message_threads WHERE id = ?").bind(threadId).first();
+  if (!thread) return { ok: false, error: "Thread not found" };
+  const translated = await translateText(replyText, thread.lang, env);
+  await env.DB.prepare(
+    "INSERT INTO messages (id, thread_id, sender, text, text_translated) VALUES (?, ?, 'admin', ?, ?)"
+  ).bind(generateMessageId(), threadId, replyText, translated).run();
+  await env.DB.prepare(
+    "UPDATE message_threads SET status='resolved', unread_by_user=1, updated_at=CURRENT_TIMESTAMP WHERE id=?"
+  ).bind(threadId).run();
+  if (EMAIL_RE.test(thread.email || "") && !/^noreply/i.test(thread.email)) {
+    try {
+      const tmpl = EMAIL_TEMPLATES.message_reply(thread.email, threadId, translated || replyText);
+      await sendEmail(thread.email, tmpl.subject, tmpl.html, env);
+    } catch (e) { console.error("[messages] reply email error:", e && e.message); }
+  }
+  return { ok: true, thread };
+}
+
+/** POST /messages — crea/riapre un thread e aggiunge un messaggio utente. Prova prima l'AI
+ * (stesso system prompt della chat esistente), altrimenti notifica Telegram (topic Supporto). */
+async function handleCreateMessage(body, request, env) {
+  const lang = CHAT_LANGS.includes(body.lang) ? body.lang : "en";
+  const ip = request ? (request.headers.get("CF-Connecting-IP") || "0.0.0.0") : "0.0.0.0";
+
+  if (!await checkChatRateLimit(ip, env)) {
+    return jsonResponse({ ok: false, error: "rate_limited" }, 429);
+  }
+
+  const email = (typeof body.email === "string" && EMAIL_RE.test(body.email.trim())) ? body.email.trim().toLowerCase() : "";
+  const text = typeof body.text === "string" ? body.text.trim() : "";
+  if (!email || !text || text.length > CHAT_MAX_MESSAGE) {
+    return jsonResponse({ ok: false, error: "Invalid input" }, 400);
+  }
+
+  // Turnstile: come handleChat, "extension" e' il token esente usato dal client dell'estensione
+  // (il widget Turnstile non e' integrabile in un'estensione).
+  const token = body.turnstileToken;
+  if (token && token !== "extension") {
+    if (!await verifyTurnstile(token, ip, env)) {
+      return jsonResponse({ ok: false, error: "verification_required", needVerification: true }, 403);
+    }
+  }
+
+  await initMessagesTable(env);
+
+  let threadId = typeof body.threadId === "string" ? body.threadId : "";
+  let thread = null;
+  if (threadId) {
+    thread = await env.DB.prepare("SELECT * FROM message_threads WHERE id = ? AND email = ?").bind(threadId, email).first();
+  }
+  if (!thread) {
+    threadId = generateMessageThreadId();
+    await env.DB.prepare(
+      "INSERT INTO message_threads (id, email, subject, status, lang) VALUES (?, ?, ?, 'open', ?)"
+    ).bind(threadId, email, text.slice(0, 80), lang).run();
+  } else if (thread.status === "resolved") {
+    await env.DB.prepare("UPDATE message_threads SET status='open', updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(threadId).run();
+  }
+
+  let attachmentKey = null;
+  if (body.attachmentBase64 && body.attachmentType) {
+    const up = await uploadAttachment(body.attachmentBase64, body.attachmentType, threadId, env);
+    if (!up.ok) return jsonResponse({ ok: false, error: up.error }, 400);
+    attachmentKey = up.key;
+  }
+
+  await env.DB.prepare(
+    "INSERT INTO messages (id, thread_id, sender, text, attachment_key) VALUES (?, ?, 'user', ?, ?)"
+  ).bind(generateMessageId(), threadId, text, attachmentKey).run();
+  await env.DB.prepare("UPDATE message_threads SET updated_at=CURRENT_TIMESTAMP WHERE id=?").bind(threadId).run();
+
+  const threadToken = await makeThreadToken(threadId, env);
+
+  const licenseContext = await buildLicenseContext(email, env);
+  const aiMessages = [
+    { role: "system", content: buildSupportSystemPrompt(lang, licenseContext) },
+    { role: "user", content: text },
+  ];
+  const llm = await callLocalLLM(aiMessages, env);
+  if (llm.ok && llm.content) {
+    const { reply, escalate } = parseEscalation(llm.content);
+    if (!escalate) {
+      const clean = sanitizeBrandNames(sanitizeReplyLinks(reply), lang);
+      await env.DB.prepare(
+        "INSERT INTO messages (id, thread_id, sender, text) VALUES (?, ?, 'ai', ?)"
+      ).bind(generateMessageId(), threadId, clean).run();
+      return jsonResponse({ ok: true, threadId, threadToken, reply: clean });
+    }
+  }
+
+  const tgMsg = `\u{1F4EC} <b>Nuovo messaggio</b>\n\u{1F4E7} ${escapeHtml(email)}\n\u{1F194} <code>${threadId}</code>\n\n${escapeHtml(text.slice(0, 2000))}`;
+  await notifyTelegram(tgMsg, env, TELEGRAM_SUPPORT_THREAD);
+
+  return jsonResponse({ ok: true, threadId, threadToken, reply: CHAT_ESCALATED_MSG[lang] });
+}
+
+/** GET /messages?email= — lista minimale dei thread per email (poll badge lato estensione).
+ * L'email da sola non e' un segreto: risposta minimale, mai il contenuto dei messaggi. */
+async function handleListMessageThreads(request, env) {
+  const url = new URL(request.url);
+  const email = (url.searchParams.get("email") || "").trim().toLowerCase();
+  if (!email || !EMAIL_RE.test(email)) return jsonResponse({ ok: true, threads: [] });
+  await initMessagesTable(env);
+  const { results } = await env.DB.prepare(
+    "SELECT id, status, unread_by_user, updated_at FROM message_threads WHERE email = ? ORDER BY updated_at DESC LIMIT 50"
+  ).bind(email).all();
+  return jsonResponse({ ok: true, threads: results || [] });
+}
+
+/** GET /messages/:threadId?token= — dettaglio thread completo (richiede il threadToken). */
+async function handleGetMessageThread(request, env, threadId) {
+  const url = new URL(request.url);
+  const authToken = url.searchParams.get("token") || "";
+  if (!await verifyThreadToken(threadId, authToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  await initMessagesTable(env);
+  const thread = await env.DB.prepare("SELECT * FROM message_threads WHERE id = ?").bind(threadId).first();
+  if (!thread) return jsonResponse({ ok: false, error: "Not found" }, 404);
+  const { results } = await env.DB.prepare(
+    "SELECT id, sender, text, attachment_key, created_at FROM messages WHERE thread_id = ? ORDER BY created_at ASC"
+  ).bind(threadId).all();
+  const messages = await Promise.all((results || []).map(async m => ({
+    id: m.id, sender: m.sender, text: m.text, created_at: m.created_at,
+    attachmentUrl: m.attachment_key ? await signAttachmentUrl(m.attachment_key, env) : null,
+  })));
+  await env.DB.prepare("UPDATE message_threads SET unread_by_user=0 WHERE id=?").bind(threadId).run();
+  return jsonResponse({ ok: true, thread: { id: thread.id, status: thread.status, lang: thread.lang }, messages });
+}
+
+/** GET /attachments/:key — proxy R2 con URL firmato a scadenza breve (vedi signAttachmentUrl). */
+async function handleGetAttachment(request, env, key) {
+  const url = new URL(request.url);
+  const exp = parseInt(url.searchParams.get("exp") || "0", 10);
+  const sig = url.searchParams.get("sig") || "";
+  if (!exp || Date.now() / 1000 > exp) return jsonResponse({ ok: false, error: "Expired" }, 403);
+  const expected = await hmacSign(`${key}:${exp}`, env.ADOFF_SECRET);
+  if (!constantTimeEqual(expected, sig)) return jsonResponse({ ok: false, error: "Invalid signature" }, 403);
+  if (!env.ADOFF_ATTACHMENTS) return jsonResponse({ ok: false, error: "Storage unavailable" }, 503);
+  const obj = await env.ADOFF_ATTACHMENTS.get(key);
+  if (!obj) return jsonResponse({ ok: false, error: "Not found" }, 404);
+  return new Response(obj.body, {
+    headers: {
+      "Content-Type": (obj.httpMetadata && obj.httpMetadata.contentType) || "application/octet-stream",
+      "Cache-Control": "private, max-age=300",
+    },
+  });
+}
+
+/** GET /admin/messages — lista thread (stesso pattern di handleAdminListSuggestions). */
+async function handleAdminListMessages(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  if (!env.DB) return jsonResponse({ ok: true, threads: [], total: 0 });
+  await initMessagesTable(env);
+  const url = new URL(request.url);
+  const status = url.searchParams.get("status");
+  const sql = "SELECT * FROM message_threads" + (status ? " WHERE status = ?" : "") + " ORDER BY updated_at DESC LIMIT 500";
+  const stmt = status ? env.DB.prepare(sql).bind(status) : env.DB.prepare(sql);
+  const { results } = await stmt.all();
+  return jsonResponse({ ok: true, threads: results || [], total: (results || []).length });
+}
+
+/** GET /admin/messages/:id — thread completo, con traduzione utente→italiano per l'admin. */
+async function handleAdminGetMessageThread(request, env, threadId) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  await initMessagesTable(env);
+  const thread = await env.DB.prepare("SELECT * FROM message_threads WHERE id = ?").bind(threadId).first();
+  if (!thread) return jsonResponse({ ok: false, error: "Not found" }, 404);
+  const { results } = await env.DB.prepare(
+    "SELECT id, sender, text, text_translated, attachment_key, created_at FROM messages WHERE thread_id = ? ORDER BY created_at ASC"
+  ).bind(threadId).all();
+  const messages = await Promise.all((results || []).map(async m => {
+    let textIt = m.text_translated;
+    if (m.sender === "user" && thread.lang && thread.lang !== "it" && !textIt) {
+      textIt = await translateText(m.text, "it", env);
+    }
+    return {
+      id: m.id, sender: m.sender, text: m.text, textIt, created_at: m.created_at,
+      attachmentUrl: m.attachment_key ? await signAttachmentUrl(m.attachment_key, env) : null,
+    };
+  }));
+  return jsonResponse({ ok: true, thread, messages });
+}
+
+/** POST /admin/messages/:id/reply — risponde, traduce se serve, invia email, marca unread lato utente. */
+async function handleAdminReplyMessage(body, env, request, threadId) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  const text = typeof body.text === "string" ? body.text.trim() : "";
+  if (!text) return jsonResponse({ ok: false, error: "Empty reply" }, 400);
+  const result = await applyMessageReply(threadId, text, env);
+  if (!result.ok) return jsonResponse(result, result.error === "Thread not found" ? 404 : 400);
+  return jsonResponse({ ok: true });
+}
+
+/** Retention 30gg: cancella i thread scaduti a cascata (messages + allegati R2 + thread),
+ * mai una query diretta su messages.updated_at (colonna inesistente). */
+async function cleanupExpiredMessageThreads(env) {
+  if (!env.DB) return;
+  try {
+    await initMessagesTable(env);
+    const cutoff = new Date(Date.now() - MESSAGE_RETENTION_MS).toISOString();
+    const { results } = await env.DB.prepare(
+      "SELECT id FROM message_threads WHERE updated_at < ?"
+    ).bind(cutoff).all();
+    for (const row of (results || [])) {
+      const threadId = row.id;
+      if (env.ADOFF_ATTACHMENTS) {
+        const { results: atts } = await env.DB.prepare(
+          "SELECT attachment_key FROM messages WHERE thread_id = ? AND attachment_key IS NOT NULL"
+        ).bind(threadId).all();
+        for (const a of (atts || [])) {
+          try { await env.ADOFF_ATTACHMENTS.delete(a.attachment_key); } catch (_) {}
+        }
+      }
+      await env.DB.prepare("DELETE FROM messages WHERE thread_id = ?").bind(threadId).run();
+      await env.DB.prepare("DELETE FROM message_threads WHERE id = ?").bind(threadId).run();
+    }
+  } catch (e) {
+    console.error("[messages] retention cleanup error:", e && e.message);
+  }
+}
+
+// =============================================
 // ADMIN — SUGGERIMENTI (D1)
 // =============================================
 
@@ -2490,26 +2839,30 @@ async function handleSupportDraftCommand(msg, env) {
     await notifyTelegram("Rispondi \"ok\" solo sul messaggio di bozza (\u{1F4DD} Bozza risposta).", env, TELEGRAM_SUPPORT_THREAD);
     return jsonResponse({ ok: true });
   }
-  const idMatch = TICKET_ID_FIND_RE.exec(draftLines[1] || "");
-  if (!idMatch) {
+  const idLine = draftLines[1] || "";
+  const ticketMatch = TICKET_ID_FIND_RE.exec(idLine);
+  const msgMatch = !ticketMatch ? MSG_ID_FIND_RE.exec(idLine) : null;
+  const targetId = ticketMatch ? ticketMatch[0] : (msgMatch ? msgMatch[0] : null);
+  if (!targetId) {
     await notifyTelegram("Non trovo l'ID ticket nella bozza a cui hai risposto.", env, TELEGRAM_SUPPORT_THREAD);
     return jsonResponse({ ok: true });
   }
-  const ticketId = idMatch[0];
 
   if (isReject) {
-    await notifyTelegram(`\u{1F5D1} Bozza scartata per <code>${ticketId}</code> — resta aperto per gestione manuale.`, env, TELEGRAM_SUPPORT_THREAD);
-    return jsonResponse({ ok: true, ticketId, action: "rejected" });
+    await notifyTelegram(`\u{1F5D1} Bozza scartata per <code>${targetId}</code> — resta aperto per gestione manuale.`, env, TELEGRAM_SUPPORT_THREAD);
+    return jsonResponse({ ok: true, targetId, action: "rejected" });
   }
 
   const replyText = draftLines.slice(2).join("\n").trim();
-  const result = await applyTicketReply(ticketId, { reply: replyText, status: "resolved", by: "ai" }, env);
+  const result = ticketMatch
+    ? await applyTicketReply(targetId, { reply: replyText, status: "resolved", by: "ai" }, env)
+    : await applyMessageReply(targetId, replyText, env);
   if (!result.ok) {
-    await notifyTelegram(`\u{26A0}\u{FE0F} ${escapeHtml(result.error || "Errore")} (<code>${ticketId}</code>).`, env, TELEGRAM_SUPPORT_THREAD);
-    return jsonResponse({ ok: true, ticketId, action: "error" });
+    await notifyTelegram(`\u{26A0}\u{FE0F} ${escapeHtml(result.error || "Errore")} (<code>${targetId}</code>).`, env, TELEGRAM_SUPPORT_THREAD);
+    return jsonResponse({ ok: true, targetId, action: "error" });
   }
-  await notifyTelegram(`\u{2705} Risposta inviata al cliente per <code>${ticketId}</code>.`, env, TELEGRAM_SUPPORT_THREAD);
-  return jsonResponse({ ok: true, ticketId, action: "approved" });
+  await notifyTelegram(`\u{2705} Risposta inviata al cliente per <code>${targetId}</code>.`, env, TELEGRAM_SUPPORT_THREAD);
+  return jsonResponse({ ok: true, targetId, action: "approved" });
 }
 
 /**
@@ -7308,6 +7661,13 @@ async function handleScheduled(env) {
     console.error("session purge error:", e.message);
   }
 
+  // Retention 30gg thread messaggi in-estensione (cascata: messages + allegati R2 + thread)
+  try {
+    await cleanupExpiredMessageThreads(env);
+  } catch (e) {
+    console.error("message threads retention error:", e.message);
+  }
+
   // Sync giornaliera Google Search Console (non bloccante: errori isolati)
   let gsc = null;
   try {
@@ -8517,6 +8877,11 @@ export default {
       if (path === "/founder-status") return withCors(handleFounderStatus(env));
       if (path === "/founder-status-premium") return withCors(handleFounderPremiumStatus(env));
       if (path === "/tickets") return withCors(handleListTickets(request, env));
+      if (path === "/messages") return withCors(handleListMessageThreads(request, env));
+      if (path.startsWith("/messages/")) return withCors(handleGetMessageThread(request, env, path.split("/messages/")[1]));
+      if (path.startsWith("/attachments/")) return withCors(handleGetAttachment(request, env, path.split("/attachments/")[1]));
+      if (path === "/admin/messages") return withCors(handleAdminListMessages(request, env));
+      if (path.startsWith("/admin/messages/")) return withCors(handleAdminGetMessageThread(request, env, path.split("/admin/messages/")[1]));
       if (path === "/trial/check") return withCors(handleTrialCheck(request, env));
       if (path === "/admin/suggestions/digest") return withCors(handleAdminSuggestionsDigest(request, env));
       if (path === "/admin/suggestions") return withCors(handleAdminListSuggestions(request, env));
@@ -8670,6 +9035,19 @@ export default {
       let updateBody;
       try { updateBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
       return withCors(handleUpdateTicket(updateBody, env, request, path.split("/ticket/")[1]));
+    }
+
+    // Messaggistica in-estensione (thread persistenti)
+    if (path === "/messages" && request.method === "POST") {
+      let msgBody;
+      try { msgBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleCreateMessage(msgBody, request, env));
+    }
+    if (path.startsWith("/admin/messages/") && path.endsWith("/reply") && request.method === "POST") {
+      let replyBody;
+      try { replyBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      const threadId = path.split("/admin/messages/")[1].replace(/\/reply$/, "");
+      return withCors(handleAdminReplyMessage(replyBody, env, request, threadId));
     }
 
     // Admin — suggerimenti (notify + update). Auth via X-Admin-Token nei rispettivi handler.
