@@ -29,6 +29,12 @@ binding = "DB"
 database_name = "adoff-db"
 database_id = "ef4cb114-95e1-49a1-b5ae-d2604ba94278"
 
+# R2 Bucket — creato con:
+# wrangler r2 bucket create adoff-support-attachments
+[[r2_buckets]]
+binding = "ADOFF_ATTACHMENTS"
+bucket_name = "adoff-support-attachments"
+
 # Secrets (settare con wrangler):
 # wrangler secret put ADOFF_SECRET
 # wrangler secret put ADMIN_TOKEN
