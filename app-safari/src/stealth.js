@@ -616,10 +616,9 @@ function onAdStart(player) {
     skipTimer = setInterval(function () {
         if (!player.classList.contains("ad-showing") &&
             !player.classList.contains("ad-interrupting")) {
-            // Restore playbackRate when ad classes disappear
-            const v = player.querySelector("video");
-            if (v) { v.playbackRate = savedRate || 1; }
-            clearInterval(skipTimer); skipTimer = null; return;
+            clearInterval(skipTimer); skipTimer = null;
+            onAdEnd(player);
+            return;
         }
         instantSkip(player);
     }, 50);
