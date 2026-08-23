@@ -1018,7 +1018,7 @@
 
   // Ad ogni tick, leggi regole matchate dal timestamp dell'ultimo check
   // Conta SOLO le regole che bloccano ads reali (non tracking/analytics)
-  chrome.alarms.onAlarm.addListener((alarm) => {
+  chrome.alarms.onAlarm.addListener(async (alarm) => {
     if (alarm.name === ALARM_LIC_CHECK) {
       revalidateLicense("daily-alarm");
       syncTrialBg();
