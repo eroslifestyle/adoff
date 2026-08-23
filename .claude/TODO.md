@@ -1,5 +1,43 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
+## Release 3.6.3 (2026-08-23): sistema di messaggistica in-estensione
+
+Piano completo: `~/.claude/plans/iridescent-foraging-zephyr.md` (STATO AVANZAMENTO in cima, fonte di verità cross-sessione). Backend (`worker.js`, thread `MSG-`, D1, traduzione, retention) era già stato completato e deployato in una sessione precedente (commit `0dc2d22`). Questa sessione ha completato tutto il resto.
+
+**Fatto:**
+- [x] Tab Messaggi nel pannello admin (`sviluppo/license-system/admin.html`) — nav+page+modal+JS, pattern identico a Supporto/Suggerimenti (commit `471c9e7`)
+- [x] `sviluppo/ai-autopilot/scripts/support-triage.sh` esteso per generare bozze automatiche anche sui thread `MSG-` (oggi copriva solo `TK-`), stesso meccanismo bozza→Telegram→ok già attivo lato worker (commit `471c9e7`)
+- [x] UI estensione completa: `options.html/js/css` (tab Aiuto→Messaggi, chatbox mono-turno sostituita da thread persistente con storico+allegati+email-gate), `popup.html/js/css` (card rapida con badge), `background.js` (alarm `adoffMessagesPoll` ogni 20 min), `i18n.js` (12 chiavi × 15 lingue) — propagato identico su Chrome/Firefox/Safari, testato dal vivo con Playwright (zero errori console) (commit `d480713`)
+- [x] R2 abilitato dallutente da dashboard → bucket `adoff-support-attachments` creato, binding `ADOFF_ATTACHMENTS` in `wrangler.toml`, worker ridistribuito, verificato end-to-end (commit `844b376`)
+- [x] Version bump 3.6.2→3.6.3 su tutti e 3 i manifests
+- [x] Build produzione (SITE+STORE) + deploy sito (commit `92e63d6`)
+- [x] Firefox AMO: firmato (canale unlisted) e scaricato xpi firmato Mozilla
+- [x] Chrome Web Store: upload SUCCESS (v3.6.3 in bozza)
+- [x] **Trovato e risolto**: `site/admin-console.html` disallineato da `sviluppo/license-system/admin.html` — risincronizzato e deployato (commit `7e01799`)
+
+**4 bug reali trovati e corretti PRIMA di considerare il lavoro finito:**
+1. `admin.html`: bottoni Segna risolto/Riapri rimossi (avrebbero spedito email vere)
+2. `background.js` (3 browser): alarm `adoffMessagesPoll` annidato nel blocco licenza — spostato fuori
+3. `i18n.js`: traduzioni CJK/arabo cirillico in caratteri latini (solo EN era corretto)
+4. `background.js` (solo Chrome): mancava `async` nel listener `chrome.alarms.onAlarm` — SyntaxError reale
+
+**Aperto — richiede azione manuale dellutente:**
+- [ ] **Chrome Web Store**: pubblicazione bloccata — compilare Privacy practices nel Developer Dashboard
+- [ ] **Edge Add-ons**: API key scaduta — rigenerare da Partner Center
+- [ ] **Safari**: richiede Xcode su Mac
+- [ ] **Annuncio Telegram**: non pubblicato — aspettare sblocco CWS
+- [ ] `app/src/background.js.bak` — file orfano, chiarire se rimuovere
+- [ ] File sparsi non tracciati in root (`package.json`, `results.jsonl`, `.png`)
+
+**Lezioni di questa sessione:**
+- Verificare SEMPRE gli errori `node --check` che i subagent liquidano come normali
+- `sviluppo/license-system/admin.html` NON aggiorna `adoff.app/admin.html` in produzione — serve sync manuale
+- `wrangler pages deploy site/` senza `--branch` non aggiorna `master.adoff-site.pages.dev`
+- Controllare sempre stato reale AMO prima di riutilizzare un numero di versione
+- Privacy practices CWS e R2 non hanno endpoint API — azioni dashboard-only
+
+---
+
 ## Release 3.6.1 — sessione 2 (2026-08-22): bonifica menu i18n + CSP + repo GitHub
 
 Un generatore di pagine rieseguito con template vecchio aveva sovrascritto 240
