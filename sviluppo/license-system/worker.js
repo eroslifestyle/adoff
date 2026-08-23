@@ -2240,6 +2240,7 @@ async function handleListTickets(request, env) {
 }
 
 const TICKET_ID_RE = /^TK-\d{8}-[A-F0-9]{8}$/;
+const TICKET_ID_FIND_RE = /TK-\d{8}-[A-F0-9]{8}/;
 
 async function handleGetTicket(request, env, ticketId) {
   if (!TICKET_ID_RE.test(ticketId)) {
@@ -2256,29 +2257,25 @@ async function handleGetTicket(request, env, ticketId) {
 
 const VALID_TICKET_STATUSES = ["open", "in_progress", "resolved", "closed"];
 
-async function handleUpdateTicket(body, env, request, ticketId) {
-  if (!TICKET_ID_RE.test(ticketId)) {
-    return jsonResponse({ ok: false, error: "Invalid ticket ID" }, 400);
-  }
-  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
-  if (!await verifyAdminAuth(adminToken, env)) {
-    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
-  }
+// Applica {reply, status} a un ticket: salva la risposta, invia l'email al cliente via
+// Resend e aggiorna l'indice. Condivisa tra l'endpoint admin POST /ticket/<id> e
+// l'approvazione via Telegram (handleSupportDraftCommand), per non duplicare l'invio email.
+async function applyTicketReply(ticketId, { reply, status, by }, env) {
   const ticket = await kvGet(env.ADOFF_LICENSES, `ticket:${ticketId}`, "json");
-  if (!ticket) return jsonResponse({ ok: false, error: "Ticket not found" }, 404);
+  if (!ticket) return { ok: false, error: "Ticket not found" };
 
-  if (body.status) {
-    if (!VALID_TICKET_STATUSES.includes(body.status)) {
-      return jsonResponse({ ok: false, error: "Invalid status value" }, 400);
+  if (status) {
+    if (!VALID_TICKET_STATUSES.includes(status)) {
+      return { ok: false, error: "Invalid status value" };
     }
-    ticket.status = body.status;
+    ticket.status = status;
   }
-  if (body.reply) {
-    ticket.replies.push({ text: body.reply, by: body.by === "ai" ? "ai" : "admin", at: new Date().toISOString() });
+  if (reply) {
+    ticket.replies.push({ text: reply, by: by === "ai" ? "ai" : "admin", at: new Date().toISOString() });
     // Chiude il loop: invia la risposta all'utente via email (i template esistevano ma non erano cablati).
     if (EMAIL_RE.test(ticket.email || "") && !/^noreply/i.test(ticket.email)) {
       try {
-        const tmpl = EMAIL_TEMPLATES.ticket_reply(ticket.email, ticketId, body.reply);
+        const tmpl = EMAIL_TEMPLATES.ticket_reply(ticket.email, ticketId, reply);
         await sendEmail(ticket.email, tmpl.subject, tmpl.html, env);
       } catch (e) { console.error("[ticket] reply email error:", e && e.message); }
     }
@@ -2294,7 +2291,22 @@ async function handleUpdateTicket(body, env, request, ticketId) {
     await env.ADOFF_LICENSES.put("tickets:index", JSON.stringify(index));
   }
 
-  return jsonResponse({ ok: true, ticket });
+  return { ok: true, ticket };
+}
+
+async function handleUpdateTicket(body, env, request, ticketId) {
+  if (!TICKET_ID_RE.test(ticketId)) {
+    return jsonResponse({ ok: false, error: "Invalid ticket ID" }, 400);
+  }
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  const result = await applyTicketReply(ticketId, { reply: body.reply, status: body.status, by: body.by }, env);
+  if (!result.ok) {
+    return jsonResponse({ ok: false, error: result.error }, result.error === "Ticket not found" ? 404 : 400);
+  }
+  return jsonResponse({ ok: true, ticket: result.ticket });
 }
 
 // =============================================
@@ -2461,9 +2473,50 @@ async function handleAdminCreateTopic(body, env, request) {
 }
 
 /**
+ * Topic Supporto (thread 7): l'owner risponde ("Rispondi" Telegram) al messaggio di bozza
+ * BASE con "ok"/"approva"/"esegui" per inviarla via email al cliente (chiude il ticket),
+ * o "rifiuta"/"reject" per scartarla (il ticket resta aperto per gestione manuale).
+ */
+async function handleSupportDraftCommand(msg, env) {
+  const text = (msg.text || "").trim();
+  const isApprove = /^(ok|approva|esegui)$/i.test(text);
+  const isReject = /^(rifiuta|reject)$/i.test(text);
+  if ((!isApprove && !isReject) || !msg.reply_to_message || !msg.reply_to_message.text) {
+    return jsonResponse({ ok: true });
+  }
+
+  const draftLines = msg.reply_to_message.text.split("\n");
+  if (!(draftLines[0] || "").includes("Bozza risposta")) {
+    await notifyTelegram("Rispondi \"ok\" solo sul messaggio di bozza (\u{1F4DD} Bozza risposta).", env, TELEGRAM_SUPPORT_THREAD);
+    return jsonResponse({ ok: true });
+  }
+  const idMatch = TICKET_ID_FIND_RE.exec(draftLines[1] || "");
+  if (!idMatch) {
+    await notifyTelegram("Non trovo l'ID ticket nella bozza a cui hai risposto.", env, TELEGRAM_SUPPORT_THREAD);
+    return jsonResponse({ ok: true });
+  }
+  const ticketId = idMatch[0];
+
+  if (isReject) {
+    await notifyTelegram(`\u{1F5D1} Bozza scartata per <code>${ticketId}</code> — resta aperto per gestione manuale.`, env, TELEGRAM_SUPPORT_THREAD);
+    return jsonResponse({ ok: true, ticketId, action: "rejected" });
+  }
+
+  const replyText = draftLines.slice(2).join("\n").trim();
+  const result = await applyTicketReply(ticketId, { reply: replyText, status: "resolved", by: "ai" }, env);
+  if (!result.ok) {
+    await notifyTelegram(`\u{26A0}\u{FE0F} ${escapeHtml(result.error || "Errore")} (<code>${ticketId}</code>).`, env, TELEGRAM_SUPPORT_THREAD);
+    return jsonResponse({ ok: true, ticketId, action: "error" });
+  }
+  await notifyTelegram(`\u{2705} Risposta inviata al cliente per <code>${ticketId}</code>.`, env, TELEGRAM_SUPPORT_THREAD);
+  return jsonResponse({ ok: true, ticketId, action: "approved" });
+}
+
+/**
  * POST /tg-webhook — riceve gli update Telegram.
  * Nel topic Suggerimenti, interpreta comandi di approvazione/rifiuto e aggiorna D1.
  * Comandi: "ok <id|n>" / "esegui <id,...|tutti>" / "rifiuta <id,...>" / "approva ..."
+ * Nel topic Supporto, "ok"/"rifiuta" in risposta a una bozza BASE (vedi handleSupportDraftCommand).
  */
 async function handleTelegramWebhook(request, env) {
   // Validazione segreto webhook
@@ -2484,6 +2537,11 @@ async function handleTelegramWebhook(request, env) {
       text: msg.text.trim(), ts: Date.now(), messageId: msg.message_id,
     }));
     return jsonResponse({ ok: true });
+  }
+
+  // Topic Supporto (thread 7): "ok"/"rifiuta" in risposta ("Rispondi" Telegram) a una bozza BASE
+  if (msg.message_thread_id === TELEGRAM_SUPPORT_THREAD) {
+    return await handleSupportDraftCommand(msg, env);
   }
 
   // Solo il topic Suggerimenti (message_thread_id === 8)
