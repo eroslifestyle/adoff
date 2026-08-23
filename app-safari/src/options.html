@@ -22,21 +22,20 @@
     </div>
   </header>
 
-  <!-- BANNER UPSELL PRO -->
-  <div id="proUpsellBanner" class="pro-upsell-banner" style="display:none">
-    <div class="pro-upsell-inner">
-      <div class="pro-upsell-left">
-        <span class="pro-upsell-icon">&#10024;</span>
-        <div class="pro-upsell-text">
-          <span class="pro-upsell-title" data-i18n="badge.allActive">Tutto attivo</span>
-          <span class="pro-upsell-sub" data-i18n="opt.supportIntro">AdOff e' gratis per tutti: ogni funzione e' gia' attiva.</span>
+  <!-- BANNER CTA: ACCOUNT + TELEGRAM (sempre visibile) -->
+  <div id="proUpsellBanner" class="cta-banner">
+    <div class="cta-banner-inner">
+      <div class="cta-banner-left">
+        <span class="cta-banner-icon">&#128172;</span>
+        <div class="cta-banner-text">
+          <span class="cta-banner-title" data-i18n="opt.ctaTitle">Resta connesso con AdOff</span>
+          <span class="cta-banner-sub" data-i18n="opt.ctaDesc">Crea il tuo account gratuito e unisciti al canale Telegram per novita', aggiornamenti e supporto diretto.</span>
         </div>
       </div>
-      <div class="pro-upsell-right">
-        <a href="https://adoff.app/account" target="_blank" class="btn-pro-upsell" id="btnBannerPro" data-i18n="opt.supportBtn">
-          Sostieni il progetto
-        </a>
-        <button class="pro-upsell-close" id="btnBannerClose" title="Chiudi">&#10005;</button>
+      <div class="cta-banner-right">
+        <a href="https://adoff.app/account/?signup=1&amp;source=options" target="_blank" rel="noopener noreferrer" class="btn-cta btn-cta-account" data-i18n="opt.ctaAccountBtn">Crea account</a>
+        <a href="https://t.me/adoffapp" target="_blank" rel="noopener noreferrer" class="btn-cta btn-cta-telegram" data-i18n="opt.ctaTelegramBtn">Telegram</a>
+        <button class="cta-banner-close" id="btnBannerClose" title="Chiudi" aria-label="Chiudi">&#10005;</button>
       </div>
     </div>
   </div>
@@ -72,7 +71,7 @@
         <span class="nav-icon">&#128444;</span> <span data-i18n="opt.navImageSwap">Cambio immagine</span>
       </a>
       <a class="nav-item" data-section="aiuto" href="#">
-        <span class="nav-icon">&#128172;</span> <span data-i18n="opt.navHelp">Aiuto</span>
+        <span class="nav-icon">&#128172;</span> <span data-i18n="opt.navHelp">Messaggi</span>
       </a>
       <a class="nav-item" data-section="suggerimenti" href="#">
         <span class="nav-icon">&#128161;</span> <span data-i18n="opt.navSuggest">Suggerimenti</span>
@@ -759,19 +758,25 @@
 
       <!-- ===== AIUTO / FAQ ===== -->
       <section id="sec-aiuto" class="section">
-        <h2 class="section-title" data-i18n="help.title">Aiuto</h2>
+        <h2 class="section-title" data-i18n="help.title">Messaggi</h2>
 
-        <!-- Chat container -->
-        <div class="card chat-card">
-          <div class="chat-messages" id="chatMessages">
-            <div class="chat-bubble bot" data-i18n="help.greeting">
-              Ciao! Sono l'assistente AdOff. Scrivi la tua domanda o scegli un argomento qui sotto.
-            </div>
+        <!-- Thread messaggi persistente col supporto AdOff -->
+        <div class="card chat-card" id="msgCard">
+          <div class="msg-email-gate" id="msgEmailGate" style="display:none">
+            <p data-i18n="msg.emailPrompt">Inserisci la tua email per iniziare una conversazione con il supporto AdOff.</p>
+            <input type="email" id="msgEmailInput" class="text-input" placeholder="La tua email" data-i18n="msg.emailPlaceholder" autocomplete="email">
+            <button class="btn btn-primary" id="btnMsgEmailSave" data-i18n="msg.emailSave">Continua</button>
           </div>
-          <div class="chat-input-row">
-            <input type="text" id="chatInput" class="text-input chat-text-input"
-              placeholder="Scrivi una domanda..." data-i18n="help.inputPlaceholder" autocomplete="off" spellcheck="false">
-            <button class="btn btn-primary chat-send" id="btnChatSend">&#10148;</button>
+          <div id="msgThreadArea" style="display:none">
+            <div class="chat-messages" id="msgMessages"></div>
+            <div class="chat-attachment-preview" id="msgAttachPreview" style="display:none"></div>
+            <div class="chat-input-row">
+              <input type="text" id="msgInput" class="text-input chat-text-input"
+                placeholder="Scrivi un messaggio..." data-i18n="msg.inputPlaceholder" autocomplete="off" spellcheck="false">
+              <label class="btn btn-ghost chat-attach-btn" for="msgAttachInput" title="Allega uno screenshot" data-i18n-title="msg.attachTitle">&#128206;</label>
+              <input type="file" id="msgAttachInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+              <button class="btn btn-primary chat-send" id="btnMsgSend">&#10148;</button>
+            </div>
           </div>
         </div>
 

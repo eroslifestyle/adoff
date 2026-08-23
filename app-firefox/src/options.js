@@ -360,22 +360,10 @@
   const btnBannerClose     = document.getElementById("btnBannerClose");
   const proShowcaseSection = document.getElementById("proShowcaseSection");
 
-  // Banner upsell: mostra solo se NON Pro/Trial e l'utente non l'ha chiuso
-  const BANNER_KEY = "adoffBannerDismissed";
-  function updateBannerVisibility(type) {
-    if (!proUpsellBanner) return;
-    const isProOrTrial = type === "pro" || type === "lifetime" || type === "trial";
-    chrome.storage.local.get([BANNER_KEY], (res) => {
-      const dismissed = res[BANNER_KEY] === true;
-      proUpsellBanner.style.display = (isProOrTrial || dismissed) ? "none" : "block";
-    });
-  }
-
-  // Chiudi banner (ricorda la scelta)
-  if (btnBannerClose) {
+  // Banner CTA account+Telegram: sempre visibile ad ogni apertura, chiusura solo per la sessione corrente
+  if (btnBannerClose && proUpsellBanner) {
     btnBannerClose.addEventListener("click", () => {
       proUpsellBanner.style.display = "none";
-      chrome.storage.local.set({ [BANNER_KEY]: true });
     });
   }
 
@@ -417,7 +405,6 @@
     stateNotLoggedIn.style.display = state === "none" ? "block" : "none";
     pricingCard.style.display = state !== "pro" && state !== "premium" ? "block" : "none";
     const t = state === "premium" ? "premium" : state === "pro" ? "pro" : state === "trial" ? "trial" : "free";
-    updateBannerVisibility(t);
     updateShowcaseVisibility(t);
   }
 
@@ -992,75 +979,29 @@
     });
   }
 
-  // ===== FAQ / AIUTO =====
+  
+  // ===== MESSAGGI (thread persistente col supporto AdOff) =====
 
-  const FAQ_DB = [
-    {
-      keywords: ["come funziona", "cosa fa", "blocca", "pubblicita", "ads"],
-      q: "Come funziona AdOff?",
-      a: "AdOff blocca le pubblicita' su 3 livelli:<br><b>1. Rete</b> — Blocca le richieste HTTP verso i server pubblicitari prima che raggiungano il browser.<br><b>2. Pagina</b> — Nasconde gli elementi pubblicitari dal DOM con CSS e JavaScript.<br><b>3. Stealth</b> — Evade i sistemi anti-adblock rendendo AdOff invisibile ai siti.",
-    },
-    {
-      keywords: ["sito non funziona", "non carica", "rotto", "pagina bianca", "errore sito", "problema sito"],
-      q: "Un sito non funziona con AdOff attivo",
-      a: "Se un sito ha problemi:<br>1. Clicca l'icona AdOff e usa <b>\"Pausa qui\"</b> per disattivarlo solo su quel sito.<br>2. Ricarica la pagina.<br>3. Se il problema persiste anche con AdOff in pausa, il problema non e' causato dall'estensione.<br><br>Puoi anche aggiungere il sito alla <b>whitelist permanente</b> nelle Opzioni > Siti esclusi.<br><br>&#9888; <a href='#' data-scroll-to='reportCard'><b>Segnalaci il sito</b></a> usando il form qui sotto — lo correggeremo!",
-    },
-    {
-      keywords: ["video", "streaming", "video ads", "pre-roll", "skip"],
-      q: "Le piattaforme video mostrano ancora ads",
-      a: "Le piattaforme video aggiornano frequentemente il loro sistema pubblicitario. AdOff include un modulo dedicato per le piattaforme video che:<br>- Blocca i video ads pre-roll e mid-roll<br>- Rimuove gli overlay pubblicitari<br>- Nasconde i banner sponsorizzati<br><br>Se vedi ancora ads, <b>ricarica la pagina</b>. Se il problema persiste, potrebbe servire un aggiornamento di AdOff — controlla che sia l'ultima versione.<br><br>&#9888; <a href='#' data-scroll-to='reportCard'><b>Segnalaci il problema</b></a> e lo risolveremo al piu' presto.",
-    },
-    {
-      keywords: ["whitelist", "escludi", "escludere", "pausa", "disattiva", "sito escluso"],
-      q: "Come escludo un sito dal blocco?",
-      a: "Hai due modi:<br><b>1. Dal popup</b> — Clicca l'icona AdOff, poi \"Pausa qui\". Scegli la durata: sessione, 1 ora, 1 giorno, o permanente.<br><b>2. Dalle opzioni</b> — Vai in Opzioni > Siti esclusi. Digita il dominio e clicca \"Aggiungi\".<br><br>I siti esclusi non ricevono nessun blocco da AdOff.",
-    },
-    {
-      keywords: ["free", "pro", "differenza", "piano", "premium", "gratis", "pagamento", "youtube", "video", "tv", "broadcaster"],
-      q: "Che differenza c'e' tra Free e Pro?",
-      a: "La versione <b>Free</b> blocca gli ads sui siti web: banner, display, pop-up/popunder, tracker e network pubblicitari. Funziona su tutti i siti, senza limiti di tempo.<br><br>La versione <b>Pro</b> aggiunge:<br>- <b>Blocco ads sui video</b>: piattaforme video e player dei broadcaster TV (servizi streaming TV europei come quelli di Italia, UK, Germania, Francia, Spagna, Portogallo)<br>- <b>Stealth Mode</b>: invisibilita' ai sistemi anti-adblock — niente piu' wall \"disabilita adblock\"<br>- Aggiornamenti prioritari per nuovi formati ads<br>- Supporto dedicato<br>- Badge Pro nell'estensione",
-    },
-    {
-      keywords: ["privacy", "dati", "tracciamento", "raccolta", "personali", "telemetria"],
-      q: "AdOff raccoglie i miei dati?",
-      a: "No. AdOff <b>non raccoglie nessun dato personale</b>. Non tracciamo i siti che visiti, non inviamo telemetria, non usiamo analytics.<br><br>Tutto funziona in locale sul tuo browser. Le uniche informazioni salvate sono le tue impostazioni (toggle, whitelist, contatori) nello storage locale dell'estensione.",
-    },
-    {
-      keywords: ["lento", "rallenta", "performance", "pesante", "memoria", "cpu", "ram"],
-      q: "AdOff rallenta il browser?",
-      a: "No. AdOff e' progettato per essere ultra-leggero:<br>- Usa <b>declarativeNetRequest</b> (API nativa di Chrome) per il blocco rete — zero overhead<br>- I CSS di hiding vengono iniettati una sola volta<br>- Il content script usa MutationObserver ottimizzato<br><br>Anzi, bloccando richieste e ads, le pagine caricano <b>piu' velocemente</b>.",
-    },
-    {
-      keywords: ["anti-adblock", "rilevato", "detected", "disabilita adblock", "muro", "wall", "anti adblock"],
-      q: "Un sito rileva AdOff e chiede di disabilitarlo",
-      a: "AdOff include un modulo <b>stealth anti-detection</b> che evade la maggior parte dei sistemi anti-adblock.<br><br>Se un sito ti chiede comunque di disabilitare l'adblock:<br>1. <b>Ricarica la pagina</b> — a volte il timing e' cruciale.<br>2. Se non basta, usa \"Pausa qui\" per quel sito specifico.<br>3. &#9888; <a href='#' data-scroll-to='reportCard'><b>Segnalaci il sito</b></a> — aggiorneremo il filtro!",
-    },
-    {
-      keywords: ["licenza", "attiva", "attivare", "chiave", "key", "codice", "pro attivazione"],
-      q: "Come attivo la licenza Pro?",
-      a: "1. Acquista una licenza su <b>adoff.app</b><br>2. Riceverai una chiave nel formato XXXX-XXXX-XXXX-XXXX<br>3. Vai in Opzioni > Piano & Licenza<br>4. Inserisci la chiave e clicca \"Attiva\"<br><br>La licenza si attiva istantaneamente.",
-    },
-    {
-      keywords: ["disinstalla", "disinstallare", "rimuovi", "rimuovere", "elimina"],
-      q: "Come disinstallo AdOff?",
-      a: "1. Vai su <b>chrome://extensions/</b><br>2. Trova AdOff nella lista<br>3. Clicca \"Rimuovi\"<br>4. Conferma la rimozione<br><br>Tutti i dati locali vengono cancellati automaticamente.",
-    },
-    {
-      keywords: ["aggiorna", "aggiornamento", "update", "versione", "nuova versione"],
-      q: "Come aggiorno AdOff?",
-      a: "Se hai installato AdOff dal Chrome Web Store, gli aggiornamenti sono <b>automatici</b>.<br><br>Per forzare un aggiornamento:<br>1. Vai su chrome://extensions/<br>2. Attiva \"Modalita' sviluppatore\"<br>3. Clicca \"Aggiorna\"<br><br>Versione corrente: <b>v" + VERSION + "</b>",
-    },
-    {
-      keywords: ["cookie", "banner cookie", "gdpr", "consenso", "cookie wall"],
-      q: "AdOff blocca i cookie banner?",
-      a: "AdOff include filtri CSS per nascondere molti cookie banner comuni. Tuttavia, i cookie banner cambiano molto da sito a sito.<br><br>Se ne vedi uno che non viene bloccato, segnalacelo nella sezione <b>Suggerimenti</b> indicando il sito e saremo felici di aggiungere il filtro.",
-    },
-  ];
+  const MSG_API          = "https://api.adoff.app/messages";
+  const MSG_LANGS        = ["it", "en", "de", "fr", "es", "pt"];
+  const MSG_EMAIL_RX     = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const MSG_ATTACH_TYPES = ["image/jpeg", "image/png", "image/webp"];
+  const MSG_ATTACH_MAX_BYTES = 5 * 1024 * 1024;
 
-  const chatMessages = document.getElementById("chatMessages");
-  const chatInput    = document.getElementById("chatInput");
-  const btnChatSend  = document.getElementById("btnChatSend");
-  const faqTopics    = document.getElementById("faqTopics");
+  const msgEmailGate     = document.getElementById("msgEmailGate");
+  const msgEmailInput    = document.getElementById("msgEmailInput");
+  const btnMsgEmailSave  = document.getElementById("btnMsgEmailSave");
+  const msgThreadArea    = document.getElementById("msgThreadArea");
+  const msgMessages      = document.getElementById("msgMessages");
+  const msgInput         = document.getElementById("msgInput");
+  const btnMsgSend       = document.getElementById("btnMsgSend");
+  const msgAttachInput   = document.getElementById("msgAttachInput");
+  const msgAttachPreview = document.getElementById("msgAttachPreview");
+  const faqTopics        = document.getElementById("faqTopics");
+
+  let msgBusy = false;
+  let msgLoaded = false;
+  let msgPendingAttachment = null; // { base64, type }
 
   /**
    * EA-5: Sanitizza HTML permettendo solo tag sicuri in allowlist.
@@ -1070,13 +1011,9 @@
    */
   function sanitizeHtml(html) {
     const ALLOWED_TAGS = ["b", "br", "a", "strong", "ol", "li", "p", "code"];
-    // Rimuovi tag non in allowlist (tag e loro contenuto di chiusura)
     return html
-      // Rimuovi tutti gli attributi on* (event handler injection)
       .replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, "")
-      // Rimuovi attributi javascript: negli href
       .replace(/href\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*')/gi, 'href="#"')
-      // Rimuovi tag non in allowlist (tag aperti e chiusi)
       .replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/gi, (match, tag) => {
         if (ALLOWED_TAGS.includes(tag.toLowerCase())) return match;
         return "";
@@ -1084,9 +1021,9 @@
   }
 
   /**
-   * Converte testo semplice (risposta AI) in HTML con link cliccabili.
+   * Converte testo semplice (risposta AI/admin) in HTML con link cliccabili.
    * Escape anti-XSS, poi markdown [label](url) + URL nudi + dominio adoff.app.
-   * L'output passa comunque da sanitizeHtml in addChatMessage.
+   * L'output passa comunque da sanitizeHtml in addMsgBubble.
    * @param {string} text
    * @returns {string}
    */
@@ -1107,21 +1044,20 @@
     return s.replace(/\n/g, "<br>");
   }
 
-  /**
-   * Aggiunge un messaggio alla chat.
-   * @param {string} text — testo o HTML (solo per bot, sanitizzato)
-   * @param {'bot'|'user'} sender
-   */
-  function addChatMessage(text, sender) {
+  function msgLang() {
+    let l = "en";
+    try { l = (i18n.getLang && i18n.getLang()) || "en"; } catch (e) {}
+    l = String(l).slice(0, 2).toLowerCase();
+    return MSG_LANGS.includes(l) ? l : "en";
+  }
+
+  function addMsgBubble(text, sender, attachmentUrl) {
     const bubble = document.createElement("div");
-    bubble.className = "chat-bubble " + sender;
+    bubble.className = "chat-bubble " + (sender === "user" ? "user" : "bot");
     if (sender === "user") {
-      // EA-5: Messaggi utente sempre come testo puro
-      bubble.textContent = text;
+      bubble.textContent = text || "";
     } else {
-      // EA-5: Messaggi bot sanitizzati (contengono HTML intenzionale)
-      bubble.innerHTML = sanitizeHtml(text);
-      // EM-7: Event delegation per link interni dopo inserimento
+      bubble.innerHTML = sanitizeHtml(linkifyText(text || ""));
       bubble.querySelectorAll("a[data-scroll-to]").forEach((link) => {
         link.addEventListener("click", (evt) => {
           evt.preventDefault();
@@ -1130,103 +1066,139 @@
         });
       });
     }
-    chatMessages.appendChild(bubble);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-
-  /**
-   * Cerca la migliore risposta FAQ per la query.
-   * @param {string} query
-   * @returns {object|null}
-   */
-  function findFaqMatch(query) {
-    const words = query.toLowerCase()
-      .replace(/[^\w\s\u00C0-\u024F]/g, "")
-      .split(/\s+/)
-      .filter((w) => w.length > 2);
-
-    if (words.length === 0) return null;
-
-    let bestMatch = null;
-    let bestScore = 0;
-
-    for (const faq of FAQ_DB) {
-      let score = 0;
-      for (const word of words) {
-        for (const kw of faq.keywords) {
-          if (kw.includes(word) || word.includes(kw)) {
-            score += 1;
-          }
-        }
-      }
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = faq;
-      }
+    if (attachmentUrl) {
+      const img = document.createElement("img");
+      img.src = attachmentUrl;
+      img.className = "chat-attachment-img";
+      bubble.appendChild(img);
     }
-
-    return bestScore >= 1 ? bestMatch : null;
+    msgMessages.appendChild(bubble);
+    msgMessages.scrollTop = msgMessages.scrollHeight;
   }
 
-  // ===== AI SUPPORT CHAT (backend /chat — LLM locale, escalation a umano) =====
-  const AI_CHAT_API   = "https://api.adoff.app/chat";
-  const AI_CHAT_LANGS = ["it", "en", "de", "fr", "es", "pt"];
-  const EMAIL_RX      = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  let aiChatSid   = "";
-  let aiChatBusy  = false;
-  let aiPendingMsg = null; // messaggio in attesa di email per l'escalation
-
-  function aiLang() {
-    let l = "en";
-    try { l = (i18n.getLang && i18n.getLang()) || "en"; } catch (e) {}
-    l = String(l).slice(0, 2).toLowerCase();
-    return AI_CHAT_LANGS.includes(l) ? l : "en";
-  }
-
-  function addTyping() {
-    const b = document.createElement("div");
-    b.className = "chat-bubble bot";
-    b.id = "aiChatTyping";
-    b.textContent = "…";
-    chatMessages.appendChild(b);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-  function removeTyping() { const t = document.getElementById("aiChatTyping"); if (t) t.remove(); }
-
-  /** Fallback offline: usa il FAQ locale se il backend AI non risponde. */
-  function offlineFallback(query) {
-    const match = findFaqMatch(query);
-    if (match) { addChatMessage("<b>" + match.q + "</b><br><br>" + match.a, "bot"); return; }
-    addChatMessage(
-      "Non riesco a contattare l'assistente in questo momento. " +
-      "Riprova o <a href='https://adoff.app/support' target='_blank' rel='noopener'>contattaci qui</a>.",
-      "bot"
-    );
-  }
-
-  /** Gestisce una domanda dell'utente: chiede all'AI, fallback FAQ locale. */
-  async function handleFaqQuestion(query) {
-    query = (query || "").trim();
-    if (!query || aiChatBusy) return;
-    addChatMessage(query, "user");
-
-    // Se attendevamo un'email per l'escalation e l'utente l'ha scritta
-    let email = "";
-    if (aiPendingMsg && EMAIL_RX.test(query)) {
-      email = query;
-      query = aiPendingMsg;
-      aiPendingMsg = null;
+  function renderMsgThread(messages) {
+    msgMessages.innerHTML = "";
+    if (!messages || !messages.length) {
+      addMsgBubble(i18n.t("msg.greeting"), "bot");
+      return;
     }
+    messages.forEach((m) => addMsgBubble(m.text, m.sender, m.attachmentUrl));
+  }
 
-    aiChatBusy = true;
-    addTyping();
+  function showMsgEmailGate() {
+    msgEmailGate.style.display = "flex";
+    msgThreadArea.style.display = "none";
+  }
+
+  function showMsgThreadArea() {
+    msgEmailGate.style.display = "none";
+    msgThreadArea.style.display = "block";
+  }
+
+  async function loadMessagesTab() {
+    if (msgLoaded) return;
+    msgLoaded = true;
+    const stored = await new Promise((resolve) => {
+      chrome.storage.local.get(["adoffUserEmail", "adoffMsgThreadId", "adoffMsgThreadToken"], resolve);
+    });
+    if (!stored.adoffUserEmail) { showMsgEmailGate(); return; }
+    showMsgThreadArea();
+    if (!stored.adoffMsgThreadId || !stored.adoffMsgThreadToken) { renderMsgThread([]); return; }
+    try {
+      const url = MSG_API + "/" + encodeURIComponent(stored.adoffMsgThreadId) +
+        "?token=" + encodeURIComponent(stored.adoffMsgThreadToken);
+      const res = await fetch(url);
+      const d = await res.json();
+      if (d && d.ok) {
+        renderMsgThread(d.messages);
+        chrome.storage.local.set({ adoffUnreadMessages: 0 });
+      } else {
+        renderMsgThread([]);
+      }
+    } catch (e) {
+      renderMsgThread([]);
+    }
+  }
+
+  btnMsgEmailSave.addEventListener("click", () => {
+    const email = (msgEmailInput.value || "").trim().toLowerCase();
+    if (!MSG_EMAIL_RX.test(email)) { showToast(i18n.t("msg.emailInvalid"), "error"); return; }
+    chrome.storage.local.set({ adoffUserEmail: email }, () => {
+      msgLoaded = false;
+      loadMessagesTab();
+    });
+  });
+
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function clearMsgAttachment() {
+    msgPendingAttachment = null;
+    msgAttachInput.value = "";
+    msgAttachPreview.style.display = "none";
+    msgAttachPreview.innerHTML = "";
+  }
+
+  msgAttachInput.addEventListener("change", async () => {
+    const file = msgAttachInput.files[0];
+    if (!file) return;
+    if (!MSG_ATTACH_TYPES.includes(file.type)) {
+      showToast(i18n.t("msg.attachTypeError"), "error");
+      msgAttachInput.value = "";
+      return;
+    }
+    if (file.size > MSG_ATTACH_MAX_BYTES) {
+      showToast(i18n.t("msg.attachSizeError"), "error");
+      msgAttachInput.value = "";
+      return;
+    }
+    try {
+      const base64 = await readFileAsBase64(file);
+      msgPendingAttachment = { base64, type: file.type };
+      msgAttachPreview.innerHTML = "";
+      msgAttachPreview.style.display = "flex";
+      const thumb = document.createElement("img");
+      thumb.src = "data:" + file.type + ";base64," + base64;
+      thumb.className = "chat-attachment-thumb";
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "×";
+      removeBtn.className = "chat-attachment-remove";
+      removeBtn.addEventListener("click", clearMsgAttachment);
+      msgAttachPreview.appendChild(thumb);
+      msgAttachPreview.appendChild(removeBtn);
+    } catch (e) {
+      showToast(i18n.t("msg.attachTypeError"), "error");
+      clearMsgAttachment();
+    }
+  });
+
+  async function sendMessage(rawText) {
+    const text = (rawText != null ? rawText : msgInput.value).trim();
+    if (!text || msgBusy) return;
+    const stored = await new Promise((resolve) => {
+      chrome.storage.local.get(["adoffUserEmail", "adoffMsgThreadId"], resolve);
+    });
+    if (!stored.adoffUserEmail) { showMsgEmailGate(); return; }
+
+    msgBusy = true;
+    const attachment = msgPendingAttachment;
+    addMsgBubble(text, "user", attachment ? ("data:" + attachment.type + ";base64," + attachment.base64) : null);
+    if (rawText == null) msgInput.value = "";
+
+    const payload = { email: stored.adoffUserEmail, text, lang: msgLang(), turnstileToken: "extension" };
+    if (stored.adoffMsgThreadId) payload.threadId = stored.adoffMsgThreadId;
+    if (attachment) { payload.attachmentBase64 = attachment.base64; payload.attachmentType = attachment.type; }
+
     const ctrl = new AbortController();
     const to = setTimeout(() => ctrl.abort(), 30000);
     try {
-      const payload = { message: query, lang: aiLang(), turnstileToken: "extension" };
-      if (aiChatSid) payload.sessionId = aiChatSid;
-      if (email) payload.email = email;
-      const res = await fetch(AI_CHAT_API, {
+      const res = await fetch(MSG_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -1234,39 +1206,34 @@
       });
       clearTimeout(to);
       const d = await res.json();
-      removeTyping(); aiChatBusy = false;
-      if (d && d.sessionId) aiChatSid = d.sessionId;
-      if (!d || !d.ok) { offlineFallback(query); return; }
-      addChatMessage(linkifyText(d.reply || ""), "bot");
-      if (d.fallback) { offlineFallback(query); return; }
-      if (d.needEmail) { aiPendingMsg = query; } // il prossimo input (email) creera' il ticket
+      msgBusy = false;
+      if (!d || !d.ok) {
+        showToast(i18n.t("msg.sendError"), "error");
+        if (rawText == null) msgInput.value = text;
+        return;
+      }
+      clearMsgAttachment();
+      chrome.storage.local.set({ adoffMsgThreadId: d.threadId, adoffMsgThreadToken: d.threadToken });
+      if (d.reply) addMsgBubble(d.reply, "bot");
     } catch (e) {
       clearTimeout(to);
-      removeTyping(); aiChatBusy = false;
-      offlineFallback(query);
+      msgBusy = false;
+      showToast(i18n.t("msg.sendError"), "error");
+      if (rawText == null) msgInput.value = text;
     }
   }
 
-  btnChatSend.addEventListener("click", () => {
-    handleFaqQuestion(chatInput.value);
-    chatInput.value = "";
-  });
+  btnMsgSend.addEventListener("click", () => sendMessage());
+  msgInput.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
 
-  chatInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      handleFaqQuestion(chatInput.value);
-      chatInput.value = "";
-    }
-  });
-
-  // Click su chip FAQ — invia la domanda completa (testo del chip) all'AI
   faqTopics.querySelectorAll(".faq-chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      handleFaqQuestion((chip.textContent || chip.dataset.q || "").trim());
-    });
+    chip.addEventListener("click", () => sendMessage((chip.textContent || "").trim()));
   });
 
-  // ===== SEGNALAZIONE SITO (TELEGRAM) =====
+  const msgNavItem = document.querySelector('.nav-item[data-section="aiuto"]');
+  if (msgNavItem) msgNavItem.addEventListener("click", loadMessagesTab);
+  if (location.hash === "#aiuto") loadMessagesTab();
+// ===== SEGNALAZIONE SITO (TELEGRAM) =====
 
   // Backend AdOff (license-api): ticket -> KV + notifica Telegram
   const WORKER_BASE     = "https://api.adoff.app";

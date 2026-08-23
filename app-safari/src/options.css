@@ -100,6 +100,132 @@ body {
   border: 1px solid #3b5998;
 }
 
+/* ===== CTA BANNER (Account + Telegram) ===== */
+.cta-banner {
+  background: var(--card2);
+  border-bottom: 1px solid var(--primary);
+  padding: 12px 24px;
+  margin-top: var(--header-h);
+}
+
+.cta-banner-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cta-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.cta-banner-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.cta-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cta-banner-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.cta-banner-sub {
+  font-size: 12px;
+  color: var(--text-sec);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cta-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: opacity 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-cta:hover {
+  opacity: 0.85;
+}
+
+.btn-cta-account {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-cta-telegram {
+  background: transparent;
+  color: #2AABEE;
+  border: 1px solid #2AABEE;
+}
+
+.btn-cta-telegram:hover {
+  background: #2AABEE;
+  color: #fff;
+  opacity: 1;
+}
+
+.cta-banner-close {
+  background: transparent;
+  border: none;
+  color: var(--text-sec);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.cta-banner-close:hover {
+  color: var(--text);
+}
+
+@media (max-width: 700px) {
+  .cta-banner-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .cta-banner-sub {
+    white-space: normal;
+  }
+  .cta-banner-right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
 .license-badge-header.free {
   background: var(--card2);
   color: var(--text-sec);
@@ -942,6 +1068,56 @@ thead .col-popular {
   line-height: 1;
   flex-shrink: 0;
 }
+
+.chat-attach-btn {
+  padding: 8px 10px;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-attachment-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.chat-attachment-thumb {
+  max-height: 60px;
+  max-width: 60px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.chat-attachment-remove {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.chat-attachment-img {
+  display: block;
+  max-width: 220px;
+  border-radius: 8px;
+  margin-top: 6px;
+}
+
+.msg-email-gate {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 
 /* FAQ topic chips */
 .faq-topics-card {

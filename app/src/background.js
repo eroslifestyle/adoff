@@ -840,11 +840,18 @@
   });
 
   // 2) Daily alarm — controllo periodico anche con browser sempre aperto
+  const ALARM_MESSAGES_POLL = "adoffMessagesPoll";
   const ALARM_LIC_CHECK = "adoffLicDailyCheck";
   chrome.alarms.get(ALARM_LIC_CHECK, (existing) => {
     if (!existing) {
       // periodInMinutes 1440 = 24h. delayInMinutes 5 per non saturare al boot.
       chrome.alarms.create(ALARM_LIC_CHECK, { delayInMinutes: 5, periodInMinutes: 24 * 60 });
+    }
+  });
+
+  chrome.alarms.get(ALARM_MESSAGES_POLL, (existing) => {
+    if (!existing) {
+      chrome.alarms.create(ALARM_MESSAGES_POLL, { delayInMinutes: 2, periodInMinutes: 20 });
     }
   });
 
@@ -941,7 +948,7 @@
 
   // showBadge: mostra il badge (ON/OFF stato). showCounter: mostra il numero di ads.
   // Entrambi rispettano le impostazioni in Opzioni (adoffShowBadge default ON, adoffShowCounter default OFF).
-  function updateBadge(isEnabled, totalBlocked, showBadge, showCounter) {
+  function updateBadge(isEnabled, totalBlocked, showBadge, showCounter, unreadMessages) {
     if (showBadge === false) {
       chrome.action.setBadgeText({ text: "" });
       return;
@@ -949,6 +956,9 @@
     if (!isEnabled) {
       chrome.action.setBadgeText({ text: "OFF" });
       chrome.action.setBadgeBackgroundColor({ color: "#e74c3c" });
+    } else if (unreadMessages > 0) {
+      chrome.action.setBadgeText({ text: String(Math.min(unreadMessages, 99)) });
+      chrome.action.setBadgeBackgroundColor({ color: "#27ae60" });
     } else {
       const text = (showCounter && totalBlocked > 0) ? formatBadgeCount(totalBlocked) : "ON";
       chrome.action.setBadgeText({ text });
@@ -959,11 +969,11 @@
 
   function refreshBadge() {
     chrome.storage.local.get(
-      [STORAGE_ENABLED, STORAGE_ADS, STORAGE_REQ, STORAGE_SHOW_BADGE, STORAGE_SHOW_COUNTER],
+      [STORAGE_ENABLED, STORAGE_ADS, STORAGE_REQ, STORAGE_SHOW_BADGE, STORAGE_SHOW_COUNTER, "adoffUnreadMessages"],
       (result) => {
         const isEnabled = result[STORAGE_ENABLED] !== false;
         const total = (result[STORAGE_ADS] || 0) + (result[STORAGE_REQ] || 0);
-        updateBadge(isEnabled, total, result[STORAGE_SHOW_BADGE] !== false, result[STORAGE_SHOW_COUNTER] !== false);
+        updateBadge(isEnabled, total, result[STORAGE_SHOW_BADGE] !== false, result[STORAGE_SHOW_COUNTER] !== false, result.adoffUnreadMessages || 0);
       }
     );
   }
@@ -972,7 +982,7 @@
 
   chrome.storage.onChanged.addListener((changes) => {
     if (changes[STORAGE_ENABLED] || changes[STORAGE_ADS] || changes[STORAGE_REQ] ||
-        changes[STORAGE_SHOW_BADGE] || changes[STORAGE_SHOW_COUNTER]) {
+        changes[STORAGE_SHOW_BADGE] || changes[STORAGE_SHOW_COUNTER] || changes.adoffUnreadMessages) {
       refreshBadge();
       if (changes[STORAGE_ENABLED]) {
         applyFreeGate();
@@ -1023,6 +1033,20 @@
           trackHeartbeat(r.adoffDeviceId, r.adoffInstallDate);
         }
       });
+      return;
+    }
+    if (alarm.name === ALARM_MESSAGES_POLL) {
+      const stored = await storageGet(["adoffUserEmail"]);
+      const email = stored.adoffUserEmail;
+      if (!email) return;
+      try {
+        const resp = await fetch(`${API_BASE}/messages?email=${encodeURIComponent(email)}`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const threads = Array.isArray(data.threads) ? data.threads : [];
+        const totalUnread = threads.reduce((s, t) => s + (t.unread_by_user || 0), 0);
+        await storageSet({ adoffUnreadMessages: totalUnread });
+      } catch (e) {}
       return;
     }
     if (alarm.name !== ALARM_FLUSH_REQ) return;

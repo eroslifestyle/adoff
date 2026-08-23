@@ -516,6 +516,21 @@
     reviewPrompt.style.display = "none";
   });
 
+  /** Mostra card rapida messaggi con badge non letti. */
+  function renderMessagesQuickCard(data) {
+    const count = data.adoffUnreadMessages || 0;
+    const card = document.getElementById('msgQuickCard');
+    const badge = document.getElementById('msgQuickBadge');
+    if (!card) return;
+    card.style.display = 'flex';
+    if (count > 0) {
+      badge.textContent = String(count);
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
   /** Esegue il render completo. */
   function renderAll(data) {
     const isEnabled = data.adoffEnabled !== false;
@@ -529,6 +544,7 @@
     renderFounderBadge(data);
     renderChangelog(data);
     renderReviewPrompt(data);
+    renderMessagesQuickCard(data);
 
     // ---- Mobile banner ----
     (function showMobileBanner() {
@@ -632,6 +648,12 @@
   helpLink.addEventListener("click", (e) => {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL("src/options.html#aiuto") });
+  });
+
+
+  // ===== MESSAGGI QUICK CARD =====
+  document.getElementById('msgQuickOpen').addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('src/options.html#aiuto') });
   });
 
   // ===== INIT =====
