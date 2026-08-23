@@ -57,7 +57,7 @@ KEY FEATURES
 ✔ Privacy-first: no browsing history collected, no page content read, no tracking data sent
 ✔ 15 languages: English, Italian, German, French, Spanish, Portuguese, Russian, Arabic, Chinese, Hindi, Japanese, Korean, Turkish, Indonesian, Polish
 ✔ Manifest V3: built with the latest Chrome extension architecture
-✔ Free tier available — core protection at no cost
+✔ Completely free — all features unlocked, no account needed
 
 ━━━━━━━━━━━━━━━━━━━━
 WORKS EVERYWHERE
@@ -71,7 +71,7 @@ AdOff blocks ads on every website you visit. A few of the places where it shines
 
 ● Search &amp; shopping — Google, Bing, Amazon, eBay: sponsored results and product ads removed.
 
-● News &amp; media — every news site, blog, and magazine: banners, pop-ups, interstitials and anti-adblock walls bypassed (Stealth, Pro).
+● News &amp; media — every news site, blog, and magazine: banners, pop-ups, interstitials and anti-adblock walls bypassed.
 
 ● Forums, wikis, streaming audio (Spotify Web), webmail, and the entire rest of the web — if a page tries to show you an ad, AdOff stops it.
 
@@ -124,7 +124,7 @@ AdOff usa quattro livelli di protezione indipendenti:
 ━━━━━━━━━━━━━━━━━━━━
 FUNZIONALITA' PRINCIPALI
 ━━━━━━━━━━━━━━━━━━━━
-<ul><li>Funziona su ogni sito web - zero configurazione</li><li>Ultra-leggero: solo poche decine di KB totali</li><li>Neutralizzazione video ads - elimina pre-roll e mid-roll</li><li>Modalita' stealth: invisibile ai sistemi anti-adblock</li><li>Controlli per sito: metti in pausa la protezione con un click</li><li>4 modalita' di pausa: 1 ora, fino a domani, permanente o personalizzata</li><li>Gestione whitelist: escludi facilmente i siti che vuoi supportare</li><li>Statistiche in tempo reale</li><li>Blocco cookie banner automatico</li><li>Privacy-first: nessun tracciamento</li><li>15 lingue supportate</li><li>Versione Free disponibile</li></ul>
+<ul><li>Funziona su ogni sito web - zero configurazione</li><li>Ultra-leggero: solo poche decine di KB totali</li><li>Neutralizzazione video ads - elimina pre-roll e mid-roll</li><li>Modalita' stealth: invisibile ai sistemi anti-adblock</li><li>Controlli per sito: metti in pausa la protezione con un click</li><li>4 modalita' di pausa: 1 ora, fino a domani, permanente o personalizzata</li><li>Gestione whitelist: escludi facilmente i siti che vuoi supportare</li><li>Statistiche in tempo reale</li><li>Blocco cookie banner automatico</li><li>Privacy-first: nessun tracciamento</li><li>15 lingue supportate</li><li>Completamente gratuito - tutte le funzioni sbloccate</li></ul>
 
 ━━━━━━━━━━━━━━━━━━━━
 SUPPORTO
