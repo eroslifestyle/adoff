@@ -3097,16 +3097,28 @@ async function handleChat(body, request, env) {
   // stesso pattern di "escalate" sotto — cosi il messaggio non va mai perso.
   if (!llm.ok) {
     history.push({ role: "user", content: message });
-    if (!email) {
-      await logChat(sessionId, lang, history, { escalated: false, email }, env);
+    // Recupera l'email gia' data in questa sessione, per non richiederla ad ogni messaggio
+    let priorLog = sessionId ? await kvGet(env.ADOFF_LICENSES, `chatlog:${sessionId}`, "json") : null;
+    const knownEmail = email || (priorLog && priorLog.email) || "";
+    if (!knownEmail) {
+      await logChat(sessionId, lang, history, { escalated: false, email: knownEmail }, env);
       return jsonResponse({ ok: true, sessionId, escalate: true, needEmail: true, reply: CHAT_NEED_EMAIL_MSG[lang] });
     }
-    const transcript = history.map(m => (m.role === "user" ? "Utente" : "AI") + ": " + m.content).join("\n");
-    const ticket = await createTicketFromChat({
-      category: "other", email, lang, reason: "Assistente AI non disponibile", transcript, sessionId,
-    }, env);
-    await logChat(sessionId, lang, history, { escalated: true, ticketId: ticket.ticketId, email }, env);
-    return jsonResponse({ ok: true, sessionId, escalate: true, ticketId: ticket.ticketId, reply: CHAT_FALLBACK_MSG[lang] });
+    let ticketId = priorLog && priorLog.ticketId;
+    if (ticketId) {
+      await appendChatToTicket(ticketId, message, env);
+    } else {
+      const transcript = history.map(m => (m.role === "user" ? "Utente" : "AI") + ": " + m.content).join("\n");
+      const ticket = await createTicketFromChat({
+        category: "other", email: knownEmail, lang, reason: "Assistente AI non disponibile", transcript, sessionId,
+      }, env);
+      ticketId = ticket.ticketId;
+    }
+    await logChat(sessionId, lang, history, { escalated: true, ticketId, email: knownEmail }, env);
+    return jsonResponse({
+      ok: true, sessionId, escalate: true, ticketId,
+      reply: CHAT_FALLBACK_MSG[lang] + "\n\n" + CHAT_ESCALATED_MSG[lang],
+    });
   }
 
   let { reply, escalate, category, reason } = parseEscalation(llm.content);
@@ -3232,6 +3244,19 @@ async function createTicketFromChat({ category, email, lang, reason, transcript,
   await notifyTelegram(msg, env);
 
   return { ticketId };
+}
+
+// Aggiunge un messaggio a un ticket chat gia' aperto in questa sessione, invece di
+// aprirne uno nuovo per ogni singolo messaggio se l'AI resta offline durante la conversazione.
+async function appendChatToTicket(ticketId, message, env) {
+  const ticket = await kvGet(env.ADOFF_LICENSES, `ticket:${ticketId}`, "json");
+  if (!ticket) return false;
+  ticket.description += "\nUtente: " + message;
+  ticket.updatedAt = new Date().toISOString();
+  await env.ADOFF_LICENSES.put(`ticket:${ticketId}`, JSON.stringify(ticket));
+  const msg2 = `\u{1F4E9} <b>Nuovo messaggio nel ticket</b> <code>${ticketId}</code>\n${escapeHtml(message.slice(0, 500))}`;
+  await notifyTelegram(msg2, env);
+  return true;
 }
 
 // =============================================
