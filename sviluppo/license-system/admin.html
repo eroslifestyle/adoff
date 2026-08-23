@@ -284,6 +284,9 @@ tr:hover td{background:rgba(124,92,252,.04)}
       <div class="nav-item" data-page="suggestions" onclick="navTo('suggestions')">
         <span class="nav-icon">💡</span><span>Suggerimenti</span>
       </div>
+      <div class="nav-item" data-page="messages" onclick="navTo('messages')">
+        <span class="nav-icon">📩</span><span>Messaggi</span>
+      </div>
       <div class="nav-item" data-page="chat" onclick="navTo('chat')">
         <span class="nav-icon">🤖</span><span>Chat AI</span>
       </div>
@@ -769,6 +772,22 @@ tr:hover td{background:rgba(124,92,252,.04)}
       </div>
     </div>
 
+    <!-- PAGE: MESSAGGI -->
+    <div class="page" id="page-messages">
+      <div class="toolbar">
+        <select id="msgStatusFilter" onchange="loadMessages(true)">
+          <option value="">Tutti gli stati</option>
+          <option value="open">Aperti</option>
+          <option value="resolved">Risolti</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn btn-outline btn-sm" onclick="loadMessages(true)">↻ Ricarica</button>
+      </div>
+      <div id="msgTableWrap">
+        <div class="loading-center"><div class="loader"></div></div>
+      </div>
+    </div>
+
     <!-- PAGE: CHAT AI -->
     <div class="page" id="page-chat">
       <div class="toolbar">
@@ -895,6 +914,17 @@ tr:hover td{background:rgba(124,92,252,.04)}
       <button class="modal-close" onclick="closeModal('suggModal')">×</button>
     </div>
     <div id="suggDetail"><div class="loading-center"><div class="loader"></div></div></div>
+  </div>
+</div>
+
+<!-- Message Thread Modal -->
+<div class="modal-bg" id="msgModal">
+  <div class="modal" style="width:640px">
+    <div class="modal-title">
+      <span id="msgModalTitle">Messaggio</span>
+      <button class="modal-close" onclick="closeModal('msgModal')">×</button>
+    </div>
+    <div id="msgDetail"><div class="loading-center"><div class="loader"></div></div></div>
   </div>
 </div>
 
@@ -1110,7 +1140,7 @@ async function init() {
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────
-const PAGE_TITLES = { stats:"Statistiche", licenses:"Licenze", finance:"Finanza", outreach:"Outreach", support:"Supporto", suggestions:"Suggerimenti", chat:"Chat AI", settings:"Impostazioni" };
+const PAGE_TITLES = { stats:"Statistiche", licenses:"Licenze", finance:"Finanza", outreach:"Outreach", support:"Supporto", suggestions:"Suggerimenti", messages:"Messaggi", chat:"Chat AI", settings:"Impostazioni" };
 
 function navTo(page) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
@@ -1144,6 +1174,7 @@ function loadPage(page, force = false) {
   else if (page === "outreach") loadOutreach(force);
   else if (page === "support") loadTickets(force);
   else if (page === "suggestions") loadSuggestions(force);
+  else if (page === "messages") loadMessages(force);
   else if (page === "chat") loadChats(force);
 }
 
@@ -2667,6 +2698,98 @@ async function updateSuggestionStatus(id, status) {
   closeModal("suggModal");
   loadSuggestions(true);
 }
+
+// ── MESSAGGI ───────────────────────────────────────────────
+let messagesLoaded = false;
+let _msgCache = {};
+
+async function loadMessages(force = false) {
+  if (messagesLoaded && !force) return;
+  document.getElementById("msgTableWrap").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  const filter = document.getElementById("msgStatusFilter")?.value || "";
+  let url = "/admin/messages";
+  if (filter) url += `?status=${encodeURIComponent(filter)}`;
+  const d = await api(url);
+  if (!d.ok) {
+    document.getElementById("msgTableWrap").innerHTML = `<div class="loading-center" style="color:var(--danger)">Errore: ${d.error || "Impossibile caricare messaggi"}</div>`;
+    toast("Errore caricamento messaggi", "error");
+    return;
+  }
+  const threads = d.threads || [];
+  messagesLoaded = true;
+  _msgCache = {};
+  threads.forEach(t => { _msgCache[t.id] = t; });
+  if (!threads.length) {
+    document.getElementById("msgTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">📩</div><p>Nessun messaggio</p></div>`;
+    return;
+  }
+  document.getElementById("msgTableWrap").innerHTML = `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Email</th><th>Oggetto</th><th>Stato</th><th>Non letti</th><th>Ultimo aggiornamento</th><th></th>
+      </tr></thead>
+      <tbody>
+        ${threads.map(t => `<tr onclick="openMessageThread('${t.id}')" style="cursor:pointer">
+          <td style="color:var(--muted)">${esc(t.email || "–")}</td>
+          <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.subject || "–")}</td>
+          <td><span class="badge badge-${t.status === 'open' ? 'open' : 'closed'}">${t.status || "–"}</span></td>
+          <td>${(t.unread_by_user || 0) > 0 ? `<span style="background:var(--danger);color:#fff;border-radius:20px;padding:2px 8px;font-size:11px">${t.unread_by_user}</span>` : "–"}</td>
+          <td style="color:var(--muted)">${t.updated_at ? new Date(t.updated_at.replace(" ","T")+"Z").toLocaleString("it-IT") : "–"}</td>
+          <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openMessageThread('${t.id}')">Apri</button></td>
+        </tr>`).join("")}
+      </tbody>
+    </table></div>`;
+}
+
+async function openMessageThread(id) {
+  document.getElementById("msgModalTitle").textContent = `Thread ${id}`;
+  document.getElementById("msgDetail").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  openModal("msgModal");
+  const d = await api(`/admin/messages/${id}`);
+  if (!d.ok) { document.getElementById("msgDetail").innerHTML = `<p style="color:var(--danger)">Errore: ${esc(d.error || "")}</p>`; return; }
+  const thread = d.thread || {};
+  const msgs = d.messages || [];
+  const senderIcon = { user:"👤", admin:"🛡️", ai:"🤖" };
+  const msgBubbles = msgs.map(m => {
+    const isAdminOrAi = m.sender === "admin" || m.sender === "ai";
+    const label = isAdminOrAi ? "Admin" : (thread.email || "Utente");
+    const senderClass = isAdminOrAi ? "admin" : "";
+    const img = m.attachmentUrl ? `<img src="${esc(m.attachmentUrl)}" style="max-width:280px;border-radius:8px;margin-top:6px">` : "";
+    const textIt = m.textIt ? `<div style="font-size:12px;color:var(--muted);font-style:italic;margin-top:4px">Traduzione IT: ${esc(m.textIt)}</div>` : "";
+    return `<div class="ticket-reply ${senderClass}">
+      <div class="reply-meta">${senderIcon[m.sender] || "👤"} ${esc(label)} — ${m.created_at ? new Date(m.created_at.replace(" ","T")+"Z").toLocaleString("it-IT") : ""}</div>
+      <div class="reply-text">${esc(m.text || "")}${textIt}${img}</div>
+    </div>`;
+  }).join("");
+  document.getElementById("msgDetail").innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <span class="badge badge-${thread.status === 'open' ? 'open' : 'closed'}">${thread.status || "–"}</span>
+        <span style="color:var(--muted);font-size:12px">${esc(thread.email || "")}</span>
+      </div>
+      <div style="margin-bottom:8px;color:var(--muted);font-size:13px;font-weight:600">${esc(thread.subject || "")}</div>
+      ${msgBubbles}
+    </div>
+    <hr class="divider">
+    <div class="section-title">Rispondi</div>
+    <div class="field">
+      <textarea id="msgReply" placeholder="Scrivi una risposta in italiano (verra tradotta automaticamente)..." style="min-height:80px"></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="sendMessageReply('${id}')">Invia risposta</button>
+  `;
+}
+
+async function sendMessageReply(id) {
+  const reply = document.getElementById("msgReply").value.trim();
+  if (!reply) { toast("Scrivi una risposta prima di inviare", "error"); return; }
+  const btn = event.target; btn.disabled = true; btn.textContent = "Inviando...";
+  const d = await api(`/admin/messages/${id}/reply`, { method: "POST", body: JSON.stringify({ text: reply }) });
+  btn.disabled = false; btn.textContent = "Invia risposta";
+  if (!d.ok) { toast(d.error || "Errore invio", "error"); return; }
+  toast("Risposta inviata");
+  openMessageThread(id);
+}
+
 
 // ── SETTINGS ─────────────────────────────────────────────────
 async function changePassword() {
