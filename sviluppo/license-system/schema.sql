@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS install_events (
     plan TEXT DEFAULT 'free',          -- free|trial|pro
     version TEXT,                       -- versione estensione
     timezone TEXT,
+    is_reactivation INTEGER DEFAULT 0, -- 1 se re-installazione di un device già visto
     UNIQUE(device_id, install_ts)
 );
 
@@ -170,3 +171,43 @@ CREATE TABLE IF NOT EXISTS newsletter (
     subscribed_at INTEGER NOT NULL,   -- Unix ms
     unsubscribed_at INTEGER           -- NULL finché iscritto
 );
+
+-- =============================================
+-- OPS MONITORING (Telegram digest/report + telemetria navigazione opt-in)
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS nav_stats (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  device_id TEXT NOT NULL,
+  day TEXT NOT NULL,
+  hostname TEXT NOT NULL,
+  ads_blocked INTEGER DEFAULT 0,
+  ads_leaked INTEGER DEFAULT 0,
+  errors INTEGER DEFAULT 0,
+  browser TEXT,
+  country TEXT,
+  created_at INTEGER NOT NULL,
+  UNIQUE(device_id, day, hostname)
+);
+CREATE INDEX IF NOT EXISTS idx_nav_stats_day ON nav_stats(day);
+CREATE INDEX IF NOT EXISTS idx_nav_stats_device ON nav_stats(device_id);
+
+CREATE TABLE IF NOT EXISTS consent_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  device_id TEXT NOT NULL,
+  action TEXT NOT NULL,
+  policy_version TEXT NOT NULL,
+  ts INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_consent_device ON consent_log(device_id);
+
+CREATE TABLE IF NOT EXISTS ops_digest_state (
+  id INTEGER PRIMARY KEY CHECK (id=1),
+  last_install_id INTEGER DEFAULT 0,
+  last_uninstall_id INTEGER DEFAULT 0,
+  last_digest_sent_at INTEGER DEFAULT 0,
+  last_report_date TEXT,
+  pending_digest_text TEXT,
+  updated_at INTEGER
+);
+INSERT OR IGNORE INTO ops_digest_state (id) VALUES (1);

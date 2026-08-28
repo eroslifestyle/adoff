@@ -454,6 +454,35 @@ tr:hover td{background:rgba(124,92,252,.04)}
           <div id="installLog"><div class="loading-center"><div class="loader"></div></div></div>
         </div>
       </div>
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Trend Install/Uninstall (30gg)</div>
+          <div class="chart-wrap"><canvas id="opsTrendChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Browser Breakdown (install)</div>
+          <div class="chart-wrap"><canvas id="opsBrowserChart"></canvas></div>
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Dispositivi Attivi</div>
+          <div class="stats-grid" id="ops-active-total" style="grid-template-columns:1fr"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Adoption Opt-in</div>
+          <div class="stats-grid" id="ops-optin-rate" style="grid-template-columns:1fr"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Top 20 Hostname per Ads Leaked (30gg)</div>
+        <div class="table-wrap">
+          <table id="opsLeakTable">
+            <thead><tr><th>Hostname</th><th style="text-align:right">Leak Total</th></tr></thead>
+            <tbody><tr><td colspan="2" class="loading-center"><div class="loader"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- PAGE: STATISTICHE (pool unico — dashboard + analytics + churn) -->
@@ -1169,7 +1198,7 @@ function loadPage(page, force = false) {
   if (page === "dashboard") loadDashboard(force);
   else if (page === "licenses") loadLicenses(force);
   else if (page === "finance") loadFinance(force);
-  else if (page === "analytics") loadAnalytics(force);
+  else if (page === "analytics") { loadAnalytics(force); loadOpsStats(force); }
   else if (page === "stats") { loadStats(force); loadSeo(); }
   else if (page === "outreach") loadOutreach(force);
   else if (page === "support") loadTickets(force);
@@ -1843,6 +1872,50 @@ async function loadAnalytics(force = false) {
     : `<div class="empty"><div class="empty-icon">📭</div><p>Nessun log</p></div>`;
 
   anaLoaded = true;
+}
+
+// ── OPS STATS ────────────────────────────────────────────────
+let opsLoaded = false;
+
+async function loadOpsStats(force = false) {
+  if (opsLoaded && !force) return;
+  const d = await api("/admin/ops-stats");
+  if (!d.ok) {
+    toast("Errore caricamento ops-stats", "error");
+    return;
+  }
+
+  // Active devices & opt-in rate
+  document.getElementById("ops-active-total").innerHTML = sc("Dispositivi attivi", d.activeTotal ?? 0, "");
+  document.getElementById("ops-optin-rate").innerHTML = sc("Opt-in rate", `${d.optInAdoption ?? 0}%`, "green");
+
+  // Install/Uninstall trend chart
+  const installMap = Object.fromEntries((d.installTrend || []).map(x => [x.day, x.count]));
+  const uninstallMap = Object.fromEntries((d.uninstallTrend || []).map(x => [x.day, x.count]));
+  const allDays = new Set([...Object.keys(installMap), ...Object.keys(uninstallMap)]);
+  const daysSorted = Array.from(allDays).sort();
+  const labels = daysSorted.map(d => d.slice(5)); // MM-DD
+  mkChart("opsTrendChart", "line", labels, [
+    { label: "Install", data: daysSorted.map(d => installMap[d] || 0), borderColor: "#4ade80", backgroundColor: "rgba(74,222,128,.2)", tension: 0.3, fill: true },
+    { label: "Uninstall", data: daysSorted.map(d => uninstallMap[d] || 0), borderColor: "#f43f5e", backgroundColor: "rgba(244,63,94,.2)", tension: 0.3, fill: true }
+  ], { legend: true });
+
+  // Browser breakdown chart
+  const bData = d.browserBreakdown || [];
+  const bLabels = bData.map(x => x.browser);
+  const bCounts = bData.map(x => x.count);
+  mkChart("opsBrowserChart", "bar", bLabels, [
+    { data: bCounts, backgroundColor: "rgba(124,92,252,.7)", borderRadius: 5, borderSkipped: false }
+  ]);
+
+  // Top leak hostnames table
+  const leaks = d.topLeakHostnames || [];
+  const tbody = document.querySelector("#opsLeakTable tbody");
+  tbody.innerHTML = leaks.length
+    ? leaks.map(h => `<tr><td class="mono">${h.hostname}</td><td style="text-align:right;font-weight:600">${h.total}</td></tr>`).join("")
+    : `<tr><td colspan="2" style="text-align:center;color:var(--muted)">Nessun dato</td></tr>`;
+
+  opsLoaded = true;
 }
 
 // ── STATISTICHE DETTAGLIATE ──────────────────────────────────

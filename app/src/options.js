@@ -197,6 +197,26 @@
     });
   }
 
+  // ===== PRIVACY NAV OPT-IN =====
+
+  const navOptInToggle = document.getElementById("navOptInToggle");
+
+  // Load toggle state on page load
+  chrome.storage.local.get("adoffNavOptIn", (r) => {
+    if (navOptInToggle) {
+      navOptInToggle.checked = r.adoffNavOptIn === true;
+    }
+  });
+
+  // Handle toggle changes
+  if (navOptInToggle) {
+    navOptInToggle.addEventListener("change", () => {
+      const optIn = navOptInToggle.checked;
+      chrome.storage.local.set({ adoffNavOptIn: optIn });
+      chrome.runtime.sendMessage({ action: "navConsentChanged", optIn: optIn });
+    });
+  }
+
   // ===== WHITELIST =====
 
   const addSiteInput  = document.getElementById("addSiteInput");

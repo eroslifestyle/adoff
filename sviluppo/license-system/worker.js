@@ -2965,6 +2965,9 @@ const TELEGRAM_REVIEWS_THREAD = 24;
 const TELEGRAM_REFUNDS_THREAD = 32;   // topic dedicato "💸 Rimborsi" (creato via /admin/tg-create-topic)
 const TELEGRAM_SEO_THREAD = 44;       // topic "🔍 SEO / AI Search" — risposte approva/migliora per l'agente SEO settimanale
 
+// KV key per thread Ops Monitoring (creato on-demand la prima volta)
+const TELEGRAM_OPS_THREAD_KV_KEY = "config:tg_ops_thread";
+
 // Override opzionale via KV (se un giorno il topic viene ricreato con id diverso).
 const KV_REFUND_THREAD = "config:tg_refund_thread";
 
@@ -2986,6 +2989,34 @@ async function resolveTicketThread(category, env) {
   if (category === "billing") return TELEGRAM_SALES_THREAD;
   if (category === "suggestion" || category === "feature") return TELEGRAM_SUGGEST_THREAD;
   return TELEGRAM_SUPPORT_THREAD;
+}
+
+/**
+ * Ritorna il thread ID per Ops Monitoring.
+ * Se non esiste ancora, crea il topic "🔔 Ops Monitoring" e salva l'ID in KV.
+ * Fallback a TELEGRAM_SUPPORT_THREAD se qualcosa fallisce.
+ */
+async function getOpsThreadId(env) {
+  try {
+    const cached = parseInt(await kvGet(env.ADOFF_LICENSES, TELEGRAM_OPS_THREAD_KV_KEY) || "0", 10);
+    if (cached > 0) return cached;
+
+    const payload = { chat_id: env.TELEGRAM_CHAT_ID, name: "🔔 Ops Monitoring", icon_color: 0x6C5CE7 };
+    const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/createForumTopic`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data.ok && data.result && data.result.message_thread_id) {
+      const threadId = data.result.message_thread_id;
+      await env.ADOFF_LICENSES.put(TELEGRAM_OPS_THREAD_KV_KEY, String(threadId));
+      return threadId;
+    }
+  } catch (e) {
+    console.error("getOpsThreadId error:", e.message);
+  }
+  return TELEGRAM_SUPPORT_THREAD; // fallback sicuro
 }
 
 async function notifyTelegram(text, env, threadId = TELEGRAM_SUPPORT_THREAD) {
@@ -4970,6 +5001,76 @@ async function handleAdminStats(request, env) {
   });
 }
 
+// Admin: operational stats for ops dashboard
+async function handleAdminOpsStats(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  if (!env.DB) return jsonResponse({ ok: false, error: "DB not available" }, 503);
+
+  try {
+    const thirtyDaysAgo = Date.now() - 30 * 86400000;
+
+    // Daily install/uninstall trend (last 30 days)
+    const installTrendRaw = await env.DB.prepare(
+      `SELECT strftime('%Y-%m-%d', install_ts/1000, 'unixepoch') AS day, COUNT(*) AS c
+       FROM install_events WHERE install_ts >= ? GROUP BY day ORDER BY day`
+    ).bind(thirtyDaysAgo).all();
+
+    const uninstallTrendRaw = await env.DB.prepare(
+      `SELECT strftime('%Y-%m-%d', uninstall_ts/1000, 'unixepoch') AS day, COUNT(*) AS c
+       FROM uninstall_events WHERE uninstall_ts >= ? GROUP BY day ORDER BY day`
+    ).bind(thirtyDaysAgo).all();
+
+    const installTrend = (installTrendRaw.results || []).map(r => ({ day: r.day, count: r.c }));
+    const uninstallTrend = (uninstallTrendRaw.results || []).map(r => ({ day: r.day, count: r.c }));
+
+    // Active devices
+    const activeRaw = await env.DB.prepare(`SELECT COUNT(*) AS c FROM device_heartbeat`).first();
+    const activeTotal = activeRaw?.c || 0;
+
+    // Browser breakdown (last 30 days)
+    const browserRaw = await env.DB.prepare(
+      `SELECT browser, COUNT(*) AS c FROM install_events WHERE install_ts >= ? GROUP BY browser ORDER BY c DESC`
+    ).bind(thirtyDaysAgo).all();
+
+    const browserBreakdown = (browserRaw.results || []).map(r => ({ browser: r.browser, count: r.c }));
+
+    // Opt-in adoption (latest action per device)
+    const optInRaw = await env.DB.prepare(
+      `SELECT COUNT(DISTINCT device_id) AS c FROM consent_log
+       WHERE (device_id, action, ts) IN (
+         SELECT device_id, action, MAX(ts) FROM consent_log GROUP BY device_id
+       ) AND action = 'opt_in'`
+    ).first();
+
+    const optInCount = optInRaw?.c || 0;
+    const optInAdoption = activeTotal > 0 ? Math.round((optInCount / activeTotal) * 100) : 0;
+
+    // Top hostnames for ads_leaked (last 30 days)
+    const thirtyDaysAgoDateStr = new Date(thirtyDaysAgo).toISOString().slice(0, 10);
+    const leakRaw = await env.DB.prepare(
+      `SELECT hostname, SUM(ads_leaked) AS total FROM nav_stats WHERE day >= ? GROUP BY hostname ORDER BY total DESC LIMIT 20`
+    ).bind(thirtyDaysAgoDateStr).all();
+
+    const topLeakHostnames = (leakRaw.results || []).map(r => ({ hostname: r.hostname, total: r.total }));
+
+    return jsonResponse({
+      ok: true,
+      installTrend,
+      uninstallTrend,
+      activeTotal,
+      browserBreakdown,
+      optInAdoption,
+      topLeakHostnames,
+    });
+  } catch (e) {
+    console.error("[adminOpsStats] Error:", e);
+    return jsonResponse({ ok: false, error: e.message }, 500);
+  }
+}
+
 // Admin: sync all KV licenses → D1 (one-shot backfill).
 async function handleAdminSyncLicensesKv(request, env) {
   const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
@@ -5262,10 +5363,16 @@ async function handleTrackInstall(request, env) {
   if (deviceId) {
     try {
       const hashedId = await hashDeviceId(deviceId, env);
+      // Reinstall detection: controlla se il device è già noto
+      const existingRow = await env.DB.prepare(
+        `SELECT 1 FROM install_events WHERE device_id = ? LIMIT 1`
+      ).bind(hashedId).first();
+      const isReactivation = existingRow ? 1 : 0;
+
       await env.DB.prepare(`
-        INSERT INTO install_events (device_id, install_ts, country, browser, source, plan, version, timezone)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(hashedId, now, country, browser, source, plan, version, tz).run();
+        INSERT INTO install_events (device_id, install_ts, country, browser, source, plan, version, timezone, is_reactivation)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(hashedId, now, country, browser, source, plan, version, tz, isReactivation).run();
 
       // Heartbeat: registra installazione
       await env.DB.prepare(`
@@ -5284,6 +5391,7 @@ async function handleTrackInstall(request, env) {
     }
   }
 
+  await maybeRunOpsChecks(env);
   return jsonResponse({ ok: true });
 }
 
@@ -5314,6 +5422,222 @@ async function handleTrackDownload(request, env) {
   }, 1000);
 
   return jsonResponse({ ok: true });
+}
+
+// =============================================
+// OPS DIGEST & REPORTING — notifiche aggregate per operazioni
+// =============================================
+
+async function maybeRunOpsChecks(env) {
+  try {
+    // Lock breve per evitare invii doppi da richieste concorrenti
+    const lockKey = "lock:ops-checks";
+    const locked = await kvGet(env.ADOFF_LICENSES, lockKey);
+    if (locked) return;
+    await env.ADOFF_LICENSES.put(lockKey, "1", { expirationTtl: 20 });
+
+    const state = await env.DB.prepare(`SELECT * FROM ops_digest_state WHERE id = 1`).first();
+    if (!state) return;
+
+    const now = Date.now();
+
+    // ── 1. Digest install/uninstall (ora fissa O soglia eventi) ──
+    const DIGEST_THRESHOLD = 20;
+    const DIGEST_INTERVAL_MS = 3600 * 1000;
+
+    const newInstalls = await env.DB.prepare(
+      `SELECT COUNT(*) AS c FROM install_events WHERE id > ?`
+    ).bind(state.last_install_id || 0).first();
+    // uninstall SENZA commento (quelle CON commento sono già notificate singolarmente da handleUninstall)
+    const newUninstalls = await env.DB.prepare(
+      `SELECT COUNT(*) AS c FROM uninstall_events WHERE id > ? AND (comment IS NULL OR comment = '')`
+    ).bind(state.last_uninstall_id || 0).first();
+
+    const installCount = newInstalls?.c || 0;
+    const uninstallCount = newUninstalls?.c || 0;
+    const totalNew = installCount + uninstallCount;
+    const dueByTime = (now - (state.last_digest_sent_at || 0)) >= DIGEST_INTERVAL_MS;
+    const dueByThreshold = totalNew >= DIGEST_THRESHOLD;
+
+    if (totalNew > 0 && (dueByTime || dueByThreshold)) {
+      const maxInstallRow = await env.DB.prepare(`SELECT MAX(id) AS m FROM install_events`).first();
+      const maxUninstallRow = await env.DB.prepare(`SELECT MAX(id) AS m FROM uninstall_events`).first();
+      const text =
+        `📊 <b>Digest AdOff</b>\n` +
+        `➕ Install: ${installCount}\n` +
+        `➖ Disinstall (senza commento): ${uninstallCount}`;
+      const threadId = await getOpsThreadId(env);
+      const sent = await notifyTelegram(text, env, threadId);
+      if (sent) {
+        await env.DB.prepare(
+          `UPDATE ops_digest_state SET last_install_id = ?, last_uninstall_id = ?, last_digest_sent_at = ?, pending_digest_text = NULL, updated_at = ? WHERE id = 1`
+        ).bind(maxInstallRow?.m || state.last_install_id, maxUninstallRow?.m || state.last_uninstall_id, now, now).run();
+      } else {
+        await env.DB.prepare(
+          `UPDATE ops_digest_state SET pending_digest_text = ?, updated_at = ? WHERE id = 1`
+        ).bind(text, now).run();
+      }
+    }
+
+    // ── 2. Report giornaliero 7am Europe/Rome ──
+    const hourRome = new Intl.DateTimeFormat('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', hour12: false }).format(new Date());
+    const dateRome = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date()); // YYYY-MM-DD
+    if (hourRome === '07' && state.last_report_date !== dateRome) {
+      const reportText = await buildDailyOpsReport(env);
+      const threadId = await getOpsThreadId(env);
+      const sent = await notifyTelegram(reportText, env, threadId);
+      if (sent) {
+        await env.DB.prepare(`UPDATE ops_digest_state SET last_report_date = ?, updated_at = ? WHERE id = 1`).bind(dateRome, now).run();
+      }
+    }
+
+    // ── 3. Alert anomalia (soglia relativa uninstall/ora) ──
+    await checkUninstallAnomaly(env);
+
+  } catch (e) {
+    console.error("maybeRunOpsChecks error:", e.message);
+  }
+}
+
+/** Calcola [startMs, endMs] del giorno Europe/Rome, dayOffset=0 oggi, 1 ieri (gestisce CET/CEST). */
+function getRomeDayBoundsMs(dayOffset, referenceNow) {
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Rome', hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  });
+  const parts = fmt.formatToParts(referenceNow).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+  const romeNowAsUTC = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
+  const offsetMs = romeNowAsUTC - referenceNow.getTime(); // offset Rome rispetto a UTC in questo istante
+  const romeMidnightTodayAsUTC = Date.UTC(+parts.year, +parts.month - 1, +parts.day);
+  const startLocalMidnightUTCValue = romeMidnightTodayAsUTC - dayOffset * 86400000;
+  const startMs = startLocalMidnightUTCValue - offsetMs;
+  const endMs = startMs + 86400000;
+  return [startMs, endMs];
+}
+
+async function buildDailyOpsReport(env) {
+  const now = Date.now();
+  const oneDayMs = 24 * 3600 * 1000;
+  const oneHourAgo = now - 3600000;
+  const sevenDaysAgo = now - 7 * oneDayMs;
+  const fourteenDaysAgo = now - 14 * oneDayMs;
+
+  // Calcola i confini del giorno corrente e precedente in Europe/Rome (Unix ms)
+  const [todayStartMs, todayEndMs] = getRomeDayBoundsMs(0, new Date(now));
+  const [yesterdayStartMs, yesterdayEndMs] = getRomeDayBoundsMs(1, new Date(now));
+
+  // Install oggi vs ieri
+  const todayInstalls = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM install_events WHERE install_ts >= ? AND install_ts < ?`
+  ).bind(todayStartMs, todayEndMs).first();
+  const yesterdayInstalls = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM install_events WHERE install_ts >= ? AND install_ts < ?`
+  ).bind(yesterdayStartMs, yesterdayEndMs).first();
+
+  // Uninstall oggi vs ieri
+  const todayUninstalls = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM uninstall_events WHERE uninstall_ts >= ? AND uninstall_ts < ?`
+  ).bind(todayStartMs, todayEndMs).first();
+  const yesterdayUninstalls = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM uninstall_events WHERE uninstall_ts >= ? AND uninstall_ts < ?`
+  ).bind(yesterdayStartMs, yesterdayEndMs).first();
+
+  // Utenti attivi totali (heartbeat negli ultimi 7 giorni)
+  const activeUsers = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM device_heartbeat WHERE last_seen >= ?`
+  ).bind(sevenDaysAgo).first();
+
+  // Trend vs settimana scorsa (ultimi 7 giorni vs 7 giorni precedenti)
+  const last7DaysInstalls = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM install_events WHERE install_ts >= ?`
+  ).bind(sevenDaysAgo).first();
+  const prev7DaysInstalls = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM install_events WHERE install_ts >= ? AND install_ts < ?`
+  ).bind(fourteenDaysAgo, sevenDaysAgo).first();
+
+  const last7DaysUninstalls = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM uninstall_events WHERE uninstall_ts >= ?`
+  ).bind(sevenDaysAgo).first();
+  const prev7DaysUninstalls = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM uninstall_events WHERE uninstall_ts >= ? AND uninstall_ts < ?`
+  ).bind(fourteenDaysAgo, sevenDaysAgo).first();
+
+  // Breakdown per browser (ultime 24h)
+  const browserBreakdown = await env.DB.prepare(
+    `SELECT browser, COUNT(*) AS c FROM install_events WHERE install_ts >= ? GROUP BY browser ORDER BY c DESC`
+  ).bind(oneHourAgo).all();
+
+  // Top motivazioni uninstall ultime 24h
+  const topReasons = await env.DB.prepare(
+    `SELECT reason, COUNT(*) AS c FROM uninstall_events WHERE uninstall_ts >= ? GROUP BY reason ORDER BY c DESC LIMIT 5`
+  ).bind(oneHourAgo).all();
+
+  // Format report
+  const reasonLabels = {
+    broken_site: "🧩 Sito rotto",
+    ads_visible: "👀 Ads visibili",
+    confusing: "😕 Complicato/Free vs Pro",
+    performance: "🐌 Rallentamento",
+    found_better: "🔀 Trovato di meglio",
+    other: "❔ Altro",
+  };
+
+  const reasonsText = topReasons.map(r => `${reasonLabels[r.reason] || r.reason}: ${r.c}`).join('\n') || "Nessuna";
+
+  const browserText = browserBreakdown.map(b => `${b.browser}: ${b.c}`).join(', ') || "Nessuna";
+
+  const trendIconInstalls = (last7DaysInstalls?.c || 0) > (prev7DaysInstalls?.c || 0) ? "📈" : "📉";
+  const trendIconUninstalls = (last7DaysUninstalls?.c || 0) < (prev7DaysUninstalls?.c || 0) ? "📉" : "📈";
+
+  const reportDate = new Intl.DateTimeFormat('it-IT', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(now));
+  return (
+    `📅 <b>Report giornaliero AdOff</b> (${reportDate})\n\n` +
+    `📊 <b>Ieri</b>\n` +
+    `➕ Install: ${yesterdayInstalls?.c || 0}\n` +
+    `➖ Disinstall: ${yesterdayUninstalls?.c || 0}\n\n` +
+    `📈 <b>Trend 7gg vs 7gg prec</b>\n` +
+    `${trendIconInstalls} Install: ${last7DaysInstalls?.c || 0} (prec: ${prev7DaysInstalls?.c || 0})\n` +
+    `${trendIconUninstalls} Disinstall: ${last7DaysUninstalls?.c || 0} (prec: ${prev7DaysUninstalls?.c || 0})\n\n` +
+    `👥 <b>Utenti attivi (7gg)</b>: ${activeUsers?.c || 0}\n\n` +
+    `🌐 <b>Browser ultimi 7gg</b> (ultime 24h)\n${browserText}\n\n` +
+    `🗑️ <b>Top motivi disinstall</b> (ultime 24h)\n${reasonsText}`
+  );
+}
+
+async function checkUninstallAnomaly(env) {
+  const now = Date.now();
+  const oneHourAgo = now - 3600000;
+  const sevenDaysAgo = now - 7 * 24 * 3600000;
+
+  // Rate-limit: non inviare più di un alert all'ora
+  const lastAlertKey = "ops:anomaly:lastalert";
+  const lastAlert = await kvGet(env.ADOFF_LICENSES, lastAlertKey);
+  if (lastAlert) return;
+
+  // Conta uninstall ultima ora
+  const lastHourCount = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM uninstall_events WHERE uninstall_ts >= ?`
+  ).bind(oneHourAgo).first();
+  const count = lastHourCount?.c || 0;
+
+  // Calcola media oraria ultimi 7 giorni
+  const last7DaysCount = await env.DB.prepare(
+    `SELECT COUNT(*) AS c FROM uninstall_events WHERE uninstall_ts >= ?`
+  ).bind(sevenDaysAgo).first();
+  const total7Days = last7DaysCount?.c || 0;
+  const avgHourly = total7Days / (7 * 24);
+
+  // Alert se: > 3x media E almeno 3 disinstall assolute (evita falsi allarmi sui numeri piccoli)
+  if (count >= 3 && count > (3 * avgHourly)) {
+    const text =
+      `⚠️ <b>Anomalia disinstallazioni</b>\n` +
+      `Ultima ora: ${count} (media oraria: ${avgHourly.toFixed(1)})`;
+    const threadId = await getOpsThreadId(env);
+    await notifyTelegram(text, env, threadId);
+    // Rate-limit per 1 ora
+    await env.ADOFF_LICENSES.put(lastAlertKey, "1", { expirationTtl: 3600 });
+  }
 }
 
 // =============================================
@@ -5451,10 +5775,126 @@ async function handleUninstall(request, env) {
   // Il retry offer URL viene restituito nella response per mostrarlo in frontend
   const retryOffer = getRetryOfferUrl(reason);
 
+  await maybeRunOpsChecks(env);
   return jsonResponse({
     ok: true,
     ...(retryOffer ? { retryOffer } : {}),
   });
+}
+
+// =============================================
+// TRACKING CONSENSO — opt_in/opt_out + oblio
+// =============================================
+
+async function handleTrackConsent(request, env) {
+  // Rate-limit: max 10 richieste/ora per deviceId hashato
+  let body = {};
+  try { body = await request.json(); } catch { return jsonResponse({ ok: false, error: "Invalid JSON" }, 400); }
+
+  const deviceId = typeof body.deviceId === "string" ? body.deviceId.trim() : "";
+  if (!deviceId) return jsonResponse({ ok: false, error: "Missing deviceId" }, 400);
+
+  const action = body.action === "opt_in" || body.action === "opt_out" ? body.action : null;
+  if (!action) return jsonResponse({ ok: false, error: "Invalid action" }, 400);
+
+  const policyVersion = typeof body.policyVersion === "string" ? body.policyVersion.slice(0, 32) : "";
+
+  const hashedId = await hashDeviceId(deviceId, env);
+  const rlKey = `ratelimit:consent:${hashedId}`;
+  const rlVal = parseInt(await kvGet(env.ADOFF_LICENSES, rlKey) || "0");
+  if (rlVal >= 10) return jsonResponse({ ok: false, error: "Rate limit" }, 429);
+  await env.ADOFF_LICENSES.put(rlKey, String(rlVal + 1), { expirationTtl: 3600 });
+
+  try {
+    await env.DB.prepare(`
+      INSERT INTO consent_log (device_id, action, policy_version, ts)
+      VALUES (?, ?, ?, ?)
+    `).bind(hashedId, action, policyVersion, Date.now()).run();
+
+    // Diritto all'oblio: opt_out → cancella immediatamente tutti i dati nav_stats
+    if (action === "opt_out") {
+      try {
+        await env.DB.prepare(`DELETE FROM nav_stats WHERE device_id = ?`).bind(hashedId).run();
+      } catch (e) {
+        console.error("D1 nav_stats purge error:", e.message);
+      }
+    }
+  } catch (e) {
+    console.error("D1 consent_log error:", e.message);
+  }
+
+  return jsonResponse({ ok: true });
+}
+
+// =============================================
+// TRACKING NAVIGAZIONE BATCH — upsert nav_stats
+// =============================================
+
+async function handleTrackNavBatch(request, env) {
+  // Rate-limit: max 30 richieste/ora per deviceId hashato
+  let body = {};
+  try { body = await request.json(); } catch { return jsonResponse({ ok: false, error: "Invalid JSON" }, 400); }
+
+  const deviceId = typeof body.deviceId === "string" ? body.deviceId.trim() : "";
+  if (!deviceId) return jsonResponse({ ok: false, error: "Missing deviceId" }, 400);
+
+  const entries = Array.isArray(body.entries) ? body.entries : [];
+  if (!entries.length) return jsonResponse({ ok: false, error: "Missing entries" }, 400);
+
+  const hashedId = await hashDeviceId(deviceId, env);
+  const rlKey = `ratelimit:navbatch:${hashedId}`;
+  const rlVal = parseInt(await kvGet(env.ADOFF_LICENSES, rlKey) || "0");
+  if (rlVal >= 30) return jsonResponse({ ok: false, error: "Rate limit" }, 429);
+  await env.ADOFF_LICENSES.put(rlKey, String(rlVal + 1), { expirationTtl: 3600 });
+
+  // Verifica consenso server-side: SOLO opt_in può scrivere
+  let consentOk = false;
+  try {
+    const lastConsent = await env.DB.prepare(`
+      SELECT action FROM consent_log WHERE device_id = ? ORDER BY ts DESC LIMIT 1
+    `).bind(hashedId).first();
+    consentOk = lastConsent && lastConsent.action === "opt_in";
+  } catch (e) {
+    console.error("D1 consent check error:", e.message);
+  }
+
+  if (!consentOk) {
+    // Fallisci in silenzio: client vecchio/bacato ignora, non serve dire nulla
+    return jsonResponse({ ok: true });
+  }
+
+  // Limita a max 50 entries per richiesta
+  const batch = entries.slice(0, 50);
+  const day = getDateStr();
+  const cf = request.cf || {};
+  const country = (cf.country || "XX").toUpperCase().slice(0, 2);
+  const browser = parseBrowser(request.headers.get("User-Agent") || "");
+  const now = Date.now();
+
+  try {
+    for (const entry of batch) {
+      if (typeof entry.hostname !== "string" || !entry.hostname) continue;
+      const hostname = entry.hostname.slice(0, 253).trim();
+      if (!hostname) continue;
+
+      const adsBlocked = Math.min(10000, Math.max(0, parseInt(entry.adsBlocked) || 0));
+      const adsLeaked = Math.min(10000, Math.max(0, parseInt(entry.adsLeaked) || 0));
+      const errors = Math.min(10000, Math.max(0, parseInt(entry.errors) || 0));
+
+      await env.DB.prepare(`
+        INSERT INTO nav_stats (device_id, day, hostname, ads_blocked, ads_leaked, errors, browser, country, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(device_id, day, hostname) DO UPDATE SET
+          ads_blocked = ads_blocked + excluded.ads_blocked,
+          ads_leaked = ads_leaked + excluded.ads_leaked,
+          errors = errors + excluded.errors
+      `).bind(hashedId, day, hostname, adsBlocked, adsLeaked, errors, browser, country, now).run();
+    }
+  } catch (e) {
+    console.error("D1 nav_stats batch error:", e.message);
+  }
+
+  return jsonResponse({ ok: true });
 }
 
 // ── UNINSTALL — Azioni Automatiche ────────────────────────────────────────
@@ -5541,6 +5981,7 @@ async function handleHeartbeat(request, env) {
     console.error("D1 heartbeat error:", e.message);
   }
 
+  await maybeRunOpsChecks(env);
   return jsonResponse({ ok: true });
 }
 
@@ -8703,6 +9144,56 @@ export default {
       await env.DB.prepare(
         "CREATE INDEX IF NOT EXISTS idx_sessions_exp ON sessions(expires_at)"
       ).run();
+
+      // OPS monitoring: nav_stats, consent_log, ops_digest_state
+      await env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS nav_stats (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          device_id TEXT NOT NULL,
+          day TEXT NOT NULL,
+          hostname TEXT NOT NULL,
+          ads_blocked INTEGER DEFAULT 0,
+          ads_leaked INTEGER DEFAULT 0,
+          errors INTEGER DEFAULT 0,
+          browser TEXT,
+          country TEXT,
+          created_at INTEGER NOT NULL,
+          UNIQUE(device_id, day, hostname)
+        )
+      `).run();
+      await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_nav_stats_day ON nav_stats(day)").run();
+      await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_nav_stats_device ON nav_stats(device_id)").run();
+
+      await env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS consent_log (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          device_id TEXT NOT NULL,
+          action TEXT NOT NULL,
+          policy_version TEXT NOT NULL,
+          ts INTEGER NOT NULL
+        )
+      `).run();
+      await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_consent_device ON consent_log(device_id)").run();
+
+      await env.DB.prepare(`
+        CREATE TABLE IF NOT EXISTS ops_digest_state (
+          id INTEGER PRIMARY KEY CHECK (id=1),
+          last_install_id INTEGER DEFAULT 0,
+          last_uninstall_id INTEGER DEFAULT 0,
+          last_digest_sent_at INTEGER DEFAULT 0,
+          last_report_date TEXT,
+          pending_digest_text TEXT,
+          updated_at INTEGER
+        )
+      `).run();
+      await env.DB.prepare("INSERT OR IGNORE INTO ops_digest_state (id) VALUES (1)").run();
+
+      // Aggiunge colonna is_reactivation a install_events (idempotente)
+      try {
+        await env.DB.prepare("ALTER TABLE install_events ADD COLUMN is_reactivation INTEGER DEFAULT 0").run();
+      } catch (e) {
+        // Colonna già esistente, ignorare errore
+      }
     } catch (e) {
       console.error("D1 init tables error:", e.message);
     }
@@ -8848,6 +9339,7 @@ export default {
       if (path === "/affiliate/me") return withCors(handleAffiliateMe(request, env));
       if (path === "/referral/stats") return withCors(handleReferralStats(request, env));
       if (path === "/admin/stats") return withCors(handleAdminStats(request, env));
+      if (path === "/admin/ops-stats") return withCors(handleAdminOpsStats(request, env));
       if (path === "/admin/retention") return withCors(handleAdminRetention(request, env));
       if (path === "/admin/analytics") return withCors(handleAdminAnalytics(request, env));
       if (path === "/admin/uninstall-analytics") return withCors(handleAdminUninstallAnalytics(request, env));
@@ -9074,6 +9566,12 @@ export default {
     }
     if (path === "/track/uninstall" && request.method === "POST") {
       return withCors(handleUninstall(request, env));
+    }
+    if (path === "/track/consent" && request.method === "POST") {
+      return withCors(handleTrackConsent(request, env));
+    }
+    if (path === "/track/nav-batch" && request.method === "POST") {
+      return withCors(handleTrackNavBatch(request, env));
     }
 
     // Trial link-account (via di fuga per falsi positivi anti-abuse)

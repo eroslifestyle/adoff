@@ -23,6 +23,14 @@
   const hostname = location.hostname;
   const isOfficialSite = hostname === "adoff.app" || hostname === "www.adoff.app" || hostname.endsWith(".adoff-site.pages.dev");
 
+  // Opt-in navigazione: statistiche per-hostname (buffer locale)
+  let navOptInActive = false;
+  try {
+    chrome.storage.local.get("adoffNavOptIn", (data) => {
+      if (!chrome.runtime.lastError) navOptInActive = data.adoffNavOptIn === true;
+    });
+  } catch (_) {}
+
   // Siti neutrali: nessuna pubblicita' interna — AdOff deve essere completamente
   // trasparente (no scan DOM, no hide, no stealth, no IMA). Hardcoded perche'
   // questo script gira in ISOLATED world prima ancora della lettura storage.
@@ -223,6 +231,56 @@
         // Extension invalidated — stop silenzioso
       }
     }, 1000);
+  }
+
+  // Buffer statistiche navigazione per-hostname (solo con opt-in)
+  function bufferNavStat(kind, count) {
+    if (!navOptInActive || count <= 0) return;
+    chrome.storage.local.get("adoffNavBuffer", (data) => {
+      if (chrome.runtime.lastError) return;
+      const buffer = data.adoffNavBuffer || {};
+      if (!buffer[hostname]) buffer[hostname] = { adsBlocked: 0, adsLeaked: 0, errors: 0 };
+      buffer[hostname][kind] = (buffer[hostname][kind] || 0) + count;
+      // Cap dimensione buffer: max 200 hostname distinti
+      const keys = Object.keys(buffer);
+      if (keys.length > 200) delete buffer[keys[0]];
+      chrome.storage.local.set({ adoffNavBuffer: buffer });
+    });
+  }
+
+  // Detect possible leaks: iframe ad visibili con dimensioni IAB standard
+  function detectPossibleLeaks() {
+    if (!navOptInActive) return;
+
+    // Selettori iframe ad-network esistenti
+    const iframeSelectors = GENERIC_AD_SELECTORS.filter(s => s.includes("iframe") && s.includes("src"));
+    let leaks = 0;
+
+    // Dimensioni IAB standard (tolleranza ±5px)
+    const IAB_SIZES = [
+      [300, 250], [728, 90], [320, 50], [300, 600],
+      [320, 100], [160, 600], [970, 250],
+    ];
+
+    for (const sel of iframeSelectors) {
+      try {
+        const iframes = document.querySelectorAll(sel);
+        for (const el of iframes) {
+          const rect = el.getBoundingClientRect();
+          const isVisible = rect.width > 0 && rect.height > 0;
+          if (!isVisible) continue;
+
+          // Verifica dimensioni IAB standard
+          const isIABSize = IAB_SIZES.some(([w, h]) =>
+            Math.abs(rect.width - w) <= 5 && Math.abs(rect.height - h) <= 5
+          );
+
+          if (isIABSize) leaks++;
+        }
+      } catch (_) {}
+    }
+
+    if (leaks > 0) bufferNavStat("adsLeaked", leaks);
   }
 
   function isVideoPlatform() {
@@ -623,6 +681,7 @@
 
     if (removed > 0) {
       incrementBlocked(removed);
+      bufferNavStat("adsBlocked", removed);
     }
   }
 
@@ -669,6 +728,7 @@
         observerDebounce = null;
         scanAndRemove();
         blockPopupOverlays();
+        detectPossibleLeaks();
       }, OBSERVER_DEBOUNCE_MS);
     });
 

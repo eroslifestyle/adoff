@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Build target list per il crawler notturno Auto-Fix."""
-import json, hashlib
+import json, hashlib, subprocess
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -38,13 +38,69 @@ def normalize_domain(raw):
         return None
     return ".".join(parts[-2:])
 
+def query_d1(sql):
+    """Esegue query sul database D1 del worker via wrangler CLI."""
+    import subprocess
+    cmd = ["wrangler", "d1", "execute", "adoff-db", "--remote", "--command", sql]
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    return json.loads(result.stdout.strip())
+
 def enrich_from_survey():
-    # Stub: quando il worker espone /admin/autofix/domains, qui lo chiami
-    # Per ora ritorna vuoto
+    """Estrae domini dalla tabella survey/uninstall (non ancora usata)."""
+    # TODO: quando disponibile, query su tabella survey
+    # SELECT problem_domain AS domain, COUNT(*) AS reports, MAX(uninstall_ts) AS last_seen
+    # FROM adleak_reports GROUP BY problem_domain ORDER BY reports DESC
     return []
+
+def enrich_from_adleak_and_nav():
+    """Estrae domini da adleak_reports e nav_stats per prioritizzare i controlli."""
+    domains = []
+    try:
+        # Query 1: domini segnalati in disinstallazione
+        adleak_sql = """
+            SELECT problem_domain AS domain, COUNT(*) AS reports, MAX(uninstall_ts) AS last_seen
+            FROM adleak_reports
+            GROUP BY problem_domain
+            ORDER BY reports DESC
+        """
+        adleak_result = query_d1(adleak_sql)
+        for row in adleak_result:
+            domains.append({
+                "domain": row["domain"],
+                "category": "unknown",
+                "site_type": "article",
+                "country": "GLOBAL",
+                "source": "adleak_report",
+                "reports": row["reports"],
+                "last_seen": row["last_seen"]
+            })
+
+        # Query 2: domini con ads leaked dalla telemetria navigazione
+        nav_sql = """
+            SELECT hostname AS domain, SUM(ads_leaked) AS reports, MAX(created_at) AS last_seen
+            FROM nav_stats
+            WHERE ads_leaked > 0
+            GROUP BY hostname
+            ORDER BY reports DESC
+        """
+        nav_result = query_d1(nav_sql)
+        for row in nav_result:
+            domains.append({
+                "domain": row["domain"],
+                "category": "unknown",
+                "site_type": "article",
+                "country": "GLOBAL",
+                "source": "nav_stats",
+                "reports": row["reports"],
+                "last_seen": row["last_seen"]
+            })
+    except (subprocess.CalledProcessError, json.JSONDecodeError, KeyError):
+        pass  # Se query fallisce, ritorna lista vuota
+    return domains
 
 def build(rotation_slice=0, slice_size=20):
     survey_domains = enrich_from_survey()
+    adleak_nav_domains = enrich_from_adleak_and_nav()
     allowed = [t for t in DEFAULT_TARGETS if t["category"] in ALLOWED_CATEGORIES]
     for d in survey_domains:
         norm = normalize_domain(d.get("domain", ""))
@@ -52,6 +108,14 @@ def build(rotation_slice=0, slice_size=20):
             allowed.append({
                 "domain": norm, "category": d.get("category", "unknown"),
                 "site_type": "article", "country": d.get("country", "GLOBAL"), "source": "survey"
+            })
+    for d in adleak_nav_domains:
+        norm = normalize_domain(d.get("domain", ""))
+        if norm and not any(t["domain"] == norm for t in allowed):
+            allowed.append({
+                "domain": norm, "category": d.get("category", "unknown"),
+                "site_type": "article", "country": d.get("country", "GLOBAL"),
+                "source": d.get("source", "adleak_nav")
             })
     total = len(allowed)
     start = (rotation_slice * slice_size) % max(total, 1)

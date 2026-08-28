@@ -855,6 +855,14 @@
     }
   });
 
+  // ---- Privacy navigation flush alarm ----
+  const ALARM_NAV_FLUSH = "adoffNavFlush";
+  chrome.alarms.get(ALARM_NAV_FLUSH, (existing) => {
+    if (!existing) {
+      chrome.alarms.create(ALARM_NAV_FLUSH, { delayInMinutes: 5, periodInMinutes: 60 });
+    }
+  });
+
   // ---- Init storage al primo install ----
   chrome.runtime.onInstalled.addListener((details) => {
     chrome.storage.local.get(null, (result) => {
@@ -1046,6 +1054,47 @@
         const threads = Array.isArray(data.threads) ? data.threads : [];
         const totalUnread = threads.reduce((s, t) => s + (t.unread_by_user || 0), 0);
         await storageSet({ adoffUnreadMessages: totalUnread });
+      } catch (e) {}
+      return;
+    }
+
+    // ---- Privacy navigation flush ----
+    if (alarm.name === ALARM_NAV_FLUSH) {
+      const stored = await storageGet(["adoffNavOptIn", "adoffDeviceId", "adoffNavBuffer"]);
+      if (!stored.adoffNavOptIn || !stored.adoffDeviceId) return;
+
+      const buffer = stored.adoffNavBuffer || {};
+      const hostnames = Object.keys(buffer);
+      if (hostnames.length === 0) return;
+
+      // Tronca a max 50 entries
+      const entries = hostnames.slice(0, 50).map(hostname => ({
+        hostname,
+        adsBlocked: buffer[hostname]?.adsBlocked || 0,
+        adsLeaked: buffer[hostname]?.adsLeaked || 0,
+        errors: buffer[hostname]?.errors || 0,
+      }));
+
+      try {
+        const resp = await fetch(`${API_BASE}/track/nav-batch`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceId: stored.adoffDeviceId, entries }),
+        });
+        if (resp.ok) {
+          // Flush OK → rimuovi solo gli hostname inviati, mantieni il resto per il prossimo giro
+          const remaining = {};
+          hostnames.slice(50).forEach((h) => { remaining[h] = buffer[h]; });
+          await storageSet({ adoffNavBuffer: remaining });
+        } else {
+          // Flush fallito → mantieni buffer ma tronca a max 200 hostname totali
+          const maxHostnames = 200;
+          if (hostnames.length > maxHostnames) {
+            const trimmed = {};
+            hostnames.slice(0, maxHostnames).forEach(h => trimmed[h] = buffer[h]);
+            await storageSet({ adoffNavBuffer: trimmed });
+          }
+        }
       } catch (e) {}
       return;
     }
@@ -1523,6 +1572,30 @@
         // EA-7: matching esatto o subdomain — evita false positive bidirezionali
         const whitelisted = list.some((d) => domain === d || domain.endsWith("." + d));
         sendResponse({ ok: true, whitelisted });
+      });
+      return true;
+    }
+
+    // Privacy navigation opt-in consent changed
+    if (message.action === "navConsentChanged") {
+      chrome.storage.local.get("adoffDeviceId", (result) => {
+        const deviceId = result.adoffDeviceId;
+        if (!deviceId) { sendResponse({ ok: false, error: "no deviceId" }); return true; }
+
+        const action = message.optIn === true ? "opt_in" : "opt_out";
+        fetch(`${API_BASE}/track/consent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceId, action, policyVersion: "2.0" }),
+        }).then(() => {
+          // Se opt-out, svuota il buffer locale
+          if (message.optIn === false) {
+            chrome.storage.local.remove("adoffNavBuffer");
+          }
+          sendResponse({ ok: true });
+        }).catch(() => {
+          sendResponse({ ok: false, error: "fetch failed" });
+        });
       });
       return true;
     }
