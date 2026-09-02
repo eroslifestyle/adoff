@@ -1612,6 +1612,45 @@ document.addEventListener("yt-navigate-finish", function () {
     Node.prototype.appendChild.__adoffPatched = true;
   }
 
+  // ---- 7. PAUSE-GATE NEUTRALIZER ----
+  // Alcuni portali video clone montano un gate puramente client-side: uno script
+  // inline mette in pausa il player dopo N secondi e apre un modal di
+  // registrazione che instrada su funnel di abbonamento fraudolenti. Il flusso
+  // video e' servito in chiaro (nessun DRM, nessuna autenticazione): il gate e'
+  // solo un nag che ferma la riproduzione.
+  //
+  // Neutralizzato sulla FIRMA DEL TEMPLATE, non sul dominio (che ruota di
+  // continuo): serve una globale `pausetime` numerica PIU' un modal di
+  // registrazione accanto a un <video>. Un paywall legittimo non espone quella
+  // coppia, quindi non viene mai toccato.
+  //
+  // Il gate valuta `currentTime() >= pausetime`: basta che quella lettura
+  // restituisca Infinity perche' la condizione non sia mai vera. La firma si
+  // valuta al momento della LETTURA (a DOM gia' costruito), non qui a
+  // document_start, quando il modal non esiste ancora.
+  if (!Object.getOwnPropertyDescriptor(window, "pausetime")) {
+    const looksLikeGateTemplate = () => {
+      try {
+        return !!document.querySelector("video") &&
+               !!document.querySelector("#mdl-register, #mdl-login");
+      } catch (_) {
+        return false;
+      }
+    };
+    let declared;
+    try {
+      Object.defineProperty(window, "pausetime", {
+        configurable: true,
+        get() {
+          return looksLikeGateTemplate() ? Infinity : declared;
+        },
+        set(v) {
+          declared = v;
+        },
+      });
+    } catch (_) {}
+  }
+
   } // fine activateStealth()
 
 })();
