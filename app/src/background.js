@@ -934,7 +934,13 @@
           // Avvia alarm heartbeat (1 ora)
           chrome.alarms.create("adoffHeartbeat", { periodInMinutes: 60 });
         });
-        chrome.tabs.create({ url: "src/onboarding.html" });
+        // Guardia extra: non fidarsi solo di details.reason === "install" —
+        // se Chrome rifà scattare onInstalled(install) su un profilo già
+        // inizializzato, questo flag persistito impedisce comunque il replay.
+        if (!result.adoffOnboardingShown) {
+          chrome.tabs.create({ url: chrome.runtime.getURL("src/onboarding.html") });
+          chrome.storage.local.set({ adoffOnboardingShown: true });
+        }
       }
     });
 
