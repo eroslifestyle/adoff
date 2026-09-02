@@ -44,7 +44,7 @@ THEMES = [
     {"key": "universal", "brief": "Universal blocking across EVERY website with {network_rules}+ network rules over {blocking_layers} layers (network, cosmetic, video, stealth). One extension, no allow-lists to babysit."},
     {"key": "lightweight", "brief": "Lightweight and modern: built on Manifest V3, minimal CPU/RAM footprint, no slowdown. Fast browsing, clean pages."},
     {"key": "multi-browser", "brief": "Works on {supported_browsers} browsers: Chrome, Firefox, Edge, Opera, Brave (Safari coming soon). Same protection everywhere."},
-    {"key": "trial-value", "brief": "Free core blocking forever. Pro unlocks the stealth + video layer with a {trial_days}-day free trial, then {monthly} EUR/month. Founder annual plan available."},
+    {"key": "free-forever", "brief": "AdOff is 100% free for everyone — one single version, every feature included (stealth anti-detection, video ad neutralization, all of it). No Pro tier, no paywall, no credit card. {grace_days} days of unrestricted free use, then just a free account (still zero payment) keeps protection active."},
     {"key": "vs-ublock", "brief": "Friendly comparison vs uBlock Origin: uBlock is great and powerful, but AdOff is built for people who want it to JUST WORK out of the box, plus an invisible stealth layer that defeats anti-adblock walls. Do NOT state any uBlock prices or invented stats — only AdOff's verified strengths and this honest positioning."},
     {"key": "vs-abp", "brief": "Friendly comparison vs AdBlock Plus: unlike 'acceptable ads' programs, AdOff blocks ads with no paid whitelist, and adds stealth anti-detection + video ad neutralization. Do NOT invent competitor prices/stats — only AdOff's verified strengths and honest positioning."},
     {"key": "vs-adguard", "brief": "Friendly comparison vs AdGuard: AdGuard is solid; AdOff focuses on being invisible to anti-adblock and effortless, privacy-first, free core. Do NOT invent competitor prices/stats — only AdOff's verified strengths and honest positioning."},
@@ -68,15 +68,14 @@ def log(msg):
 def load_facts():
     with open(CONSTANTS, encoding="utf-8") as f:
         c = json.load(f)
-    p = c.get("pricing", {})
+    fm = c.get("free_model", {})
     return {
         "network_rules": c.get("network_rules", 138),
         "blocking_layers": c.get("blocking_layers", 4),
         "languages": c.get("languages", 15),
         "supported_browsers": c.get("supported_browsers", 5),
-        "trial_days": c.get("trial_days", 30),
-        "monthly": p.get("monthly", 2.99),
-        "annual_founder": p.get("annual_founder", 19.99),
+        "grace_days": fm.get("grace_days", 30),
+        "registered_grant_days": fm.get("registered_grant_days", 365),
     }
 
 
@@ -127,8 +126,9 @@ def build_prompt(theme, facts, card_headline=None):
         f"{facts['blocking_layers']} protection layers; "
         f"works on {facts['supported_browsers']} browsers (Chrome, Firefox, Edge, Opera, Brave; Safari soon); "
         f"{facts['languages']} languages; "
-        f"{facts['trial_days']}-day free Pro trial; Pro {facts['monthly']} EUR/month; "
-        f"founder annual {facts['annual_founder']} EUR/year; install at {INSTALL}. "
+        f"AdOff is 100% free for everyone, one single version, no paid tier exists; "
+        f"{facts['grace_days']} days of free use with no account, then a free account (never a payment) keeps it active; "
+        f"install at {INSTALL}. "
         f"AdOff collects zero user data. Tagline: 'Ads? Off!'."
     )
     user = f"TOPIC FOR TODAY: {brief}\n\n{facts_block}\n\nWrite the post now."

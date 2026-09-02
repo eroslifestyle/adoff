@@ -41,7 +41,7 @@ I social di contenuto sono una categoria diversa e sana:
 | **Brand Name Policy** (CLAUDE.md) | Mai mostrare/nominare piattaforme video/social riconoscibili nei video demo. Le clip "prima/dopo" si girano su **siti neutri**: news generiche, blog ricette, blog tech non-brand. Mai screen-record di piattaforme famose. |
 | **Privacy/Identity Policy** | Nessun dato personale del founder. Account brand "AdOff". Bio rimanda a `adoff.app` e form supporto, mai email diretta. |
 | **EU AI Act (R7 risk register)** | Disclosure AI: bio profilo include "assistente brand AI" / footer trasparente. Voce dei post = "noi" (brand), non finto-umano individuale. |
-| **Ad policy piattaforme** | Meta/TikTok **vietano o limitano** la pubblicità a pagamento di ad-blocker. → **Solo organico** su questi canali. Paid solo Google Search, post-MRR>1K (resta in PIANO-DEFINITIVO T18). |
+| **Ad policy piattaforme** | Meta/TikTok **vietano o limitano** la pubblicità a pagamento di ad-blocker. → **Solo organico** su questi canali. Paid ricerca (Google) valutato in futuro se risorse disponibili. |
 | **Tono brand** (Bibbia parte 9) | Diretto, onesto, empatico, minimale. Mostrare frustrazione → silenzio → sollievo. Mai paranoia, mai esagerare (i numeri reali bastano). |
 
 ---
@@ -67,7 +67,7 @@ TikTok è il **motore di test creativo** (cicli rapidi, reach indipendente dai f
 | **A. Demo prima/dopo** | Stesso sito neutro: clutter pubblicitario → silenzio. Hero format. | Parte 7 (viaggio emozionale), Parte 3 (3 livelli) | 40% |
 | **B. "I numeri che nessuno ti dice"** | Stat-hook: 6.000-10.000 ads/giorno, 47% pagina = pub, 30h/anno persi a saltare | Parte 2 (problema), Parte 8 (numeri chiave) | 25% |
 | **C. Storytelling emozionale** | Frustrazione → momento → serenità. Palette emozionale per fase. | Parte 7, Parte 9 (palette) | 15% |
-| **D. Build-in-public** | Milestone install/MRR, dietro le quinte, "indie vs adtech" | Stats Stripe/CWS API (già disponibili) | 15% |
+| **D. Build-in-public** | Milestone install, dietro le quinte, "indie vs adtech" | Stats CWS API (già disponibili) | 15% |
 | **E. Comparativo soft** | ultraleggera vs MB, no "acceptable ads", privacy assoluta, zero config | Parte 5 (10 vantaggi) | 5% |
 
 Hook obbligatori (frasi pronte Bibbia parte 7): *"Ricordi quando internet era bello?"*, *"Il mio ad blocker pesa meno di questa foto"*, *"Un click. Dieci secondi. Internet torna tuo."*
@@ -132,9 +132,9 @@ Diversa da quella Reddit — qui il rischio non è la novità account ma l'inaut
 
 ## 7. UGC / creator seeding (leva esistente)
 
-Il sistema **referral è già in produzione** (+15gg Pro per amico pagante, codice univoco, dashboard). Riutilizzo come motore UGC a costo zero:
+Il sistema **referral è già in produzione** (codice univoco, dashboard). Riutilizzo come motore UGC a costo zero:
 
-- Gifting codici Pro a micro-creator (privacy/tech, 5-50k follower) → contenuto autentico, non adv (no obbligo disclosure paid perché è gifting prodotto gratuito + referral).
+- Gifting accesso gratuito esteso a micro-creator (privacy/tech, 5-50k follower) → contenuto autentico, non adv.
 - Hashtag/challenge "internet senza pubblicità" (formato POV, brand-safe).
 - Repost (con permesso) di UGC migliore sui canali brand → social proof + volume contenuti senza produzione.
 
@@ -160,7 +160,7 @@ Il sistema **referral è già in produzione** (+15gg Pro per amico pagante, codi
 - Doppiare sui formati/hook vincenti (TikTok come test-bed).
 - Avvio UGC/creator seeding via referral.
 - Tier 2 lingue (JA/KO/ZH/PL/TR/AR/ID) via pipeline traduzione già pronta.
-- Valutazione Google Ads Search (solo se MRR>1K — PIANO-DEFINITIVO T18).
+- Valutazione Google Ads Search (se risorse e priorità lo consentono).
 
 ---
 
@@ -174,7 +174,7 @@ Il sistema **referral è già in produzione** (+15gg Pro per amico pagante, codi
 | Follower brand (tot) | 500+ | 2K+ | 8K+ |
 | CTR profilo→sito | 2%+ | 3%+ | 4%+ |
 | Install attribuiti social (UTM) | 200+ | 1.5K+ | 6K+ |
-| Conversion social→trial Pro | 60%+ install | 65%+ | 70%+ |
+| Conversion social→install | 60%+ click-through | 65%+ | 70%+ |
 | Account ban/restriction | 0 | 0 | <1 |
 | UGC creator attivati | 0 | 3+ | 15+ |
 
@@ -208,7 +208,7 @@ Il sistema **referral è già in produzione** (+15gg Pro per amico pagante, codi
 | RS2 | Reach algoritmica bassa per nicchia "anti-pub" | MED | MED | TikTok come test-bed: itera hook fino a vincente, poi scala. UGC per autenticità. |
 | RS3 | Contenuto demo viola brand-name policy (mostra piattaforma vietata) | MED | HIGH | Remotion = UI mock sintetica, **mai screen-record reale**. Review pre-publish su keyword brand. |
 | RS4 | Account social restriction per pattern automation | LOW | MED | Solo publish proprio contenuto, zero engagement-bot, cadenza costante. |
-| RS5 | Rifiuto ads pagati ad-blocker (Meta/TikTok) | HIGH | LOW | Mai pianificati: solo organico. Paid = Google Search post-MRR. |
+| RS5 | Rifiuto ads pagati ad-blocker (Meta/TikTok) | HIGH | LOW | Mai pianificati: solo organico. Paid ricerca valutato in futuro. |
 | R7 (eredit.) | Disclosure AI insufficiente → EU AI Act | LOW | CRITICAL | Bio + voce "noi" brand + footer. Confermato in S1. |
 
 ---

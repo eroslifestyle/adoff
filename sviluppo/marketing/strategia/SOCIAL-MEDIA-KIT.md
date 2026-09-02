@@ -96,10 +96,10 @@ MIT — use freely in your own projects.
 > **Limit: 160 chars**
 
 ```
-Block ads everywhere. Stealth mode so sites can't detect you. ultraleggera, MV3 native, 15-day free trial. No credit card. adoff.app
+Block ads everywhere. Stealth mode so sites can't detect you. ultraleggera, MV3 native, 100% free. adoff.app
 ```
 
-*(127 chars)*
+*(108 chars)*
 
 ---
 
@@ -109,14 +109,14 @@ Block ads everywhere. Stealth mode so sites can't detect you. ultraleggera, MV3 
 ```
 🚫 AdOff — the ad blocker that hides itself.
 
-Most blockers get caught. AdOff spoof the variables anti-adblock scripts look for, intercepts their detection requests, and stays invisible.
+Most blockers get caught. AdOff spoofs the variables anti-adblock scripts look for, intercepts their detection requests, and stays invisible.
 
-ultraleggera. MV3 native. 15-day free trial, no credit card.
+ultraleggera. MV3 native. 100% free.
 
 👉 adoff.app
 ```
 
-*(261 chars)*
+*(238 chars)*
 
 ---
 
@@ -147,7 +147,7 @@ Official community for AdOff — the Chrome ad blocker that stays invisible to a
 ```
 👋 Welcome to the AdOff community!
 
-AdOff is a Chrome ad blocker with stealth anti-detection — it blocks ads and hides itself from anti-adblock scripts.
+AdOff is a Chrome ad blocker with stealth anti-detection — it blocks ads and hides itself from anti-adblock scripts. And it's completely free.
 
 **Get started:**
 • 🌐 Website & download: https://adoff.app
@@ -156,9 +156,7 @@ AdOff is a Chrome ad blocker with stealth anti-detection — it blocks ads and h
 • 🆘 **#support** — extension not working? we'll help
 • 💬 **#general** — everything else
 
-**Free tier** blocks ads on all sites. **Pro** adds stealth anti-detection so sites can't detect you're using an ad blocker.
-
-15-day free trial, no credit card required. Try Pro and see the difference.
+**All features included, no payment required.** AdOff blocks ads on all sites and hides itself from anti-adblock scripts — no subscriptions, no upgrades, 100% free.
 
 Thanks for being here. 🙏
 ```
@@ -193,12 +191,12 @@ AdOff — Chrome ad blocker with stealth anti-detection 🚫
 
 Blocks ads at the network layer (107+ rules), hides them with CSS, and spoofs the browser variables anti-adblock scripts look for — so sites can't tell you're using a blocker.
 
-ultraleggera. Manifest V3 native. 6 languages. Free plan available. Pro from €2.69/mo with a 15-day trial, no credit card.
+ultraleggera. Manifest V3 native. 6 languages. 100% free forever.
 
 Open filter rules on GitHub. adoff.app
 ```
 
-*(381 chars)*
+*(278 chars)*
 
 ---
 
@@ -236,16 +234,16 @@ AI-assisted brand channel
 - **Intro / short bio** (limit ~101 chars):
 
 ```
-Every ad off — video & web. Invisible to anti-adblock. AI-assisted brand · adoff.app
+Every ad off — video & web. Invisible to anti-adblock. 100% free. AI-assisted brand · adoff.app
 ```
 
-*(84 chars)* — AI disclosure inline (la nuova UI Pagine FB NON ha campo About lungo); "free" implicito, mai "15-day" (`feedback-social-copy`)
+*(94 chars)* — AI disclosure inline (la nuova UI Pagine FB NON ha campo About lungo)
 
 - **Privacy** (Informazioni → Informazioni legali e sulla privacy): link `https://adoff.app/privacy`. **Impressum: vuoto** (vietati dati legali/identità).
 - **Disclosure AI completa → POST FISSATO** (no campo About nella nuova UI):
 
 ```
-AdOff — official brand channel. Free: blocks website ads (banners, pop-ups, trackers). Pro: adds video ads on streaming platforms + stealth anti-detection. Posts and replies are AI-assisted, published on behalf of the AdOff brand. Info & support: https://adoff.app
+AdOff — official brand channel. Blocks website ads (banners, pop-ups, trackers) and hides itself from anti-adblock scripts. 100% free, all features included. Posts and replies are AI-assisted, published on behalf of the AdOff brand. Info & support: https://adoff.app
 ```
 
 ---
@@ -292,7 +290,7 @@ AdOff operates on three layers:
 
 2. **CSS cosmetic filtering** — Ad containers that slip through network rules are hidden via injected CSS. Clean pages, no layout holes.
 
-3. **Stealth anti-detection (Pro)** — This is where AdOff goes further. It spoofs the JavaScript variables that anti-adblock scripts look for, intercepts their detection requests, and replaces ad-related DOM properties with neutral values. Sites run their detection scripts and find... nothing.
+3. **Stealth anti-detection** — This is where AdOff goes further. It spoofs the JavaScript variables that anti-adblock scripts look for, intercepts their detection requests, and replaces ad-related DOM properties with neutral values. Sites run their detection scripts and find... nothing.
 
 **Built for MV3**
 
@@ -300,9 +298,7 @@ AdOff is native Manifest V3 — the new Chrome extension standard. No legacy wor
 
 **Pricing**
 
-- **Free** — Network blocking + CSS hiding on all sites
-- **Pro** — Adds stealth anti-detection. €2.69/month, €29.59/year, or €67.90 lifetime
-- **15-day free trial**, no credit card required
+**100% free forever.** All features included — network blocking, CSS hiding, stealth anti-detection. No subscription, no upgrade, no payment required. Ever.
 
 **Languages**
 
@@ -312,7 +308,7 @@ English, Italian, German, French, Spanish, Portuguese.
 
 The network rule set is open source on GitHub. Found an ad source that should be blocked? Open an issue.
 
-Try AdOff free for 15 days — no card, no commitment.
+Install AdOff free — no card, no commitment, no limits.
 ```
 
 ---
@@ -325,6 +321,8 @@ Hi Product Hunt! 👋
 I built AdOff because I kept running into the same problem: I'd install an ad blocker, it would work for a week, then sites started detecting it and throwing up walls.
 
 The interesting technical challenge in MV3 is that you can't inject scripts into the page's main JavaScript context the usual way — you have to use the `world: "MAIN"` manifest parameter. That's what makes the stealth layer possible: we run our spoofing code in the same JavaScript environment as the page, so when anti-adblock scripts check `window.adsbygoogle` or monitor XHR requests, they see exactly what they expect to see.
+
+**And the best part: it's completely free.** No subscription, no trial, no upgrade. All features for everyone.
 
 Happy to answer questions about:
 - How the MV3 stealth layer works technically
@@ -344,11 +342,11 @@ Thanks for checking it out 🙏
 ```
 AdOff is a Chrome extension that blocks ads using three complementary layers: network-level blocking via Chrome's declarativeNetRequest API (107+ rules), CSS cosmetic filtering that hides ad containers from the DOM, and a stealth anti-detection layer that prevents sites from identifying you as an ad blocker user.
 
-The stealth layer — available in the Pro plan — runs in the browser's main JavaScript context, spoofing variables and intercepting requests that anti-adblock scripts use to detect blockers. This means sites run their detection code and find no evidence of ad blocking.
+The stealth layer runs in the browser's main JavaScript context, spoofing variables and intercepting requests that anti-adblock scripts use to detect blockers. This means sites run their detection code and find no evidence of ad blocking.
 
 AdOff is native Manifest V3, weighs ultraleggera, and supports six languages: English, Italian, German, French, Spanish, and Portuguese. The filter rule set is open source.
 
-Pricing: free plan covers network and CSS blocking. Pro (€2.69/month, €29.59/year, or €67.90 lifetime) adds stealth anti-detection. A 15-day free trial is available with no credit card required.
+**Pricing: 100% free forever.** All features included — network blocking, CSS filtering, and stealth anti-detection — with no subscription, trial, or payment required.
 
 Good alternative to: uBlock Origin (for users who want active anti-detection), AdGuard (for users who want a lightweight MV3-native solution).
 ```
@@ -360,8 +358,8 @@ Good alternative to: uBlock Origin (for users who want active anti-detection), A
 ```
 Label (en): AdOff
 Label (it): AdOff
-Description (en): Chrome browser extension for ad blocking with stealth anti-detection
-Description (it): Estensione Chrome per il blocco degli annunci con anti-rilevamento stealth
+Description (en): Chrome browser extension for ad blocking with stealth anti-detection, free forever
+Description (it): Estensione Chrome per il blocco degli annunci con anti-rilevamento stealth, gratis per sempre
 
 Instance of (P31): browser extension (Q862305)
 Platform (P400): Google Chrome (Q11841)
@@ -369,7 +367,7 @@ Operating system (P306): web browser (Q6368)
 Website (P856): https://adoff.app
 Source code repository (P1324): https://github.com/[org]/adoff-filter-rules
 Programming language (P277): JavaScript (Q2005)
-License (P275): Proprietary (free tier + paid Pro tier)
+License (P275): Proprietary (free forever, all features included)
 Publication date (P577): 2025
 Genre (P136): privacy software (Q1769417), ad blocking software
 Developer (P178): [AdOff]
@@ -382,13 +380,13 @@ Interface language (P407): English, Italian, German, French, Spanish, Portuguese
 
 **Title:**
 ```
-Show HN: AdOff – MV3 ad blocker with stealth anti-detection layer
+Show HN: AdOff – MV3 ad blocker with stealth anti-detection layer (free forever)
 ```
-*(66 chars)*
+*(81 chars)*
 
 **Body:**
 ```
-I built AdOff, a Chrome extension (MV3) that blocks ads and hides from anti-adblock detection.
+I built AdOff, a Chrome extension (MV3) that blocks ads and hides from anti-adblock detection. And it's completely free forever.
 
 The stealth problem is interesting from a technical standpoint. In MV2 you could inject scripts via content_scripts with run_at: "document_start" into the main world easily. In MV3 you need to declare world: "MAIN" in your manifest content_scripts entry — this is what lets the script share the page's JavaScript context.
 
@@ -404,7 +402,7 @@ The network layer runs 107 declarativeNetRequest rules to stop most ad requests 
 
 Total extension size: ultraleggera. No remote code execution, no eval(), no dynamic imports from external sources.
 
-Filter rules are open source on GitHub. Free plan covers layers 1 and 2. Pro (€2.69/mo) adds the stealth layer with a 15-day trial.
+Filter rules are open source on GitHub. All features included at no cost — no subscription, no trial, no upgrade.
 
 adoff.app — happy to answer questions about the MV3 implementation.
 ```
@@ -417,9 +415,9 @@ adoff.app — happy to answer questions about the MV3 implementation.
 ```
 AdOff is a Chrome browser extension that blocks online advertisements using three layers of filtering: network-level request blocking (107+ rules using Chrome's declarativeNetRequest API), CSS cosmetic filtering to hide ad elements from page layouts, and a stealth anti-detection system that prevents websites from identifying the extension.
 
-The stealth anti-detection layer — included in the Pro subscription — operates in the browser's main JavaScript context, spoofing variables and intercepting requests used by anti-adblock detection scripts. This allows AdOff to remain undetected on sites that would otherwise prompt users to disable their ad blocker.
+The stealth anti-detection layer operates in the browser's main JavaScript context, spoofing variables and intercepting requests used by anti-adblock detection scripts. This allows AdOff to remain undetected on sites that would otherwise prompt users to disable their ad blocker.
 
-AdOff is built natively for Chrome's Manifest V3 standard. It supports English, Italian, German, French, Spanish, and Portuguese. Pricing starts at €2.69/month for Pro, with annual and lifetime options available. A 15-day free trial requires no credit card.
+AdOff is built natively for Chrome's Manifest V3 standard. It supports English, Italian, German, French, Spanish, and Portuguese. **Best of all: AdOff is 100% free forever.** All features — network blocking, CSS filtering, and stealth anti-detection — are included with no subscription, no trial, and no payment required.
 ```
 
 ---
@@ -494,17 +492,20 @@ Sites find no evidence. ✅
 
 **Tweet 6 — Pricing transparency**
 ```
-Pricing (no tricks):
+Pricing is simple:
 
-🆓 Free — network blocking + CSS hiding, forever
-💳 Pro — adds stealth anti-detection
-  → €2.69/month
-  → €29.59/year (~€2.47/mo)
-  → €67.90 lifetime, one payment
+🆓 100% free forever
 
-15-day free trial. No credit card.
+All features included:
+• Network blocking (107+ rules)
+• CSS cosmetic filtering
+• Stealth anti-detection
+• 6 languages
+• Open source filter rules
+
+No subscription. No trial. No payment. Ever.
 ```
-*(230 chars)*
+*(205 chars)*
 
 ---
 
@@ -524,23 +525,20 @@ Small. Fast. Transparent.
 
 ---
 
-**Tweet 8 — Free vs Pro**
+**Tweet 8 — Complete feature set**
 ```
-What you get free:
+What you get (no payment ever):
 
 ✅ Blocks ads on all sites (network layer)
 ✅ Hides ad containers (CSS layer)
+✅ Stealth anti-detection — sites can't tell you're using a blocker
 ✅ Whitelist / pause per site
 ✅ 6 languages
+✅ Open source filter rules
 
-What Pro adds:
-
-🛡️ Stealth anti-detection
-🛡️ Sites can't tell you're using a blocker
-
-Try Pro free for 15 days. No card needed.
+Everything. Forever free.
 ```
-*(274 chars)*
+*(243 chars)*
 
 ---
 
@@ -550,9 +548,9 @@ If you're tired of "Please disable your ad blocker" walls:
 
 👉 adoff.app
 
-Install free. Try Pro free for 15 days. If the stealth layer doesn't impress you, stay on free — it still blocks everything. No pressure. 🙏
+Install free. Forever free. All features included. No subscription, no payment, no tricks. 🙏
 ```
-*(214 chars)*
+*(142 chars)*
 
 ---
 
@@ -574,7 +572,7 @@ And if you try AdOff — good or bad — I'd love to hear what you think. DMs op
 
 **Title:**
 ```
-I built AdOff — a Chrome MV3 ad blocker with stealth anti-detection (sites can't detect it)
+I built AdOff — a Chrome MV3 ad blocker with stealth anti-detection (and it's completely free)
 ```
 
 **Body:**
@@ -591,7 +589,7 @@ AdOff blocks ads on three layers:
 
 1. **Network blocking** — 107+ declarativeNetRequest rules stop requests to ad servers before they reach the page.
 2. **CSS hiding** — Any ad container that slips through the network layer gets hidden via injected CSS.
-3. **Stealth anti-detection (Pro)** — This is the interesting part. AdOff runs in the browser's main JavaScript context (via MV3's `world: "MAIN"` declaration) and spoofs the variables, DOM elements, and network requests that anti-adblock scripts use to detect blockers. Sites run their detection code and see nothing unusual.
+3. **Stealth anti-detection** — This is the interesting part. AdOff runs in the browser's main JavaScript context (via MV3's `world: "MAIN"` declaration) and spoofs the variables, DOM elements, and network requests that anti-adblock scripts use to detect blockers. Sites run their detection code and see nothing unusual.
 
 **Why MV3?**
 
@@ -606,7 +604,7 @@ I know MV3 gets a bad reputation in the ad blocking community. I built AdOff nat
 
 **Pricing**
 
-Free plan covers layers 1 and 2 (network + CSS). Pro adds the stealth layer — €2.69/month, €29.59/year, or €67.90 lifetime. 15-day free trial, no credit card.
+100% free forever. All features included — network blocking, CSS filtering, and stealth anti-detection. No subscription, no trial, no payment required.
 
 **Download:** adoff.app
 
@@ -619,7 +617,7 @@ Happy to answer questions about the MV3 implementation, the stealth technique, o
 
 **Title:**
 ```
-AdOff: ad blocker for Chrome that also blocks the scripts sites use to detect your ad blocker
+AdOff: ad blocker for Chrome that also blocks the scripts sites use to detect your ad blocker (completely free)
 ```
 
 **Body:**
@@ -644,7 +642,7 @@ The stealth layer runs in the browser's main JavaScript context (MV3 `world: "MA
 
 **Pricing**
 
-Free plan covers network blocking and CSS hiding. Pro (€2.69/mo, 15-day trial, no card) adds the stealth anti-detection.
+100% free forever. All features included — network blocking, CSS hiding, and stealth anti-detection. No subscription, no trial, no payment.
 
 adoff.app — I'm genuinely interested in the privacy community's take on this approach. Does intercepting detection requests rather than blocking them feel like the right tradeoff?
 ```
@@ -655,7 +653,7 @@ adoff.app — I'm genuinely interested in the privacy community's take on this a
 
 **Title:**
 ```
-After 6 months of building nights and weekends, I launched AdOff — a stealth Chrome ad blocker
+After 6 months of building nights and weekends, I launched AdOff — a stealth Chrome ad blocker (completely free)
 ```
 
 **Body:**
@@ -667,19 +665,19 @@ Six months ago I got annoyed enough at "please disable your ad blocker" walls th
 - Month 1–2: Learning MV3 deeply. The `declarativeNetRequest` API is more constrained than MV2 but also more predictable. The real unlock was `world: "MAIN"` script injection for the stealth layer.
 - Month 3–4: Building the stealth anti-detection system. Testing against real anti-adblock implementations. A lot of cat-and-mouse.
 - Month 5: UI, options page, onboarding, i18n (6 languages — I wanted it accessible).
-- Month 6: License system (built on Cloudflare Workers), Stripe integration, landing page, Chrome Web Store submission.
+- Month 6: Landing page, Chrome Web Store submission, and the decision: make it completely free. No subscriptions, no trials, no paywalls.
 
 **What I shipped**
 
 AdOff — a Chrome ad blocker that blocks ads AND hides from anti-adblock detection. Three layers: network (107+ rules), CSS hiding, and a stealth layer that spoofs the variables sites use to detect blockers.
 
-ultraleggera. Free plan forever. Pro at €2.69/mo with a 15-day trial and no credit card.
+ultraleggera. 100% free forever. All features included.
 
 **What I learned**
 
 The hardest part wasn't the technical side — it was writing copy that explains "stealth anti-detection" to someone who just wants ads gone. Still working on that.
 
-The best decision: making the filter rules open source on GitHub. Immediate credibility.
+The best decision: making it completely free forever. No trial, no subscription, no payment. Just install and use.
 
 **Where it lives**
 
@@ -744,7 +742,7 @@ adoff.app — feedback genuinely welcome, especially from Chrome power users.
 | Thu | X/Twitter | 💬 Engagement | Same question on X — aggregate responses | 13:00 UTC |
 | Fri | Discord | 📣 Promo | Announce any new filter rules added this week | 17:00 UTC |
 | Sat | X/Twitter | 😄 Meme | "Ad blocker tier list" meme — good-natured | 15:00 UTC |
-| Sun | X/Twitter | 📣 Promo | Remind followers: 15-day trial, no card | 14:00 UTC |
+| Sun | X/Twitter | 📣 Promo | Remind followers: 100% free, no payment ever | 14:00 UTC |
 
 ---
 
@@ -756,8 +754,8 @@ adoff.app — feedback genuinely welcome, especially from Chrome power users.
 | Mon | Hacker News | 🚀 Submit | Post the "Show HN" if not already done — aim for weekday morning US Eastern | 13:00 UTC |
 | Tue | Mastodon | 📖 Educational | Privacy deep-dive: how ad networks track users even with cookies disabled | 10:00 UTC |
 | Tue | Reddit | 💬 Engagement | AMA in r/SideProject or r/privacy | 15:00 UTC |
-| Wed | X/Twitter | 📣 Promo | Referral program announcement — "Invite a friend, get extra Pro days" | 09:00 UTC |
-| Wed | Discord | 📣 Promo | Announce referral program in server | 12:00 UTC |
+| Wed | X/Twitter | 📣 Promo | Community highlights — "Here's what users are saying about AdOff" | 09:00 UTC |
+| Wed | Discord | 📣 Promo | Share community feedback and success stories | 12:00 UTC |
 | Thu | X/Twitter | 📖 Educational | "MV3 vs MV2 for ad blocking — the honest comparison" | 10:00 UTC |
 | Thu | Mastodon | 💬 Engagement | Boost referral announcement | 13:00 UTC |
 | Fri | Reddit | 📖 Educational | Post in r/chrome: "MV3 doesn't have to mean worse ad blocking — here's proof" | 14:00 UTC |
@@ -863,13 +861,13 @@ adoff.app — feedback genuinely welcome, especially from Chrome power users.
 ### WhatsApp / Telegram (casual, 2 lines)
 
 ```
-Sto usando AdOff per bloccare la pubblicità nel browser — funziona anche sui siti che di solito ti forzano a disattivare il blocco. Prova gratis 15 giorni senza carta: adoff.app
+Sto usando AdOff per bloccare la pubblicità nel browser — funziona anche sui siti che di solito ti forzano a disattivare il blocco. Completamente gratis, senza pagamento: adoff.app
 ```
 
 *(Italian version)*
 
 ```
-I've been using AdOff to block ads in Chrome — it works even on sites that usually force you to disable your blocker. Free 15-day trial, no card: adoff.app
+I've been using AdOff to block ads in Chrome — it works even on sites that usually force you to disable your blocker. 100% free, no payment ever: adoff.app
 ```
 
 *(English version)*
@@ -889,7 +887,7 @@ Hey,
 
 If you use an ad blocker and keep hitting "please disable your ad blocker" walls, this might help.
 
-I've been using AdOff — a Chrome extension that blocks ads and also hides the fact that it's blocking them, so sites can't detect it. There's a free plan and a 15-day Pro trial with no credit card.
+I've been using AdOff — a Chrome extension that blocks ads and also hides the fact that it's blocking them, so sites can't detect it. And the best part? It's completely free forever.
 
 → adoff.app
 

@@ -85,10 +85,10 @@ THEME_VISUALS = {
         "sub": "Chrome · Firefox · Edge · Opera · Brave — Safari soon",
         "icon": "browsers",
     },
-    "trial-value": {
-        "headlines": ["{trial_days} days of Pro. Free.", "Try Pro free for {trial_days} days"],
-        "sub": "Then just {monthly} EUR/month — core blocking free forever",
-        "icon": "trial",
+    "free-forever": {
+        "headlines": ["0€. Forever.", "100% free. No catch."],
+        "sub": "One version, every feature included — no Pro plan, no paywall",
+        "icon": "free",
     },
     "vs-ublock": {
         "headlines": ["Built to just work", "No setup. No detection."],
@@ -249,15 +249,15 @@ def icon_browsers(d, cx, cy, accent):
            fill=accent + (255,), width=10)
 
 
-def icon_trial(d, cx, cy, accent, facts=None):
-    days = str((facts or {}).get("trial_days", 30))
+def icon_free(d, cx, cy, accent, facts=None):
+    label = "0€"
     d.ellipse([cx - 185, cy - 185, cx + 185, cy + 185], outline=accent + (255,), width=14)
     d.ellipse([cx - 150, cy - 150, cx + 150, cy + 150], outline=accent + (90,), width=4)
     f_num = _lexend(150, "ExtraBold")
-    tw = d.textlength(days, font=f_num)
-    d.text((cx - tw / 2, cy - 130), days, font=f_num, fill=WHITE + (255,))
+    tw = d.textlength(label, font=f_num)
+    d.text((cx - tw / 2, cy - 130), label, font=f_num, fill=WHITE + (255,))
     f_lab = _font(INTER_SB, 40)
-    for i, lab in enumerate(["DAYS FREE"]):
+    for i, lab in enumerate(["FOREVER FREE"]):
         tw = d.textlength(lab, font=f_lab)
         d.text((cx - tw / 2, cy + 48 + i * 44), lab, font=f_lab, fill=accent + (255,))
 
@@ -360,8 +360,8 @@ def build_card(theme_key, facts, out_path, seed=None):
         icon_lightweight(d, ICON_CX, ICON_CY, accent)
     elif icon == "browsers":
         icon_browsers(d, ICON_CX, ICON_CY, accent)
-    elif icon == "trial":
-        icon_trial(d, ICON_CX, ICON_CY, accent, facts)
+    elif icon == "free":
+        icon_free(d, ICON_CX, ICON_CY, accent, facts)
     elif icon == "pause":
         icon_pause(d, ICON_CX, ICON_CY, accent)
     elif icon == "counter":
@@ -425,8 +425,7 @@ def main():
     ap.add_argument("--seed", type=int, default=None)
     args = ap.parse_args()
     facts = {"network_rules": 138, "blocking_layers": 4, "languages": 15,
-             "supported_browsers": 5, "trial_days": 30, "monthly": 2.99,
-             "annual_founder": 19.99}
+             "supported_browsers": 5, "grace_days": 30, "registered_grant_days": 365}
     path, headline = build_card(args.theme, facts, args.out, args.seed)
     print(f"saved {path} — headline: {headline}")
 

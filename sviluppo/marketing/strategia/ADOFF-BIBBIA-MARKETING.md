@@ -151,7 +151,7 @@ Un content script intelligente che:
 - Rimozione companion ads (banner laterali durante la riproduzione)
 - **Zero manipolazione del player**: non tocca currentTime, playbackRate, muted — questo previene i glitch che altri ad blocker causano facendo saltare o accelerare le pubblicita'
 
-### LIVELLO 3 — La Modalita' Stealth (Anti-Detection) — Solo Pro e Trial
+### LIVELLO 3 — La Modalita' Stealth (Anti-Detection) — Disponibile per tutti (gratis)
 
 **Cosa fa**: Rende AdOff **completamente invisibile** ai sistemi anti-adblock dei siti web. Nessun muro. Nessun ricatto. Nessun "disattiva il tuo ad blocker per continuare".
 
@@ -195,7 +195,9 @@ Per evitare di rompere il funzionamento di siti complessi, lo stealth NON modifi
 
 ## Mappa completa delle funzionalita' per versione
 
-### VERSIONE FREE (Gratuita, per sempre, senza limiti)
+### VERSIONE UNICA (100% Gratis, per sempre, senza limiti)
+
+AdOff è completamente **gratis per tutti**. Nessun piano a pagamento, nessun upgrade, nessun abbonamento. Tutte le funzionalità incluse dal primo install.
 
 | # | Funzionalita' | Dettaglio |
 |---|---|---|
@@ -205,84 +207,33 @@ Per evitare di rompere il funzionamento di siti complessi, lo stealth NON modifi
 | 4 | **MutationObserver** | Rilevamento pubblicita' caricate dinamicamente (lazy loading, infinite scroll, SPA navigation) con debounce ottimizzato (200ms) |
 | 5 | **Skip video ads** | Click automatico pulsante "Salta" su piattaforme video + chiusura overlay pubblicitari. Doppio observer: content script per slot feed + stealth script per player |
 | 6 | **Blocco popup anti-adblock** | Rilevamento e rimozione overlay con classe `adblock-wall/overlay/modal` + sblocco scroll body |
-| 7 | **Toggle globale ON/OFF** | Attiva/disattiva AdOff con un click dal popup. Badge icona: viola = ON, rosso = OFF |
-| 8 | **Pausa per sito — sessione** | Disattiva AdOff solo sul sito corrente per la durata della visita |
-| 9 | **Pausa per sito — permanente** | Disattiva AdOff permanentemente su un sito (whitelist) |
-| 10 | **Whitelist manuale** | Aggiungi/rimuovi siti dalla pagina opzioni. Matching esatto + subdomain |
-| 11 | **Contatori** | Ads bloccati + richieste bloccate, visualizzazione K/M |
-| 12 | **6 lingue** | IT, EN, DE, FR, ES, PT con auto-detect browser e override manuale |
-| 13 | **Onboarding** | Pagina di benvenuto al primo install con guida pin toolbar |
-| 14 | **Assistente FAQ** | Chat-style con 12 argomenti, chip rapidi, matching keyword |
-| 15 | **Segnalazione siti** | Form con protezione anti-bot (honeypot, captcha, rate limit, anti-spam) |
-| 16 | **Suggerimenti** | Form per proporre feature/bug/miglioramenti con storico locale |
+| 7 | **Stealth Anti-Detection completo** | Tutte e 6 le tecniche anti-detection: bait spoofing, fetch/XHR interception, variable spoofing, script neutralizer, scroll lock prevention, mutation protection |
+| 8 | **Invisibilita' ai muri anti-adblock** | I siti non riescono a rilevare AdOff → nessun messaggio "disabilita il tuo ad blocker" |
+| 9 | **Toggle globale ON/OFF** | Attiva/disattiva AdOff con un click dal popup. Badge icona: viola = ON, rosso = OFF |
+| 10 | **Pausa per sito — sessione** | Disattiva AdOff solo sul sito corrente per la durata della visita |
+| 11 | **Pausa per sito — permanente** | Disattiva AdOff permanentemente su un sito (whitelist) |
+| 12 | **Pausa per sito — 1 ora** | Disattiva AdOff per 1 ora su un sito, si riattiva automaticamente |
+| 13 | **Pausa per sito — 1 giorno** | Disattiva AdOff per 24 ore, si riattiva automaticamente |
+| 14 | **Whitelist manuale** | Aggiungi/rimuovi siti dalla pagina opzioni. Matching esatto + subdomain |
+| 15 | **Import/Export whitelist** | Esporta whitelist come JSON, importa da file con validazione |
+| 16 | **Backup completo** | Esporta/importa tutte le impostazioni |
+| 17 | **Contatori** | Ads bloccati + richieste bloccate, visualizzazione K/M |
+| 18 | **6 lingue** | IT, EN, DE, FR, ES, PT con auto-detect browser e override manuale |
+| 19 | **Onboarding** | Pagina di benvenuto al primo install con guida pin toolbar |
+| 20 | **Assistente FAQ** | Chat-style con 12 argomenti, chip rapidi, matching keyword |
+| 21 | **Segnalazione siti** | Form con protezione anti-bot (honeypot, captcha, rate limit, anti-spam) |
+| 22 | **Suggerimenti** | Form per proporre feature/bug/miglioramenti con storico locale |
+| 23 | **Badge Founding Member** | Badge esclusivo per chi ha installato AdOff prima del 01/07/2026 — visibile solo nel popup, riconoscimento per gli early adopter |
 
-### VERSIONE TRIAL PRO (15 giorni gratis, automatica al primo install)
+**Per chi supera i 30 giorni di uso**: basta creare un **account gratuito** (zero pagamento) per continuare senza interruzioni. L'account si rinnova automaticamente ed è completamente gratuito.
 
-**Tutto cio' che e' nella versione Free, PIU':**
+## Modello di finanziamento
 
-| # | Funzionalita' aggiuntiva | Dettaglio |
-|---|---|---|
-| 17 | **Stealth Anti-Detection completo** | Tutte e 6 le tecniche: bait spoofing, fetch/XHR interception, variable spoofing, script neutralizer, scroll lock prevention, mutation protection |
-| 18 | **Invisibilita' ai muri anti-adblock** | I siti non riescono a rilevare AdOff → nessun messaggio "disabilita il tuo ad blocker" |
-| 19 | **Pausa per sito — 1 ora** | Disattiva AdOff per 1 ora su un sito, si riattiva automaticamente |
-| 20 | **Pausa per sito — 1 giorno** | Disattiva AdOff per 24 ore, si riattiva automaticamente |
-| 21 | **Import/Export whitelist** | Esporta whitelist come JSON, importa da file con validazione |
-| 22 | **Backup completo** | Esporta/importa tutte le impostazioni (con filtro sicurezza licenza) |
-| 23 | **Badge PRO/TRIAL** | Badge visivo nel popup e nelle opzioni |
-| 24 | **Sistema referral** | Codice unico, link condivisibile, +15 giorni Pro per ogni amico che acquista |
-| 25 | **Condivisione social** | Bottoni WhatsApp, Telegram, Email con testo pre-compilato |
-| 26 | **Dashboard referral** | Amici paganti, giorni guadagnati, giorni rimasti, storico |
+**AdOff è 100% gratis per tutti**. Non c'è nessun piano a pagamento, nessun abbonamento, nessun upgrade.
 
-**Dopo 30 giorni**: il trial scade automaticamente. L'utente passa alla versione Free. Non viene addebitato nulla. Non serve carta di credito.
+Tutte le funzionalità — blocco di rete, stealth anti-detection, supporto multilingua — sono incluse dal primo install.
 
-### VERSIONE PRO (Abbonamento o Lifetime)
-
-**Identica al Trial Pro, permanente. Include anche:**
-
-| # | Funzionalita' aggiuntiva | Dettaglio |
-|---|---|---|
-| 27 | **Aggiornamenti prioritari** | Quando le piattaforme cambiano il sistema pubblicitario, gli utenti Pro ricevono l'aggiornamento dei filtri prima degli utenti Free |
-| 28 | **Supporto dedicato** | Canale di supporto prioritario per utenti Pro |
-| 29 | **Badge Founding Member** | Badge esclusivo per chi ha installato AdOff prima del 01/07/2026 — visibile solo nel popup, riconoscimento per gli early adopter |
-
-## Tabella comparativa versioni (per presentazioni)
-
-| Funzionalita' | FREE | TRIAL | PRO |
-|---|---|---|---|
-| Blocco rete 107 regole | Si | Si | Si |
-| CSS hiding universale | Si | Si | Si |
-| DOM Scanner + MutationObserver | Si | Si | Si |
-| Skip video ads automatico | Si | Si | Si |
-| Blocco popup anti-adblock (CSS) | Si | Si | Si |
-| Toggle globale ON/OFF | Si | Si | Si |
-| Pausa sessione + permanente | Si | Si | Si |
-| Contatori ads/richieste | Si | Si | Si |
-| 6 lingue | Si | Si | Si |
-| FAQ integrata + segnalazioni | Si | Si | Si |
-| **Stealth anti-detection (6 tecniche)** | **No** | **Si** | **Si** |
-| **Invisibilita' muri anti-adblock** | **No** | **Si** | **Si** |
-| **Pausa temporizzata (1h, 1gg)** | **No** | **Si** | **Si** |
-| **Import/Export whitelist** | **No** | **Si** | **Si** |
-| **Backup completo impostazioni** | **No** | **Si** | **Si** |
-| **Sistema referral** | **No** | **Si** | **Si** |
-| **Aggiornamenti prioritari** | **No** | No | **Si** |
-| **Supporto dedicato** | **No** | No | **Si** |
-| **Durata** | Illimitata | 15 giorni | Illimitata |
-| **Prezzo** | Gratis | Gratis | Da 2,99 EUR/mese |
-
-## Pricing dettagliato
-
-| Piano | Prezzo | Equivalente mensile | Note |
-|---|---|---|---|
-| **Free** | 0 EUR | 0 EUR | Per sempre, senza limiti |
-| **Trial Pro** | 0 EUR | 0 EUR | 15 giorni, automatico al primo install, no carta richiesta |
-| **Pro Mensile** | 2,99 EUR/mese | 2,99 EUR | Cancella quando vuoi |
-| **Pro Annuale** | 19,99 EUR/anno Founder (primi 100) · 24,99 std | — | Prezzo Founder bloccato a vita |
-| **Pro Lifetime** | 99 EUR | — | Founder Lifetime, posti limitati, Pro per sempre |
-
-### Messaggio chiave sul pricing
-
-> **La versione Free blocca TUTTE le pubblicita' su TUTTI i siti, senza limiti, per sempre.** L'upgrade a Pro non aggiunge "piu' blocco" — aggiunge l'invisibilita'. Chi passa a Pro lo fa per supportare lo sviluppo continuo di AdOff e per avere la tranquillita' di non essere mai bloccato dai muri anti-adblock.
+**Per chi continua dopo 30 giorni**: l'unico requisito è creare un **account gratuito** (zero costi, zero pagamento, mai richiesta la carta di credito). L'account si rinnova automaticamente per continuare a usare AdOff senza interruzioni.
 
 ---
 
@@ -299,7 +250,7 @@ I principali ad blocker disponibili per Chrome nel 2026:
 | **AdBlock** | ~5M | ~3 MB | Freemium |
 | **AdGuard** | ~15M | ~6 MB | Freemium + app desktop |
 | **Ghostery** | ~7M | ~5 MB | Freemium |
-| ****AdOff** | Lancio 2026 | **ultraleggera** | Freemium |
+| ****AdOff** | Lancio 2026 | **ultraleggera** | 100% Gratis per tutti |
 
 ## I 10 vantaggi competitivi di AdOff
 
@@ -422,13 +373,13 @@ I competitor principali sono prevalentemente in inglese con traduzioni parziali 
 | AdBlock | Premium + donazioni |
 | AdGuard | Software desktop a pagamento + app mobile |
 | Ghostery | Dati utente (Ghostery Insights) + premium |
-| **AdOff** | **Abbonamento Pro opzionale. La versione Free funziona completamente.** |
+| **AdOff** | **100% gratis per tutti. Nessun piano a pagamento.** |
 
 AdOff ha un modello semplice e onesto:
-- La versione Free blocca tutte le pubblicita', senza limiti
-- La versione Pro aggiunge l'anti-detection stealth e il supporto
+- Tutte le funzionalità sono gratis per sempre
+- Nessun upgrade, nessun piano "Pro", nessun abbonamento
 - Non vendiamo dati. Non abbiamo "Acceptable Ads". Non ti tracciamo.
-- Chi paga, paga per un servizio extra, non per sbloccare il blocco base
+- L'estensione è completamente gratuita: installa e usa senza alcun costo
 
 ---
 
@@ -461,9 +412,7 @@ Questa non e' una frase di marketing. E' una realta' tecnica verificabile nel co
 | Contatore ads bloccati | Mostrarti quante pubblicita' hai evitato | chrome.storage.local |
 | Contatore richieste bloccate | Mostrarti quante richieste traccianti hai evitato | chrome.storage.local |
 | Lista siti esclusi | Ricordare su quali siti hai messo in pausa AdOff | chrome.storage.local |
-| Tipo licenza | Sapere se sei Free, Trial o Pro | chrome.storage.local |
 | Lingua selezionata | Mostrare l'interfaccia nella tua lingua | chrome.storage.local |
-| Codice referral | Il tuo codice per invitare amici | chrome.storage.local |
 | Suggerimenti inviati | Storico locale dei tuoi suggerimenti | chrome.storage.local |
 
 **`chrome.storage.local`** e' lo storage privato dell'estensione. Nessun altro sito web, nessun'altra estensione, nessun server puo' accedervi. E' crittografato dal browser.
@@ -487,7 +436,7 @@ Nessuna di queste comunicazioni e' automatica. Nessuna avviene senza la tua azio
 | `storage` | Salvare le tue impostazioni | Legge/scrive chrome.storage.local (privato) |
 | `declarativeNetRequest` | Bloccare le richieste verso ad network | Applica 107 regole statiche al motore di rete Chrome |
 | `activeTab` | Mostrare il nome del sito corrente nel popup | Legge l'URL della tab attiva |
-| `scripting` | Iniettare il content script per nascondere le ads | Esegue content.js e stealth.js sulle pagine |
+| `scripting` | Iniettare il content script per nascondere le ads e rendere AdOff invisibile | Esegue content.js e stealth.js sulle pagine |
 | `webNavigation` | Rilevare quando navighi su una nuova pagina | Attiva il content script sulla nuova pagina |
 | `<all_urls>` | Funzionare su tutti i siti web | Necessario per un ad blocker universale |
 
@@ -570,9 +519,9 @@ Quel silenzio e' la cosa piu' potente che AdOff ti da'. Non e' il silenzio del v
 
 ### Frasi per le presentazioni
 - "AdOff: l'unico ad blocker progettato nativamente per Manifest V3 con stealth anti-detection integrato."
-- "ultraleggera. 107 regole di rete. 6 tecniche anti-detection. 6 lingue. Zero raccolta dati."
+- "ultraleggera. 107 regole di rete. 6 tecniche anti-detection. 6 lingue. Zero raccolta dati. 100% gratis."
 - "Il 79% degli utenti dice che la pubblicita' rovina l'esperienza online. AdOff e' la loro risposta."
-- "La versione Free blocca tutto. La versione Pro ti rende invisibile."
+- "Blocca tutto. Rende AdOff invisibile ai sistemi anti-adblock. Completamente gratis."
 
 ### Frasi per i social
 - "Ho installato AdOff 30 secondi fa. Il mio internet non e' mai stato cosi' pulito."
@@ -619,12 +568,13 @@ Quel silenzio e' la cosa piu' potente che AdOff ti da'. Non e' il silenzio del v
 | Selettori CSS hiding | 40+ |
 | Selettori DOM generici | 25+ |
 | Selettori DOM piattaforme video | 10+ |
-| Tecniche anti-detection | 6 |
+| Tecniche anti-detection (incluse nel gratis) | 6 |
 | Lingue | 6 |
 | Overhead CPU | 0% (declarativeNetRequest nativo) |
 | RAM aggiuntiva | ~2 MB |
 | Tempo installazione | < 10 secondi |
 | Configurazione richiesta | Zero |
+| Costo | 100% Gratis |
 
 ## Storage keys
 
@@ -634,12 +584,7 @@ Quel silenzio e' la cosa piu' potente che AdOff ti da'. Non e' il silenzio del v
 | adoffAdsBlocked | number | 0 |
 | adoffReqBlocked | number | 0 |
 | adoffWhitelist | array | [] |
-| adoffTrialEnd | number | install + 30gg |
-| adoffLicense | object | {type: "free"} |
 | adoffLang | string | "auto" |
-| adoffReferralCode | string | "ADO-XXXXX" |
-| adoffReferralCount | number | 0 |
-| adoffReferralDays | number | 0 |
 | adoffIsFounder | boolean | true se < 01/07/2026 |
 | adoffInstallDate | number | timestamp install |
 

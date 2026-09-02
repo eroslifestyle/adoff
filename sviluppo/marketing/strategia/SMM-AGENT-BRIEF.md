@@ -11,12 +11,12 @@
 **I 4 livelli (come funziona):**
 1. **Network blocking** — ~130 regole mirate, bloccano richieste verso ad network (molto più leggero di liste da 80.000+ regole).
 2. **Cosmetic filtering** — nasconde elementi pubblicitari dal DOM.
-3. **Video ad neutralization** (Pro) — sostituisce l'SDK pubblicitario video con uno stub neutro → zero pre-roll/mid-roll, player funzionante.
-4. **Stealth anti-detection** (Pro) — bait spoofing, fetch/XHR interception, variable spoofing: i siti non rilevano il blocker → niente muri "disattiva l'adblock".
+3. **Video ad neutralization** — sostituisce l'SDK pubblicitario video con uno stub neutro → zero pre-roll/mid-roll, player funzionante.
+4. **Stealth anti-detection** — bait spoofing, fetch/XHR interception, variable spoofing: i siti non rilevano il blocker → niente muri "disattiva l'adblock".
 
-**Modello**: Freemium. Free permanente + trial Pro 30 giorni (no carta). Pricing: piano UNICO fino a 3 dispositivi — Mensile 2,99 / Annuale Founder 19,99 (std 24,99) / Founder Lifetime 99 EUR.
+**Modello**: Completamente gratis per tutti. Niente abbonamenti, niente piani a pagamento, tutte le funzionalità incluse.
 
-**Privacy**: zero-log policy, storage solo locale (`chrome.storage.local`), GDPR by design, codice ispezionabile. Unica comunicazione server = validazione licenza Pro.
+**Privacy**: zero-log policy, storage solo locale (`chrome.storage.local`), GDPR by design, codice ispezionabile.
 
 ---
 

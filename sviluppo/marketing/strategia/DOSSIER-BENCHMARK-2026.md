@@ -8,7 +8,7 @@
 
 | # | Servizio | URL | Cosa misura | Azione | Submission |
 |---|---|---|---|---|---|
-| 1 | Ad Block Tester | https://adblock-tester.com/ | Score 0-100 su blocco ads/tracker/annoyance | Installare AdOff (Pro) → eseguire il test live → screenshot score | Self-service: il sito calcola lo score; nessun form. Per essere **listato** nella loro pagina "/ad-blockers/" inviare richiesta via contatto sito |
+| 1 | Ad Block Tester | https://adblock-tester.com/ | Score 0-100 su blocco ads/tracker/annoyance | Installare AdOff → eseguire il test live → screenshot score | Self-service: il sito calcola lo score; nessun form. Per essere **listato** nella loro pagina "/ad-blockers/" inviare richiesta via contatto sito |
 | 2 | Cover Your Tracks (EFF) | https://coveryourtracks.eff.org/ | Protezione fingerprinting/tracker | Eseguire con AdOff attivo → salvare report | Nessuna submission, solo evidenza citabile |
 | 3 | d3ward toolz | https://d3ward.github.io/toolz/adblock.html | % blocco su lista ampia ad/tracker | Eseguire con AdOff → screenshot % | Nessuna submission, evidenza citabile (molto usato su Reddit) |
 | 4 | Adblock Tester (CPM Star/legacy) | https://adblock-tester.com/ alt mirror | idem #1 | ridondanza | — |
@@ -18,7 +18,7 @@
 ## 2. Pre-check prima del test (per massimizzare lo score)
 
 - [ ] Build STORE/SITE aggiornata installata (versione corrente dei `manifest.json`).
-- [ ] Pro/Trial attivo (Stealth + video skip + cookie banner ON) — i benchmark testano anche annoyance/cosmetic.
+- [ ] Tutte le funzionalità abilitate (Stealth + video skip + cookie banner ON) — i benchmark testano anche annoyance/cosmetic.
 - [ ] `adblock-rules.json` aggiornato (130+ regole) caricato correttamente.
 - [ ] Nessuna whitelist/pausa attiva sul dominio di test.
 - [ ] Browser pulito (no altre estensioni adblock attive che falsino il risultato).
@@ -40,7 +40,7 @@ draft §3.2 PIANO-OPERATIVO):
 > Oggetto: AdOff — richiesta inclusione nella lista ad blocker
 >
 > Salve, AdOff è un ad blocker Manifest V3 (Chrome/Edge/Brave/Firefox/Safari) con blocco
-> universale + stealth anti-detection. Abbiamo eseguito il vostro test: score allegato
+> universale + stealth anti-detection, **completamente gratuito**. Abbiamo eseguito il vostro test: score allegato
 > (screenshot). Chiediamo l'inclusione di AdOff nella vostra pagina comparativa, con i
 > dati che ritenete corretti dopo verifica indipendente. Sito: adoff.app — Team AdOff
 

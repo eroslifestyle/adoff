@@ -35,7 +35,7 @@ Vai su alternativeto.net → "Add application". Incolla:
 - **Licenze**: Freemium
 - **Platforms**: Chrome, Edge, Opera, Brave, Firefox, Safari
 - **Description** (incolla):
-  > AdOff is a lightweight Manifest V3 ad blocker that blocks banners, pop-ups, trackers and video ads. Its standout feature is Stealth anti-detection: it blocks ads without leaving the traces that trigger "disable your ad blocker" walls, so it stays invisible to anti-adblock systems. Zero data collection (local-only, GDPR by design), ultra-light footprint, and free with a 15-day Pro trial. Available on Chrome, Edge, Opera, Brave, Firefox and Safari.
+  > AdOff is a lightweight Manifest V3 ad blocker that blocks banners, pop-ups, trackers and video ads. Its standout feature is Stealth anti-detection: it blocks ads without leaving the traces that trigger "disable your ad blocker" walls, so it stays invisible to anti-adblock systems. Zero data collection (local-only, GDPR by design), ultra-light footprint, and completely free. Available on Chrome, Edge, Opera, Brave, Firefox and Safari.
 - **Aggiungi come alternativa a**: uBlock Origin, AdBlock Plus, AdGuard, Ghostery, AdBlock → questo ti fa comparire nelle ricerche "alternative to [X]".
 - **Tags**: ad-blocker, privacy, anti-adblock, manifest-v3, stealth
 
@@ -46,7 +46,7 @@ Vai su alternativeto.net → "Add application". Incolla:
 - **Name**: AdOff
 - **Tagline** (60 char): The ad blocker websites can't detect
 - **Description**:
-  > AdOff blocks banners, pop-ups, trackers and video ads on Chrome, Edge, Opera, Brave, Firefox and Safari. Unlike most blockers, its Stealth mode hides the blocking itself — so anti-adblock walls never trigger. Manifest V3 native, ultra-light, zero data collection. Free with a 15-day Pro trial.
+  > AdOff blocks banners, pop-ups, trackers and video ads on Chrome, Edge, Opera, Brave, Firefox and Safari. Unlike most blockers, its Stealth mode hides the blocking itself — so anti-adblock walls never trigger. Manifest V3 native, ultra-light, zero data collection. Completely free.
 - **First comment (maker)** (incolla):
   > Hi PH 👋 I built AdOff because every ad blocker I tried got detected — sites would nag me to turn it off. AdOff blocks ads AND stays invisible to anti-adblock scripts (you can test whether your current blocker is detectable here: https://adoff.app/adblock-detector). It's Manifest V3 native, ultra-light, and collects zero data. Happy to answer anything!
 - **Gallery**: 4-5 screenshot (popup, contatore, test tool, comparison). Includi una GIF del tool.
@@ -85,7 +85,7 @@ La lista 4-tier esiste già. Usa quei contatti + questo angolo aggiornato (il to
 > Subject: An ad blocker that's actually invisible to anti-adblock
 >
 > Hi [Name], I follow your work on [privacy/tech]. I built AdOff, a Manifest V3 ad blocker whose angle is stealth anti-detection — it blocks ads without tripping the "disable your ad blocker" walls. I made a free in-browser test that shows whether any blocker is detectable: https://adoff.app/adblock-detector — might be an interesting demo regardless of coverage.
-> Happy to give you a free Pro license + a referral code, zero strings. If it's worth a mention, great; if not, thanks for testing.
+> AdOff is completely free. Happy to give you early access + a referral code for tracking, zero strings. If it's worth a mention, great; if not, thanks for testing.
 
 ---
 

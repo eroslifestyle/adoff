@@ -31,7 +31,7 @@ hanno solo AdGuard, Ghostery e Brave.
    passaparola dev. Reach lento ma fiducia altissima.
 2. **Premium pragmatico** (AdGuard, AdLock): "protezione totale del device, privacy +
    security". Tono corporate-friendly, freemium con Pro chiaro, content marketing + affiliate
-   trasparente (AdGuard 40-50% commission). Sostenibile, mainstream.
+   trasparente (AdGuard 40-50% commission). Sostenibile, mainstream. **AdOff si differenzia qui con completo free, zero paywall.**
 3. **Visionario / emozionale** (Brave): founder-narrative (Brendan Eich), "metaphysical
    rebellion contro la sorveglianza", attention economy, creator economy. Multi-canale +
    sponsorship influencer massiccia.
@@ -82,14 +82,17 @@ su Reddit. Profitto breve, reputazione tossica.
 
 1. **Positioning ibrido**: pragmatismo AdGuard + trasparenza radicale (anti-Total Adblock) +
    un hook emotivo ("riprenditi banda, tempo e attenzione" — funzionale + emozionale, NO Web3).
-2. **Trasparenza come arma**: trial 15gg onesto, prezzo rinnovo prominente, cancellazione
-   1-click, zero dark pattern. Comunicarlo esplicitamente ("Why we don't use dark patterns")
-   in contrasto diretto col modello Total Adblock e con l'Acceptable Ads di eyeo.
+   **Differenziale chiave: completamente gratis per sempre, zero paywall.**
+2. **Trasparenza come arma**: gratis al 100%, zero dark pattern, zero trial bait-and-switch. 
+   Comunicarlo esplicitamente ("Free forever, no paywalls") in contrasto diretto col modello 
+   Total Adblock e con l'Acceptable Ads di eyeo e i freemium di AdGuard/AdLock.
 3. **SEO + listicle prima dei social**: priorità assoluta entrare nei comparison article/video
    "best ad blocker". Blog tipo "AdOff Tracker Report" / "come i siti bloccano i blocker".
-4. **Affiliate etico AdGuard-style** (40-50% recurring) verso tech media legit; NO SEO farm.
-5. **Outreach micro/medio creator autentici** (Mental Outlaw, Techlore, NBTV-like, micro
-   1K-10K) con valori privacy allineati — niente sponsorizzazioni transazionali palesi.
+   **Messaggio differenziale nel positioning: unico blocker completamente gratis.**
+4. **Creator outreach** (Mental Outlaw, Techlore, NBTV-like, micro 1K-10K) con valori privacy allineati — 
+   niente sponsorizzazioni transazionali, solo accesso gratuito al prodotto.
+5. **Niente affiliate ricorrente**: con il modello free-forever, i creator guadagnano da inviti referral
+   e community credibility, non da commissioni su abbonamenti (che non esistono).
 6. **News-jacking pronto**: monitorare il prossimo giro di crackdown piattaforma video →
    reaction video/post "ecco la soluzione AdOff" entro 24-48h.
 7. **YouTube ufficiale + Shorts**: 1 canale educativo + 3-5 Shorts demo "satisfying" (load

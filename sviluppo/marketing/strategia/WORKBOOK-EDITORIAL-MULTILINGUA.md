@@ -159,7 +159,7 @@ social_posts (DB) ×3 righe:
 
 1. **Brand Name Policy**: vietati `youtube · google · facebook · instagram · tiktok · amazon · reddit · twitch · chrome · firefox · safari · edge · opera` (e altri brand) in caption/hashtag. Solo termini generici. Vedi project `CLAUDE.md`.
 2. **Privacy founder**: zero dati personali. Voce = "noi" brand.
-3. **No pricing aggressivo**: "free" implicito; il trial vive in bio/sito, mai nei caption.
+3. **No pricing/pagamento**: nessun riferimento a trial, abbonamento, pagamento, upgrade. "Free" implicito, non nominare.
 4. **Lang sync**: caption == lingua voiceover == lingua testo a schermo.
 5. **AI disclosure** in caption: obbligatoria (EU AI Act).
 6. **No real-screen capture** di player video brandizzati: solo UI sintetica + immagini FLUX nostre.

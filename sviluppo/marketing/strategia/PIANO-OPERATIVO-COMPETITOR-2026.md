@@ -22,12 +22,12 @@ contro i due punti deboli reputazionali del mercato:
 
 **Messaggio cardine (claim trasversale, da inserire in sito + store + bio + pinned post):**
 
-- IT: *"Niente pubblicità 'accettabili'. Niente trappole. Prova 15 giorni, disdici in un click."*
-- EN: *"No 'acceptable ads'. No traps. 30-day trial, cancel in one click."*
+- IT: *"Niente pubblicità 'accettabili'. Niente trappole. Gratis al 100%, per sempre."*
+- EN: *"No 'acceptable ads'. No traps. Free forever."*
 
 **Linee copy pronte (riuso in video pilastro E / carousel / about):**
 1. *"Altri ti fanno passare le pubblicità 'giuste'. Noi nessuna."* (vs eyeo)
-2. *"Prezzo di rinnovo scritto grande, non in grigio 4pt."* (vs Total Adblock)
+2. *"Gratis e completo — zero paywalls, zero sorprese."* (vs Total Adblock)
 3. *"ultraleggera. Open about pricing. Nessun dark pattern — è una promessa, non uno slogan."*
 4. *"Il tuo tempo e la tua banda sono tuoi. Ce li riprendiamo, in silenzio."* (hook emozionale, no Web3)
 
@@ -45,7 +45,7 @@ il singolo gap di crescita più grande e NON era coperto dalla strategia social.
 ### 2.1 Target — siti che rankano (da inserire/contattare)
 | Sito | Tipo | Azione |
 |---|---|---|
-| cybernews.com/best-ad-blockers | Review tech autorevole | Pitch inclusione (review onesta, accesso Pro) |
+| cybernews.com/best-ad-blockers | Review tech autorevole | Pitch inclusione (review onesta, accesso completo) |
 | techradar.com/best-ad-blockers | Review tech mainstream | Pitch inclusione |
 | allaboutcookies.org | Affiliate review (alto ranking) | Affiliate etico 40-50% recurring |
 | pcrisk.com / standsapp.org/blog | Listicle YouTube adblock | Outreach inclusione |
@@ -74,7 +74,7 @@ citabile ovunque (come fa uBlock Origin). Azione S-OPS-3, Size S.
 
 ## 3. Outreach creator & press (estende §7 UGC del doc social)
 
-La §7 della strategia copre già "gifting codici Pro a micro-creator via referral". Qui la
+La §7 della strategia copre già "outreach a micro-creator via referral e community gifting". Qui la
 **lista concreta segmentata** + i **draft messaggi**. Principio dalla ricerca: i creator
 **autentici** valgono più di 100 listicle faceless; chi non accetta sponsor (NBTV) va
 trattato come earned media, NON come deal.
@@ -84,9 +84,9 @@ trattato come earned media, NON come deal.
 | Tier | Chi | Approccio | Aspettativa |
 |---|---|---|---|
 | **A — Autorità no-sponsor** | Naomi Brockwell/NBTV, Techlore | NO offerta pagata. Solo: prodotto allineato a privacy + invito a provarlo. Mention solo se merita | Earned, basso volume, fiducia max |
-| **B — Tech FOSS/privacy** | Mental Outlaw e simili (audience privacy-aware) | Accesso Pro gratuito + dati tecnici (stealth/MV3). Nessuno script imposto | Review/menzione organica |
-| **C — Micro-creator 1K-50K** | privacy/tech/produttività su YT/TikTok/IG | Gifting Pro + codice referral (loro guadagnano giorni Pro). UGC autentico | Volume, UGC ripostabile |
-| **D — Review/affiliate site** | allaboutcookies, blog comparativi seri | Programma affiliate etico 40-50% recurring, NO coupon farm | Ranking SEO |
+| **B — Tech FOSS/privacy** | Mental Outlaw e simili (audience privacy-aware) | Accesso completo + dati tecnici (stealth/MV3). Nessuno script imposto | Review/menzione organica |
+| **C — Micro-creator 1K-50K** | privacy/tech/produttività su YT/TikTok/IG | Accesso gratuito + codice referral (loro guadagnano credibilità community). UGC autentico | Volume, UGC ripostabile |
+| **D — Review/affiliate site** | allaboutcookies, blog comparativi seri | Accesso completo per il test + dati benchmark, NO coupon farm | Ranking SEO |
 
 ### 3.2 Draft messaggi (brand "AdOff", zero identità founder, contatto via brand)
 
@@ -95,26 +95,25 @@ trattato come earned media, NON come deal.
 >
 > Ciao [Nome], seguiamo il tuo lavoro sulla privacy. Abbiamo costruito AdOff: blocco
 > universale, stealth anti-detection, **zero pubblicità "accettabili", zero dark pattern**,
-> prezzo di rinnovo trasparente, disdetta in un click — l'opposto del modello Total Adblock/eyeo.
-> Non ti chiediamo una sponsorizzazione né uno script: solo, se ti va, un Pro gratuito a vita
-> per provarlo. Se non ti convince, nessun problema e nessun follow-up. — Team AdOff, adoff.app
+> **completamente gratuito** — l'opposto del modello Total Adblock/eyeo.
+> Non ti chiediamo una sponsorizzazione né uno script: solo, se ti va, di provarlo. 
+> Se non ti convince, nessun problema e nessun follow-up. — Team AdOff, adoff.app
 
 **Tier B/C (gifting + referral) — email/DM:**
-> Oggetto: Pro gratuito AdOff + codice referral per la tua community
+> Oggetto: AdOff gratis + codice referral per la tua community
 >
-> Ciao [Nome], ti regaliamo un AdOff Pro a vita (codice qui sotto) — usalo senza alcun
-> obbligo di parlarne. Se decidi di mostrarlo, hai un codice referral: chi lo usa ti fa
-> guadagnare giorni Pro extra. Niente brief, niente claim imposti: di' solo quello che
-> pensi davvero. AdOff = blocco universale, stealth, niente "acceptable ads", trial 15gg
-> onesto, disdetta 1 click. Materiali brand-safe su richiesta. — Team AdOff, adoff.app
+> Ciao [Nome], AdOff è completamente gratuito per tutti — niente paywall, niente trial bait.
+> Se decidi di mostrarlo, hai un codice referral: chi lo usa entra nella tua community.
+> Niente brief, niente claim imposti: di' solo quello che pensi davvero. AdOff = blocco universale, stealth, 
+> niente "acceptable ads", **gratis per sempre**. Materiali brand-safe su richiesta. — Team AdOff, adoff.app
 
 **Tier D (affiliate/press) — email:**
-> Oggetto: AdOff — inclusione nella comparativa + programma affiliate trasparente
+> Oggetto: AdOff — inclusione nella comparativa + accesso completo per il test
 >
 > Ciao [Redazione], proponiamo AdOff per la vostra comparativa ad blocker 2026: vi diamo
-> accesso Pro completo per il test e tutti i dati di benchmark (score adblock-tester
-> indipendente). Affiliate ricorrente 40-50%, nessun coupon farm, nessuna richiesta di
-> posizionamento forzato — solo una review onesta. — Team AdOff, adoff.app
+> accesso completo per il test e tutti i dati di benchmark (score adblock-tester
+> indipendente). **AdOff è completamente gratuito** — nessun modello freemium, nessun coupon farm, 
+> nessuna richiesta di posizionamento forzato — solo una review onesta. — Team AdOff, adoff.app
 
 Azione: S-OPS-4 — costruire lista nominativa (50 micro-creator C, 10 B, 4 A, 8 D) +
 workflow invio via referral esistente + tracking D1. Owner: N8N Expert + founder per Tier A/B.

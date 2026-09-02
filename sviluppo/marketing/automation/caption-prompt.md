@@ -9,7 +9,7 @@
 2. **Privacy founder**: nessun dato personale. Voce = "noi" brand AdOff, mai persona fisica.
 3. **AI disclosure obbligatoria** (EU AI Act): ogni caption termina con la riga disclosure nella lingua target (vedi §Disclosure).
 4. **Niente claim non verificati**: usa SOLO numeri presenti nel brief. Non inventare metriche.
-5. **No pricing aggressivo nel video copy**: "free" resta implicito; il trial 15gg vive in bio/sito, non nei caption (coerente con i template silent).
+5. **No pricing aggressivo nel video copy**: AdOff è gratis al 100% per tutti (una versione unica con tutto incluso). Niente trial, niente piani a pagamento nei caption — il messaggio è: completamente gratis, niente paywalls.
 6. Tono brand (Bibbia parte 9): diretto, onesto, empatico, minimale. Frustrazione → silenzio → sollievo. Mai paranoia, mai iperbole.
 
 ## System prompt

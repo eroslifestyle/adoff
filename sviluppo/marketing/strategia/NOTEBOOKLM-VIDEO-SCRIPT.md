@@ -154,7 +154,7 @@ Hai due opzioni:
 
 **AdOff. Ads? Off.**
 
-La versione base e' completamente gratuita, senza limiti. Blocca tutte le pubblicita' su tutti i siti. Se vuoi supportare lo sviluppo e ottenere aggiornamenti prioritari, c'e' la versione Pro — ma il blocco funziona identicamente in entrambe le versioni.
+Tutte le funzionalita' sono completamente gratuite. Per sempre. Blocca tutte le pubblicita' su tutti i siti, con accesso a tutte le capacita' (stealth anti-detection, blocco video ads, tutto). Niente pagamenti, niente abbonamenti.
 
 Installa AdOff adesso. Il tuo futuro io ti ringraziera'.
 
@@ -179,22 +179,17 @@ Zero raccolta dati. Nessuna telemetria. Nessun analytics. Tutto in locale.
 ### Lingue supportate
 Italiano, English, Deutsch, Francais, Espanol, Portugues.
 
-### Piani
-- **Free**: blocco ads completo, senza limiti, per sempre
-- **Trial Pro**: 15 giorni gratis con tutte le funzionalita' Pro
-- **Pro Mensile**: 2,99 EUR/mese
-- **Pro Annuale**: 19,99 EUR/anno (Founder, primi 100) · 24,99 standard
-- **Pro Lifetime**: 99 EUR una tantum (Founder Lifetime)
+### Modello di accesso
+- **Gratuito per sempre**: blocco ads completo, senza limiti, tutte le funzionalita'. Niente pagamenti.
+- **Account gratuito**: crea un account gratuito (niente carta di credito) dopo 30 giorni per continuare l'accesso illimitato.
 
-### Funzionalita' principali
+### Funzionalita' principali (tutte gratuite)
 - Blocco pubblicita' su tutti i siti web
 - Skip automatico ads video su piattaforme di streaming
-- Modalita' Stealth anti-detection (Pro/Trial)
+- Modalita' Stealth anti-detection
 - Pausa per sito con 4 opzioni (sessione, 1 ora, 1 giorno, permanente)
 - Whitelist importabile/esportabile
 - Contatori ads e richieste bloccate
-- Sistema referral (invita amici, guadagna giorni Pro)
-- Badge Founding Member per early adopter
 - Onboarding guidato al primo install
 - Assistente FAQ integrato
 - Sistema segnalazione siti problematici (con protezione anti-bot)

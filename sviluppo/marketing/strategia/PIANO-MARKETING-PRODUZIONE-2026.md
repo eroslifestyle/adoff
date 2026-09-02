@@ -104,10 +104,10 @@ Fonte frasi verificate: Bibbia Parte 7 (frasi video/social) + Parte 2 (numeri). 
 
 - **1 idea per video.** Un hook, un numero, una svolta. Niente liste di feature nel video.
 - **Frasi ≤ 8 parole** nei testi a schermo (lettura mobile in 0.5s).
-- **CTA sempre soft**: "→ adoff.app". Mai "Compra", mai "15 giorni gratis" nel video (vive in bio/sito). "Free" implicito.
+- **CTA sempre soft**: "→ adoff.app". Mai "Compra", mai nessun riferimento a trial/pagamento/upgrade nel video. "Free" implicito.
 - **Caption** ≤150 char: gancio (ripreso/variato dall'hook) + CTA. Poi hashtag. Poi riga AI disclosure (obbligatoria, EU AI Act).
 - **Brand Name Policy**: mai brand reali nei testi/voce/grafiche. Solo "video platform", "search engine", "social". UI sempre sintetica.
-- **Numeri solo da Bibbia.** Mai inventare metriche (vale anche per build-in-public: usa cifre reali CWS/Stripe o nessun numero).
+- **Numeri solo da Bibbia.** Mai inventare metriche (vale anche per build-in-public: usa cifre reali CWS o nessun numero).
 - **Hashtag**: 5-6, set per pilastro (`hook-bank.json §hashtagSets`). No hashtag-stuffing, no trending irrilevanti.
 
 ### 3.4 Caption — template per piattaforma

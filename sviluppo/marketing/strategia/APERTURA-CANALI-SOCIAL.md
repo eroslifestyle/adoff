@@ -43,7 +43,7 @@ Nota: il punto può richiedere mapping nel tool di scheduling — verificare al 
 3. **Username**: `adoff.app` · **Nome visualizzato**: `AdOff`
 4. **Foto profilo**: `avatar-512.png`
 5. **Bio** (≤80, da SOCIAL-MEDIA-KIT §1 TikTok):
-   `Watch anything. Read anything. Zero ads, anywhere ↓`
+   `Watch anything. Read anything. Zero ads, forever. Gratis 🚫`
 6. **Link in bio**: `https://adoff.app` (campo sito; se non disponibile su Creator sotto soglia follower, mettere link nella prima riga bio / link-in-bio page).
 7. **AI disclosure**: non c'è spazio in bio → inserire la versione **Long** (`SOCIAL-MEDIA-KIT §1 AI Disclosure`) nella **descrizione del primo video pinnato** + nella link-in-bio page.
 8. Impostazioni: lingua contenuti **English** (reach globale), 2FA ON, commenti filtrati (filtro parole offensive ON).
@@ -61,7 +61,7 @@ Nota: il punto può richiedere mapping nel tool di scheduling — verificare al 
    ```
    Block every ad, everywhere 🚫
    Invisible to anti-adblock · all major browsers · ultraleggera
-   15-day free trial, no card
+   Gratis per sempre, zero paywall
    AI-assisted brand channel
    ```
 6. **Link**: campo sito → `https://adoff.app` (o link-in-bio page con disclosure Long + download).
@@ -78,7 +78,7 @@ Nota: il punto può richiedere mapping nel tool di scheduling — verificare al 
 2. **Username/vanity**: `@adoff.app` (`Impostazioni → Username Pagina`).
 3. **Foto profilo**: `avatar-512.png` · **Copertina**: `marquee-1400x560.png` ridimensionato a 1640×624.
 4. **Intro/bio breve** (≤101, da SOCIAL-MEDIA-KIT §1 FB):
-   `Block every ad, everywhere. Invisible to anti-adblock. Free 15-day Pro trial. adoff.app`
+   `Block every ad, everywhere. Invisible to anti-adblock. Free forever. adoff.app`
 5. **Informazioni → Ulteriori informazioni**: incollare il testo **About lungo** (con AI disclosure) da SOCIAL-MEDIA-KIT §1 Facebook.
 6. **Sito web**: `https://adoff.app` · **Email contatto pubblica**: NON inserire (usare solo link al form supporto del sito).
 7. **Ruoli Pagina**: admin = account founder, ma profilo personale impostato privato. Niente nome/cognome nella Pagina.

@@ -55,10 +55,10 @@ SEO blog backlog for Q2-Q3 2026. This supports the brand-safe, competitor-neutra
    - YouTube (pre-roll, mid-roll, ads in recommendations)
    - Twitch (mid-roll, category-level blocking)
    - Streaming services
-5. When video blocking is worth premium
-   - Time saved calculation
-   - Streaming duration metrics
-6. CTA: 15-day trial
+5. Getting it for free
+   - Why AdOff handles video ads without premium paywall
+   - Built-in for everyone
+6. CTA: Install AdOff free
 
 **Word Target:** ~1,200-1,400 words each (EN + IT)  
 **Format:** Technical + Practical hybrid  
@@ -110,27 +110,27 @@ SEO blog backlog for Q2-Q3 2026. This supports the brand-safe, competitor-neutra
 
 ---
 
-### 5. Why Free Trial Matters: The 15-Day Test Drive for Ad Blocker Compatibility
+### 5. How to Test an Ad Blocker: Evaluation Checklist Before Installing
 
 **Status:** Pending | **Priority:** MEDIUM | **SEO Score:** 7.2/10
 
 **Target Keywords:**
-- "free ad blocker trial"
-- "try premium ad blocker free"
-- "ad blocker 15 day trial"
-- "test ad blocker before buying"
+- "best free ad blocker"
+- "test ad blocker compatibility"
+- "how to choose ad blocker"
+- "ad blocker trial sites"
 
 **Outline (EN/IT):**
-1. The trial paradox: why you *need* a test drive
+1. Why testing matters before committing
    - Compatibility varies by site
    - Feature usefulness is personal
    - Stealth mode effectiveness varies
-2. What you should test in a 15-day trial
+2. What you should test when installing
    - Your top 10 sites with anti-adblock
    - Video streaming (YouTube, Twitch, Netflix)
    - Paywalled sites you frequent
-   - Speed + stability over 2 weeks
-3. How to evaluate trial performance
+   - Speed + stability over first week
+3. How to evaluate performance
    - Before/after comparison
    - Ad block effectiveness metrics
    - False positive rate (too aggressive?)
@@ -139,20 +139,20 @@ SEO blog backlog for Q2-Q3 2026. This supports the brand-safe, competitor-neutra
    - Identify your pain points FIRST
    - Test on your actual browsing patterns
    - Check edge cases (PayPal, banking, etc.)
-5. Questions to ask during trial
+5. Questions to ask yourself during testing
    - Does it bypass anti-adblock on site X?
    - Does video skip work on platform Y?
    - Is the UI intuitive for your needs?
    - Is customer support responsive if stuck?
-6. Why no-questions refund matters
-   - Insurance against incompatibility
-   - Trust signal from vendor
-7. CTA: Start risk-free 15-day trial
+6. Why uninstall is always free (no lock-in)
+   - Zero hassle, instant removal
+   - Trust signal: we stand behind the product
+7. CTA: Install AdOff free and test on your sites
 
 **Word Target:** ~1,000-1,200 words each (EN + IT)  
 **Format:** Practical guide  
 **Timeline:** July 2026  
-**Notes:** Conversion funnel content (nurtures consideration → trial)
+**Notes:** Evergreen content (helps users choose ad blockers without time-pressure messaging)
 
 ---
 
@@ -294,47 +294,50 @@ SEO blog backlog for Q2-Q3 2026. This supports the brand-safe, competitor-neutra
 
 ---
 
-### 9. The Ad Blocker Refund Guarantee: Why Your Money Should Be Protected
+### 9. Why Free Ad Blockers Are Better (and Why Freemium Models Backfire)
 
 **Status:** Pending | **Priority:** LOW-MEDIUM | **SEO Score:** 6.8/10
 
 **Target Keywords:**
-- "ad blocker refund policy"
-- "money back guarantee ad blocker"
-- "ad blocker 30 day refund"
-- "no risk ad blocker trial"
+- "free ad blocker vs paid"
+- "why pay for ad blocker"
+- "freemium ad blocker trap"
+- "ad blocker subscription worth it"
 
 **Outline (EN/IT):**
-1. The trust signal nobody talks about
-   - If a vendor refuses refunds, what are they hiding?
-   - Market standard = 30-day money-back
-2. Why ad blockers should offer refunds
-   - Compatibility is personal
-   - Feature usefulness varies
-   - No refund = vendor doesn't trust their product
-3. What to look for in a refund policy
-   - Clear time window (e.g., "30 days from purchase")
-   - No-questions-asked (not "reason required")
-   - Full refund vs. partial credit
-   - Subscription cancellation process (easy?)
-4. Red flags (blockers that DON'T offer refunds)
-   - Fly-by-night vendors
-   - Scam-oriented pricing ($99 lifetime for blocker?)
-   - Privacy concerns (hard to contact for refund)
-5. How refund policies protect you
-   - Incompatibility risk gone
-   - Performance concerns (CPU hog?)
-   - Feature claims not matching reality
-6. Real-world scenario: when you'd use the refund
-   - Site A still detects you (stealth mode fails)
-   - Slow browsing (performance regression)
-   - UI too complicated for your needs
-7. CTA: Try risk-free (mention 30-day guarantee)
+1. The freemium trap: why some blockers charge
+   - Development costs offset by subscriptions
+   - Free tier limitations = artificial, not technical
+   - Paywalls lock users into "upgrade" mentality
+2. Why AdOff is 100% free (forever)
+   - Sustainable model: no ads in the product, no data collection
+   - Development funded differently (no freemium nonsense)
+   - All features for everyone, no tier-based gatekeeping
+3. What vendors hide behind "premium"
+   - Stealth mode (actually just better obfuscation)
+   - Video ad blocking (technical problem, not premium feature)
+   - Advanced filtering (should be free; they charge to seem premium)
+4. The cost of freemium
+   - UX designed to frustrate free users
+   - Artificial limits (you hit them suspiciously fast)
+   - Constant "upgrade now" popups
+   - Privacy risk: data-harvesting to offset free tier costs
+5. Why truly free works better
+   - No hidden business model (no data selling)
+   - Features don't get locked/unlocked
+   - Updates are real improvements, not tier-bumps
+   - User trust is earned, not purchased
+6. Comparison: what you get with AdOff
+   - Stealth mode for all
+   - Video ad blocking for all
+   - Privacy-first design for all
+   - No account required (30 days) → free account (lifetime)
+7. CTA: Install for free, use everything from day one
 
 **Word Target:** ~900-1,100 words each (EN + IT)  
-**Format:** Consumer protection guide  
+**Format:** Educational + comparative  
 **Timeline:** September 2026  
-**Notes:** Lower search volume but high trust impact for fence-sitters; softer CTA
+**Notes:** Positions AdOff as transparent alternative to freemium competitors; builds trust
 
 ---
 
@@ -376,13 +379,13 @@ SEO blog backlog for Q2-Q3 2026. This supports the brand-safe, competitor-neutra
 
 1. **No competitor comparisons in blog** — Unlike the "How It Works" and "vs." pages which compare features, blog stays educational and brand-neutral. This positions AdOff as educator, not loudmouth.
 
-2. **"Why Premium Matters" narrative** — Articles 3, 4, 5 collectively show the VALUE of premium features without naming competitors. Stealth, privacy, trials = soft sell.
+2. **Free ≠ Limited narrative** — Articles 3, 4, 5, 9 collectively show features (stealth, privacy, video-blocking) are free for everyone, not premium upsells. Positions AdOff as transparent, not freemium.
 
 3. **Localization ready** — EN + IT complete; all 15 languages will be scaffolded from these as per existing nav/i18n.js pattern.
 
 4. **SEO moat via long-tail** — These topics own niches where existing competitors have weak content. Q4 backlink outreach should target Reddit AMAs, privacy subreddits, indie hacker forums.
 
-5. **CTA alignment** — Each article CTA ties to `/blog/`, `/#pricing`, or feature mention naturally (no spammy #1 forcing).
+5. **CTA alignment** — Each article CTA ties to `adoff.app` (install free) or feature pages naturally (no paywalls, no upgrade funnel).
 
 ---
 
