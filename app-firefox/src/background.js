@@ -1016,11 +1016,12 @@
   // 190-191: gemius, addthis
   // 211: analytics.tiktok
   // 962: yadro.ru (LiveInternet counter)
+  // 965: histats
   const TRACKING_RULE_IDS = new Set([
     4, 5, 20, 21, 22,
     80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
     175, 176, 180, 181, 183,
-    190, 191, 211, 962,
+    190, 191, 211, 962, 965,
   ]);
 
   // Crea alarm persistente (sopravvive ai restart del SW)
