@@ -5,9 +5,10 @@ FASE 4 — congruenza fra quello che il sito dichiara e la realta' del prodotto.
 Verita' di riferimento (verificata, non assunta):
   versione   -> app/manifest.json                       = 3.5.38
   regole     -> grep -c '"id"' app/rules/adblock-rules.json = 144
-  trial      -> app/src/background.js:13 TRIAL_DAYS     = 15
-  prezzi     -> site/data/constants.json (allineato a worker.js PRICE_CONFIG)
-  piano Lifetime -> RIMOSSO il 2026-07-16 (constants.json _note)
+  AdOff e' gratis al 100% dal 2026-08 (vedi CLAUDE.md "Modello di accesso"):
+  NESSUN trial/prezzo/piano Lifetime deve comparire piu' sul sito — ogni
+  occorrenza di durata-trial, prezzo o "lifetime" e' ora un problema di per se',
+  non solo un disallineamento numerico.
 """
 import json
 import re
@@ -22,29 +23,29 @@ OUT.mkdir(exist_ok=True)
 C = json.loads((SITE / "data" / "constants.json").read_text())
 VERSION = json.loads((ROOT / "app" / "manifest.json").read_text())["version"]
 RULES = (ROOT / "app" / "rules" / "adblock-rules.json").read_text().count('"id"')
-TRIAL = C["trial_days"]
-
-ALLOWED_PRICES = {
-    "2,99", "2.99", "19,99", "19.99", "24,99", "24.99",
-    "4,99", "4.99", "29,99", "29.99", "49,99", "49.99",
-}
+# AdOff e' gratis per tutti: nessun prezzo e' piu' ammesso in copy pubblica.
+ALLOWED_PRICES = set()
 
 CHECKS = [
     # (id, regex, descrizione, filtro che decide se e' un problema)
     ("VER", re.compile(r"\bv?(\d+\.\d+\.\d+)\b"), "versione dichiarata",
      lambda m: m.group(1) != VERSION and m.group(1).startswith("3.")),
-    ("TRIAL", re.compile(r"\b(\d{1,3})\s*(?:giorni|days|Tage|jours|d[ií]as|дней|дня|天|일|日間|gün|dni|hari|दिन|يوم|يوما)\b", re.I),
-     "durata trial", lambda m: m.group(1) not in (str(TRIAL), "30", "7", "14", "60", "90", "365")),
-    ("TRIAL30", re.compile(r"\b30\s*(?:giorni|days|Tage|jours|d[ií]as|дней|天|일|gün|dni|hari|दिन|يوم)\b", re.I),
-     "trial dichiarato 30gg (reale: %d)" % TRIAL, lambda m: True),
-    ("TRIAL30NET", re.compile(
-        r"(?:prov[ai]|trial|test(?:versi|phase)|essai|prueba|avalia[çc][ãa]o|uji\s*coba|"
-        r"пробн\w*|체험|試用|お試し|deneme|okres\s*próbny|परीक्षण|تجرب\w*|试用)"
-        r"[^.<>]{0,60}\b30\s*(?:giorni|days|Tage|jours|d[ií]as|дней|天|일|gün|dni|hari|दिन|يوم)\b"
-        r"|\b30\s*(?:giorni|days|Tage|jours|d[ií]as|дней|天|일|gün|dni|hari|दिन|يوم)"
-        r"[^.<>]{0,40}(?:prov[ai]|trial|gratis|gratuit\w*|free|kostenlos|gratuito|체험|試用|試す|"
-        r"ücretsiz|za darmo|gratis|मुफ़्त|مجان\w*|免费)", re.I | re.S),
-     "TRIAL 30gg NETTO (escluso rimborso/cookie) — reale: %dgg" % TRIAL, lambda m: True),
+    # AdOff non ha piu' un "trial" (accesso temporaneo prima di pagare): ha un
+    # periodo di grazia gratis (30gg) seguito da un account gratuito. Menzioni
+    # legittime di "30 giorni"/"365 giorni" in quel contesto NON sono un
+    # problema — quindi non flaggiamo piu' durate nude, solo il concetto di
+    # "trial"/"prova" (che implica un pagamento a seguire) e il linguaggio di
+    # conversione a pagamento, ovunque compaiano.
+    ("TRIALWORD", re.compile(
+        r"\b(?:trial|prova\s+gratuit\w*|period[oa]\s+di\s+prova|test(?:versi|phase)|essai\s+gratuit|"
+        r"prueba\s+gratuit\w*|avalia[çc][ãa]o\s+gratuit\w*|uji\s*coba|"
+        r"пробн\w*\s+период|체험판|試用期間|deneme\s+s[üu]resi|okres\s*próbny|"
+        r"परीक्षण\s+अवधि|فترة\s+تجريبية|试用期)\b", re.I),
+     "linguaggio 'trial' (AdOff non ha piu' un trial-poi-paghi, solo periodo di grazia gratis)", lambda m: True),
+    ("PAIDLANG", re.compile(
+        r"\b(?:upgrade\s+to\s+pro|sblocca\s+pro|passa\s+a\s+pro|abbonamento|subscription|"
+        r"canone|checkout|poi\s+paghi|then\s+pay|piano\s+premium|premium\s+plan)\b", re.I),
+     "linguaggio da piano a pagamento (AdOff e' gratis, nessun upgrade a pagamento esiste)", lambda m: True),
     ("RULES", re.compile(r"\b(\d{2,4})\+?\s*(?:regole|rules|Regeln|r[eè]gles|reglas|regras|правил|规则|규칙|ルール|kural|regu[łl]|aturan|नियम|قاعدة|قواعد)\b", re.I),
      "numero regole", lambda m: m.group(1) != str(RULES)),
     ("LIFETIME", re.compile(r"\b(lifetime|a vita|Lebenslang|de por vida|vitalicio)\b", re.I),
@@ -62,9 +63,9 @@ def main():
     print("=" * 84)
     print("FASE 4 — CONGRUENZA CONTENUTI")
     print("=" * 84)
-    print(f"verita': versione={VERSION}  regole={RULES}  trial={TRIAL}gg  "
+    print(f"verita': versione={VERSION}  regole={RULES}  "
           f"lingue={C['languages']}  browser={C['supported_browsers']}")
-    print(f"prezzi ammessi: {sorted(ALLOWED_PRICES)}")
+    print("AdOff e' gratis al 100% — nessun prezzo/trial ammesso in copy pubblica")
 
     hits = defaultdict(list)
     files = sorted(p for p in SITE.rglob("*.html")

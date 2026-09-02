@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 """
-gen-guide-prices.py — Rigenera i prezzi delle guide multilingua dal SSOT.
+gen-guide-prices.py — OBSOLETO (2026-08): AdOff non ha piu' un piano a
+pagamento (vedi CLAUDE.md "Pricing"), quindi non esiste piu' un prezzo da
+rigenerare — le tabelle prezzo nelle guide multilingua vanno RIMOSSE, non
+aggiornate. Questo script si rifiuta di girare (vedi guardia in main()) per
+non riscrivere prezzi che non dovrebbero piu' comparire. Lasciato per
+riferimento storico sul formato delle tabelle.
+
+Rigenera i prezzi delle guide multilingua dal SSOT.
 
 Single source of truth: site/data/constants.json (chiave "pricing").
 Aggiorna SOLO i valori numerici nelle 3 righe a pagamento della tabella prezzi
@@ -117,6 +124,11 @@ def main():
                         help="quale prezzo annuale usare (default: founder)")
     parser.add_argument("--dry-run", action="store_true", help="non scrivere, mostra solo")
     args = parser.parse_args()
+
+    print("ERRORE: script obsoleto — AdOff e' gratis, non esiste piu' un prezzo da")
+    print("rigenerare. Le tabelle prezzo in site/**/guide.html vanno rimosse, non")
+    print("aggiornate. Vedi CLAUDE.md sezione Pricing. Uscita senza fare nulla.")
+    return
 
     constants = json.load(io.open(CONSTANTS, encoding="utf-8"))
     p = constants["pricing"]

@@ -12,28 +12,25 @@ L'estensione opera su 4 livelli:
 
 1. **Network blocking** (`declarativeNetRequest`) — 146 regole `block`/`allow` (nessun `redirect`) bloccano richieste HTTP verso ad network, incluso il blocco di IMA SDK (`imasdk.googleapis.com`, rule 900). Le regole si dividono in **ads reali** (contate nel badge) e **tracking/analytics** (bloccati ma non contati, 23 rule IDs esclusi)
 2. **Cosmetic filtering** (CSS + content script ISOLATED) — Nasconde elementi ad dal DOM
-3. **Video ad neutralization** (IMA SDK stub, MAIN world, Solo Pro/Trial) — Lo stub universale è iniettato in-page da `stealth.js` via `Object.defineProperty(window.google, "ima", ...)`, sostituendo Google IMA SDK su tutti i siti (sia caricato esternamente che bundlato nei player). Quando un player video chiama `adsManager.start()`, lo stub emette immediatamente `CONTENT_RESUME_REQUESTED` → zero ads, player funzionante. Il caricamento esterno di IMA è inoltre bloccato a livello rete (rule 900)
-4. **Stealth anti-detection** (script MAIN world, Solo Pro/Trial) — Evasione anti-adblock: bait spoofing, variable spoofing, fetch/XHR interception
+3. **Video ad neutralization** (IMA SDK stub, MAIN world, gratis per tutti) — Lo stub universale è iniettato in-page da `stealth.js` via `Object.defineProperty(window.google, "ima", ...)`, sostituendo Google IMA SDK su tutti i siti (sia caricato esternamente che bundlato nei player). Quando un player video chiama `adsManager.start()`, lo stub emette immediatamente `CONTENT_RESUME_REQUESTED` → zero ads, player funzionante. Il caricamento esterno di IMA è inoltre bloccato a livello rete (rule 900)
+4. **Stealth anti-detection** (script MAIN world, gratis per tutti) — Evasione anti-adblock: bait spoofing, variable spoofing, fetch/XHR interception
 
-### Trial anti-crack (server-anchored signed token — 2026-06-05)
+### Modello di accesso: gratis per tutti (2026-08, sostituisce il vecchio Trial/Pro)
 
-Il trial è **ancorato al server** e non manomettibile via DevTools/storage, e **non si resetta più sugli update**.
+**AdOff è gratis al 100% per tutti, versione unica, tutte le funzionalità incluse** (stealth + video neutralization comprese — non sono più a pagamento). Il gate reale oggi è solo quello di `syncFreeLicense()`/`applyFreeGate()`: **30 giorni di uso libero** (`FREE_GRACE_MS` in worker.js, no account richiesto), poi basta un **account gratuito** (mai un pagamento) per continuare — grant di 365gg rinnovabile (`FREE_REGISTERED_MS`). Dettaglio in **Storage Keys** sotto (`adoffFree*`).
 
-- **Autorità = server**: `POST /trial { deviceId }` (worker `handleTrial`) fissa `trial_start` la prima volta in tabella D1 `trials` (keyed su `device_id` = `adoffDeviceId` stabile), poi è idempotente. Calcola `trial_end = trial_start + 15g` (`TRIAL_DURATION_MS`, worker.js:641) e ritorna un **token firmato ECDSA P-256** (`payloadB64.sigB64`, payload `{deviceId,trialStart,trialEnd,iat,v}`).
-- **Chiave**: privata nel Worker (`env.ADOFF_TRIAL_PRIVKEY`, PKCS8 b64, in `~/.secrets/adoff-stores.env`); **pubblica embeddata** (stessa JWK) in `background.js`, `content.js`, `license-client.js`. Avere la pubblica NON permette di forgiare un token con più giorni.
-- **Gate client**: ogni punto che abilita Pro/Trial verifica la firma del token con `crypto.subtle.verify` e confronta `payload.deviceId` col locale (anti token-sharing). **Nessun fallback su `adoffTrialEnd` nei gate delle feature** (`background.js` e `content.js`): quel valore è scrivibile da DevTools e permetteva di riattivare Pro all'infinito rinnovandolo — rimosso il 2026-08-04. Resta solo come cache di display in `license-client.js` (popup/options), con cap ≤ `now + 15g + 3g`.
-- **Fix reset-on-update**: `syncTrialBg()` gira a install/update/startup/daily-alarm → su update RIPRISTINA la scadenza dal server anche se lo storage locale fosse azzerato. Il countdown non riparte mai.
-- **Punti di verifica** (tutti col token): `background.js` `isTrialActive()`/`updateImaRules()` (gate IMA redirect), `content.js` gate `data-adoff-stealth` (stealth/cosmetic Pro), `license-client.js` `checkPro()` (popup/options). Guardia clock-rollback via `adoffTrialSeen`.
-- **Residuo noto**: un reinstall completo azzera `adoffDeviceId` → trial nuovo (accettato); un programmatore che patcha il JS dell'estensione bypassa qualsiasi gate client-side (limite intrinseco — difesa totale = servire la funzionalità Pro dal server).
-- **Deploy worker**: `wrangler secret put ADOFF_TRIAL_PRIVKEY` PRIMA del deploy. Se `/trial` non è ancora live i client degradano al fallback ottimistico (nessuna regressione).
+- **Come funziona lo sblocco universale**: `adoffPlanTier()` (funzione canonica, duplicata identica in `background.js` e `content.js`) **ritorna sempre `"premium"`**, qualunque licenza/trial reale. Ogni gate che un tempo controllava Pro/Trial (`isPro` in `updateImaRules()`, gate `data-adoff-stealth` in `content.js`) continua a passare dalla stessa funzione — quindi risulta sempre vero. Commento originale del dev: *"Sbloccato per tutti: adoffPlanTier ritorna sempre premium. Il gate passa comunque dalla funzione canonica, così per tornare indietro basta rimettere mano a quella e non a ogni singolo punto."*
+- **Il vecchio sistema Trial/Licenza/Stripe resta nel codice ma è dormiente, non rimosso** — deliberatamente, per poter tornare indietro toccando solo `adoffPlanTier()`: token trial firmato ECDSA (`POST /trial`, `TRIAL_DURATION_MS` 15gg in worker.js), `adoffLicense`/`checkPro()` in `license-client.js`, checkout Stripe (`/checkout`, `PRICE_CONFIG` in worker.js). **Non gating nulla oggi** — `trialOk`/`lic.type` restano nella condizione ma sono ridondanti perché `adoffPlanTier()` la rende sempre vera comunque ("continua a girare a vuoto").
+- **Pricing card in `options.html`** (`#pricingCard`, bottoni `.pricing-buy-btn`) — non è più un paywall: è una **donazione volontaria** ("Sostieni il progetto" / `opt.supportBtn`), visibile a chi non ha mai pagato, che passa comunque dal vecchio `/checkout` Stripe. Non sblocca nulla che non sia già gratis.
+- **Chi vuole reintrodurre un vero paywall**: basta editare `adoffPlanTier()` (in entrambi i file) per farla leggere di nuovo `lic.type`/`lic.plan` invece di ritornare `"premium"` fisso — l'intera infrastruttura di verifica (token firmato, Stripe, license-client) è ancora funzionante e non richiede altro lavoro.
 
 ### File structure — Chrome (`app/`)
 
 - `manifest.json` — Manifest V3, AdOff v3.3.9
-- `src/stealth.js` — MAIN world: IMA SDK stub universale + ad skipper piattaforme video + anti-detection (Pro-only)
+- `src/stealth.js` — MAIN world: IMA SDK stub universale + ad skipper piattaforme video + anti-detection (gratis per tutti)
 - `src/content.js` — ISOLATED: whitelist check, scan DOM, hide ads, contatore ads cosmetic
 - `src/ads-hide.css` — CSS hiding universale
-- `src/background.js` — Service worker: storage init, badge contatore (solo ads reali), trial 15gg, whitelist messaging, referral, contatore network ads (filtra tracking/analytics)
+- `src/background.js` — Service worker: storage init, badge contatore (solo ads reali), free-gate 30gg, whitelist messaging, referral, contatore network ads (filtra tracking/analytics)
 - `src/popup.html/css/js` — Popup: toggle, contatori, pausa sito (4 opzioni), badge licenza
 - `src/options.html/css/js` — Opzioni: generale, whitelist, licenza, stats (con reset), referral, avanzate, aiuto, suggerimenti, info
 - `src/onboarding.html/css/js` — Pagina primo install con istruzioni pin
@@ -161,20 +158,21 @@ Usa `chrome.storage.local` con prefisso `adoff`:
 - `adoffAdsBlocked` (number) — contatore ads cosmetic (elementi DOM nascosti + video ads skippate)
 - `adoffReqBlocked` (number) — contatore richieste ad network bloccate (esclusi tracking/analytics)
 - `adoffWhitelist` (array) — siti esclusi con tipo pausa
-- `adoffTrialEnd` (number) — timestamp fine trial (cache display; **autorità = `adoffTrialToken`**)
-- `adoffTrialToken` (string) — token trial firmato ECDSA P-256 dal server (`POST /trial`), fonte di verità anti-tampering della scadenza. Verificato client-side con chiave pubblica embeddata in `background.js`/`content.js`/`license-client.js`. Vedi **Trial anti-crack** sotto
-- `adoffTrialStart` (number) — timestamp inizio trial dal server
-- `adoffTrialSeen` (number) — max `now` osservato (guardia clock-rollback)
-- `adoffLicense` (object) — dati licenza Pro
+- `adoffFreeToken` (string) — token firmato dal server (`POST /free-license`) che governa il **gate reale attuale**: 30gg liberi, poi serve un account gratuito. Vedi **Modello di accesso** sopra
+- `adoffFreeGateStart` / `adoffFreeGrantEnd` / `adoffFreeRegistered` — timestamp inizio grazia, scadenza, e se l'utente si è registrato (account gratuito)
+- `adoffFreeExpired` (boolean) — vero se i 30gg sono scaduti senza registrazione: `content.js`/`background.js` fermano la protezione finché non ci si registra
+- `adoffFreeExpiredNotified` / `adoffFreeRemindersShown` — dedup per non riaprire più volte il tab di avviso scadenza/reminder
+- `adoffTrialEnd` / `adoffTrialToken` / `adoffTrialStart` / `adoffTrialSeen` (dormienti) — vecchio sistema Trial 15gg firmato ECDSA (`POST /trial`), non gating nulla oggi perché `adoffPlanTier()` lo bypassa sempre. Vedi **Modello di accesso** sopra
+- `adoffLicense` (object, dormiente) — dati licenza Pro del vecchio sistema a pagamento, letta ma ininfluente (stesso motivo)
 - `adoffLang` (string) — lingua override
 - `adoffReferralCode` (string) — codice referral
-- `adoffReferralCount` (number) — amici paganti portati
-- `adoffReferralDays` (number) — giorni Pro guadagnati da referral
+- `adoffReferralCount` (number) — amici portati tramite il codice referral
+- `adoffReferralDays` (number, vestigiale) — "giorni Pro" guadagnati da referral nel vecchio modello; ininfluente oggi (tutto è già gratis)
 - `adoffReferralHistory` (array) — storico inviti
 - `adoffInstallDate` (number) — timestamp primo install
 - `adoffIsFounder` (boolean) — early adopter badge
 - `adoffIntegrity` (string) — hash integrity anti-tampering
-- `adoffTrialExpired` (boolean) — trial scaduto flag
+- `adoffTrialExpired` (boolean, dormiente) — flag scadenza del vecchio trial 15gg, non gating nulla oggi
 - `adoffShowChangelog` (boolean) — mostra changelog post-update
 - `adoffNewVersion` (string) — versione aggiornata
 - `adoffChangelogSeen` (array) — versioni changelog gia' viste
@@ -183,19 +181,14 @@ Usa `chrome.storage.local` con prefisso `adoff`:
 - `adoffReviewDone` (boolean) — recensione lasciata
 - `adoffMilestones` (object) — milestone ads raggiunte
 
-## Pricing (modello Founder — 2026-06-01, piano UNICO)
+## Pricing — AdOff è gratis al 100% (dal 2026-08, sostituisce il vecchio modello Founder/pagamento)
 
-| Piano | Prezzo |
-|---|---|
-| Mensile | **2,99 EUR/mese** |
-| Annuale — Founder (primi 100, bloccato a vita) | **19,99 EUR/anno** |
-| Annuale — standard (dopo i 100) | **24,99 EUR/anno** |
-| Founder Lifetime (offerta limitata) | **99 EUR** una tantum |
+**Nessun piano a pagamento esiste più.** Versione unica, tutte le funzionalità incluse (network+cosmetic blocking, stealth anti-detection, video ad neutralization) dal primo install, per chiunque.
 
-- Trial: 15gg gratis Pro (`TRIAL_DAYS` in background.js; autorità = token firmato dal server) · piano UNICO (fino a ~3 dispositivi personali; tier 3/5/10 rimandati)
-- **Counter reale "Posti Founder X/100"** dal backend (`GET /founder-status`, tabella D1 `founder_seats`); niente numeri finti
-- Prezzo deciso **server-side** dal worker (price_data inline, gating Founder) — NON si usano Price ID Stripe fissi
-- Dettaglio completo: `docs/PRICING-PLAN.md`. Vecchi prezzi 2,69/29,59/67,90 + tier device = SUPERATI.
+- **Meccanica reale**: `FREE_GRACE_MS` = 30gg di uso libero senza account (worker.js). Dopo, `FREE_REGISTERED_MS` = basta un **account gratuito** (mai un pagamento, mai carta di credito) per continuare, con grant di 365gg rinnovabile. Vedi **Modello di accesso** e **Storage Keys** sopra.
+- **Founder/prezzi/checkout Stripe restano nel codice ma sono dormienti** (vedi **Modello di accesso**): `#pricingCard` in `options.html` è oggi una donazione volontaria ("Sostieni il progetto"), non un piano che sblocca funzionalità — tutto è già sbloccato per tutti tramite `adoffPlanTier()`.
+- I vecchi numeri (2,99/19,99/24,99/99 EUR, counter "Posti Founder X/100", `GET /founder-status`) restano tecnicamente funzionanti lato worker per il flusso di donazione, ma NON vanno più usati in comunicazione prodotto/marketing come piani a pagamento.
+- `docs/PRICING-PLAN.md` **non esiste più** (cartella `docs/` rimossa) — questa sezione è ora la fonte primaria.
 
 ## Privacy & Identity Protection (REGOLA ASSOLUTA)
 
