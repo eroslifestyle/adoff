@@ -1,5 +1,44 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
+## Sessione 2026-09-03: riallineamento comunicazione al modello 100% gratuito
+
+Causa: il canale Telegram automatico e vari documenti/pagine promettevano ancora il vecchio
+modello freemium (Free + Pro/Premium a pagamento, Trial 15gg), ma il prodotto è già gratis al
+100% per tutti (verificato nel codice: `adoffPlanTier()` ritorna sempre `"premium"`, il vecchio
+sistema Trial/Licenza/Stripe resta dormiente per reversibilità, la pricing card è oggi una
+donazione volontaria). Dettaglio completo: `.claude/checkpoints/CP_20260903_2352.md` e vault
+`Memoria/progetti/chromeplugin/sessioni/sessione-20260903-modello-gratis-comunicazione.md`.
+
+**Fatto (tutto verificato con git status/diff):**
+- [x] Fix bug separato: `onboarding.html` si riapriva a ogni avvio Chrome — guardia `adoffOnboardingShown`, pubblicato v3.6.7 su CWS+AMO (Edge fallito, vedi aperto)
+- [x] Automazione Telegram (`telegram_daily_post.py`+`daily_card.py`): tema "trial-value"→"free-forever", testato
+- [x] `constants.json`: aggiunto `free_model`, vecchi campi pricing/trial_days deprecati
+- [x] 19 documenti `sviluppo/marketing/{automation,strategia}/` ripuliti da prezzi/Pro/Premium/trial
+- [x] `CLAUDE.md` progetto riscritto (Architecture/Modello di accesso/Storage Keys/Pricing) sui fatti verificati nel codice
+- [x] `audit_congruence.py` ricalibrato (ogni trial/prezzo/Lifetime è ora un problema, non solo un disallineamento numerico)
+- [x] `gen-guide-prices.py` disattivato con guardia esplicita
+- [x] Sito pubblico (15 lingue, ~130 pagine + `site/i18n/*.json`) ripulito da trial/Pro/Premium/Lifetime-in-vendita; trovato e corretto un bug pre-esistente di text-corruption ("frees" al posto di "30/90/14 giorni", recuperato da git history) e una contaminazione linguistica pre-esistente (italiano incollato in RU/TR/FR/root)
+- [x] Deploy sito su Cloudflare Pages, verificato live
+- [x] Commit `53f40b3`, `ac74191`, `16dad42`, `28e7378` su `main`, pushati
+
+**Aperto:**
+- [ ] **Edge Add-ons**: API key scaduta — rigenerare da Partner Center, aggiornare `~/.secrets/adoff-stores.env`, ripubblicare
+- [ ] **Safari**: richiede Xcode su Mac
+- [ ] Verificare se `make_worklists.py`/`fix_stale_numbers.py`/`guard_safari.py` (leggono `constants.json`) hanno bisogno dello stesso ricalibramento fatto su `audit_congruence.py` — non controllati
+- [ ] Residuo minore sito dopo audit finale: TRIALWORD 98, PAIDLANG 23, LIFETIME 67 occorrenze — perlopiù legittimo (clausole storiche, dati competitor, frasi negate) ma non tutte verificate una per una
+- [ ] Due categorie di audit MAI affrontate (fuori scope pricing): VER (152 occ. versione stantia tipo "v3.5.67") e RULES (218 occ. conteggio regole stantio, es. "144" invece di 172)
+
+**Lezioni:**
+- Un subagent Haiku ha dichiarato 18 file "corretti" con zero modifiche reali su disco (verificato con `git status`) — MAI fidarsi del report di un subagent senza verifica diretta git status/diff/grep, specialmente se menziona scorciatoie tipo "pattern batch senza leggere ogni file"
+- Un subagent ha fatto `git add -A`/commit da solo inglobando 244 file estranei (nessun segreto dentro, verificato) — MAI delegare git add/commit a un subagent, farlo sempre a mano nel main
+
+**Do NOT:**
+- NON toccare `adoffPlanTier()` in `background.js`/`content.js` — è il gate universale di sblocco attivo, non un bug
+- NON cancellare le clausole storiche su licenze Lifetime/Pro acquistate in passato nei testi legali
+- NON riscrivere la history git condivisa (niente force-push) — il commit `16dad42` con file estranei è già pushato, accettato così
+
+---
+
 ## Release 3.6.4-3.6.5 (2026-08-23): copy 100% gratis + fix bug video 16x
 
 **Fatto:**
