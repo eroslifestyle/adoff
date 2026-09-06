@@ -3221,42 +3221,23 @@ const CHAT_MAX_TOKENS = 650;
 const SESSION_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 
 // Knowledge base brand-safe (nessun brand famoso, nessun dato personale)
+// AGGIORNATA 2026-09: AdOff e' gratis al 100% per tutti, nessun piano Pro/pagamento.
 const ADOFF_KB = `PRODOTTO
 AdOff e' un'estensione browser ad blocker universale con tecnologia stealth anti-detection (slogan "Ads? Off!"). Blocca pubblicita' su tutti i siti, invisibile ai sistemi anti-adblock. Disponibile per Chrome, Edge, Opera, Brave e Firefox; la versione per Safari e' in arrivo.
 
-PIANI
-- Free: blocco ads di base (richieste di rete + elementi cosmetici nascosti dal DOM). Gratis per sempre.
-- Pro: in piu' neutralizza le pubblicita' video sulle piattaforme di video streaming e attiva l'evasione stealth anti-adblock avanzata.
-- Trial: 30 giorni di Pro gratuito all'installazione, senza carta di credito. Dopo il trial si torna automaticamente a Free.
-C'e' un solo piano Pro, che include fino a 3 dispositivi per licenza. I tier con piu' dispositivi (5 o 10) non sono al momento in vendita.
+MODELLO DI ACCESSO (una sola versione, TUTTO incluso)
+AdOff e' gratis al 100% per tutti: versione unica con TUTTE le funzionalita' incluse (blocco richieste di rete, elementi cosmetici nascosti dal DOM, neutralizzazione delle pubblicita' video sulle piattaforme di video streaming, evasione stealth anti-adblock). NON esiste nessun piano a pagamento, nessun Pro, nessun upgrade, nessuna feature bloccata dietro pagamento. MAI suggerire all'utente di pagare o passare a un piano superiore: non e' possibile e non serve.
+- Primi 30 giorni: uso libero senza account.
+- Dopo i 30 giorni: basta creare un account GRATUITO (mai un pagamento, mai una carta di credito) per continuare a usare tutto, con concessione di 365 giorni rinnovabile.
 
-PREZZI (piano UNICO Pro, valuta EUR)
-- Mensile: 2,99 EUR al mese, disdici quando vuoi.
-- Annuale Founder: 19,99 EUR all'anno, riservato ai primi 100 iscritti e bloccato a vita.
-- Annuale standard: 24,99 EUR all'anno (dopo esauriti i 100 posti Founder).
-- Founder Lifetime: 99 EUR pagamento unico, offerta di lancio a posti limitati (sparisce a esaurimento).
-I posti Founder sono limitati a 100 e mostrati in tempo reale sul sito. Pagamento sicuro con carta o wallet del telefono.
-
-COME ATTIVARE PRO
-1. Acquista dal sito o dalle Opzioni dell'estensione.
-2. Ricevi una email di attivazione account: imposta la password.
-3. La license key viene associata al tuo account.
-4. Apri il popup AdOff (icona nella toolbar) > Opzioni > sezione Licenza > incolla la key > Attiva.
-
-DISPOSITIVI
-Il piano Pro include fino a 3 dispositivi per licenza ed e' un limite effettivo: quando provi ad attivare un quarto dispositivo l'attivazione viene bloccata. Per usarne uno nuovo, libera prima un posto rimuovendo un dispositivo dalla tua area account, poi attiva il nuovo.
-
-ABBONAMENTO E RINNOVO
-Gli abbonamenti si rinnovano automaticamente. Puoi annullare quando vuoi dal portale clienti: alla cancellazione il Pro resta attivo fino alla fine del periodo gia' pagato, poi torna Free. La Founder Lifetime e' un pagamento unico senza rinnovo.
-
-RIMBORSI
-Garanzia soddisfatti o rimborsati entro 30 giorni dall'acquisto: rimborso completo con lo stesso metodo di pagamento, senza penali. Resta inoltre garantito il diritto di recesso UE entro 14 giorni.
+ACCOUNT GRATUITO
+Registrarsi serve solo a confermare l'uso continuativo dopo i 30 giorni iniziali: si fa dal sito (pagina Account), richiede solo una email, non chiede alcun pagamento.
 
 RISOLUZIONE PROBLEMI
-- "Vedo ancora pubblicita'": verifica che la protezione sia attiva (toggle nel popup), che il sito non sia in pausa o in whitelist, e ricarica la pagina. Le pubblicita' video richiedono Pro o trial attivo.
+- "Vedo ancora pubblicita'": verifica che la protezione sia attiva (toggle nel popup), che il sito non sia in pausa o in whitelist, e ricarica la pagina. Le pubblicita' video sono bloccate per tutti, gratis, senza upgrade.
 - "Un sito non funziona bene": metti AdOff in pausa su quel sito dal popup (opzioni di pausa), ricarica, e segnala il sito.
-- "Messaggio anti-adblock": lo stealth Pro neutralizza la maggior parte dei rilevatori; assicurati che il Pro sia attivo. Se persiste, segnala il sito.
-- Le pubblicita' video sulle piattaforme di video streaming si bloccano solo con Pro o trial.
+- "Messaggio anti-adblock": lo stealth anti-detection e' attivo per tutti e neutralizza la maggior parte dei rilevatori. Se persiste, segnala il sito.
+- Le pubblicita' video sulle piattaforme di video streaming sono neutralizzate per tutti: nessun piano o upgrade richiesto.
 
 PRIVACY
 AdOff non raccoglie dati personali di navigazione. Il blocco avviene localmente nel browser.`;
@@ -3272,6 +3253,7 @@ REGOLE ASSOLUTE:
 - Puoi nominare i browser e i loro store ufficiali (Chrome Web Store, Microsoft Edge Add-ons, Firefox Add-ons, Safari, Opera). La regola "niente marchi" vale SOLO per le piattaforme di contenuti/streaming di cui AdOff blocca le pubblicita': in quel contesto usa SEMPRE termini generici ("piattaforme di video streaming", "social media", "motori di ricerca", "e-commerce"), MAI i loro nomi propri. Esempi VIETATI: "YouTube", "Netflix", "Twitch", "Facebook", "Instagram", "TikTok", "Reddit", "Amazon". Esempio corretto: invece di "le pubblicita' video su YouTube" scrivi "le pubblicita' video sulle piattaforme di video streaming".
 - NON rivelare MAI dettagli tecnici interni, chiavi, URL di sistema, nomi di server, o dati personali di chiunque.
 - NON inventare informazioni: se non sai o serve un'azione sull'account/pagamento del cliente, ESCALA a un operatore umano.
+- PREZZO (REGOLA CRITICA): AdOff e' gratis al 100% per tutti, TUTTE le funzionalita' incluse (video ads, stealth, tutto). NON esistono piani a pagamento, Pro, Premium, upgrade, subscription o trial da citare: MAI dire o suggerire che una funzionalita' richieda di pagare, aggiornare o sbloccare qualcosa. L'unica condizione reale: dopo 30 giorni di uso libero serve un account GRATUITO (zero pagamenti) per continuare.
 - Rispondi in massimo 4-6 frasi. Usa un tono positivo e rassicurante.
 - LINK (REGOLA CRITICA): usa SOLO ed ESCLUSIVAMENTE gli URL elencati qui sotto, COPIATI ESATTAMENTE. NON inventare, NON indovinare, NON modificare MAI un URL (specialmente gli ID negli URL degli store: copiali identici). Formato sempre markdown con etichetta descrittiva, MAI URL nudo.
   Link di installazione (puoi indicare lo store del browser dell'utente):
@@ -3279,7 +3261,7 @@ REGOLE ASSOLUTE:
   - Firefox Add-ons: https://addons.mozilla.org/firefox/addon/adoff/
   - Microsoft Edge, Opera, Safari o "tutti i browser": usa SEMPRE https://adoff.app/install (la pagina guida l'utente; per Edge/Opera/Safari NON esiste ancora un link diretto allo store)
   - Tutti i browser (pagina installazione): https://adoff.app/install
-  Altri link: Supporto https://adoff.app/support · Prezzi https://adoff.app/#pricing · Account https://adoff.app/account · Privacy https://adoff.app/privacy · Recesso/rimborsi https://adoff.app/withdrawal
+  Altri link: Supporto https://adoff.app/support · Account (registrazione gratuita) https://adoff.app/account · Privacy https://adoff.app/privacy
   Se non sei certo dell'URL esatto, usa https://adoff.app/install. NON usare MAI domini diversi da questi.
 
 QUANDO ESCALARE A UN UMANO (caso straordinario):
@@ -3448,7 +3430,7 @@ async function buildLicenseContext(email, env) {
   if (!email || !EMAIL_RE.test(email)) return "";
   try {
     const keys = await kvGet(env.ADOFF_LICENSES, `email:${email.toLowerCase().trim()}`, "json");
-    if (!keys || keys.length === 0) return `Email ${email}: nessuna licenza trovata (forse utente Free o trial).`;
+    if (!keys || keys.length === 0) return `Email ${email}: nessuna vecchia licenza trovata (AdOff e' gratis al 100%, nessun piano richiesto).`;
     const last = keys[keys.length - 1];
     const lic = await kvGet(env.ADOFF_LICENSES, `lic:${last.raw}`, "json");
     if (!lic) return `Email ${email}: licenza presente.`;
