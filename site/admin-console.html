@@ -279,6 +279,9 @@ tr:hover td{background:rgba(124,92,252,.04)}
       <div class="nav-item active" data-page="stats" onclick="navTo('stats')">
         <span class="nav-icon">📊</span><span>Statistiche</span>
       </div>
+      <div class="nav-item" data-page="seoagent" onclick="navTo('seoagent')">
+        <span class="nav-icon">🤖</span><span>Agente SEO</span>
+      </div>
       <div class="nav-item" data-page="licenses" onclick="navTo('licenses')">
         <span class="nav-icon">🔑</span><span>Licenze</span>
       </div>
@@ -723,6 +726,40 @@ tr:hover td{background:rgba(124,92,252,.04)}
       </div>
     </div>
 
+    <!-- PAGE: SEO AGENT -->
+    <div class="page" id="page-seoagent">
+      <div class="stats-grid" id="sa-kpis">
+        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+      </div>
+
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">📈 Health score nel tempo</div>
+          <div id="sa-trend"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">✅ Check ultimo run</div>
+          <div id="sa-checks"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🚨 Findings aperti</div>
+        <div id="sa-findings"><div class="loading-center"><div class="loader"></div></div></div>
+      </div>
+
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">🗂️ Storico run (ultimi 12)</div>
+          <div id="sa-runs"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">✨ Risolti di recente</div>
+          <div id="sa-fixed"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+    </div>
+
     <!-- PAGE: OUTREACH -->
     <div class="page" id="page-outreach">
       <div class="card" style="margin-bottom:16px">
@@ -1150,7 +1187,7 @@ async function init() {
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────
-const PAGE_TITLES = { stats:"Statistiche", licenses:"Licenze", finance:"Finanza", outreach:"Outreach", support:"Supporto", suggestions:"Suggerimenti", messages:"Messaggi", chat:"Chat AI", settings:"Impostazioni" };
+const PAGE_TITLES = { stats:"Statistiche", seoagent:"Agente SEO", licenses:"Licenze", finance:"Finanza", outreach:"Outreach", support:"Supporto", suggestions:"Suggerimenti", messages:"Messaggi", chat:"Chat AI", settings:"Impostazioni" };
 
 function navTo(page) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
@@ -1191,6 +1228,7 @@ function loadPage(page, force = false) {
   else if (page === "finance") loadFinance(force);
   else if (page === "analytics") loadAnalytics(force);
   else if (page === "stats") { loadStats(force); loadSeo(); }
+  else if (page === "seoagent") loadSeoAgent(force);
   else if (page === "outreach") loadOutreach(force);
   else if (page === "support") loadTickets(force);
   else if (page === "suggestions") loadSuggestions(force);
@@ -2164,6 +2202,131 @@ async function loadSeo(force = false) {
   // Set period button active
   setSeoPeriod(seoPeriod);
   seoLoaded = true;
+}
+
+// ── SEO AGENT (run settimanale) ──────────────────────────────
+let saLoaded = false;
+const SA_SEV_ORDER = { high: 0, medium: 1, low: 2 };
+const SA_SEV_BADGE = {
+  high:   "background:rgba(244,63,94,.12);color:var(--danger);border:1px solid rgba(244,63,94,.2)",
+  medium: "background:rgba(251,191,36,.12);color:var(--warn);border:1px solid rgba(251,191,36,.2)",
+  low:    "background:rgba(100,116,139,.12);color:#94a3b8;border:1px solid rgba(100,116,139,.2)",
+};
+const SA_CHECK_DOT = { pass: "#4ade80", warn: "#fbbf24", fail: "#f87171", error: "#6a6a8a" };
+
+function saHealthColor(s) { return s >= 80 ? "green" : s >= 60 ? "gold" : "red"; }
+
+function saFmtDate(ts) {
+  if (!ts) return "—";
+  const d = new Date(typeof ts === "number" ? ts : ts.replace(" ", "T"));
+  return isNaN(d) ? String(ts) : d.toLocaleString("it-IT", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
+function saEsc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+
+async function loadSeoAgent(force = false) {
+  if (saLoaded && !force) return;
+  ["sa-kpis","sa-trend","sa-checks","sa-findings","sa-runs","sa-fixed"].forEach(id =>
+    document.getElementById(id).innerHTML = `<div class="loading-center"><div class="loader"></div></div>`);
+  const d = await api("/admin/seo-agent");
+  if (!d.ok) {
+    document.getElementById("sa-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${saEsc(d.error || "Impossibile caricare")}</div>`;
+    ["sa-trend","sa-checks","sa-findings","sa-runs","sa-fixed"].forEach(id => document.getElementById(id).innerHTML = "");
+    toast("Errore caricamento Agente SEO", "error");
+    return;
+  }
+  const run = d.last_run, trend = d.health_trend || [], checks = d.checks_last || [];
+  const empty = !run;
+  document.getElementById("sa-kpis").innerHTML = empty
+    ? `<div class="empty" style="grid-column:1/-1"><p>🤖 L'agente non ha ancora girato. Prossima esecuzione: <b>domenica 08:00</b>.</p></div>`
+    : [
+        sc("Health score", run.health_score ?? "—", saHealthColor(run.health_score || 0)),
+        sc("Findings aperti", (d.open_findings || []).length, (d.open_findings || []).length ? "red" : ""),
+        sc("Auto-risolti ultimo run", run.applied_count ?? 0, "green"),
+        sc("Ultimo run", saFmtDate(run.generated_at), ""),
+        sc("Modello", run.model_used || "—", ""),
+        sc("Durata", run.duration_s != null ? run.duration_s + "s" : "—", ""),
+      ].join("");
+
+  // Trend: grafico solo con ≥2 punti
+  if (trend.length >= 2) {
+    document.getElementById("sa-trend").innerHTML = `<div class="chart-wrap chart-wrap-lg"><canvas id="saTrendChart"></canvas></div>`;
+    mkChart("saTrendChart", "line", trend.map(p => (p.date || "").slice(5)), [
+      { label: "Health score", data: trend.map(p => p.score), borderColor: "#4ade80", backgroundColor: "rgba(74,222,128,.12)", fill: true, tension: 0.4, pointRadius: 2 },
+    ], { legend: false, scales: { x: { grid: { color: "#1e1e3a" }, ticks: { color: "#6a6a8a" } }, y: { min: 0, max: 100, grid: { color: "#1e1e3a" }, ticks: { color: "#6a6a8a" } } } });
+  } else {
+    document.getElementById("sa-trend").innerHTML = `<div class="empty"><p>Dati insufficienti per il grafico (servono almeno 2 run settimanali).</p></div>`;
+  }
+
+  // Checks: griglia densa
+  document.getElementById("sa-checks").innerHTML = checks.length
+    ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px">` + checks.map(c => {
+        const col = SA_CHECK_DOT[c.status] || "#6a6a8a";
+        return `<div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:4px 6px;background:var(--input);border-radius:6px;overflow:hidden">
+          <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0" title="${saEsc(c.status)}"></span>
+          <span class="mono" style="flex-shrink:0">${saEsc(c.id)}</span>
+          <span style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${saEsc(c.detail || "")}">${saEsc(c.measured ?? "")}</span>
+        </div>`;
+      }).join("") + `</div>`
+    : `<div class="empty"><p>Nessun check disponibile</p></div>`;
+
+  // Findings aperti, ordinati per gravità
+  const fins = (d.open_findings || []).slice().sort((a, b) => (SA_SEV_ORDER[a.severity] ?? 9) - (SA_SEV_ORDER[b.severity] ?? 9));
+  document.getElementById("sa-findings").innerHTML = fins.length
+    ? `<div class="table-wrap"><table><thead><tr><th>Severità</th><th>Area</th><th>Titolo</th><th>Evidenza</th><th>File</th><th>Prima vista</th><th>Occ.</th><th></th></tr></thead><tbody>${
+        fins.map(f => {
+          const files = (() => { try { return (JSON.parse(f.files_json || "[]") || []).join(", "); } catch { return f.files_json || ""; } })();
+          return `<tr>
+            <td><span class="badge" style="${SA_SEV_BADGE[f.severity] || SA_SEV_BADGE.low}">${saEsc(f.severity)}</span></td>
+            <td style="font-size:12px">${saEsc(f.area)}</td>
+            <td style="max-width:260px;font-size:12px" title="${saEsc(f.title)}">${saEsc(f.title)}</td>
+            <td style="max-width:200px;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${saEsc(f.evidence || "")}">${saEsc(f.evidence || "")}</td>
+            <td style="max-width:160px;font-size:11px" class="mono" title="${saEsc(files)}">${saEsc(files)}</td>
+            <td style="font-size:11px;color:var(--muted);white-space:nowrap">${saFmtDate(f.first_seen)}</td>
+            <td>${f.occurrences ?? 1}</td>
+            <td><button class="btn btn-sm btn-outline" onclick="saIgnore('${saEsc(f.finding_id)}')">Ignora</button></td>
+          </tr>`;
+        }).join("")
+      }</tbody></table></div>`
+    : `<div class="empty"><p>Nessun finding aperto — tutto pulito ✨</p></div>`;
+
+  // Storico run
+  const runs = d.runs || [];
+  document.getElementById("sa-runs").innerHTML = runs.length
+    ? `<div class="table-wrap"><table><thead><tr><th>Data</th><th>HS</th><th>Findings</th><th>Applicati</th><th>Deploy</th><th>Modello</th><th>Durata</th></tr></thead><tbody>${
+        runs.map(r => `<tr>
+          <td style="font-size:12px;white-space:nowrap">${saFmtDate(r.generated_at)}</td>
+          <td style="color:var(--${saHealthColor(r.health_score || 0) === "green" ? "success" : saHealthColor(r.health_score || 0) === "gold" ? "gold" : "danger"})">${r.health_score ?? "—"}</td>
+          <td>${r.findings_total ?? 0}${r.findings_high ? ` <span style="color:var(--danger)">(${r.findings_high} high)</span>` : ""}</td>
+          <td>${r.applied_count ?? 0}</td>
+          <td>${r.deployed ? "✅" : "—"}</td>
+          <td style="font-size:11px">${saEsc(r.model_used || "—")}</td>
+          <td>${r.duration_s != null ? r.duration_s + "s" : "—"}</td>
+        </tr>`).join("")
+      }</tbody></table></div>`
+    : `<div class="empty"><p>Nessun run registrato</p></div>`;
+
+  // Risolti di recente
+  const fixed = d.recently_fixed || [];
+  document.getElementById("sa-fixed").innerHTML = fixed.length
+    ? fixed.map(f => `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span>${f.status === "fixed" ? "🔧" : "🌫️"}</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${saEsc(f.title)}">${saEsc(f.title)}</span>
+        <span style="color:var(--muted);white-space:nowrap">${f.status === "fixed" ? "fixed" : "risolto"} · ${saFmtDate(f.resolved_at)}</span>
+      </div>`).join("")
+    : `<div class="empty"><p>Niente di risolto di recente</p></div>`;
+
+  saLoaded = true;
+}
+
+async function saIgnore(findingId) {
+  const d = await api("/admin/seo-agent/backlog", { method: "POST", body: JSON.stringify({ finding_id: findingId, status: "wontfix", note: "ignored-from-console" }) });
+  if (!d.ok) { toast("Errore: " + (d.error || "impossibile ignorare"), "error"); return; }
+  toast("Finding ignorato — non sarà riproposto", "success");
+  saLoaded = false;
+  loadSeoAgent(true);
 }
 
 async function loadAutofix(force = false) {
