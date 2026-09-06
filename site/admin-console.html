@@ -2295,13 +2295,14 @@ async function loadSeoAgent(force = false) {
   // Storico run
   const runs = d.runs || [];
   document.getElementById("sa-runs").innerHTML = runs.length
-    ? `<div class="table-wrap"><table><thead><tr><th>Data</th><th>HS</th><th>Findings</th><th>Applicati</th><th>Deploy</th><th>Modello</th><th>Durata</th></tr></thead><tbody>${
+    ? `<div class="table-wrap"><table><thead><tr><th>Data</th><th>HS</th><th>Findings</th><th>Applicati</th><th>Deploy</th><th>Commit</th><th>Modello</th><th>Durata</th></tr></thead><tbody>${
         runs.map(r => `<tr>
           <td style="font-size:12px;white-space:nowrap">${saFmtDate(r.generated_at)}</td>
           <td style="color:var(--${saHealthColor(r.health_score || 0) === "green" ? "success" : saHealthColor(r.health_score || 0) === "gold" ? "gold" : "danger"})">${r.health_score ?? "—"}</td>
           <td>${r.findings_total ?? 0}${r.findings_high ? ` <span style="color:var(--danger)">(${r.findings_high} high)</span>` : ""}</td>
-          <td>${r.applied_count ?? 0}</td>
+          <td>${r.applied_count ?? 0}${r.proposed_count ? ` <span style="opacity:.6;font-size:11px">+${r.proposed_count} prop.</span>` : ""}</td>
           <td>${r.deployed ? "✅" : "—"}</td>
+          <td style="font-size:11px"><code>${r.commit_sha ? saEsc(r.commit_sha) : "—"}</code></td>
           <td style="font-size:11px">${saEsc(r.model_used || "—")}</td>
           <td>${r.duration_s != null ? r.duration_s + "s" : "—"}</td>
         </tr>`).join("")

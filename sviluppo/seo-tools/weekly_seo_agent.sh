@@ -62,11 +62,15 @@ ADMIN_TOKEN="$(grep '^export ADMIN_TOKEN=' "$SECRETS" | sed 's/export ADMIN_TOKE
 # Alert via POST /admin/notify del worker (thread 44): il markup supportato da
 # mdToTelegramHtml e' **bold** / *bold* / backtick / blocchi ```.
 tg_send() {
-  curl -s -X POST "https://api.adoff.app/admin/notify" \
+  local rc
+  rc=$(curl -s -m 20 -o /dev/null -w '%{http_code}' -X POST "https://api.adoff.app/admin/notify" \
     -H "X-Admin-Token: $ADMIN_TOKEN" \
     -H "Content-Type: application/json" \
     -d "$(python3 -c "import json,sys;print(json.dumps({'text':sys.argv[1],'thread_id':${TG_THREAD_SEO}}))" "$1")" \
-    >/dev/null 2>&1
+    2>/dev/null)
+  # Solo log, mai un'uscita d'errore: tg_send e' chiamata anche da die(), e non deve
+  # ne' far fallire il run ne' richiamare se stessa (loop infinito).
+  [ "$rc" = "200" ] || log "WARNING: invio Telegram fallito (http=$rc)"
 }
 
 # Fase 5 — ingest del run nella console admin. Un fallimento NON fa fallire il

@@ -2295,13 +2295,25 @@ async function applyTicketReply(ticketId, { reply, status, by }, env) {
     ticket.status = status;
   }
   if (reply) {
-    ticket.replies.push({ text: reply, by: by === "ai" ? "ai" : "admin", at: new Date().toISOString() });
+    // Stesso oggetto che finisce in ticket.replies: mutarlo qui sotto aggiorna il
+    // ticket salvato nel KV poche righe piu' avanti.
+    const entry = { text: reply, by: by === "ai" ? "ai" : "admin", at: new Date().toISOString() };
+    ticket.replies.push(entry);
     // Chiude il loop: invia la risposta all'utente via email (i template esistevano ma non erano cablati).
     if (EMAIL_RE.test(ticket.email || "") && !/^noreply/i.test(ticket.email)) {
       try {
         const tmpl = EMAIL_TEMPLATES.ticket_reply(ticket.email, ticketId, reply);
-        await sendEmail(ticket.email, tmpl.subject, tmpl.html, env);
-      } catch (e) { console.error("[ticket] reply email error:", e && e.message); }
+        // L'esito va registrato: senza, dal KV non si sa se la risposta e' partita.
+        const sent = await sendEmail(ticket.email, tmpl.subject, tmpl.html, env);
+        entry.email = sent && sent.ok
+          ? { ok: true, id: sent.id || null, at: new Date().toISOString() }
+          : { ok: false, error: (sent && sent.error) || "unknown", at: new Date().toISOString() };
+      } catch (e) {
+        console.error("[ticket] reply email error:", e && e.message);
+        entry.email = { ok: false, error: (e && e.message) || "exception", at: new Date().toISOString() };
+      }
+    } else {
+      entry.email = { ok: false, error: "skipped: indirizzo assente, non valido o noreply" };
     }
   }
   ticket.updatedAt = new Date().toISOString();
@@ -9156,7 +9168,8 @@ async function buildSeoAgentDashboard(env) {
   const lastRun = (await env.DB.prepare(
     `SELECT * FROM seo_agent_runs ORDER BY generated_at DESC LIMIT 1`).all()).results || [];
   const runs = (await env.DB.prepare(
-    `SELECT run_id, generated_at, health_score, findings_total, applied_count,
+    `SELECT run_id, generated_at, health_score, findings_total, findings_high,
+            applied_count, proposed_count, commit_sha, deployed,
             duration_s, model_used FROM seo_agent_runs
      ORDER BY generated_at DESC LIMIT 12`).all()).results || [];
   const openFindings = (await env.DB.prepare(
