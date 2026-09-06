@@ -574,8 +574,13 @@ async function sendEmail(to, subject, html, env) {
       }),
     });
     const data = await res.json();
+    // Un'email che non parte e' invisibile: i chiamanti fanno `catch` e tirano
+    // dritto, quindi un ok:true a video non prova nessuna consegna. Qui almeno
+    // resta una traccia. Non si logga il destinatario: e' un dato personale.
+    if (!res.ok) console.error("[email] invio rifiutato:", res.status, String(data && data.message).slice(0, 120));
     return { ok: res.ok, id: data.id, error: data.message };
   } catch (e) {
+    console.error("[email] invio fallito:", e && e.message);
     return { ok: false, error: e.message };
   }
 }
@@ -4158,8 +4163,11 @@ async function handleStripeWebhook(request, env) {
         if (subData.current_period_end) {
           finalExpires = subData.current_period_end; // gia' unix timestamp
         }
-      } catch (_) {
-        // Fallback al calcolo manuale se Stripe non risponde
+      } catch (e) {
+        // Si prosegue col calcolo manuale, ma va detto: se Stripe non risponde
+        // la scadenza la stiamo indovinando noi, e un errore qui si scopre solo
+        // quando un cliente si lamenta.
+        console.error("[stripe] periodo abbonamento non leggibile, uso il calcolo manuale:", e && e.message);
       }
     }
 
@@ -4197,7 +4205,12 @@ async function handleStripeWebhook(request, env) {
           await env.DB.prepare("INSERT OR IGNORE INTO founder_seats (email, plan, stripe_session_id) VALUES (?, ?, ?)")
             .bind(email, plan, session.id).run();
         }
-      } catch (_) { /* non bloccare l'emissione licenza se il conteggio fallisce */ }
+      } catch (e) {
+        // Giusto non bloccare l'emissione della licenza per un conteggio, ma il
+        // silenzio totale significa che i posti registrati divergono dai pagamenti
+        // senza che nulla lo segnali.
+        console.error("[stripe] registrazione del posto fallita (licenza emessa comunque):", e && e.message);
+      }
     }
 
     // Sale record keyed by payment_intent — abilita lo storno accurato sui rimborsi.
