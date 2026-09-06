@@ -3097,7 +3097,12 @@ async function handleAdminNotifyOps(body, env, request) {
   }
   const text = String((body && body.text) || "").slice(0, ADMIN_NOTIFY_MAX_CHARS).trim();
   if (!text) return jsonResponse({ ok: false, error: "Missing text" }, 400);
-  const sent = await notifyTelegram(escapeHtml(text), env, await getOpsThreadId(env));
+  // thread_id opzionale: chi scrive da un dominio (es. agente SEO) può puntare al
+  // proprio topic senza conoscere il gruppo. Assente → topic Ops Monitoring.
+  const threadId = Number.isInteger(body && body.thread_id) && body.thread_id > 0
+    ? body.thread_id
+    : await getOpsThreadId(env);
+  const sent = await notifyTelegram(escapeHtml(text), env, threadId);
   return jsonResponse({ ok: sent }, sent ? 200 : 502);
 }
 

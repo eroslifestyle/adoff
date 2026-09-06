@@ -12,7 +12,7 @@
 # =============================================================================
 set -uo pipefail
 
-PROJECT_ROOT="/home/mrxxx/Dropbox/1 Programmazione/Progetti/ChromePlugin"
+PROJECT_ROOT="/mnt/nvme2/projects/Progetti/ChromePlugin"
 SEO_DIR="$PROJECT_ROOT/sviluppo/seo-tools"
 STATE_DIR="$SEO_DIR/.state"
 LOG_DIR="$PROJECT_ROOT/sviluppo/logs"
@@ -26,16 +26,15 @@ log() { echo "[$(date +%H:%M:%S)] $*" >> "$LOG"; }
 
 # shellcheck disable=SC1090
 source "$SECRETS" 2>/dev/null || exit 1
-source /home/mrxxx/.secrets/adoff-telegram.env 2>/dev/null  # TELEGRAM_BOT_TOKEN + CHAT_ID
 ADMIN_TOKEN="$(grep '^export ADMIN_TOKEN=' "$SECRETS" | sed 's/export ADMIN_TOKEN=//; s/"//g')"
-TG_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
-TG_CHAT="${TELEGRAM_CHAT_ID:-}"
 
+# Alert via POST /admin/notify del worker (che conosce gia' il gruppo admin):
+# l'id di gruppo e il token bot restano secret del worker, non duplicati qui.
 tg_send() {
-  [ -z "$TG_TOKEN" ] && return
-  curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+  curl -s -X POST "https://api.adoff.app/admin/notify" \
+    -H "X-Admin-Token: $ADMIN_TOKEN" \
     -H "Content-Type: application/json" \
-    -d "$(python3 -c "import json,sys;print(json.dumps({'chat_id':'${TG_CHAT}','message_thread_id':${TG_THREAD_SEO},'text':sys.argv[1],'parse_mode':'Markdown','disable_web_page_preview':True}))" "$1")" \
+    -d "$(python3 -c "import json,sys;print(json.dumps({'text':sys.argv[1],'thread_id':${TG_THREAD_SEO}}))" "$1")" \
     >/dev/null 2>&1
 }
 
@@ -49,6 +48,7 @@ log "Risposta ricevuta: $REPLY"
 # --- 2) C'è una proposta in staging? ---
 PENDING_DATE="$(cat "$STATE_DIR/pending_date.txt" 2>/dev/null)"
 PENDING_BACKUP="$(cat "$STATE_DIR/pending_backup.txt" 2>/dev/null)"
+PENDING_BRANCH="$(cat "$STATE_DIR/pending_branch.txt" 2>/dev/null)"
 if [ -z "$PENDING_DATE" ]; then
   log "Nessuna proposta in staging, ignoro."
   tg_send "ℹ️ Non c'è una proposta SEO in attesa. (Il prossimo report arriva domenica.)"
@@ -57,7 +57,7 @@ fi
 
 REPLY_LC="$(echo "$REPLY" | tr '[:upper:]' '[:lower:]' | xargs)"
 
-clear_pending() { rm -f "$STATE_DIR/pending_date.txt" "$STATE_DIR/pending_backup.txt"; }
+clear_pending() { rm -f "$STATE_DIR/pending_date.txt" "$STATE_DIR/pending_backup.txt" "$STATE_DIR/pending_branch.txt"; }
 
 deploy_site() {
   cd "$PROJECT_ROOT" || return 1
@@ -67,7 +67,20 @@ deploy_site() {
 
 case "$REPLY_LC" in
   ok|approva|pubblica|si|sì|"approva ok"|publish|deploy)
-    log "APPROVATO → deploy"
+    log "APPROVATO → merge branch + deploy"
+    # Merge del branch proposto su main PRIMA del deploy: se il merge fallisce
+    # non pubblico nulla (i file di lavoro sono sul branch, main resta coerente).
+    if [ -n "$PENDING_BRANCH" ]; then
+      if git -C "$PROJECT_ROOT" checkout main && git -C "$PROJECT_ROOT" merge --no-edit "$PENDING_BRANCH" \
+         && git -C "$PROJECT_ROOT" push origin main \
+         && git -C "$PROJECT_ROOT" branch -d "$PENDING_BRANCH"; then
+        log "Merge $PENDING_BRANCH su main OK"
+      else
+        log "ERRORE: merge/push di $PENDING_BRANCH fallito, deploy annullato."
+        tg_send "⚠️ Merge git di $PENDING_BRANCH fallito: deploy ANNULLATO, modifiche restano sul branch. Controlla i log."
+        exit 1
+      fi
+    fi
     tg_send "🚀 Approvato. Pubblico le migliorie SEO sul sito..."
     if deploy_site; then
       tg_send "✅ *Pubblicato!* Le migliorie SEO/AEO del $PENDING_DATE sono live su adoff.app. I motori e le AI bot le vedranno alla prossima scansione."
@@ -86,6 +99,10 @@ case "$REPLY_LC" in
       tg_send "↩️ Proposta scartata. Ripristinato lo stato precedente di site/. Nessuna modifica pubblicata."
     else
       tg_send "↩️ Proposta scartata (backup non trovato, ma nulla è stato pubblicato)."
+    fi
+    # Pulizia git: il backup tar e' il vero rollback dei file, il branch si butta.
+    if [ -n "$PENDING_BRANCH" ]; then
+      git -C "$PROJECT_ROOT" checkout main && git -C "$PROJECT_ROOT" branch -D "$PENDING_BRANCH" && log "Branch $PENDING_BRANCH eliminato"
     fi
     clear_pending
     ;;

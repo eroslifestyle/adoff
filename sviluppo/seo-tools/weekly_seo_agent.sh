@@ -18,7 +18,7 @@
 # =============================================================================
 set -uo pipefail
 
-PROJECT_ROOT="/home/mrxxx/Dropbox/1 Programmazione/Progetti/ChromePlugin"
+PROJECT_ROOT="/mnt/nvme2/projects/Progetti/ChromePlugin"
 SEO_DIR="$PROJECT_ROOT/sviluppo/seo-tools"
 STATE_DIR="$SEO_DIR/.state"
 LOG_DIR="$PROJECT_ROOT/sviluppo/logs"
@@ -41,17 +41,16 @@ log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
 # --- secrets ---
 # shellcheck disable=SC1090
 source "$SECRETS" 2>/dev/null || { log "ERRORE: secrets non trovati"; exit 1; }
-source /home/mrxxx/.secrets/adoff-telegram.env 2>/dev/null  # TELEGRAM_BOT_TOKEN + CHAT_ID
 ADMIN_TOKEN="$(grep '^export ADMIN_TOKEN=' "$SECRETS" | sed 's/export ADMIN_TOKEN=//; s/"//g')"
-TG_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
-TG_CHAT="${TELEGRAM_CHAT_ID:-}"
 
+# Alert via POST /admin/notify del worker (che conosce gia' il gruppo admin):
+# l'id di gruppo e il token bot restano secret del worker, non duplicati qui.
 tg_send() {
   local text="$1"
-  [ -z "$TG_TOKEN" ] && { log "Telegram non configurato, skip"; return; }
-  curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+  curl -s -X POST "https://api.adoff.app/admin/notify" \
+    -H "X-Admin-Token: $ADMIN_TOKEN" \
     -H "Content-Type: application/json" \
-    -d "$(python3 -c "import json,sys; print(json.dumps({'chat_id':'${TG_CHAT}','message_thread_id':${TG_THREAD_SEO},'text':sys.argv[1],'parse_mode':'Markdown','disable_web_page_preview':True}))" "$text")" \
+    -d "$(python3 -c "import json,sys;print(json.dumps({'text':sys.argv[1],'thread_id':${TG_THREAD_SEO}}))" "$text")" \
     >/dev/null 2>&1
 }
 
@@ -113,7 +112,14 @@ if [ "$DRY_RUN" -eq 1 ]; then
   echo "# DRY RUN report $DATESTAMP" > "$REPORT"
   echo "Snapshot GSC scaricato. claude -p non eseguito (dry-run)." >> "$REPORT"
 else
-  log "Lancio claude -p (regia + applicazione)..."
+  # Isolamento: claude -p committa su branch dedicato, mai direttamente su main.
+  if [ -n "$(git -C "$PROJECT_ROOT" status --porcelain)" ]; then
+    log "ERRORE: working tree sporco, non tocco nulla. Pulire e rilanciare."
+    tg_send "⚠️ Agente SEO: working tree git sporco, run settimanale annullato."
+    exit 1
+  fi
+  git -C "$PROJECT_ROOT" checkout -b "$BRANCH" || { log "ERRORE: creazione branch $BRANCH fallita"; tg_send "⚠️ Agente SEO: impossibile creare branch $BRANCH."; exit 1; }
+  log "Lancio claude -p (regia + applicazione) su branch $BRANCH..."
   cd "$PROJECT_ROOT" || exit 1
   echo "$PROMPT" | "$CLAUDE_BIN" -p --permission-mode acceptEdits --add-dir "$PROJECT_ROOT" >> "$LOG" 2>&1
   log "claude -p terminato (exit $?)"
@@ -129,6 +135,8 @@ rm -rf "$TMP_OLD"
 
 if [ "$CHANGED" -eq 0 ] && [ "$DRY_RUN" -eq 0 ]; then
   log "Nessuna modifica proposta questa settimana."
+  # Niente branch orfano: torna su main e butta quello appena creato.
+  git -C "$PROJECT_ROOT" checkout main && git -C "$PROJECT_ROOT" branch -D "$BRANCH"
   rm -f "$STATE_DIR/pending_branch.txt" "$STATE_DIR/pending_backup.txt"
   tg_send "📊 *Agente SEO settimanale* — nessun intervento necessario questa settimana. I dati GSC sono stabili."
   exit 0
@@ -136,6 +144,7 @@ fi
 
 if [ "$DRY_RUN" -eq 0 ]; then
   echo "$DATESTAMP" > "$STATE_DIR/pending_date.txt"
+  echo "$BRANCH" > "$STATE_DIR/pending_branch.txt"
 fi
 
 REPORT_TXT="$(cat "$REPORT" 2>/dev/null | head -40)"
