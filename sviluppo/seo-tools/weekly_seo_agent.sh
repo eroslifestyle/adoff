@@ -287,35 +287,68 @@ PROMPT_END
     log "Re-audit di verifica..."
     python3 "$SEO_DIR/seo_audit.py" --json >/dev/null 2>>"$LOG"
     if [ -s "$AUDIT" ]; then
-      python3 - "$STATE_DIR" <<'PY' >>"$LOG" 2>&1
+      python3 - "$STATE_DIR" "$HEALTH" <<'PY' >>"$LOG" 2>&1
 import json, sys
-state = sys.argv[1]
+state, health_before = sys.argv[1], int(sys.argv[2])
 tri = json.load(open(f"{state}/triage.json"))
-now = {f["id"] for f in json.load(open(f"{state}/audit_findings.json"))["findings"]}
-applied = [f["id"] for f in tri["auto"] if f["id"] not in now]
-failed = [f["id"] for f in tri["auto"] if f["id"] in now]
-json.dump({"applied": applied, "failed": failed}, open(f"{state}/verify.json", "w"), indent=1)
-print("VERIFICA: applicati=%d falliti=%d" % (len(applied), len(failed)))
+audit = json.load(open(f"{state}/audit_findings.json"))
+# L'id e' sha1(area|title|primo_file): un fix PARZIALE cambia il file peggiore e
+# quindi l'id, e sembrerebbe risolto. L'identita' stabile e' (area, title).
+def key(f):
+    return (f["area"], f["title"])
+now = {key(f): f for f in audit["findings"]}
+applied, failed, partial = [], [], []
+for f in tri["auto"]:
+    cur = now.get(key(f))
+    if cur is None:
+        applied.append(f["id"])
+    else:
+        failed.append(f["id"])
+        if cur["evidence"] != f["evidence"]:
+            partial.append(f["id"])
+pre_high = {key(f) for f in tri["auto"] + tri["propose"] if f["severity"] == "high"}
+new_high = [key(f) for f in audit["findings"] if f["severity"] == "high" and key(f) not in pre_high]
+health_after = audit["metrics"]["health_score"]
+# Si pubblica se il sito non e' peggiorato: il fix parziale e' comunque valore,
+# ma resta contato come NON risolto (la console admin non deve mentire).
+publish_ok = health_after >= health_before and not new_high
+json.dump({"applied": applied, "failed": failed, "partial": partial,
+           "publish_ok": publish_ok}, open(f"{state}/verify.json", "w"), indent=1)
+print("VERIFICA: risolti=%d non_risolti=%d (parziali=%d) nuovi_high=%d publish_ok=%s" % (
+    len(applied), len(failed), len(partial), len(new_high), publish_ok))
 PY
       mapfile -t APPLIED_IDS < <(python3 -c 'import json,sys;print("\n".join(json.load(open(sys.argv[1]+"/verify.json"))["applied"]))' "$STATE_DIR" | grep . )
       mapfile -t FAILED_IDS  < <(python3 -c 'import json,sys;print("\n".join(json.load(open(sys.argv[1]+"/verify.json"))["failed"]))'  "$STATE_DIR" | grep . )
+      mapfile -t PARTIAL_IDS < <(python3 -c 'import json,sys;print("\n".join(json.load(open(sys.argv[1]+"/verify.json")).get("partial",[])))' "$STATE_DIR" | grep . )
+      PUBLISH_OK="$(python3 -c 'import json,sys;print(1 if json.load(open(sys.argv[1]+"/verify.json")).get("publish_ok") else 0)' "$STATE_DIR")"
       HEALTH_AFTER="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["metrics"]["health_score"])' "$AUDIT")"
     else
       FAILED_IDS=($(python3 -c 'import json,sys;print(" ".join(f["id"] for f in json.load(open(sys.argv[1]+"/triage.json"))["auto"]))' "$STATE_DIR"))
       HEALTH_AFTER="$HEALTH"
+      PARTIAL_IDS=(); PUBLISH_OK=0
       log "WARNING: re-audit non disponibile: nessun fix considerato verificato."
     fi
-    log "Verifica: applicati=${#APPLIED_IDS[@]} falliti=${#FAILED_IDS[@]} (health $HEALTH -> $HEALTH_AFTER)"
+    log "Verifica: risolti=${#APPLIED_IDS[@]} non risolti=${#FAILED_IDS[@]} (parziali=${#PARTIAL_IDS[@]}) health $HEALTH -> $HEALTH_AFTER, publish_ok=$PUBLISH_OK"
 
-    if [ "${#APPLIED_IDS[@]}" -eq 0 ]; then
-      # Nulla di verificato: niente merge, niente deploy. Il branch resta per ispezione.
-      git checkout main || die 3 "checkout main fallito"
-      log "Nessun fix verificato: branch $BRANCH conservato per ispezione (NON mergiato)."
-      tg_send "⚠️ Agente SEO — fase 3: nessun fix AUTO verificato (${#FAILED_IDS[@]} falliti). Branch $BRANCH NON pubblicato, serve ispezione manuale."
-    else
+    # Il lavoro va committato sul branch in ogni caso: cosi' il working tree resta
+    # pulito anche quando non si pubblica, e il branch resta ispezionabile.
+    HAS_WORK=0
+    if [ -n "$(git status --porcelain site/)" ]; then
       git add site/ || die 3 "git add site/ fallito"
-      git commit -m "fix(seo): auto-fix agente $DATESTAMP (${#APPLIED_IDS[@]} finding, health $HEALTH->$HEALTH_AFTER)" \
+      git commit -q -m "fix(seo): auto-fix agente $DATESTAMP (${#APPLIED_IDS[@]} risolti, ${#PARTIAL_IDS[@]} parziali, health $HEALTH->$HEALTH_AFTER)" \
         || die 3 "commit fallito"
+      HAS_WORK=1
+    else
+      log "claude -p non ha modificato nulla in site/."
+    fi
+
+    if [ "$HAS_WORK" -eq 0 ] || [ "$PUBLISH_OK" != "1" ]; then
+      git checkout main || die 3 "checkout main fallito"
+      log "Non pubblico (lavoro=$HAS_WORK publish_ok=$PUBLISH_OK): branch $BRANCH conservato per ispezione."
+      if [ "$HAS_WORK" -eq 1 ]; then
+        tg_send "⚠️ Agente SEO — fase 3: fix NON pubblicati (health $HEALTH->$HEALTH_AFTER, ${#FAILED_IDS[@]} non risolti). Branch $BRANCH conservato, serve ispezione manuale."
+      fi
+    else
       if git checkout main && git merge --no-edit "$BRANCH" && git push origin main && git branch -d "$BRANCH"; then
         COMMIT="$(git rev-parse --short HEAD)"
         log "Merge su main OK ($COMMIT)"
