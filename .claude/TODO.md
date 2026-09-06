@@ -1,5 +1,32 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
+## Sessione 2026-09-06 (sera): audit SEO/AEO + redesign agente domenicale
+
+Tre filoni chiusi: email ticket confermata consegnata (Resend `last_event:"delivered"`), audit
+/hulk-seo con riparazioni live (492 orfane, hreflang duplicati, testi 15 lingue, chiavi VPN morte),
+redesign dell'agente SEO (21 check deterministici + pipeline 5 fasi + stato D1 + sezione admin,
+modello ibrido code-max/sonnet testato 2/2). HEAD `77ecce6`. Dettaglio: checkpoint
+`.claude/checkpoints/CP_20260906_2115.md` · vault `Memoria/progetti/AdOff/sessioni/seo-aeo-audit-fix-20260906.md`.
+
+**Fatto:**
+- [x] Email TK-20260906-90D03425 confermata consegnata; gap `applyTicketReply`/KV annotato
+- [x] Audit + fix live: linking interno, sitemap 516 URL, 13 citazioni esterne, 74 conteggi, 214 file i18n, 4048 chiavi VPN rimosse
+- [x] Suite 21 check (`sviluppo/seo-tools/seo_audit.py`), pipeline 5 fasi, endpoint worker, sezione admin "Agente SEO"
+- [x] Modello ibrido: preflight `:8774` → code-max locale, altrimenti sonnet; test live 2/2
+
+**Aperto:**
+- [ ] Primo run COMPLETO dell'agente (non `--dry-run`): AUTO=1, PROPOSE=8 attesi
+- [ ] Redirect 301 www→apex: da fare a mano dal dashboard (Redirect Rule di zona; `_redirects` non matcha l'hostname)
+- [ ] Residui health 67/100: 10 orfane, 93 title fuori range, 66 pagine senza data, 88/91 senza citazioni
+- [ ] Registrare stato consegna email nel KV
+
+**Do NOT:**
+- NON toccare Stripe/trial dormiente né `adoffPlanTier()`; NON dire che qualcosa richiede pagamento
+- NON deployare console admin senza `--branch master`; alert solo via `POST /admin/notify` (mai TELEGRAM_CHAT_ID pubblico)
+- NON rinominare/cancellare chiavi i18n senza verifica su TUTTO il sito (HTML + JS); MAI `<a>` dentro `data-i18n`
+
+---
+
 ## Sessione 2026-09-06: ticket TK-20260906-90D03425 → chat AI ripristinata + resilienza
 
 Partito da "è arrivato un messaggio da un utente sul supporto, non lo trovo"; finito con la
@@ -22,9 +49,9 @@ stesso. Dettaglio: `.claude/checkpoints/CP_20260906_1140.md` · vault
 - [x] 10 commit pushati su main (9f29b1d → a1df67f); test: test_ttl_router.js 5/5, test_monitor_chat.py 8/8, preflight 0 errori
 
 **Aperto (2026-09-06):**
-- [ ] Verificare che la risposta email al ticket TK-20260906-90D03425 sia stata consegnata (ok:true non prova la consegna)
-- [ ] /admin/health usa CHAT_MAX_TOKENS pieno (650) per un ping: ridurre a un budget minimo, ~96 completion/giorno sprecate
-- [ ] Valutare se la chat debba dipendere da Ollama sul PC locale (PC spento = chat giù, il dead-man avvisa entro ~4h)
+- [x] Verificare che la risposta email al ticket TK-20260906-90D03425 sia stata consegnata (ok:true non prova la consegna) — CONFERMATA: `last_event:"delivered"` (sessione sera)
+- [x] /admin/health usa CHAT_MAX_TOKENS pieno (650) per un ping: ridurre a un budget minimo, ~96 completion/giorno sprecate — fatto (commit `1e2c226`)
+- [x] Valutare se la chat debba dipendere da Ollama sul PC locale (PC spento = chat giù, il dead-man avvisa entro ~4h) — fatto (monitor a 5 min)
 
 ---
 
@@ -328,7 +355,7 @@ Merge-accessor su `googletag`/`adsbygoogle`: i siti sovrascrivevano lo spoof. Or
 - [ ] **Hash integrita' licenza fragile.** `adoffIntegrity` calcolato su TUTTO l'oggetto licenza: qualunque campo aggiunto lo invalida. Valutare hash su sottoinsieme stabile (`rawKey`, `plan`, `expires`). Decisione prima del prossimo cambio schema.
 - [ ] **Regola 179** (`videoplayback*oad=`, Pro-only) mai verificata: stessa famiglia della 178 rimossa. Se lo schermo nero ricomparisse in Pro, e' il sospetto numero uno.
 - [ ] **`validate_site.py:46` falso positivo** su 233 file: segnala "trial 30gg" mentre il prodotto fa 15. E' la regola del validatore a essere sbagliata, non il sito.
-- [ ] **Cron SEO gira nella directory sbagliata**: `~/Dropbox/…` (quasi vuota) invece di `/mnt/backup/…`. Keyword research fallita da 5 settimane.
+- [x] **Cron SEO gira nella directory sbagliata**: `~/Dropbox/…` (quasi vuota) invece di `/mnt/backup/…`. Keyword research fallita da 5 settimane. — risolto 2026-09-06, commit `7f3a4df`
 - [ ] **`constants.json` allineato a 3.5.70** nel prossimo giro di build sito.
 
 ---
