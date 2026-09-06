@@ -278,7 +278,7 @@ Rispondi solo con un breve elenco (un rigo per finding) di cosa hai corretto.
 PROMPT_END
 )"
     log "Lancio claude -p ($MODEL_USED, timeout ${CLAUDE_TIMEOUT_S}s)..."
-    env "${CLAUDE_ENV[@]}" timeout "$CLAUDE_TIMEOUT_S" "$CLAUDE_BIN" -p \
+    env "${CLAUDE_ENV[@]}" timeout "$CLAUDE_TIMEOUT_S" "$CLAUDE_BIN" -p "$PROMPT" \
       --model "$MODEL_NAME" --permission-mode acceptEdits --add-dir "$PROJECT_ROOT" >>"$LOG" 2>&1
     CLAUDE_RC=$?
     log "claude -p terminato (exit $CLAUDE_RC)"
