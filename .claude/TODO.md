@@ -1,5 +1,33 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
+## Sessione 2026-09-06: ticket TK-20260906-90D03425 → chat AI ripristinata + resilienza
+
+Partito da "è arrivato un messaggio da un utente sul supporto, non lo trovo"; finito con la
+chat AI del sito ripristinata dopo 15 giorni di silenzio (chiave LiteLLM revocata + modello
+inesistente), sei interventi di resilienza e una review che ha trovato 5 difetti nel lavoro
+stesso. Dettaglio: `.claude/checkpoints/CP_20260906_1140.md` · vault
+`Memoria/progetti/AdOff/log/adoff-admin-cache-e-chat-ai-giu-20260906.md`.
+
+**Fatto (2026-09-06):**
+- [x] Ticket TK-20260906-90D03425 trovato, risposto e chiuso
+- [x] 6 ticket di test del 22/08 chiusi
+- [x] Console admin: TTL nel router pagine (11 sezioni mostravano dati congelati)
+- [x] Chat AI ripristinata dopo 15 giorni di silenzio (chiave LiteLLM revocata + modello inesistente)
+- [x] Monitor chat + alert Telegram via worker, timer 30 min
+- [x] Fallback LLM a cascata, /admin/health, dead-man switch
+- [x] preflight.py pre-deploy, ensure-llm-key.py auto-riparazione
+- [x] Log sui fallimenti muti (sendEmail + 2 punti Stripe)
+- [x] System prompt corretto (prometteva un piano a pagamento inesistente)
+- [x] Review del lavoro: 5 difetti trovati e corretti
+- [x] 10 commit pushati su main (9f29b1d → a1df67f); test: test_ttl_router.js 5/5, test_monitor_chat.py 8/8, preflight 0 errori
+
+**Aperto (2026-09-06):**
+- [ ] Verificare che la risposta email al ticket TK-20260906-90D03425 sia stata consegnata (ok:true non prova la consegna)
+- [ ] /admin/health usa CHAT_MAX_TOKENS pieno (650) per un ping: ridurre a un budget minimo, ~96 completion/giorno sprecate
+- [ ] Valutare se la chat debba dipendere da Ollama sul PC locale (PC spento = chat giù, il dead-man avvisa entro ~4h)
+
+---
+
 ## Sessione 2026-09-03: riallineamento comunicazione al modello 100% gratuito
 
 Causa: il canale Telegram automatico e vari documenti/pagine promettevano ancora il vecchio
