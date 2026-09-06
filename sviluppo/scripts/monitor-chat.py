@@ -30,17 +30,22 @@ CHAT_URL = "https://api.adoff.app/chat"
 PROBE_MESSAGE = "How do I install the extension?"
 REQUEST_TIMEOUT_S = 45
 MIN_REPLY_CHARS = 20
+# Con lo User-Agent di default di urllib il WAF di Cloudflare risponde 403
+# "error code: 1010" e la richiesta non arriva mai al worker.
+USER_AGENT = "adoff-chat-monitor/1"
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 STATE_PATH = PROJECT_ROOT / "sviluppo" / "logs" / "chat-monitor-state.json"
 LOG_PATH = PROJECT_ROOT / "sviluppo" / "logs" / "chat-monitor.log"
 
-# Namespace del vault TPM da cui leggere le credenziali Telegram. Il chat id NON
-# deve essere quello del canale pubblico @adoffapp: un alert tecnico contiene
-# dettagli d'infrastruttura e non va davanti agli utenti.
+# L'alert passa dal worker (POST /admin/notify), che lo inoltra nel topic
+# "Ops Monitoring" del gruppo admin. Cosi' l'id di quel gruppo resta un secret del
+# solo worker: qui non va duplicato — e non si rischia di mandare per sbaglio un
+# alert tecnico sul canale PUBBLICO @adoffapp, che nel vault ha un nome quasi
+# identico (TELEGRAM_CHAT_ID).
+NOTIFY_URL = "https://api.adoff.app/admin/notify"
 SECRET_NAMESPACE = "adoff-stores"
-ALERT_CHAT_ID_VAR = "ALERT_CHAT_ID"
-BOT_TOKEN_VAR = "TELEGRAM_BOT_TOKEN"
+ADMIN_TOKEN_VAR = "ADMIN_TOKEN"
 
 
 def utc_now_iso() -> str:
@@ -53,7 +58,7 @@ def probe_chat() -> tuple[str, str]:
     request = urllib.request.Request(
         CHAT_URL,
         data=payload,
-        headers={"Content-Type": "application/json", "User-Agent": "adoff-chat-monitor/1"},
+        headers={"Content-Type": "application/json", "User-Agent": USER_AGENT},
         method="POST",
     )
     try:
@@ -95,24 +100,32 @@ def read_secret(namespace: str, name: str) -> str:
 
 
 def send_telegram(text: str) -> bool:
-    chat_id = read_secret(SECRET_NAMESPACE, ALERT_CHAT_ID_VAR)
-    token = read_secret(SECRET_NAMESPACE, BOT_TOKEN_VAR)
-    if not chat_id or not token:
+    """Inoltra l'alert via il worker, che conosce il gruppo admin. False se non ci riesce."""
+    token = read_secret(SECRET_NAMESPACE, ADMIN_TOKEN_VAR)
+    if not token:
         return False
-    payload = json.dumps({"chat_id": chat_id, "text": text, "parse_mode": "HTML"}).encode()
+    payload = json.dumps({"text": text}).encode()
     request = urllib.request.Request(
-        f"https://api.telegram.org/bot{token}/sendMessage",
-        data=payload, headers={"Content-Type": "application/json"}, method="POST",
+        NOTIFY_URL,
+        data=payload,
+        # Lo User-Agent e' obbligatorio: con quello di default di urllib il WAF di
+        # Cloudflare risponde 403 "error code: 1010" e l'alert non parte mai.
+        headers={
+            "Content-Type": "application/json",
+            "X-Admin-Token": token,
+            "User-Agent": USER_AGENT,
+        },
+        method="POST",
     )
     try:
-        with urllib.request.urlopen(request, timeout=20) as response:
+        with urllib.request.urlopen(request, timeout=25) as response:
             return json.loads(response.read().decode()).get("ok", False)
     except Exception:
         return False
 
 
 def notify(text: str) -> None:
-    """Telegram se configurato; altrimenti notifica desktop. Sempre su log."""
+    """Telegram via worker se raggiungibile; altrimenti notifica desktop. Sempre su log."""
     LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
     with LOG_PATH.open("a", encoding="utf-8") as handle:
         handle.write(f"{utc_now_iso()} {text}\n")
@@ -155,11 +168,13 @@ def main() -> int:
     # Si notifica solo al CAMBIO di stato: un guasto lungo non deve generare un
     # messaggio ogni mezz'ora, ma il ritorno alla normalita' va comunicato.
     if status != previous:
+        # Testo semplice: /admin/notify fa escapeHtml, quindi eventuali tag
+        # arriverebbero visibili come tali.
         if status == "down":
-            notify(f"🔴 <b>AdOff</b> — l'assistente AI non risponde\n{detail}\n"
+            notify(f"🔴 AdOff — l'assistente AI non risponde\n{detail}\n"
                    f"Ogni visitatore che scrive in chat apre un ticket.")
         elif previous == "down":
-            notify(f"🟢 <b>AdOff</b> — assistente AI di nuovo operativo\n{detail}")
+            notify(f"🟢 AdOff — assistente AI di nuovo operativo\n{detail}")
         state["changedAt"] = utc_now_iso()
 
     save_state(state)

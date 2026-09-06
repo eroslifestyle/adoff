@@ -3019,6 +3019,24 @@ async function getOpsThreadId(env) {
   return TELEGRAM_SUPPORT_THREAD; // fallback sicuro
 }
 
+/**
+ * Inoltra un alert operativo nel topic "Ops Monitoring". Serve al monitor esterno
+ * (sviluppo/scripts/monitor-chat.py) per avvisare senza conoscere il chat id del
+ * gruppo admin. Il testo passa da escapeHtml: il parse_mode e' HTML e un '<' non
+ * bilanciato farebbe rifiutare il messaggio da Telegram.
+ */
+async function handleAdminNotifyOps(body, env, request) {
+  if (!await verifyAdminAuth(request.headers.get(ADMIN_TOKEN_HEADER), env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  const text = String((body && body.text) || "").slice(0, ADMIN_NOTIFY_MAX_CHARS).trim();
+  if (!text) return jsonResponse({ ok: false, error: "Missing text" }, 400);
+  const sent = await notifyTelegram(escapeHtml(text), env, await getOpsThreadId(env));
+  return jsonResponse({ ok: sent }, sent ? 200 : 502);
+}
+
+const ADMIN_NOTIFY_MAX_CHARS = 1500;
+
 async function notifyTelegram(text, env, threadId = TELEGRAM_SUPPORT_THREAD) {
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return false;
   const url = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -9550,6 +9568,15 @@ export default {
       try { replyBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
       const threadId = path.split("/admin/messages/")[1].replace(/\/reply$/, "");
       return withCors(handleAdminReplyMessage(replyBody, env, request, threadId));
+    }
+
+    // Admin — alert operativi dal monitor esterno. Il chat id del gruppo admin resta
+    // un secret del worker: chi allerta non deve conoscerlo (ne' duplicarlo altrove,
+    // dove finirebbe per sbaglio sul canale pubblico).
+    if (path === "/admin/notify" && request.method === "POST") {
+      let alertBody;
+      try { alertBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleAdminNotifyOps(alertBody, env, request));
     }
 
     // Admin — suggerimenti (notify + update). Auth via X-Admin-Token nei rispettivi handler.
