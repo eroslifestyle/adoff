@@ -119,6 +119,24 @@ def test_rules_num_thousands_separator():
     print("  ok: RULES_NUM_RE ignora frammenti di numeri con separatore migliaia")
 
 
+def test_freshness_re_multilingual():
+    """FRESHNESS_RE matcha le forme reali usate sul sito, incl. CJK/arabo/hindi."""
+    for text in (
+        "Last updated September 2026",
+        "Ultimo aggiornamento settembre 2026",
+        "آخر تحديث: سبتمبر 2026",
+        "अंतिम अपडेट: सितंबर 2026",
+        "Son güncelleme: Eylül 2026",
+        "Ostatnia aktualizacja: wrzesień 2026",
+        "Atualizado em setembro de 2026",
+        "Terakhir diperbarui: September 2026",
+        "업데이트: 2026년 9월",
+        "最終更新日 2026年9月",
+    ):
+        assert seo.FRESHNESS_RE.search(text) is not None, f"non matcha: {text}"
+    print("  ok: FRESHNESS_RE copre le 15 lingue del sito (CJK senza \\b)")
+
+
 def hits_via_run(seo, expect_none, expect_some):
     """Esegue check_content_model_claims su file fake sotto site/ temporanei."""
     import tempfile
@@ -151,6 +169,7 @@ def main():
     test_hreflang_dupes_inline_xml()
     test_model_claims_false_positives()
     test_rules_num_thousands_separator()
+    test_freshness_re_multilingual()
     print("OK")
     return 0
 

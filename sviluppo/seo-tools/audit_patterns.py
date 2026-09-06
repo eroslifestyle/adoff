@@ -60,7 +60,12 @@ AI_CRAWLERS = ["GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended",
 # Pattern "last updated" visibile. Il sito usa "Updated April 2026", quindi
 # accetto anche "updated/aggiornat*" da solo: meglio un falso negativo
 # (testo generico con "updated") che un falso positivo.
+# Copertura multilingua: ar/hi/id/ko/pl/pt/tr aggiunte; `aggiorna\w+` copre
+# anche "aggiornamento". Niente \b su CJK/arabo/hindi: \b non esiste fra
+# caratteri non-latini (in "最終更新日" tutti sono \w, nessun boundary → non
+# matcherebbe mai), e lì non servono.
 FRESHNESS_RE = re.compile(
-    r"(?i)\b(?:last\s+updated|updated|aggiornat\w+|zuletzt\s+aktualisiert|"
-    r"actualizad[oa]s?|mis\s+à\s+jour|更新|обновлен\w*)\b",
+    r"(?i)(?:\b(?:last\s+updated|updated|aggiorna\w+|zuletzt\s+aktualisiert|"
+    r"aktualizacj\w*|actualizad[oa]s?|atualizad\w*|mis\s+à\s+jour|diperbarui|"
+    r"güncelle\w*|обновлен\w*)\b|更新|업데이트|تحديث|अपडेट)"
 )
