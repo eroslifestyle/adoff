@@ -1,23 +1,21 @@
 # AdOff — Universal Stealth Ad Blocker (Full Documentation)
 
-> AdOff is a Manifest V3 browser extension (Chrome, Edge, Brave, Opera, Firefox, Safari) that blocks ads on every website while staying invisible to anti-adblock detection. It combines 143 network rules, native CSS hiding, a universal IMA SDK stub for video ad neutralization, and dedicated Stealth Mode anti-detection (Pro). Featherlight — a tiny fraction of the size of uBlock Origin and AdBlock Plus.
+> AdOff is a Manifest V3 browser extension (Chrome, Edge, Brave, Opera, Firefox, Safari) that blocks ads on every website while staying invisible to anti-adblock detection. It combines 180 network rules, native CSS hiding, a universal IMA SDK stub for video ad neutralization, and dedicated Stealth Mode anti-detection. Featherlight — a tiny fraction of the size of uBlock Origin and AdBlock Plus.
 
 ## Quick Facts
 
-- **Version**: 3.5.54
+- **Version**: 3.6.10
 - **Size**: featherlight, zero runtime dependencies
-- **License Model**: Freemium (Free tier + Pro tiers)
-- **Trial**: 15 days full Pro access included
-- **Money-back Guarantee**: 30 days
-- **Plan**: single Pro plan, covers your personal devices
+- **License Model**: 100% free for everyone (all features included)
+- **Free use**: 30 days without account, then a free account (never a payment) continues for another 365 days
 - **Languages**: 15 (English, Italian, German, French, Spanish, Portuguese, Russian, Arabic, Chinese, Hindi, Japanese, Korean, Turkish, Indonesian, Polish)
-- **Data Collection**: Zero (no telemetry, no tracking, no user data beyond license validation)
+- **Data Collection**: Zero (no telemetry, no tracking, no user data)
 
 ## Core Technology
 
 ### Network Blocking (Layer 1)
-- 130+ declarativeNetRequest rules blocking ad networks, trackers, and video pre-roll endpoints
-- IMA SDK requests redirected to a local, lightweight stub
+- 180 declarativeNetRequest rules blocking ad networks, trackers, and video pre-roll endpoints
+- IMA SDK requests blocked at network level
 - Real-time ad request counter (badge displays only real ads, excludes 23 tracking/analytics rule IDs)
 - Granular per-domain rules for targeted blocking
 
@@ -27,14 +25,14 @@
 - DOM scanning and mutation observer for dynamically injected ads
 - Universal selectors work across 99% of websites
 
-### Video Ad Neutralization (Layer 3) — Pro/Trial
+### Video Ad Neutralization (Layer 3)
 - **Universal IMA SDK stub**: injected in MAIN world, works on any video player using Google IMA SDK
 - When player calls `adsManager.start()`, stub fires `CONTENT_RESUME_REQUESTED` immediately
 - Zero ads, fully functional player (no re-buffering, no quality drops)
 - Works for externally-loaded IMA SDK (via redirect in Layer 1) and bundled IMA SDK in custom players
 - Supports DASH, HLS, and progressive video streaming
 
-### Stealth Mode Anti-Detection (Layer 4) — Pro/Trial
+### Stealth Mode Anti-Detection (Layer 4)
 - MAIN-world script defeating anti-adblock systems
 - **Bait spoofing**: fake ad slots that appear to block, hide detection triggers
 - **Variable spoofing**: masks adblocker-detection variable names (replaces `.adsbygoogle`, `adslot`, etc.)
@@ -75,7 +73,7 @@
 3. **Universal IMA SDK stub** — works on any video player using Google IMA SDK
    - Covers all major streaming platforms and 10,000+ custom video websites
    - Not platform-specific like other blockers
-   - One stub covers all IMA SDK players (Pro/Trial only)
+   - One stub covers all IMA SDK players
 
 4. **State-preserving instant skip** — skip without re-buffering or quality drop
    - Skip happens in milliseconds, not seconds
@@ -89,18 +87,7 @@
 
 ## Pricing
 
-### Pro (single plan — covers your personal devices)
-- **Monthly**: €2.99/month (cancel anytime)
-- **Annual — Founder**: €19.99/year (first 100 Founders, price locked for life)
-- **Annual — standard**: €24.99/year (after the first 100 Founders)
-
-### Terms
-- **Free Tier**: 15-day full Pro trial (includes Stealth Mode, video skip, anti-detection)
-- **Trial Coverage**: full Pro for 15 days
-- **Money-back Guarantee**: 30 days from purchase, full refund no questions asked
-- **Refund Method**: Original payment method (Stripe handles processing)
-- **EU Rights**: 14-day cooling-off period + right to withdrawal (automatic refund)
-- **Payment Methods**: Credit/debit card (Visa, Mastercard, Amex, Diners, Discover)
+AdOff is 100% free for everyone. All features included from day one (stealth mode, video ad neutralization). 30 days of free use, then a free account (never a payment) to continue for another 365 days.
 
 ## FAQ
 
@@ -115,21 +102,21 @@ A: iOS and Android versions are in development. Currently desktop/laptop only.
 A: Visit https://adoff.app/install for step-by-step guides for each browser.
 
 ### Features
-**Q: What's the difference between Free and Pro?**
-A: Free: network blocking and cosmetic filtering on all websites. Pro adds Stealth Mode (anti-detection) and video ad blocking on streaming platforms and TV services.
+**Q: Is AdOff really free?**
+A: Yes — 100% free for everyone. All features included from day one (stealth mode, video ad neutralization). 30 days of free use, then a free account (never a payment) to continue for another 365 days.
 
 **Q: How many ads does AdOff block?**
 A: Varies by site. Average 30-50 ads per page. Heavy ad sites: 100+.
 
 **Q: Does AdOff block video ads on streaming platforms?**
-A: Yes — AdOff Pro blocks video ads on all streaming platforms and TV services. The free version blocks ads on websites (banners, popups, trackers) but not on video streaming platforms. Video ad blocking is Pro/Trial only.
+A: Yes — AdOff blocks video ads on all streaming platforms and TV services, for everyone. It uses a universal IMA SDK stub that fires `CONTENT_RESUME_REQUESTED` immediately — zero pre-roll, zero countdown, no quality loss.
 
 **Q: Does the Stealth Mode work on all sites?**
 A: Stealth Mode defeats 99% of anti-adblock detection. A few premium anti-adblock services (Admiral, Sourcepoint at highest tier) may still detect it, but no public list exists.
 
 ### Privacy & Security
 **Q: Does AdOff collect my data?**
-A: No. Zero data collection. Only license validation (device ID + subscription status sent to our server, never stored, processed once per 30 days).
+A: No. Zero data collection. No telemetry, no tracking, no remote logging.
 
 **Q: Does AdOff track my browsing?**
 A: No. No analytics, no telemetry, no tracking cookies, no remote logging.
@@ -137,8 +124,8 @@ A: No. No analytics, no telemetry, no tracking cookies, no remote logging.
 **Q: Is AdOff safe to use?**
 A: Yes. Code is auditable (open-source components available on GitHub). No remote code execution, no auto-updates, no sketchy permissions.
 
-**Q: How do you validate licenses?**
-A: HMAC-SHA256 signature verification. Your license key is signed by our backend. We verify the signature on your device. No phone-home required.
+**Q: Is the free account required?**
+A: Only after 30 days of use. A free account (email only, never a payment) grants another 365 days, renewable. No credit card, ever.
 
 ### Performance
 **Q: Will AdOff slow down my browser?**
@@ -150,15 +137,12 @@ A: Yes, via the whitelist in the popup (4 pause modes).
 **Q: Does AdOff have a performance mode?**
 A: Yes, in Options → Advanced: toggle "aggressive CSS matching" for battery optimization.
 
-### Refunds & Returns
-**Q: What's the refund policy?**
-A: 30-day money-back guarantee. File a refund request via https://adoff.app/support, receive full refund to original payment method within 5 business days.
+### Payments & Accounts
+**Q: Does AdOff ever ask for payment?**
+A: Never. There are no paid plans. All features are free for everyone.
 
-**Q: Can I switch between monthly and annual?**
-A: Yes, contact support and we'll prorate the cost.
-
-**Q: Does the trial require a payment method?**
-A: No. The 15-day trial is free, no credit card needed.
+**Q: What happens after 30 days?**
+A: A free account (never a payment) continues your protection for another 365 days, renewable.
 
 ## System Requirements
 
