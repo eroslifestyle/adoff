@@ -60,6 +60,10 @@ META_MIN = 70
 # tech.lastmod_uniform: sopra questa quota identica = freschezza non credibile
 LASTMOD_UNIFORM_RATIO = 0.80
 
+# Pagine NON indicizzabili (noindex e fuori sitemap): escluse dai check onpage
+# (h1, title, meta): un h1 "SEO" su una pagina admin privata non ha significato.
+NON_INDEXED_PAGES = {"admin-console.html", "mgmt-9f4a/index.html"}
+
 # crawl.sitemap_status: quante URL campionare via curl
 SITEMAP_SAMPLE_N = 15
 # tech.hreflang_reciprocity: quanti cluster verificare
@@ -593,12 +597,17 @@ def check_onpage_meta_desc():
 
 
 def check_onpage_h1():
-    """Pagine con 0 o più di 1 <h1>."""
+    """Pagine con 0 o più di 1 <h1>. Le pagine non indicizzabili (NON_INDEXED_PAGES)
+    sono escluse: una pagina admin privata non ha bisogno di un h1 SEO."""
     bad = []
     for f in html_files():
+        rel = str(f.relative_to(ROOT))
+        rel_site = rel.removeprefix("site/")
+        if rel_site in NON_INDEXED_PAGES:
+            continue
         n = page_head(f.read_text(encoding="utf-8", errors="replace"))["h1_count"]
         if n != 1:
-            bad.append(f"{f.relative_to(ROOT)} ({n} h1)")
+            bad.append(f"{rel} ({n} h1)")
     check = make_check("onpage.h1", "onpage",
                        "pass" if not bad else "warn", measured=len(bad), threshold=0,
                        detail=f"pagine con h1 != 1: {bad[:10]}")

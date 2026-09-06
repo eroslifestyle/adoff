@@ -108,6 +108,8 @@
             '<li><a href="' + (fLang === 'it' ? '/it/about-data/' : '/about-data/') + '" data-i18n="footer.aboutdata">Live data</a></li>',
             '<li><a href="' + itRoot('support.html') + '" data-i18n="footer.support">Supporto</a></li>',
             '<li><a href="' + enRoot('press') + '" data-i18n="footer.press">Press Kit</a></li>',
+            '<li><a href="' + enRoot('accessibility') + '" data-i18n="footer.accessibility">Accessibilit&agrave;</a></li>',
+            '<li><a href="/affiliati" data-i18n="footer.affiliates">Programma Affiliati</a></li>',
           '</ul>',
         '</div>',
 
@@ -123,6 +125,8 @@
             '<li><a href="' + enRoot('unique-tech') + '" data-i18n="footer.tech">Tecnologia unica</a></li>',
             '<li><a href="' + itRoot('guide') + '" data-i18n="footer.guide">Guida utente</a></li>',
             '<li><a href="' + itRoot('install.html') + '" data-i18n="footer.install">Installa</a></li>',
+            '<li><a href="' + enRoot('license-guide') + '" data-i18n="footer.license">Licenze e account</a></li>',
+            '<li><a href="' + enRoot('manifest-v3-ad-blocker') + '" data-i18n="footer.mv3">Ad blocker Manifest V3</a></li>',
           '</ul>',
         '</div>',
 
@@ -133,6 +137,7 @@
             '<li><a href="' + enRoot('ad-blocker-brave') + '" data-i18n="footer.pl.brave">Ad blocker Brave</a></li>',
             '<li><a href="' + enRoot('android-ad-blocker') + '" data-i18n="footer.pl.android">Ad blocker Android</a></li>',
             '<li><a href="' + enRoot('free-ad-blocker') + '" data-i18n="footer.pl.free">Ad blocker gratis</a></li>',
+            '<li><a href="/android" data-i18n="footer.androidapp">App AdOff per Android</a></li>',
           '</ul>',
         '</div>',
 
