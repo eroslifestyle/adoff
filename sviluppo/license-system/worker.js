@@ -3055,7 +3055,7 @@ async function handleAdminHealth(request, env) {
 
   const checks = await Promise.all([
     probe("llm", async () => {
-      const r = await callLocalLLM([{ role: "user", content: "ping" }], env);
+      const r = await callLocalLLM([{ role: "user", content: "Reply with OK." }], env, { max_tokens: HEALTH_CHECK_MAX_TOKENS });
       if (!r.ok) throw new Error(r.error || "unavailable");
       return "risponde";
     }),
@@ -3218,6 +3218,8 @@ const CHAT_MAX_MESSAGE = 2000;
 const CHAT_HISTORY_KEEP = 16;       // ultimi N messaggi tenuti in sessione
 const CHAT_SESSION_TTL = 86400;     // 24h
 const CHAT_MAX_TOKENS = 650;
+// Ping di /admin/health: serve solo a sapere che il modello e' vivo, non a generare testo.
+const HEALTH_CHECK_MAX_TOKENS = 10;
 const SESSION_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 
 // Knowledge base brand-safe (nessun brand famoso, nessun dato personale)
@@ -3381,7 +3383,7 @@ function parseEscalation(rawReply) {
   return { reply, escalate, category, reason };
 }
 
-async function callLocalLLM(messages, env) {
+async function callLocalLLM(messages, env, opts = {}) {
   const url = env.LLM_API_URL;
   const key = env.LLM_API_KEY;
   if (!url || !key) return { ok: false, error: "LLM not configured" };
@@ -3402,7 +3404,7 @@ async function callLocalLLM(messages, env) {
       body: JSON.stringify({
         model: env.LLM_MODEL || "fast-max",
         messages,
-        max_tokens: CHAT_MAX_TOKENS,
+        max_tokens: opts.max_tokens || CHAT_MAX_TOKENS,
         temperature: 0.3,
       }),
       signal: controller.signal,
