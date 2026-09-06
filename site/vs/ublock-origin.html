@@ -169,7 +169,7 @@
     <p class="meta">Updated April 2026 &nbsp;·&nbsp; 8 min read &nbsp;·&nbsp; Chrome Extensions</p>
 
     <p>
-      If you have been using ad blockers on Chrome for a while, you already know the story: uBlock Origin — one of the most powerful and beloved ad blockers ever built — <strong>can no longer run in its full form on Chrome</strong>. Chrome's mandatory switch to Manifest V3 (MV3) changed the rules of the game, and uBlock Origin's maintainer was explicit: the MV3 version is a <em>fundamentally weaker product</em>.
+      If you have been using ad blockers on Chrome for a while, you already know the story: uBlock Origin — one of the most powerful and beloved ad blockers ever built — <strong>can no longer run in its full form on Chrome</strong>. Chrome's mandatory switch to <a href="https://developer.chrome.com/docs/extensions/develop/migrate/mv2-deprecation-timeline" rel="noopener" target="_blank">Manifest V3</a> (MV3) changed the rules of the game, and uBlock Origin's maintainer was explicit: the MV3 version is a <em>fundamentally weaker product</em>.
     </p>
     <p>
       This comparison cuts through the noise. We look at what uBlock Origin Lite actually delivers on Chrome today, what AdOff does differently, and who should use which tool.
@@ -180,7 +180,7 @@
       Manifest V3 is Chrome's new extension platform, enforced as mandatory starting in 2024, meaning any extension that wants to run on Chrome must comply. The core issue for ad blockers is the replacement of <strong>webRequest blocking</strong> (which allowed extensions to intercept and cancel any network request) with <strong>declarativeNetRequest</strong> (a rule-based system controlled by the browser, not the extension).
     </p>
     <p>
-      In practical terms, this means ad blockers under MV3 cannot react dynamically to new ad techniques in real time. They must rely on pre-declared rules, and those rules have hard limits: Chrome caps extensions at a maximum of 30,000 static rules. Advanced dynamic filtering — which powered uBlock Origin's most effective blocking — is either restricted or removed entirely.
+      In practical terms, this means ad blockers under MV3 cannot react dynamically to new ad techniques in real time. They must rely on pre-declared rules, and those rules have hard limits: Chrome caps extensions at a maximum of <a href="https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest" rel="noopener" target="_blank">30,000 static rules</a>. Advanced dynamic filtering — which powered uBlock Origin's most effective blocking — is either restricted or removed entirely.
     </p>
     <p>
       The result? <strong>uBlock Origin Lite on Chrome is estimated to be 5–10% less effective</strong> than the original uBlock Origin was under MV2, according to community benchmarks and the extension's own documentation. Certain cosmetic filters and dynamic rules simply cannot be replicated in the MV3 environment.
@@ -188,7 +188,7 @@
 
     <h3>uBlock Origin Lite: A Faithful Port Under Constraints</h3>
     <p>
-      uBlock Origin Lite is the official MV3 adaptation of uBlock Origin. The developers did an admirable job of porting as much as possible, but they were working against architectural limitations they did not choose. Key losses include:
+      <a href="https://github.com/uBlockOrigin/uBOL-home" rel="noopener" target="_blank">uBlock Origin Lite</a> is the official MV3 adaptation of uBlock Origin. The developers did an admirable job of porting as much as possible, but they were working against architectural limitations they did not choose. Key losses include:
     </p>
     <ul>
       <li>No procedural cosmetic filters (complex DOM-based hiding rules)</li>

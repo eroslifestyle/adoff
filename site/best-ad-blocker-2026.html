@@ -313,7 +313,7 @@
       </div>
       <div class="stars">★★★★★ <span>5.0 / 5</span></div>
       <p>
-        AdOff is the only ad blocker tested that was built from scratch for Manifest V3. Competitors adapted older code to the new architecture; AdOff was designed around declarativeNetRequest from the start. This matters: the performance and anti-detection capability show it.
+        AdOff is the only ad blocker tested that was built from scratch for Manifest V3. Competitors adapted older code to the new architecture; AdOff was designed around <a href="https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest" rel="noopener" target="_blank">declarativeNetRequest</a> from the start. This matters: the performance and anti-detection capability show it.
       </p>
       <p>
         The distinctive feature is <strong>four-layer protection</strong>. Most blockers hit one or two layers: network blocking, or DOM filtering. AdOff runs all four simultaneously: (1) network blocking via 180 declarativeNetRequest rules, (2) cosmetic filtering through CSS injection, (3) stealth anti-detection in the main JavaScript world that spoofs ad system presence to block anti-adblock paywalls, and (4) SDK-level video ad neutralization.
@@ -363,7 +363,7 @@
         uBlock Origin is open-source ad blocking done well. Its filter ecosystem is the largest available: EasyList, EasyPrivacy, and hundreds of community-maintained filter lists cover an enormous range of ad networks and trackers. For advanced users who want full control (customizing per-site rules, managing multiple filter subscriptions, tweaking cosmetic filters), uBlock Origin is the most configurable option here.
       </p>
       <p>
-        The hard constraint is Manifest V3. The full uBlock Origin depends on the webRequest API, a Manifest V2 feature that Google deprecated and is progressively restricting in Chrome. As of April 2026, uBO still runs on Chrome but its long-term viability there is uncertain. The uBlock team released uBlock Origin Lite for MV3 compatibility, but it trades significant capability for compliance, especially cosmetic filtering. On Firefox, uBlock Origin runs at full power without compromise and remains the top recommendation for Firefox users by a clear margin.
+        The hard constraint is Manifest V3. The full uBlock Origin depends on the webRequest API, a Manifest V2 feature that Google deprecated and is progressively restricting in Chrome (see the <a href="https://developer.chrome.com/docs/extensions/develop/migrate/mv2-deprecation-timeline" rel="noopener" target="_blank">official MV2 deprecation timeline</a>). As of April 2026, uBO still runs on Chrome but its long-term viability there is uncertain. The uBlock team released uBlock Origin Lite for MV3 compatibility, but it trades significant capability for compliance, especially cosmetic filtering. On Firefox, uBlock Origin runs at full power without compromise and remains the top recommendation for Firefox users by a clear margin.
       </p>
       <div class="pros-cons">
         <div class="pros-box">
@@ -501,7 +501,7 @@
         AdBlock Plus was the first ad blocker and remains the most-installed due to inertia and browser-default suggestions. Familiarity is its only advantage in 2026.
       </p>
       <p>
-        The core issue: AdBlock Plus runs the Acceptable Ads programme. By default, it whitelists advertisers who pay for the privilege, including major ad networks. The justification is that non-intrusive ads fund content creators. The reality is that users installed an ad blocker to block ads, and selling whitelist slots to advertisers creates an obvious conflict of interest. You can turn off Acceptable Ads in settings, but most users never do.
+        The core issue: AdBlock Plus runs the <a href="https://acceptableads.org" rel="noopener" target="_blank">Acceptable Ads programme</a>. By default, it whitelists advertisers who pay for the privilege, including major ad networks. The justification is that non-intrusive ads fund content creators. The reality is that users installed an ad blocker to block ads, and selling whitelist slots to advertisers creates an obvious conflict of interest. You can turn off Acceptable Ads in settings, but most users never do.
       </p>
       <p>
         Performance lags. With Acceptable Ads enabled (the default), ABP blocked 62% of ad impressions in our tests. The lowest rate in the group. With Acceptable Ads disabled, 84%, still behind the leaders. CPU usage was the highest of all extensions tested.
