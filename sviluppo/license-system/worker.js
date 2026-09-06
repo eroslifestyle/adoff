@@ -3026,10 +3026,19 @@ async function getOpsThreadId(env) {
 
 /**
  * Inoltra un alert operativo nel topic "Ops Monitoring". Serve al monitor esterno
- * (sviluppo/scripts/monitor-chat.py) per avvisare senza conoscere il chat id del
- * gruppo admin. Il testo passa da escapeHtml: il parse_mode e' HTML e un '<' non
- * bilanciato farebbe rifiutare il messaggio da Telegram.
+ * (sviluppo/scripts/monitor-chat.py) e agli script seo-tools via tg_send. Il testo
+ * arriva in Markdown (stile GitHub: **bold**, `code`, ``` blocchi) e viene convertito
+ * in HTML Telegram (escapeHtml prima: un '<' non bilanciato farebbe rifiutare il
+ * messaggio, e notifyTelegram usa parse_mode: HTML per tutti i caller).
  */
+function mdToTelegramHtml(md) {
+  let s = escapeHtml(md);
+  s = s.replace(/```([\s\S]*?)```/g, "<pre>$1</pre>");
+  s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+  s = s.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+  s = s.replace(/\*([^*\n]+)\*/g, "<b>$1</b>");
+  return s;
+}
 /**
  * Verdetto aggregato sulle dipendenze del worker: LLM, KV, D1, Telegram.
  * Nasce dal guasto del 22/08, in cui ogni pezzo sembrava a posto perche' nessuno
@@ -3102,7 +3111,7 @@ async function handleAdminNotifyOps(body, env, request) {
   const threadId = Number.isInteger(body && body.thread_id) && body.thread_id > 0
     ? body.thread_id
     : await getOpsThreadId(env);
-  const sent = await notifyTelegram(escapeHtml(text), env, threadId);
+  const sent = await notifyTelegram(mdToTelegramHtml(text), env, threadId);
   return jsonResponse({ ok: sent }, sent ? 200 : 502);
 }
 
