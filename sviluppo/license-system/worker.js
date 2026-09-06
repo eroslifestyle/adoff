@@ -9127,6 +9127,186 @@ async function handleAutofixScreenshot(request, env) {
   });
 }
 
+/** ─────────────────────────────────────────────────────────────────────────────
+ * SEO AGENT — endpoint per l'agente SEO settimanale (sviluppo/seo-tools/seo_audit.py).
+ * Tabelle create a runtime (convenzione progetto: niente schema.sql per le tabelle SEO).
+ ───────────────────────────────────────────────────────────────────────────── */
+const SEO_AGENT_MAX_BODY = 512 * 1024;   // 512 KB — un report non e' mai piu' grande
+const SEO_AGENT_MAX_FINDINGS = 500;      // cap anti-bug: uno script impazzito non riempie la D1
+const SEO_AGENT_DASH_KEY = 'seoagent:dashboard';
+const SEO_AGENT_VALID_BACKLOG = ['open', 'wontfix', 'fixed'];
+
+async function ensureSeoAgentTables(env) {
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS seo_agent_runs (
+    run_id TEXT PRIMARY KEY, generated_at TEXT, health_score INTEGER,
+    findings_total INTEGER, findings_high INTEGER, applied_count INTEGER, proposed_count INTEGER,
+    commit_sha TEXT, deployed INTEGER, model_used TEXT, duration_s INTEGER,
+    checks_json TEXT, created_at TEXT)`).run();
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS seo_agent_findings (
+    finding_id TEXT PRIMARY KEY, area TEXT, severity TEXT, title TEXT,
+    evidence TEXT, fix TEXT, auto INTEGER, files_json TEXT, status TEXT,
+    first_seen TEXT, last_seen TEXT, resolved_at TEXT, occurrences INTEGER,
+    note TEXT, last_run_id TEXT)`).run();
+  await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_seo_agent_findings_status ON seo_agent_findings(status)`).run();
+  await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_seo_agent_findings_severity ON seo_agent_findings(severity)`).run();
+}
+
+/** Righe della dashboard: ultimo run, run recenti, open/recently-fixed, trend. */
+async function buildSeoAgentDashboard(env) {
+  const lastRun = (await env.DB.prepare(
+    `SELECT * FROM seo_agent_runs ORDER BY generated_at DESC LIMIT 1`).all()).results || [];
+  const runs = (await env.DB.prepare(
+    `SELECT run_id, generated_at, health_score, findings_total, applied_count,
+            duration_s, model_used FROM seo_agent_runs
+     ORDER BY generated_at DESC LIMIT 12`).all()).results || [];
+  const openFindings = (await env.DB.prepare(
+    `SELECT * FROM seo_agent_findings WHERE status='open'
+     ORDER BY CASE severity WHEN 'high' THEN 0 WHEN 'medium' THEN 1 ELSE 2 END, first_seen`).all()).results || [];
+  const recentlyFixed = (await env.DB.prepare(
+    `SELECT * FROM seo_agent_findings WHERE status IN ('fixed','resolved')
+     ORDER BY resolved_at DESC LIMIT 20`).all()).results || [];
+  const healthTrend = runs.slice().reverse().map(r => ({
+    date: r.generated_at, score: r.health_score,
+  }));
+  return {
+    last_run: lastRun[0]
+      ? { ...lastRun[0], checks: safeJsonParse(lastRun[0].checks_json) }
+      : null,
+    runs, open_findings: openFindings, recently_fixed: recentlyFixed,
+    health_trend: healthTrend,
+    checks_last: lastRun[0] ? safeJsonParse(lastRun[0].checks_json) || [] : [],
+  };
+}
+
+function safeJsonParse(s) {
+  try { return s ? JSON.parse(s) : null; } catch (_) { return null; }
+}
+
+/** POST /admin/seo-agent/ingest — riceve il report di un run dell'agente SEO. */
+async function handleSeoAgentIngest(request, env) {
+  if (request.method !== 'POST') return jsonResponse({ ok: false, error: 'Method not allowed' }, 405);
+  if (!await verifyAdminAuth(request.headers.get(ADMIN_TOKEN_HEADER), env))
+    return jsonResponse({ ok: false, error: 'Unauthorized' }, 401);
+  const raw = await request.text();
+  if (raw.length > SEO_AGENT_MAX_BODY)
+    return jsonResponse({ ok: false, error: 'Body too large (max 512 KB)' }, 413);
+  let body;
+  try { body = JSON.parse(raw); } catch (_) { return jsonResponse({ ok: false, error: 'Invalid JSON' }, 400); }
+  const { run_id, generated_at, checks = [], findings = [], metrics = {},
+          applied = [], proposed = [], commit, deployed, model_used, duration_s } = body;
+  if (!run_id) return jsonResponse({ ok: false, error: 'Missing run_id' }, 400);
+  if (!Array.isArray(findings) || findings.length > SEO_AGENT_MAX_FINDINGS)
+    return jsonResponse({ ok: false, error: `findings must be an array of at most ${SEO_AGENT_MAX_FINDINGS} items` }, 400);
+
+  await ensureSeoAgentTables(env);
+  const now = new Date().toISOString();
+  const highCount = findings.filter(f => f.severity === 'high').length;
+  const appliedSet = new Set(applied);
+  const currentIds = new Set(findings.map(f => f.id).filter(Boolean));
+
+  // Upsert del run
+  await env.DB.prepare(`
+    INSERT INTO seo_agent_runs
+      (run_id, generated_at, health_score, findings_total, findings_high,
+       applied_count, proposed_count, commit_sha, deployed, model_used,
+       duration_s, checks_json, created_at)
+    VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13)
+    ON CONFLICT(run_id) DO UPDATE SET
+      generated_at=excluded.generated_at, health_score=excluded.health_score,
+      findings_total=excluded.findings_total, findings_high=excluded.findings_high,
+      applied_count=excluded.applied_count, proposed_count=excluded.proposed_count,
+      commit_sha=excluded.commit_sha, deployed=excluded.deployed,
+      model_used=excluded.model_used, duration_s=excluded.duration_s,
+      checks_json=excluded.checks_json
+  `).bind(
+    run_id, generated_at || now, metrics.health_score ?? null, findings.length, highCount,
+    applied.length, proposed.length, commit || null, deployed ? 1 : 0,
+    model_used || null, duration_s ?? null, JSON.stringify(checks), now
+  ).run();
+
+  // ID e stato gia' presenti: contano i nuovi, preservano i wontfix e risolvono i desaparsi
+  const existing = (await env.DB.prepare(
+    `SELECT finding_id, status FROM seo_agent_findings`).all()).results || [];
+  const existingStatus = new Map(existing.map(r => [r.finding_id, r.status]));
+  let findingsNew = 0;
+
+  for (const f of findings) {
+    if (!f.id) continue;
+    const prevStatus = existingStatus.get(f.id);
+    const isNew = prevStatus === undefined;
+    if (isNew) findingsNew++;
+    const isFixed = appliedSet.has(f.id);
+    // Un wontfix deciso in backlog non torna open solo perché lo script lo reinvia
+    const newStatus = isFixed ? 'fixed'
+      : (!isNew && prevStatus === 'wontfix') ? 'wontfix' : 'open';
+    await env.DB.prepare(`
+      INSERT INTO seo_agent_findings
+        (finding_id, area, severity, title, evidence, fix, auto, files_json,
+         status, first_seen, last_seen, resolved_at, occurrences, note, last_run_id)
+      VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,NULL,?14)
+      ON CONFLICT(finding_id) DO UPDATE SET
+        area=excluded.area, severity=excluded.severity, title=excluded.title,
+        evidence=excluded.evidence, fix=excluded.fix, auto=excluded.auto,
+        files_json=excluded.files_json, status=excluded.status,
+        last_seen=excluded.last_seen, resolved_at=excluded.resolved_at,
+        occurrences=seo_agent_findings.occurrences+1, last_run_id=excluded.last_run_id
+    `).bind(
+      f.id, f.area || null, f.severity || null, f.title || null, f.evidence || null,
+      f.fix || null, f.auto ? 1 : 0, JSON.stringify(f.files || []),
+      newStatus, now, now,
+      (isFixed || newStatus === 'wontfix') ? now : null, isNew ? 1 : 0, run_id
+    ).run();
+  }
+
+  // Finding aperti al run precedente assenti ora → risolti (si sono risolti da soli)
+  let findingsResolved = 0;
+  const gone = existing.filter(r => !currentIds.has(r.finding_id)).map(r => r.finding_id);
+  for (const fid of gone) {
+    // solo gli 'open' si risolvono: 'fixed'/'wontfix'/'resolved' restano come sono
+    const res = await env.DB.prepare(
+      `UPDATE seo_agent_findings SET status='resolved', resolved_at=?1
+       WHERE finding_id=?2 AND status='open'`).bind(now, fid).run();
+    if (res.meta && res.meta.changes > 0) findingsResolved++;
+  }
+
+  const dash = await buildSeoAgentDashboard(env);
+  await env.ADOFF_LICENSES.put(SEO_AGENT_DASH_KEY, JSON.stringify(dash));
+  return jsonResponse({ ok: true, run_id, findings_new: findingsNew, findings_resolved: findingsResolved });
+}
+
+/** GET /admin/seo-agent — dati per la console admin (cache edge 60s). */
+async function handleSeoAgentDashboardGet(request, env) {
+  if (request.method !== 'GET') return jsonResponse({ ok: false, error: 'Method not allowed' }, 405);
+  if (!await verifyAdminAuth(request.headers.get(ADMIN_TOKEN_HEADER), env))
+    return jsonResponse({ ok: false, error: 'Unauthorized' }, 401);
+  await ensureSeoAgentTables(env);
+  return jsonResponse({ ok: true, ...(await buildSeoAgentDashboard(env)) });
+}
+
+/** POST /admin/seo-agent/backlog — decisione su un finding (open|wontfix|fixed). */
+async function handleSeoAgentBacklog(request, env) {
+  if (request.method !== 'POST') return jsonResponse({ ok: false, error: 'Method not allowed' }, 405);
+  if (!await verifyAdminAuth(request.headers.get(ADMIN_TOKEN_HEADER), env))
+    return jsonResponse({ ok: false, error: 'Unauthorized' }, 401);
+  let body;
+  try { body = await request.json(); } catch (_) { return jsonResponse({ ok: false, error: 'Invalid JSON' }, 400); }
+  const { finding_id, status, note } = body;
+  if (!finding_id) return jsonResponse({ ok: false, error: 'Missing finding_id' }, 400);
+  if (!SEO_AGENT_VALID_BACKLOG.includes(status))
+    return jsonResponse({ ok: false, error: `Invalid status: ${status} (valid: ${SEO_AGENT_VALID_BACKLOG.join('|')})` }, 400);
+  await ensureSeoAgentTables(env);
+  const now = new Date().toISOString();
+  const resolvedAt = (status === 'fixed' || status === 'wontfix') ? now : null;
+  const res = await env.DB.prepare(
+    `UPDATE seo_agent_findings SET status=?1, note=?2, resolved_at=?3 WHERE finding_id=?4`)
+    .bind(status, note || null, resolvedAt, finding_id).run();
+  if (!res.meta || res.meta.changes === 0)
+    return jsonResponse({ ok: false, error: 'Finding not found' }, 404);
+  const dash = await buildSeoAgentDashboard(env);
+  await env.ADOFF_LICENSES.put(SEO_AGENT_DASH_KEY, JSON.stringify(dash));
+  return jsonResponse({ ok: true, finding_id, status });
+}
+
 /**
  * GET /admin/edge/status — verifica le credenziali dell'Edge Add-ons API v1.1.
  *
@@ -9522,6 +9702,7 @@ export default {
       if (path === "/admin/autofix/status")    return withCors(cachedAdminGet(request, env, ctx, handleAdminAutofixStatus, 60));
       if (path === "/admin/autofix/leaks")     return withCors(cachedAdminGet(request, env, ctx, handleAutofixLeaks, 60));
       if (path === "/admin/autofix/screenshot") return withCors(handleAutofixScreenshot(request, env));
+      if (path === "/admin/seo-agent") return withCors(cachedAdminGet(request, env, ctx, handleSeoAgentDashboardGet, 60));
       if (path === "/admin/edge/status") return withCors(handleAdminEdgeStatus(request, env));
       if (path === "/success") return withCors(handleSuccess(request, env));
       if (path === "/portal") return withCors(handlePortalSession(request, env));
@@ -9565,6 +9746,8 @@ export default {
     if (request.method === "POST") {
       if (path === "/admin/autofix/ingest") return withCors(handleAutofixIngest(request, env));
       if (path === "/admin/autofix/decision") return withCors(handleAutofixDecision(request, env));
+      if (path === "/admin/seo-agent/ingest") return withCors(handleSeoAgentIngest(request, env));
+      if (path === "/admin/seo-agent/backlog") return withCors(handleSeoAgentBacklog(request, env));
     }
 
     // Trial endpoints
