@@ -1183,7 +1183,9 @@ const PAGE_TTL_MS = 60000;
 
 function loadPage(page, force = false) {
   if (!force && Date.now() - (_pageLoadedAt[page] || 0) > PAGE_TTL_MS) force = true;
-  _pageLoadedAt[page] = Date.now();
+  // il timestamp segna l'ultimo CARICAMENTO, non l'ultima visita: aggiornarlo
+  // sempre slitta il TTL in avanti a ogni rientro e la pagina non si ricarica mai piu'
+  if (force) _pageLoadedAt[page] = Date.now();
   if (page === "dashboard") loadDashboard(force);
   else if (page === "licenses") loadLicenses(force);
   else if (page === "finance") loadFinance(force);

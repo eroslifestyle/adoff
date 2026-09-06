@@ -23,6 +23,7 @@ import json
 import re
 import subprocess
 import sys
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -38,6 +39,12 @@ CONSOLE_COPIES = [
 ]
 RULES_FILE = ROOT / "app" / "rules" / "adblock-rules.json"
 LITELLM_MODELS_URL = "http://127.0.0.1:4000/v1/models"
+LITELLM_CHAT_URL = "http://127.0.0.1:4000/v1/chat/completions"
+# Catena fallback del worker: deve restare allineata alla catena `fallbacks`
+# in /etc/litellm/config.yaml e ai `models` ammessi dalla virtual key.
+LLM_CHAIN = ["fast-max", "fast-backup"]
+WORKER_CHAT_MAX_TOKENS = 650  # CHAT_MAX_TOKENS in worker.js — il budget reale
+LLM_TIMEOUT_S = 120  # una completion reale puo' metterci una decina di secondi
 
 errors: list[str] = []
 warnings: list[str] = []
@@ -102,8 +109,15 @@ def check_console_copies() -> None:
 
 
 def check_llm_model() -> None:
-    """Il modello che il worker chiedera' deve esistere davvero nel proxy."""
-    configured = "fast-max"  # default del worker; se cambi LLM_MODEL, aggiorna qui
+    """La catena COMPLETA del worker deve funzionare: esistenza, autorizzazione
+    della virtual key e contenuto non vuoto col budget reale.
+
+    Due guasti reali che solo la catena intera coglie: il modello di riserva non
+    era nei `models` della virtual key (il fallback sarebbe stato respinto con
+    403) e la riserva era un modello "thinking" che col budget di CHAT_MAX_TOKENS
+    bruciava tutto nel reasoning restituendo contenuto vuoto — un 200 che per il
+    worker e' un guasto.
+    """
     try:
         token = subprocess.run(
             ["bash", "-lc", "set -a; . ~/.claude/secrets/local-llm.env; set +a; echo $LITELLM_API_KEY"],
@@ -117,10 +131,74 @@ def check_llm_model() -> None:
     except Exception as exc:
         warn(f"proxy LLM non interrogabile ({type(exc).__name__}): controllo saltato")
         return
-    if configured in ids:
-        ok(f"il modello '{configured}' esiste nel proxy ({len(ids)} modelli)")
-    else:
-        fail(f"il modello '{configured}' NON esiste nel proxy — la chat rispondera' 400. Disponibili: {ids}")
+
+    for model in LLM_CHAIN:
+        if model in ids:
+            ok(f"il modello '{model}' esiste nel proxy ({len(ids)} modelli)")
+        else:
+            fail(f"il modello '{model}' NON esiste nel proxy — la chat o il suo fallback risponderanno 400. Disponibili: {ids}")
+
+    # Autorizzazione della virtual key del worker + contenuto non vuoto col
+    # budget reale: servono chiamate vere, /v1/models non basta.
+    worker_key = subprocess.run(
+        ["secret", "get", "adoff-stores.LLM_API_KEY"],
+        capture_output=True, text=True, timeout=20,
+    ).stdout.strip()
+    if not worker_key:
+        fail("virtual key del worker (secret adoff-stores.LLM_API_KEY) vuota o non leggibile")
+        return
+
+    for model in LLM_CHAIN:
+        body = json.dumps({
+            "model": model,
+            "messages": [{"role": "user", "content": "ping"}],
+            "max_tokens": 8,
+        }).encode()
+        request = urllib.request.Request(
+            LITELLM_CHAT_URL, data=body,
+            headers={"Authorization": f"Bearer {worker_key}", "Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=LLM_TIMEOUT_S) as response:
+                json.loads(response.read().decode())
+        except urllib.error.HTTPError as exc:
+            if exc.code in (401, 403):
+                fail(f"la virtual key del worker NON e' autorizzata su '{model}' "
+                     f"(HTTP {exc.code}) — il fallback su questo modello morirebbe. "
+                     f"Aggiungi '{model}' ai `models` della virtual key.")
+            else:
+                warn(f"chiamata di test su '{model}' fallita con HTTP {exc.code}: non bloccante")
+            continue
+        except Exception as exc:
+            warn(f"chiamata di test su '{model}' non arrivata ({type(exc).__name__}): non bloccante")
+            continue
+        ok(f"la virtual key del worker e' autorizzata su '{model}'")
+
+        # Stesso modello, budget reale del worker: un 200 con contenuto vuoto e'
+        # un guasto (tipico dei modelli thinking che consumano il budget nel
+        # reasoning e non lasciano nulla per la risposta).
+        body = json.dumps({
+            "model": model,
+            "messages": [{"role": "user", "content": "ping"}],
+            "max_tokens": WORKER_CHAT_MAX_TOKENS,
+        }).encode()
+        request = urllib.request.Request(
+            LITELLM_CHAT_URL, data=body,
+            headers={"Authorization": f"Bearer {worker_key}", "Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=LLM_TIMEOUT_S) as response:
+                content = (json.loads(response.read().decode())
+                           .get("choices", [{}])[0].get("message", {}).get("content") or "").strip()
+        except Exception as exc:
+            warn(f"test contenuto su '{model}' non completato ({type(exc).__name__}): non bloccante")
+            continue
+        if content:
+            ok(f"'{model}' restituisce contenuto non vuoto con max_tokens={WORKER_CHAT_MAX_TOKENS}")
+        else:
+            fail(f"'{model}' risponde 200 ma con contenuto VUOTO a max_tokens={WORKER_CHAT_MAX_TOKENS} — "
+                 f"il worker la interpreta come guasto. Se e' un modello thinking, brucia il budget "
+                 f"nel reasoning: serve un modello non-thinking o un budget maggiore.")
 
 
 def check_rules_count() -> None:

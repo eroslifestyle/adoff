@@ -9185,6 +9185,14 @@ async function handleAdminEdgeStatus(request, env) {
 export default {
   // Cron trigger — eseguito da Cloudflare ogni giorno alle 09:00 UTC
   async scheduled(event, env, ctx) {
+    // Cron "0 */4 * * *" = SOLO check heartbeat: handleScheduled manda reminder
+    // di scadenza e fa snapshot KV — eseguirlo ogni 4 ore rischierebbe reminder
+    // duplicati e consumo KV inutile. Il buco di 17 ore fra i 3 cron giornalieri
+    // lasciava un monitor morto senza allarme per un intero giorno.
+    if (event.cron === "0 */4 * * *") {
+      ctx.waitUntil(checkMonitorHeartbeat(env));
+      return;
+    }
     ctx.waitUntil(handleScheduled(env));
   },
 
