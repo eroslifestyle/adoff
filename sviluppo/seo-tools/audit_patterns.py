@@ -12,6 +12,12 @@ Nota falsi positivi content.model_claims (perché i pattern sono costruiti così
 - Prezzi/piani dei COMPETITOR nelle pagine /vs/*: i pattern generici (trial,
   "Pro plan") sono valutati solo FUORI da /vs/* (in seo_audit.py);
   "AdOff Pro/Premium" invece vale ovunque: parla del NOSTRO prodotto.
+
+Nota falso positivo content.stale_numbers:
+- "30,000 static rules" / "30.000 regole estáticas" (limiti Chrome, liste
+  competitor): il separatore di migliaia precede il numero catturato, quindi
+  RULES_NUM_RE esige che il numero NON sia preceduto né seguito da cifra o
+  separatore (lookaround su [\\d.,]).
 """
 
 import re
@@ -21,7 +27,9 @@ RULE_WORDS = (
     "rules?|regole|Regeln|règles|reglas|regras|reguły|правил\\w*|kurallar|"
     "aturan|नियम|ルール|规则|규칙|قواعد"
 )
-RULES_NUM_RE = re.compile(rf"\b(\d{{2,4}})\s*(?:[\w' ]{{0,30}}?\b(?:{RULE_WORDS})\b)", re.I)
+# Il numero non dev'essere un pezzo di un numero più grande: in "30,000 static
+# rules" (limite Chrome) il vecchio \b agganciava "000" e lo confrontava con 180.
+RULES_NUM_RE = re.compile(rf"(?<![\d.,])(\d{{2,4}})(?!\d|[.,]\d)\s*(?:[\w' ]{{0,30}}?\b(?:{RULE_WORDS})\b)", re.I)
 # Versioni con confini puliti: i path SVG contengono sequenze numeriche tipo
 # "C.92 16.46 0 20.12" che sembrano versioni (lookaround esclude quelle incollate)
 VERSION_RE = re.compile(r"(?<![\d.])3\.\d{1,2}\.\d+(?![\d.])")

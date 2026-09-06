@@ -106,6 +106,19 @@ def test_model_claims_false_positives():
     ])
 
 
+def test_rules_num_thousands_separator():
+    """'30,000 rules' (limite Chrome) NON matcha; il conteggio AdOff sì."""
+    for text in (
+        "Chrome caps extensions at a maximum of 30,000 static rules",
+        "Chrome impone un massimo di 30.000 regole statiche per estensione",
+        "caricano liste di filtri con oltre 80.000 regole",
+    ):
+        assert seo.RULES_NUM_RE.search(text) is None, f"falso positivo: {text}"
+    assert seo.RULES_NUM_RE.search("130 precise rules").group(1) == "130"
+    assert seo.RULES_NUM_RE.search("180 regole").group(1) == "180"
+    print("  ok: RULES_NUM_RE ignora frammenti di numeri con separatore migliaia")
+
+
 def hits_via_run(seo, expect_none, expect_some):
     """Esegue check_content_model_claims su file fake sotto site/ temporanei."""
     import tempfile
@@ -137,6 +150,7 @@ def main():
     test_health_score()
     test_hreflang_dupes_inline_xml()
     test_model_claims_false_positives()
+    test_rules_num_thousands_separator()
     print("OK")
     return 0
 
