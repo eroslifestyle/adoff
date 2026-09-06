@@ -3025,6 +3025,67 @@ async function getOpsThreadId(env) {
  * gruppo admin. Il testo passa da escapeHtml: il parse_mode e' HTML e un '<' non
  * bilanciato farebbe rifiutare il messaggio da Telegram.
  */
+/**
+ * Verdetto aggregato sulle dipendenze del worker: LLM, KV, D1, Telegram.
+ * Nasce dal guasto del 22/08, in cui ogni pezzo sembrava a posto perche' nessuno
+ * li guardava insieme. Ogni sonda e' isolata: una che esplode non nasconde le altre.
+ * Admin-only — dice a un estraneo quali servizi usiamo e quali sono giu'.
+ */
+async function handleAdminHealth(request, env) {
+  if (!await verifyAdminAuth(request.headers.get(ADMIN_TOKEN_HEADER), env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const probe = async (name, fn) => {
+    const startedAt = Date.now();
+    try {
+      const detail = await fn();
+      return { name, ok: true, ms: Date.now() - startedAt, detail };
+    } catch (e) {
+      // Il messaggio puo' contenere l'endpoint LLM, che e' un secret.
+      const reason = String((e && e.message) || e).replace(/https?:\/\/\S+/gi, "<redacted-url>");
+      return { name, ok: false, ms: Date.now() - startedAt, detail: reason.slice(0, 200) };
+    }
+  };
+
+  const checks = await Promise.all([
+    probe("llm", async () => {
+      const r = await callLocalLLM([{ role: "user", content: "ping" }], env);
+      if (!r.ok) throw new Error(r.error || "unavailable");
+      return "risponde";
+    }),
+    probe("kv", async () => {
+      await kvGet(env.ADOFF_LICENSES, "tickets:index", "json");
+      return "leggibile";
+    }),
+    probe("d1", async () => {
+      if (!env.DB) return "non configurato";
+      await env.DB.prepare("SELECT 1").first();
+      return "raggiungibile";
+    }),
+    probe("telegram", async () => {
+      if (!env.TELEGRAM_BOT_TOKEN) throw new Error("token assente");
+      const r = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/getMe`);
+      if (!r.ok) throw new Error("getMe HTTP " + r.status);
+      return "bot valido";
+    }),
+  ]);
+
+  const degraded = checks.filter((c) => !c.ok).map((c) => c.name);
+
+  // La chiamata stessa vale da heartbeat del monitor esterno: nessun endpoint in
+  // piu' da mantenere. Serve al dead-man switch nel cron — se il PC del monitor e'
+  // spento, il suo silenzio e' indistinguibile da "tutto bene", e solo qualcosa di
+  // esterno (questo worker) puo' accorgersene.
+  try {
+    await env.ADOFF_LICENSES.put(KV_MONITOR_HEARTBEAT, String(Date.now()));
+  } catch (e) {
+    console.error("[health] heartbeat write failed:", e && e.message);
+  }
+
+  return jsonResponse({ ok: degraded.length === 0, degraded, checks, at: new Date().toISOString() });
+}
+
 async function handleAdminNotifyOps(body, env, request) {
   if (!await verifyAdminAuth(request.headers.get(ADMIN_TOKEN_HEADER), env)) {
     return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
@@ -3401,6 +3462,22 @@ const CHAT_FALLBACK_MSG = {
   es: "Nuestro asistente de IA no esta disponible ahora. Deja tu mensaje y nuestro equipo te respondera por email.",
   pt: "O nosso assistente de IA esta indisponivel. Deixe a sua mensagem e a nossa equipa respondera por email.",
 };
+/**
+ * Risposta quando l'assistente non e' raggiungibile. Sostituisce il vecchio
+ * "dammi la tua email": chi scriveva una domanda banale si sentiva chiedere un
+ * dato personale invece di ricevere una risposta. Qui si dice cosa e' successo,
+ * si danno i due link che coprono la gran parte delle domande, e si offre
+ * l'operatore — senza pretenderlo.
+ */
+const CHAT_DEGRADED_MSG = {
+  it: "L'assistente automatico e' momentaneamente non disponibile. Nel frattempo: la guida all'installazione e' su https://adoff.app/install e le domande frequenti su https://adoff.app — se preferisci parlare con una persona, lasciami la tua email e ti ricontattiamo.",
+  en: "The automated assistant is temporarily unavailable. In the meantime: the install guide is at https://adoff.app/install and the FAQ at https://adoff.app — if you'd rather talk to a person, leave your email and we'll get back to you.",
+  de: "Der automatische Assistent ist voruebergehend nicht verfuegbar. In der Zwischenzeit: Installationsanleitung unter https://adoff.app/install, FAQ unter https://adoff.app — wenn du lieber mit einer Person sprichst, hinterlasse deine E-Mail.",
+  fr: "L'assistant automatique est momentanement indisponible. En attendant : le guide d'installation est sur https://adoff.app/install et la FAQ sur https://adoff.app — si vous preferez parler a une personne, laissez votre email.",
+  es: "El asistente automatico no esta disponible temporalmente. Mientras tanto: la guia de instalacion esta en https://adoff.app/install y las preguntas frecuentes en https://adoff.app — si prefieres hablar con una persona, dejame tu email.",
+  pt: "O assistente automatico esta temporariamente indisponivel. Entretanto: o guia de instalacao esta em https://adoff.app/install e as perguntas frequentes em https://adoff.app — se preferes falar com uma pessoa, deixa o teu email.",
+};
+
 const CHAT_NEED_EMAIL_MSG = {
   it: "Per inoltrare la tua richiesta a un operatore ho bisogno della tua email. Puoi indicarmela?",
   en: "To forward your request to a human agent I need your email. Could you share it?",
@@ -3572,7 +3649,12 @@ async function handleChat(body, request, env) {
     const knownEmail = email || (priorLog && priorLog.email) || "";
     if (!knownEmail) {
       await logChat(sessionId, lang, history, { escalated: false, email: knownEmail }, env);
-      return jsonResponse({ ok: true, sessionId, escalate: true, needEmail: true, reply: CHAT_NEED_EMAIL_MSG[lang] });
+      // `degraded` distingue "assistente giu'" da "escalation voluta dall'utente":
+      // e' cio' che il monitor esterno cerca per accorgersi del guasto.
+      return jsonResponse({
+        ok: true, sessionId, escalate: true, needEmail: true, degraded: true,
+        reply: (CHAT_DEGRADED_MSG[lang] || CHAT_DEGRADED_MSG.en),
+      });
     }
     let ticketId = priorLog && priorLog.ticketId;
     if (ticketId) {
@@ -8074,7 +8156,36 @@ function jsonResponse(data, status = 200) {
 // CRON: CONTROLLO SCADENZE LICENZE (giornaliero)
 // =============================================
 
+const KV_MONITOR_HEARTBEAT = "monitor:heartbeat";
+const MONITOR_SILENCE_ALERT_MS = 6 * 60 * 60 * 1000; // 6 ore: il monitor riporta ogni 30 min
+
+/**
+ * Dead-man switch del monitor esterno. Se il monitor smette di riportare — PC
+ * spento, timer disattivato, rete giu' — nessuno se ne accorgerebbe: il silenzio
+ * somiglia alla salute. Questo controllo gira su Cloudflare, quindi resta sveglio
+ * anche quando la macchina di casa non lo e'.
+ */
+async function checkMonitorHeartbeat(env) {
+  try {
+    const raw = await kvGet(env.ADOFF_LICENSES, KV_MONITOR_HEARTBEAT);
+    const last = parseInt(raw || "0", 10);
+    if (!last) return; // mai partito: niente da dire, non e' un guasto
+    const silentMs = Date.now() - last;
+    if (silentMs < MONITOR_SILENCE_ALERT_MS) return;
+
+    const hours = Math.floor(silentMs / 3600000);
+    await notifyTelegram(
+      `\u{1F7E0} AdOff — il monitor non riporta da ${hours} ore.\n` +
+      `Nessuno sta piu' controllando l'assistente AI: potrebbe essere giu' senza che arrivi un allarme.`,
+      env, await getOpsThreadId(env)
+    );
+  } catch (e) {
+    console.error("[heartbeat] check failed:", e && e.message);
+  }
+}
+
 async function handleScheduled(env) {
+  await checkMonitorHeartbeat(env);
   const now = Math.floor(Date.now() / 1000);
   let reminders = 0, expired = 0, checked = 0;
 
@@ -9366,6 +9477,7 @@ export default {
       if (path === "/affiliate/stats") return withCors(handleAffiliateStats(request, env));
       if (path === "/affiliate/me") return withCors(handleAffiliateMe(request, env));
       if (path === "/referral/stats") return withCors(handleReferralStats(request, env));
+      if (path === "/admin/health") return withCors(handleAdminHealth(request, env));
       if (path === "/admin/stats") return withCors(handleAdminStats(request, env));
       if (path === "/admin/ops-stats") return withCors(handleAdminOpsStats(request, env));
       if (path === "/admin/retention") return withCors(handleAdminRetention(request, env));

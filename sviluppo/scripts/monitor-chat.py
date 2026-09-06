@@ -44,6 +44,10 @@ LOG_PATH = PROJECT_ROOT / "sviluppo" / "logs" / "chat-monitor.log"
 # alert tecnico sul canale PUBBLICO @adoffapp, che nel vault ha un nome quasi
 # identico (TELEGRAM_CHAT_ID).
 NOTIFY_URL = "https://api.adoff.app/admin/notify"
+# /admin/health prova LLM, KV, D1 e Telegram in un colpo: un guasto in uno
+# qualsiasi si vede qui, non solo quando rompe la chat. La chiamata vale anche da
+# heartbeat per il dead-man switch lato worker.
+HEALTH_URL = "https://api.adoff.app/admin/health"
 SECRET_NAMESPACE = "adoff-stores"
 ADMIN_TOKEN_VAR = "ADMIN_TOKEN"
 
@@ -85,6 +89,32 @@ def probe_chat() -> tuple[str, str]:
     if len(reply) < MIN_REPLY_CHARS:
         return "down", f"risposta troppo corta ({len(reply)} caratteri)"
     return "ok", f"risposta di {len(reply)} caratteri"
+
+
+def probe_health() -> tuple[str, str]:
+    """Verdetto aggregato del worker su LLM, KV, D1 e Telegram.
+
+    Ritorna ("skip", ...) se non e' interrogabile: un problema del monitor (token
+    assente, rete locale giu') non deve essere spacciato per un guasto del sito.
+    """
+    token = read_secret(SECRET_NAMESPACE, ADMIN_TOKEN_VAR)
+    if not token:
+        return "skip", "token admin non disponibile"
+    request = urllib.request.Request(
+        HEALTH_URL,
+        headers={"X-Admin-Token": token, "User-Agent": USER_AGENT},
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_S) as response:
+            body = json.loads(response.read().decode())
+    except Exception as exc:
+        return "skip", f"health non interrogabile ({type(exc).__name__})"
+
+    degraded = body.get("degraded") or []
+    if degraded:
+        return "down", "servizi degradati: " + ", ".join(degraded)
+    return "ok", "tutti i servizi rispondono"
 
 
 def read_secret(namespace: str, name: str) -> str:
@@ -154,7 +184,14 @@ def main() -> int:
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
-    status, detail = probe_chat()
+    # Prima le dipendenze (una chiamata copre LLM, KV, D1, Telegram), poi la chat
+    # vera: il verdetto peggiore vince. Un servizio puo' rispondere alle sonde e
+    # fallire lo stesso end-to-end — e' esattamente com'e' andata il 22/08.
+    status, detail = probe_health()
+    if status != "down":
+        chat_status, chat_detail = probe_chat()
+        if chat_status != "skip":
+            status, detail = chat_status, chat_detail
     if args.verbose:
         print(f"{utc_now_iso()} {status}: {detail}")
 
