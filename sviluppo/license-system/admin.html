@@ -1194,7 +1194,15 @@ function switchStatsTab(name) {
   if (name === "autofix") { loadAutofix(); return; }
 }
 
+// ponytail: TTL a livello router — invalida i flag *Loaded delle singole sezioni
+// (one-shot, mai disarmati) senza doverli toccare uno per uno. Senza questo, una
+// dashboard lasciata aperta mostra per sempre i dati del primo caricamento.
+const _pageLoadedAt = {};
+const PAGE_TTL_MS = 60000;
+
 function loadPage(page, force = false) {
+  if (!force && Date.now() - (_pageLoadedAt[page] || 0) > PAGE_TTL_MS) force = true;
+  _pageLoadedAt[page] = Date.now();
   if (page === "dashboard") loadDashboard(force);
   else if (page === "licenses") loadLicenses(force);
   else if (page === "finance") loadFinance(force);
