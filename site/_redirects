@@ -1,6 +1,6 @@
-# www serviva 200 in parallelo all'apex: due host con lo stesso contenuto
-# dividono i segnali di ranking. 301 verso l'apex, che e' la forma canonica.
-https://www.adoff.app/*  https://adoff.app/:splat  301!
+# NOTA: il 301 www -> apex NON si puo' fare qui. _redirects di Pages matcha
+# solo il PATH, non l'hostname: provato e verificato, www continuava a dare 200.
+# Va creato come Redirect Rule di zona nel dashboard Cloudflare.
 
 /r/:code  /?ref=:code  302
 
