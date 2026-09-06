@@ -3342,7 +3342,13 @@ async function callLocalLLM(messages, env) {
       signal: controller.signal,
     });
     clearTimeout(timer);
-    if (!res.ok) return { ok: false, error: "LLM HTTP " + res.status };
+    if (!res.ok) {
+      // Diagnostica: il solo status non dice CHI rifiuta (Access? LiteLLM? provider cloud?).
+      // Si tiene un estratto breve del corpo, con URL redatti — mai chiavi.
+      let hint = "";
+      try { hint = (await res.text()).slice(0, 200).replace(/https?:\/\/\S+/gi, "<redacted-url>"); } catch (_) {}
+      return { ok: false, error: "LLM HTTP " + res.status + (hint ? " | " + hint : "") };
+    }
     const data = await res.json();
     const content = data.choices?.[0]?.message?.content;
     if (!content) return { ok: false, error: "Empty LLM response" };
@@ -3538,6 +3544,10 @@ async function handleChat(body, request, env) {
   // LLM non disponibile: tratta come escalation forzata verso un umano (ticket + Telegram),
   // stesso pattern di "escalate" sotto — cosi il messaggio non va mai perso.
   if (!llm.ok) {
+    // L'errore era scartato senza traccia: la chat e' rimasta muta dal 22/08 al 06/09
+    // senza che nulla lo segnalasse. Redazione degli URL prima di loggare: `e.message`
+    // di una fetch fallita puo' contenere l'endpoint LLM, che e' un secret.
+    console.error("[chat] LLM unavailable:", String(llm.error || "").replace(/https?:\/\/\S+/gi, "<redacted-url>"));
     history.push({ role: "user", content: message });
     // Recupera l'email gia' data in questa sessione, per non richiederla ad ogni messaggio
     let priorLog = sessionId ? await kvGet(env.ADOFF_LICENSES, `chatlog:${sessionId}`, "json") : null;
