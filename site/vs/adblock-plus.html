@@ -148,7 +148,18 @@
     ]
   }
   </script>
-  </head>
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "AdOff", "item": "https://adoff.app/"},
+      {"@type": "ListItem", "position": 2, "name": "Comparisons", "item": "https://adoff.app/vs/"},
+      {"@type": "ListItem", "position": 3, "name": "AdOff vs AdBlock Plus 2026: The Honest Comparison", "item": "https://adoff.app/vs/adblock-plus"}
+    ]
+  }
+  </script>
+</head>
 <body>
   <div id="site-nav"></div>
   <script src="/adoff-i18n.js?v=623d521a"></script>
@@ -198,7 +209,7 @@
       This is not a trivial difference. A 3.2 MB extension loads more data into memory, takes longer to initialise when Chrome starts, and requires more resources to process and update filter lists. On machines with limited RAM — Chromebooks, older laptops, shared office computers — this overhead is felt as real browser slowdown.
     </p>
     <p>
-      The size gap also reflects a philosophical difference. AdBlock Plus includes a large infrastructure of filter list management, Acceptable Ads logic, analytics, and user interface components that serve purposes beyond pure blocking. AdOff is lean by design: 153 network blocking rules, a stealth script, a cosmetic filter layer, and the popup interface. Nothing more.
+      The size gap also reflects a philosophical difference. AdBlock Plus includes a large infrastructure of filter list management, Acceptable Ads logic, analytics, and user interface components that serve purposes beyond pure blocking. AdOff is lean by design: 180 network blocking rules, a stealth script, a cosmetic filter layer, and the popup interface. Nothing more.
     </p>
     <p>
       From a security and privacy standpoint, a smaller codebase is also a <strong>smaller attack surface</strong>. Every additional line of code in an extension is a potential vulnerability. AdOff's minimalism is not just a performance feature — it is a security feature.
@@ -220,7 +231,7 @@
       The user's perception may be "I have an ad blocker" while they are still receiving a curated selection of ads from paying partners. This is not full blocking — it is managed filtering with commercial exceptions.
     </p>
     <p>
-      AdOff blocks unconditionally. The 153 rules target known ad network domains, ad server endpoints, and tracking infrastructure. There is no whitelist, no approved exception list, no partner program. If a request matches a blocking rule, it is blocked.
+      AdOff blocks unconditionally. The 180 rules target known ad network domains, ad server endpoints, and tracking infrastructure. There is no whitelist, no approved exception list, no partner program. If a request matches a blocking rule, it is blocked.
     </p>
 
     <h2>Video Ad Neutralization: A free AdBlock Plus Cannot Match</h2>
@@ -292,7 +303,7 @@
         </tr>
         <tr>
           <td>Network ad blocking</td>
-          <td class="check">✔ 153 curated rules</td>
+          <td class="check">✔ 180 curated rules</td>
           <td class="check">✔ Large filter lists</td>
         </tr>
         <tr>
