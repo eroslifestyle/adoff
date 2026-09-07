@@ -252,6 +252,70 @@ def test_i18n_link_destruct_line_number():
     print("  ok: i18n_link_destruct riporta la riga reale nonostante <script> multi-riga")
 
 
+def test_i18n_html_links():
+    """data-i18n-html con <a>: i dizionari devono avere gli STESSI href nello
+    stesso ordine. Casi: ok / senza markup / href diverso / anchor annidati /
+    chiave assente in una lingua. Anche <a> in data-i18n semplice NON entra qui."""
+    import tempfile
+    html = ('<html><body>'
+            '<p data-i18n-html="k.ok">t <a href="/a">x</a> <a href="/b">y</a></p>'
+            '<p data-i18n="k.plain">solo testo <a href="/c">z</a></p>'
+            '</body></html>')
+    orig_site, orig_root, orig_i18n = seo.SITE, seo.ROOT, seo.I18N_DIR
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            seo.SITE = Path(tmp)
+            seo.ROOT = Path(tmp)
+            seo.I18N_DIR = Path(tmp) / "i18n"
+            seo.I18N_DIR.mkdir()
+            p = Path(tmp) / "p.html"
+            p.write_text(html)
+            orig_htmlfiles = seo.html_files
+            seo.html_files = lambda: [p]
+            dicts = {
+                # en: TUTTO ok (stessi href, stesso ordine)
+                "en": {"k.ok": 't <a href="/a">X</a> <a href="/b">Y</a>', "k.plain": "t"},
+                # it: valore senza markup
+                "it": {"k.ok": "testo senza markup", "k.plain": "t"},
+                # de: href diverso dall'HTML
+                "de": {"k.ok": 'vedi <a href="/altro">link</a>', "k.plain": "t"},
+                # fr: anchor annidati (href giusti ma HTML invalido)
+                "fr": {"k.ok": 'vai <a href="/a"><a href="/b">entrambi</a></a>', "k.plain": "t"},
+                # es: chiave k.ok assente
+                "es": {"k.plain": "t"},
+            }
+            for lang, d in dicts.items():
+                (seo.I18N_DIR / f"{lang}.json").write_text(json.dumps(d))
+            try:
+                check, findings = seo.check_content_i18n_html_links()
+                assert check["status"] == "warn" and len(findings) == 1, check
+                # k.plain (data-i18n semplice) NON deve comparire nel confronto
+                assert check["measured"] == 1, f"solo k.ok, got {check}"
+                detail = str(check["detail"])
+                assert ("'k.ok', 'it'" in detail), "senza markup non rilevato"
+                assert ("'k.ok', 'de'" in detail), "href diverso non rilevato"
+                assert ("'k.ok', 'fr'" in detail and "annidati" in detail), "annidati non rilevati"
+                assert ("'k.ok', 'es'" in detail and "assente" in detail), "chiave assente non rilevata"
+                # en pulita: nessuna riga per en
+                assert "'k.ok', 'en'" not in detail, "falso positivo su lingua corretta"
+                # evidence: chiave, file, href attesi, elenco lingue
+                ev = findings[0]["evidence"]
+                assert "'k.ok'" in ev and "p.html" in ev and "/a" in ev and "['de'" in ev, ev
+                assert findings[0]["severity"] == "medium" and findings[0]["auto"] is False
+                assert findings[0]["files"] == ["p.html"]
+                # caso pulito: dizionari tutti conformi -> 0 finding
+                for lang, d in dicts.items():
+                    (seo.I18N_DIR / f"{lang}.json").write_text(json.dumps(
+                        {**d, "k.ok": 't <a href="/a">X</a> <a href="/b">Y</a>'}))
+                check2, f2 = seo.check_content_i18n_html_links()
+                assert check2["status"] == "pass" and not f2, check2
+            finally:
+                seo.html_files = orig_htmlfiles
+    finally:
+        seo.SITE, seo.ROOT, seo.I18N_DIR = orig_site, orig_root, orig_i18n
+    print("  ok: i18n_html_links (href uguali ok, markup assente/differenti/annidati/assente)")
+
+
 def main():
     test_finding_id_stable()
     test_health_score()
@@ -261,6 +325,7 @@ def main():
     test_freshness_re_multilingual()
     test_i18n_link_destruct()
     test_i18n_link_destruct_line_number()
+    test_i18n_html_links()
     print("OK")
     return 0
 

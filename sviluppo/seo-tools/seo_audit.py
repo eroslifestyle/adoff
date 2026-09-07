@@ -889,6 +889,97 @@ def check_content_i18n_link_destruct():
     return check, findings
 
 
+I18N_HREF_RE = re.compile(r"""<a\b[^>]*\bhref=["']([^"']+)["']""", re.I)
+I18N_NESTED_A_RE = re.compile(r"<a\b[^>]*>\s*<a\b", re.I)
+
+
+class _I18nHtmlLinkParser(HTMLParser):
+    """{chiave data-i18n-html: [href degli <a> figli]}, un passaggio per file.
+    Stesse regole di stack del parser gemello (void, heading, end tag orfani)."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.stack = []     # [(tag, chiave data-i18n-html | None), ...]
+        self.by_key = {}    # chiave -> [href, ...] in ordine di apparizione
+
+    def handle_starttag(self, tag, attrs):
+        d = dict(attrs)
+        if tag == "a":
+            for _, key in self.stack:
+                if key is not None:
+                    self.by_key.setdefault(key, []).append(d.get("href", ""))
+                    break
+        if tag not in I18N_LINK_VOID:
+            self.stack.append((tag, d.get("data-i18n-html")))
+
+    def handle_endtag(self, tag):
+        if tag in I18N_LINK_VOID:
+            return
+        cand = HEADING_TAGS if tag in HEADING_TAGS else {tag}
+        for i in range(len(self.stack) - 1, -1, -1):
+            if self.stack[i][0] in cand:
+                del self.stack[i:]
+                return
+
+
+def check_content_i18n_html_links():
+    """data-i18n-html con <a> nell'HTML: i dizionari devono contenere GLI STESSI
+    href nello stesso ordine, altrimenti innerHTML cancella il link lo stesso.
+    Rileva anche anchor annidati (<a><a>) nei valori (HTML invalido)."""
+    # chiave -> {file -> hrefs attesi}
+    wanted = {}
+    for f in html_files():
+        rel = str(f.relative_to(ROOT))
+        parser = _I18nHtmlLinkParser()
+        parser.feed(f.read_text(encoding="utf-8", errors="replace"))
+        parser.close()
+        for key, hrefs in parser.by_key.items():
+            wanted.setdefault(key, {})[rel] = hrefs
+    wanted = {k: v for k, v in wanted.items() if any(v.values())}  # solo con <a> veri
+    dicts = {}
+    for lang in LANGS:
+        # I18N_DIR letto a runtime: i test lo reindirizzano con dizionari finti
+        p = I18N_DIR / f"{lang}.json"
+        if p.exists():
+            dicts[lang] = json.loads(p.read_text(encoding="utf-8"))
+    bad = []  # (chiave, lingua, motivo)
+    for key, per_file in sorted(wanted.items()):
+        hrefs = sorted({tuple(h) for h in per_file.values()})[0]
+        for lang, d in dicts.items():
+            if key not in d:
+                bad.append((key, lang, "chiave assente"))
+                continue
+            val = d[key]
+            if I18N_NESTED_A_RE.search(val):
+                bad.append((key, lang, "anchor annidati"))
+            if I18N_HREF_RE.findall(val) != list(hrefs):
+                bad.append((key, lang, f"href attesi {list(hrefs)}"))
+    check = make_check("content.i18n_html_links", "content",
+                       "pass" if not bad else "warn",
+                       measured=len({k for k, _, _ in bad}), threshold=0,
+                       detail=f"chiavi data-i18n-html con <a> e dizionari difformi: "
+                              f"{bad[:5]}")
+    findings = []
+    if bad:
+        langs_by_key = {}
+        for k, l, _ in bad:
+            langs_by_key.setdefault(k, []).append(l)
+        first_key = sorted(bad, key=lambda x: (x[0], x[1]))[0][0]
+        rel = sorted(wanted[first_key])[0]
+        hrefs = sorted({tuple(h) for h in wanted[first_key].values()})[0]
+        findings.append(make_finding(
+            "content", "medium",
+            "data-i18n-html: dizionari senza i link presenti nell'HTML",
+            f"{len(langs_by_key)} chiavi/{len(bad)} coppie chiave-lingua in difetto; "
+            f"es. '{first_key}' in {rel}, href attesi {list(hrefs)}, lingue senza: "
+            f"{sorted(langs_by_key[first_key])[:8]}"
+            f"{'…' if len(langs_by_key[first_key]) > 8 else ''}",
+            "Nei dizionari: stesso numero di <a href> dell'HTML, stessi target nello "
+            "stesso ordine (innerHTML=riscrittura totale). Niente anchor annidati.",
+            False, sorted({r for per in wanted.values() for r in per})[:10]))
+    return check, findings
+
+
 # ══════════════════════════ AUTHORITY (AEO) ═════════════════════════════
 
 def check_aeo_llms_txt():
@@ -1012,6 +1103,7 @@ def run_checks(offline: bool) -> dict:
         ("content.broken_phrases", lambda: check_content_broken_phrases()),
         ("content.i18n_integrity", lambda: check_content_i18n_integrity()),
         ("content.i18n_link_destruct", lambda: check_content_i18n_link_destruct()),
+        ("content.i18n_html_links", lambda: check_content_i18n_html_links()),
         ("aeo.llms_txt", lambda: check_aeo_llms_txt()),
         ("aeo.external_citations", lambda: check_aeo_external_citations(offline)),
         ("aeo.freshness", lambda: check_aeo_freshness()),
