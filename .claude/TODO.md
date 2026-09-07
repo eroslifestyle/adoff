@@ -1,5 +1,35 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
+## Sessione 2026-09-07 (notte): applicate tutte le 8 proposte SEO — health 67 → 100
+
+Chiusura del filone della sera: il run completo dell'agente (health 67) è stato seguito
+dall'applicazione di tutte e 8 le proposte in quattro lotti di commit, fino a health 100/100
+con 0 finding aperti. Corretti alla radice due bug dello script agente e due falsi positivi
+del checker (con test di regressione, suite 6/6). HEAD `3812a03`. Dettaglio: checkpoint
+`.claude/checkpoints/CP_20260907_0130.md` · vault
+`Memoria/progetti/AdOff/sessioni/seo-aeo-audit-fix-20260906.md` (Fase 7).
+
+**Fatto:**
+- Primo run completo dell'agente SEO (`20260906_2123`, 341s, sonnet cloud perché il preflight su `:8774` dava http=000), merge+push+deploy automatici
+- Due bug corretti nello script dell'agente: `$PROMPT` mai passato a `claude -p` (commit `b6167e9`) e verifica che scambiava un fix parziale per risolto (`5423048`) — l'id è `sha1(area|title|primo_file)`, quindi correggere una parte delle occorrenze cambiava l'id e il finding sembrava sparito; ora l'identità è `(area, title)`
+- Accorpati tre difetti "valore di ritorno scartato" (`a055bd8`): esito di `sendEmail` registrato nel KV del ticket, `tg_send` logga lo status HTTP, la SELECT dei run espone `findings_high`/`proposed_count`/`commit_sha`/`deployed` (colonne che esistevano già e che la UI usava ricevendo undefined)
+- Applicate tutte e 8 le proposte in quattro lotti: HIGH `28fb32b` (67→87), MEDIUM `1055b19` (87→96), LOW onpage `21619f4` (96→98), LOW authority `3812a03` (98→100)
+- Due falsi positivi del checker corretti ALLA RADICE con test di regressione (suite 6/6): `RULES_NUM_RE` agganciava lo "000" di "30,000 static rules"; `FRESHNESS_RE` copriva solo 6 lingue e il `\b` non funziona fra caratteri CJK
+- 88 citazioni esterne da 4 URL distinti, tutti verificati HTTP 200 uno per uno
+- Deploy sito (242 file) + worker (via OAuth di wrangler); run `20260907_0122` registrato: health 100, open_findings 0, recently_fixed 9
+
+**Aperto:**
+- Redirect 301 www→apex: solo dal dashboard Cloudflare. Né `CF_API_TOKEN` né l'OAuth di wrangler hanno il permesso di zona in scrittura (l'OAuth ha solo `zone (read)`)
+- 17 elementi con `data-i18n` contengono un `<a>`: a runtime `adoff-i18n.js` li riscrive via `textContent` e quei link spariscono. Tutti preesistenti — candidato a diventare un check della suite
+- Verifica sul campo di `applyTicketReply`: il campo `email: {ok, id, at}` nella reply si vedrà solo alla prossima risposta a un ticket reale
+
+**Do NOT:**
+- NON deployare il worker con `CF_API_TOKEN` (ha solo permessi Pages): serve l'OAuth di wrangler, `env -u CLOUDFLARE_API_TOKEN -u CF_API_TOKEN npx wrangler deploy`
+- NON riscrivere la prosa del sito per far tacere una regex dell'audit: va corretto il check, con test di regressione
+- NON fidarsi di `GET /admin/seo-agent` subito dopo un ingest: ha ~1 minuto di cache e mostra lo stato vecchio
+
+---
+
 ## Sessione 2026-09-06 (sera): audit SEO/AEO + redesign agente domenicale
 
 Tre filoni chiusi: email ticket confermata consegnata (Resend `last_event:"delivered"`), audit
@@ -15,10 +45,10 @@ modello ibrido code-max/sonnet testato 2/2). HEAD `77ecce6`. Dettaglio: checkpoi
 - [x] Modello ibrido: preflight `:8774` → code-max locale, altrimenti sonnet; test live 2/2
 
 **Aperto:**
-- [ ] Primo run COMPLETO dell'agente (non `--dry-run`): AUTO=1, PROPOSE=8 attesi
+- [x] Primo run COMPLETO dell'agente (non `--dry-run`): AUTO=1, PROPOSE=8 attesi — fatto: run `20260906_2123`, 341s, health 67, deploy ok
 - [ ] Redirect 301 www→apex: da fare a mano dal dashboard (Redirect Rule di zona; `_redirects` non matcha l'hostname)
-- [ ] Residui health 67/100: 10 orfane, 93 title fuori range, 66 pagine senza data, 88/91 senza citazioni
-- [ ] Registrare stato consegna email nel KV
+- [x] Residui health 67/100: 10 orfane, 93 title fuori range, 66 pagine senza data, 88/91 senza citazioni — fatto: tutte e 8 le proposte applicate, health 100/100, 0 finding
+- [x] Registrare stato consegna email nel KV — fatto, commit `a055bd8`
 
 **Do NOT:**
 - NON toccare Stripe/trial dormiente né `adoffPlanTier()`; NON dire che qualcosa richiede pagamento
