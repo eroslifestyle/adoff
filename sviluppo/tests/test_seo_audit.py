@@ -163,6 +163,95 @@ def hits_via_run(seo, expect_none, expect_some):
     print("  ok: model_claims falsi positivi esclusi, veri positivi trovati")
 
 
+def test_i18n_link_destruct():
+    """<a> dentro data-i18n = finding; data-i18n-html / link fuori = pulito;
+    </h1> che chiude <h2> (account.html) NON deve inglobare il link successivo."""
+    import tempfile
+    orig_site, orig_root = seo.SITE, seo.ROOT
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            seo.SITE = Path(tmp)
+            seo.ROOT = Path(tmp)
+            pages = {
+                "bad.html": "<html><body><p data-i18n=\"k\">testo <a href=\"/x\">link</a></p></body></html>",
+                "ok-html-attr.html": "<html><body><p data-i18n-html=\"k\">testo <a href=\"/x\">link</a></p></body></html>",
+                "ok-text-only.html": "<html><body><p data-i18n=\"k\">solo testo</p></body></html>",
+                "ok-link-outside.html": "<html><body><p data-i18n=\"k\">testo</p><a href=\"/x\">link</a></body></html>",
+                "malformed-h2.html": "<html><body><h2 data-i18n=\"k\">titolo</h1> <a href=\"/x\">link</a></body></html>",
+            }
+            orig_htmlfiles = seo.html_files
+            for rel, text in pages.items():
+                p = Path(tmp) / rel
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_text(text)
+            seo.html_files = lambda: [Path(tmp) / rel for rel in pages]
+            try:
+                check, findings = seo.check_content_i18n_link_destruct()
+                files_hit = {f for fnd in findings for f in fnd["files"]}
+                assert check["measured"] == 1, f"1 solo hit atteso, got {check}"
+                assert check["status"] == "warn"
+                assert len(findings) == 1
+                assert findings[0]["severity"] == "medium" and findings[0]["auto"] is False
+                assert files_hit == {"bad.html"}, f"solo bad.html, got {files_hit}"
+                assert "'k'" in findings[0]["evidence"], "evidence cita la chiave"
+                # regressione parser: h1..h6 intercambiabili + void + end tag orfano
+                p = seo._I18nLinkParser()
+                p.feed("<h2 data-i18n=\"k\">a</h1> <a href=\"/x\">l</a>")
+                p.close()
+                assert p.hits == [], f"</h1> chiude <h2>, nessun hit: {p.hits}"
+                p.feed("<div data-i18n=\"k\"><br><img src=\"x\"> <a href=\"/y\">l</a>")
+                assert len(p.hits) == 1, "i void non devono rompere lo stack"
+                p.feed("</span></div> <a href=\"/z\">l</a>")
+                p.close()
+                assert len(p.hits) == 1, "end tag orfani/non corrispondenti ignorati"
+            finally:
+                seo.html_files = orig_htmlfiles
+    finally:
+        seo.SITE, seo.ROOT = orig_site, orig_root
+    print("  ok: i18n_link_destruct (text vs html attr, h2/h1, void, end tag orfani)")
+
+
+def test_i18n_link_destruct_line_number():
+    """L'evidence riporta la riga REALE dell'<a> nel file: i blocchi <script>
+    multi-riga PRIMA del link non devono sfasarla (regressione strip_scripts)."""
+    import tempfile
+    # <a> del caso cattivo a riga 12 (contando da 1)
+    bad = "\n".join([
+        "<html><head>",
+        '<script type="application/ld+json">',
+        "{",
+        '  "@type": "Answer",',
+        '  "text": "bla",',
+        "},",
+        "];",
+        "</script>",
+        "<style>",
+        ".x { color: red }",
+        "</style>",
+        '</head><body><p data-i18n="k">testo <a href="/x">link</a></p></body></html>',
+    ]) + "\n"
+    assert '<p data-i18n="k"' in bad.splitlines()[11], "setup: <a> a riga 12"
+    orig_site, orig_root = seo.SITE, seo.ROOT
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            seo.SITE = Path(tmp)
+            seo.ROOT = Path(tmp)
+            p = Path(tmp) / "line.html"
+            p.write_text(bad)
+            orig_htmlfiles = seo.html_files
+            seo.html_files = lambda: [p]
+            try:
+                check, findings = seo.check_content_i18n_link_destruct()
+                assert len(findings) == 1, findings
+                assert "line.html:12 " in findings[0]["evidence"], \
+                    f"riga reale 12 nell'evidence, got: {findings[0]['evidence']}"
+            finally:
+                seo.html_files = orig_htmlfiles
+    finally:
+        seo.SITE, seo.ROOT = orig_site, orig_root
+    print("  ok: i18n_link_destruct riporta la riga reale nonostante <script> multi-riga")
+
+
 def main():
     test_finding_id_stable()
     test_health_score()
@@ -170,6 +259,8 @@ def main():
     test_model_claims_false_positives()
     test_rules_num_thousands_separator()
     test_freshness_re_multilingual()
+    test_i18n_link_destruct()
+    test_i18n_link_destruct_line_number()
     print("OK")
     return 0
 

@@ -18,6 +18,7 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from datetime import datetime
+from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -822,6 +823,72 @@ def check_content_i18n_integrity():
     return check, findings
 
 
+# ponytail: stack globale + heading intercambiabili (HTML5); per-namespace se servisse
+I18N_LINK_VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input",
+                  "link", "meta", "param", "source", "track", "wbr"}
+HEADING_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
+
+
+class _I18nLinkParser(HTMLParser):
+    """Trova <a> dentro un elemento con data-i18n: adoff-i18n.js riscrive
+    quell'elemento via textContent e i figli (link compresi) spariscono.
+    Stack di antenati robusto a HTML malformato (end tag ignori/chiudono)."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.stack = []  # [(tag, chiave data-i18n | None), ...]
+        self.hits = []   # [(chiave, riga), ...]
+
+    def handle_starttag(self, tag, attrs):
+        key = dict(attrs).get("data-i18n")
+        if tag == "a":
+            for _, anc_key in self.stack:  # antenati: se stesso non è ancora nello stack
+                if anc_key is not None:
+                    self.hits.append((anc_key, self.getpos()[0]))
+                    break
+        if tag not in I18N_LINK_VOID:  # i void non vanno mai sullo stack
+            self.stack.append((tag, key))
+        # (handle_startendtag di default chiama starttag+endtag: <br/> non entra)
+
+    def handle_endtag(self, tag):
+        if tag in I18N_LINK_VOID:
+            return
+        cand = HEADING_TAGS if tag in HEADING_TAGS else {tag}  # h1..h6 intercambiabili
+        # pop fino all'elemento corrispondente; assente -> end tag ignorato
+        for i in range(len(self.stack) - 1, -1, -1):
+            if self.stack[i][0] in cand:
+                del self.stack[i:]
+                return
+
+
+def check_content_i18n_link_destruct():
+    """<a> dentro data-i18n: il textContent di adoff-i18n.js distrugge il link."""
+    hits = []  # (rel, chiave, riga)
+    for f in html_files():
+        parser = _I18nLinkParser()
+        # niente strip_scripts: collassa le righe dei blocchi script e l'offset
+        # riportato non corrisponde più al file; <script> è CDATA per HTMLParser
+        # (nessun starttag interno). La riga è quella del tag <a>, non del padre.
+        parser.feed(f.read_text(encoding="utf-8", errors="replace"))
+        parser.close()
+        for key, line in parser.hits:
+            hits.append((str(f.relative_to(ROOT)), key, line))
+    check = make_check("content.i18n_link_destruct", "content",
+                       "pass" if not hits else "warn", measured=len(hits), threshold=0,
+                       detail=f"<a> annidati in data-i18n (textContent li distrugge): "
+                              f"{hits[:5]}")
+    findings = []
+    if hits:
+        rel, key, line = hits[0]
+        findings.append(make_finding(
+            "content", "medium", "Link annidati in elementi data-i18n (distrutti a runtime)",
+            f"{len(hits)} occorrenze, es. {rel}:{line} (chiave '{key}')",
+            "Spostare il link fuori dall'elemento con data-i18n, oppure usare "
+            "data-i18n-html con il markup (incluso l'<a>) nel valore del dizionario.",
+            False, sorted({r for r, _, _ in hits})[:10]))
+    return check, findings
+
+
 # ══════════════════════════ AUTHORITY (AEO) ═════════════════════════════
 
 def check_aeo_llms_txt():
@@ -944,6 +1011,7 @@ def run_checks(offline: bool) -> dict:
         ("content.model_claims", lambda: check_content_model_claims()),
         ("content.broken_phrases", lambda: check_content_broken_phrases()),
         ("content.i18n_integrity", lambda: check_content_i18n_integrity()),
+        ("content.i18n_link_destruct", lambda: check_content_i18n_link_destruct()),
         ("aeo.llms_txt", lambda: check_aeo_llms_txt()),
         ("aeo.external_citations", lambda: check_aeo_external_citations(offline)),
         ("aeo.freshness", lambda: check_aeo_freshness()),
