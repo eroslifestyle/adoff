@@ -8207,6 +8207,78 @@ async function checkMonitorHeartbeat(env) {
   }
 }
 
+// =============================================
+// GDPR RETENTION PURGE — 90 giorni (privacy.html §15 "Retention: 90 days,
+// then automatic deletion" + sezione ad-leak "conservate per un massimo di
+// 90 giorni, poi eliminate"). Formati data verificati sulle INSERT:
+// - nav_stats.day = "YYYY-MM-DD" (getDateStr, indice idx_nav_stats_day)
+// - adleak_reports.uninstall_ts = epoch ms (Date.now())
+// - KV uninstalls:log = array entry {ts: epoch ms}, cap 1000 (appendToLog)
+// Batch DELETE per rispettare i limiti D1 su volumi grandi.
+// =============================================
+const RETENTION_DAYS = 90;
+const PURGE_BATCH = 5000;
+// ponytail: cap difensivo ~1M righe/passata — se si supera, alza o passa a DELETE definitivo
+const PURGE_MAX_ITER = 200;
+
+async function purgeExpiredTelemetry(env) {
+  const cutoffMs = Date.now() - RETENTION_DAYS * 86400 * 1000;
+  const cutoffDay = new Date(cutoffMs).toISOString().slice(0, 10);
+  const purged = {};
+
+  async function purgeBatch(table, sqlBatch, sqlAll) {
+    let total = 0;
+    for (let i = 0; i < PURGE_MAX_ITER; i++) {
+      try {
+        const r = await env.DB.prepare(sqlBatch).bind(table === "nav_stats" ? cutoffDay : cutoffMs).run();
+        total += r.meta.changes || 0;
+        if ((r.meta.changes || 0) < PURGE_BATCH) break;
+      } catch (e) {
+        // Fallback se DELETE ... LIMIT non fosse supportato: un colpo unico
+        // (volumi daily bassi, tabella opt-in) — logga comunque l'errore.
+        console.error(`${table} purge batch error:`, e.message);
+        const r = await env.DB.prepare(sqlAll).bind(table === "nav_stats" ? cutoffDay : cutoffMs).run();
+        total += r.meta.changes || 0;
+        break;
+      }
+    }
+    return total;
+  }
+
+  try {
+    purged.nav_stats = await purgeBatch(
+      "nav_stats",
+      `DELETE FROM nav_stats WHERE day < ? LIMIT ${PURGE_BATCH}`,
+      `DELETE FROM nav_stats WHERE day < ?`
+    );
+    purged.adleak_reports = await purgeBatch(
+      "adleak_reports",
+      `DELETE FROM adleak_reports WHERE uninstall_ts < ? LIMIT ${PURGE_BATCH}`,
+      `DELETE FROM adleak_reports WHERE uninstall_ts < ?`
+    );
+  } catch (e) {
+    console.error("D1 retention purge error:", e.message);
+    purged.error = e.message;
+  }
+
+  // KV uninstalls:log — array JSON, un solo pass basta (cap 1000)
+  try {
+    const log = await kvGet(env.ADOFF_LICENSES, "uninstalls:log", "json") || [];
+    const kept = log.filter((entry) => entry && typeof entry.ts === "number" && entry.ts >= cutoffMs);
+    if (kept.length !== log.length) {
+      await env.ADOFF_LICENSES.put("uninstalls:log", JSON.stringify(kept));
+    }
+    purged["uninstalls:log"] = log.length - kept.length;
+  } catch (e) {
+    console.error("uninstalls:log purge error:", e.message);
+    purged["uninstalls:log_error"] = e.message;
+  }
+
+  // Audit GDPR: solo conteggi, nessun dato personale
+  console.log("[gdpr-retention] purged:", JSON.stringify(purged));
+  return purged;
+}
+
 async function handleScheduled(env) {
   await checkMonitorHeartbeat(env);
   const now = Math.floor(Date.now() / 1000);
@@ -8299,7 +8371,15 @@ async function handleScheduled(env) {
     vpnCron = { ok: false, error: e.message };
   }
 
-  return { reminders, expired, checked, gsc, kvSnapshot, vpnCron };
+  // GDPR retention 90gg: nav_stats, adleak_reports, uninstalls:log (privacy.html §15)
+  let gdprPurge = null;
+  try {
+    gdprPurge = await purgeExpiredTelemetry(env);
+  } catch (e) {
+    gdprPurge = { ok: false, error: e.message };
+  }
+
+  return { reminders, expired, checked, gsc, kvSnapshot, vpnCron, gdprPurge };
 }
 
 // =============================================

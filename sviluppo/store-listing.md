@@ -16,7 +16,7 @@
 
 **Summary:**
 ```
-Block ads on YouTube & every website. Skip video ads, ultra-light, invisible to anti-adblock. Fast, private, no tracking.
+Block ads on YouTube & every website. Skip video ads, ultra-light, invisible to anti-adblock. Fast, private: nothing about your browsing is collected by default.
 ```
 
 **Description:**
@@ -54,7 +54,7 @@ KEY FEATURES
 ✔ Cookie banner blocker: auto-dismisses cookie consent pop-ups
 ✔ No "acceptable ads": blocks everything by default — no paid whitelist, ever
 ✔ Free, no account, no limits
-✔ Privacy-first: no browsing history collected, no page content read, no tracking data sent
+✔ Privacy-first: nothing about your browsing is collected by default — nothing at all unless you explicitly turn on the optional anonymous stats (which share only site hostnames, never full URLs, never page content)
 ✔ 15 languages: English, Italian, German, French, Spanish, Portuguese, Russian, Arabic, Chinese, Hindi, Japanese, Korean, Turkish, Indonesian, Polish
 ✔ Manifest V3: built with the latest Chrome extension architecture
 ✔ Completely free — all features unlocked, no account needed
@@ -90,7 +90,7 @@ Most ad blockers share the same five weaknesses. AdOff was built to fix every on
 On top of all that:
 
 → Undetectable: stealth technology bypasses even the most aggressive anti-adblock walls
-→ No monetization of your data: we don't track you, sell your data, or inject our own ads
+→ No monetization of your data: we never sell your data or inject our own ads — and nothing is collected unless you explicitly opt in
 → Open and transparent: clear permissions, clear privacy policy
 
 ━━━━━━━━━━━━━━━━━━━━
@@ -106,7 +106,7 @@ Found a site where ads aren't blocked? Let us know and we'll add rules for it in
 
 **Summary:**
 ```
-Blocca le pubblicita' su ogni sito. Ultra-leggero, invisibile ai sistemi anti-adblock, neutralizzazione video ads. Veloce, privato, zero tracciamento.
+Blocca le pubblicita' su ogni sito. Ultra-leggero, invisibile ai sistemi anti-adblock, neutralizzazione video ads. Veloce, privato: nessun dato di navigazione raccolto di default.
 ```
 
 **Description:**
@@ -124,7 +124,7 @@ AdOff usa quattro livelli di protezione indipendenti:
 ━━━━━━━━━━━━━━━━━━━━
 FUNZIONALITA' PRINCIPALI
 ━━━━━━━━━━━━━━━━━━━━
-<ul><li>Funziona su ogni sito web - zero configurazione</li><li>Ultra-leggero: solo poche decine di KB totali</li><li>Neutralizzazione video ads - elimina pre-roll e mid-roll</li><li>Modalita' stealth: invisibile ai sistemi anti-adblock</li><li>Controlli per sito: metti in pausa la protezione con un click</li><li>4 modalita' di pausa: 1 ora, fino a domani, permanente o personalizzata</li><li>Gestione whitelist: escludi facilmente i siti che vuoi supportare</li><li>Statistiche in tempo reale</li><li>Blocco cookie banner automatico</li><li>Privacy-first: nessun tracciamento</li><li>15 lingue supportate</li><li>Completamente gratuito - tutte le funzioni sbloccate</li></ul>
+<ul><li>Funziona su ogni sito web - zero configurazione</li><li>Ultra-leggero: solo poche decine di KB totali</li><li>Neutralizzazione video ads - elimina pre-roll e mid-roll</li><li>Modalita' stealth: invisibile ai sistemi anti-adblock</li><li>Controlli per sito: metti in pausa la protezione con un click</li><li>4 modalita' di pausa: 1 ora, fino a domani, permanente o personalizzata</li><li>Gestione whitelist: escludi facilmente i siti che vuoi supportare</li><li>Statistiche in tempo reale</li><li>Blocco cookie banner automatico</li><li>Privacy-first: nessun dato raccolto di default; statistiche anonime solo su tua attivazione esplicita (solo hostname dei siti, mai URL completi, mai contenuti delle pagine)</li><li>15 lingue supportate</li><li>Completamente gratuito - tutte le funzioni sbloccate</li></ul>
 
 ━━━━━━━━━━━━━━━━━━━━
 SUPPORTO
