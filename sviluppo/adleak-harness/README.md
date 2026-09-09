@@ -17,6 +17,25 @@ node adleak.mjs youtube.com repubblica.it    # solo alcuni domini
 node adleak.mjs --ab                         # con confronto A/B no-extension
 node adleak.mjs --domains lista-grande.txt --concurrency 4 --timeout-ms 60000
 node adleak.mjs --no-extension example.com   # solo contesto pulito (controllo)
+node adleak.mjs --push example.com           # a fine run spedisce i risultati alla console admin
+```
+
+## Push alla console admin (`--push`)
+
+Con `--push`, a fine run (dopo che il JSON è già stato scritto in `results/`), i risultati vengono inviati a `POST https://api.adoff.app/admin/adleak-ingest` con header `X-Admin-Token`. L'esito compare nella scheda **"Efficacia"** della console admin, accanto ai dati reali degli utenti.
+
+- **Token**: non va MAI scritto nel codice o in un file. Si legge da `ADOFF_ADMIN_TOKEN`. Se manca, l'harness esce subito con un errore che spiega come impostarlo. Modo previsto (regola progetto, vault TPM): `secret run adoff -- node adleak.mjs --push ...`
+- **Ordine garantito**: prima il JSON locale in `results/`, poi la POST. Se il push fallisce, i risultati locali restano al loro posto e l'harness esce con codice non-zero stampando status HTTP e corpo della risposta. Al massimo 3 tentativi con pausa di 2s, niente retry infinito.
+- **Idempotenza**: ogni run ha un `runId` unico (timestamp + random) e l'endpoint accetta un solo run per `runId`: rimandare lo stesso run lo aggiorna senza duplicarlo.
+- `extensionVersion` è letta a runtime da `app/manifest.json` (zero versioni hardcoded).
+- Per test: `ADOFF_PUSH_URL` sovrascrive l'endpoint (es. server locale finto).
+
+```bash
+# push reale, token dal vault
+secret run adoff -- node adleak.mjs --push
+
+# prova contro un server finto locale
+ADOFF_ADMIN_TOKEN=test ADOFF_PUSH_URL=http://127.0.0.1:9999/admin/adleak-ingest node adleak.mjs --push example.com
 ```
 
 Requisiti: niente di nuovo. Usa Playwright già presente in `sviluppo/marketing/demo/node_modules` (syrmlink `node_modules`) e il Chromium già scaricato in `~/.cache/ms-playwright`. Gira **headless** (`headless: true`, niente display/xvfb necessario). Il lancio browser riprende il pattern di `sviluppo/marketing/demo/capture-demo.mjs`: `launchPersistentContext` + `--disable-extensions-except` + `--load-extension` sull'estensione reale di `app/`.

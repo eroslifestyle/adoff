@@ -10,11 +10,12 @@
 // (launchPersistentContext + --disable-extensions-except + --load-extension + executablePath).
 //
 // Uso: node adleak.mjs [--domains file] [--out dir] [--concurrency N] [--timeout-ms N]
-//                      [--ab] [--no-extension] [dominio1 dominio2 ...]
+//                      [--ab] [--no-extension] [--push] [dominio1 dominio2 ...]
 
 import { chromium } from 'playwright';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'node:crypto';
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..'); // ChromePlugin/
 const APP = process.env.ADOFF_APP || path.join(ROOT, 'app');
@@ -40,7 +41,15 @@ for (let i = 0; i < args.length; i++) {
   else if (args[i] === '--settle-ms') opts.settleMs = +args[++i] || DEFAULTS.settleMs;
   else if (args[i] === '--ab') opts.ab = true;
   else if (args[i] === '--no-extension') opts.noExt = true;
+  else if (args[i] === '--push') opts.push = true;
   else if (!args[i].startsWith('--')) opts.domainsList.push(args[i].replace(/^https?:\/\//, '').split('/')[0]);
+}
+
+// Fail fast: con --push serve il token admin, MAI hardcoded (viene dal vault TPM).
+if (opts.push && !process.env.ADOFF_ADMIN_TOKEN) {
+  console.error('ERRORE: --push richiede la variabile d\'ambiente ADOFF_ADMIN_TOKEN (token admin del worker).\n' +
+    'Modo previsto (vault TPM, niente chiavi in chiaro): secret run adoff -- node adleak.mjs --push ...');
+  process.exit(1);
 }
 
 // --- Oracolo: carica le regole DNR ---
@@ -208,12 +217,12 @@ const browserOpts = {
   args: ['--no-first-run', '--no-default-browser-check', '--disable-blink-features=AutomationControlled'],
 };
 
-console.log(`AdOff ad-leak harness — ${domains.length} domini, estensione: ${opts.noExt ? 'NO' : 'SI'} (${APP})`);
-const jobs = [];
+console.log(`AdOff ad-leak harness — ${domains.length} domini, estensione: ${opts.noExt ? 'NO' : 'SI'} (${APP})`);const jobs = [];
 for (const d of domains) jobs.push({ domain: d, withExtension: !opts.noExt });
 if (opts.ab) for (const d of domains) jobs.push({ domain: d, withExtension: false });
 
 const results = [];
+const startedAtMs = Date.now();
 let idx = 0;
 async function worker(wid) {
   while (idx < jobs.length) {
@@ -230,6 +239,48 @@ await Promise.all(Array.from({ length: opts.concurrency }, (_, i) => worker(i + 
 const run = { timestamp: new Date().toISOString(), extensionPath: APP, rulesFile: RULES, options: opts, results };
 const outFile = path.join(opts.out, `adleak-${stamp}.json`);
 fs.writeFileSync(outFile, JSON.stringify(run, null, 2));
+
+// --- Push risultati alla console admin (dopo il salvataggio locale: mai perdere i dati) ---
+if (opts.push) {
+  const PUSH_ATTEMPTS = 3, PUSH_PAUSE_MS = 2000;
+  const manifest = JSON.parse(fs.readFileSync(path.join(APP, 'manifest.json'), 'utf8'));
+  // ponytail: 2 retry con pausa fissa basta per una post amministrativa; niente retry infiniti
+  const payload = {
+    runId: `${Date.now()}-${crypto.randomBytes(4).toString('hex')}`,
+    startedAt: startedAtMs,
+    finishedAt: Date.now(),
+    extensionVersion: manifest.version,
+    domains: results.map(r => ({
+      domain: r.domain,
+      httpStatus: r.httpStatus,
+      requests: r.requestsTotal,
+      leaks: r.leakCount,
+      leakRules: [...new Set(r.leaks.map(l => l.ruleId))],
+      detection: r.detection.length > 0,
+      error: r.error || null,
+    })),
+  };
+  let pushed = false;
+  for (let attempt = 1; attempt <= PUSH_ATTEMPTS && !pushed; attempt++) {
+    if (attempt > 1) await new Promise(res => setTimeout(res, PUSH_PAUSE_MS));
+    try {
+      const resp = await fetch(process.env.ADOFF_PUSH_URL || 'https://api.adoff.app/admin/adleak-ingest', {
+        method: 'POST',
+        headers: { 'X-Admin-Token': process.env.ADOFF_ADMIN_TOKEN, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (resp.ok) { console.log(`Push ok (runId ${payload.runId})`); pushed = true; break; }
+      const body = await resp.text().catch(() => '');
+      console.error(`Push tentativo ${attempt}/${PUSH_ATTEMPTS} fallito: HTTP ${resp.status} — ${body.slice(0, 500)}`);
+    } catch (e) {
+      console.error(`Push tentativo ${attempt}/${PUSH_ATTEMPTS} fallito: ${String(e && e.message || e).slice(0, 300)}`);
+    }
+  }
+  if (!pushed) {
+    console.error(`Push NON riuscito: i risultati restano salvati localmente in ${outFile}. Rilancia con --push per ritentare (stesso runId non ancora assegnato, l'endpoint è idempotente).`);
+    process.exit(1);
+  }
+}
 
 // --- Riepilogo leggibile ---
 console.log('\n=== RIEPILOGO ===');
