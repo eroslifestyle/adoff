@@ -176,7 +176,7 @@ Funzionalita' aggiunte:
 Infrastruttura creata:
 - `sviluppo/license-system/keygen.py` — generatore chiavi HMAC Python
 - `sviluppo/license-system/worker.js` — Cloudflare Worker API licenze
-- `sviluppo/license-system/admin.html` — dashboard admin licenze
+- `site/admin-console.html` — console admin licenze (servita su `/admin` dal worker)
 - `sviluppo/license-system/wrangler.toml` — configurazione deploy Cloudflare
 
 ---
@@ -488,7 +488,7 @@ function cleanExpiredPauses(list) {
          │                              │
          │                   ┌──────────┴──────────┐
          │                   │  Admin Dashboard    │
-         │                   │  (admin.html)       │
+         │                   │ (admin-console.html)│
          │                   └─────────────────────┘
          │
          ▼
@@ -1466,7 +1466,7 @@ sviluppo/
     PAGAMENTI.md               — Sistema pagamenti Stripe
     keygen.py                  — Generatore chiavi HMAC Python (CLI)
     worker.js                  — Cloudflare Worker API licenze
-    admin.html                 — Dashboard admin licenze (web UI)
+    admin-console.html         — Console admin licenze (web UI)
     wrangler.toml              — Configurazione deploy Wrangler/Cloudflare
     (chat log spostati in `sviluppo/logs/chat-archive/` — regola: niente chat in docs/)
 

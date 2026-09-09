@@ -50,15 +50,6 @@ function getCorsHeaders(request) {
   return headers;
 }
 
-// =============================================
-// VPN MODULE — provisioning, gating, auto-disable
-// (estratto in vpn-module.js — vedi FASE 0)
-// =============================================
-import { handleVpnServers, handleVpnProfile, handleVpnGetConfig,
-         handleVpnCreateAccount, handleVpnDeleteAccount,
-         handleVpnEnableDisable, handleCronVpnAutoDisable,
-         provisionVpnForCheckout, disableVpnForCheckout } from './vpn-module.js';
-
 /**
  * KV get wrapper — gestisce il rate limit del namespace.
  * Se il limite giornaliero è superato, restituisce null invece di crashare.
@@ -2088,79 +2079,6 @@ async function handleDeactivate(body, env, request) {
   return jsonResponse({ ok: true, devicesRemaining: devices.length });
 }
 
-// =============================================
-// GET-VPN-TOKEN — converte licenza HMAC in token ECDSA Premium per VPN
-// Il client chiama /get-vpn-token con {licenseKey, deviceId}.
-// Ritorna un token ECDSA P-256 firmato che /vpn/* accetta.
-// =============================================
-
-async function handleGetVpnToken(body, env, request) {
-  const { licenseKey, deviceId } = body;
-  if (!licenseKey || !deviceId) {
-    return jsonResponse({ error: "Missing licenseKey or deviceId" }, 400);
-  }
-
-  // Risolvi alias e verifica HMAC — stesse logiche di handleValidate
-  let rawKey = licenseKey;
-  if (licenseKey.startsWith("ADOFF-")) {
-    rawKey = await kvGet(env.ADOFF_LICENSES, `key:${licenseKey}`);
-    if (!rawKey) return jsonResponse({ error: "License not found" }, 404);
-  }
-
-  const sigCheck = await validateSignature(rawKey, env.ADOFF_SECRET);
-  if (!sigCheck.valid) return jsonResponse({ error: sigCheck.error }, 401);
-
-  // KV lookup
-  let licenseData = await kvGet(env.ADOFF_LICENSES, `lic:${rawKey}`, "json");
-  if (!licenseData && env.DB) {
-    try {
-      const dbResult = await env.DB.prepare(
-        "SELECT * FROM licenses WHERE raw = ? OR adoff_key = ?"
-      ).bind(rawKey, rawKey).first();
-      if (dbResult) {
-        licenseData = {
-          key: dbResult.adoff_key,
-          raw: dbResult.raw,
-          plan: dbResult.plan,
-          tier: dbResult.tier,
-          expires: dbResult.expires,
-          revoked: !!dbResult.revoked,
-          source: "db_fallback",
-        };
-      }
-    } catch (_) { /* ignore */ }
-  }
-  if (!licenseData) return jsonResponse({ error: "License not found" }, 404);
-
-  // Tier must be premium
-  const tier = licenseData.tier || sigCheck.payload?.t || null;
-  if (tier !== "premium") {
-    return jsonResponse({ error: "Premium subscription required for VPN" }, 403);
-  }
-
-  // Revoked / expired
-  if (licenseData.revoked) return jsonResponse({ error: "License revoked" }, 403);
-  const expiresAt = licenseData.expires || 0;
-  if (expiresAt > 0 && expiresAt < Date.now() / 1000) {
-    return jsonResponse({ error: "License expired" }, 403);
-  }
-
-  // DeviceId: licenza HMAC + deviceId locale = sufficiente per VPN
-  // (device activation è per l'ad blocker; VPN funziona con licenseKey + deviceId)
-
-  // Genera token ECDSA P-256 Premium — stessa chiave del trial
-  const iat = Math.floor(Date.now());
-  const vpnPayload = {
-    deviceId,
-    tier: "premium",
-    expiresAt: expiresAt * 1000,  // ms
-    iat,
-    v: 1,
-  };
-  const token = await signTrialToken(vpnPayload, env);
-  return jsonResponse({ ok: true, token, tier: "premium" });
-}
-
 async function handleRevoke(body, env, request) {
   // Solo admin
   const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
@@ -4048,18 +3966,9 @@ const FOUNDER_TOTAL = 100;            // posti Founder totali
 const ANNUAL_FOUNDER_AMOUNT = 1999;   // €19,99 — primi 100, bloccato a vita
 const ANNUAL_STANDARD_AMOUNT = 2499;  // €24,99 — dopo i primi 100
 
-// ── Premium VPN ────────────────────────────────────────────────────────────────
-const FOUNDER_PREMIUM_TOTAL = 100;          // posti Founder Premium separati
-const PREMIUM_MONTHLY_AMOUNT = 499;         // €4,99
-const PREMIUM_ANNUAL_FOUNDER_AMOUNT = 2999; // €29,99 — 1° anno
-const PREMIUM_ANNUAL_STD_AMOUNT    = 4999;  // €49,99 — dopo Founder o standard
 const PRICE_CONFIG = {
   monthly:  { amount: 299,                    plan: "monthly",  recurring: "month", founder: false, tier: "pro" },
   annual:   { amount: ANNUAL_FOUNDER_AMOUNT,  plan: "annual",   recurring: "year",  founder: true,  tier: "pro" },
-  // Premium VPN plans
-  premium_monthly:          { amount: PREMIUM_MONTHLY_AMOUNT,         plan: "premium_monthly",          recurring: "month", founder: false, tier: "premium" },
-  premium_annual:           { amount: PREMIUM_ANNUAL_STD_AMOUNT,      plan: "premium_annual",           recurring: "year",  founder: false, tier: "premium" },
-  premium_annual_founder:   { amount: PREMIUM_ANNUAL_FOUNDER_AMOUNT,  plan: "premium_annual_founder",   recurring: "year",  founder: true,  tier: "premium" },
 };
 
 // Conta i posti Founder REALMENTE occupati (dati reali da D1). Auto-crea la tabella.
@@ -4072,34 +3981,6 @@ async function getFounderCount(env) {
   } catch (e) {
     return null;
   }
-}
-
-// Conta i posti Founder Premium REALMENTE occupati (tabella separata da Pro).
-async function getFounderPremiumCount(env) {
-  try {
-    await env.DB.prepare("CREATE TABLE IF NOT EXISTS founder_premium_seats (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, stripe_session_id TEXT UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)").run();
-    const row = await env.DB.prepare("SELECT COUNT(*) AS n FROM founder_premium_seats").first();
-    return row ? (row.n || 0) : 0;
-  } catch (e) {
-    return null;
-  }
-}
-
-// Endpoint pubblico: stato reale dei posti Founder Premium (pool separato da Pro).
-async function handleFounderPremiumStatus(env) {
-  const count = await getFounderPremiumCount(env);
-  const taken = (count === null) ? FOUNDER_PREMIUM_TOTAL : count;
-  const remaining = Math.max(0, FOUNDER_PREMIUM_TOTAL - taken);
-  return jsonResponse({
-    active: remaining > 0,
-    taken,
-    remaining,
-    total: FOUNDER_PREMIUM_TOTAL,
-    founder_price: PREMIUM_ANNUAL_FOUNDER_AMOUNT / 100,
-    annual_standard: PREMIUM_ANNUAL_STD_AMOUNT / 100,
-    monthly: PREMIUM_MONTHLY_AMOUNT / 100,
-    currency: "EUR",
-  });
 }
 
 // Endpoint pubblico: stato reale dei posti Founder per il sito (counter X/100 + prezzo annuale).
@@ -4132,42 +4013,25 @@ async function handleCreateCheckout(body, env) {
   const priceConfig = PRICE_CONFIG[plan];
   if (!priceConfig) return jsonResponse({ error: "Invalid plan" }, 400);
 
-  const tier = priceConfig.tier || "pro";   // 'pro' | 'premium'
-  const isPremium = tier === "premium";
-  const devices = isPremium ? 3 : 3;        // piano unico: fino a 3 dispositivi
+  const tier = priceConfig.tier || "pro";   // 'pro'
+  const devices = 3;                        // piano unico: fino a 3 dispositivi
   let amount = priceConfig.amount;
   let isFounder = false;
   let productName;
 
-  if (isPremium) {
-    // ── Premium VPN ──────────────────────────────────────────────────────────
-    // Gating Founder AUTHORITATIVE lato server.
-    if (plan === "premium_annual_founder") {
-      const count = await getFounderPremiumCount(env);
-      const seatsLeft = (count === null) ? 0 : Math.max(0, FOUNDER_PREMIUM_TOTAL - count);
-      if (seatsLeft <= 0) return jsonResponse({ error: "Founder Premium seats are sold out." }, 409);
-      isFounder = true;
-      productName = "AdOff Premium VPN — Annuale (Founder)";
-    } else {
-      productName = plan === "premium_monthly"
-        ? "AdOff Premium VPN — Mensile"
-        : "AdOff Premium VPN — Annuale";
+  // ── Pro ─────────────────────────────────────────────────────────────────────
+  if (plan === "annual" || plan === "lifetime") {
+    const count = await getFounderCount(env);
+    const seatsLeft = (count === null) ? 0 : Math.max(0, FOUNDER_TOTAL - count);
+    if (plan === "annual") {
+      if (seatsLeft > 0) { amount = ANNUAL_FOUNDER_AMOUNT; isFounder = true; productName = "AdOff Pro — Annuale (Founder)"; }
+      else { amount = ANNUAL_STANDARD_AMOUNT; isFounder = false; productName = "AdOff Pro — Annuale"; }
+    } else { // lifetime
+      if (seatsLeft <= 0) return jsonResponse({ error: "Founder Lifetime offer is sold out." }, 409);
+      isFounder = true; productName = "AdOff Founder Lifetime";
     }
   } else {
-    // ── Pro (esistente) ─────────────────────────────────────────────────────
-    if (plan === "annual" || plan === "lifetime") {
-      const count = await getFounderCount(env);
-      const seatsLeft = (count === null) ? 0 : Math.max(0, FOUNDER_TOTAL - count);
-      if (plan === "annual") {
-        if (seatsLeft > 0) { amount = ANNUAL_FOUNDER_AMOUNT; isFounder = true; productName = "AdOff Pro — Annuale (Founder)"; }
-        else { amount = ANNUAL_STANDARD_AMOUNT; isFounder = false; productName = "AdOff Pro — Annuale"; }
-      } else { // lifetime
-        if (seatsLeft <= 0) return jsonResponse({ error: "Founder Lifetime offer is sold out." }, 409);
-        isFounder = true; productName = "AdOff Founder Lifetime";
-      }
-    } else {
-      productName = "AdOff Pro — " + plan.charAt(0).toUpperCase() + plan.slice(1);
-    }
+    productName = "AdOff Pro — " + plan.charAt(0).toUpperCase() + plan.slice(1);
   }
 
   const isRecurring = priceConfig.recurring !== null;
@@ -4183,13 +4047,9 @@ async function handleCreateCheckout(body, env) {
   }
   params.append("line_items[0][quantity]", "1");
   params.append("mode", isRecurring ? "subscription" : "payment");
-  params.append("success_url", isPremium
-    ? "https://adoff.app/success?session_id={CHECKOUT_SESSION_ID}&tier=premium"
-    : "https://adoff.app/success?session_id={CHECKOUT_SESSION_ID}");
+  params.append("success_url", "https://adoff.app/success?session_id={CHECKOUT_SESSION_ID}");
   params.append("cancel_url", "https://adoff.app/#pricing");
-  params.append("custom_text[submit][message]", isPremium
-    ? "AdOff Premium — AdBlock Pro + VPN integrata"
-    : "AdOff Pro — Ads? Off!");
+  params.append("custom_text[submit][message]", "AdOff Pro — Ads? Off!");
 
   // Lingua checkout — sincronizzata con la lingua selezionata sul sito
   const STRIPE_LOCALES = ['auto','bg','cs','da','de','el','en','es','et','fi','fil','fr','hr','hu','id','it','ja','ko','lt','lv','ms','mt','nb','nl','pl','pt','ro','ru','sk','sl','sv','th','tr','vi','zh'];
@@ -4301,16 +4161,13 @@ async function handleStripeWebhook(request, env) {
 
     // Determina piano e tier: prima da metadata (source of truth), poi da price ranges
     const metadataPlan = session.metadata?.plan || null;
-    const metadataTier = session.metadata?.tier || null; // 'pro' | 'premium'
+    const metadataTier = session.metadata?.tier || null; // 'pro'
     let plan = metadataPlan;
     let tier = metadataTier || "pro";
 
     if (!plan) {
-      // Fallback: deduce dal price range (legacy webhook per checkout creati pre-premium)
+      // Fallback: deduce dal price range (legacy webhook per checkout creati pre-metadata)
       const PLAN_PRICE_RANGES = [
-        { plan: "premium_monthly",          minCents: 400,  maxCents: 599,  tier: "premium" },
-        { plan: "premium_annual_founder",    minCents: 2600, maxCents: 3499, tier: "premium" },
-        { plan: "premium_annual",           minCents: 4000, maxCents: 5999, tier: "premium" },
         { plan: "monthly",                  minCents: 1,    maxCents: 399,  tier: "pro" },
         { plan: "annual",                   minCents: 400,  maxCents: 6999, tier: "pro" },
         { plan: "lifetime",                 minCents: 7000, maxCents: Infinity, tier: "pro" },
@@ -4350,10 +4207,10 @@ async function handleStripeWebhook(request, env) {
 
     // Numero dispositivi: da metadata.devices (source of truth), default 3
     const devices = parseInt(session.metadata?.devices) || 3;
-    const PLAN_MONTHS = { monthly: 1, annual: 12, lifetime: 0, premium_monthly: 1, premium_annual: 12, premium_annual_founder: 12 };
+    const PLAN_MONTHS = { monthly: 1, annual: 12, lifetime: 0 };
     let months = PLAN_MONTHS[plan] !== undefined ? PLAN_MONTHS[plan] : 1;
 
-    // Genera license key — payload include tier per gating VPN
+    // Genera license key — payload include tier
     const now = Math.floor(Date.now() / 1000);
     const expires = plan === "lifetime" ? 0 : now + (months * 30 * 86400);
     const payload = { c: now, d: devices, e: email, p: plan, t: tier, v: 1, x: expires };
@@ -4395,7 +4252,7 @@ async function handleStripeWebhook(request, env) {
 
     const customerId = session.customer || "";
 
-    // Salva nel KV — tier per gating VPN
+    // Salva nel KV — tier
     await env.ADOFF_LICENSES.put(`lic:${raw}`, JSON.stringify({
       key,
       raw,
@@ -4413,20 +4270,13 @@ async function handleStripeWebhook(request, env) {
     // Salva mapping key->raw per lookup
     await env.ADOFF_LICENSES.put(`key:${key}`, raw);
 
-    // Founder seat — Pro e Premium hanno pool separati
+    // Founder seat
     if (session.metadata?.founder === "1") {
       try {
-        if (tier === "premium") {
-          // Pool separato founder_premium_seats
-          await env.DB.prepare("CREATE TABLE IF NOT EXISTS founder_premium_seats (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, stripe_session_id TEXT UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)").run();
-          await env.DB.prepare("INSERT OR IGNORE INTO founder_premium_seats (email, stripe_session_id) VALUES (?, ?)")
-            .bind(email, session.id).run();
-        } else {
-          // Pool Pro esistente
-          await env.DB.prepare("CREATE TABLE IF NOT EXISTS founder_seats (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, plan TEXT, stripe_session_id TEXT UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)").run();
-          await env.DB.prepare("INSERT OR IGNORE INTO founder_seats (email, plan, stripe_session_id) VALUES (?, ?, ?)")
-            .bind(email, plan, session.id).run();
-        }
+        // Pool Pro
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS founder_seats (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, plan TEXT, stripe_session_id TEXT UNIQUE, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)").run();
+        await env.DB.prepare("INSERT OR IGNORE INTO founder_seats (email, plan, stripe_session_id) VALUES (?, ?, ?)")
+          .bind(email, plan, session.id).run();
       } catch (e) {
         // Giusto non bloccare l'emissione della licenza per un conteggio, ma il
         // silenzio totale significa che i posti registrati divergono dai pagamenti
@@ -4516,29 +4366,15 @@ async function handleStripeWebhook(request, env) {
     // Notifica vendita su Telegram (thread Vendite & Rimborsi)
     const PLAN_LABELS = {
       monthly: "Mensile", annual: "Annuale", lifetime: "Lifetime",
-      premium_monthly: "Premium Mensile", premium_annual: "Premium Annuale", premium_annual_founder: "Premium Annuale (Founder)",
     };
     const planLabel = PLAN_LABELS[plan] || plan;
-    const vpnBadge = tier === "premium" ? " \u{1F5A5} VPN" : "";
-    const saleMsg = `\u{1F4B0} <b>Nuova vendita</b>${vpnBadge}\n` +
+    const saleMsg = `\u{1F4B0} <b>Nuova vendita</b>\n` +
       `\u{1F4B6} ${((amount || 0) / 100).toFixed(2)} ${(session.currency || "eur").toUpperCase()}\n` +
       `\u{1F4E6} ${escapeHtml(planLabel)} · ${devices} dispositiv${devices === 1 ? "o" : "i"}\n` +
       `\u{2709} ${escapeHtml(email || "—")}\n` +
       `\u{1F511} <code>${escapeHtml(key)}</code>` +
       (affiliateId ? `\n\u{1F91D} ref: ${escapeHtml(affiliateId)}` : "");
     await notifyTelegram(saleMsg, env, TELEGRAM_SALES_THREAD);
-
-    // VPN provisioning automatico per Premium — dopo la licenza
-    if (tier === "premium") {
-      const vpnDeviceId = session.metadata?.device_id || null; // null = provisioning on-demand la prima volta
-      const vpnIp = request.headers.get("CF-Connecting-IP") || null;
-      const vpnResult = await provisionVpnForCheckout(vpnDeviceId, email, vpnIp, env, customerId || null);
-      if (vpnResult.ok) {
-        console.log(`VPN provisioned for ${email}: accountId=${vpnResult.accountId}, alreadyExists=${!!vpnResult.alreadyExists}`);
-      } else {
-        console.error(`VPN provisioning failed for ${email}: ${vpnResult.error}`);
-      }
-    }
 
     return jsonResponse({ ok: true, message: "License created, account activated" });
   }
@@ -4576,31 +4412,6 @@ async function handleStripeWebhook(request, env) {
     const customerId = subscriptionObj.customer;
     const subscriptionId = subscriptionObj.id;
     if (customerId) {
-      // Cerca il tier di questa subscription per sapere se era Premium
-      let tier = "pro";
-      if (subscriptionObj.metadata?.tier === "premium") {
-        tier = "premium";
-      } else if (subscriptionId) {
-        try {
-          const subRes = await fetch("https://api.stripe.com/v1/subscriptions/" + subscriptionId, {
-            headers: { "Authorization": "Basic " + btoa(env.STRIPE_SECRET_KEY + ":") },
-          });
-          const subData = await subRes.json();
-          if (subData.metadata?.tier === "premium") tier = "premium";
-        } catch (_) { /* ignore */ }
-      }
-
-      // Disabilita VPN se Premium
-      if (tier === "premium") {
-        const vpnIp = request.headers.get("CF-Connecting-IP") || null;
-        const vpnResult = await disableVpnForCheckout(customerId, vpnIp, env);
-        if (vpnResult.ok) {
-          console.log(`VPN disabled for customer ${customerId}: accountId=${vpnResult.accountId}`);
-        } else if (!vpnResult.notFound) {
-          console.error(`VPN disable failed for ${customerId}: ${vpnResult.error}`);
-        }
-      }
-
       const { revoked, email: revokedEmail } = await revokeByCustomerId(customerId, env, type);
       if (revokedEmail) {
         const tmpl = EMAIL_TEMPLATES.cancelled(revokedEmail);
@@ -7486,7 +7297,7 @@ async function handleOAuthCallback(provider, request, env) {
     if (stateData) await env.ADOFF_LICENSES.delete(`oauth_state:${state}`);
   }
   if (!stateData || stateData.provider !== provider) return errorRedirect("invalid_state");
-  if (stateData.flow === "admin") errBase = "https://adoff.app/admin.html#error=";
+  if (stateData.flow === "admin") errBase = "https://adoff.app/admin#error=";
 
   try {
     // Exchange code for tokens
@@ -7619,13 +7430,13 @@ async function handleOAuthCallback(provider, request, env) {
 async function issueAdminOAuthSession(email, env) {
   const allowed = (env.ADMIN_GOOGLE_EMAIL || "").toLowerCase().trim();
   if (!allowed || email !== allowed) {
-    return Response.redirect("https://adoff.app/admin.html#error=not_authorized", 302);
+    return Response.redirect("https://adoff.app/admin#error=not_authorized", 302);
   }
   const sessionToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
     .map(b => b.toString(16).padStart(2, "0")).join("");
   const now = Date.now();
   await sessionPut(env, "admin", sessionToken, { token: sessionToken, username: "admin", email, via: "google", createdAt: now, expiresAt: now + 24 * 60 * 60 * 1000 }, 86400);
-  return Response.redirect("https://adoff.app/admin.html#token=" + encodeURIComponent(sessionToken), 302);
+  return Response.redirect("https://adoff.app/admin#token=" + encodeURIComponent(sessionToken), 302);
 }
 
 // =============================================
@@ -8579,18 +8390,6 @@ async function handleScheduled(env) {
     kvSnapshot = { ok: false, error: e.message };
   }
 
-  // VPN auto-disable (account inattivi >7gg + abbonamenti scaduti) — cron 10:00 UTC
-  let vpnCron = null;
-  try {
-    const fakeReq = new Request("https://api.adoff.app/vpn/auto-disable", {
-      headers: { "X-Admin-Token": env.ADMIN_TOKEN || "" },
-    });
-    const resp = await handleCronVpnAutoDisable(fakeReq, env);
-    vpnCron = await resp.json().catch(() => ({ ok: false }));
-  } catch (e) {
-    vpnCron = { ok: false, error: e.message };
-  }
-
   // GDPR retention 90gg: nav_stats, adleak_reports, uninstalls:log (privacy.html §15)
   let gdprPurge = null;
   try {
@@ -8599,7 +8398,7 @@ async function handleScheduled(env) {
     gdprPurge = { ok: false, error: e.message };
   }
 
-  return { reminders, expired, checked, gsc, kvSnapshot, vpnCron, gdprPurge };
+  return { reminders, expired, checked, gsc, kvSnapshot, gdprPurge };
 }
 
 // =============================================
@@ -9689,8 +9488,6 @@ async function handleAdminEdgeStatus(request, env) {
   });
 }
 
-// VPN functions moved after withCors definition below
-
 export default {
   // Cron trigger — eseguito da Cloudflare ogni giorno alle 09:00 UTC
   async scheduled(event, env, ctx) {
@@ -9872,6 +9669,7 @@ export default {
     // NOTE: /admin serves the same HTML as /panel (via Pages), but via worker+KV.
     // Keep no-cache headers so the CDN does not cache stale versions.
     if ((path === "/admin" || path === "/admin.html") && request.method === "GET") {
+      // /admin.html = legacy alias, rimanda alla console vera (nessuna pagina separata).
       // Cache edge dell'HTML admin: la read KV avviene solo su cache-miss (~1 volta
       // ogni ADMIN_HTML_CACHE_TTL), non a ogni richiesta. Evita di bruciare la quota
       // read KV free tier (100k/giorno) col traffico/monitor su /admin.
@@ -9984,7 +9782,6 @@ export default {
       return new Response(resp.body, { status: resp.status, headers: newHeaders });
     };
 
-    // VPN MODULE — tutto in vpn-module.js (estratto in FASE 0)
     // GET endpoints
     if (request.method === "GET") {
       if (path === "/stats") return withCors(handleStats(env));
@@ -10025,7 +9822,6 @@ export default {
       if (path === "/success") return withCors(handleSuccess(request, env));
       if (path === "/portal") return withCors(handlePortalSession(request, env));
       if (path === "/founder-status") return withCors(handleFounderStatus(env));
-      if (path === "/founder-status-premium") return withCors(handleFounderPremiumStatus(env));
       if (path === "/tickets") return withCors(handleListTickets(request, env));
       if (path === "/messages") return withCors(handleListMessageThreads(request, env));
       if (path.startsWith("/messages/")) return withCors(handleGetMessageThread(request, env, path.split("/messages/")[1]));
@@ -10044,11 +9840,6 @@ export default {
       if (path === "/oauth/microsoft/start") return handleOAuthStart("microsoft", env); // redirect — no CORS wrap
       if (path === "/oauth/google/callback") return handleOAuthCallback("google", request, env); // redirect — no CORS wrap
       if (path === "/oauth/microsoft/callback") return handleOAuthCallback("microsoft", request, env); // redirect — no CORS wrap
-      // VPN Reseller endpoints (GET) — modulo vpn-module.js
-      if (path === "/vpn/servers") return withCors(handleVpnServers(request, env));
-      if (path === "/vpn/profile") return withCors(handleVpnProfile(request, env));
-      if (path === "/vpn/config") return withCors(handleVpnGetConfig(request, env));
-      if (path === "/vpn/auto-disable") return withCors(handleCronVpnAutoDisable(request, env));
       // Fix 405: /verify-mobile-license era registrato solo come POST (riga ~8308),
       // il client mobile lo chiama in GET → lo gestiamo anche qui.
       if (path === "/verify-mobile-license" && request.method === "GET") {
@@ -10146,12 +9937,6 @@ export default {
       try { accBody = await request.json(); } catch { accBody = {}; }
       return withCors(handleAccountRemoveAll(accBody, env, request));
     }
-    if (path === "/get-vpn-token" && request.method === "POST") {
-      let body;
-      try { body = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
-      return withCors(handleGetVpnToken(body, env, request));
-    }
-
     // Checkout session (crea sessione Stripe con dark mode)
     if (path === "/newsletter" && request.method === "POST") {
       let nlBody = null;
@@ -10266,20 +10051,6 @@ export default {
     // GET endpoints (rules feed)
     if (path === "/rules/feed" && request.method === "GET") {
       return handleRulesFeed(env, request);
-    }
-
-    // VPN Reseller endpoints (POST) — modulo vpn-module.js con gating Premium
-    if (path === "/vpn/create" && request.method === "POST") {
-      return withCors(handleVpnCreateAccount(request, env));
-    }
-    if (path === "/vpn/delete" && request.method === "POST") {
-      return withCors(handleVpnDeleteAccount(request, env));
-    }
-    if (path === "/vpn/enable" && request.method === "POST") {
-      return withCors(handleVpnEnableDisable(request, env, true));
-    }
-    if (path === "/vpn/disable" && request.method === "POST") {
-      return withCors(handleVpnEnableDisable(request, env, false));
     }
 
     // POST endpoints

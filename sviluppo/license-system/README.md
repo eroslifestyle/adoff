@@ -39,7 +39,7 @@ Sistema proprietario di gestione licenze a 3 componenti:
 - Cache locale con fallback
 - Fingerprint dispositivo
 
-### 4. Admin Dashboard (`admin.html`)
+### 4. Admin Dashboard (`site/admin-console.html`, servita dal worker su `/admin`)
 - Genera nuove licenze
 - Visualizza tutte le licenze attive
 - Revoca licenze

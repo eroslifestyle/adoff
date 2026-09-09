@@ -35,7 +35,6 @@ MANIFESTS = [
 ]
 CONSOLE_COPIES = [
     ROOT / "site" / "admin-console.html",
-    ROOT / "sviluppo" / "license-system" / "admin.html",
 ]
 RULES_FILE = ROOT / "app" / "rules" / "adblock-rules.json"
 LITELLM_MODELS_URL = "http://127.0.0.1:4000/v1/models"
@@ -92,8 +91,8 @@ CONSOLE_SHARED_MARKERS = [
 
 def check_console_copies() -> None:
     present = [p for p in CONSOLE_COPIES if p.exists()]
-    if len(present) < 2:
-        warn("una delle due console admin non e' presente, salto il confronto")
+    if not present:
+        warn("console admin non presente, salto il controllo marker")
         return
     for marker, why in CONSOLE_SHARED_MARKERS:
         # Confini di parola, non sottostringa: con `in` un identificatore rinominato
@@ -105,7 +104,7 @@ def check_console_copies() -> None:
         if missing:
             fail(f"'{marker}' manca in {missing} — {why}")
         else:
-            ok(f"'{marker}' presente in entrambe le console")
+            ok(f"'{marker}' presente nella console admin")
 
 
 def check_llm_model() -> None:

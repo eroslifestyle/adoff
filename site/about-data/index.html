@@ -56,12 +56,12 @@
     <div class="data-card">
       <div class="label">GitHub stars</div>
       <div class="value"><span class="skeleton" id="gh-stars">…</span></div>
-      <div class="meta"><a href="https://github.com/eroslifestyle/adoff" style="color:var(--text-muted)">eroslifestyle/adoff</a> · open source</div>
+      <div class="meta"><a href="/r/repo" style="color:var(--text-muted)">AdOff</a> · open source</div>
     </div>
     <div class="data-card">
       <div class="label">Open issues</div>
       <div class="value"><span class="skeleton" id="gh-issues">…</span></div>
-      <div class="meta">public backlog · <a href="https://github.com/eroslifestyle/adoff/issues" style="color:var(--text-muted)">browse</a></div>
+      <div class="meta">public backlog · <a href="/r/issues" style="color:var(--text-muted)">browse</a></div>
     </div>
     <div class="data-card">
       <div class="label">Last commit</div>
@@ -116,7 +116,7 @@
 
   // 1) GitHub repo stats
   try {
-    const r = await fetch('https://api.github.com/repos/eroslifestyle/adoff', {cache: 'no-store'});
+    const r = await fetch('/r/api/repo', {cache: 'no-store'});
     const d = await r.json();
     document.getElementById('gh-stars').textContent = d.stargazers_count ?? 0;
     document.querySelector('#gh-stars').classList.remove('skeleton');

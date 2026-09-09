@@ -50,12 +50,12 @@
     <div class="data-card">
       <div class="label">Stelle GitHub</div>
       <div class="value"><span class="skeleton" id="gh-stars">…</span></div>
-      <div class="meta"><a href="https://github.com/eroslifestyle/adoff" style="color:var(--text-muted)">eroslifestyle/adoff</a> · open source</div>
+      <div class="meta"><a href="/r/repo" style="color:var(--text-muted)">AdOff</a> · open source</div>
     </div>
     <div class="data-card">
       <div class="label">Issue aperte</div>
       <div class="value"><span class="skeleton" id="gh-issues">…</span></div>
-      <div class="meta">backlog pubblico · <a href="https://github.com/eroslifestyle/adoff/issues" style="color:var(--text-muted)">sfoglia</a></div>
+      <div class="meta">backlog pubblico · <a href="/r/issues" style="color:var(--text-muted)">sfoglia</a></div>
     </div>
     <div class="data-card">
       <div class="label">Ultimo commit</div>
@@ -107,7 +107,7 @@
 (async () => {
   document.getElementById('stamp').textContent = new Date().toISOString().replace('T',' ').slice(0,19) + ' UTC';
   try {
-    const r = await fetch('https://api.github.com/repos/eroslifestyle/adoff', {cache: 'no-store'});
+    const r = await fetch('/r/api/repo', {cache: 'no-store'});
     const d = await r.json();
     document.getElementById('gh-stars').textContent = d.stargazers_count ?? 0;
     document.querySelector('#gh-stars').classList.remove('skeleton');

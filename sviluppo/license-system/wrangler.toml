@@ -12,8 +12,7 @@ routes = [
   { pattern = "api.adoff.app/*", zone_name = "adoff.app" },
   { pattern = "adoff.app/api/*", zone_name = "adoff.app" },
   { pattern = "adoff.app/admin", zone_name = "adoff.app" },
-  { pattern = "adoff.app/admin/*", zone_name = "adoff.app" },
-  { pattern = "adoff.app/admin.html", zone_name = "adoff.app" }
+  { pattern = "adoff.app/admin/*", zone_name = "adoff.app" }
 ]
 
 # KV Namespace — crearlo prima con:
@@ -41,7 +40,6 @@ bucket_name = "adoff-support-attachments"
 # wrangler secret put STRIPE_WEBHOOK_SECRET
 # wrangler secret put ADOFF_TRIAL_PRIVKEY   # ECDSA P-256 PKCS8 b64 — firma token /trial
 # wrangler secret put ADOFF_LICENSE_PRIVKEY # ECDSA P-256 PKCS8 b64 — firma token licenza Premium (stessa JWK di TRIAL_MOBILE_PUBKEY_JWK)
-# wrangler secret put VPNRESELLERS_API_KEY  # API key VPNresellers.com (valore in ~/.secrets/adoff-stores.env)
 
 # Cron trigger:
 # 0 */4 — SOLO controllo heartbeat monitor (worker.js discrimina via event.cron):
@@ -49,6 +47,5 @@ bucket_name = "adoff-support-attachments"
 #         un monitor morto restava muto.
 # 09:00 UTC — controllo scadenze licenze
 # 03:00 UTC — snapshot KV → D1
-# 10:00 UTC — VPN auto-disable (account inattivi >7gg + abbonamenti scaduti)
 [triggers]
-crons = ["0 9 * * *", "0 3 * * *", "0 10 * * *", "0 */4 * * *"]
+crons = ["0 9 * * *", "0 3 * * *", "0 */4 * * *"]

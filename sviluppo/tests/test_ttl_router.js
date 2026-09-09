@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-// Verifica la logica TTL di loadPage (site/admin-console.html e
-// sviluppo/license-system/admin.html): il timestamp deve segnare l'ultimo
+// Verifica la logica TTL di loadPage (site/admin-console.html): il timestamp deve segnare l'ultimo
 // CARICAMENTO, non l'ultima visita — altrimenti rientri frequenti slittano
 // il TTL in avanti e i dati non si aggiornano mai.
 // Solo assert, nessun framework. Esecuzione: node sviluppo/tests/test_ttl_router.js

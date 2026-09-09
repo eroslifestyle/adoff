@@ -130,9 +130,8 @@ Per usare `api.adoff.app` invece dell'URL workers.dev:
 # Dalla root del progetto
 # Crea la cartella del sito
 mkdir -p site
-# Copia admin nella cartella site
-cp sviluppo/license-system/admin.html site/admin.html
-# Crea index.html (landing page — da creare)
+# La console admin è site/admin-console.html (servita dal worker su /admin).
+# Il vecchio sviluppo/license-system/admin.html è stato ELIMINATO: non ricrearlo.
 
 # Deploy su Cloudflare Pages
 wrangler pages deploy site --project-name=adoff-site

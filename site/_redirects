@@ -2,6 +2,20 @@
 # solo il PATH, non l'hostname: provato e verificato, www continuava a dare 200.
 # Va creato come Redirect Rule di zona nel dashboard Cloudflare.
 
+# GitHub — indirezione brandizzata (privacy: l'account personale del developer
+# NON deve comparire nei sorgenti/pagine). Se il repo migra a un'org GitHub,
+# cambia SOLO questo blocco, non le pagine.
+# NOTA: deve stare SOPRA /r/:code — in Pages vince la prima regola che matcha.
+/r/apk        https://github.com/eroslifestyle/adoff/releases/download/v1.0.0/app-release.apk  301
+/r/rules      https://github.com/eroslifestyle/adoff/blob/main/app/rules/adblock-rules.json  301
+/r/github     https://github.com/eroslifestyle  301
+/r/api/repo   https://api.github.com/repos/eroslifestyle/adoff  301
+/r/repo       https://github.com/eroslifestyle/adoff  301
+/r/issues/new https://github.com/eroslifestyle/adoff/issues/new  301
+/r/issues     https://github.com/eroslifestyle/adoff/issues  301
+/r/releases/v1.0.0 https://github.com/eroslifestyle/adoff/releases/tag/v1.0.0  301
+/r/releases   https://github.com/eroslifestyle/adoff/releases  301
+
 /r/:code  /?ref=:code  302
 
 # VPN pages archived 2026-08-20 (product discontinued)

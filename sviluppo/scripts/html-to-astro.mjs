@@ -34,7 +34,7 @@ const DRY = ARGS.includes('--dry');
 const ONLY = ARGS.find((a, i, arr) => arr[i - 1] === '--only');
 
 const LANGS = ['it','en','de','fr','es','pt','ru','ar','zh','hi','ja','ko','tr','id','pl'];
-const SKIP_FILES = new Set(['admin.html', 'mgmt-9f4a/index.html']);
+const SKIP_FILES = new Set(['admin-console.html', 'mgmt-9f4a/index.html']);
 const SKIP_DIRS = new Set(['account', 'graphify-out', 'i18n', 'assets', 'blog/_archive', '.claude']);
 
 function jsonStr(s) {

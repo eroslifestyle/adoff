@@ -51,7 +51,7 @@ Lo script:
 1. **Checkout reale di prova** (carta vera o tua): apri il flusso acquisto dal sito/estensione → completa.
 2. Conferma sul dashboard Stripe (Live) che il pagamento appare.
 3. Conferma email di attivazione account ricevuta (Resend).
-4. Conferma licenza creata (admin panel `adoff.app/admin.html`).
+4. Conferma licenza creata (admin panel `adoff.app/admin`).
 5. Stripe dashboard → Webhooks → l'evento `checkout.session.completed` risulta **200**.
 
 ## Rollback

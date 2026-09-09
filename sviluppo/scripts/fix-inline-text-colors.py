@@ -136,7 +136,7 @@ def main() -> None:
         sys.exit(1)
 
     # Pagine dark-only per design (admin) — NON renderle tema-aware.
-    DARK_ONLY = {"panel.html", "admin-console.html", "admin.html"}
+    DARK_ONLY = {"panel.html", "admin-console.html"}
 
     files = sorted(site_root.rglob("*.html"))
     changed_files, changed_total = 0, 0
