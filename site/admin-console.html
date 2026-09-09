@@ -279,6 +279,12 @@ tr:hover td{background:rgba(124,92,252,.04)}
       <div class="nav-item active" data-page="stats" onclick="navTo('stats')">
         <span class="nav-icon">📊</span><span>Statistiche</span>
       </div>
+      <div class="nav-item" data-page="efficacia" onclick="navTo('efficacia')">
+        <span class="nav-icon">🛡️</span><span>Efficacia</span>
+      </div>
+      <div class="nav-item" data-page="registrazioni" onclick="navTo('registrazioni')">
+        <span class="nav-icon">🆓</span><span>Registrazioni</span>
+      </div>
       <div class="nav-item" data-page="seoagent" onclick="navTo('seoagent')">
         <span class="nav-icon">🤖</span><span>Agente SEO</span>
       </div>
@@ -723,6 +729,68 @@ tr:hover td{background:rgba(124,92,252,.04)}
           </div>
         </div>
         <div id="autofix-empty" style="display:none;text-align:center;padding:32px 16px;color:var(--muted);font-size:13px">Nessun leak in questo bucket.</div>
+      </div>
+    </div>
+
+    <!-- PAGE: EFFICACIA -->
+    <div class="page" id="page-efficacia">
+      <div class="stats-grid" id="eff-kpis">
+        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+      </div>
+
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Installazioni vs Disinstallazioni · ultimi 30 giorni</div>
+          <div class="chart-wrap"><canvas id="effTrendChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Retention curve (utenti attivi a N giorni dall'installazione)</div>
+          <div id="effRetention"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Quanto durano le installazioni (coorti di giorni)</div>
+          <div id="effCohorts"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Motivi di disinstallazione · ultimi 30 giorni</div>
+          <div id="effReasons"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">🎯 Dove perdiamo secondo gli utenti · telemetria opt-in (30 giorni)</div>
+          <div id="effUserLeaks"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🤖 Dove perdiamo secondo i nostri test · crawler ad-leak</div>
+          <div id="effTestLeaks"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🗂️ Storico run ad-leak (ultimi 20)</div>
+        <div id="effRuns"><div class="loading-center"><div class="loader"></div></div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: REGISTRAZIONI (gate gratuito: 30gg liberi, poi account gratuito — nessun pagamento) -->
+    <div class="page" id="page-registrazioni">
+      <div class="stats-grid" id="reg-kpis">
+        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Nuovi dispositivi e nuovi account gratuiti · 30 giorni</div>
+        <div class="chart-wrap"><canvas id="regTrendChart"></canvas></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Dispositivi recenti</div>
+        <div id="regRecent"><div class="loading-center"><div class="loader"></div></div></div>
       </div>
     </div>
 
@@ -1187,7 +1255,7 @@ async function init() {
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────
-const PAGE_TITLES = { stats:"Statistiche", seoagent:"Agente SEO", licenses:"Licenze", finance:"Finanza", outreach:"Outreach", support:"Supporto", suggestions:"Suggerimenti", messages:"Messaggi", chat:"Chat AI", settings:"Impostazioni" };
+const PAGE_TITLES = { stats:"Statistiche", efficacia:"Efficacia", registrazioni:"Registrazioni", seoagent:"Agente SEO", licenses:"Licenze", finance:"Finanza", outreach:"Outreach", support:"Supporto", suggestions:"Suggerimenti", messages:"Messaggi", chat:"Chat AI", settings:"Impostazioni" };
 
 function navTo(page) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
@@ -1228,6 +1296,8 @@ function loadPage(page, force = false) {
   else if (page === "finance") loadFinance(force);
   else if (page === "analytics") loadAnalytics(force);
   else if (page === "stats") { loadStats(force); loadSeo(); }
+  else if (page === "efficacia") loadEfficacia(force);
+  else if (page === "registrazioni") loadRegistrazioni(force);
   else if (page === "seoagent") loadSeoAgent(force);
   else if (page === "outreach") loadOutreach(force);
   else if (page === "support") loadTickets(force);
@@ -2059,6 +2129,179 @@ async function loadStats(force = false) {
     : `<div class="empty"><div class="empty-icon">📭</div><p>Nessuna disinstallazione registrata (l'estensione v3.5.3 inizia a raccoglierle dopo l'approvazione store)</p></div>`;
 
   statsLoaded = true;
+}
+
+// ── EFFICACIA ────────────────────────────────────────────────
+let effLoaded = false;
+
+function effEmpty(icon, msg) {
+  return `<div class="empty"><div class="empty-icon">${icon}</div><p>${msg}</p></div>`;
+}
+
+const EFF_ENDPOINT_PENDING = "Endpoint non ancora disponibile: il dato apparirà qui appena attivo.";
+
+async function loadEfficacia(force = false) {
+  if (effLoaded && !force) return;
+  document.getElementById("eff-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>`;
+
+  const [ops, unan, ret, leak, runs] = await Promise.all([
+    api("/admin/ops-stats"),
+    api("/admin/uninstall-analytics"),
+    api("/admin/retention"),
+    api("/admin/adleak-latest"),
+    api("/admin/adleak-runs?limit=20"),
+  ]);
+
+  // KPI: dai soli endpoint storici (ops-stats/retention), che esistono già.
+  const rs = ret.summary || {};
+  document.getElementById("eff-kpis").innerHTML = `
+    ${sc("Dispositivi attivi", ops.activeTotal ?? 0, "green")}
+    ${sc("Adozione telemetria opt-in", (ops.optInAdoption ?? 0) + "%", "")}
+    ${sc("Tasso disinstallazione", (rs.uninstallRate ?? 0) + "%", "red")}
+    ${rs.avgDaysToUninstall != null ? sc("Giorni medi prima della disinstallazione", Math.round(rs.avgDaysToUninstall), "gold") : ""}
+  `;
+
+  // Trend install vs uninstall (30 giorni)
+  const iT = (ops.installTrend || []).slice(-30);
+  const uT = (ops.uninstallTrend || []).slice(-30);
+  const dayMap = m => Object.fromEntries((m || []).map(x => [x.day, x.count]));
+  const uByDay = dayMap(uT);
+  const labels = iT.map(x => x.day?.slice(5) || "");
+  if (labels.length) {
+    mkChart("effTrendChart", "line", labels, [
+      { label: "Installazioni", data: iT.map(x => x.count), borderColor: "#4ade80", backgroundColor: "rgba(74,222,128,.15)", fill: true, tension: .35, pointRadius: 2 },
+      { label: "Disinstallazioni", data: iT.map(x => uByDay[x.day] || 0), borderColor: "#f43f5e", backgroundColor: "rgba(244,63,94,.12)", fill: true, tension: .35, pointRadius: 2 },
+    ], { legend: true });
+  }
+
+  // Retention curve
+  const curve = ret.retentionCurve || [];
+  document.getElementById("effRetention").innerHTML = curve.length
+    ? barList(curve.map(c => ({ label: `Utenti attivi a ${c.days} giorni`, value: c.rate })), { color: "var(--accent)", icon: "📈", suffix: "%", empty: "Nessun dato retention" })
+    : effEmpty("📈", "Nessun dato retention");
+
+  // Coorti durata installazione (uninstall-analytics)
+  const cohort = unan.cohort || [];
+  document.getElementById("effCohorts").innerHTML = cohort.length
+    ? barList(cohort.map(c => ({ label: c.bucket, value: c.count })), { color: "var(--danger)", icon: "⏳", empty: "Nessuna disinstallazione tracciata" })
+    : effEmpty("⏳", "Ancora nessuna disinstallazione tracciata");
+
+  // Motivi disinstallazione (trend 30d)
+  const r30 = (unan.reasonTrend && unan.reasonTrend["30d"]) || {};
+  const reasons = Object.entries(r30).map(([k, v]) => ({ label: REASON_LABELS[k] || k, value: v })).sort((a, b) => b.value - a.value);
+  document.getElementById("effReasons").innerHTML = reasons.length
+    ? barList(reasons, { color: "var(--danger)", icon: "🙋", empty: "Nessun dato motivo" })
+    : effEmpty("🙋", "Nessun motivo registrato negli ultimi 30 giorni");
+
+  // ── Le due misure affiancate ──
+  // 1) Telemetria utenti: topLeakHostnames
+  const hosts = ops.topLeakHostnames || [];
+  document.getElementById("effUserLeaks").innerHTML = hosts.length
+    ? `<div class="table-wrap"><table>
+        <thead><tr><th>Dominio</th><th style="text-align:right">Occorrenze (30g)</th></tr></thead>
+        <tbody>${hosts.map(h => `<tr>
+          <td style="font-family:monospace;font-size:12px">${esc(h.hostname)}</td>
+          <td style="text-align:right;font-weight:600">${(h.total || 0).toLocaleString()}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>`
+    : effEmpty("📭", ops.ok ? "Nessun ad-leak segnalato dalla telemetria (ottimo)" : "Telemetria non disponibile: " + (ops.error || "nessun dato"));
+
+  // 2) Nostri test automatici: adleak-latest (endpoint nuovo: 404 = stato vuoto legittimo)
+  const testEl = document.getElementById("effTestLeaks");
+  const doms = (leak && leak.ok && Array.isArray(leak.domains)) ? leak.domains : null;
+  if (!doms) {
+    testEl.innerHTML = effEmpty("🤖", leak && leak.error && leak.error !== "Not found" ? ("Errore: " + esc(leak.error)) : "Nessun run del crawler disponibile ancora. " + EFF_ENDPOINT_PENDING);
+  } else if (!doms.length) {
+    testEl.innerHTML = effEmpty("✅", `Ultimo run (${esc(leak.extensionVersion || "?")}): ${leak.domainsTested ?? 0} domini testati, nessun leak. Ottimo.`);
+  } else {
+    testEl.innerHTML = `
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
+        Run ${esc(leak.runId || "")} · ${fmtDate((leak.finishedAt || leak.startedAt || 0) / 1000)} · versione ${esc(leak.extensionVersion || "?")} ·
+        ${leak.domainsTested ?? 0} domini testati · <b style="color:var(--danger)">${leak.domainsWithLeak ?? doms.length} con leak</b> · ${leak.totalLeaks ?? 0} leak totali
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Dominio</th><th style="text-align:right">Richieste</th><th style="text-align:right">Leak</th><th>Rilevato</th><th>Esito</th></tr></thead>
+        <tbody>${doms.map(d => `<tr>
+          <td style="font-family:monospace;font-size:12px">${esc(d.domain)}</td>
+          <td style="text-align:right">${(d.requests ?? 0).toLocaleString()}</td>
+          <td style="text-align:right;font-weight:600;color:var(--danger)">${d.leaks ?? 0}</td>
+          <td>${d.detection ? '<span style="color:#fbbf24">🚫 Sì</span>' : '<span style="color:var(--muted)">No</span>'}</td>
+          <td style="color:var(--muted);font-size:11px">${d.error ? "⚠️ " + esc(d.error) : (d.httpStatus != null ? "HTTP " + d.httpStatus : "–")}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>`;
+  }
+
+  // Storico run (endpoint nuovo: 404 = stato vuoto legittimo)
+  const runsArr = (runs && Array.isArray(runs.runs)) ? runs.runs : (Array.isArray(runs) ? runs : []);
+  document.getElementById("effRuns").innerHTML = runsArr.length
+    ? `<div class="table-wrap"><table>
+        <thead><tr><th>Data</th><th>Versione</th><th style="text-align:right">Domini testati</th><th style="text-align:right">Con leak</th><th style="text-align:right">Leak totali</th></tr></thead>
+        <tbody>${runsArr.map(r => `<tr>
+          <td style="color:var(--muted)">${fmtDate((r.finishedAt || r.startedAt || 0) / 1000)}</td>
+          <td>${esc(r.extensionVersion || r.version || "–")}</td>
+          <td style="text-align:right">${(r.domainsTested ?? 0).toLocaleString()}</td>
+          <td style="text-align:right">${(r.domainsWithLeak ?? 0).toLocaleString()}</td>
+          <td style="text-align:right;font-weight:600">${(r.totalLeaks ?? 0).toLocaleString()}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>`
+    : effEmpty("🗂️", "Nessuno storico disponibile. " + EFF_ENDPOINT_PENDING);
+
+  effLoaded = true;
+}
+
+// ── REGISTRAZIONI (gate gratuito — MAI suggerire pagamenti/abbonamenti) ──
+let regLoaded = false;
+
+const REG_STATUS = {
+  grace: '<span style="color:#fbbf24">🕐 In grazia (uso libero)</span>',
+  registered: '<span style="color:#4ade80">✅ Account gratuito attivo</span>',
+  expired: '<span style="color:var(--danger)">⏰ Scaduto — basta registrarsi gratis</span>',
+};
+
+async function loadRegistrazioni(force = false) {
+  if (regLoaded && !force) return;
+  document.getElementById("reg-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>`;
+
+  const d = await api("/admin/free-licenses");
+  if (!d.ok || !d.summary) {
+    const msg = d.error && d.error !== "Not found" ? ("Errore: " + esc(d.error)) : ("Nessun dato ancora. " + EFF_ENDPOINT_PENDING);
+    document.getElementById("reg-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1">${effEmpty("🆓", msg)}</div>`;
+    document.getElementById("regRecent").innerHTML = effEmpty("📭", msg);
+    if (charts.regTrendChart) { charts.regTrendChart.destroy(); delete charts.regTrendChart; }
+    return;
+  }
+
+  const s = d.summary || {};
+  document.getElementById("reg-kpis").innerHTML = `
+    ${sc("Dispositivi totali", s.total ?? 0, "")}
+    ${sc("In grazia (uso libero)", s.inGrace ?? 0, "gold")}
+    ${sc("Con account gratuito", s.registered ?? 0, "green")}
+    ${sc("Grazia in scadenza", s.graceExpiringSoon ?? 0, "gold")}
+    ${sc("Scaduti senza registrarsi", s.expired ?? 0, "red")}
+  `;
+
+  const trend = d.trend || [];
+  if (trend.length) {
+    mkChart("regTrendChart", "line", trend.map(t => t.day?.slice(5) || ""), [
+      { label: "Nuovi dispositivi", data: trend.map(t => t.newDevices || 0), borderColor: "#7c5cfc", backgroundColor: "rgba(124,92,252,.15)", fill: true, tension: .35, pointRadius: 2 },
+      { label: "Nuovi account gratuiti", data: trend.map(t => t.newAccounts || 0), borderColor: "#4ade80", backgroundColor: "rgba(74,222,128,.15)", fill: true, tension: .35, pointRadius: 2 },
+    ], { legend: true });
+  }
+
+  const recent = (d.recent || []).slice(0, 50);
+  document.getElementById("regRecent").innerHTML = recent.length
+    ? `<div class="table-wrap"><table>
+        <thead><tr><th>Dispositivo</th><th>Inizio grazia</th><th>Account collegato</th><th>Stato</th></tr></thead>
+        <tbody>${recent.map(r => `<tr>
+          <td style="font-family:monospace;font-size:12px;color:var(--muted)">${esc(String(r.deviceId || "").slice(0, 12))}…</td>
+          <td style="color:var(--muted)">${r.gateStart ? fmtDate(r.gateStart / 1000) : "–"}</td>
+          <td style="color:var(--muted)">${r.accountId ? esc(r.accountId) : "–"}</td>
+          <td>${REG_STATUS[r.status] || esc(r.status || "–")}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>`
+    : effEmpty("📭", "Nessun dispositivo registrato ancora");
+
+  regLoaded = true;
 }
 
 // ── SEO / AEO ────────────────────────────────────────────────
