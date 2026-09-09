@@ -1406,7 +1406,7 @@ async function handleLinkDevice(body, env, request) {
   ).first()) || { c: 0 }).c;
   const tgThread = Number.isInteger(parseInt(env.TELEGRAM_THREAD_REGISTRATIONS, 10))
     ? parseInt(env.TELEGRAM_THREAD_REGISTRATIONS, 10)
-    : TELEGRAM_SUPPORT_THREAD;
+    : await getOpsThreadId(env); // fallback: thread degli alert (stesso di /admin/notify), mai il canale pubblico
   const tgVersion = typeof body?.extensionVersion === "string" && body.extensionVersion
     ? body.extensionVersion.slice(0, 32) : "?";
   notifyTelegram(mdToTelegramHtml(
