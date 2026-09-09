@@ -316,6 +316,96 @@ def test_i18n_html_links():
     print("  ok: i18n_html_links (href uguali ok, markup assente/differenti/annidati/assente)")
 
 
+def test_script_contamination():
+    """Caratteri di uno script estraneo alla lingua della pagina = finding.
+    Controprove: kanji/kana in /ja/ leciti, selettore lingua con nomi nativi
+    (fuori da script/style), testo dentro <script> ignorato."""
+    import tempfile
+    orig_site, orig_root = seo.SITE, seo.ROOT
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            seo.SITE = Path(tmp)
+            seo.ROOT = Path(tmp)
+            pages = {
+                # veri positivi (casi reali trovati online)
+                "site/pl/withdrawal.html": "<html><body><p>Konsument wyrازil na to zgode</p></body></html>",
+                "site/pt/vs/adblock-plus.html": "<html><body><p>acrescentа anti-detecção</p></body></html>",
+                "site/id/ublock-origin-alternative.html": "<html><body><p>30 Juni 2026। uBlock</p></body></html>",
+                "site/tr/terms.html": "<html><body><p>fatura doneминин sonunda</p></body></html>",
+                # cirillico nella meta description: testo visibile (SERP), NON escluso
+                "site/de/x.html": "<html><head><meta name=\"description\" content=\"Chrome ослабił\"></head></html>",
+                # controprove anti-false-positive
+                "site/ja/ok.html": "<html><body><p>広告ブロックは日本語で書かれています</p></body></html>",
+                "site/ko/ok.html": "<html><body><p>한국어 페이지입니다</p></body></html>",
+                "site/ru/ok.html": "<html><body><p>блокировщик рекламы</p></body></html>",
+                "site/hi/ok.html": "<html><body><p>विज्ञापन अवरोधक। अगला वाक्य</p></body></html>",
+                "site/lang-selector.html": ("<html><body><nav>"
+                                            "<a href='/ru'>Русский</a> <a href='/ja'>日本語</a> "
+                                            "<a href='/ko'>한국어</a> <a href='/ar'>العربية</a>"
+                                            "</nav></body></html>"),
+                "site/script-only.html": ("<html><body><script>"
+                                          "var x = 'блокировщик広告。';"
+                                          "</script></body></html>"),
+                "site/jsonld-only.html": ('<html><head><script type="application/ld+json">'
+                                          '{"@type":"Answer","text":"блокировщик広告"}'
+                                          "</script></head></html>"),
+            }
+            orig_htmlfiles = seo.html_files
+            for rel, text in pages.items():
+                q = Path(tmp) / rel
+                q.parent.mkdir(parents=True, exist_ok=True)
+                q.write_text(text, encoding="utf-8")
+            # layout reale: html_files() elenca tutto, ROOT per i path relativi
+            seo.html_files = lambda: [Path(tmp) / rel for rel in sorted(pages)]
+            try:
+                check, findings = seo.check_content_script_contamination()
+            finally:
+                seo.html_files = orig_htmlfiles
+            detail = check["detail"]
+            hits = _detail_hits(check)  # [(rel, riga, script, ctx)]
+            bad = {h[0] for h in hits}
+            for rel in ("site/pl/withdrawal.html", "site/pt/vs/adblock-plus.html",
+                        "site/id/ublock-origin-alternative.html", "site/tr/terms.html",
+                        "site/de/x.html"):
+                assert rel in bad, f"finding mancante su {rel}: {detail}"
+            clean = ("site/ja/ok.html", "site/ko/ok.html", "site/ru/ok.html",
+                     "site/hi/ok.html", "site/lang-selector.html",
+                     "site/script-only.html", "site/jsonld-only.html")
+            for rel in clean:
+                assert rel not in bad, f"falso positivo su {rel}: {detail}"
+            assert check["status"] == "fail" and check["measured"] == len(hits)
+            assert len(findings) == 1
+            assert findings[0]["severity"] == "medium" and findings[0]["auto"] is False
+            # evidence = primo hit: file:riga [script] + frammento
+            first = hits[0]
+            assert f"{first[0]}:{first[1]} [{first[2]}]" in findings[0]["evidence"], \
+                findings[0]["evidence"]
+            assert first[3][:40] in findings[0]["evidence"], findings[0]["evidence"]
+            assert sorted(findings[0]["files"]) == sorted(bad)
+            # riga riportata: ogni hit punta alla riga 1 dei fixture monoriga
+            for rel, line, _script, _ctx in hits:
+                assert line == 1, f"riga errata su {rel}: {line}"
+            # meta description NON esclusa: il cirillico sta nel content= (regressione)
+            assert any(h[0] == "site/de/x.html" and h[2] == "cyrillic" for h in hits), hits
+            # Script res: controllo diretto dei range
+            assert seo.SCRIPT_RES["danda"].search("।") is not None
+            assert seo.SCRIPT_RES["cyrillic"].search("а") is not None
+            assert seo.SCRIPT_RES["cyrillic"].search("a") is None
+            # 'а' cirillica non è la 'a' latina (il caso insidioso)
+            assert "а" != "a"
+    finally:
+        seo.SITE, seo.ROOT = orig_site, orig_root
+    print("  ok: script_contamination (5 veri positivi, selettore lingua/script/jsonld/meta desc)")
+
+
+def _detail_hits(check):
+    """Hits strutturate dal check: [(rel, riga, script, ctx)] riparstate dal
+    detail (lista stampata) via ast.literal_eval."""
+    import ast
+    raw = check["detail"].split(": ", 1)[1]
+    return [tuple(x) for x in ast.literal_eval(raw)]
+
+
 def main():
     test_finding_id_stable()
     test_health_score()
@@ -326,6 +416,7 @@ def main():
     test_i18n_link_destruct()
     test_i18n_link_destruct_line_number()
     test_i18n_html_links()
+    test_script_contamination()
     print("OK")
     return 0
 

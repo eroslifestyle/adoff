@@ -26,7 +26,8 @@ from urllib.parse import urlparse
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from audit_patterns import (  # noqa: E402
     ADOFF_PRO_RE, AI_CRAWLERS, BROKEN_PHRASES, FRESHNESS_RE, GENERIC_PRO_RE,
-    RULES_NUM_RE, TRIAL_CTX_RE, TRIAL_RE, VERSION_RE,
+    LANG_ALLOWED_SCRIPTS, RULES_NUM_RE, SCRIPT_RES, TRIAL_CTX_RE, TRIAL_RE,
+    VERSION_RE,
 )
 
 # rimozione noise HTML per l'estrazione numerica (path SVG = finte versioni)
@@ -780,6 +781,76 @@ def check_content_broken_phrases():
     return check, findings
 
 
+# attributi whose value is mai testo visibile (URL, src, href...)
+_VISIBLE_TEXT_ATTRS_RE = re.compile(r"""\b(?:href|src)=["'][^"']*["']""", re.I)
+# meta NON-description rimossa intera: og:/twitter:/viewport non sono testo visibile.
+# ponytail: qui si copre solo meta description (SERP); se serve og: si estende il lookahead
+_NON_DESC_META_RE = re.compile(r'(?is)<meta\b(?![^>]*name=["\']description["\'])[^>]*>')
+# <a> escluso: il selettore lingua del nav mostra nomi nativi (Русский, 日本語…)
+# in pagine di qualunque lingua, per design.
+_ANCHOR_RE = re.compile(r"(?is)<a\b[^>]*>.*?</a>")
+
+
+def _page_visible_text(html: str) -> str:
+    """Testo visibile di una pagina: senza <script>, <style>, JSON-LD e
+    valori degli attributi (href/src/content). title e meta description
+    RESTANO: il loro testo è visibile (SERP) e va controllato."""
+    text = re.sub(r"(?is)<script\b[^>]*>.*?</script>", " ", html)  # include JSON-LD
+    text = re.sub(r"(?is)<style\b[^>]*>.*?</style>", " ", text)
+    text = _NON_DESC_META_RE.sub(" ", text)
+    text = _VISIBLE_TEXT_ATTRS_RE.sub(" ", text)
+    text = _ANCHOR_RE.sub(" ", text)
+    return text
+
+
+def _page_lang(rel_path: str, html: str) -> str:
+    """Lingua della pagina: cartella site/<lang>/ o attributo <html lang>
+    (fallback necessario: la root non è uniforme — blog/* è en, index it)."""
+    first = Path(rel_path).parts[1] if len(Path(rel_path).parts) > 1 else ""
+    if first in LANGS:
+        return first
+    m = re.search(r'(?i)<html[^>]*\blang=["\']([a-zA-Z-]+)["\']', html)
+    if m:
+        return m.group(1).split("-")[0].lower()
+    return "it"  # default storico del sito (pagine italiane senza prefisso)
+
+
+def check_content_script_contamination():
+    """Caratteri di uno script Unicode estraneo alla lingua della pagina nel
+    testo visibile (residui di traduzione automatica: cirillico nel polacco,
+    danda nell'indonesiano, 'а' cirillica al posto della latina...)."""
+    hits = []  # (rel, riga, script, frammento)
+    for f in html_files():
+        rel = str(f.relative_to(ROOT))
+        html = f.read_text(encoding="utf-8", errors="replace")
+        lang = _page_lang(rel, html)
+        allowed = LANG_ALLOWED_SCRIPTS.get(lang, set())
+        text = _page_visible_text(html)
+        for script, script_re in SCRIPT_RES.items():
+            if script in allowed:
+                continue
+            m = script_re.search(text)
+            if not m:
+                continue
+            line = text[:m.start()].count("\n") + 1
+            ctx = re.sub(r"\s+", " ", text[max(0, m.start() - 40):m.end() + 40])
+            hits.append((rel, line, script, ctx[:80]))
+    check = make_check("content.script_contamination", "content",
+                       "pass" if not hits else "fail", measured=len(hits), threshold=0,
+                       detail=f"caratteri di script estranei alla lingua: {hits[:5]}")
+    findings = []
+    if hits:
+        rel, line, script, ctx = hits[0]
+        findings.append(make_finding(
+            "content", "medium", "Caratteri di script estraneo alla lingua della pagina",
+            f"{len(hits)} occorrenze, es. {rel}:{line} [{script}]: …{ctx}…",
+            "Correggere il testo: la pagina contiene caratteri di un altro alfabeto "
+            "residui della traduzione automatica (invisibili a occhio per caratteri "
+            "omoglifi come la 'а' cirillica).", False,
+            sorted({h[0] for h in hits})[:10]))
+    return check, findings
+
+
 def collect_i18n_keys():
     """Chiavi i18n richieste: data-i18n* negli HTML e negli HTML-string dei JS del sito."""
     keys = set()
@@ -1101,6 +1172,7 @@ def run_checks(offline: bool) -> dict:
         ("content.stale_numbers", lambda: check_content_stale_numbers()),
         ("content.model_claims", lambda: check_content_model_claims()),
         ("content.broken_phrases", lambda: check_content_broken_phrases()),
+        ("content.script_contamination", lambda: check_content_script_contamination()),
         ("content.i18n_integrity", lambda: check_content_i18n_integrity()),
         ("content.i18n_link_destruct", lambda: check_content_i18n_link_destruct()),
         ("content.i18n_html_links", lambda: check_content_i18n_html_links()),
