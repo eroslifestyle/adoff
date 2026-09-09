@@ -1,5 +1,11 @@
 # TODO GLOBALE — AdOff ChromePlugin
 
+## Attivo
+
+- [ ] **Scheda store da incollare a mano** nei Developer Dashboard (Chrome Web Store, AMO, Edge): l'API carica il pacchetto, non la descrizione. Finché non è fatto, online resta il claim assoluto vecchio — punto di rischio verso lo store. L'estensione non è cambiata: nessun bump di versione né upload del pacchetto necessari.
+- [ ] **Redirect 301 www→apex**: solo dal dashboard Cloudflare (Rules → Redirect Rules, hostname `www.adoff.app` → 301 all'apex). Né `CF_API_TOKEN` né l'OAuth di wrangler hanno il permesso di zona in scrittura (l'OAuth ha solo `zone (read)`).
+- [ ] **66 file del sito espongono l'account GitHub personale** `github.com/eroslifestyle` (incluso l'URL di download dell'APK Android). Preesistente; sfuggito perché il pre-deploy check cerca `erosdegrande`, non `eroslifestyle`. Rinominare il repo romperebbe i link di download: decisione dell'utente.
+
 ## Sessione 2026-09-07 (notte): applicate tutte le 8 proposte SEO — health 67 → 100
 
 Chiusura del filone della sera: il run completo dell'agente (health 67) è stato seguito
@@ -20,7 +26,7 @@ del checker (con test di regressione, suite 6/6). HEAD `3812a03`. Dettaglio: che
 
 **Aperto:**
 - Redirect 301 www→apex: solo dal dashboard Cloudflare. Né `CF_API_TOKEN` né l'OAuth di wrangler hanno il permesso di zona in scrittura (l'OAuth ha solo `zone (read)`)
-- 17 elementi con `data-i18n` contengono un `<a>`: a runtime `adoff-i18n.js` li riscrive via `textContent` e quei link spariscono. Tutti preesistenti — candidato a diventare un check della suite
+- [x] 17 elementi con `data-i18n` contengono un `<a>`: a runtime `adoff-i18n.js` li riscrive via `textContent` e quei link spariscono. Tutti preesistenti — candidato a diventare un check della suite — FATTO 2026-09-08: check `content.i18n_link_destruct` + `content.i18n_html_links` e 95 coppie riparate (commit `7952521`, `94ceabf`, `f86b6a4`)
 - Verifica sul campo di `applyTicketReply`: il campo `email: {ok, id, at}` nella reply si vedrà solo alla prossima risposta a un ticket reale
 
 **Do NOT:**
