@@ -1398,7 +1398,22 @@ async function handleLinkDevice(body, env, request) {
       account_id = excluded.account_id,
       linked_at = excluded.linked_at
   `).bind(deviceId, now, accountId, now).run();
-  
+  $
+  // Notifica fire-and-forget: se Telegram fallisce la registrazione deve comunque riuscire
+  const tgCountry = (request.cf && request.cf.country) || "??";
+  const tgTotal = ((await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM free_licenses WHERE account_id IS NOT NULL"
+  ).first()) || { c: 0 }).c;
+  const tgThread = Number.isInteger(parseInt(env.TELEGRAM_THREAD_REGISTRATIONS, 10))
+    ? parseInt(env.TELEGRAM_THREAD_REGISTRATIONS, 10)
+    : TELEGRAM_SUPPORT_THREAD;
+  const tgVersion = typeof body?.extensionVersion === "string" && body.extensionVersion
+    ? body.extensionVersion.slice(0, 32) : "?";
+  notifyTelegram(mdToTelegramHtml(
+    `\u2705 <b>Nuova registrazione AdOff</b> — paese: ${escapeHtml(tgCountry)} · versione: ${escapeHtml(tgVersion)}\n` +
+    `Totale account registrati: <b>${tgTotal}</b>`
+  ), env, tgThread).catch(() => {});
+
   const row = await env.DB.prepare(
     "SELECT gate_start FROM free_licenses WHERE device_id = ?"
   ).bind(deviceId).first();
@@ -1416,6 +1431,7 @@ async function handleLinkDevice(body, env, request) {
     v: 1
   }, env);
   
+
   return jsonResponse({
     ok: true,
     linked: true,
@@ -1426,6 +1442,7 @@ async function handleLinkDevice(body, env, request) {
     daysLeft: Math.ceil(FREE_REGISTERED_MS / 86400000)
   });
 }
+
 
 /**
  * Parses User-Agent to produce a human-readable device name.
@@ -1477,6 +1494,201 @@ function findDevice(devices, deviceId) {
 }
 
 // =============================================
+// =============================================
+// ADMIN FREE-LICENSES + ADLEAK HARNESS INGEST
+// =============================================
+const HARNESS_MAX_DOMAINS = 200;
+const HARNESS_MAX_STR = 200;
+const HARNESS_RETENTION_DAYS = 365; // dati di TEST nostri (non utente), fuori dalla retention 90gg privacy
+const GRACE_SOON_MS = 7*24*60*60*1000; // "expiring soon" = meno di 7 giorni di grazia residui
+const TREND_DAYS = 30;
+const RECENT_LIMIT = 50;
+const ADMIN_RATE_LIMIT_MAX = 120; // per 60s, per-isolate: generoso per la console, frena l'abuso
+const ADMIN_RATE_LIMIT_WINDOW = 60;
+
+const ADMIN_RL_BUCKET = new Map();
+function checkAdminRateLimit(ip) {
+  const now = Date.now();
+  let rec = ADMIN_RL_BUCKET.get(ip);
+  if (!rec || now >= rec.resetAt) {
+    rec = { count: 0, resetAt: now + ADMIN_RATE_LIMIT_WINDOW * 1000 };
+    ADMIN_RL_BUCKET.set(ip, rec);
+    if (ADMIN_RL_BUCKET.size > 5000) {
+      for (const [k, v] of ADMIN_RL_BUCKET) { if (now >= v.resetAt) ADMIN_RL_BUCKET.delete(k); }
+    }
+  }
+  rec.count++;
+  return rec.count <= ADMIN_RATE_LIMIT_MAX;
+}
+
+async function handleAdminFreeLicenses(request, env) {
+  if (!await verifyAdminAuth(request.headers.get(ADMIN_TOKEN_HEADER), env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  const now = Date.now();
+  const rows = (await env.DB.prepare(
+    "SELECT device_id, gate_start, account_id, linked_at FROM free_licenses"
+  ).all()).results || [];
+
+  const graceMs = FREE_GRACE_MS, regMs = FREE_REGISTERED_MS;
+  let inGrace = 0, registered = 0, expired = 0, graceExpiringSoon = 0;
+  const trendMap = new Map(); // day -> { newDevices, newAccounts }
+  const recent = [];
+
+  for (const r of rows) {
+    const accountId = r.account_id || null;
+    const gateStart = r.gate_start || 0;
+    let status;
+    if (accountId) {
+      status = "registered"; registered++;
+    } else if (now < gateStart + graceMs) {
+      status = "grace"; inGrace++;
+      if (gateStart + graceMs - now < GRACE_SOON_MS) graceExpiringSoon++;
+    } else {
+      status = "expired"; expired++;
+    }
+    if (gateStart) {
+      const day = new Date(gateStart).toISOString().slice(0, 10);
+      const t = trendMap.get(day) || { newDevices: 0, newAccounts: 0 };
+      t.newDevices++;
+      if (accountId && r.linked_at) t.newAccounts++;
+      trendMap.set(day, t);
+    }
+    recent.push({ _gs: gateStart, row: { deviceId: await hashDeviceId(r.device_id, env), gateStart, accountId, linkedAt: r.linked_at ?? null, status } });
+  }
+
+  const trend = [];
+  for (let i = TREND_DAYS - 1; i >= 0; i--) {
+    const day = new Date(now - i * 86400000).toISOString().slice(0, 10);
+    const t = trendMap.get(day);
+    trend.push({ day, newDevices: t ? t.newDevices : 0, newAccounts: t ? t.newAccounts : 0 });
+  }
+
+  recent.sort((a, b) => b._gs - a._gs);
+  return jsonResponse({
+    summary: { total: rows.length, inGrace, registered, expired, graceExpiringSoon },
+    trend,
+    recent: recent.slice(0, RECENT_LIMIT).map((x) => x.row),
+  });
+}
+
+// Valida una riga dominio dell'harness. Ritorna messaggio errore o null.
+function harnessDomainError(d) {
+  if (!d || typeof d !== "object" || Array.isArray(d)) return "domain entry is not an object";
+  if (typeof d.domain !== "string" || !d.domain.trim() || d.domain.length > HARNESS_MAX_STR) return "invalid domain";
+  if (d.httpStatus !== null && d.httpStatus !== undefined && !Number.isInteger(d.httpStatus)) return "invalid httpStatus";
+  if (!Number.isInteger(d.requests) || d.requests < 0) return "invalid requests";
+  if (!Number.isInteger(d.leaks) || d.leaks < 0) return "invalid leaks";
+  if (d.leakRules !== undefined && d.leakRules !== null && !Array.isArray(d.leakRules)) return "invalid leakRules";
+  if (typeof d.detection !== "boolean") return "invalid detection";
+  if (d.error !== null && d.error !== undefined && typeof d.error !== "string") return "invalid error";
+  return null;
+}
+
+async function handleAdleakIngest(request, env) {
+  if (!await verifyAdminAuth(request.headers.get(ADMIN_TOKEN_HEADER), env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  let body;
+  try { body = await request.json(); } catch (_) { return jsonResponse({ ok: false, error: "Invalid JSON" }, 400); }
+  const runId = typeof body?.runId === "string" ? body.runId.trim() : "";
+  if (!runId || runId.length > HARNESS_MAX_STR) return jsonResponse({ ok: false, error: "Missing or invalid runId" }, 400);
+  if (!Number.isFinite(body?.startedAt) || !Number.isFinite(body?.finishedAt)) return jsonResponse({ ok: false, error: "Missing startedAt/finishedAt" }, 400);
+  if (typeof body?.extensionVersion !== "string" || !body.extensionVersion.trim() || body.extensionVersion.length > HARNESS_MAX_STR) return jsonResponse({ ok: false, error: "Missing extensionVersion" }, 400);
+  if (!Array.isArray(body?.domains) || body.domains.length === 0) return jsonResponse({ ok: false, error: "Empty domains array" }, 400);
+  if (body.domains.length > HARNESS_MAX_DOMAINS) return jsonResponse({ ok: false, error: `Too many domains (max ${HARNESS_MAX_DOMAINS})` }, 400);
+  for (const d of body.domains) {
+    const err = harnessDomainError(d);
+    if (err) return jsonResponse({ ok: false, error: `Invalid domain entry (${d && d.domain || "?"}): ${err}` }, 400);
+  }
+
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS harness_runs (
+      run_id TEXT PRIMARY KEY,
+      started_at INTEGER,
+      finished_at INTEGER,
+      extension_version TEXT,
+      domains_tested INTEGER,
+      domains_with_leak INTEGER,
+      total_leaks INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS harness_results (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      run_id TEXT NOT NULL,
+      domain TEXT NOT NULL,
+      http_status INTEGER,
+      requests INTEGER,
+      leaks INTEGER,
+      leak_rules TEXT,
+      detection INTEGER,
+      error TEXT
+    )
+  `).run();
+  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_harness_results_run ON harness_results(run_id)").run();
+  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_harness_results_domain ON harness_results(domain)").run();
+
+  const totalLeaks = body.domains.reduce((s, d) => s + d.leaks, 0);
+  const withLeak = body.domains.filter((d) => d.leaks > 0 || d.detection).length;
+  const seen = new Set();
+  const domains = body.domains.filter((d) => !seen.has(d.domain) && seen.add(d.domain));
+
+  const stmts = [
+    env.DB.prepare(`
+      INSERT INTO harness_runs (run_id, started_at, finished_at, extension_version, domains_tested, domains_with_leak, total_leaks)
+      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+      ON CONFLICT(run_id) DO UPDATE SET
+        started_at=excluded.started_at, finished_at=excluded.finished_at,
+        extension_version=excluded.extension_version, domains_tested=excluded.domains_tested,
+        domains_with_leak=excluded.domains_with_leak, total_leaks=excluded.total_leaks
+    `).bind(runId, Math.round(body.startedAt), Math.round(body.finishedAt), body.extensionVersion.trim(), domains.length, withLeak, totalLeaks),
+    // Idempotente: reingest dello stesso runId sostituisce i risultati, non duplica
+    env.DB.prepare("DELETE FROM harness_results WHERE run_id = ?1").bind(runId),
+  ];
+  for (const d of domains) {
+    stmts.push(env.DB.prepare(`
+      INSERT INTO harness_results (run_id, domain, http_status, requests, leaks, leak_rules, detection, error)
+      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+    `).bind(runId, d.domain.trim(), d.httpStatus ?? null, d.requests, d.leaks,
+            Array.isArray(d.leakRules) ? JSON.stringify(d.leakRules) : null,
+            d.detection ? 1 : 0, d.error ?? null));
+  }
+  await env.DB.batch(stmts);
+
+  return jsonResponse({ ok: true, runId, domains: domains.length, domainsWithLeak: withLeak, totalLeaks });
+}
+
+async function handleAdleakRuns(request, env) {
+  if (!await verifyAdminAuth(request.headers.get(ADMIN_TOKEN_HEADER), env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  const url = new URL(request.url);
+  const limitRaw = parseInt(url.searchParams.get("limit") || "20", 10);
+  const limit = Number.isInteger(limitRaw) && limitRaw > 0 && limitRaw <= 100 ? limitRaw : 20;
+  const runs = (await env.DB.prepare(
+    "SELECT run_id, started_at, finished_at, extension_version, domains_tested, domains_with_leak, total_leaks, created_at FROM harness_runs ORDER BY started_at DESC LIMIT ?"
+  ).bind(limit).all()).results || [];
+  return jsonResponse({ ok: true, runs });
+}
+
+async function handleAdleakLatest(request, env) {
+  if (!await verifyAdminAuth(request.headers.get(ADMIN_TOKEN_HEADER), env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  const run = (await env.DB.prepare(
+    "SELECT run_id, started_at, finished_at, extension_version, domains_tested, domains_with_leak, total_leaks, created_at FROM harness_runs ORDER BY started_at DESC LIMIT 1"
+  ).first());
+  if (!run) return jsonResponse({ ok: true, run: null, problems: [] }); // stato vuoto pulito per la console
+
+  const rows = (await env.DB.prepare(
+    "SELECT domain, http_status, requests, leaks, leak_rules, detection, error FROM harness_results WHERE run_id = ?1 AND (leaks > 0 OR detection = 1) ORDER BY leaks DESC"
+  ).bind(run.run_id).all()).results || [];
+  return jsonResponse({
+    ok: true,
+    run,
+    problems: rows.map((r) => ({
+      domain: r.domain, httpStatus: r.http_status, requests: r.requests,
+      leaks: r.leaks, leakRules: r.leak_rules ? JSON.parse(r.leak_rules) : [],
+      detection: !!r.detection, error: r.error,
+    })),
+  });
+}
+
+// Rate limiting
 // RATE LIMITING
 // =============================================
 
@@ -8256,6 +8468,14 @@ async function purgeExpiredTelemetry(env) {
       `DELETE FROM adleak_reports WHERE uninstall_ts < ? LIMIT ${PURGE_BATCH}`,
       `DELETE FROM adleak_reports WHERE uninstall_ts < ?`
     );
+    // Harness ad-leak: dati di TEST nostri, non dati utente — retention piu' lunga (365gg)
+    const harnessCutoff = Date.now() - HARNESS_RETENTION_DAYS * 86400 * 1000;
+    purged.harness_results = (await env.DB.prepare(
+      "DELETE FROM harness_results WHERE run_id IN (SELECT run_id FROM harness_runs WHERE started_at < ?)"
+    ).bind(harnessCutoff).run()).meta.changes || 0;
+    purged.harness_runs = (await env.DB.prepare(
+      "DELETE FROM harness_runs WHERE started_at < ?"
+    ).bind(harnessCutoff).run()).meta.changes || 0;
   } catch (e) {
     console.error("D1 retention purge error:", e.message);
     purged.error = e.message;
@@ -9739,9 +9959,11 @@ export default {
     // Admin endpoints — no rate limit (autenticati via password admin)
     // Rate limiting solo per endpoint pubblici
     const isAdminEndpoint = path.startsWith("/admin");
-    if (!isAdminEndpoint) {
+    {
+      // Pubblici: bucket stretto; /admin: bucket separato piu' generoso (console reale
+      // non tocca il limite, frena solo abuso/loop). Auth invariata.
       const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
-      const allowed = checkRateLimit(ip);
+      const allowed = isAdminEndpoint ? checkAdminRateLimit(ip) : checkRateLimit(ip);
       if (!allowed) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
           status: 429,
@@ -9770,6 +9992,9 @@ export default {
       if (path === "/affiliate/me") return withCors(handleAffiliateMe(request, env));
       if (path === "/referral/stats") return withCors(handleReferralStats(request, env));
       if (path === "/admin/health") return withCors(handleAdminHealth(request, env));
+      if (path === "/admin/free-licenses") return withCors(handleAdminFreeLicenses(request, env));
+      if (path === "/admin/adleak-runs") return withCors(handleAdleakRuns(request, env));
+      if (path === "/admin/adleak-latest") return withCors(handleAdleakLatest(request, env));
       if (path === "/admin/stats") return withCors(handleAdminStats(request, env));
       if (path === "/admin/ops-stats") return withCors(handleAdminOpsStats(request, env));
       if (path === "/admin/retention") return withCors(handleAdminRetention(request, env));
@@ -9838,6 +10063,7 @@ export default {
     // POST admin endpoints — autofix
     if (request.method === "POST") {
       if (path === "/admin/autofix/ingest") return withCors(handleAutofixIngest(request, env));
+      if (path === "/admin/adleak-ingest") return withCors(handleAdleakIngest(request, env));
       if (path === "/admin/autofix/decision") return withCors(handleAutofixDecision(request, env));
       if (path === "/admin/seo-agent/ingest") return withCors(handleSeoAgentIngest(request, env));
       if (path === "/admin/seo-agent/backlog") return withCors(handleSeoAgentBacklog(request, env));
