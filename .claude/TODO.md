@@ -2,6 +2,8 @@
 
 ## Attivo
 
+- [ ] **CRITICO — ruotare segreti esposti**: token bot Telegram `magicalclaude_bot` (via @BotFather), chiavi Stripe live + webhook secret (Dashboard Stripe). Esposti pubblicamente su github.com/eroslifestyle/adoff (branch contaminati, ora eliminati) fino al 2026-09-12. Dettaglio: vault `progetti/AdOff/sessioni/adoff-repo-secrets-leak-fix-2026-09-12.md`.
+- [ ] Rimuovere il token Telegram hardcoded da questo CLAUDE.md (sezione "REGOLA POST-TELEGRAM") dopo la rotazione, sostituendolo con riferimento a `~/.secrets/adoff-stores.env`.
 - [ ] Verificare su Edge Partner Center quale delle 3 submission inviate in sessione 2026-09-12 è quella "in review" (l'ultima ha le note corrette, ma non verificato via dashboard)
 - [ ] Decidere se postare annuncio Telegram @adoffapp per 3.6.11 (Chrome+Firefox live, Edge in review, Safari bloccato — serve Mac/Xcode)
 - [ ] Correggere CLAUDE.md progetto: versione dichiarata 3.3.9 è stantia, quella reale è 3.6.11
@@ -9,6 +11,39 @@
 - [ ] **Redirect 301 www→apex**: solo dal dashboard Cloudflare (Rules → Redirect Rules, hostname `www.adoff.app` → 301 all'apex). Né `CF_API_TOKEN` né l'OAuth di wrangler hanno il permesso di zona in scrittura (l'OAuth ha solo `zone (read)`).
 - [ ] **66 file del sito espongono l'account GitHub personale** `github.com/eroslifestyle` (incluso l'URL di download dell'APK Android). Preesistente; sfuggito perché il pre-deploy check cerca `erosdegrande`, non `eroslifestyle`. Rinominare il repo romperebbe i link di download: decisione dell'utente.
 - [ ] **Bug referral `/r/:code` ROTTO**: `adoff.app/r/TESTCODE` redirige a `/?ref=%3Acode` invece del codice reale — Cloudflare Pages non interpola i placeholder nella query string della destinazione (`site/_redirects`, regola invariata da prima della sessione, verificata con `git show 867dc46:site/_redirects`). Le regole statiche `/r/*` funzionano. Fix: Pages Function `site/functions/r/[code].js` o handler nel worker. Dettaglio: checkpoint `CP_20260911_1330.md`.
+
+## Sessione 2026-09-12 (continuazione): incidente sicurezza repo pubblico + bonifica
+
+Richiesta iniziale: la release GitHub v1.0.0 sembrava "non aggiornata". In realtà è la release
+dell'app Android (non collegata all'estensione). Approfondendo per creare la release corretta,
+scoperto che il repo pubblico open-core `eroslifestyle/adoff` era stato contaminato da un
+force-push (causa ignota) con l'intero progetto privato, inclusi segreti in chiaro (token
+Telegram, chiavi Stripe). Bonificato: main ripulito, release `extension-v3.6.11` creata, vecchia
+release v1.0.0 eliminata, 3 branch remoti contaminati eliminati. Checkpoint:
+`.claude/checkpoints/CP_20260912_0131.md` (o nome adattato se collisione) · vault
+`Memoria/progetti/AdOff/sessioni/adoff-repo-secrets-leak-fix-2026-09-12.md`.
+
+**Fatto:**
+- [x] Chiarito v1.0.0 = release Android, non estensione
+- [x] Scoperto e diagnosticato incidente: main pubblico contaminato con progetto privato
+- [x] sviluppo/github-repo/ risincronizzato a v3.6.11
+- [x] Force-push pulito di main (autorizzato dall'utente)
+- [x] Release extension-v3.6.11 creata; v1.0.0 Android eliminata
+- [x] 3 branch remoti contaminati eliminati (master, feat/premium-vpn, feat/premium-vpn-worker)
+- [x] Verificato zero segreti nel working tree pubblico attuale
+
+**Aperto:**
+- [ ] Rotazione token Telegram bot (azione umana, @BotFather)
+- [ ] Rotazione chiavi Stripe live + webhook secret (azione umana, Dashboard)
+- [ ] Valutare rotazione CWS OAuth secret
+- [ ] Rimuovere token Telegram hardcoded da CLAUDE.md progetto dopo rotazione
+
+**Do NOT:**
+- NON considerare l'incidente chiuso finché Telegram/Stripe non sono ruotati
+- NON delegare git add/commit a un subagent
+- NON ripetere force-push su eroslifestyle/adoff senza necessità (main e production già puliti)
+
+---
 
 ## Sessione 2026-09-12: audit dashboard admin + release 3.6.11 (adoffEnabled) multi-store
 
