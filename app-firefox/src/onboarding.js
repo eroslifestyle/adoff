@@ -1,3 +1,14 @@
+// Tier canonico del piano. Da quando AdOff e' gratuito per tutti questa
+// funzione ritorna sempre "premium": ogni funzione e' sbloccata senza
+// licenza e senza scadenza. La firma resta invariata perche' i chiamanti
+// passano ancora il nome del piano, e per poter tornare indietro toccando
+// un punto solo. Il grado di sostenitore NON si deduce da qui: usa
+// adoffSupporterKind(). Invariante presidiato da
+// sviluppo/tests/test-plan-tier-consistency.js.
+function adoffPlanTier() {
+  return "premium";
+}
+
 // Detect browser
 function detectBrowser() {
   const ua = navigator.userAgent;
@@ -83,57 +94,183 @@ function initSourceSelect() {
   });
 }
 
+// Giorni concessi prima che serva l'account gratuito.
+const SIGNUP_GRACE_DAYS = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const ACCOUNT_URL = "https://adoff.app/account/";
+
+// Email del profilo del browser, per precompilare la registrazione.
+// Il permesso e' OPZIONALE e si chiede solo al click: metterlo tra i permessi
+// fissi del manifest disattiverebbe l'estensione a tutti gli utenti gia'
+// installati finche' non riaccettano. Se l'utente lo nega, o il browser non
+// espone l'API (Firefox), si apre comunque la registrazione, senza email.
+function getProfileEmail() {
+  return new Promise((resolve) => {
+    // getProfileUserInfo esiste solo sui browser Chromium: altrove il permesso
+    // non e' nemmeno dichiarato e chiederlo aprirebbe un popup inutile.
+    const CHROMIUM = ["chrome", "edge", "opera", "brave"];
+    if (!CHROMIUM.includes(detectBrowser())) return resolve("");
+    if (!chrome.permissions || !chrome.permissions.request) return resolve("");
+    try {
+      chrome.permissions.request({ permissions: ["identity", "identity.email"] }, (granted) => {
+        void chrome.runtime.lastError;
+        if (!granted || !chrome.identity || !chrome.identity.getProfileUserInfo) return resolve("");
+        try {
+          chrome.identity.getProfileUserInfo({ accountStatus: "ANY" }, (info) => {
+            void chrome.runtime.lastError;
+            resolve((info && info.email) || "");
+          });
+        } catch (_) { resolve(""); }
+      });
+    } catch (_) { resolve(""); }
+  });
+}
+
+// Oltre questo tempo si apre comunque la registrazione, senza email:
+// il dialog dei permessi puo' restare aperto o non rispondere mai, e la CTA
+// principale non puo' dipendere da quella risposta.
+const PERMISSION_TIMEOUT_MS = 8000;
+
+async function openRegistration() {
+  const btn = document.getElementById("registerBtn");
+  if (btn) btn.disabled = true;
+  let url = ACCOUNT_URL + "?signup=1&source=onboarding";
+  try {
+    const deviceId = await readDeviceId();
+    if (deviceId) url += "&device=" + encodeURIComponent(deviceId);
+  } catch (_) {}
+  try {
+    const email = await Promise.race([
+      getProfileEmail(),
+      new Promise((r) => setTimeout(() => r(""), PERMISSION_TIMEOUT_MS)),
+    ]);
+    if (email) url += "&email=" + encodeURIComponent(email);
+  } catch (_) {}
+  try {
+    chrome.tabs.create({ url });
+  } catch (_) {
+    window.open(url, "_blank", "noopener");
+  }
+  if (btn) btn.disabled = false;
+}
+
+function readDeviceId() {
+  return new Promise(function(resolve) {
+    if (typeof chrome === "undefined" || !chrome.storage) {
+      resolve("");
+      return;
+    }
+    chrome.storage.local.get("adoffDeviceId", function(items) {
+      void chrome.runtime.lastError;
+      resolve(items && items.adoffDeviceId ? items.adoffDeviceId : "");
+    });
+  });
+}
+
+function applyOnboardingMode() {
+  var params = new URLSearchParams(location.search);
+  var expired = params.get("expired");
+  var remind = params.get("remind");
+
+  if (!expired && !remind) {
+    return;
+  }
+
+  var regSection = document.querySelector(".reg-section");
+  if (!regSection) {
+    return;
+  }
+
+  var h2 = regSection.querySelector("h2");
+  var p = regSection.querySelector("p");
+  var deadline = document.getElementById("regDeadline");
+
+  if (expired === "1") {
+    var expiredTitle = i18n.t("onb.regExpiredTitle");
+    if (h2 && expiredTitle !== "onb.regExpiredTitle") {
+      h2.textContent = expiredTitle;
+    }
+    var expiredDesc = i18n.t("onb.regExpiredDesc");
+    if (p && expiredDesc !== "onb.regExpiredDesc") {
+      p.textContent = expiredDesc;
+    }
+    if (deadline) {
+      deadline.style.display = "none";
+    }
+    regSection.classList.add("reg-section--urgent");
+  } else if (remind !== null) {
+    var remindTitle = i18n.t("onb.regRemindTitle");
+    if (h2 && remindTitle !== "onb.regRemindTitle") {
+      h2.textContent = remindTitle;
+    }
+    var remindDesc = i18n.t("onb.regRemindDesc");
+    if (p && remindDesc !== "onb.regRemindDesc") {
+      p.textContent = remindDesc.replace("{n}", remind);
+    }
+  }
+
+  regSection.scrollIntoView({ block: "center" });
+}
+
+function watchRegistrationReturn() {
+  document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === "visible") {
+      try {
+        chrome.runtime.sendMessage(
+          { action: "refreshFreeLicense" },
+          function() {
+            void chrome.runtime.lastError;
+          }
+        );
+      } catch (e) {
+      }
+    }
+  });
+}
+
+// Giorni che restano prima che serva l'account. Senza data di install
+// (storage non ancora scritto) si lascia il testo statico dell'HTML.
+function renderSignupDeadline() {
+  const el = document.getElementById("regDeadline");
+  if (!el || !chrome.storage || !chrome.storage.local) return;
+  chrome.storage.local.get("adoffInstallDate", (r) => {
+    void chrome.runtime.lastError;
+    const installed = Number(r && r.adoffInstallDate);
+    if (!installed) return;
+    const left = Math.max(0, SIGNUP_GRACE_DAYS - Math.floor((Date.now() - installed) / DAY_MS));
+    const tpl = i18n.t("onb.regDaysLeft");
+    if (tpl && tpl !== "onb.regDaysLeft") el.textContent = tpl.replace("{n}", String(left));
+  });
+}
+
 // Init: translate page then apply browser-specific instructions
 i18n.init(() => {
   i18n.applyToDOM();
   applyBrowserSteps(detectBrowser());
   initSourceSelect();
   renderTrialCountdown();
+  renderSignupDeadline();
   renderVersion();
+  applyOnboardingMode();
+  watchRegistrationReturn();
+  const regBtn = document.getElementById("registerBtn");
+  if (regBtn) regBtn.addEventListener("click", openRegistration);
 });
 
-// Render countdown dinamico del trial (resiliente: legge storage, no hardcoded)
+// Trial non piu' mostrato: tutto e' gratis e attivo.
 function renderTrialCountdown() {
-  if (!chrome.storage || !chrome.storage.local) return;
-  chrome.storage.local.get(["adoffTrialEnd", "adoffLicense"], (r) => {
-    const trialEnd = r.adoffTrialEnd || 0;
-    const lic = r.adoffLicense || {};
-    const plan = lic.plan || "";
-    const hasValidPro = lic.valid &&
-      (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
-    if (hasValidPro) {
-      // Utente Pro: nasconde trial msg + countdown
-      const trialMsg = document.getElementById("trialMsg");
-      if (trialMsg) trialMsg.style.display = "none";
-      return;
-    }
-    if (!trialEnd || trialEnd <= Date.now()) {
-      // Trial scaduto: aggiorna messaggio
-      const trialMsg = document.getElementById("trialMsg");
-      if (trialMsg) {
-        trialMsg.innerHTML = "";
-        const span = document.createElement("span");
-        span.setAttribute("data-i18n", "onb.trialExpired");
-        const expiredText = i18n && i18n.t ? i18n.t("onb.trialExpired") : "Trial expired. Activate Pro to keep all features.";
-        span.textContent = (expiredText && expiredText !== "onb.trialExpired") ? expiredText : "Trial expired. Activate Pro to keep all features.";
-        trialMsg.appendChild(span);
-      }
-      return;
-    }
-    // Trial attivo: calcola giorni e mostra countdown
-    const diff = trialEnd - Date.now();
-    const daysLeft = Math.max(0, Math.ceil(diff / 86400000));
-    const dateEl = document.getElementById("trialCountdownDate");
-    const daysEl = document.getElementById("trialCountdownDays");
-    const countdownEl = document.getElementById("trialCountdown");
-    if (daysEl) daysEl.textContent = String(daysLeft);
-    if (dateEl) {
-      const d = new Date(trialEnd);
-      const pad = n => String(n).padStart(2, "0");
-      dateEl.textContent = pad(d.getDate()) + "/" + pad(d.getMonth()+1) + "/" + d.getFullYear();
-    }
-    if (countdownEl) countdownEl.style.display = "block";
-  });
+  const trialMsg = document.getElementById("trialMsg");
+  const countdown = document.getElementById("trialCountdown");
+  // Il messaggio "tutto è gratis" vale solo finché il piano canonico è premium;
+  // se un giorno si torna indietro l'onboarding smette da solo di prometterlo.
+  if (trialMsg && adoffPlanTier() === "premium") {
+    trialMsg.innerHTML = "";
+    const span = document.createElement("span");
+    span.setAttribute("data-i18n", "onb.allFree");
+    span.textContent = i18n && i18n.t ? i18n.t("onb.allFree") : "Every feature is on, free, no account needed.";
+    trialMsg.appendChild(span);
+  }
+  if (countdown) countdown.style.display = "none";
 }
 
 // Render versione corrente da manifest (no hardcoded)

@@ -8,6 +8,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding-top: 60px;
 }
 
 .container {
@@ -275,6 +276,77 @@ h1 {
   line-height: 1.4;
 }
 
+/* CTA REGISTRAZIONE (principale) */
+.reg-section {
+  background: linear-gradient(135deg, rgba(124, 92, 252, 0.22), rgba(76, 58, 212, 0.12));
+  border: 1px solid #7c5cfc;
+  border-radius: 16px;
+  padding: 28px 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 10px 30px rgba(124, 92, 252, 0.18);
+}
+
+.reg-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.reg-section h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.reg-section p {
+  font-size: 14px;
+  color: #cfc7ff;
+  line-height: 1.55;
+  margin-bottom: 20px;
+}
+
+.reg-deadline {
+  margin-top: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffcf8a;
+}
+
+/* licenza scaduta: stesso box, tono d'allarme */
+.reg-section--urgent {
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.22), rgba(124, 92, 252, 0.12));
+  border-color: #e74c3c;
+  box-shadow: 0 10px 30px rgba(231, 76, 60, 0.2);
+}
+
+/* TELEGRAM CTA */
+.tg-section {
+  background: linear-gradient(135deg, rgba(41, 171, 226, 0.14), rgba(124, 92, 252, 0.14));
+  border: 1px solid #29abe2;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.tg-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.tg-section h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.tg-section p {
+  font-size: 13px;
+  color: #b8c7d9;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
 .cta-btn {
   display: inline-block;
   background: linear-gradient(135deg, #7c5cfc, #4c3ad4);
@@ -294,8 +366,124 @@ h1 {
   box-shadow: 0 8px 24px rgba(124, 92, 252, 0.4);
 }
 
+.cta-btn--lg {
+  padding: 16px 44px;
+  font-size: 17px;
+  width: 100%;
+  max-width: 380px;
+}
+
+/* dopo .cta-btn: stessa specificita', deve vincere sul gradiente viola */
+.tg-btn {
+  background: linear-gradient(135deg, #29abe2, #1c7fb0);
+}
+
+.tg-btn:hover {
+  box-shadow: 0 8px 24px rgba(41, 171, 226, 0.4);
+}
+
 .footer {
   margin-top: 32px;
   font-size: 12px;
   color: #3a3a5a;
+}
+
+.onb-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  height: 60px;
+  background: rgba(10, 10, 26, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.onb-nav-inner {
+  max-width: 1100px;
+  height: 60px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.onb-nav-logo {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #fff;
+  text-decoration: none;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.onb-nav-logo span {
+  color: #7c5cfc;
+}
+
+.onb-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+}
+
+.onb-nav-links a {
+  color: #8a8aaa;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.onb-nav-links a:hover {
+  color: #fff;
+  background: rgba(124, 92, 252, 0.15);
+}
+
+.onb-nav-github {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #8a8aaa;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.onb-nav-github:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.onb-nav-cta {
+  background: #7c5cfc;
+  color: #fff;
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.onb-nav-cta:hover {
+  background: #6845d1;
+}
+
+@media (max-width: 720px) {
+  .onb-nav-links {
+    display: none;
+  }
 }

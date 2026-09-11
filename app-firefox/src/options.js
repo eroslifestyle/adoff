@@ -1,5 +1,25 @@
 (function () {
   "use strict";
+  // Tier canonico del piano. Da quando AdOff e' gratuito per tutti questa
+  // funzione ritorna sempre "premium": ogni funzione e' sbloccata senza
+  // licenza e senza scadenza. La firma resta invariata perche' i chiamanti
+  // passano ancora il nome del piano, e per poter tornare indietro toccando
+  // un punto solo. Il grado di sostenitore NON si deduce da qui: usa
+  // adoffSupporterKind(). Invariante presidiato da
+  // sviluppo/tests/test-plan-tier-consistency.js.
+  function adoffPlanTier() {
+    return "premium";
+  }
+
+  // Grado di sostenitore, per il solo badge della UI: chi ha una licenza
+  // valida continua a pagare volontariamente. Non governa NESSUNA funzione,
+  // che ormai e' sbloccata per tutti (vedi adoffPlanTier).
+  function adoffSupporterKind(lic) {
+    if (!lic || lic.valid !== true) return "none";
+    const plan = typeof lic.plan === "string" ? lic.plan : "";
+    if (plan.includes("founder") || plan === "lifetime") return "founder";
+    return "supporter";
+  }
 
   // ===== COSTANTI =====
   const TYPE_LABELS = {
@@ -144,14 +164,17 @@
   const settingEnabled = document.getElementById("settingEnabled");
   const settingBadge   = document.getElementById("settingBadge");
   const settingCounter = document.getElementById("settingCounter");
+  const settingVideoCompat = document.getElementById("settingVideoCompat");
 
   function loadGenerali() {
     chrome.storage.local.get(
-      ["adoffEnabled", "adoffShowBadge", "adoffShowCounter"],
+      ["adoffEnabled", "adoffShowBadge", "adoffShowCounter", "adoffYtCompat"],
       (r) => {
         settingEnabled.checked = r.adoffEnabled !== false;
         settingBadge.checked   = r.adoffShowBadge !== false;
         settingCounter.checked = r.adoffShowCounter !== false;
+        // Default OFF: la modalita' compatibilita' e' una via di fuga, non lo standard
+        if (settingVideoCompat) settingVideoCompat.checked = r.adoffYtCompat === true;
       }
     );
   }
@@ -167,6 +190,32 @@
   settingCounter.addEventListener("change", () => {
     chrome.storage.local.set({ adoffShowCounter: settingCounter.checked });
   });
+
+  if (settingVideoCompat) {
+    settingVideoCompat.addEventListener("change", () => {
+      chrome.storage.local.set({ adoffYtCompat: settingVideoCompat.checked });
+    });
+  }
+
+  // ===== PRIVACY NAV OPT-IN =====
+
+  const navOptInToggle = document.getElementById("navOptInToggle");
+
+  // Load toggle state on page load
+  chrome.storage.local.get("adoffNavOptIn", (r) => {
+    if (navOptInToggle) {
+      navOptInToggle.checked = r.adoffNavOptIn === true;
+    }
+  });
+
+  // Handle toggle changes
+  if (navOptInToggle) {
+    navOptInToggle.addEventListener("change", () => {
+      const optIn = navOptInToggle.checked;
+      chrome.storage.local.set({ adoffNavOptIn: optIn });
+      chrome.runtime.sendMessage({ action: "navConsentChanged", optIn: optIn });
+    });
+  }
 
   // ===== WHITELIST =====
 
@@ -327,6 +376,23 @@
 
   const headerLicenseBadge = document.getElementById("headerLicenseBadge");
   const pricingCard        = document.getElementById("pricingCard");
+  const proUpsellBanner    = document.getElementById("proUpsellBanner");
+  const btnBannerClose     = document.getElementById("btnBannerClose");
+  const proShowcaseSection = document.getElementById("proShowcaseSection");
+
+  // Banner CTA account+Telegram: sempre visibile ad ogni apertura, chiusura solo per la sessione corrente
+  if (btnBannerClose && proUpsellBanner) {
+    btnBannerClose.addEventListener("click", () => {
+      proUpsellBanner.style.display = "none";
+    });
+  }
+
+  // Pro showcase: mostra solo se NON Pro/Trial
+  function updateShowcaseVisibility(type) {
+    if (!proShowcaseSection) return;
+    const isProOrTrial = type === "pro" || type === "lifetime" || type === "trial";
+    proShowcaseSection.style.display = isProOrTrial ? "none" : "block";
+  }
 
   // Auth state elements (solo 2 stati: Pro attivo o No license)
   const stateProActive   = document.getElementById("stateProActive");
@@ -335,146 +401,79 @@
   /**
    * Normalizza l'oggetto licenza: il trial vive nella chiave storage
    * separata `adoffTrialEnd`, mentre `adoffLicense` contiene solo le
-   * licenze Pro/Lifetime acquistate. Deriva `type`/`trialEndsAt` per la UI.
+   * licenze Pro/Lifetime/Premium acquistate. Deriva `type`/`trialEndsAt` per la UI.
    * @param {object|undefined} lic
    * @param {number|undefined} trialEnd
    * @returns {object}
    */
   function normalizeLicense(lic, trialEnd) {
     const out = Object.assign({}, lic);
-    const plan = out.plan || "";
-    const hasValidPro = out.valid &&
-      (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
-    if (hasValidPro) {
-      out.type = plan === "lifetime" ? "lifetime" : "pro";
-    } else if (trialEnd && trialEnd > Date.now()) {
-      out.type = "trial";
-      out.trialEndsAt = trialEnd;
-    } else {
-      out.type = "free";
-    }
+    // Il tipo passa dalla funzione canonica: è lì che si decide, ed è lì
+    // che si tornerebbe indietro. Oggi vale sempre "premium".
+    out.type = adoffPlanTier(out.plan);
     return out;
-  }
-
-  /** Calcola giorni trial rimasti. */
-  function trialDaysLeft() {
-    if (!license.trialEndsAt) return 0;
-    return Math.max(0, Math.ceil((license.trialEndsAt - Date.now()) / 86_400_000));
   }
 
   /**
    * Nasconde tutti gli stati auth e mostra solo quello richiesto.
-   * @param {'pro'|'trial'|'none'} state
+   * @param {'pro'|'trial'|'none'|'premium'} state
    */
   function showAuthState(state) {
-    stateProActive.style.display = state === "pro" ? "block" : "none";
+    stateProActive.style.display = state === "pro" || state === "premium" ? "block" : "none";
     const trialEl = document.getElementById("stateTrialActive");
     if (trialEl) trialEl.style.display = state === "trial" ? "block" : "none";
     stateNotLoggedIn.style.display = state === "none" ? "block" : "none";
-    pricingCard.style.display = state !== "pro" ? "block" : "none";
+    pricingCard.style.display = state !== "pro" && state !== "premium" ? "block" : "none";
+    const t = state === "premium" ? "premium" : state === "pro" ? "pro" : state === "trial" ? "trial" : "free";
+    updateShowcaseVisibility(t);
   }
 
   /**
-   * Aggiorna il badge header in base al piano corrente.
-   * @param {string} t — 'pro'|'lifetime'|'trial'|'free'
+   * Badge header. Non esistono piu' livelli di piano: tutto e' attivo per
+   * tutti. Il badge distingue solo chi sostiene volontariamente il progetto.
    */
-  function updateHeaderBadge(t) {
-    if (t === "pro" || t === "lifetime") {
-      headerLicenseBadge.textContent = "PRO";
-      headerLicenseBadge.className = "license-badge-header pro";
-    } else if (t === "trial") {
-      headerLicenseBadge.textContent = "TRIAL " + trialDaysLeft() + "gg";
-      headerLicenseBadge.className = "license-badge-header trial";
+  function updateHeaderBadge() {
+    const kind = adoffSupporterKind(license);
+    if (kind === "founder") {
+      headerLicenseBadge.textContent = i18n.t("popup.founder");
+    } else if (kind === "supporter") {
+      headerLicenseBadge.textContent = i18n.t("badge.supporter");
     } else {
-      headerLicenseBadge.textContent = "FREE";
-      headerLicenseBadge.className = "license-badge-header free";
+      headerLicenseBadge.textContent = i18n.t("badge.allActive");
     }
+    headerLicenseBadge.className = "license-badge-header premium";
   }
 
-  /** Render sezione licenza con 3 stati: Pro attivo / Trial attivo / No license. */
+  /** Render sezione licenza: ora tutti sono premium, senza scadenza. */
   function renderLicenseSection() {
-    const plan  = license.plan || "";
-    const isPro = license.valid &&
-      (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
-    const isTrial = !isPro && license.type === "trial" && license.trialEndsAt && license.trialEndsAt > Date.now();
-    const t = isPro ? (plan === "lifetime" ? "lifetime" : "pro") : (isTrial ? "trial" : (license.type || "free"));
+    updateHeaderBadge();
 
-    updateHeaderBadge(t);
 
-    if (isPro) {
-      // Stato B: Pro attivo
-      showAuthState("pro");
-      const expText = license.expiresHuman === "LIFETIME" || !license.expiresHuman
-        ? "Mai (Lifetime)"
-        : license.expiresHuman;
-      document.getElementById("proStatePlan").textContent    = plan.charAt(0).toUpperCase() + plan.slice(1);
-      document.getElementById("proStateExpiry").textContent  = expText;
-      document.getElementById("proStateEmail").textContent   = license.email || "—";
+    // Premium section visibility
+    const premiumShowcase = document.getElementById("premiumShowcaseSection");
+    const premiumActive = document.getElementById("premiumActiveCard");
+    if (premiumShowcase) premiumShowcase.style.display = "none";
+    if (premiumActive) premiumActive.style.display = "block";
 
-      // Barra dispositivi
-      const maxDev  = license.maxDevices || 3;
-      const usedDev = license.devices || 0;
-      const pct     = Math.min(100, Math.round((usedDev / maxDev) * 100));
-      const barFill = document.getElementById("proDevicesBar");
-      const devCount = document.getElementById("proDevicesCount");
-      if (barFill) barFill.style.width = pct + "%";
-      if (devCount) devCount.textContent = usedDev + "/" + maxDev;
-
-    } else if (isTrial) {
-      // Stato T: Trial attivo
-      showAuthState("trial");
-      renderTrialState();
-    } else {
-      // Stato A: No license — solo input codice licenza
-      showAuthState("none");
+    // Tutti gli utenti vedono la sezione premium attivo
+    showAuthState(adoffPlanTier(license.plan));
+    // Il piano mostrato: chi ha licenza vede il suo piano, altrimenti "Tutto attivo"
+    const planNameEl = document.getElementById("premiumPlanName");
+    if (planNameEl) {
+      planNameEl.textContent = i18n.t("badge.allActive");
     }
+    // Nessuna scadenza: il supporto e' volontario
+    const expiryEl = document.getElementById("premiumExpiry");
+    if (expiryEl) expiryEl.textContent = i18n.t("badge.noExpiry");
+    return;
   }
 
-  /** Render dettagli stato trial: countdown giorni, barra progresso, scadenza. */
+  /** Trial non piu' mostrato: tutto e' attivo di default. */
   function renderTrialState() {
-    const daysLeft = trialDaysLeft();
-    const TRIAL_TOTAL_DAYS = 15;
-    const daysUsed = Math.max(0, Math.min(TRIAL_TOTAL_DAYS, TRIAL_TOTAL_DAYS - daysLeft));
-    const pct = Math.round((daysLeft / TRIAL_TOTAL_DAYS) * 100);
-
-    const badge = document.getElementById("trialBadge");
-    const countdownEl = document.getElementById("trialCountdownDays");
-    const expiryEl = document.getElementById("trialExpiryDate");
-    const barFill = document.getElementById("trialProgressBar");
-    const barLabel = document.getElementById("trialProgressLabel");
-
-    if (badge) badge.textContent = daysLeft + " GG";
-    if (countdownEl) {
-      // Mostra "X giorni rimasti" in formato grande
-      const num = document.createElement("span");
-      num.style.fontSize = "28px";
-      num.style.fontWeight = "700";
-      num.textContent = daysLeft;
-      const lbl = document.createElement("span");
-      lbl.style.fontSize = "12px";
-      lbl.style.opacity = "0.7";
-      lbl.style.marginLeft = "6px";
-      lbl.textContent = daysLeft === 1 ? "giorno" : "giorni";
-      countdownEl.textContent = "";
-      countdownEl.appendChild(num);
-      countdownEl.appendChild(lbl);
-    }
-    if (expiryEl && license.trialEndsAt) {
-      const d = new Date(license.trialEndsAt);
-      // Formato locale dd/mm/yyyy hh:mm
-      const pad = n => String(n).padStart(2, "0");
-      expiryEl.textContent = pad(d.getDate()) + "/" + pad(d.getMonth()+1) + "/" + d.getFullYear() +
-        " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
-    }
-    if (barFill) {
-      barFill.style.width = pct + "%";
-      // Colore graduale: verde >7gg, giallo 3-7gg, rosso <=2gg
-      if (daysLeft <= 2) barFill.style.background = "#ef4444";
-      else if (daysLeft <= 7) barFill.style.background = "#f59e0b";
-      else barFill.style.background = "#3b82f6";
-    }
-    if (barLabel) barLabel.textContent = daysUsed + "/" + TRIAL_TOTAL_DAYS + " gg usati";
+    const el = document.getElementById("stateTrialActive");
+    if (el) el.style.display = "none";
   }
+
 
 
   /**
@@ -686,13 +685,205 @@
     statAds.textContent = formatCount(ads);
     statReq.textContent = formatCount(req);
   }
+  const statsChart = document.getElementById("statsChart");
+  const statsChartMeta = document.getElementById("statsChartMeta");
+  const statsTabs = document.querySelectorAll(".stats-tab");
+
+  let currentPeriod = "today";
+  let chartData = { labels: [], ads: [], req: [] };
+
+  // Formatta data ISO "YYYY-MM-DD" → label leggibile
+  function fmtDate(iso) {
+    const d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString(undefined, { day: "2-digit", month: "short" });
+  }
+
+  // Prepara dati per un periodo
+  function prepareChartData(daily, period) {
+    const today = new Date().toISOString().slice(0, 10);
+    const labels = [], ads = [], req = [];
+
+    if (!daily || Object.keys(daily).length === 0) {
+      return { labels, ads, req };
+    }
+
+    const sorted = Object.keys(daily).sort();
+    let startDate = null;
+
+    if (period === "today") {
+      startDate = today;
+    } else if (period === "week") {
+      const d = new Date(); d.setDate(d.getDate() - 6);
+      startDate = d.toISOString().slice(0, 10);
+    } else if (period === "month") {
+      const d = new Date(); d.setDate(d.getDate() - 29);
+      startDate = d.toISOString().slice(0, 10);
+    } else if (period === "year") {
+      const d = new Date(); d.setDate(d.getDate() - 364);
+      startDate = d.toISOString().slice(0, 10);
+    } else { // all
+      startDate = sorted[0] || today;
+    }
+
+    // ponytail: sparse sampling per grafici lunghi (mantiene forma senza 90 punti)
+    const days = sorted.filter(d => d >= startDate && d <= today);
+    const step = period === "year" || period === "all"
+      ? Math.max(1, Math.floor(days.length / 30))
+      : 1;
+
+    for (let i = 0; i < days.length; i += step) {
+      const day = days[i];
+      labels.push(fmtDate(day));
+      ads.push(daily[day]?.ads || 0);
+      req.push(daily[day]?.req || 0);
+    }
+    return { labels, ads, req };
+  }
+
+  // Disegna curva smooth sul canvas
+  function drawChart(canvas, labels, ads, req) {
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width = canvas.offsetWidth * 2;
+    const H = canvas.height = canvas.offsetHeight * 2;
+    ctx.scale(2, 2);
+    const w = canvas.offsetWidth;
+    const h = canvas.offsetHeight;
+
+    ctx.clearRect(0, 0, w, h);
+
+    const maxVal = Math.max(1, ...ads, ...req);
+    const padX = 8, padY = 8;
+    const chartW = w - padX * 2;
+    const chartH = h - padY * 2;
+
+    function scaleX(i) { return padX + (i / Math.max(1, labels.length - 1)) * chartW; }
+    function scaleY(v)  { return padY + chartH - (v / maxVal) * chartH; }
+
+    function fillCurve(vals, color) {
+      ctx.beginPath();
+      vals.forEach((v, i) => {
+        const x = scaleX(i), y = scaleY(v);
+        if (i === 0) ctx.moveTo(x, scaleY(0));
+        ctx.lineTo(x, y);
+      });
+      ctx.lineTo(scaleX(vals.length - 1), scaleY(0));
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    function strokeCurve(vals, color, width) {
+      if (vals.length < 2) return;
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      vals.forEach((v, i) => {
+        const x = scaleX(i), y = scaleY(v);
+        if (i === 0) ctx.moveTo(x, y);
+        else {
+          const px = scaleX(i - 1), py = scaleY(vals[i - 1]);
+          const mx = (px + x) / 2;
+          ctx.bezierCurveTo(mx, py, mx, y, x, y);
+        }
+      });
+      ctx.stroke();
+    }
+
+    fillCurve(req, "rgba(114, 82, 248, 0.08)");
+    fillCurve(ads, "rgba(52, 152, 219, 0.12)");
+    strokeCurve(req, "#7252f8", 1.5);
+    strokeCurve(ads, "#3498db", 2);
+
+    function drawDots(vals, color) {
+      vals.forEach((v, i) => {
+        if (v === 0) return;
+        ctx.beginPath();
+        ctx.arc(scaleX(i), scaleY(v), 3, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      });
+    }
+    drawDots(ads, "#3498db");
+    drawDots(req, "#7252f8");
+
+    ctx.strokeStyle = "rgba(0,0,0,0.06)";
+    ctx.lineWidth = 1;
+    for (let t = 0; t <= 4; t++) {
+      const y = padY + (chartH / 4) * t;
+      ctx.beginPath();
+      ctx.moveTo(padX, y);
+      ctx.lineTo(w - padX, y);
+      ctx.stroke();
+    }
+
+    const labelStep = Math.max(1, Math.floor(labels.length / 6));
+    ctx.fillStyle = "rgba(100,100,100,0.6)";
+    ctx.font = "10px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    labels.forEach((l, i) => {
+      if (i % labelStep === 0 || i === labels.length - 1) {
+        ctx.fillText(l, scaleX(i), h - 2);
+      }
+    });
+  }
+
+  function loadAndRenderChart(period) {
+    chrome.storage.local.get("adoffDailyStats", (result) => {
+      const daily = result.adoffDailyStats || {};
+      const data = prepareChartData(daily, period);
+      chartData = data;
+
+      if (data.labels.length === 0) {
+        statsChartMeta.textContent = "";
+        statsChartMeta.setAttribute("data-honest", "Nessuno storico disponibile. I dati appariranno da domani.");
+        const ctx = statsChart.getContext("2d");
+        ctx.clearRect(0, 0, statsChart.offsetWidth, statsChart.offsetHeight);
+        return;
+      }
+
+      const firstDay = data.labels[0];
+      const lastDay = data.labels[data.labels.length - 1];
+      const totalPeriodAds = data.ads.reduce((a, b) => a + b, 0);
+      const totalPeriodReq = data.req.reduce((a, b) => a + b, 0);
+      statsChartMeta.textContent = `Dal ${firstDay} al ${lastDay} · ${formatCount(totalPeriodAds)} ads · ${formatCount(totalPeriodReq)} richieste`;
+      statsChartMeta.removeAttribute("data-honest");
+      drawChart(statsChart, data.labels, data.ads, data.req);
+    });
+  }
+
+  // Tab switching
+  statsTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      statsTabs.forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+      currentPeriod = tab.dataset.period;
+      loadAndRenderChart(currentPeriod);
+    });
+  });
+
+  // Re-render on window resize
+  window.addEventListener("resize", () => {
+    if (document.getElementById("sec-statistiche")?.style.display !== "none") {
+      loadAndRenderChart(currentPeriod);
+    }
+  });
 
   btnResetStats.addEventListener("click", () => {
-    if (!confirm("Resettare le statistiche?")) return;
-    chrome.storage.local.set({ adoffAdsBlocked: 0, adoffReqBlocked: 0 }, () => {
+    if (!confirm("Resetta le statistiche?")) return;
+    chrome.storage.local.set({ adoffAdsBlocked: 0, adoffReqBlocked: 0, adoffDailyStats: {} }, () => {
       renderStats(0, 0);
+      chartData = { labels: [], ads: [], req: [] };
+      loadAndRenderChart(currentPeriod);
       showToast("Statistiche azzerate.", "success");
     });
+  });
+
+  // Load initial stats
+  chrome.storage.local.get(["adoffAdsBlocked", "adoffReqBlocked", "adoffDailyStats"], (r) => {
+    renderStats(r.adoffAdsBlocked || 0, r.adoffReqBlocked || 0);
+    loadAndRenderChart(currentPeriod);
   });
 
   // ===== AVANZATE =====
@@ -786,6 +977,8 @@
       renderStats(r.adoffAdsBlocked || 0, r.adoffReqBlocked || 0);
       loadSuggestions();
       loadReferral();
+      loadThemes(r.adoffTheme);
+      loadImageSwap(r.adoffImageSwap);
 
       // Background revalidate: se l'utente ha una licenza attiva, ricontrolla col server.
       // Permette il rilevamento quasi immediato di licenze revocate/eliminate dall'admin
@@ -806,75 +999,29 @@
     });
   }
 
-  // ===== FAQ / AIUTO =====
+  
+  // ===== MESSAGGI (thread persistente col supporto AdOff) =====
 
-  const FAQ_DB = [
-    {
-      keywords: ["come funziona", "cosa fa", "blocca", "pubblicita", "ads"],
-      q: "Come funziona AdOff?",
-      a: "AdOff blocca le pubblicita' su 3 livelli:<br><b>1. Rete</b> — Blocca le richieste HTTP verso i server pubblicitari prima che raggiungano il browser.<br><b>2. Pagina</b> — Nasconde gli elementi pubblicitari dal DOM con CSS e JavaScript.<br><b>3. Stealth</b> — Evade i sistemi anti-adblock rendendo AdOff invisibile ai siti.",
-    },
-    {
-      keywords: ["sito non funziona", "non carica", "rotto", "pagina bianca", "errore sito", "problema sito"],
-      q: "Un sito non funziona con AdOff attivo",
-      a: "Se un sito ha problemi:<br>1. Clicca l'icona AdOff e usa <b>\"Pausa qui\"</b> per disattivarlo solo su quel sito.<br>2. Ricarica la pagina.<br>3. Se il problema persiste anche con AdOff in pausa, il problema non e' causato dall'estensione.<br><br>Puoi anche aggiungere il sito alla <b>whitelist permanente</b> nelle Opzioni > Siti esclusi.<br><br>&#9888; <a href='#' data-scroll-to='reportCard'><b>Segnalaci il sito</b></a> usando il form qui sotto — lo correggeremo!",
-    },
-    {
-      keywords: ["video", "streaming", "video ads", "pre-roll", "skip"],
-      q: "Le piattaforme video mostrano ancora ads",
-      a: "Le piattaforme video aggiornano frequentemente il loro sistema pubblicitario. AdOff include un modulo dedicato per le piattaforme video che:<br>- Blocca i video ads pre-roll e mid-roll<br>- Rimuove gli overlay pubblicitari<br>- Nasconde i banner sponsorizzati<br><br>Se vedi ancora ads, <b>ricarica la pagina</b>. Se il problema persiste, potrebbe servire un aggiornamento di AdOff — controlla che sia l'ultima versione.<br><br>&#9888; <a href='#' data-scroll-to='reportCard'><b>Segnalaci il problema</b></a> e lo risolveremo al piu' presto.",
-    },
-    {
-      keywords: ["whitelist", "escludi", "escludere", "pausa", "disattiva", "sito escluso"],
-      q: "Come escludo un sito dal blocco?",
-      a: "Hai due modi:<br><b>1. Dal popup</b> — Clicca l'icona AdOff, poi \"Pausa qui\". Scegli la durata: sessione, 1 ora, 1 giorno, o permanente.<br><b>2. Dalle opzioni</b> — Vai in Opzioni > Siti esclusi. Digita il dominio e clicca \"Aggiungi\".<br><br>I siti esclusi non ricevono nessun blocco da AdOff.",
-    },
-    {
-      keywords: ["free", "pro", "differenza", "piano", "premium", "gratis", "pagamento", "youtube", "video", "tv", "broadcaster"],
-      q: "Che differenza c'e' tra Free e Pro?",
-      a: "La versione <b>Free</b> blocca gli ads sui siti web: banner, display, pop-up/popunder, tracker e network pubblicitari. Funziona su tutti i siti, senza limiti di tempo.<br><br>La versione <b>Pro</b> aggiunge:<br>- <b>Blocco ads sui video</b>: piattaforme video e player dei broadcaster TV (servizi streaming TV europei come quelli di Italia, UK, Germania, Francia, Spagna, Portogallo)<br>- <b>Stealth Mode</b>: invisibilita' ai sistemi anti-adblock — niente piu' wall \"disabilita adblock\"<br>- Aggiornamenti prioritari per nuovi formati ads<br>- Supporto dedicato<br>- Badge Pro nell'estensione",
-    },
-    {
-      keywords: ["privacy", "dati", "tracciamento", "raccolta", "personali", "telemetria"],
-      q: "AdOff raccoglie i miei dati?",
-      a: "No. AdOff <b>non raccoglie nessun dato personale</b>. Non tracciamo i siti che visiti, non inviamo telemetria, non usiamo analytics.<br><br>Tutto funziona in locale sul tuo browser. Le uniche informazioni salvate sono le tue impostazioni (toggle, whitelist, contatori) nello storage locale dell'estensione.",
-    },
-    {
-      keywords: ["lento", "rallenta", "performance", "pesante", "memoria", "cpu", "ram"],
-      q: "AdOff rallenta il browser?",
-      a: "No. AdOff e' progettato per essere ultra-leggero:<br>- Usa <b>declarativeNetRequest</b> (API nativa di Chrome) per il blocco rete — zero overhead<br>- I CSS di hiding vengono iniettati una sola volta<br>- Il content script usa MutationObserver ottimizzato<br><br>Anzi, bloccando richieste e ads, le pagine caricano <b>piu' velocemente</b>.",
-    },
-    {
-      keywords: ["anti-adblock", "rilevato", "detected", "disabilita adblock", "muro", "wall", "anti adblock"],
-      q: "Un sito rileva AdOff e chiede di disabilitarlo",
-      a: "AdOff include un modulo <b>stealth anti-detection</b> che evade la maggior parte dei sistemi anti-adblock.<br><br>Se un sito ti chiede comunque di disabilitare l'adblock:<br>1. <b>Ricarica la pagina</b> — a volte il timing e' cruciale.<br>2. Se non basta, usa \"Pausa qui\" per quel sito specifico.<br>3. &#9888; <a href='#' data-scroll-to='reportCard'><b>Segnalaci il sito</b></a> — aggiorneremo il filtro!",
-    },
-    {
-      keywords: ["licenza", "attiva", "attivare", "chiave", "key", "codice", "pro attivazione"],
-      q: "Come attivo la licenza Pro?",
-      a: "1. Acquista una licenza su <b>adoff.app</b><br>2. Riceverai una chiave nel formato XXXX-XXXX-XXXX-XXXX<br>3. Vai in Opzioni > Piano & Licenza<br>4. Inserisci la chiave e clicca \"Attiva\"<br><br>La licenza si attiva istantaneamente.",
-    },
-    {
-      keywords: ["disinstalla", "disinstallare", "rimuovi", "rimuovere", "elimina"],
-      q: "Come disinstallo AdOff?",
-      a: "1. Vai su <b>chrome://extensions/</b><br>2. Trova AdOff nella lista<br>3. Clicca \"Rimuovi\"<br>4. Conferma la rimozione<br><br>Tutti i dati locali vengono cancellati automaticamente.",
-    },
-    {
-      keywords: ["aggiorna", "aggiornamento", "update", "versione", "nuova versione"],
-      q: "Come aggiorno AdOff?",
-      a: "Se hai installato AdOff dal Chrome Web Store, gli aggiornamenti sono <b>automatici</b>.<br><br>Per forzare un aggiornamento:<br>1. Vai su chrome://extensions/<br>2. Attiva \"Modalita' sviluppatore\"<br>3. Clicca \"Aggiorna\"<br><br>Versione corrente: <b>v" + VERSION + "</b>",
-    },
-    {
-      keywords: ["cookie", "banner cookie", "gdpr", "consenso", "cookie wall"],
-      q: "AdOff blocca i cookie banner?",
-      a: "AdOff include filtri CSS per nascondere molti cookie banner comuni. Tuttavia, i cookie banner cambiano molto da sito a sito.<br><br>Se ne vedi uno che non viene bloccato, segnalacelo nella sezione <b>Suggerimenti</b> indicando il sito e saremo felici di aggiungere il filtro.",
-    },
-  ];
+  const MSG_API          = "https://api.adoff.app/messages";
+  const MSG_LANGS        = ["it", "en", "de", "fr", "es", "pt"];
+  const MSG_EMAIL_RX     = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const MSG_ATTACH_TYPES = ["image/jpeg", "image/png", "image/webp"];
+  const MSG_ATTACH_MAX_BYTES = 5 * 1024 * 1024;
 
-  const chatMessages = document.getElementById("chatMessages");
-  const chatInput    = document.getElementById("chatInput");
-  const btnChatSend  = document.getElementById("btnChatSend");
-  const faqTopics    = document.getElementById("faqTopics");
+  const msgEmailGate     = document.getElementById("msgEmailGate");
+  const msgEmailInput    = document.getElementById("msgEmailInput");
+  const btnMsgEmailSave  = document.getElementById("btnMsgEmailSave");
+  const msgThreadArea    = document.getElementById("msgThreadArea");
+  const msgMessages      = document.getElementById("msgMessages");
+  const msgInput         = document.getElementById("msgInput");
+  const btnMsgSend       = document.getElementById("btnMsgSend");
+  const msgAttachInput   = document.getElementById("msgAttachInput");
+  const msgAttachPreview = document.getElementById("msgAttachPreview");
+  const faqTopics        = document.getElementById("faqTopics");
+
+  let msgBusy = false;
+  let msgLoaded = false;
+  let msgPendingAttachment = null; // { base64, type }
 
   /**
    * EA-5: Sanitizza HTML permettendo solo tag sicuri in allowlist.
@@ -884,13 +1031,9 @@
    */
   function sanitizeHtml(html) {
     const ALLOWED_TAGS = ["b", "br", "a", "strong", "ol", "li", "p", "code"];
-    // Rimuovi tag non in allowlist (tag e loro contenuto di chiusura)
     return html
-      // Rimuovi tutti gli attributi on* (event handler injection)
       .replace(/\s+on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, "")
-      // Rimuovi attributi javascript: negli href
       .replace(/href\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*')/gi, 'href="#"')
-      // Rimuovi tag non in allowlist (tag aperti e chiusi)
       .replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/gi, (match, tag) => {
         if (ALLOWED_TAGS.includes(tag.toLowerCase())) return match;
         return "";
@@ -898,9 +1041,9 @@
   }
 
   /**
-   * Converte testo semplice (risposta AI) in HTML con link cliccabili.
+   * Converte testo semplice (risposta AI/admin) in HTML con link cliccabili.
    * Escape anti-XSS, poi markdown [label](url) + URL nudi + dominio adoff.app.
-   * L'output passa comunque da sanitizeHtml in addChatMessage.
+   * L'output passa comunque da sanitizeHtml in addMsgBubble.
    * @param {string} text
    * @returns {string}
    */
@@ -921,21 +1064,20 @@
     return s.replace(/\n/g, "<br>");
   }
 
-  /**
-   * Aggiunge un messaggio alla chat.
-   * @param {string} text — testo o HTML (solo per bot, sanitizzato)
-   * @param {'bot'|'user'} sender
-   */
-  function addChatMessage(text, sender) {
+  function msgLang() {
+    let l = "en";
+    try { l = (i18n.getLang && i18n.getLang()) || "en"; } catch (e) {}
+    l = String(l).slice(0, 2).toLowerCase();
+    return MSG_LANGS.includes(l) ? l : "en";
+  }
+
+  function addMsgBubble(text, sender, attachmentUrl) {
     const bubble = document.createElement("div");
-    bubble.className = "chat-bubble " + sender;
+    bubble.className = "chat-bubble " + (sender === "user" ? "user" : "bot");
     if (sender === "user") {
-      // EA-5: Messaggi utente sempre come testo puro
-      bubble.textContent = text;
+      bubble.textContent = text || "";
     } else {
-      // EA-5: Messaggi bot sanitizzati (contengono HTML intenzionale)
-      bubble.innerHTML = sanitizeHtml(text);
-      // EM-7: Event delegation per link interni dopo inserimento
+      bubble.innerHTML = sanitizeHtml(linkifyText(text || ""));
       bubble.querySelectorAll("a[data-scroll-to]").forEach((link) => {
         link.addEventListener("click", (evt) => {
           evt.preventDefault();
@@ -944,103 +1086,139 @@
         });
       });
     }
-    chatMessages.appendChild(bubble);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-
-  /**
-   * Cerca la migliore risposta FAQ per la query.
-   * @param {string} query
-   * @returns {object|null}
-   */
-  function findFaqMatch(query) {
-    const words = query.toLowerCase()
-      .replace(/[^\w\s\u00C0-\u024F]/g, "")
-      .split(/\s+/)
-      .filter((w) => w.length > 2);
-
-    if (words.length === 0) return null;
-
-    let bestMatch = null;
-    let bestScore = 0;
-
-    for (const faq of FAQ_DB) {
-      let score = 0;
-      for (const word of words) {
-        for (const kw of faq.keywords) {
-          if (kw.includes(word) || word.includes(kw)) {
-            score += 1;
-          }
-        }
-      }
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = faq;
-      }
+    if (attachmentUrl) {
+      const img = document.createElement("img");
+      img.src = attachmentUrl;
+      img.className = "chat-attachment-img";
+      bubble.appendChild(img);
     }
-
-    return bestScore >= 1 ? bestMatch : null;
+    msgMessages.appendChild(bubble);
+    msgMessages.scrollTop = msgMessages.scrollHeight;
   }
 
-  // ===== AI SUPPORT CHAT (backend /chat — LLM locale, escalation a umano) =====
-  const AI_CHAT_API   = "https://api.adoff.app/chat";
-  const AI_CHAT_LANGS = ["it", "en", "de", "fr", "es", "pt"];
-  const EMAIL_RX      = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  let aiChatSid   = "";
-  let aiChatBusy  = false;
-  let aiPendingMsg = null; // messaggio in attesa di email per l'escalation
-
-  function aiLang() {
-    let l = "en";
-    try { l = (i18n.getLang && i18n.getLang()) || "en"; } catch (e) {}
-    l = String(l).slice(0, 2).toLowerCase();
-    return AI_CHAT_LANGS.includes(l) ? l : "en";
-  }
-
-  function addTyping() {
-    const b = document.createElement("div");
-    b.className = "chat-bubble bot";
-    b.id = "aiChatTyping";
-    b.textContent = "…";
-    chatMessages.appendChild(b);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-  function removeTyping() { const t = document.getElementById("aiChatTyping"); if (t) t.remove(); }
-
-  /** Fallback offline: usa il FAQ locale se il backend AI non risponde. */
-  function offlineFallback(query) {
-    const match = findFaqMatch(query);
-    if (match) { addChatMessage("<b>" + match.q + "</b><br><br>" + match.a, "bot"); return; }
-    addChatMessage(
-      "Non riesco a contattare l'assistente in questo momento. " +
-      "Riprova o <a href='https://adoff.app/support' target='_blank' rel='noopener'>contattaci qui</a>.",
-      "bot"
-    );
-  }
-
-  /** Gestisce una domanda dell'utente: chiede all'AI, fallback FAQ locale. */
-  async function handleFaqQuestion(query) {
-    query = (query || "").trim();
-    if (!query || aiChatBusy) return;
-    addChatMessage(query, "user");
-
-    // Se attendevamo un'email per l'escalation e l'utente l'ha scritta
-    let email = "";
-    if (aiPendingMsg && EMAIL_RX.test(query)) {
-      email = query;
-      query = aiPendingMsg;
-      aiPendingMsg = null;
+  function renderMsgThread(messages) {
+    msgMessages.innerHTML = "";
+    if (!messages || !messages.length) {
+      addMsgBubble(i18n.t("msg.greeting"), "bot");
+      return;
     }
+    messages.forEach((m) => addMsgBubble(m.text, m.sender, m.attachmentUrl));
+  }
 
-    aiChatBusy = true;
-    addTyping();
+  function showMsgEmailGate() {
+    msgEmailGate.style.display = "flex";
+    msgThreadArea.style.display = "none";
+  }
+
+  function showMsgThreadArea() {
+    msgEmailGate.style.display = "none";
+    msgThreadArea.style.display = "block";
+  }
+
+  async function loadMessagesTab() {
+    if (msgLoaded) return;
+    msgLoaded = true;
+    const stored = await new Promise((resolve) => {
+      chrome.storage.local.get(["adoffUserEmail", "adoffMsgThreadId", "adoffMsgThreadToken"], resolve);
+    });
+    if (!stored.adoffUserEmail) { showMsgEmailGate(); return; }
+    showMsgThreadArea();
+    if (!stored.adoffMsgThreadId || !stored.adoffMsgThreadToken) { renderMsgThread([]); return; }
+    try {
+      const url = MSG_API + "/" + encodeURIComponent(stored.adoffMsgThreadId) +
+        "?token=" + encodeURIComponent(stored.adoffMsgThreadToken);
+      const res = await fetch(url);
+      const d = await res.json();
+      if (d && d.ok) {
+        renderMsgThread(d.messages);
+        chrome.storage.local.set({ adoffUnreadMessages: 0 });
+      } else {
+        renderMsgThread([]);
+      }
+    } catch (e) {
+      renderMsgThread([]);
+    }
+  }
+
+  btnMsgEmailSave.addEventListener("click", () => {
+    const email = (msgEmailInput.value || "").trim().toLowerCase();
+    if (!MSG_EMAIL_RX.test(email)) { showToast(i18n.t("msg.emailInvalid"), "error"); return; }
+    chrome.storage.local.set({ adoffUserEmail: email }, () => {
+      msgLoaded = false;
+      loadMessagesTab();
+    });
+  });
+
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function clearMsgAttachment() {
+    msgPendingAttachment = null;
+    msgAttachInput.value = "";
+    msgAttachPreview.style.display = "none";
+    msgAttachPreview.innerHTML = "";
+  }
+
+  msgAttachInput.addEventListener("change", async () => {
+    const file = msgAttachInput.files[0];
+    if (!file) return;
+    if (!MSG_ATTACH_TYPES.includes(file.type)) {
+      showToast(i18n.t("msg.attachTypeError"), "error");
+      msgAttachInput.value = "";
+      return;
+    }
+    if (file.size > MSG_ATTACH_MAX_BYTES) {
+      showToast(i18n.t("msg.attachSizeError"), "error");
+      msgAttachInput.value = "";
+      return;
+    }
+    try {
+      const base64 = await readFileAsBase64(file);
+      msgPendingAttachment = { base64, type: file.type };
+      msgAttachPreview.innerHTML = "";
+      msgAttachPreview.style.display = "flex";
+      const thumb = document.createElement("img");
+      thumb.src = "data:" + file.type + ";base64," + base64;
+      thumb.className = "chat-attachment-thumb";
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "×";
+      removeBtn.className = "chat-attachment-remove";
+      removeBtn.addEventListener("click", clearMsgAttachment);
+      msgAttachPreview.appendChild(thumb);
+      msgAttachPreview.appendChild(removeBtn);
+    } catch (e) {
+      showToast(i18n.t("msg.attachTypeError"), "error");
+      clearMsgAttachment();
+    }
+  });
+
+  async function sendMessage(rawText) {
+    const text = (rawText != null ? rawText : msgInput.value).trim();
+    if (!text || msgBusy) return;
+    const stored = await new Promise((resolve) => {
+      chrome.storage.local.get(["adoffUserEmail", "adoffMsgThreadId"], resolve);
+    });
+    if (!stored.adoffUserEmail) { showMsgEmailGate(); return; }
+
+    msgBusy = true;
+    const attachment = msgPendingAttachment;
+    addMsgBubble(text, "user", attachment ? ("data:" + attachment.type + ";base64," + attachment.base64) : null);
+    if (rawText == null) msgInput.value = "";
+
+    const payload = { email: stored.adoffUserEmail, text, lang: msgLang(), turnstileToken: "extension" };
+    if (stored.adoffMsgThreadId) payload.threadId = stored.adoffMsgThreadId;
+    if (attachment) { payload.attachmentBase64 = attachment.base64; payload.attachmentType = attachment.type; }
+
     const ctrl = new AbortController();
     const to = setTimeout(() => ctrl.abort(), 30000);
     try {
-      const payload = { message: query, lang: aiLang(), turnstileToken: "extension" };
-      if (aiChatSid) payload.sessionId = aiChatSid;
-      if (email) payload.email = email;
-      const res = await fetch(AI_CHAT_API, {
+      const res = await fetch(MSG_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -1048,39 +1226,34 @@
       });
       clearTimeout(to);
       const d = await res.json();
-      removeTyping(); aiChatBusy = false;
-      if (d && d.sessionId) aiChatSid = d.sessionId;
-      if (!d || !d.ok) { offlineFallback(query); return; }
-      addChatMessage(linkifyText(d.reply || ""), "bot");
-      if (d.fallback) { offlineFallback(query); return; }
-      if (d.needEmail) { aiPendingMsg = query; } // il prossimo input (email) creera' il ticket
+      msgBusy = false;
+      if (!d || !d.ok) {
+        showToast(i18n.t("msg.sendError"), "error");
+        if (rawText == null) msgInput.value = text;
+        return;
+      }
+      clearMsgAttachment();
+      chrome.storage.local.set({ adoffMsgThreadId: d.threadId, adoffMsgThreadToken: d.threadToken });
+      if (d.reply) addMsgBubble(d.reply, "bot");
     } catch (e) {
       clearTimeout(to);
-      removeTyping(); aiChatBusy = false;
-      offlineFallback(query);
+      msgBusy = false;
+      showToast(i18n.t("msg.sendError"), "error");
+      if (rawText == null) msgInput.value = text;
     }
   }
 
-  btnChatSend.addEventListener("click", () => {
-    handleFaqQuestion(chatInput.value);
-    chatInput.value = "";
-  });
+  btnMsgSend.addEventListener("click", () => sendMessage());
+  msgInput.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
 
-  chatInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      handleFaqQuestion(chatInput.value);
-      chatInput.value = "";
-    }
-  });
-
-  // Click su chip FAQ — invia la domanda completa (testo del chip) all'AI
   faqTopics.querySelectorAll(".faq-chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      handleFaqQuestion((chip.textContent || chip.dataset.q || "").trim());
-    });
+    chip.addEventListener("click", () => sendMessage((chip.textContent || "").trim()));
   });
 
-  // ===== SEGNALAZIONE SITO (TELEGRAM) =====
+  const msgNavItem = document.querySelector('.nav-item[data-section="aiuto"]');
+  if (msgNavItem) msgNavItem.addEventListener("click", loadMessagesTab);
+  if (location.hash === "#aiuto") loadMessagesTab();
+// ===== SEGNALAZIONE SITO (TELEGRAM) =====
 
   // Backend AdOff (license-api): ticket -> KV + notifica Telegram
   const WORKER_BASE     = "https://api.adoff.app";
@@ -1834,13 +2007,13 @@
         const referralEnd = trialEnd + daysEarned * 86400000;
         const daysLeft = referralEnd > now ? Math.ceil((referralEnd - now) / 86400000) : 0;
 
-        // Popola UI
+        // Popola UI (elementi opzionali: il redesign HTML puo' ometterne alcuni)
         const fullLink = REFERRAL_BASE_URL + code;
-        referralLinkInput.value = fullLink;
-        referralCodeEl.textContent = code;
-        refCountEl.textContent = String(count);
-        refDaysEarnedEl.textContent = String(daysEarned);
-        refDaysLeftEl.textContent = String(daysLeft);
+        if (referralLinkInput) referralLinkInput.value = fullLink;
+        if (referralCodeEl) referralCodeEl.textContent = code;
+        if (refCountEl) refCountEl.textContent = String(count);
+        if (refDaysEarnedEl) refDaysEarnedEl.textContent = String(daysEarned);
+        if (refDaysLeftEl) refDaysLeftEl.textContent = String(daysLeft);
 
         // Storico
         renderReferralHistory(history);
@@ -1856,12 +2029,12 @@
               if (typeof data.daysEarned === "number") updates.adoffReferralDays = data.daysEarned;
               if (Array.isArray(data.history)) updates.adoffReferralHistory = data.history;
               chrome.storage.local.set(updates, () => {
-                refCountEl.textContent = String(data.count || 0);
-                refDaysEarnedEl.textContent = String(data.daysEarned || 0);
+                if (refCountEl) refCountEl.textContent = String(data.count || 0);
+                if (refDaysEarnedEl) refDaysEarnedEl.textContent = String(data.daysEarned || 0);
                 // Ricalcola daysLeft con dati freschi
                 const freshEnd = trialEnd + (data.daysEarned || 0) * 86400000;
                 const freshLeft = freshEnd > now ? Math.ceil((freshEnd - now) / 86400000) : 0;
-                refDaysLeftEl.textContent = String(freshLeft);
+                if (refDaysLeftEl) refDaysLeftEl.textContent = String(freshLeft);
                 renderReferralHistory(data.history || []);
               });
             })
@@ -1885,12 +2058,13 @@
   }
 
   function renderReferralHistory(history) {
+    if (!referralHistoryEl) return;
     referralHistoryEl.innerHTML = "";
     if (!history || history.length === 0) {
-      referralEmptyEl.style.display = "block";
+      if (referralEmptyEl) referralEmptyEl.style.display = "block";
       return;
     }
-    referralEmptyEl.style.display = "none";
+    if (referralEmptyEl) referralEmptyEl.style.display = "none";
 
     history.forEach((entry) => {
       const div = document.createElement("div");
@@ -2004,6 +2178,137 @@
       i18n.applyToDOM();
       showToast(i18n.t("opt.saved"));
     });
+  }
+
+  // ponytail: CSS-only approach — scope restricted to extension UI, no real theming engine needed
+
+  // ===== TEMI =====
+  const THEMES = [
+    { id: "default",  name: "Dark",     badge: "free", bg: "#0a0a1a", bg2: "#12122a", text: "#ffffff", accent: "#7c5cfc" },
+    { id: "midnight", name: "Midnight", badge: "free", bg: "#0d1117", bg2: "#161b22", text: "#c9d1d9", accent: "#1f6feb" },
+    { id: "forest",   name: "Forest",   badge: "free", bg: "#0f1a14", bg2: "#162119", text: "#d4e8d0", accent: "#2ea043" },
+    { id: "ocean",    name: "Ocean",    badge: "pro",  bg: "#0a1520", bg2: "#0f1e2e", text: "#c0d8f0", accent: "#1d9bf0" },
+    { id: "sunset",   name: "Sunset",   badge: "pro",  bg: "#1a0f0a", bg2: "#251510", text: "#f0d8c0", accent: "#f97316" },
+    { id: "lavender", name: "Lavender", badge: "pro",  bg: "#12101a", bg2: "#1a1625", text: "#e0d8f0", accent: "#b794f4" },
+  ];
+
+  function buildThemePreview(theme) {
+    return `<div class="theme-preview" style="background:${theme.bg}">
+      <div class="theme-preview-bar" style="background:${theme.bg2}">
+        <div class="theme-preview-icon" style="background:${theme.accent}"></div>
+        <div class="theme-preview-text" style="background:${theme.text};opacity:0.3"></div>
+      </div>
+      <div class="theme-preview-card" style="background:${theme.bg2}"></div>
+      <div class="theme-preview-bar" style="background:${theme.bg2};height:10px">
+        <div class="theme-preview-text" style="background:${theme.text};opacity:0.15;max-width:50%"></div>
+      </div></div>`;
+  }
+
+  function applyTheme(theme) {
+    const root = document.documentElement;
+    root.style.setProperty("--th-bg", theme.bg);
+    root.style.setProperty("--th-bg2", theme.bg2);
+    root.style.setProperty("--th-text", theme.text);
+    root.style.setProperty("--th-accent", theme.accent);
+  }
+
+  function resetThemeVars() {
+    const root = document.documentElement;
+    ["--th-bg","--th-bg2","--th-text","--th-accent"].forEach(v => root.style.removeProperty(v));
+  }
+
+  function loadThemes(savedThemeId) {
+    const grid = document.getElementById("themesGrid");
+    const upsell = document.getElementById("themesProUpsell");
+    if (!grid) return;
+    grid.innerHTML = "";
+    const isPro = license && (license.valid || (license.source === "trial" && license.plan === "trial"));
+
+    THEMES.forEach((theme) => {
+      const locked = theme.badge === "pro" && !isPro;
+      const active = savedThemeId === theme.id;
+      const card = document.createElement("div");
+      card.className = "theme-card" + (active ? " active" : "") + (locked ? " locked" : "");
+      card.dataset.themeId = theme.id;
+      const badgeText = locked ? `<span class="theme-badge ${theme.badge}">&#128274;</span>`
+        : `<span class="theme-badge ${active ? "active-badge" : theme.badge}">${active ? "&#10003;" : (theme.badge === "pro" ? "Pro" : "Free")}</span>`;
+      card.innerHTML = `${locked ? `<span class="theme-pro-icon">&#128274;</span>` : ""}${buildThemePreview(theme)}<span class="theme-name">${theme.name}</span>${badgeText}`;
+      if (!locked) card.addEventListener("click", () => saveTheme(theme.id));
+      grid.appendChild(card);
+    });
+
+    const activeName = document.getElementById("themeActiveName");
+    if (activeName) {
+      const t = THEMES.find(th => th.id === (savedThemeId || "default"));
+      activeName.textContent = t ? t.name : "Dark";
+    }
+    if (upsell) upsell.style.display = isPro ? "none" : "block";
+    if (savedThemeId) { const t = THEMES.find(th => th.id === savedThemeId); if (t) applyTheme(t); }
+  }
+
+  function saveTheme(themeId) {
+    chrome.storage.local.set({ adoffTheme: themeId });
+    const t = THEMES.find(th => th.id === themeId);
+    if (t) { resetThemeVars(); applyTheme(t); }
+    loadThemes(themeId);
+    showToast("Tema applicato!", "success");
+  }
+
+  // ===== IMAGE SWAP =====
+  const IMAGE_CATEGORIES = [
+    { id: "cats",     name: "Cats",     icon: "&#128008;", pro: true  },
+    { id: "dogs",     name: "Dogs",     icon: "&#128054;", pro: true  },
+    { id: "nature",   name: "Nature",   icon: "&#127795;", pro: false },
+    { id: "abstract", name: "Abstract", icon: "&#127912;", pro: true  },
+    { id: "space",    name: "Space",    icon: "&#127756;", pro: true  },
+    { id: "food",     name: "Food",     icon: "&#127839;", pro: true  },
+  ];
+
+  function loadImageSwap(savedCategory) {
+    const toggle = document.getElementById("settingImageSwap");
+    const catCard = document.getElementById("imageSwapCategoryCard");
+    const catGrid = document.getElementById("imageCategoriesGrid");
+    const upsell = document.getElementById("imageSwapProUpsell");
+    if (!toggle) return;
+    const isPro = license && (license.valid || (license.source === "trial" && license.plan === "trial"));
+    const currentVal = savedCategory || "off";
+
+    // ponytail: stub wired — content.js integration TODO when invasive changes needed
+    // Stub: setting persists to storage; cosmetic wire in content.js deferred per handoff note.
+
+    chrome.storage.local.get("adoffImageSwap", (r) => {
+      const val = r.adoffImageSwap || "off";
+      toggle.checked = val !== "off";
+      if (catCard) catCard.style.display = isPro && val !== "off" ? "block" : "none";
+      if (upsell) upsell.style.display = isPro ? "none" : "block";
+      if (!catGrid) return;
+      catGrid.innerHTML = "";
+      IMAGE_CATEGORIES.forEach((cat) => {
+        const locked = cat.pro && !isPro;
+        const active = val === cat.id;
+        const el = document.createElement("div");
+        el.className = "image-category-card" + (active ? " active" : "") + (locked ? " locked" : "");
+        el.innerHTML = `<div class="image-category-icon">${cat.icon}</div><div class="image-category-name">${cat.name}</div><div class="image-category-check">&#10003;</div>`;
+        if (!locked) el.addEventListener("click", () => {
+          chrome.storage.local.set({ adoffImageSwap: cat.id });
+          loadImageSwap(cat.id);
+          showToast("Salvato!");
+        });
+        catGrid.appendChild(el);
+      });
+    });
+
+    toggle.addEventListener("change", () => {
+      if (!isPro) { toggle.checked = false; showUpgradeUpsell(); return; }
+      const val = toggle.checked ? (savedCategory || "nature") : "off";
+      chrome.storage.local.set({ adoffImageSwap: val });
+      if (val !== "off") loadImageSwap(val);
+    });
+  }
+
+  function showUpgradeUpsell() {
+    const upsell = document.getElementById("imageSwapProUpsell");
+    if (upsell) { upsell.style.display = "block"; upsell.scrollIntoView({ behavior: "smooth", block: "center" }); }
   }
 
   // ===== INIT =====

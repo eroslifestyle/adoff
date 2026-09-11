@@ -1,16 +1,35 @@
 (function () {
   "use strict";
+  // Tier canonico del piano. Da quando AdOff e' gratuito per tutti questa
+  // funzione ritorna sempre "premium": ogni funzione e' sbloccata senza
+  // licenza e senza scadenza. La firma resta invariata perche' i chiamanti
+  // passano ancora il nome del piano, e per poter tornare indietro toccando
+  // un punto solo. Il grado di sostenitore NON si deduce da qui: usa
+  // adoffSupporterKind(). Invariante presidiato da
+  // sviluppo/tests/test-plan-tier-consistency.js.
+  function adoffPlanTier() {
+    return "premium";
+  }
 
   // EB-6: Nonce casuale per prevenire clobbering del flag di caricamento
   const LOAD_NONCE = Math.random().toString(36).slice(2, 10);
 
-  // Previeni istanze multiple — verifica che il valore sia il nostro nonce (non uno iniettato dal sito)
-  const existingNonce = document.documentElement.getAttribute("data-adoff-loaded");
-  if (existingNonce) return; // Già caricato
-  document.documentElement.setAttribute("data-adoff-loaded", LOAD_NONCE);
+  // Previeni istanze multiple. Il gate vive su window dell'ISOLATED world, che
+  // la pagina NON puo' leggere ne' scrivere: un attributo sul DOM e' invece
+  // condiviso col sito, che scrivendolo nell'HTML iniziale disattivava AdOff.
+  if (window.__adoffContentLoaded) return; // Già caricato in questo world
+  window.__adoffContentLoaded = LOAD_NONCE;
 
   const hostname = location.hostname;
   const isOfficialSite = hostname === "adoff.app" || hostname === "www.adoff.app" || hostname.endsWith(".adoff-site.pages.dev");
+
+  // Opt-in navigazione: statistiche per-hostname (buffer locale)
+  let navOptInActive = false;
+  try {
+    chrome.storage.local.get("adoffNavOptIn", (data) => {
+      if (!chrome.runtime.lastError) navOptInActive = data.adoffNavOptIn === true;
+    });
+  } catch (_) {}
 
   // Siti neutrali: nessuna pubblicita' interna — AdOff deve essere completamente
   // trasparente (no scan DOM, no hide, no stealth, no IMA). Hardcoded perche'
@@ -51,7 +70,7 @@
 
   // EM-4: Verifica integrity hash dello stato licenza (FNV inline)
   function computeIntegrity(licData) {
-    const raw = JSON.stringify(licData);
+    const raw = JSON.stringify(licData, licData && typeof licData === "object" ? Object.keys(licData).sort() : null);
     let hash = 0x811c9dc5;
     for (let i = 0; i < raw.length; i++) {
       hash ^= raw.charCodeAt(i);
@@ -68,8 +87,6 @@
   // L'autorità del trial è il server. Il gate Pro/Trial in-page si fida SOLO
   // di un token firmato verificato con la chiave pubblica embeddata; un
   // adoffTrialEnd gonfiato via DevTools non abilita le feature Pro.
-  const TRIAL_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
-  const TRIAL_MARGIN_MS = 24 * 60 * 60 * 1000;
   const TRIAL_PUBKEY_JWK = {
     kty: "EC", crv: "P-256",
     x: "FnIroHHVzo3v01gENPaA2U70c58sduDD6hGS0EhCATc",
@@ -107,20 +124,18 @@
       return payload;
     } catch (_) { return null; }
   }
-  // Trial attivo? Autorità = token firmato; fallback ottimistico ≤30g da ora.
+  // Autorità = token firmato dal server, no fallback locali.
   async function isTrialActive(result, now) {
     const payload = result.adoffTrialToken
       ? await verifyTrialToken(result.adoffTrialToken, result.adoffDeviceId)
       : null;
     if (payload) return payload.trialEnd > now;
-    const te = result.adoffTrialEnd || 0;
-    return !result.adoffTrialExpired && te > now
-      && te <= now + TRIAL_DURATION_MS + TRIAL_MARGIN_MS;
+    return false;
   }
 
   // --- Controlla whitelist, stato e licenza prima di avviare ---
   if (!isExtensionValid()) return;
-  chrome.storage.local.get(["adoffEnabled", "adoffAdsBlocked", "adoffWhitelist", "adoffTrialEnd", "adoffTrialToken", "adoffTrialExpired", "adoffDeviceId", "adoffLicense", "adoffIntegrity"], async (result) => {
+  chrome.storage.local.get(["adoffEnabled", "adoffAdsBlocked", "adoffWhitelist", "adoffTrialEnd", "adoffTrialToken", "adoffTrialExpired", "adoffDeviceId", "adoffLicense", "adoffIntegrity", "adoffYtCompat", "adoffFreeExpired"], async (result) => {
     if (chrome.runtime.lastError || !isExtensionValid()) return;
     const whitelist = result.adoffWhitelist || [];
     // EA-7: suffix matching corretto (non bidirezionale)
@@ -139,21 +154,42 @@
     // Trial: gate basato su token firmato dal server (non falsificabile).
     const trialOk = await isTrialActive(result, Date.now());
 
-    // Comunica al MAIN world (stealth.js) se lo stealth e' abilitato (Pro/Trial)
-    // Se l'integrity fallisce, trattare come Free (no stealth)
-    const isPro = (integrityOk && (
-      lic.type === "pro" || lic.type === "lifetime" ||
-      lic.plan === "pro" || lic.plan === "lifetime" ||
-      lic.plan === "monthly" || lic.plan === "annual"
-    )) || trialOk;
-    if (isPro) {
+    // Licenza free scaduta (30 giorni senza registrazione): AdOff non tocca
+    // piu' la pagina finche' l'utente non crea l'account. Lo stato lo decide
+    // background.js dal token firmato, qui si obbedisce e basta.
+    const freeExpired = result.adoffFreeExpired === true;
+
+    // Come in background.js: l'integrita' non governa piu' l'accesso.
+    const isPro =
+      adoffPlanTier(lic.type) !== "free" ||
+      adoffPlanTier(lic.plan) !== "free" ||
+      trialOk;
+    const stealthActive = enabled && !freeExpired && isPro;
+    if (stealthActive) {
       // EB-7: usa nonce verificabile invece di "1" fisso
       document.documentElement.setAttribute("data-adoff-stealth", STEALTH_NONCE);
     }
 
-    enabled    = result.adoffEnabled !== false;
-    adsBlocked = result.adoffAdsBlocked || 0;
-    if (enabled) start();
+    // --- Modalita' compatibilita' piattaforma video (kill-switch) ---
+    // stealth.js gira nel MAIN world a document_start e deve decidere se
+    // strippare la config ads PRIMA che la pagina la legga: una storage.get
+    // asincrona arriverebbe troppo tardi. localStorage e' condiviso tra
+    // ISOLATED e MAIN sullo stesso origin ed e' leggibile in modo sincrono,
+    // quindi lo usiamo come canale per la preferenza (stabile tra i load).
+    if (isVideoPlatform()) {
+      const compatOn = result.adoffYtCompat === true;
+      try { localStorage.setItem("__adoff_vc", compatOn ? "1" : "0"); } catch (_) { /* storage negato */ }
+      document.documentElement.setAttribute("data-adoff-vcompat", compatOn ? "1" : "0");
+      // Stesso canale sincrono per il verdetto Pro: il nonce qui sopra viene
+      // scritto dopo storage.get + verifica ECDSA, ma stealth.js deve decidere
+      // se ripulire la config ads PRIMA che la pagina la legga (pochi ms dopo
+      // document_start). Scritto solo sulle piattaforme video: e' li' che serve.
+      // Se l'estensione e' in pausa, il flag resta a "0": stealth.js fa
+      // passthrough completo e il video si comporta come senza AdOff.
+      try { localStorage.setItem("__adoff_pro", stealthActive ? "1" : "0"); } catch (_) { /* storage negato */ }
+    }
+
+    if (enabled && !freeExpired) start();
   });
 
   if (!isExtensionValid()) return;
@@ -163,10 +199,13 @@
       enabled = changes.adoffEnabled.newValue !== false;
       enabled ? start() : stop();
     }
+    if (changes.adoffFreeExpired) {
+      changes.adoffFreeExpired.newValue === true ? stop() : (enabled && start());
+    }
     // Aggiorna in tempo reale se la whitelist cambia mentre la pagina e' aperta
     if (changes.adoffWhitelist) {
       const whitelist = changes.adoffWhitelist.newValue || [];
-      const isPaused  = whitelist.some((d) => hostname.includes(d) || d.includes(hostname));
+      const isPaused  = whitelist.some((d) => hostname === d || hostname.endsWith("." + d));
       if (isPaused && enabled) stop();
     }
   });
@@ -192,6 +231,56 @@
         // Extension invalidated — stop silenzioso
       }
     }, 1000);
+  }
+
+  // Buffer statistiche navigazione per-hostname (solo con opt-in)
+  function bufferNavStat(kind, count) {
+    if (!navOptInActive || count <= 0) return;
+    chrome.storage.local.get("adoffNavBuffer", (data) => {
+      if (chrome.runtime.lastError) return;
+      const buffer = data.adoffNavBuffer || {};
+      if (!buffer[hostname]) buffer[hostname] = { adsBlocked: 0, adsLeaked: 0, errors: 0 };
+      buffer[hostname][kind] = (buffer[hostname][kind] || 0) + count;
+      // Cap dimensione buffer: max 200 hostname distinti
+      const keys = Object.keys(buffer);
+      if (keys.length > 200) delete buffer[keys[0]];
+      chrome.storage.local.set({ adoffNavBuffer: buffer });
+    });
+  }
+
+  // Detect possible leaks: iframe ad visibili con dimensioni IAB standard
+  function detectPossibleLeaks() {
+    if (!navOptInActive) return;
+
+    // Selettori iframe ad-network esistenti
+    const iframeSelectors = GENERIC_AD_SELECTORS.filter(s => s.includes("iframe") && s.includes("src"));
+    let leaks = 0;
+
+    // Dimensioni IAB standard (tolleranza ±5px)
+    const IAB_SIZES = [
+      [300, 250], [728, 90], [320, 50], [300, 600],
+      [320, 100], [160, 600], [970, 250],
+    ];
+
+    for (const sel of iframeSelectors) {
+      try {
+        const iframes = document.querySelectorAll(sel);
+        for (const el of iframes) {
+          const rect = el.getBoundingClientRect();
+          const isVisible = rect.width > 0 && rect.height > 0;
+          if (!isVisible) continue;
+
+          // Verifica dimensioni IAB standard
+          const isIABSize = IAB_SIZES.some(([w, h]) =>
+            Math.abs(rect.width - w) <= 5 && Math.abs(rect.height - h) <= 5
+          );
+
+          if (isIABSize) leaks++;
+        }
+      } catch (_) {}
+    }
+
+    if (leaks > 0) bufferNavStat("adsLeaked", leaks);
   }
 
   function isVideoPlatform() {
@@ -425,8 +514,27 @@
       }
     }
 
-    // 5. Trova label "Pubblicità"/"Ad" SOLO se adiacente a un contenitore ad noto
-    //    Non nascondere label/span/div generici — rompe pulsanti di popup legittimi
+    // 5. CITYNEWS PLATFORM — nasconde banner container self-hosted
+    //    (gif banner serviti dal sito stesso, non bloccabili a livello network)
+    const citynewsSelectors = [".area_banner", ".paszone_container", ".area-header"];
+    for (const sel of citynewsSelectors) {
+      const els = document.querySelectorAll(sel);
+      for (const el of els) {
+        if (el.hasAttribute("data-adoff-hidden")) continue;
+        if (el.querySelector("nav, header, article, section, [role='navigation'], .menu, .logo")) continue;
+        const hasAdContent = el.querySelector(
+          "ins.adsbygoogle, iframe[src], img[src*='banner' i], img[src*='ads' i], " +
+          "img[src*='sponsor' i], img[src*='promo' i], [id*='gpt-'], .adsbygoogle"
+        );
+        if (hasAdContent) {
+          collapseElement(el);
+          collapseAdParent(el);
+          count++;
+        }
+      }
+    }
+
+    // 5b. Trova label "Pubblicità"/"Ad" SOLO se adiacente a un contenitore ad noto
     const AD_LABELS = ["pubblicità", "ad", "ads", "advertisement", "annuncio", "pubblicita"];
     const candidates = document.querySelectorAll("p, span, div, small");
     for (const el of candidates) {
@@ -573,6 +681,7 @@
 
     if (removed > 0) {
       incrementBlocked(removed);
+      bufferNavStat("adsBlocked", removed);
     }
   }
 
@@ -619,6 +728,7 @@
         observerDebounce = null;
         scanAndRemove();
         blockPopupOverlays();
+        detectPossibleLeaks();
       }, OBSERVER_DEBOUNCE_MS);
     });
 
@@ -682,8 +792,13 @@
     }
     const hidden = document.querySelectorAll("[data-adoff-hidden]");
     for (const el of hidden) {
+      // Tutte e sei quelle scritte da collapseElement: fermarsi a tre lasciava
+      // il layout collassato (min-height/margin/padding) a protezione spenta.
       el.style.removeProperty("display");
       el.style.removeProperty("height");
+      el.style.removeProperty("min-height");
+      el.style.removeProperty("margin");
+      el.style.removeProperty("padding");
       el.style.removeProperty("overflow");
       el.removeAttribute("data-adoff-hidden");
     }

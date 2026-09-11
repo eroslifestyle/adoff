@@ -1,5 +1,25 @@
 (function () {
   "use strict";
+  // Tier canonico del piano. Da quando AdOff e' gratuito per tutti questa
+  // funzione ritorna sempre "premium": ogni funzione e' sbloccata senza
+  // licenza e senza scadenza. La firma resta invariata perche' i chiamanti
+  // passano ancora il nome del piano, e per poter tornare indietro toccando
+  // un punto solo. Il grado di sostenitore NON si deduce da qui: usa
+  // adoffSupporterKind(). Invariante presidiato da
+  // sviluppo/tests/test-plan-tier-consistency.js.
+  function adoffPlanTier() {
+    return "premium";
+  }
+
+  // Grado di sostenitore, per il solo badge della UI: chi ha una licenza
+  // valida continua a pagare volontariamente. Non governa NESSUNA funzione,
+  // che ormai e' sbloccata per tutti (vedi adoffPlanTier).
+  function adoffSupporterKind(lic) {
+    if (!lic || lic.valid !== true) return "none";
+    const plan = typeof lic.plan === "string" ? lic.plan : "";
+    if (plan.includes("founder") || plan === "lifetime") return "founder";
+    return "supporter";
+  }
 
   // ===== COSTANTI =====
   const PAUSE_LABELS = {
@@ -31,6 +51,7 @@
   const optionsLink    = document.getElementById("optionsLink");
 
   // Nuovi elementi
+  const trialBlockedBanner = document.getElementById("trialBlockedBanner");
   const founderBadge      = document.getElementById("founderBadge");
   const changelogBanner   = document.getElementById("changelogBanner");
   const changelogTitle    = document.getElementById("changelogTitle");
@@ -114,78 +135,101 @@
     reqBlockedEl.textContent = formatCount(req);
   }
 
-  /** Aggiorna il badge licenza nell'header. */
+  /** Aggiorna il badge licenza nell'header — 3 livelli: Free / Pro / Premium. */
   function renderLicenseBadge() {
-    const t = license.type || "free";
-    if (t === "pro" || t === "lifetime") {
-      licenseBadge.textContent = "PRO";
-      licenseBadge.className = "license-badge pro";
-    } else if (t === "trial") {
-      const daysLeft = calcTrialDaysLeft();
-      licenseBadge.textContent = daysLeft > 0 ? `TRIAL ${daysLeft}gg` : "TRIAL";
-      licenseBadge.className = "license-badge trial";
+    const kind = adoffSupporterKind(license);
+    if (kind === "founder") {
+      licenseBadge.textContent = i18n.t("popup.founder");
+      licenseBadge.className = "license-badge premium";
+    } else if (kind === "supporter") {
+      licenseBadge.textContent = i18n.t("badge.supporter");
+      licenseBadge.className = "license-badge premium";
     } else {
-      licenseBadge.textContent = "FREE";
-      licenseBadge.className = "license-badge free";
+      licenseBadge.textContent = i18n.t("badge.allActive");
+      licenseBadge.className = "license-badge premium";
     }
   }
 
-  /** Aggiorna il banner licenza sotto il sito. */
+  /** Mostra sezione Premium per utenti non-Premium. */
+  function renderPremiumUpsell(isPremium) {
+    const banner = document.getElementById("premiumBanner");
+    const section = document.getElementById("premiumSection");
+    if (banner) banner.style.display = "none";
+    if (section) {
+      section.style.display = "block";
+      const badge = document.getElementById("premiumBadge");
+      if (badge) {
+        badge.textContent = "ATTIVO";
+        badge.className = "premium-badge active";
+      }
+      const cta = section.querySelector(".premium-cta");
+      if (cta) cta.style.display = "none";
+    }
+  }
+
+  /** Avviso licenza free: giorni rimasti o protezione ferma. */
   function renderLicenseBanner() {
-    const t = license.type || "free";
-    if (t === "pro" || t === "lifetime") {
-      licenseBanner.style.display = "none";
-      return;
-    }
-    licenseBanner.style.display = "block";
-    // EA-1: costruzione DOM sicura, niente innerHTML con dati dinamici
-    licenseBanner.textContent = "";
-    if (t === "trial") {
-      const d = calcTrialDaysLeft();
-      licenseBanner.className = "license-banner trial";
-      const icon = document.createTextNode("\u23F3 Trial attivo \u2014 ");
-      const strong = document.createElement("strong");
-      const daysSpan = document.createElement("span");
-      daysSpan.textContent = d + " giorni rimasti";
-      strong.appendChild(daysSpan);
-      licenseBanner.appendChild(icon);
-      licenseBanner.appendChild(strong);
-    } else {
-      licenseBanner.className = "license-banner free";
-      const icon = document.createTextNode("\u2728 FREE \u2014 ");
-      const link = document.createElement("a");
-      link.href = "#";
-      link.textContent = "Prova Pro 30 giorni gratis";
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        chrome.runtime.openOptionsPage();
+    licenseBanner.style.display = "none";
+  
+    chrome.storage.local.get(["adoffFreeExpired", "adoffFreeGrantEnd", "adoffFreeRegistered", "adoffDeviceId"], function(data) {
+      void chrome.runtime.lastError;
+    
+      if (data.adoffFreeRegistered) return;
+    
+      var daysLeft = Math.max(0, Math.ceil((Number(data.adoffFreeGrantEnd || 0) - Date.now()) / 86400000));
+      var text = "";
+      var classe = "";
+    
+      if (data.adoffFreeExpired) {
+        text = i18n.t("onb.regExpiredTitle");
+        if (text === "onb.regExpiredTitle") text = "Your free period has expired.";
+        classe = "license-banner expired";
+      } else if (data.adoffFreeGrantEnd && daysLeft <= 7) {
+        text = i18n.t("onb.regDaysLeft").replace("{n}", String(daysLeft));
+        if (text === "onb.regDaysLeft") text = "Your free period expires in " + daysLeft + " days.";
+        classe = "license-banner warn";
+      } else {
+        return;
+      }
+    
+      licenseBanner.textContent = "";
+    
+      var span = document.createElement("span");
+      span.textContent = text;
+    
+      var btn = document.createElement("button");
+      btn.textContent = i18n.t("onb.regBtn");
+      if (btn.textContent === "onb.regBtn") btn.textContent = "Register";
+      btn.className = "license-banner-btn";
+      btn.addEventListener("click", function() {
+        var deviceParam = data.adoffDeviceId ? "&device=" + encodeURIComponent(data.adoffDeviceId) : "";
+        chrome.tabs.create({ url: "https://adoff.app/account/?signup=1&source=popup" + deviceParam });
       });
-      licenseBanner.appendChild(icon);
-      licenseBanner.appendChild(link);
-    }
+    
+      licenseBanner.appendChild(span);
+      licenseBanner.appendChild(btn);
+      licenseBanner.style.display = "block";
+    });
+  }
+
+  /** Mostra il banner trial bloccato. */
+  function renderTrialBlockedBanner() {
+    trialBlockedBanner.style.display = "none";
   }
 
   /**
-   * Normalizza l'oggetto licenza: il trial vive nella chiave storage
-   * separata `adoffTrialEnd`, mentre `adoffLicense` contiene solo le
-   * licenze Pro/Lifetime acquistate. Deriva `type`/`trialEndsAt` per la UI.
+   * Normalizza l'oggetto licenza. Tutte le funzioni sono attive per tutti
+   * gli utenti: il tipo e' sempre "premium". I parametri non sono piu'
+   * utilizzati ma restano nella firma per compatibilita' con i chiamanti.
    * @param {object|undefined} lic
    * @param {number|undefined} trialEnd
    * @returns {object}
    */
-  function normalizeLicense(lic, trialEnd) {
+  function normalizeLicense(lic, trialEnd, trialBlocked) {
     const out = Object.assign({}, lic);
-    const plan = out.plan || "";
-    const hasValidPro = out.valid &&
-      (plan === "pro" || plan === "lifetime" || plan === "monthly" || plan === "annual");
-    if (hasValidPro) {
-      out.type = plan === "lifetime" ? "lifetime" : "pro";
-    } else if (trialEnd && trialEnd > Date.now()) {
-      out.type = "trial";
-      out.trialEndsAt = trialEnd;
-    } else {
-      out.type = "free";
-    }
+    // Il tipo passa dalla funzione canonica: è lì che si decide, ed è lì
+    // che si tornerebbe indietro. Oggi vale sempre "premium".
+    out.type = adoffPlanTier(out.plan);
     return out;
   }
 
@@ -194,9 +238,7 @@
    * @returns {number}
    */
   function calcTrialDaysLeft() {
-    if (!license.trialEndsAt) return 0;
-    const diff = license.trialEndsAt - Date.now();
-    return Math.max(0, Math.ceil(diff / 86_400_000));
+    return 0;
   }
 
   /** Aggiorna la sezione pausa per sito. */
@@ -226,6 +268,117 @@
 
   // Changelogs (stesso del background.js)
   const CHANGELOGS = {
+      "3.6.0": [
+        "AdOff e' ora gratuito per tutti: ogni funzione e' attiva senza account e senza scadenze",
+        "Non serve fare nulla: e' gia' tutto sbloccato",
+        "Se avevi un abbonamento attivo, sei passato a Sostenitore: puoi interromperlo quando vuoi senza perdere nessuna funzione"
+      ],
+
+      
+      
+
+      "3.5.84": [
+        "Gli annunci vengono saltati subito invece di essere accelerati",
+        "L'attesa iniziale e' ridotta al minimo"
+      ],
+      "3.5.83": [
+        "Gli annunci inseriti dentro il video vengono ora saltati invece che accelerati",
+        "Attesa iniziale ridotta al minimo"
+      ],
+      "3.5.82": [
+        "Attesa iniziale piu' breve: gli annunci vengono scaricati alla risoluzione minima",
+        "Il video torna subito alla massima qualita' appena l'annuncio finisce"
+      ],
+      "3.5.81": [
+        "Risolto il blocco su schermo nero durante gli annunci",
+        "L'annuncio puo' essere riprodotto a qualsiasi risoluzione, il contenuto resta al massimo"
+      ],
+      "3.5.80": [
+        "Il video parte sempre alla massima risoluzione disponibile",
+        "Recuperata la qualita' bassa che era rimasta memorizzata dalle versioni precedenti"
+      ],
+      "3.5.79": [
+        "Risolti i salti di posizione: il video non riparte piu' da un punto sbagliato dopo un annuncio",
+        "La qualita' del video non viene piu' abbassata durante gli annunci: resta sempre quella scelta",
+        "Rimossa la ricarica di soccorso che poteva far ripartire il video dall'inizio"
+      ],
+      "3.5.78": [
+        "Fix: all'avvio di un video la qualita' poteva restare bassa dopo l'annuncio, facendo perdere l'alta definizione",
+        "La qualita' viene ora rilevata mentre scorre il contenuto, non durante l'annuncio"
+      ],
+      "3.5.77": [
+        "Fix: gli abbonamenti annuali e Premium non venivano riconosciuti in alcune schermate e su alcune piattaforme video, riattivando gli annunci",
+        "Riconoscimento del piano unificato in un unico punto, identico su tutti i browser"
+      ],
+      "3.5.76": [
+        "Reintegrato il fix dell'hash di integrita' della licenza perso accidentalmente nel merge della 3.5.75",
+        "Senza questo fix il blocco pubblicita' sulle piattaforme video restava disattivato per tutti gli abbonati Pro, Lifetime e Premium",
+        "Verificata la presenza del fix su tutti i file dell'estensione per Chrome, Firefox e Safari"
+      ],
+      "3.5.75": [
+        "Risolto il bug che impediva il caricamento dell'estensione su Chrome: un campo deprecato nelle regole faceva rifiutare l'intero ruleset",
+        "Le regole dei negozi (936/937) usano ora excludedInitiatorDomains al posto del campo excludedDomains non piu' supportato",
+        "Verificato il ruleset completo: nessun altro campo deprecato presente su Chrome, Firefox e Safari"
+      ],      "3.5.71": [
+        "Corretto il riconoscimento del piano Premium: ora i piani premium_monthly, premium_annual e premium_annual_founder attivano correttamente il blocco pubblicita' sulle piattaforme video",
+        "Il controllo usa ora un match prefisso (startsWith premium) invece di un match esatto che non scattava mai con i nomi reali dei piani",
+        "Verificato su tutti e tre i browser (Chrome, Firefox, Safari)",
+      ],
+      "3.5.70": [
+        "Risolto un problema che sulle piattaforme video mostrava di nuovo tutte le pubblicita' agli abbonati Premium",
+        "Il riconoscimento dell'abbonamento Premium ora funziona anche sulle piattaforme video",
+        "Nessun impatto sugli altri piani: Pro, Trial e Free restano invariati",
+      ],
+      "3.5.69": [
+        "Risolto il blocco dei login con Google e di altri provider su alcuni siti",
+        "I siti con piu' sottodomini vengono riconosciuti correttamente",
+        "Verificato che non indebolisce il blocco dei popunder",
+      ],
+      "3.5.68": [
+        "Ridotti a uno solo i clic necessari per avviare o fermare il video",
+        "Rimossa la restituzione del gesto che causava un passaggio di stato di troppo",
+        "Verificato sul sito reale e sui lettori video puliti",
+      ],
+      "3.5.67": [
+        "Bloccato il caricatore pubblicitario servito dal sito stesso e non dal suo circuito",
+        "La difesa contro le finestre aperte dai riquadri raggiunge ora gli utenti",
+        "Riconosciuti i circuiti anche quando cambiano indirizzo con un sottodominio",
+      ],
+      "3.5.66": [
+        "Bloccate le finestre pubblicitarie aperte da un riquadro creato al momento",
+        "Riconosciuti i circuiti anche quando cambiano indirizzo con un sottodominio",
+        "Le difese seguono il lettore dentro i riquadri di altri siti",
+      ],
+      "3.5.65": [
+        "Il comando arriva al lettore al primo clic anche quando la pubblicita' prova a rubarlo",
+        "Riconosciuti i collegamenti invisibili stesi sopra il video anche fuori dai lettori incorporati",
+        "Un clic dell'utente resta una sola azione: nessun comando ripetuto",
+      ],
+      "3.5.64": [
+        "Protezione confermata contro le finestre che si aprono al clic sul play",
+        "Riconoscimento dei circuiti pubblicitari dal loro indirizzo",
+        "Difesa attiva anche dentro i lettori video incorporati",
+      ],
+      "3.5.63": [
+        "Blocco delle finestre pubblicitarie che si aprono al primo clic",
+        "Riconoscimento dei circuiti di affiliazione dal loro indirizzo",
+        "Difesa piu' severa sui link invisibili sovrapposti al video",
+      ],
+      "3.5.62": [
+      "Protezione attiva anche dentro i player incorporati",
+      "Blocco degli annunci a comparsa indipendente dal sito",
+      "Riconoscimento dei circuiti pubblicitari che cambiano indirizzo"
+      ],
+    "3.5.61": [
+      "Protezione piu' solida contro i siti che provano a disattivarla",
+      "Riconoscimento dei domini piu' rigoroso",
+      "Il ripristino del layout a protezione spenta ora e' completo",
+    ],
+    "3.5.60": [
+      "Blocco popunder da iframe di player video",
+      "Correzione crash stub IMA durante navigazione",
+      "Aggiornamento automatico filtri dal server",
+    ],
     "3.1.0": [
       "Sistema referral: invita amici, guadagna Pro gratis",
       "Prompt recensioni intelligente",
@@ -273,21 +426,29 @@
 
   // Deep-link alla pagina recensioni dello store giusto, in base al browser rilevato.
   const SUPPORT_URL = "https://adoff.app/support.html";
+  // ID pubblicato sul Chrome Web Store. NON usare chrome.runtime.id: negli install
+  // da ZIP (unpacked) è un ID locale diverso e il deep-link finisce su una pagina inesistente.
+  // ponytail: chi ha installato da ZIP vedrà la scheda ma non il widget recensione — Google
+  // richiede l'install dallo store; per loro il link serve a reinstallare da lì.
+  const CWS_ITEM_ID = "fcjfpfhdcpbjmihiikbblcokmjnhedhp";
+
   function detectReviewUrl() {
     const ua = navigator.userAgent || "";
     if (/Firefox\//.test(ua)) return "https://addons.mozilla.org/firefox/addon/adoff/reviews/";
     if (/Edg\//.test(ua))     return "https://microsoftedge.microsoft.com/addons/detail/00a23227-cb9a-415c-88bb-4e9636f7e94b";
-    return "https://chromewebstore.google.com/detail/" + chrome.runtime.id + "/reviews";
+    return "https://chromewebstore.google.com/detail/" + CWS_ITEM_ID + "/reviews";
   }
 
-  // Trigger su USO ATTIVO: almeno 100 ads bloccate (proxy d'uso reale) e 10 giorni dall'install.
-  const REVIEW_MIN_ADS = 100;
-  const REVIEW_MIN_DAYS = 10;
+  // Trigger su USO ATTIVO. Soglia bassa di proposito: `adoffAdsBlocked` conta solo le ads
+  // cosmetic, quindi 100 ads + 10 giorni era irraggiungibile per quasi tutti gli utenti e
+  // il prompt non compariva mai. Ora si sommano anche le richieste di rete bloccate.
+  const REVIEW_MIN_BLOCKED = 30;
+  const REVIEW_MIN_DAYS = 3;
   const REVIEW_COOLDOWN_DAYS = 7;   // un solo promemoria dopo ~7 giorni
   const REVIEW_MAX_PROMPTS = 2;     // 1 prompt + 1 reminder, poi mai più
 
   function shouldShowReviewPrompt(data) {
-    const adsBlocked = data.adoffAdsBlocked || 0;
+    const blocked = (data.adoffAdsBlocked || 0) + (data.adoffReqBlocked || 0);
     const installDate = data.adoffInstallDate || 0;
     const promptCount = data.adoffReviewPromptCount || 0;
     const dismissed = data.adoffReviewDismissed || false;
@@ -297,7 +458,7 @@
 
     if (done || dismissed) return false;
     if (promptCount >= REVIEW_MAX_PROMPTS) return false;
-    if (adsBlocked < REVIEW_MIN_ADS) return false;
+    if (blocked < REVIEW_MIN_BLOCKED) return false;
 
     const daysSinceInstall = (now - installDate) / 86400000;
     if (daysSinceInstall < REVIEW_MIN_DAYS) return false;
@@ -355,6 +516,21 @@
     reviewPrompt.style.display = "none";
   });
 
+  /** Mostra card rapida messaggi con badge non letti. */
+  function renderMessagesQuickCard(data) {
+    const count = data.adoffUnreadMessages || 0;
+    const card = document.getElementById('msgQuickCard');
+    const badge = document.getElementById('msgQuickBadge');
+    if (!card) return;
+    card.style.display = 'flex';
+    if (count > 0) {
+      badge.textContent = String(count);
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
   /** Esegue il render completo. */
   function renderAll(data) {
     const isEnabled = data.adoffEnabled !== false;
@@ -362,10 +538,23 @@
     renderStats(data.adoffAdsBlocked || 0, data.adoffReqBlocked || 0);
     renderLicenseBadge();
     renderLicenseBanner();
+    renderTrialBlockedBanner();
     renderPauseSection();
+    renderPremiumUpsell(true);
     renderFounderBadge(data);
     renderChangelog(data);
     renderReviewPrompt(data);
+    renderMessagesQuickCard(data);
+
+    // ---- Mobile banner ----
+    (function showMobileBanner() {
+      var banner = document.getElementById("mobileBanner");
+      if (!banner) return;
+      // Show the banner to all users (free and Pro) after 1.5s
+      setTimeout(function() {
+        banner.style.display = "flex";
+      }, 1500);
+    })();
   }
 
   // ===== CARICAMENTO DATI =====
@@ -390,7 +579,7 @@
           chrome.storage.local.set({ adoffWhitelist: whitelist });
         }
 
-        license = normalizeLicense(result.adoffLicense || result.license, result.adoffTrialEnd);
+        license = normalizeLicense(result.adoffLicense || result.license, result.adoffTrialEnd, result.adoffTrialBlocked);
         renderAll(result);
       });
     });
@@ -461,7 +650,14 @@
     chrome.tabs.create({ url: chrome.runtime.getURL("src/options.html#aiuto") });
   });
 
+
+  // ===== MESSAGGI QUICK CARD =====
+  document.getElementById('msgQuickOpen').addEventListener('click', () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('src/options.html#aiuto') });
+  });
+
   // ===== INIT =====
+
   i18n.init(() => {
     i18n.applyToDOM();
     loadState();

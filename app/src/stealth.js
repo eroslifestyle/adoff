@@ -70,159 +70,31 @@
   // funzionare nativamente. IMA stub e stealth disabilitati su questi siti.
   const PREMIUM_STREAMING = [
     "paramountplus.com",
+    "parampunt.com",
+    // SSAI proprietario (non Google IMA): lo stub e gli override stealth non
+    // servono e possono rompere la SPA o il player, come su netflix.com.
+    "primevideo.com",
   ];
 
-  const isBroadcaster = BROADCASTER_SITES.some((d) => hostname.includes(d));
-  const isPremiumStreaming = PREMIUM_STREAMING.some((d) => hostname.includes(d));
-  const isStealhExcluded = isBroadcaster || isPremiumStreaming || STEALTH_EXCLUDED.some((d) => hostname.includes(d));
+  // hostname.includes rendeva youtube.com.malware.tk un sito considerato sicuro ed esente dalle difese
+  const matchDominio = (host, d) => {
+    if (d === 'google.co') {
+      // Copre i domini nazionali (google.co.uk, google.com.au) ma NON
+      // google.co.evil.tk: dopo "google." accetta solo 1-2 label finali.
+      return /(^|\.)google\.[a-z]{2,3}(\.[a-z]{2})?$/.test(host);
+    }
+    return host === d || host.endsWith('.' + d);
+  };
+  const isBroadcaster = BROADCASTER_SITES.some((d) => matchDominio(hostname, d));
+  const isPremiumStreaming = PREMIUM_STREAMING.some((d) => matchDominio(hostname, d));
+  const isStealhExcluded = isBroadcaster || isPremiumStreaming || STEALTH_EXCLUDED.some((d) => matchDominio(hostname, d));
 
   // =============================================
-  // POPUP / POPUNDER BLOCKER (MAIN world, document_start)
-  //
-  // Blocca le finestre/tab pubblicitarie aperte dai siti di streaming
-  // pirata, aggregatori, mirror video. Tre layer di difesa:
-  //
-  //   Layer 1 — URL blacklist: pattern di popunder ad networks noti
-  //             (ExoClick, PopAds, TrafficJunky, AdsTerra, ...) e
-  //             TLD/path cloaking comuni nei redirect a pagamento.
-  //   Layer 2 — User-gesture verification: window.open() chiamato
-  //             senza click utente recente (<1s, isTrusted) viene
-  //             bloccato. I popunder usano timer/eventi sintetici.
-  //   Layer 3 — Multi-window throttle: piu' di 1 window.open per
-  //             gesture e' signature popunder ("aprire 3 tab al click
-  //             su play"). Blocchiamo dalla seconda in poi.
-  //
-  // Disabilitato sui big tech (STEALTH_EXCLUDED) e broadcaster
-  // (BROADCASTER_SITES, PREMIUM_STREAMING) dove popup legittimi
-  // sono attesi (auth OAuth, dialog, payment, share). Layer 1 (URL
-  // blacklist) resta attivo ovunque — quegli URL non sono mai voluti.
+  // POPUP / POPUNDER BLOCKER → spostato in src/popup-blocker.js
+  // Gira in MAIN world su TUTTI i frame (all_frames: true), perche' i
+  // popunder dei siti di streaming partono dagli iframe del player,
+  // dove questo script (solo top frame) non arrivava.
   // =============================================
-  (function popupBlocker() {
-    // Layer 1 — URL blacklist (sempre attivo, anche su big tech)
-    const POPUP_AD_PATTERNS = [
-      // Popunder ad networks
-      /popads\.net/i, /popcash\.net/i, /propellerads\.com/i,
-      /adsterra\.com/i, /exoclick\.com/i, /juicyads\.com/i,
-      /trafficjunky\.(?:com|net)/i, /clickadu\.com/i, /hilltopads\.net/i,
-      /onclickadnow\.com/i, /onclkds\.com/i, /clkmon\.com/i,
-      /clickdealer\.com/i, /mellowads\.com/i, /smartypop\.com/i,
-      /tsyndicate\.com/i, /adskeeper\.com/i, /mgid\.com/i,
-      /yllix\.com/i, /revenuehits\.com/i, /bidvertiser\.com/i,
-      /adversal\.com/i, /infolinks\.com/i, /popunder/i,
-      /\bpopads\b/i, /\bpop-?ads?\b/i, /\bpop-?under\b/i,
-      // Cloaking/redirect comuni nei popunder
-      /awsmsndr\.com/i, /clksite\.com/i, /clkrev\.com/i,
-      /go\.onelink\.me\/.*\?af_xp/i, /trk\..*\?p=/i,
-      /\/4\/\d{6,}/i,               // ExoClick zone tracker path
-      /\/smartpop/i, /\/popunder\.js/i,
-      // Pattern domini TLD a basso costo + query tracker (cloak)
-      /^https?:\/\/[a-z0-9-]+\.(?:tk|ml|ga|cf|gq|click|loan|win|men|trade|top|gdn|surf|date|stream|cricket|science|party|review|kim|country|faith|cricket|racing|bid|webcam|download|accountant)\//i,
-      // Push-notification ad networks ("vuoi ricevere notifiche?")
-      /pushwhy\.com/i, /pushnam\.com/i, /pushhouse\.com/i,
-      /pushtape\.com/i, /pushmaster\.io/i, /push-notification-/i,
-      // Generic cloak redirects
-      /\bredirect=https?%3A/i, /\bgo=https?%3A/i,
-      /\/redirect\.php\?/i, /\/go\.php\?/i, /\/out\.php\?/i,
-    ];
-
-    function isPopupAdUrl(u) {
-      if (!u || typeof u !== "string") return false;
-      // about:blank popup poi assegna location → check parziale
-      if (u === "about:blank" || u === "" || u === "javascript:void(0)") return false;
-      return POPUP_AD_PATTERNS.some((re) => re.test(u));
-    }
-
-    // Layer 2/3 — gesture tracking
-    let lastTrustedClick = 0;
-    let windowsThisGesture = 0;
-    let gestureTimer = null;
-
-    function markGesture() {
-      lastTrustedClick = Date.now();
-      windowsThisGesture = 0;
-      if (gestureTimer) clearTimeout(gestureTimer);
-      gestureTimer = setTimeout(() => { windowsThisGesture = 0; }, 1000);
-    }
-
-    // Capture phase: registriamo il gesture PRIMA che il sito lo intercetti
-    const GESTURE_EVENTS = ["click", "auxclick", "pointerdown", "mousedown", "touchstart", "keydown"];
-    for (const ev of GESTURE_EVENTS) {
-      window.addEventListener(ev, function (e) {
-        if (e.isTrusted) markGesture();
-      }, true);
-    }
-
-    // Disabilita Layer 2/3 sui big tech / broadcaster / streaming premium
-    // dove popup legittimi sono attesi
-    const enableGestureCheck = !isStealhExcluded;
-
-    const origOpen = window.open;
-    function safeOpen(url, name, features) {
-      try {
-        const u = String(url || "");
-        // Layer 1: sempre attivo
-        if (isPopupAdUrl(u)) {
-          try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: u } })); } catch (_) {}
-          return null;
-        }
-        // Layer 2/3: solo se non big tech
-        if (enableGestureCheck) {
-          const sinceClick = Date.now() - lastTrustedClick;
-          // window.open senza gesto utente recente (>1.5s) → popunder
-          if (sinceClick > 1500) {
-            try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: u, reason: "no-gesture" } })); } catch (_) {}
-            return null;
-          }
-          // 2+ finestre nello stesso click → popunder signature
-          if (windowsThisGesture >= 1) {
-            try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: u, reason: "multi-window" } })); } catch (_) {}
-            return null;
-          }
-          windowsThisGesture++;
-        }
-        return origOpen.apply(this, arguments);
-      } catch (_) {
-        return null;
-      }
-    }
-    // Manteniamo la prototype chain originale
-    try {
-      Object.defineProperty(window, "open", {
-        value: safeOpen,
-        writable: false,
-        configurable: false,
-      });
-    } catch (_) {
-      try { window.open = safeOpen; } catch (__) {}
-    }
-
-    // HTMLAnchorElement.click() programmatico verso ad networks
-    // (popunder spesso fa: a = document.createElement('a'); a.href=ad; a.target='_blank'; a.click())
-    const origAClick = HTMLAnchorElement.prototype.click;
-    HTMLAnchorElement.prototype.click = function () {
-      try {
-        const href = String(this.href || "");
-        if (isPopupAdUrl(href)) {
-          try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: href, reason: "anchor-click" } })); } catch (_) {}
-          return;
-        }
-        // target=_blank programmatico senza gesto recente
-        if (enableGestureCheck && (this.target === "_blank" || this.target === "_new")) {
-          const sinceClick = Date.now() - lastTrustedClick;
-          if (sinceClick > 1500) {
-            try { window.dispatchEvent(new CustomEvent("adoff-popup-blocked", { detail: { url: href, reason: "anchor-no-gesture" } })); } catch (_) {}
-            return;
-          }
-        }
-      } catch (_) {}
-      return origAClick.apply(this, arguments);
-    };
-
-    // Notifica content.js (ISOLATED) per incrementare contatore + badge
-    window.addEventListener("adoff-popup-blocked", function () {
-      try { document.documentElement.setAttribute("data-adoff-popup-blocked", String(Date.now())); } catch (_) {}
-    });
-  })();
 
   // =============================================
   // VIDEO PLATFORM AD ELIMINATION (MAIN world)
@@ -236,58 +108,205 @@
   //   /youtubei/v1/player API (SPA navigation) before the player
   //   reads it. Result: zero ads scheduled, zero delay, zero black screen.
   //
-  // Layer B: INSTANT SKIP — Fallback for any ads that slip through.
-  //   video.currentTime = video.duration ends the ad instantly.
-  //   playbackRate = 16 as insurance if seeking is blocked.
+  // Layer B: FAST-FORWARD — Fallback for any ads that slip through.
+  //   playbackRate = 16 lets the ad finish on its own in about a second,
+  //   hidden behind an opaque overlay, and YouTube handles the transition.
   //   Immediate skip button click, 50ms polling.
-  //   NOTE: currentTime on ad video is safe — the player handles
-  //   content position restoration internally after ad completion.
+  //   NEVER seek currentTime: ad and content share the same <video> element
+  //   (MSE source switching). Seeking caused six versions of position bugs
+  //   (removed in v3.5.52, reintroduced by mistake in v3.5.55, removed again).
   //
   // Layer C: ANTI-DETECTION — ratechange masking, overlay closing.
   // =============================================
   if (isVideoPlatform) {
 
+    // Kill-switch compatibilita': se attivo, NON tocchiamo la config ads della
+    // pagina (niente strip, niente mangle, niente inject) e lasciamo che la
+    // piattaforma programmi gli annunci normalmente — vengono poi bruciati a
+    // runtime dal Layer B. Serve quando lo strip fa reagire il server con
+    // attese/buffering al posto dell'annuncio.
+    // Letto da localStorage perche' qui siamo a document_start e serve una
+    // lettura SINCRONA: content.js lo scrive al load precedente.
+    function isVideoCompatMode() {
+      try { if (localStorage.getItem("__adoff_vc") === "1") return true; } catch (_) { /* negato */ }
+      return document.documentElement?.getAttribute("data-adoff-vcompat") === "1";
+    }
+
     // ---- LAYER A: Ad Prevention (strip ad config) ----
 
     // Mangle ad field names in JSON text — makes them unrecognizable
-    // to the player without breaking JSON structure
-    const AD_MANGLE = [
-      [/"adPlacements"/g, '"xdPlacements"'],
-      [/"playerAds"/g, '"playerXds"'],
-      [/"adSlots"/g, '"xdSlots"'],
-      [/"adBreakParams"/g, '"xdBreakParams"'],
-      [/"adBreakHeartbeatParams"/g, '"xdBreakHeartbeatParams"'],
-    ];
-
+    // to the player without breaking JSON structure. Pattern-based: qualsiasi
+    // chiave JSON che inizia con "ad" + maiuscola viene rinominata.
     function mangleAdFields(text) {
-      for (const [re, rep] of AD_MANGLE) text = text.replace(re, rep);
-      return text;
+      if (typeof text !== "string") return text;
+      // Renaming con regex: "adPlacements" -> "xdPlacements", ecc.
+      // Il gruppo cattura solo la parte dopo "ad", quindi adPlacements -> xdPlacements.
+      return text
+        .replace(/"ad([A-Z][a-zA-Z]*)"\s*:/g, '"xd$1":')
+        .replace(/"playerAds"\s*:/g, '"playerXds":')
+        .replace(/"midroll([a-zA-Z]*)"\s*:/g, '"xdroll$1":');
     }
 
-    // Object-level deletion for ytInitialPlayerResponse
-    const AD_KEYS = [
-      "adPlacements", "playerAds", "adSlots",
-      "adBreakParams", "adBreakHeartbeatParams",
-    ];
+    // Object-level deep deletion: rimuove ricorsivamente ogni chiave che segue
+    // la naming convention degli annunci di YouTube. Piu' robusta di una lista
+    // statica: nuovi campi vengono intercettati automaticamente.
+    function isAdKey(k) {
+      if (typeof k !== "string") return false;
+      if (k === "adaptiveFormats") return false;   // qualita' video, NON annunci
+      if (k === "additive") return false;
+      return /^ad[A-Z]/.test(k) || /^playerAds$/i.test(k) || /^midroll/i.test(k);
+    }
 
-    function stripAdObj(obj) {
+    function stripAdObj(obj, depth) {
       if (!obj || typeof obj !== "object") return obj;
-      for (const k of AD_KEYS) { if (k in obj) delete obj[k]; }
-      if (obj.playerResponse) stripAdObj(obj.playerResponse);
+      if (depth === undefined) depth = 0;
+      if (depth > 6) return obj;  // sicurezza anti-ciclo
+      for (const k of Object.keys(obj)) {
+        if (isAdKey(k)) {
+          delete obj[k];
+        } else if (typeof obj[k] === "object" && obj[k] !== null) {
+          stripAdObj(obj[k], depth + 1);
+        }
+      }
       return obj;
     }
 
+    // A0: Hook JSON.stringify per inject isInlinePlaybackNoAd
+    (function () {
+        var _origStringify = JSON.stringify;
+        JSON.stringify = function (value) {
+            var out = _origStringify.apply(JSON, arguments);
+            try {
+                if (isProSync() && !isVideoCompatMode() && typeof out === "string" &&
+                    out.indexOf("\"contentPlaybackContext\":{") !== -1 &&
+                    out.indexOf("isInlinePlaybackNoAd") === -1) {
+                    out = out.replace("\"contentPlaybackContext\":{", "\"contentPlaybackContext\":{\"isInlinePlaybackNoAd\":true,");
+                    try { window.__adoffYtDiag.flagInjectedStringify++; } catch (_) {}
+                }
+            } catch (_) { /* mai rompere JSON.stringify */ }
+            return out;
+        };
+    })();
+
+    // A0b: Hook Object.assign come fallback anti locker-script
+    (function () {
+        try {
+            window.Object.assign = new Proxy(window.Object.assign, {
+                apply: function (target, thisArg, args) {
+                    var res = Reflect.apply(target, thisArg, args);
+                    try {
+                        if (isProSync() && !isVideoCompatMode() && res && typeof res === "object" &&
+                            res.contentPlaybackContext && typeof res.contentPlaybackContext === "object" &&
+                            res.contentPlaybackContext.isInlinePlaybackNoAd === undefined) {
+                            res.contentPlaybackContext.isInlinePlaybackNoAd = true;
+                            try { window.__adoffYtDiag.flagInjectedAssign++; } catch (_) {}
+                        }
+                    } catch (_) {}
+                    return res;
+                }
+            });
+        } catch (_) { /* Object.assign puo essere non configurabile */ }
+    })();
+
     // A1: Hook ytInitialPlayerResponse before YouTube's inline script sets it
     // Gating runtime: Free passthrough (no strip), Pro/Trial strip.
-    // L'hook si installa sempre a document_start per non perdere il primo set;
-    // la decisione strip vs passthrough avviene quando YouTube chiama il setter.
+    //
+    // CRITICO — la decisione NON va presa nel setter. YouTube assegna
+    // ytInitialPlayerResponse da uno script inline pochi ms dopo document_start,
+    // mentre il verdetto Pro arriva da content.js solo dopo storage.get +
+    // verifica ECDSA del token trial (entrambe asincrone). Decidendo nel set si
+    // perde quella corsa quasi sempre: gli adPlacements passano intatti e il
+    // player schedula tutti gli annunci. Lo strip e' quindi PIGRO, valutato al
+    // get: il player legge la config molto piu' tardi (playerBootstrap), quando
+    // il gate e' arrivato. isProSync legge in piu' il canale localStorage
+    // sincrono, che copre anche una lettura anticipata.
     let _ytResp = window.ytInitialPlayerResponse;
+    let _ytStripped = false;
+    let _coldLoadDone = false;
+    let _hadAds = false;
+
+    function rilevaAds(r) {
+       // Lo strip cancella l'indizio, quindi va memorizzato prima.
+       try {
+           if (!r) return false;
+           if (r.adPlacements || r.adBreakHeartbeatParams || r.playerAds) return true;
+       } catch (_) {}
+       return false;
+    }
+
+    // Inizializzazione: copriamo il caso in cui la variabile esista già prima del nostro hook
+    _hadAds = rilevaAds(_ytResp);
+
+    function stripYtRespIfPro() {
+      if (_ytStripped || !_ytResp) return;
+      if (!isProSync() || isVideoCompatMode()) return;
+      stripAdObj(_ytResp);
+      _ytStripped = true;
+    }
+
+    function coldLoadDisabilitato() {
+       // COLD-LOAD DISATTIVATO PERMANENTEMENTE (v3.5.73): causava 403 su googlevideo.com
+       // per parametri firmati invalidati + degrado qualita video + spot server-side via SABR.
+       // Lo strip adPlacements + mangle + inject isInlinePlaybackNoAd bastano a rimuovere gli
+       // spot client-side senza corrompere il player.
+       return true;
+    }
+
+    function isLiveResp(r) {
+       // le dirette NON vanno mai toccate: il cold-load le rompe
+       try {
+           if (!r) return false;
+           if (r.videoDetails && (r.videoDetails.isLive === true || r.videoDetails.isLiveContent === true)) return true;
+           if (r.playabilityStatus && r.playabilityStatus.liveStreamability) return true;
+       } catch (_) {}
+       return false;
+    }
+
+    function deveColdLoad(r) {
+       if (_coldLoadDone || coldLoadDisabilitato()) return false;
+       if (!isProSync() || isVideoCompatMode()) return false;
+       if (!r || isLiveResp(r)) return false;
+       // Lo strip ha già rimosso gli indizi, quindi controllo se erano presenti inizialmente
+       if (_hadAds || rilevaAds(r)) return true;
+       return false;
+    }
+
     Object.defineProperty(window, "ytInitialPlayerResponse", {
-      get() { return _ytResp; },
-      set(v) { _ytResp = isProEnabled() ? stripAdObj(v) : v; },
+      get() {
+        if (deveColdLoad(_ytResp)) {
+          _coldLoadDone = true;
+          try { window.__adoffYtDiag.coldLoads++; } catch (_) {}
+          // Restituiamo un oggetto minimale con i metadati necessari (videoDetails,
+          // playabilityStatus, microformat, captions, responseContext) ma senza
+          // streamingData, per obbligare il player a richiedere la configurazione
+          // via rete: tale richiesta passa dai nostri hook e parte senza annunci.
+          try {
+            var minimale = {
+              videoDetails: _ytResp.videoDetails,
+              playabilityStatus: _ytResp.playabilityStatus || { status: "OK" },
+              microformat: _ytResp.microformat,
+              captions: _ytResp.captions,
+              responseContext: _ytResp.responseContext
+            };
+            return minimale;
+          } catch (_) {}
+          // Se la costruzione del minimale fallisce, cadiamo sul comportamento
+          // normale: strip e restituzione dell'oggetto completo.
+          stripYtRespIfPro();
+          return _ytResp;
+        }
+        stripYtRespIfPro();
+        return _ytResp;
+      },
+      set(v) {
+        _hadAds = rilevaAds(v);
+        _ytResp = v;
+        _ytStripped = false;
+        stripYtRespIfPro();
+      },
       configurable: true,
     });
-    if (_ytResp && isProEnabled()) _ytResp = stripAdObj(_ytResp);
+    stripYtRespIfPro();
 
     // A2: Intercept fetch for player API (SPA navigation)
     //
@@ -299,222 +318,451 @@
     // what the ad would have lasted.
     //
     // Reference: https://iter.ca/post/yt-adblock + uBO Smitty filter.
-    function injectNoAd(body) {
-      if (typeof body !== "string") return body;
-      if (!body.includes('"contentPlaybackContext":{')) return body;
-      if (body.includes('"isInlinePlaybackNoAd"')) return body;
-      return body.replace(
-        '"contentPlaybackContext":{',
-        '"contentPlaybackContext":{"isInlinePlaybackNoAd":true,'
-      );
-    }
+if (!window.__adoffYtDiag) {
+  window.__adoffYtDiag = {
+    reqTotal: 0,
+    reqFormRequest: 0,
+    reqFormInit: 0,
+    flagInjected: 0,
+    flagMissedNonString: 0,
+    respMangled: 0,
+    respXhrMangled: 0,
+    adSeeks: 0,
+    flagInjectedStringify: 0,
+    flagInjectedAssign: 0,
+    coldLoads: 0,
+    adReloads: 0,
+    adSkipIntegrali: 0
+  };
+}
 
-    const _origFetch = window.fetch;
-    window.fetch = function (input, init) {
-      const url = typeof input === "string" ? input : (input?.url || "");
-      const isPlayerReq = url.includes("/youtubei/v1/player") ||
-                          url.includes("/youtubei/v1/next");
+function injectNoAd(body) {
+  if (typeof body === "string") {
+    if (!body.includes('"contentPlaybackContext":{')) return body;
+    if (body.includes('"isInlinePlaybackNoAd"')) return body;
+    var replaced = body.replace(
+      '"contentPlaybackContext":{',
+      '"contentPlaybackContext":{"isInlinePlaybackNoAd":true,'
+    );
+    try { window.__adoffYtDiag.flagInjected++; } catch (_) {}
+    return replaced;
+  }
+  if (typeof URLSearchParams !== "undefined" && body instanceof URLSearchParams) {
+    var str = body.toString();
+    if (!str.includes('"contentPlaybackContext":{')) return body;
+    var replacedStr = str.replace(
+      '"contentPlaybackContext":{',
+      '"contentPlaybackContext":{"isInlinePlaybackNoAd":true,'
+    );
+    try { window.__adoffYtDiag.flagInjected++; } catch (_) {}
+    return new URLSearchParams(replacedStr);
+  }
+  // Altri tipi: ritorno invariato, incremento contatore diagnostico.
+  try { window.__adoffYtDiag.flagMissedNonString++; } catch (_) {}
+  return body;
+}
 
-      // Free: passthrough completo sulle player API. Solo Pro/Trial modifica
-      // request body (isInlinePlaybackNoAd) e mangle response (adPlacements/...).
-      if (!isPlayerReq || !isProEnabled()) {
-        return _origFetch.call(window, input, init);
+const _origFetch = window.fetch;
+window.fetch = async function (input, init) {
+  var url = typeof input === "string" ? input : (input instanceof Request ? input.url : (input && input.url) || "");
+  var isPlayerReq = url.includes("/youtubei/v1/player") ||
+                    url.includes("/youtubei/v1/next");
+
+  // Free: passthrough completo sulle player API. Solo Pro/Trial modifica
+  // request body (isInlinePlaybackNoAd) e mangle response (adPlacements/...).
+  if (!isPlayerReq || !isProSync() || isVideoCompatMode()) {
+    return _origFetch.call(window, input, init);
+  }
+
+  // Diagnostica per forma della richiesta
+  try { window.__adoffYtDiag.reqTotal++; } catch (_) {}
+  if (input instanceof Request) {
+    try { window.__adoffYtDiag.reqFormRequest++; } catch (_) {}
+  } else {
+    try { window.__adoffYtDiag.reqFormInit++; } catch (_) {}
+  }
+
+  var newInput = input;
+  var newInit = init;
+
+  if (input instanceof Request) {
+    // Request object form
+    if (!init || init.body === undefined) {
+      // Body is carried by the Request itself
+      var text = await input.clone().text();
+      var injected = injectNoAd(text);
+      if (injected !== text) {
+        newInput = new Request(input, { body: injected });
       }
-
-      // Inject isInlinePlaybackNoAd in the outbound request body
-      if (init && init.body) {
-        const newBody = injectNoAd(init.body);
-        if (newBody !== init.body) {
-          init = Object.assign({}, init, { body: newBody });
+    } else {
+      // init.body presente, trattamento classico
+      if (init.body) {
+        var injected = injectNoAd(init.body);
+        if (injected !== init.body) {
+          newInit = Object.assign({}, init, { body: injected });
         }
       }
+    }
+  } else {
+    // Forma classica (url, init)
+    if (init && init.body) {
+      var injected = injectNoAd(init.body);
+      if (injected !== init.body) {
+        newInit = Object.assign({}, init, { body: injected });
+      }
+    }
+  }
 
-      return _origFetch.call(window, input, init).then(function (resp) {
-        const clone = resp.clone();
-        return clone.text().then(function (txt) {
-          try {
-            return new Response(mangleAdFields(txt), {
-              status: resp.status,
-              statusText: resp.statusText,
-              headers: resp.headers,
+    var resp = await _origFetch.call(window, newInput, newInit);
+
+    // Mangle della risposta
+    try {
+        var clone = resp.clone();
+        var txt = await clone.text();
+        var mangled = mangleAdFields(txt);
+        if (mangled !== txt) {
+            try { window.__adoffYtDiag.respMangled++; } catch (_) {}
+            return new Response(mangled, {
+                status: resp.status,
+                statusText: resp.statusText,
+                headers: resp.headers
             });
-          } catch (_) { return resp; }
-        });
-      });
-    };
+        }
+    } catch (_) {
+        // fallback to original response
+    }
+    return resp;
+};
 
     // A3: XHR interception (some legacy YouTube paths use XMLHttpRequest)
     try {
-      const _xhrOpen = XMLHttpRequest.prototype.open;
-      const _xhrSend = XMLHttpRequest.prototype.send;
-      XMLHttpRequest.prototype.open = function (method, url) {
-        this._adoffUrl = String(url || "");
-        return _xhrOpen.apply(this, arguments);
-      };
-      XMLHttpRequest.prototype.send = function (body) {
-        // Free: passthrough. Pro/Trial inietta isInlinePlaybackNoAd.
-        if (isProEnabled() && this._adoffUrl &&
-            (this._adoffUrl.includes("/youtubei/v1/player") ||
-             this._adoffUrl.includes("/youtubei/v1/next"))) {
-          body = injectNoAd(body);
-        }
-        return _xhrSend.call(this, body);
-      };
+        const _xhrOpen = XMLHttpRequest.prototype.open;
+        const _xhrSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (method, url) {
+            this._adoffUrl = String(url || "");
+            return _xhrOpen.apply(this, arguments);
+        };
+        XMLHttpRequest.prototype.send = function (body) {
+            // Free: passthrough. Pro/Trial inietta isInlinePlaybackNoAd.
+            if (isProSync() && !isVideoCompatMode() && this._adoffUrl &&
+                (this._adoffUrl.includes("/youtubei/v1/player") ||
+                 this._adoffUrl.includes("/youtubei/v1/next"))) {
+                try { window.__adoffYtDiag.reqTotal++; } catch (_) {}
+                var newBody = injectNoAd(body);
+                if (newBody !== body) {
+                    body = newBody;
+                }
+                // Intercetta la risposta per mangle
+                var self = this;
+                var originalOnReadyStateChange = self.onreadystatechange;
+                self.onreadystatechange = function (ev) {
+                    if (self.readyState === 4) {
+                        try {
+                            if (!self._adoffOriginalResponseText) {
+                                self._adoffOriginalResponseText = self.responseText;
+                            }
+                            if (!self._adoffOriginalResponse) {
+                                self._adoffOriginalResponse = self.response;
+                            }
+                            var mangledText = mangleAdFields(self._adoffOriginalResponseText);
+                            var mangledResponse = mangleAdFields(self._adoffOriginalResponse);
+                            if (mangledText !== self._adoffOriginalResponseText) {
+                                try { window.__adoffYtDiag.respXhrMangled++; } catch (_) {}
+                            }
+                            self._adoffMangledResponseText = mangledText;
+                            self._adoffMangledResponse = mangledResponse;
+                            Object.defineProperty(self, 'responseText', {
+                                get: function () {
+                                    return self._adoffMangledResponseText;
+                                },
+                                configurable: true
+                            });
+                            Object.defineProperty(self, 'response', {
+                                get: function () {
+                                    return self._adoffMangledResponse;
+                                },
+                                configurable: true
+                            });
+                        } catch (_) {}
+                    }
+                    if (originalOnReadyStateChange) {
+                        return originalOnReadyStateChange.call(self, ev);
+                    }
+                };
+            }
+            return _xhrSend.call(this, body);
+        };
     } catch (_) { /* ignore — XHR may be locked on some pages */ }
 
     // Layer B/C/Observer — attivati dal proChecker solo se Pro/Trial confermato.
     // Definiti come funzione per essere chiamati on-demand quando arriva il gate.
     function activateYoutubeRuntimeKiller() {
 
-    // ---- LAYER B: Instant Skip (fallback for ads that slip through) ----
+    // ---- LAYER B: Fast-forward (FadBlock approach) ----
     //
-    // CRITICAL: ad and content share the SAME <video> element on YouTube
-    // (MSE source switching). Setting currentTime=duration on the ad video
-    // corrupts the content's resume position — the player loses track of
-    // where the user was watching. Confirmed by users + April 2026 YouTube bug.
+    // MAI seekare (impostare currentTime) sul video di YouTube. Annuncio e
+    // contenuto condividono lo stesso elemento <video> (MSE source switching):
+    // un seek lasciava currentTime alla fine dell'annuncio, e il contenuto
+    // partiva da un punto a caso. Sei versioni di fix non hanno risolto il
+    // problema perche' la causa era il seek stesso, non la guardia.
     //
-    // Fix: only fast-forward via playbackRate (FadBlock approach), and
-    // save/restore the content position around every ad as safety net.
+    // Ora: solo playbackRate=16. L'annuncio finisce NATURALMENTE a 16x (~1s
+    // per un ad da 15s), YouTube gestisce la transizione e il contenuto parte
+    // da 0. Niente seek = niente posizione sbagliata = niente stall sul buffer.
 
-    let adActive = false;
-    let wasMuted = false;
-    let playerObs = null;
-    let skipTimer = null;
-    let savedContentTime = 0;     // last known content position (pre-ad)
-    let recoveryTimer = null;     // restore-position watchdog
-    let positionTracker = null;   // interval that updates savedContentTime
+let adActive = false;
+let wasMuted = false;
+let savedRate = 1;
+let playerObs = null;
+let skipTimer = null;
+let overlayTimer = null;
+const OVERLAY_MAX_MS = 6000;   // oltre questa soglia l'overlay va tolto comunque
 
-    function instantSkip(player) {
-      const video = player.querySelector("video");
-      if (video) {
-        // SAFE: just speed through the ad. Do NOT set currentTime on the ad
-        // video — that breaks YouTube's content position tracking.
+// contentDuration/contentSrc/contentTime restano: usati per aggiornare i
+// riferimenti sul contenuto (vedi checkPlayer/onAdEnd). Le guardie per il
+// seek chirurgico (canSeekAd, getContentDuration, lastAdDuration,
+// stableTicks) sono state rimosse: il seek stesso e' stato rimosso.
+let contentDuration = 0;   // durata del contenuto in secondi
+let contentSrc = "";       // currentSrc del contenuto
+let contentTime = 0;       // ultima posizione nota nel contenuto
+
+function instantSkip(player) {
+    const video = player.querySelector("video");
+    if (video) {
+        // Un annuncio in pausa non finisce mai a 16x.
+        if (video.paused) {
+            try {
+                const p = video.play();
+                if (p && typeof p.catch === "function") p.catch(() => {});
+            } catch (_) { /* ignore */ }
+        }
         video.playbackRate = 16;
-      }
-      // Click skip button immediately (no humanized delay — MAIN world)
-      const skip = player.querySelector(
+    }
+    // Click sul pulsante di salto se esiste (annunci saltabili).
+    const skip = player.querySelector(
         ".ytp-skip-ad-button, .ytp-ad-skip-button, " +
         ".ytp-ad-skip-button-modern, .ytp-ad-skip-button-slot button, " +
         "[id^='skip-button'], .videoAdUiSkipButton"
-      );
-      if (skip?.offsetParent !== null) skip.click();
-      // Close overlay ads
-      for (const btn of player.querySelectorAll(
+    );
+    if (skip && skip.offsetParent !== null) skip.click();
+    // Chiudi gli overlay ad (banner sovrapposti).
+    for (const btn of player.querySelectorAll(
         ".ytp-ad-overlay-close-button, .ytp-ad-overlay-close-container"
-      )) { if (btn.offsetParent !== null) btn.click(); }
+    )) { if (btn.offsetParent !== null) btn.click(); }
+
+    // NESSUN seek generico: annuncio e contenuto condividono lo stesso elemento
+    // <video> (MSE source switching). Toccare currentTime e' stata la causa
+    // radice di sei versioni di bug di posizione (rimosso in v3.5.52, rientrato
+    // per errore in v3.5.55). L'annuncio finisce da solo a 16x e YouTube gestisce
+    // la transizione. Prima si prova a uscire subito dall'annuncio; il 16x resta
+    // come ripiego per i casi in cui la guardia non da' certezze.
+    if (video) skipIntegrale(player, video);
+}
+
+// Overlay opaco durante l'ad SSAI: l'utente non vede il contenuto
+// pubblicitario, solo un breve "skipping…" nero mentre il fast-forward
+// (16x) consuma l'annuncio. pointer-events:none => non blocca i click.
+function setSkipOverlay(player, on) {
+    let ov = document.getElementById("adoff-skip-ov");
+    if (on) {
+        if (!ov) {
+            ov = document.createElement("div");
+            ov.id = "adoff-skip-ov";
+            ov.style.cssText =
+                "position:absolute;inset:0;background:#000;z-index:999999;" +
+                "display:flex;align-items:center;justify-content:center;" +
+                "color:#7252f8;font:600 16px system-ui,sans-serif;pointer-events:none;";
+            ov.textContent = "AdOff · skipping ad…";
+        }
+        if (!ov.parentNode) player.appendChild(ov);
+    } else if (ov) {
+        ov.remove();
     }
+}
 
-    function onAdStart(player) {
-      if (adActive) { instantSkip(player); return; }
-      adActive = true;
+function onAdStart(player) {
+    if (adActive) { instantSkip(player); return; }
+    adActive = true;
 
-      // Cancel any pending recovery from a previous ad
-      if (recoveryTimer) { clearTimeout(recoveryTimer); recoveryTimer = null; }
+    // Nessuna forzatura di qualita': degradava il contenuto e la preferenza
+    // dell'utente. L'annuncio dura ~1s a 16x, i byte risparmiati non valgono
+    // un video che riparte in bassa risoluzione.
 
-      const video = player.querySelector("video");
-      if (video) {
+    const video = player.querySelector("video");
+    if (video) {
         video._adoffSkipping = true;
+        savedRate = video.playbackRate;
         if (!video.muted) { video.muted = true; wasMuted = true; }
-      }
+    }
+    setSkipOverlay(player, true);
 
-      instantSkip(player);
+    // Rete di sicurezza: se dopo 6s l'annuncio e' ancora li', l'overlay viene
+    // tolto lo stesso. Uno schermo nero perenne e' peggio di un annuncio visibile.
+    if (overlayTimer) clearTimeout(overlayTimer);
+    overlayTimer = setTimeout(function () {
+        setSkipOverlay(player, false);
+        overlayTimer = null;
+    }, OVERLAY_MAX_MS);
 
-      // Aggressive 50ms polling until ad clears
-      if (skipTimer) clearInterval(skipTimer);
-      skipTimer = setInterval(function () {
+    // Annuncio alla risoluzione minima: si scarica prima, quindi il 16x lo
+    // consuma quasi subito e l'attesa iniziale si accorcia.
+    abbassaQualitaAnnuncio(player);
+
+    instantSkip(player);
+
+    // Polling a 50ms: mantiene playbackRate=16 finche' YouTube non lo
+    // rimette a 1, e clicka lo skip appena compare.
+    if (skipTimer) clearInterval(skipTimer);
+    skipTimer = setInterval(function () {
         if (!player.classList.contains("ad-showing") &&
             !player.classList.contains("ad-interrupting")) {
-          clearInterval(skipTimer); skipTimer = null; return;
+            clearInterval(skipTimer); skipTimer = null;
+            onAdEnd(player);
+            return;
         }
         instantSkip(player);
-      }, 50);
+    }, 50);
 
-      window.dispatchEvent(new CustomEvent("adoff-ad-skipped"));
-    }
+    window.dispatchEvent(new CustomEvent("adoff-ad-skipped"));
+}
 
-    function onAdEnd(player) {
-      if (!adActive) return;
-      adActive = false;
-      if (skipTimer) { clearInterval(skipTimer); skipTimer = null; }
+function onAdEnd(player) {
+    if (!adActive) return;
+    adActive = false;
+    if (skipTimer) { clearInterval(skipTimer); skipTimer = null; }
+    if (overlayTimer) { clearTimeout(overlayTimer); overlayTimer = null; }
 
-      const video = player.querySelector("video");
-      if (video) {
+    const video = player.querySelector("video");
+    if (video) {
+        // Memorizza lo stato del contenuto (contentSrc/contentDuration).
+        contentSrc = video.currentSrc;
+        if (Number.isFinite(video.duration) && video.duration > 0) {
+            contentDuration = video.duration;
+        }
+
         video._adoffSkipping = false;
-        video.playbackRate = 1;
+        video.playbackRate = savedRate || 1;
         if (wasMuted) { video.muted = false; wasMuted = false; }
-      }
-
-      // ---- POSITION RECOVERY ----
-      // After the ad, YouTube may resume from the wrong position
-      // (known YouTube bug + side-effect of ad source-swap). If the
-      // content video lands far from where the user was, we force-restore.
-      const target = savedContentTime;
-      if (!video || target <= 2) return;
-
-      let attempts = 0;
-      const maxAttempts = 30; // ~3s total
-      let restored = false;
-
-      function tryRecover() {
-        attempts++;
-        // Abort if a new ad started
-        if (player.classList.contains("ad-showing") ||
-            player.classList.contains("ad-interrupting")) {
-          recoveryTimer = null;
-          return;
-        }
-        const ct = video.currentTime;
-        const dur = video.duration;
-        // Wait for content video to be loaded enough
-        if (!isFinite(ct) || !isFinite(dur) || dur <= 0) {
-          if (attempts < maxAttempts) {
-            recoveryTimer = setTimeout(tryRecover, 100);
-          } else {
-            recoveryTimer = null;
-          }
-          return;
-        }
-        // If content position is sane (within 5s of saved), accept it.
-        // Tolerance accounts for natural playback during recovery loop.
-        if (Math.abs(ct - target) <= 5) {
-          recoveryTimer = null;
-          return;
-        }
-        // Position is wrong — force-restore (only once)
-        if (!restored && target < dur - 1) {
-          restored = true;
-          try {
-            video.currentTime = target;
-          } catch (_) { /* ignore */ }
-          // Verify after a tick — YouTube may override us
-          recoveryTimer = setTimeout(tryRecover, 200);
-          return;
-        }
-        // Already restored, give up if YouTube keeps overriding
-        recoveryTimer = null;
-      }
-
-      recoveryTimer = setTimeout(tryRecover, 200);
     }
+    setSkipOverlay(player, false);
 
-    // ---- POSITION TRACKER ----
-    // Continuously remember the content video's currentTime while NOT in
-    // an ad. When an ad starts, savedContentTime holds the user's last
-    // real position — used by onAdEnd for recovery.
-    if (positionTracker) clearInterval(positionTracker);
-    positionTracker = setInterval(function () {
-      if (adActive) return;
-      const p = document.getElementById("movie_player");
-      if (!p) return;
-      // Skip if YouTube hasn't classified the player yet
-      if (p.classList.contains("ad-showing") ||
-          p.classList.contains("ad-interrupting")) return;
-      const v = p.querySelector("video");
-      if (!v) return;
-      const ct = v.currentTime;
-      if (!isFinite(ct) || ct <= 1) return;
-      savedContentTime = ct;
-    }, 500);
+    // Nessun position recovery: l'annuncio e' finito NATURALMENTE a 16x,
+    // YouTube ha gestito la transizione. Non tocchiamo currentTime.
+}
+
+// L'utente vuole sempre la massima risoluzione disponibile. Non basta alzarla
+// una volta: YouTube riapplica la propria preferenza memorizzata anche dopo il
+// nostro intervento (fino alla 3.5.78 gliela abbiamo insegnata noi, imponendo
+// "tiny" a ogni annuncio). Quindi si ricontrolla di continuo e si rialza ogni
+// volta che e' scesa. Il confronto con il livello migliore rende l'operazione
+// gratuita nel caso normale: se siamo gia' al massimo non si tocca nulla.
+let ultimoControlloQualita = 0;
+const INTERVALLO_CONTROLLO_QUALITA_MS = 2000;
+// Ultimo currentSrc per cui la qualita' massima e' stata confermata. Un
+// annuncio a 16x puo' durare meno del throttle sopra (un ad da 15s finisce in
+// ~0.9s), quindi appena finisce va bypassato il throttle una volta sola per
+// rialzare subito, invece di aspettare fino a 2s. abbassaQualitaAnnuncio lo
+// azzera per marcare "da riconfermare"; qui si rimette al valore corrente
+// appena la conferma avviene.
+let qualitaAlzataPer = null;
+
+// Durante l'ANNUNCIO conviene la risoluzione minima: un annuncio a 144p pesa
+// circa un decimo e arriva dalla rete molto prima, quindi il fast-forward a 16x
+// lo consuma quasi subito invece di aspettare i segmenti. Vale SOLO per la
+// durata dell'annuncio: appena torna il contenuto, forzaQualitaMassima() lo
+// rialza al massimo entro pochi secondi (e' il presidio che nella 3.5.57
+// mancava, ed e' il motivo per cui allora si restava a 144p).
+function abbassaQualitaAnnuncio(player) {
+    try {
+        // Il range resta aperto: mai bloccare il player su un livello assente.
+        if (typeof player.setPlaybackQualityRange === "function") {
+            player.setPlaybackQualityRange("tiny", "highres");
+        }
+        if (typeof player.setPlaybackQuality === "function") {
+            player.setPlaybackQuality("tiny");
+        }
+        // Il contenuto va rialzato appena l'annuncio finisce: azzero la guardia
+        // per video, altrimenti il rialzo si considererebbe gia' fatto.
+        qualitaAlzataPer = null;
+    } catch (_) { /* mai rompere il player */ }
+}
+
+function forzaQualitaMassima(player) {
+    try {
+        if (typeof player.getAvailableQualityLevels !== "function") return;
+        // currentSrc identifica il video corrente: se e' diverso dall'ultimo
+        // per cui la qualita' massima e' stata confermata (o e' stato appena
+        // azzerato da un annuncio) il throttle sotto viene bypassato una volta,
+        // cosi' il rialzo post-annuncio non aspetta fino a 2s.
+        var video = typeof player.querySelector === "function" ? player.querySelector("video") : null;
+        var src = video && video.currentSrc;
+        var bypassThrottle = src !== qualitaAlzataPer;
+        var ora = Date.now();
+        if (!bypassThrottle && ora - ultimoControlloQualita < INTERVALLO_CONTROLLO_QUALITA_MS) return;
+        ultimoControlloQualita = ora;
+        // I livelli arrivano dal migliore al peggiore; "auto" non e' impostabile.
+        var livelli = (player.getAvailableQualityLevels() || []).filter(function (q) {
+            return q && q !== "auto";
+        });
+        if (!livelli.length) return;   // player non ancora pronto: si riprova al giro dopo
+        var migliore = livelli[0];
+        if (typeof player.getPlaybackQuality === "function" &&
+            player.getPlaybackQuality() === migliore) {
+            qualitaAlzataPer = src;
+            return;   // gia' al massimo
+        }
+        // Range APERTO verso il basso: congelarlo sul massimo mandava in stallo
+        // il player quando partiva un annuncio privo di quella risoluzione
+        // (schermo nero infinito, 3.5.80). A tenere alta la qualita' ci pensa il
+        // controllo continuo qui sotto, non il vincolo sul range.
+        if (typeof player.setPlaybackQualityRange === "function") {
+            player.setPlaybackQualityRange("tiny", migliore);
+        }
+        if (typeof player.setPlaybackQuality === "function") {
+            player.setPlaybackQuality(migliore);
+        }
+        qualitaAlzataPer = src;
+    } catch (_) { /* mai rompere il player */ }
+}
+
+// Durata del CONTENUTO secondo i metadati del player: e' il riferimento per
+// capire quale media e' montato nell'elemento <video>. Durante un annuncio la
+// durata del media montato e' quella dell'annuncio (pochi secondi), non questa.
+function durataContenuto() {
+    try {
+        var r = window.ytInitialPlayerResponse;
+        var n = r && r.videoDetails && parseFloat(r.videoDetails.lengthSeconds);
+        return (isFinite(n) && n > 0) ? n : 0;
+    } catch (_) { return 0; }
+}
+
+// Il media montato e' davvero l'ANNUNCIO? YouTube marca "ad-showing" PRIMA di
+// scambiare la sorgente MSE: in quell'istante l'elemento <video> contiene ancora
+// il contenuto, e saltare lo manderebbe avanti nel video dell'utente. E' la
+// causa di nove versioni di bug di posizione. Quindi: si salta SOLO se la durata
+// del media montato e' diversa da quella del contenuto. Senza un riferimento
+// sul contenuto non si salta affatto.
+function mediaMontatoEAnnuncio(video) {
+    if (!video || !isFinite(video.duration) || video.duration <= 0) return false;
+    var dc = durataContenuto();
+    if (!dc) return false;                       // nessun riferimento: mai saltare
+    return Math.abs(video.duration - dc) > 2;    // durate diverse = e' l'annuncio
+}
+
+// Salto INTEGRALE: portare currentTime alla fine dell'annuncio in un colpo solo.
+// Accelerare a 16x non basta, perche' a 16x il player deve comunque SCARICARE
+// l'annuncio: l'attesa e' quella della rete. Qui invece si esce subito e YouTube
+// gestisce da solo la transizione al contenuto.
+function skipIntegrale(player, video) {
+    try {
+        if (!mediaMontatoEAnnuncio(video)) return false;
+        var fine = video.duration - 0.1;
+        if (!(fine > video.currentTime)) return false;
+        video.currentTime = fine;
+        try { window.__adoffYtDiag.adSkipIntegrali++; } catch (_) {}
+        return true;
+    } catch (_) { return false; }
+}
 
     // ---- LAYER C: Anti-detection (insurance) ----
 
@@ -533,30 +781,58 @@
 
     // ---- Observer + Polling ----
 
-    function checkPlayer() {
-      const p = document.getElementById("movie_player");
-      if (!p) return;
-      const isAd = p.classList.contains("ad-showing") ||
-                   p.classList.contains("ad-interrupting");
-      if (isAd) onAdStart(p); else onAdEnd(p);
+function checkPlayer() {
+  const p = document.getElementById("movie_player");
+  if (!p) return;
+  const isAd = p.classList.contains("ad-showing") ||
+               p.classList.contains("ad-interrupting");
+  if (isAd) {
+    onAdStart(p);
+  } else {
+    // Aggiorna i riferimenti del contenuto se il video è stabile
+    const video = p.querySelector("video");
+    if (video) {
+      try {
+        if (isFinite(video.duration) && video.duration > 0) {
+          contentDuration = video.duration;
+        }
+        if (video.currentSrc) {
+          contentSrc = video.currentSrc;
+        }
+        // Posizione nel contenuto: serve alla ricarica sui midroll, per
+        // ripartire dal punto giusto invece che dall'inizio.
+        if (Number.isFinite(video.currentTime) && video.currentTime > 0) {
+          contentTime = video.currentTime;
+        }
+      } catch (e) {
+        // ignore
+      }
     }
+    forzaQualitaMassima(p);
+    onAdEnd(p);
+  }
+}
 
-    function attachObs() {
-      const p = document.getElementById("movie_player");
-      if (!p) return false;
-      if (playerObs) playerObs.disconnect();
-      playerObs = new MutationObserver(checkPlayer);
-      playerObs.observe(p, { attributes: true, attributeFilter: ["class"] });
-      checkPlayer();
-      return true;
-    }
+function attachObs() {
+  const p = document.getElementById("movie_player");
+  if (!p) return false;
+  if (playerObs) playerObs.disconnect();
+  playerObs = new MutationObserver(checkPlayer);
+  playerObs.observe(p, { attributes: true, attributeFilter: ["class"] });
+  checkPlayer();
+  return true;
+}
 
-    (function poll() { if (!attachObs()) setTimeout(poll, 200); })();
+(function poll() { if (!attachObs()) setTimeout(poll, 200); })();
 
-    // SPA navigation: re-attach after page transition
-    document.addEventListener("yt-navigate-finish", function () {
-      setTimeout(attachObs, 100);
-    });
+// SPA navigation: re-attach after page transition
+document.addEventListener("yt-navigate-finish", function () {
+  // Azzera i riferimenti del video precedente per non usarli con il nuovo video
+  contentDuration = 0;
+  contentSrc = "";
+  ultimoControlloQualita = 0;
+  setTimeout(attachObs, 100);
+});
 
     // Fast fallback polling (100ms)
     setInterval(checkPlayer, 100);
@@ -598,6 +874,17 @@
   function isProEnabled() {
     const val = document.documentElement.getAttribute("data-adoff-stealth") || "";
     return /^ao_[0-9a-f]{8}$/.test(val);
+  }
+
+  // Verdetto Pro leggibile in modo SINCRONO a document_start.
+  // Il nonce sopra arriva tardi (storage.get + verifica ECDSA sono asincrone),
+  // ma la config ads di una piattaforma video va decisa subito. content.js
+  // pubblica il verdetto in localStorage al load precedente — stesso canale e
+  // stesso limite (una ricarica) gia' adottati per __adoff_vc.
+  // Usata SOLO dal Layer A: IMA stub e stealth anti-adblock restano sul nonce.
+  function isProSync() {
+    if (isProEnabled()) return true;
+    try { return localStorage.getItem("__adoff_pro") === "1"; } catch (_) { return false; }
   }
 
   function injectImaStub() {
@@ -819,11 +1106,23 @@
     // Inietta PRIMA di qualsiasi altro script — Object.defineProperty
     // impedisce che il vero IMA SDK sovrascriva il nostro stub
     window.google = window.google || {};
-    Object.defineProperty(window.google, "ima", {
-      get() { return imaStub; },
-      set() { /* blocca sovrascrittura */ },
-      configurable: false,
-    });
+    try {
+      Object.defineProperty(window.google, "ima", {
+        get() { return imaStub; },
+        set() { /* blocca sovrascrittura */ },
+        // configurable:true — con false la property resta intrappolata e ogni
+        // redefinizione altrui lancia TypeError, rompendo il render della pagina
+        configurable: true,
+      });
+    } catch (_) {
+      // Se il vero IMA SDK e' gia' caricato e ha definito google.ima come NON
+      // configurabile, defineProperty lancia "Cannot redefine property: ima".
+      // Senza questo catch l'eccezione interrompe injectImaStub e lo stub non
+      // viene installato. Fallback: assegnazione diretta (puo' fallire anch'essa).
+      try {
+        window.google.ima = imaStub;
+      } catch (_) {}
+    }
 
   }
   // Fine definizione injectImaStub
@@ -845,11 +1144,11 @@
       // Premium streaming (SSAI/DAI): no stub, no stealth — il player
       // ha bisogno del vero google.ima per ottenere lo stream
       if (isPremiumStreaming) return;
-      // Pro/Trial confermato — inietta IMA stub su tutti i siti
-      injectImaStub();
       // Stealth anti-adblock solo su siti non-esclusi e non-broadcaster
       if (!isBroadcaster && !isStealhExcluded) {
         activateStealth();
+        // IMA stub iniettato DOPO stealth per non interferire col player
+        injectImaStub();
       }
     } else if (proCheckCount >= 20) {
       // Dopo 2s senza segnale Pro — versione Free, niente IMA/stealth
@@ -880,51 +1179,138 @@
     return BAIT_PATTERNS.some((re) => re.test(str));
   }
 
-  const origGetComputedStyle = window.getComputedStyle;
-  window.getComputedStyle = function (el, pseudo) {
-    const style = origGetComputedStyle.call(window, el, pseudo);
+  let isMeasurementSpoofInstalled = false;
 
-    if (el && (isBaitClass(el.className) || isBaitClass(el.id))) {
+  function installMeasurementSpoof() {
+    if (isMeasurementSpoofInstalled) return;
+    isMeasurementSpoofInstalled = true;
+
+    const origGetComputedStyle = window.getComputedStyle;
+    window.getComputedStyle = function (el, pseudo) {
+      const style = origGetComputedStyle.call(window, el, pseudo);
+
+      if (el && (isBaitClass(el.className) || isBaitClass(el.id))) {
+        try {
+          return new Proxy(style, {
+            get(target, prop) {
+              if (prop === "display") return "block";
+              if (prop === "visibility") return "visible";
+              if (prop === "opacity") return "1";
+              if (prop === "height") return "250px";
+              if (prop === "width") return "300px";
+              const val = target[prop];
+              return typeof val === "function" ? val.bind(target) : val;
+            },
+          });
+        } catch (_) {
+          return style;
+        }
+      }
+
+      return style;
+    };
+
+    const origOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
+    const origOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");
+
+    if (origOffsetHeight) {
       try {
-        return new Proxy(style, {
-          get(target, prop) {
-            if (prop === "display") return "block";
-            if (prop === "visibility") return "visible";
-            if (prop === "opacity") return "1";
-            if (prop === "height") return "250px";
-            if (prop === "width") return "300px";
-            const val = target[prop];
-            return typeof val === "function" ? val.bind(target) : val;
+        Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+          get() {
+            if (isBaitClass(this.className) || isBaitClass(this.id)) return 250;
+            return origOffsetHeight.get.call(this);
           },
+          configurable: true,
+          enumerable: true,
         });
-      } catch (_) {
-        return style;
+      } catch (e) {
+        // silently fail
       }
     }
 
-    return style;
-  };
-
-  const origOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
-  const origOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");
-
-  if (origOffsetHeight) {
-    Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
-      get() {
-        if (isBaitClass(this.className) || isBaitClass(this.id)) return 250;
-        return origOffsetHeight.get.call(this);
-      },
-    });
+    if (origOffsetWidth) {
+      try {
+        Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
+          get() {
+            if (isBaitClass(this.className) || isBaitClass(this.id)) return 300;
+            return origOffsetWidth.get.call(this);
+          },
+          configurable: true,
+          enumerable: true,
+        });
+      } catch (e) {
+        // silently fail
+      }
+    }
   }
 
-  if (origOffsetWidth) {
-    Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
-      get() {
-        if (isBaitClass(this.className) || isBaitClass(this.id)) return 300;
-        return origOffsetWidth.get.call(this);
-      },
-    });
+  function isBaitNode(node) {
+    try {
+      if (node.nodeType === 1) {
+        if (isBaitClass(String(node.className || '')) || isBaitClass(String(node.id || ''))) {
+          return true;
+        }
+      }
+      if (node.tagName === 'SCRIPT') {
+        const src = node.src || '';
+        const text = node.textContent || '';
+        const content = (src + ' ' + text).toLowerCase();
+        if (/blockadblock|fuckadblock|detectadblock|anti-adblock|fundingchoices/i.test(content)) {
+          return true;
+        }
+      }
+    } catch (_) {}
+    return false;
   }
+
+  function maybeInstallMeasurementSpoof(node) {
+    try {
+      if (!isMeasurementSpoofInstalled && isBaitNode(node)) {
+        installMeasurementSpoof();
+      }
+    } catch (_) {}
+  }
+
+  try {
+    const BAIT_WATCH_TIMEOUT_MS = 15000;
+
+    const existing = document.querySelectorAll("[class*=ad],[id*=ad],script");
+    let scanned = 0;
+    for (const node of existing) {
+      if (++scanned > 300) break;
+      maybeInstallMeasurementSpoof(node);
+      if (isMeasurementSpoofInstalled) break;
+    }
+
+    if (!isMeasurementSpoofInstalled) {
+      const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes) {
+            maybeInstallMeasurementSpoof(node);
+            if (isMeasurementSpoofInstalled) {
+              observer.disconnect();
+              return;
+            }
+            if (node.nodeType === 1 && node.children) {
+              for (const child of node.children) {
+                maybeInstallMeasurementSpoof(child);
+                if (isMeasurementSpoofInstalled) {
+                  observer.disconnect();
+                  return;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+
+      setTimeout(() => {
+        try { observer.disconnect(); } catch (_) {}
+      }, BAIT_WATCH_TIMEOUT_MS);
+    }
+  } catch (_) {}
 
   // ---- 2. FETCH / XHR INTERCEPTION ----
   const DETECTION_PATTERNS = [
@@ -969,70 +1355,199 @@
   };
 
   // ---- 3. ADBLOCK VARIABLE SPOOFING ----
-  if (!window.adsbygoogle) {
-    window.adsbygoogle = { loaded: true, push: function () {}, length: 1 };
+  // Spoof resistente alla sovrascrittura: i siti riassegnano window.googletag
+  // dopo document_start; l'accessor fa merge invece di replace cosi' i marker
+  // (apiReady/pubadsReady/_loaded_) non spariscono mai.
+
+  // Build googletag stub with all required properties
+  function buildGoogletagStub(existing) {
+    var stub = {
+      cmd: {
+        push: function(f) {
+          try {
+            if (typeof f === "function") {
+              f();
+            }
+          } catch (_) {}
+          return 1;
+        },
+        length: 0
+      },
+      pubads: function() {
+        return {
+          addEventListener: function() { return this; },
+          setTargeting: function() { return this; },
+          refresh: function() {},
+          enableSingleRequest: function() { return this; },
+          disableInitialLoad: function() {},
+          collapseEmptyDivs: function() {},
+          getSlots: function() { return []; },
+          clear: function() {}
+        };
+      },
+      enableServices: function() {},
+      defineSlot: function() {
+        return {
+          addService: function() { return this; },
+          setTargeting: function() { return this; },
+          defineSizeMapping: function() { return this; },
+          setCollapseEmptyDiv: function() { return this; }
+        };
+      },
+      defineOutOfPageSlot: function() {
+        return {
+          addService: function() { return this; },
+          setTargeting: function() { return this; },
+          defineSizeMapping: function() { return this; },
+          setCollapseEmptyDiv: function() { return this; }
+        };
+      },
+      display: function() {},
+      destroySlots: function() {},
+      sizeMapping: function() {
+        return {
+          addSize: function() { return this; },
+          build: function() { return []; }
+        };
+      },
+      apiReady: true,
+      pubadsReady: true,
+      _loaded_: true,
+      _loadStarted_: true,
+      _vars_: {},
+      _b_: {},
+      secureSignalProviders: [],
+      encryptedSignalProviders: [],
+      evalScripts: function() {},
+      getVersion: function() { return "2024"; }
+    };
+
+    // Execute any pending commands from existing cmd array
+    if (existing && existing.cmd && existing.cmd.length > 0) {
+      for (var i = 0; i < existing.cmd.length; i++) {
+        try {
+          if (typeof existing.cmd[i] === "function") {
+            existing.cmd[i]();
+          }
+        } catch (_) {}
+      }
+    }
+
+    // Merge existing properties
+    if (existing && typeof existing === "object") {
+      Object.assign(stub, existing);
+    }
+
+    // cmd DEVE restare l'array-like che esegue subito: il merge qui sopra lo
+    // riporterebbe all'array del sito, e le callback non partirebbero mai.
+    stub.cmd = {
+      push: function(f) {
+        try {
+          if (typeof f === "function") { f(); }
+        } catch (_) {}
+        return 1;
+      },
+      length: 0
+    };
+
+    // Ensure critical properties are always set
+    stub.apiReady = true;
+    stub.pubadsReady = true;
+    stub._loaded_ = true;
+
+    return stub;
   }
 
-  if (!window.googletag) {
-    window.googletag = window.googletag || {};
-    window.googletag.cmd = window.googletag.cmd || [];
-    window.googletag.pubads = function () {
-      return {
-        addEventListener: function () { return this; },
-        setTargeting: function () { return this; },
-        refresh: function () {},
-        enableSingleRequest: function () { return this; },
-        disableInitialLoad: function () {},
-        collapseEmptyDivs: function () {},
-        getSlots: function () { return []; },
-        clear: function () {},
-      };
+  // Initialize and protect window.googletag
+  var _gtag = buildGoogletagStub(window.googletag);
+  try {
+    Object.defineProperty(window, "googletag", {
+      configurable: true,
+      get: function() {
+        return _gtag;
+      },
+      set: function(v) {
+        if (v && typeof v === "object") {
+          try {
+            _gtag = buildGoogletagStub(Object.assign({}, _gtag, v));
+          } catch (_) {}
+        }
+        return true;
+      }
+    });
+  } catch (_) {
+    window.googletag = _gtag;
+  }
+
+  // Build adsbygoogle stub with all required properties
+  function buildAdsbygoogleStub(existing) {
+    var stub = {
+      loaded: true,
+      push: function() { return 1; },
+      length: 1
     };
-    window.googletag.enableServices = function () {};
-    window.googletag.defineSlot = function () {
-      return {
-        addService: function () { return this; },
-        setTargeting: function () { return this; },
-        defineSizeMapping: function () { return this; },
-        setCollapseEmptyDiv: function () { return this; },
-      };
-    };
-    window.googletag.defineOutOfPageSlot = window.googletag.defineSlot;
-    window.googletag.display = function () {};
-    window.googletag.destroySlots = function () {};
-    window.googletag.sizeMapping = function () {
-      return { addSize: function () { return this; }, build: function () { return []; } };
-    };
-    window.googletag.apiReady = true;
-    window.googletag.pubadsReady = true;
+
+    // Merge existing properties
+    if (existing && typeof existing === "object") {
+      Object.assign(stub, existing);
+    }
+
+    return stub;
+  }
+
+  // Initialize and protect window.adsbygoogle
+  var _adsbygoogle = buildAdsbygoogleStub(window.adsbygoogle);
+  try {
+    Object.defineProperty(window, "adsbygoogle", {
+      configurable: true,
+      get: function() {
+        return _adsbygoogle;
+      },
+      set: function(v) {
+        if (v && typeof v === "object") {
+          try {
+            _adsbygoogle = buildAdsbygoogleStub(Object.assign({}, _adsbygoogle, v));
+          } catch (_) {}
+        }
+        return true;
+      }
+    });
+  } catch (_) {
+    window.adsbygoogle = _adsbygoogle;
   }
 
   // ---- 4. ANTI-ADBLOCK SCRIPT NEUTRALIZERS ----
-  const origCreateElement = document.createElement;
-  document.createElement = function (tag) {
-    const el = origCreateElement.call(document, tag);
-    if (typeof tag === "string" && tag.toLowerCase() === "script") {
-      const origSetSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, "src");
-      if (origSetSrc && origSetSrc.set) {
-        let _src = "";
-        Object.defineProperty(el, "src", {
-          get() { return _src; },
-          set(val) {
-            _src = val;
-            const lower = String(val).toLowerCase();
-            if (lower.includes("blockadblock") || lower.includes("fuckadblock") ||
-                lower.includes("detectadblock") || lower.includes("anti-adblock")) {
-              return;
-            }
-            origSetSrc.set.call(this, val);
-          },
-          configurable: true,
-        });
+  if (!document.createElement.__adoffPatched) {
+    const origCreateElement = document.createElement;
+    document.createElement = function (tag) {
+      const el = origCreateElement.apply(this, arguments);
+      if (typeof tag === "string" && tag.toLowerCase() === "script") {
+        const origSetSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, "src");
+        if (origSetSrc && origSetSrc.set) {
+          try {
+            let _src = "";
+            Object.defineProperty(el, "src", {
+              get() { return _src; },
+              set(val) {
+                _src = val;
+                const lower = String(val).toLowerCase();
+                if (lower.includes("blockadblock") || lower.includes("fuckadblock") ||
+                    lower.includes("detectadblock") || lower.includes("anti-adblock")) {
+                  return;
+                }
+                origSetSrc.set.call(this, val);
+              },
+              configurable: true,
+            });
+          } catch (e) {
+            // ignore
+          }
+        }
       }
-    }
-    return el;
-  };
-
+      return el;
+    };
+    document.createElement.__adoffPatched = true;
+  }
   // ---- 5. SCROLL LOCK PREVENTION ----
   // Blocca overflow:hidden su body/html SOLO se causato da un wall anti-adblock
   // NON bloccare se ci sono popup/dialog/modal legittimi aperti
@@ -1062,34 +1577,79 @@
   };
 
   // ---- 6. MUTATION PROTECTION ----
-  const origAppendChild = Node.prototype.appendChild;
-  Node.prototype.appendChild = function (child) {
-    if (child && child.tagName === "SCRIPT") {
-      const src = String(child.src || "");
-      const text = child.textContent || "";
-      const srcLower = src.toLowerCase();
-      const isAntiAdblockSrc = (
-        srcLower.includes("blockadblock") ||
-        srcLower.includes("fuckadblock") ||
-        srcLower.includes("detectadblock") ||
-        srcLower.includes("anti-adblock")
-      );
-      const isAntiAdblock = (
-        (text.includes("adblock") || text.includes("ad-block") || text.includes("adblocker")) &&
-        (text.includes("detected") || text.includes("disable") || text.includes("whitelist")) &&
-        text.length < 5000
-      );
-      if (isAntiAdblockSrc || isAntiAdblock) {
+  if (!Node.prototype.appendChild.__adoffPatched) {
+    const origAppendChild = Node.prototype.appendChild;
+    Node.prototype.appendChild = function (child) {
+      try {
+        if (child) maybeInstallMeasurementSpoof(child);
+      } catch (_) {}
+      if (child && child.tagName === "SCRIPT") {
+        const src = String(child.src || "");
+        const text = child.textContent || "";
+        const srcLower = src.toLowerCase();
+        const isAntiAdblockSrc = (
+          srcLower.includes("blockadblock") ||
+          srcLower.includes("fuckadblock") ||
+          srcLower.includes("detectadblock") ||
+          srcLower.includes("anti-adblock")
+        );
+        const isAntiAdblock = (
+          (text.includes("adblock") || text.includes("ad-block") || text.includes("adblocker")) &&
+          (text.includes("detected") || text.includes("disable") || text.includes("whitelist")) &&
+          text.length < 5000
+        );
+        if (isAntiAdblockSrc || isAntiAdblock) {
+          return child;
+        }
+      }
+      try {
+        return origAppendChild.call(this, child);
+      } catch (_) {
+        // Sandboxed iframe (about:blank senza allow-scripts) — passthrough silenzioso
         return child;
       }
-    }
+    };
+    Node.prototype.appendChild.__adoffPatched = true;
+  }
+
+  // ---- 7. PAUSE-GATE NEUTRALIZER ----
+  // Alcuni portali video clone montano un gate puramente client-side: uno script
+  // inline mette in pausa il player dopo N secondi e apre un modal di
+  // registrazione che instrada su funnel di abbonamento fraudolenti. Il flusso
+  // video e' servito in chiaro (nessun DRM, nessuna autenticazione): il gate e'
+  // solo un nag che ferma la riproduzione.
+  //
+  // Neutralizzato sulla FIRMA DEL TEMPLATE, non sul dominio (che ruota di
+  // continuo): serve una globale `pausetime` numerica PIU' un modal di
+  // registrazione accanto a un <video>. Un paywall legittimo non espone quella
+  // coppia, quindi non viene mai toccato.
+  //
+  // Il gate valuta `currentTime() >= pausetime`: basta che quella lettura
+  // restituisca Infinity perche' la condizione non sia mai vera. La firma si
+  // valuta al momento della LETTURA (a DOM gia' costruito), non qui a
+  // document_start, quando il modal non esiste ancora.
+  if (!Object.getOwnPropertyDescriptor(window, "pausetime")) {
+    const looksLikeGateTemplate = () => {
+      try {
+        return !!document.querySelector("video") &&
+               !!document.querySelector("#mdl-register, #mdl-login");
+      } catch (_) {
+        return false;
+      }
+    };
+    let declared;
     try {
-      return origAppendChild.call(this, child);
-    } catch (_) {
-      // Sandboxed iframe (about:blank senza allow-scripts) — passthrough silenzioso
-      return child;
-    }
-  };
+      Object.defineProperty(window, "pausetime", {
+        configurable: true,
+        get() {
+          return looksLikeGateTemplate() ? Infinity : declared;
+        },
+        set(v) {
+          declared = v;
+        },
+      });
+    } catch (_) {}
+  }
 
   } // fine activateStealth()
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AdOff",
-  "version": "3.5.22",
+  "version": "3.6.11",
   "description": "Ads? Off! Blocca pubblicita' su tutti i siti. Invisibile. Leggero. Veloce.",
   "browser_specific_settings": {
     "safari": {
@@ -22,6 +22,27 @@
     "service_worker": "src/background.js"
   },
   "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/popup-blocker.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/player-probe.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    },
     {
       "matches": [
         "<all_urls>"
@@ -70,7 +91,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "stubs/google-ima3.js"
+        "stubs/google-ima3.js",
+        "src/stealth.js"
       ],
       "matches": [
         "<all_urls>"

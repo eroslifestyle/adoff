@@ -34,6 +34,8 @@
   // --- Ad stubs ---
   class Ad {
     getAdId()              { return ""; }
+    getAdIdValue()         { return ""; }
+    getAdIdRegistry()      { return ""; }
     getAdSystem()          { return ""; }
     getAdvertiserName()    { return ""; }
     getApiFramework()      { return null; }
@@ -56,7 +58,7 @@
     getUiElements()        { return []; }
     getUniversalAdIdRegistry() { return "unknown"; }
     getUniversalAdIdValue()    { return "unknown"; }
-    getUniversalAdIds()    { return [{ adIdRegistry: "unknown", adIdValue: "unknown" }]; }
+    getUniversalAdIds()    { return [{ getAdIdRegistry() { return "unknown"; }, getAdIdValue() { return "unknown"; }, adIdRegistry: "unknown", adIdValue: "unknown" }]; }
     getVastMediaBitrate()  { return 0; }
     getVastMediaHeight()   { return 0; }
     getVastMediaWidth()    { return 0; }
@@ -65,6 +67,21 @@
     getWrapperCreativeIds(){ return []; }
     isLinear()             { return true; }
     isSkippable()          { return true; }
+    getAdPodInfo()         { return new AdPodInfo(); }
+  }
+
+  // --- AdPodInfo (returned by Ad.getAdPodInfo) ---
+  // Alcuni player (es. RTI/Mediaset) invocano ad.getAdPodInfo() dentro
+  // l'handler di OGNI evento, incluso CONTENT_RESUME_REQUESTED. Se manca,
+  // il listener lancia un'eccezione prima di riprendere il contenuto e il
+  // video non parte. Per lo stesso motivo serve il pieno set di getter.
+  class AdPodInfo {
+    getAdPosition()  { return 1; }
+    getIsBumper()    { return false; }
+    getMaxDuration() { return -1; }
+    getPodIndex()    { return 0; }
+    getTimeOffset()  { return 0; }
+    getTotalAds()    { return 1; }
   }
 
   // --- Event types ---

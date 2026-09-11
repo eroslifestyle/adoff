@@ -22,6 +22,24 @@
     </div>
   </header>
 
+  <!-- BANNER CTA: ACCOUNT + TELEGRAM (sempre visibile) -->
+  <div id="proUpsellBanner" class="cta-banner">
+    <div class="cta-banner-inner">
+      <div class="cta-banner-left">
+        <span class="cta-banner-icon">&#128172;</span>
+        <div class="cta-banner-text">
+          <span class="cta-banner-title" data-i18n="opt.ctaTitle">Resta connesso con AdOff</span>
+          <span class="cta-banner-sub" data-i18n="opt.ctaDesc">Crea il tuo account gratuito e unisciti al canale Telegram per novita', aggiornamenti e supporto diretto.</span>
+        </div>
+      </div>
+      <div class="cta-banner-right">
+        <a href="https://adoff.app/account/?signup=1&amp;source=options" target="_blank" rel="noopener noreferrer" class="btn-cta btn-cta-account" data-i18n="opt.ctaAccountBtn">Crea account</a>
+        <a href="https://t.me/adoffapp" target="_blank" rel="noopener noreferrer" class="btn-cta btn-cta-telegram" data-i18n="opt.ctaTelegramBtn">Telegram</a>
+        <button class="cta-banner-close" id="btnBannerClose" title="Chiudi" aria-label="Chiudi">&#10005;</button>
+      </div>
+    </div>
+  </div>
+
   <div class="layout">
     <!-- SIDEBAR MENU -->
     <nav class="sidebar">
@@ -34,17 +52,29 @@
       <a class="nav-item" data-section="licenza" href="#">
         <span class="nav-icon">&#10024;</span> <span data-i18n="opt.navLicense">Piano &amp; Licenza</span>
       </a>
+      <a class="nav-item" data-section="premium" href="#" id="navPremium" style="display:none">
+        <span class="nav-icon">&#10024;</span> <span data-i18n="badge.allActive">Tutto attivo</span>
+      </a>
       <a class="nav-item" data-section="statistiche" href="#">
         <span class="nav-icon">&#128202;</span> <span data-i18n="opt.navStats">Statistiche</span>
       </a>
       <a class="nav-item" data-section="referral" href="#">
         <span class="nav-icon">&#127873;</span> <span data-i18n="opt.navReferral">Invita amici</span>
       </a>
+      <a class="nav-item" data-section="privacy" href="#">
+        <span class="nav-icon">&#128737;</span> <span data-i18n="opt.navPrivacy">Privacy</span>
+      </a>
       <a class="nav-item" data-section="avanzate" href="#">
         <span class="nav-icon">&#128295;</span> <span data-i18n="opt.navAdvanced">Avanzate</span>
       </a>
+      <a class="nav-item" data-section="temi" href="#">
+        <span class="nav-icon">&#127912;</span> <span data-i18n="opt.navThemes">Temi</span>
+      </a>
+      <a class="nav-item" data-section="cambio-immagine" href="#">
+        <span class="nav-icon">&#128444;</span> <span data-i18n="opt.navImageSwap">Cambio immagine</span>
+      </a>
       <a class="nav-item" data-section="aiuto" href="#">
-        <span class="nav-icon">&#128172;</span> <span data-i18n="opt.navHelp">Aiuto</span>
+        <span class="nav-icon">&#128172;</span> <span data-i18n="opt.navHelp">Messaggi</span>
       </a>
       <a class="nav-item" data-section="suggerimenti" href="#">
         <span class="nav-icon">&#128161;</span> <span data-i18n="opt.navSuggest">Suggerimenti</span>
@@ -165,6 +195,72 @@
       <section id="sec-licenza" class="section">
         <h2 class="section-title" data-i18n="opt.licenseTitle">Piano &amp; Licenza</h2>
 
+        <!-- PRO SHOWCASE (visibile solo se NON Pro) -->
+        <div id="proShowcaseSection">
+          <div class="pro-showcase-header">
+            <span class="pro-showcase-icon">&#128274;</span>
+            <div class="pro-showcase-text">
+              <h3 data-i18n="badge.allActive">Tutto attivo</h3>
+              <p data-i18n="opt.supportIntro">AdOff e' gratis per tutti. Se vuoi, puoi sostenere il progetto: non sblocca nulla, tutto e' gia' attivo.</p>
+            </div>
+          </div>
+          <div class="pro-features-grid">
+            <div class="pro-feature-card">
+              <div class="pro-feature-icon">&#127916;</div>
+              <div class="pro-feature-content">
+                <h4>Video senza pubblicità</h4>
+                <p>Nessuna interruzione durante la visione — neanche sui video embedded</p>
+              </div>
+              <span class="pro-feature-lock">&#128274;</span>
+            </div>
+            <div class="pro-feature-card">
+              <div class="pro-feature-icon">&#128737;</div>
+              <div class="pro-feature-content">
+                <h4>Anti-detection avanzato</h4>
+                <p>Invisibile ai sistemi anti-adblock più sofisticati</p>
+              </div>
+              <span class="pro-feature-lock">&#128274;</span>
+            </div>
+            <div class="pro-feature-card">
+              <div class="pro-feature-icon">&#128274;</div>
+              <div class="pro-feature-content">
+                <h4>Blocco cookie popup</h4>
+                <p>Nessun fastidioso banner per il consenso cookie</p>
+              </div>
+              <span class="pro-feature-lock">&#128274;</span>
+            </div>
+            <div class="pro-feature-card">
+              <div class="pro-feature-icon">&#128166;</div>
+              <div class="pro-feature-content">
+                <h4>Controllo distrazioni</h4>
+                <p>Blocca widget social, commenti e contenuti non richiesti</p>
+              </div>
+              <span class="pro-feature-lock">&#128274;</span>
+            </div>
+            <div class="pro-feature-card">
+              <div class="pro-feature-icon">&#128762;</div>
+              <div class="pro-feature-content">
+                <h4>Stealth mode</h4>
+                <p>Nessuna traccia — variabili spoofate, fetch/XHR mascherati</p>
+              </div>
+              <span class="pro-feature-lock">&#128274;</span>
+            </div>
+            <div class="pro-feature-card">
+              <div class="pro-feature-icon">&#128171;</div>
+              <div class="pro-feature-content">
+                <h4 data-i18n="badge.allActive">Tutto attivo</h4>
+                <p data-i18n="opt.supportIntro">AdOff e' gratis per tutti: ogni funzione e' gia' attiva.</p>
+              </div>
+              <span class="pro-feature-badge trial" style="display:none"></span>
+            </div>
+          </div>
+          <div class="pro-showcase-cta">
+            <a href="https://adoff.app/account" target="_blank" class="btn btn-primary btn-pro-cta">
+              Tutto attivo, per tutti
+            </a>
+          </div>
+        </div>
+
         <!-- STATE B: PRO ATTIVO -->
         <div class="card auth-state" id="stateProActive" style="display:none">
           <div class="auth-pro-header">
@@ -203,7 +299,7 @@
         <!-- STATE T: TRIAL ATTIVO -->
         <div class="card auth-state" id="stateTrialActive" style="display:none">
           <div class="auth-pro-header">
-            <span class="ls-badge trial" id="trialBadge">TRIAL</span>
+            <span class="ls-badge trial" id="trialBadge">Attivo</span>
             <span class="auth-pro-check" id="trialCountdownDays">—</span>
           </div>
           <div class="auth-pro-info">
@@ -211,11 +307,11 @@
               <span class="auth-info-label" data-i18n="opt.trialStatus">Stato</span>
               <span class="auth-info-val" id="trialStatus" data-i18n="opt.trialActive">Trial Pro attivo</span>
             </div>
-            <div class="auth-info-row">
+            <div class="auth-info-row" style="display:none">
               <span class="auth-info-label" data-i18n="opt.trialExpiry">Scadenza</span>
               <span class="auth-info-val" id="trialExpiryDate">—</span>
             </div>
-            <div class="auth-info-row">
+            <div class="auth-info-row" style="display:none">
               <span class="auth-info-label" data-i18n="opt.trialProgress">Tempo trial</span>
               <div class="auth-info-devices">
                 <div class="devices-bar">
@@ -225,21 +321,19 @@
               </div>
             </div>
           </div>
-          <p style="color:var(--text-muted);font-size:13px;margin:0 20px 16px;line-height:1.5" data-i18n="opt.trialUpgrade">
-            Al termine del trial AdOff continuerà a funzionare in versione FREE. Per non perdere le funzionalità Pro (anti-detection avanzato, video senza ads), attiva una licenza prima della scadenza.
-          </p>
+          <span data-i18n="onb.allFree">Tutte le funzioni sono attive, gratis e senza account.</span>
           <div class="auth-pro-actions">
-            <button class="btn btn-primary auth-btn-sm" id="btnTrialUpgrade" data-i18n="opt.trialUpgradeBtn">Acquista Pro</button>
+            <button class="btn btn-primary auth-btn-sm" id="btnTrialUpgrade" data-i18n="opt.supportBtn" style="display:none">Sostieni il progetto</button>
             <button class="btn btn-ghost auth-btn-sm" id="btnTrialHaveKey" data-i18n="opt.trialHaveKey">Ho già una licenza</button>
           </div>
         </div>
 
         <!-- STATE A: NO LICENSE (semplificato - no login) -->
         <div class="card auth-state" id="stateNotLoggedIn" style="display:none">
-          <h3 class="card-title" style="padding-top:20px">&#128273; Attiva AdOff Pro</h3>
+          <h3 class="card-title" style="padding-top:20px">&#128273; <span data-i18n="badge.allActive">Tutto attivo</span></h3>
 
-          <p class="auth-intro-text" style="color:var(--text-muted);font-size:14px;margin:0 20px 20px;line-height:1.5">
-            Inserisci il codice licenza che hai ricevuto via email dopo l'acquisto.
+          <p class="auth-intro-text" style="color:var(--text-muted);font-size:14px;margin:0 20px 20px;line-height:1.5" data-i18n="opt.supportIntro">
+            AdOff e' gratis per tutti. Se vuoi, puoi sostenere il progetto: non sblocca nulla, tutto e' gia' attivo.
           </p>
 
           <!-- License key activation -->
@@ -258,14 +352,14 @@
               &#128100; Gestisci account sul sito
             </a>
             <p style="color:var(--text-muted);font-size:12px;margin-top:8px">
-              Acquista, attiva il tuo account e trova il codice licenza su adoff.app
+              Se hai una licenza, attiva il tuo account e trova il codice su adoff.app
             </p>
           </div>
         </div>
 
         <!-- PRICING CARD (shown in State A and C) -->
         <div class="card" id="pricingCard" style="display:none">
-          <h3 class="card-title">&#128230; Acquista AdOff Pro</h3>
+          <h3 class="card-title">&#10024; <span data-i18n="opt.supportBtn">Sostieni il progetto</span></h3>
 
           <!-- Device selector -->
           <div class="pricing-device-selector">
@@ -281,22 +375,22 @@
           <div class="pricing-cards-row">
             <div class="pricing-plan-card">
               <div class="pricing-plan-name">Mensile</div>
-              <div class="pricing-plan-price" id="priceMonthly">€2.69</div>
+              <div class="pricing-plan-price" id="priceMonthly"></div>
               <div class="pricing-plan-period">/mese</div>
-              <button class="btn btn-primary pricing-buy-btn" data-plan="monthly">Acquista</button>
+              <button class="btn btn-primary pricing-buy-btn" data-plan="monthly" data-i18n="opt.supportBtn">Sostieni il progetto</button>
             </div>
             <div class="pricing-plan-card popular">
               <div class="pricing-popular-badge">Miglior valore</div>
               <div class="pricing-plan-name">Annuale</div>
-              <div class="pricing-plan-price" id="priceAnnual">€29.59</div>
+              <div class="pricing-plan-price" id="priceAnnual"></div>
               <div class="pricing-plan-period">/anno</div>
-              <button class="btn btn-primary pricing-buy-btn" data-plan="annual">Acquista</button>
+              <button class="btn btn-primary pricing-buy-btn" data-plan="annual" data-i18n="opt.supportBtn">Sostieni il progetto</button>
             </div>
             <div class="pricing-plan-card">
               <div class="pricing-plan-name">Lifetime</div>
-              <div class="pricing-plan-price" id="priceLifetime">€67.90</div>
+              <div class="pricing-plan-price" id="priceLifetime"></div>
               <div class="pricing-plan-period">una tantum</div>
-              <button class="btn btn-primary pricing-buy-btn" data-plan="lifetime">Acquista</button>
+              <button class="btn btn-primary pricing-buy-btn" data-plan="lifetime" data-i18n="opt.supportBtn">Sostieni il progetto</button>
             </div>
           </div>
 
@@ -322,21 +416,155 @@
           </div>
         </div>
 
+        <!-- Tab temporali -->
+        <div class="card stats-chart-card">
+          <div class="stats-tabs">
+            <button class="stats-tab active" data-period="today" data-i18n="opt.periodToday">Oggi</button>
+            <button class="stats-tab" data-period="week" data-i18n="opt.periodWeek">Questa settimana</button>
+            <button class="stats-tab" data-period="month" data-i18n="opt.periodMonth">Questo mese</button>
+            <button class="stats-tab" data-period="year" data-i18n="opt.periodYear">Quest'anno</button>
+            <button class="stats-tab" data-period="all" data-i18n="opt.periodAll">Sempre</button>
+          </div>
+          <div class="stats-chart-wrapper">
+            <canvas id="statsChart" width="600" height="180"></canvas>
+          </div>
+          <div class="stats-chart-meta" id="statsChartMeta"></div>
+        </div>
+
         <div class="card">
           <button class="btn btn-danger" id="btnResetStats">
-            &#128465; <span data-i18n="opt.resetStats">Resetta statistiche</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+            <span data-i18n="opt.resetStats">Resetta statistiche</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== PREMIUM ===== -->
+      <!-- Sezione storica: la VPN non fa piu' parte del prodotto. Resta nel markup
+           perche' options.js la cerca, ma non e' raggiungibile dal menu. -->
+      <section id="sec-premium" class="section" hidden>
+        <h2 class="section-title" data-i18n="badge.allActive">Tutto attivo</h2>
+
+        <!-- Pro showcase per non-premium -->
+        <div id="premiumShowcaseSection">
+          <div class="card premium-hero-card">
+            <div class="premium-hero-icon">&#128274;</div>
+            <h3 class="premium-hero-title" data-i18n="badge.allActive">Tutto attivo</h3>
+            <p class="premium-hero-sub" data-i18n="opt.supportIntro">AdOff e' gratis per tutti: ogni funzione e' gia' attiva.</p>
+          </div>
+          <div class="card">
+            <h3 class="card-title" style="margin-bottom:14px" data-i18n="badge.allActive">Tutto attivo</h3>
+            <div class="premium-features-list">
+              <div class="premium-feature-row">
+                <span class="premium-feature-icon">&#128274;</span>
+                <div class="premium-feature-info">
+                  <strong>Blocco della pubblicita'</strong>
+                  <span>Su ogni sito, senza account e senza limiti</span>
+                </div>
+              </div>
+              <div class="premium-feature-row">
+                <span class="premium-feature-icon">&#127916;</span>
+                <div class="premium-feature-info">
+                  <strong>Blocco ads avanzato</strong>
+                  <span>Regole aggiornate anche per i siti piu' ostinati</span>
+                </div>
+              </div>
+              <div class="premium-feature-row">
+                <span class="premium-feature-icon">&#128172;</span>
+                <div class="premium-feature-info">
+                  <strong>Supporto prioritario</strong>
+                  <span>Risposta prioritaria dal team AdOff</span>
+                </div>
+              </div>
+              <div class="premium-feature-row">
+                <span class="premium-feature-icon">&#128752;</span>
+                <div class="premium-feature-info">
+                  <strong>Fino a 3 dispositivi</strong>
+                  <span>Stesso account su più dispositivi personali</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="text-align:center; padding: 20px;">
+            <p style="color:var(--text-muted); font-size:14px; margin:0 0 12px; line-height:1.5">
+              <strong style="color:var(--primary-light)">A partire da €4,99/mese</strong><br>
+              Annulla quando vuoi. Nessun impegno.
+            </p>
+            <a href="https://adoff.app/premium" target="_blank" class="btn btn-primary" style="font-size:0.9rem; padding:10px 24px;">
+              Scegli Premium &rarr;
+            </a>
+          </div>
+        </div>
+
+        <!-- Premium attivo -->
+        <div class="card" id="premiumActiveCard" style="display:none">
+          <div class="auth-pro-header">
+            <span class="premium-active-badge">PREMIUM</span>
+            <span style="font-size:1.2rem">&#10003;</span>
+          </div>
+          <div class="auth-pro-info" style="margin-top:12px">
+            <div class="auth-info-row">
+              <span class="auth-info-label">Piano</span>
+              <span class="auth-info-val" id="premiumPlanName">—</span>
+            </div>
+            <div class="auth-info-row">
+              <span class="auth-info-label">Scadenza</span>
+              <span class="auth-info-val" id="premiumExpiry">—</span>
+            </div>
+          </div>
+          <p style="color:var(--text-muted); font-size:12px; margin:12px 0 0; line-height:1.5">
+            Tutte le funzioni sono attive, senza account e senza scadenze.
+            <a href="https://adoff.app/premium" target="_blank" style="color:var(--primary-light)">Gestisci account &rarr;</a>
+          </p>
+        </div>
+      </section>
+
+      <!-- ===== REFERRAL ===== -->
+      <section id="sec-statistiche" class="section">
+        <h2 class="section-title" data-i18n="opt.statsTitle">Statistiche</h2>
+
+        <div class="card stats-grid">
+          <div class="big-stat">
+            <span class="big-stat-value" id="statAds">0</span>
+            <span class="big-stat-label" data-i18n="opt.totalAds">Ads bloccati</span>
+          </div>
+          <div class="big-stat">
+            <span class="big-stat-value" id="statReq">0</span>
+            <span class="big-stat-label" data-i18n="opt.totalReq">Richieste bloccate</span>
+          </div>
+        </div>
+
+        <!-- Tab temporali -->
+        <div class="card stats-chart-card">
+          <div class="stats-tabs">
+            <button class="stats-tab active" data-period="today" data-i18n="opt.periodToday">Oggi</button>
+            <button class="stats-tab" data-period="week" data-i18n="opt.periodWeek">Questa settimana</button>
+            <button class="stats-tab" data-period="month" data-i18n="opt.periodMonth">Questo mese</button>
+            <button class="stats-tab" data-period="year" data-i18n="opt.periodYear">Quest'anno</button>
+            <button class="stats-tab" data-period="all" data-i18n="opt.periodAll">Sempre</button>
+          </div>
+          <div class="stats-chart-wrapper">
+            <canvas id="statsChart" width="600" height="180"></canvas>
+          </div>
+          <div class="stats-chart-meta" id="statsChartMeta"></div>
+        </div>
+
+        <div class="card">
+          <button class="btn btn-danger" id="btnResetStats">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+            <span data-i18n="opt.resetStats">Resetta statistiche</span>
           </button>
         </div>
       </section>
 
       <!-- ===== REFERRAL ===== -->
       <section id="sec-referral" class="section">
-        <h2 class="section-title">Guadagna con AdOff</h2>
+        <h2 class="section-title" data-i18n="ref.inviteTitle">Invita un amico</h2>
 
         <!-- Selezione Modalita' -->
-        <div class="card" style="padding: 10px; display: flex; gap: 10px; margin-bottom: 20px;">
+        <div class="card" style="padding: 10px; display: none; gap: 10px; margin-bottom: 20px;">
           <button class="btn btn-primary" id="btnShowInvite" style="flex: 1; font-size: 0.8rem;">Invita Amici (Giorni Gratis)</button>
-          <button class="btn btn-ghost" id="btnShowAffiliate" style="flex: 1; font-size: 0.8rem;">Partner Affiliato (30 giorni)</button>
+          <button class="btn btn-ghost" id="btnShowAffiliate" style="flex: 1; font-size: 0.8rem;">Partner Affiliato</button>
         </div>
 
         <!-- SEZIONE 1: INVITA AMICI (FREE DAYS) -->
@@ -346,8 +574,8 @@
             <div class="referral-hero">
               <span class="referral-hero-icon">&#127873;</span>
               <div class="referral-hero-text">
-                <h3 data-i18n="ref.heroTitle">Guadagna Pro gratis!</h3>
-                <p data-i18n="ref.heroDesc">Per ogni amico che passa a Pro, ricevi <strong>30 giorni di AdOff Pro gratis</strong>.</p>
+                <h3 data-i18n="ref.inviteTitle">Invita un amico</h3>
+                <p data-i18n="ref.inviteDesc">Condividi il tuo link: piu' persone navigano senza pubblicita'.</p>
               </div>
             </div>
           </div>
@@ -355,12 +583,16 @@
           <!-- Codice e link -->
           <div class="card">
             <h3 class="card-title" data-i18n="ref.linkTitle">Il tuo link referral</h3>
+            <p style="font-size:13px;color:#9aa0a8;margin:0 0 8px;">
+              <span data-i18n="ref.yourCode">Il tuo codice</span>:
+              <strong id="referralCode" style="color:var(--primary-light);letter-spacing:0.5px;">---</strong>
+            </p>
             <div class="referral-link-row">
               <input type="text" id="referralLink" class="text-input referral-link-input" readonly>
               <button class="btn btn-primary" id="btnCopyReferral" data-i18n="ref.copy">Copia</button>
             </div>
-            <button id="btnLinkReferralAccount" class="btn btn-ghost" style="margin-top:12px;">Collega al tuo account adoff.app</button>
-            <p style="font-size:12px;color:#9aa0a8;margin-top:6px;">Necessario per ricevere i 30 giorni gratis quando un amico paga.</p>
+            <button id="btnLinkReferralAccount" class="btn btn-ghost" style="margin-top:12px;display:none;">Collega al tuo account adoff.app</button>
+            <p style="font-size:12px;color:#9aa0a8;margin-top:6px;display:none;">Necessario per ricevere i 30 giorni gratis quando un amico paga.</p>
           </div>
         </div>
 
@@ -370,7 +602,7 @@
           <div class="card" id="affiliateNotRegistered" style="text-align: center; padding: 40px 20px;">
             <div style="font-size: 3rem; margin-bottom: 20px;">&#128181;</div>
             <h3>Diventa Partner AdOff</h3>
-            <p class="text-muted" style="margin-bottom: 24px;">Ricevi <strong>30 giorni di AdOff Pro GRATIS</strong> per ogni vendita generata tramite il tuo link.</p>
+            <p class="text-muted" style="margin-bottom: 24px;">Programma non piu' attivo: AdOff e' gratis per tutti.</p>
             <button class="btn btn-primary" id="btnRegisterAffiliate">Attiva Profilo Partner</button>
           </div>
 
@@ -402,20 +634,114 @@
           <div class="referral-stats">
             <div class="referral-stat">
               <span class="referral-stat-value" id="refCount">0</span>
-              <span class="referral-stat-label" data-i18n="ref.friendsCount">Amici paganti</span>
+              <span class="referral-stat-label" data-i18n="ref.friendsCount">Amici invitati</span>
             </div>
             <div class="referral-stat-divider"></div>
             <div class="referral-stat">
               <span class="referral-stat-value" id="refDaysEarned">0</span>
-              <span class="referral-stat-label" data-i18n="ref.daysEarned">Giorni bonus</span>
+              <span class="referral-stat-label" data-i18n="ref.daysEarned">Inviti</span>
             </div>
           </div>
         </div>
       </section>
 
+      <!-- ===== TEMI ===== -->
+      <section id="sec-temi" class="section">
+        <h2 class="section-title" data-i18n="opt.themesTitle">Temi</h2>
+
+        <div class="card">
+          <p class="section-desc" data-i18n="opt.themesDesc">Personalizza l'aspetto di AdOff con i temi.</p>
+        </div>
+
+        <!-- Griglia temi -->
+        <div class="themes-grid" id="themesGrid">
+          <!-- Popolato da JS -->
+        </div>
+
+        <!-- Tema attivo -->
+        <div class="card theme-active-card" id="themeActiveCard">
+          <div class="theme-active-info">
+            <span class="theme-active-label" data-i18n="opt.themeActive">Tema attivo:</span>
+            <span class="theme-active-name" id="themeActiveName">—</span>
+          </div>
+        </div>
+
+        <!-- Pro upsell per temi bloccati -->
+        <div class="card pro-upsell-card" id="themesProUpsell" style="display:none">
+          <div class="pro-upsell-icon">&#128274;</div>
+          <h3 class="pro-upsell-title" data-i18n="opt.themesProTitle">Temi</h3>
+          <p class="pro-upsell-desc" data-i18n="opt.themesProDesc">Scegli tra varianti scure, chiare e colorate.</p>
+          <button class="btn btn-primary" id="btnThemesUpgrade" data-i18n="opt.themesProBtn">Scegli un tema</button>
+        </div>
+      </section>
+
+      <!-- ===== CAMBIO IMMAGINE ===== -->
+      <section id="sec-cambio-immagine" class="section">
+        <h2 class="section-title" data-i18n="opt.imageSwapTitle">Cambio immagine</h2>
+
+        <div class="card">
+          <p class="section-desc" data-i18n="opt.imageSwapDesc">Al posto degli spazi pubblicitari vuoti, mostra immagini divertenti.</p>
+        </div>
+
+        <!-- Toggle principale -->
+        <div class="card">
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label" data-i18n="opt.imageSwapEnable">Mostra immagini al posto degli ads</span>
+              <span class="setting-desc" data-i18n="opt.imageSwapEnableDesc">Sostituisce gli spazi pubblicitari con immagini decorative</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settingImageSwap">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Categoria immagini -->
+        <div class="card" id="imageSwapCategoryCard">
+          <h3 class="card-title" data-i18n="opt.imageSwapCategory">Categoria</h3>
+          <div class="image-categories-grid" id="imageCategoriesGrid">
+            <!-- Popolato da JS -->
+          </div>
+        </div>
+
+        <!-- Pro upsell -->
+        <div class="card pro-upsell-card" id="imageSwapProUpsell" style="display:none">
+          <div class="pro-upsell-icon">&#128274;</div>
+          <h3 class="pro-upsell-title" data-i18n="opt.imageSwapProTitle">Cambio immagine</h3>
+          <p class="pro-upsell-desc" data-i18n="opt.imageSwapProDesc">Mostra immagini al posto degli spazi pubblicitari vuoti. Scegli tra gatti, cani o paesaggi.</p>
+          <button class="btn btn-primary" id="btnImageSwapUpgrade" data-i18n="opt.imageSwapProBtn">Attiva il cambio immagine</button>
+        </div>
+      </section>
+
+      <!-- ===== PRIVACY ===== -->
+      <section id="sec-privacy" class="section">
+        <h2 class="section-title" data-i18n="opt.privacyTitle">Privacy — Dati di Navigazione Anonimi</h2>
+        <p data-i18n="opt.privacyDesc">Se attivi questa opzione, AdOff condivide in forma aggregata e anonima il nome dei siti che visiti (mai l'URL completo) e il numero di annunci bloccati/non bloccati su quel sito. Serve a verificare se il blocco funziona davvero. Puoi disattivarlo in qualsiasi momento: i dati già raccolti verranno cancellati subito.</p>
+        <label class="switch">
+          <input type="checkbox" id="navOptInToggle" />
+          <span class="slider"></span>
+          <span data-i18n="opt.privacyToggleLabel">Condividi dati anonimi di efficacia</span>
+        </label>
+        <p class="privacy-note" data-i18n="opt.privacyLink">Leggi la <a href="https://adoff.app/privacy" target="_blank" rel="noopener">Privacy Policy</a> completa.</p>
+      </section>
+
       <!-- ===== AVANZATE ===== -->
       <section id="sec-avanzate" class="section">
         <h2 class="section-title" data-i18n="opt.advancedTitle">Avanzate</h2>
+
+        <div class="card">
+          <div class="setting-row last">
+            <div class="setting-info">
+              <span class="setting-label" data-i18n="opt.vcompatLabel">Compatibilita' piattaforme video</span>
+              <span class="setting-desc" data-i18n="opt.vcompatDesc">Attiva se i video restano neri a lungo prima di partire: gli annunci vengono saltati durante la riproduzione invece che rimossi in anticipo</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settingVideoCompat">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
 
         <div class="card">
           <div class="action-row">
@@ -447,19 +773,25 @@
 
       <!-- ===== AIUTO / FAQ ===== -->
       <section id="sec-aiuto" class="section">
-        <h2 class="section-title" data-i18n="help.title">Aiuto</h2>
+        <h2 class="section-title" data-i18n="help.title">Messaggi</h2>
 
-        <!-- Chat container -->
-        <div class="card chat-card">
-          <div class="chat-messages" id="chatMessages">
-            <div class="chat-bubble bot" data-i18n="help.greeting">
-              Ciao! Sono l'assistente AdOff. Scrivi la tua domanda o scegli un argomento qui sotto.
-            </div>
+        <!-- Thread messaggi persistente col supporto AdOff -->
+        <div class="card chat-card" id="msgCard">
+          <div class="msg-email-gate" id="msgEmailGate" style="display:none">
+            <p data-i18n="msg.emailPrompt">Inserisci la tua email per iniziare una conversazione con il supporto AdOff.</p>
+            <input type="email" id="msgEmailInput" class="text-input" placeholder="La tua email" data-i18n="msg.emailPlaceholder" autocomplete="email">
+            <button class="btn btn-primary" id="btnMsgEmailSave" data-i18n="msg.emailSave">Continua</button>
           </div>
-          <div class="chat-input-row">
-            <input type="text" id="chatInput" class="text-input chat-text-input"
-              placeholder="Scrivi una domanda..." data-i18n="help.inputPlaceholder" autocomplete="off" spellcheck="false">
-            <button class="btn btn-primary chat-send" id="btnChatSend">&#10148;</button>
+          <div id="msgThreadArea" style="display:none">
+            <div class="chat-messages" id="msgMessages"></div>
+            <div class="chat-attachment-preview" id="msgAttachPreview" style="display:none"></div>
+            <div class="chat-input-row">
+              <input type="text" id="msgInput" class="text-input chat-text-input"
+                placeholder="Scrivi un messaggio..." data-i18n="msg.inputPlaceholder" autocomplete="off" spellcheck="false">
+              <label class="btn btn-ghost chat-attach-btn" for="msgAttachInput" title="Allega uno screenshot" data-i18n-title="msg.attachTitle">&#128206;</label>
+              <input type="file" id="msgAttachInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+              <button class="btn btn-primary chat-send" id="btnMsgSend">&#10148;</button>
+            </div>
           </div>
         </div>
 
@@ -471,11 +803,11 @@
             <button class="faq-chip" data-q="sito non funziona" data-i18n="help.chipBroken">Un sito non funziona</button>
             <button class="faq-chip" data-q="video ads" data-i18n="help.chipVideoAds">Le piattaforme video mostrano ancora ads</button>
             <button class="faq-chip" data-q="whitelist" data-i18n="help.chipWhitelist">Come escludo un sito?</button>
-            <button class="faq-chip" data-q="differenza free pro" data-i18n="help.chipFreePro">Differenza Free vs Pro</button>
+            <button class="faq-chip" data-q="differenza free pro" data-i18n="help.chipFreePro">AdOff e' gratis?</button>
             <button class="faq-chip" data-q="privacy dati" data-i18n="help.chipPrivacy">Privacy e dati personali</button>
             <button class="faq-chip" data-q="rallenta browser" data-i18n="help.chipSlow">AdOff rallenta il browser?</button>
             <button class="faq-chip" data-q="anti-adblock" data-i18n="help.chipAntiblock">Siti con anti-adblock</button>
-            <button class="faq-chip" data-q="attivare licenza" data-i18n="help.chipLicense">Come attivo la licenza Pro?</button>
+            <button class="faq-chip" data-q="attivare licenza" data-i18n="help.chipLicense">Ho una licenza, come la attivo?</button>
             <button class="faq-chip" data-q="disinstallare" data-i18n="help.chipUninstall">Come disinstallo AdOff?</button>
           </div>
         </div>

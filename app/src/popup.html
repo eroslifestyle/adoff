@@ -83,6 +83,9 @@
       </label>
     </div>
 
+    <!-- Banner storico, ora sempre nascosto: popup.js lo cerca ancora per id. -->
+    <div class="premium-banner" id="premiumBanner" style="display:none"></div>
+
     <!-- CONTATORI -->
     <div class="stats">
       <div class="stat">
@@ -128,8 +131,28 @@
       </div>
     </div>
 
+    <!-- MESSAGGI QUICK CARD -->
+    <div class="msg-quick-card" id="msgQuickCard" style="display:none">
+      <span class="msg-quick-icon">&#128172;</span>
+      <span class="msg-quick-label" data-i18n="popup.messagesLabel">Messaggi</span>
+      <span class="msg-quick-badge" id="msgQuickBadge" style="display:none">0</span>
+      <button class="msg-quick-open" id="msgQuickOpen" data-i18n="popup.messagesOpen">Apri</button>
+    </div>
+
     <!-- BANNER LICENZA (solo per free/trial) -->
     <div class="license-banner" id="licenseBanner" style="display:none"></div>
+
+    <!-- BANNER TRIAL GIA' USATO -->
+    <div class="trial-blocked-banner" id="trialBlockedBanner" style="display:none"></div>
+
+    <!-- MOBILE BANNER -->
+    <div class="mobile-banner" id="mobileBanner" style="display:none">
+      <div class="mobile-banner__icon">&#128241;</div>
+      <div class="mobile-banner__text">
+        <strong data-i18n="popup.mobile.title">AdOff anche su Android</strong>
+        <span data-i18n="popup.mobile.subtitle">DNS blocking senza app — attivalo in 60 secondi</span>
+      </div>
+    </div>
 
     <!-- FOOTER -->
     <div class="footer">
@@ -141,6 +164,7 @@
     </div>
 
   </div>
+  <script src="license-client.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
