@@ -21,85 +21,56 @@ Block ads on YouTube & every website. Skip video ads, ultra-light, invisible to 
 
 **Description:**
 ```markdown
-Ads? Off!
+A faster, cleaner, more private web — completely free.
 
-AdOff is a next-generation ad blocker built from scratch with Manifest V3. It blocks ads everywhere — instantly, invisibly, and without slowing down your browser.
+AdOff is a privacy-focused content filter built from scratch with Manifest V3. It removes intrusive ads, trackers, and clutter everywhere — instantly, invisibly, and without slowing down your browser. Every feature, every layer of protection, no upgrades, no paywalls.
 
 ━━━━━━━━━━━━━━━━━━━━
 HOW IT WORKS
 ━━━━━━━━━━━━━━━━━━━━
 
-AdOff uses four independent layers of protection that work together:
+AdOff uses independent layers of protection that work together:
 
-● Network Blocking — Intercepts and blocks ad requests before they even reach your browser. 180 rules cover all major advertising networks, tracking pixels, and analytics endpoints. Ads are stopped at the source, saving bandwidth and speeding up page loads.
+● Network Filtering — Intercepts unwanted network requests before they load, using Chrome's native declarativeNetRequest API. 180 static rules cover known tracking domains, intrusive scripts, and unwanted content delivery networks. Zero background overhead.
 
-● Cosmetic Filtering — Hides ad containers, banners, sponsored content, pop-ups, cookie walls, and residual ad elements directly from the page. Uses precise CSS selectors and smart DOM scanning to remove visual clutter without breaking page layouts.
+● Cosmetic Filtering — Hides intrusive page elements such as banners, pop-ups, cookie walls, overlay content, and video interruptions using precise CSS selectors and smart DOM scanning, without breaking page layouts.
 
-● Video Ad Neutralization — Replaces the standard video ad SDK with a neutral stub that tells the player "no ads to show." Videos start immediately without pre-roll or mid-roll interruptions. Works universally on video platforms like YouTube and Twitch, and on any streaming or broadcaster website worldwide.
-
-● Stealth Anti-Detection — Advanced anti-adblock evasion technology. AdOff stays completely invisible to detection scripts, so you never see "please disable your ad blocker" messages. Works on news sites, video platforms like YouTube, social networks like Facebook, and any site that fights ad blockers.
+● Stealth Mode — Advanced anti-detection technology. AdOff stays invisible to scripts that try to detect content filters, so you never see "please disable your content filter" messages, even on sites that fight filtering.
 
 ━━━━━━━━━━━━━━━━━━━━
-KEY FEATURES
+KEY FEATURES — ALL INCLUDED, FREE
 ━━━━━━━━━━━━━━━━━━━━
 
-✔ Works on every website — zero configuration needed
-✔ Ultra-lightweight: only tens of KB, a fraction of typical competitors
-✔ Video ad neutralization — eliminates pre-roll and mid-roll ads on YouTube, Twitch, Vimeo, Dailymotion and streaming platforms worldwide
-✔ Stealth mode: invisible to anti-adblock detection systems
-✔ Per-site controls: pause protection on specific sites with one click
-✔ 4 pause modes: pause for 1 hour, until tomorrow, permanently, or custom
-✔ Whitelist management: easily exclude trusted sites you want to support
-✔ Real-time stats: see how many ads and requests have been blocked
-✔ Cookie banner blocker: auto-dismisses cookie consent pop-ups
-✔ No "acceptable ads": blocks everything by default — no paid whitelist, ever
-✔ 100% free: 30 days free to use, then just a free account (never a payment) to keep going
-✔ Privacy-first: nothing about your browsing is collected by default — nothing at all unless you explicitly turn on the optional anonymous stats (which share only site hostnames, never full URLs, never page content)
-✔ 15 languages: English, Italian, German, French, Spanish, Portuguese, Russian, Arabic, Chinese, Hindi, Japanese, Korean, Turkish, Indonesian, Polish
-✔ Manifest V3: built with the latest Chrome extension architecture
-✔ Completely free — all features unlocked from day one
-
-━━━━━━━━━━━━━━━━━━━━
-WORKS EVERYWHERE
-━━━━━━━━━━━━━━━━━━━━
-
-AdOff blocks ads on every website you visit. A few of the places where it shines:
-
-● Video &amp; streaming — YouTube, Twitch, Vimeo, Dailymotion, Hulu, and any player worldwide: pre-roll, mid-roll and overlay video ads neutralized instantly .
-
-● Social networks — Facebook, Instagram, X (Twitter), TikTok, Reddit, LinkedIn, Pinterest, Snapchat: sponsored posts, in-feed ads and promoted content hidden.
-
-● Search &amp; shopping — Google, Bing, Amazon, eBay: sponsored results and product ads removed.
-
-● News &amp; media — every news site, blog, and magazine: banners, pop-ups, interstitials and anti-adblock walls bypassed.
-
-● Forums, wikis, streaming audio (Spotify Web), webmail, and the entire rest of the web — if a page tries to show you an ad, AdOff stops it.
+✔ Works on every website — no configuration, no lists to manage
+✔ Ultra-lightweight: only tens of KB, a fraction of typical alternatives
+✔ Stealth mode included: invisible to detection systems
+✔ Per-site controls: pause on specific sites with one click
+✔ 4 pause modes: 1 hour, until tomorrow, permanently, or custom
+✔ Whitelist management: easily allow sites you want to support
+✔ Real-time stats: see how much has been blocked
+✔ Cookie banner blocker: auto-dismisses consent pop-ups
+✔ Blocks everything by default — no "acceptable" exceptions, no paid whitelist
+✔ 100% free — no trial, no subscription, no upgrade prompts
+✔ Privacy-first: no browsing history collected, no page content read, no tracking data sent
+✔ 15 languages
+✔ Manifest V3: latest extension architecture
 
 ━━━━━━━━━━━━━━━━━━━━
 WHY ADOFF?
 ━━━━━━━━━━━━━━━━━━━━
 
-Most ad blockers share the same five weaknesses. AdOff was built to fix every one of them:
-
-→ Video ads slip through or force a page reload? AdOff neutralizes video ads instantly, in-page, on any streaming platform or broadcaster worldwide — no reload needed, nothing slips through.
-→ "Acceptable ads" letting paid ads through by default? Never. AdOff blocks everything by default. No paid whitelist, no ads we quietly let through — ever.
-→ Cluttered, overwhelming settings? Zero configuration. AdOff works the second you install it — no modes to switch, no filter lists to tune.
-→ Bloated blockers that eat RAM and slow your browser? AdOff is ultra-light and uses Chrome's native declarativeNetRequest engine — no background overhead, no slowdown.
-→ Predatory billing and impossible refunds? There is nothing to buy, ever. AdOff is free, with just a free account after the first 30 days — never a payment.
-
-On top of all that:
-
-→ Undetectable: stealth technology bypasses even the most aggressive anti-adblock walls
-→ No monetization of your data: we never sell your data or inject our own ads — and nothing is collected unless you explicitly opt in
-→ Open and transparent: clear permissions, clear privacy policy
+→ Blocks everything by default — no "acceptable" exceptions slipping through, no paid whitelist.
+→ Zero configuration — works the second you install it, no modes to switch, no lists to tune.
+→ Ultra-light — uses Chrome's native engine, no background overhead, no slowdown.
+→ Completely free — every feature included from day one, nothing locked behind a paywall.
+→ Invisible by design — stays undetected even where filtering is actively blocked.
+→ No monetization of your data — we don't track you, sell your data, or inject our own content.
 
 ━━━━━━━━━━━━━━━━━━━━
 SUPPORT
 ━━━━━━━━━━━━━━━━━━━━
 
 Need help? Visit our support page at adoff.app/support — we respond to every message.
-
-Found a site where ads aren't blocked? Let us know and we'll add rules for it in the next update.
 ```
 
 ### Italian (it)
@@ -111,26 +82,56 @@ Blocca le pubblicita' su ogni sito. Ultra-leggero, invisibile ai sistemi anti-ad
 
 **Description:**
 ```markdown
-Ads? Off!
+Un web più veloce, più pulito, più privato — completamente gratis.
 
-AdOff e' un ad blocker di nuova generazione, costruito da zero con Manifest V3. Blocca le pubblicita' ovunque - istantaneamente, in modo invisibile, senza rallentare il browser.
+AdOff è un filtro dei contenuti orientato alla privacy, costruito da zero con Manifest V3. Rimuove pubblicità invadenti, tracker e elementi di disturbo ovunque — istantaneamente, in modo invisibile, senza rallentare il browser. Ogni funzione, ogni livello di protezione, nessun upgrade, nessun paywall.
 
 ━━━━━━━━━━━━━━━━━━━━
 COME FUNZIONA
 ━━━━━━━━━━━━━━━━━━━━
 
-AdOff usa quattro livelli di protezione indipendenti:
-<ul><li>Blocco di rete: Intercetta e blocca le richieste pubblicitarie prima che raggiungano il browser. 180 regole coprono tutte le principali reti pubblicitarie.</li><li>Filtro cosmetico: Nasconde container ads, banner, contenuti sponsorizzati, pop-up e cookie wall direttamente dalla pagina.</li><li>Neutralizzazione video ads: Sostituisce l'SDK pubblicitario video con una versione neutra. I video partono immediatamente senza interruzioni pre-roll o mid-roll.</li><li>Anti-rilevamento stealth: Tecnologia avanzata di evasione anti-adblock. AdOff resta completamente invisibile agli script di rilevamento.</li></ul>
+AdOff utilizza livelli di protezione indipendenti che lavorano insieme:
+
+● Filtro di rete — Intercetta le richieste di rete indesiderate prima che vengano caricate, usando l'API nativa declarativeNetRequest di Chrome. 180 regole statiche coprono domini di tracciamento noti, script invadenti e reti di distribuzione di contenuti indesiderati. Zero overhead in background.
+
+● Filtro cosmetico — Nasconde elementi invadenti della pagina come banner, pop-up, cookie wall, contenuti sovrapposti e interruzioni video, usando selettori CSS precisi e scansione DOM intelligente, senza rompere il layout della pagina.
+
+● Modalità Stealth — Tecnologia avanzata anti-rilevamento. AdOff resta invisibile agli script che cercano di rilevare i filtri dei contenuti, così non vedrai mai messaggi come "disattiva il tuo filtro dei contenuti", nemmeno sui siti che combattono attivamente il filtraggio.
+
 ━━━━━━━━━━━━━━━━━━━━
-FUNZIONALITA' PRINCIPALI
+FUNZIONALITÀ PRINCIPALI — TUTTO INCLUSO, GRATIS
 ━━━━━━━━━━━━━━━━━━━━
-<ul><li>Funziona su ogni sito web - zero configurazione</li><li>Ultra-leggero: solo poche decine di KB totali</li><li>Neutralizzazione video ads - elimina pre-roll e mid-roll</li><li>Modalita' stealth: invisibile ai sistemi anti-adblock</li><li>Controlli per sito: metti in pausa la protezione con un click</li><li>4 modalita' di pausa: 1 ora, fino a domani, permanente o personalizzata</li><li>Gestione whitelist: escludi facilmente i siti che vuoi supportare</li><li>Statistiche in tempo reale</li><li>Blocco cookie banner automatico</li><li>Privacy-first: nessun dato raccolto di default; statistiche anonime solo su tua attivazione esplicita (solo hostname dei siti, mai URL completi, mai contenuti delle pagine)</li><li>15 lingue supportate</li><li>Gratuito al 100%: 30 giorni liberi, poi basta un account gratuito (mai un pagamento) per continuare</li></ul>
+
+✔ Funziona su ogni sito web — nessuna configurazione, nessuna lista da gestire
+✔ Ultra-leggero: solo poche decine di KB, una frazione delle alternative tipiche
+✔ Modalità stealth inclusa: invisibile ai sistemi di rilevamento
+✔ Controlli per sito: metti in pausa su siti specifici con un click
+✔ 4 modalità di pausa: 1 ora, fino a domani, permanentemente o personalizzata
+✔ Gestione whitelist: consenti facilmente i siti che vuoi supportare
+✔ Statistiche in tempo reale: vedi quanto è stato bloccato
+✔ Blocco cookie banner: chiude automaticamente i pop-up di consenso
+✔ Blocca tutto per impostazione predefinita — nessuna eccezione "accettabile", nessuna whitelist a pagamento
+✔ 100% gratis — nessun trial, nessun abbonamento, nessun prompt di upgrade
+✔ Privacy-first: nessuna cronologia di navigazione raccolta, nessun contenuto di pagina letto, nessun dato di tracciamento inviato
+✔ 15 lingue
+✔ Manifest V3: architettura di estensione più recente
+
+━━━━━━━━━━━━━━━━━━━━
+PERCHÉ ADOFF?
+━━━━━━━━━━━━━━━━━━━━
+
+→ Blocca tutto per impostazione predefinita — nessuna eccezione "accettabile" che passa, nessuna whitelist a pagamento.
+→ Zero configurazione — funziona dal secondo in cui lo installi, nessuna modalità da cambiare, nessuna lista da regolare.
+→ Ultra-leggero — usa il motore nativo di Chrome, zero overhead in background, zero rallentamenti.
+→ Completamente gratis — ogni funzione inclusa dal primo giorno, niente bloccato dietro un paywall.
+→ Invisibile per design — resta non rilevato anche dove il filtraggio viene attivamente bloccato.
+→ Nessuna monetizzazione dei tuoi dati — non ti tracciamo, non vendiamo i tuoi dati, non inseriamo contenuti nostri.
 
 ━━━━━━━━━━━━━━━━━━━━
 SUPPORTO
 ━━━━━━━━━━━━━━━━━━━━
 
-Hai bisogno di aiuto? Visita adoff.app/support - rispondiamo a ogni messaggio.
+Hai bisogno di aiuto? Visita la nostra pagina di supporto su adoff.app/support — rispondiamo a ogni messaggio.
 ```
 
 ---
@@ -154,6 +155,7 @@ Inserisci gli stessi testi riportati sopra per la lingua corrispondente (Summary
 - **Conservati** i nomi delle piattaforme (YouTube, Twitch, Vimeo, Dailymotion, Hulu) per keyword SEO
 - **Conservata** la riga di confronto sugli "acceptable ads" dei concorrenti
 - **Numero regole:** 153 -> **180**; corretto il claim pricing (era "no account, no limits", ora riflette 30gg liberi + account gratuito dopo)
+- **2026-09-11**: sostituita l'intera Description EN/IT con il testo REALMENTE pubblicato sul dashboard Chrome Web Store (era disallineato); unico fix fattuale: 153 -> 180 regole. Nuovo posizionamento "privacy-focused content filter" invece di "ad blocker".
 
 ---
 
