@@ -1,4 +1,4 @@
-# Store Listing - AdOff 3.6.0
+# Store Listing - AdOff 3.6.10
 
 > **AMO gia pubblicata via API** (verificata).
 >
@@ -31,7 +31,7 @@ HOW IT WORKS
 
 AdOff uses four independent layers of protection that work together:
 
-● Network Blocking — Intercepts and blocks ad requests before they even reach your browser. 153 rules cover all major advertising networks, tracking pixels, and analytics endpoints. Ads are stopped at the source, saving bandwidth and speeding up page loads.
+● Network Blocking — Intercepts and blocks ad requests before they even reach your browser. 180 rules cover all major advertising networks, tracking pixels, and analytics endpoints. Ads are stopped at the source, saving bandwidth and speeding up page loads.
 
 ● Cosmetic Filtering — Hides ad containers, banners, sponsored content, pop-ups, cookie walls, and residual ad elements directly from the page. Uses precise CSS selectors and smart DOM scanning to remove visual clutter without breaking page layouts.
 
@@ -53,11 +53,11 @@ KEY FEATURES
 ✔ Real-time stats: see how many ads and requests have been blocked
 ✔ Cookie banner blocker: auto-dismisses cookie consent pop-ups
 ✔ No "acceptable ads": blocks everything by default — no paid whitelist, ever
-✔ Free, no account, no limits
+✔ 100% free: 30 days free to use, then just a free account (never a payment) to keep going
 ✔ Privacy-first: nothing about your browsing is collected by default — nothing at all unless you explicitly turn on the optional anonymous stats (which share only site hostnames, never full URLs, never page content)
 ✔ 15 languages: English, Italian, German, French, Spanish, Portuguese, Russian, Arabic, Chinese, Hindi, Japanese, Korean, Turkish, Indonesian, Polish
 ✔ Manifest V3: built with the latest Chrome extension architecture
-✔ Completely free — all features unlocked, no account needed
+✔ Completely free — all features unlocked from day one
 
 ━━━━━━━━━━━━━━━━━━━━
 WORKS EVERYWHERE
@@ -85,7 +85,7 @@ Most ad blockers share the same five weaknesses. AdOff was built to fix every on
 → "Acceptable ads" letting paid ads through by default? Never. AdOff blocks everything by default. No paid whitelist, no ads we quietly let through — ever.
 → Cluttered, overwhelming settings? Zero configuration. AdOff works the second you install it — no modes to switch, no filter lists to tune.
 → Bloated blockers that eat RAM and slow your browser? AdOff is ultra-light and uses Chrome's native declarativeNetRequest engine — no background overhead, no slowdown.
-→ Predatory billing and impossible refunds? There is nothing to buy. AdOff is free, no account, no limits.
+→ Predatory billing and impossible refunds? There is nothing to buy, ever. AdOff is free, with just a free account after the first 30 days — never a payment.
 
 On top of all that:
 
@@ -120,11 +120,11 @@ COME FUNZIONA
 ━━━━━━━━━━━━━━━━━━━━
 
 AdOff usa quattro livelli di protezione indipendenti:
-<ul><li>Blocco di rete: Intercetta e blocca le richieste pubblicitarie prima che raggiungano il browser. 153 regole coprono tutte le principali reti pubblicitarie.</li><li>Filtro cosmetico: Nasconde container ads, banner, contenuti sponsorizzati, pop-up e cookie wall direttamente dalla pagina.</li><li>Neutralizzazione video ads: Sostituisce l'SDK pubblicitario video con una versione neutra. I video partono immediatamente senza interruzioni pre-roll o mid-roll.</li><li>Anti-rilevamento stealth: Tecnologia avanzata di evasione anti-adblock. AdOff resta completamente invisibile agli script di rilevamento.</li></ul>
+<ul><li>Blocco di rete: Intercetta e blocca le richieste pubblicitarie prima che raggiungano il browser. 180 regole coprono tutte le principali reti pubblicitarie.</li><li>Filtro cosmetico: Nasconde container ads, banner, contenuti sponsorizzati, pop-up e cookie wall direttamente dalla pagina.</li><li>Neutralizzazione video ads: Sostituisce l'SDK pubblicitario video con una versione neutra. I video partono immediatamente senza interruzioni pre-roll o mid-roll.</li><li>Anti-rilevamento stealth: Tecnologia avanzata di evasione anti-adblock. AdOff resta completamente invisibile agli script di rilevamento.</li></ul>
 ━━━━━━━━━━━━━━━━━━━━
 FUNZIONALITA' PRINCIPALI
 ━━━━━━━━━━━━━━━━━━━━
-<ul><li>Funziona su ogni sito web - zero configurazione</li><li>Ultra-leggero: solo poche decine di KB totali</li><li>Neutralizzazione video ads - elimina pre-roll e mid-roll</li><li>Modalita' stealth: invisibile ai sistemi anti-adblock</li><li>Controlli per sito: metti in pausa la protezione con un click</li><li>4 modalita' di pausa: 1 ora, fino a domani, permanente o personalizzata</li><li>Gestione whitelist: escludi facilmente i siti che vuoi supportare</li><li>Statistiche in tempo reale</li><li>Blocco cookie banner automatico</li><li>Privacy-first: nessun dato raccolto di default; statistiche anonime solo su tua attivazione esplicita (solo hostname dei siti, mai URL completi, mai contenuti delle pagine)</li><li>15 lingue supportate</li><li>Completamente gratuito - tutte le funzioni sbloccate</li></ul>
+<ul><li>Funziona su ogni sito web - zero configurazione</li><li>Ultra-leggero: solo poche decine di KB totali</li><li>Neutralizzazione video ads - elimina pre-roll e mid-roll</li><li>Modalita' stealth: invisibile ai sistemi anti-adblock</li><li>Controlli per sito: metti in pausa la protezione con un click</li><li>4 modalita' di pausa: 1 ora, fino a domani, permanente o personalizzata</li><li>Gestione whitelist: escludi facilmente i siti che vuoi supportare</li><li>Statistiche in tempo reale</li><li>Blocco cookie banner automatico</li><li>Privacy-first: nessun dato raccolto di default; statistiche anonime solo su tua attivazione esplicita (solo hostname dei siti, mai URL completi, mai contenuti delle pagine)</li><li>15 lingue supportate</li><li>Gratuito al 100%: 30 giorni liberi, poi basta un account gratuito (mai un pagamento) per continuare</li></ul>
 
 ━━━━━━━━━━━━━━━━━━━━
 SUPPORTO
@@ -153,6 +153,7 @@ Inserisci gli stessi testi riportati sopra per la lingua corrispondente (Summary
 - Eliminate le righe su prezzi, trial di 30 giorni, rimborsi e rinnovi
 - **Conservati** i nomi delle piattaforme (YouTube, Twitch, Vimeo, Dailymotion, Hulu) per keyword SEO
 - **Conservata** la riga di confronto sugli "acceptable ads" dei concorrenti
+- **Numero regole:** 153 -> **180**; corretto il claim pricing (era "no account, no limits", ora riflette 30gg liberi + account gratuito dopo)
 
 ---
 
@@ -160,4 +161,4 @@ Inserisci gli stessi testi riportati sopra per la lingua corrispondente (Summary
 
 **NON usare** le parole "forever", "per sempre", "a vita", "lifetime" nei claim.
 
-La formula corretta e': **"gratis, senza account e senza limiti"**
+La formula corretta e': **"gratis al 100%, 30 giorni liberi poi basta un account gratuito (mai un pagamento)"**
