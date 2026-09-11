@@ -395,7 +395,7 @@
   async function trackHeartbeat(adoffDeviceId, installTs) {
     try {
       const manifest = chrome.runtime.getManifest();
-      const { adoffLicense, adoffTrialEnd } = await new Promise(r => chrome.storage.local.get(["adoffLicense", "adoffTrialEnd"]));
+      const { adoffLicense, adoffTrialEnd, adoffEnabled } = await new Promise(r => chrome.storage.local.get(["adoffLicense", "adoffTrialEnd", "adoffEnabled"]));
       const now = Date.now();
       const isProTrial = !!(adoffLicense?.key || (adoffTrialEnd && adoffTrialEnd > now));
       const plan = isProTrial ? "pro" : "free";
@@ -407,6 +407,7 @@
           plan,
           version: manifest.version,
           installTs: installTs || now,
+          enabled: adoffEnabled !== false, // default true: l'estensione è attiva all'install
         }),
       });
     } catch (e) {

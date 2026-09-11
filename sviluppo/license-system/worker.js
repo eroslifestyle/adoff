@@ -6188,18 +6188,27 @@ async function handleHeartbeat(request, env) {
   const version = typeof body.version === "string" ? body.version.slice(0, 16) : "";
   const now = Date.now();
 
+  const enabled = body.enabled === undefined ? true : (body.enabled === true); // default true: retrocompat client vecchi
+
   try {
     const hashedId = await hashDeviceId(deviceId, env);
+    // Migrazione lazy idempotente (colonna aggiunta 3.6.11)
+    try {
+      await env.DB.prepare("ALTER TABLE device_heartbeat ADD COLUMN enabled INTEGER DEFAULT 1").run();
+    } catch (e) {
+      // Colonna già esistente, ignorare errore
+    }
     await env.DB.prepare(`
-      INSERT INTO device_heartbeat (device_id, last_seen, country, browser, plan, version, install_ts)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO device_heartbeat (device_id, last_seen, country, browser, plan, version, install_ts, enabled)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(device_id) DO UPDATE SET
         last_seen = excluded.last_seen,
         country = excluded.country,
         browser = excluded.browser,
         plan = excluded.plan,
-        version = excluded.version
-    `).bind(hashedId, now, country, browser, plan, version, body.installTs || now).run();
+        version = excluded.version,
+        enabled = excluded.enabled
+    `).bind(hashedId, now, country, browser, plan, version, body.installTs || now, enabled ? 1 : 0).run();
   } catch (e) {
     console.error("D1 heartbeat error:", e.message);
   }
@@ -6331,6 +6340,19 @@ async function handleAdminRetention(request, env) {
     "SELECT COUNT(*) AS n FROM device_heartbeat WHERE last_seen > ?"
   ).bind(sevenDaysAgo).first().catch(() => ({ n: 0 }));
 
+  // 1b) Attivi reali (heartbeat 3g) con protezione ON vs OFF
+  let activeEnabled = { n: 0 }, activeDisabled = { n: 0 };
+  try {
+    activeEnabled = await env.DB.prepare(
+      "SELECT COUNT(*) AS n FROM device_heartbeat WHERE last_seen > ? AND enabled = 1"
+    ).bind(now - 3 * 86400000).first();
+    activeDisabled = await env.DB.prepare(
+      "SELECT COUNT(*) AS n FROM device_heartbeat WHERE last_seen > ? AND enabled = 0"
+    ).bind(now - 3 * 86400000).first();
+  } catch (e) {
+    console.error("D1 retention enabled split error:", e.message);
+  }
+
   // 2) Retention curve: quanti dispositivi attivi a N giorni dall'installazione
   // N = 1, 3, 7, 14, 30
   const retentionDays = [1, 3, 7, 14, 30];
@@ -6452,6 +6474,8 @@ async function handleAdminRetention(request, env) {
       totalUninstalls: totalUninstalls.n,
       activeDevices: activeDevices.n,
       activeLast7d: activeLast7d.n,
+      activeEnabled: activeEnabled.n,
+      activeDisabled: activeDisabled.n,
       uninstallRate: totalInstalls.n > 0
         ? Math.round((totalUninstalls.n / totalInstalls.n) * 1000) / 10
         : 0,

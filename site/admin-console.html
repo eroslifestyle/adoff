@@ -2010,11 +2010,12 @@ async function loadStats(force = false) {
   if (statsLoaded && !force) return;
   document.getElementById("st-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>`;
 
-  // Pool unico: business (stats) + revenue + telemetria (analytics)
-  const [stats, rev, ana] = await Promise.all([
+  // Pool unico: business (stats) + revenue + telemetria (analytics) + retention (protezione ON/OFF)
+  const [stats, rev, ana, ret] = await Promise.all([
     api("/admin/stats"),
     api("/admin/revenue"),
     api("/admin/analytics"),
+    api("/admin/retention"),
   ]);
   if (!ana.ok && !stats.ok) {
     document.getElementById("st-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${ana.error || stats.error || "Impossibile caricare dati"}</div>`;
@@ -2037,7 +2038,8 @@ async function loadStats(force = false) {
   const net7 = sum(i7) - sum(u7);
   const churn = un.ratePercent ?? 0;
 
-  // KPI cards (business + crescita)
+  // KPI cards (business + crescita) + protezione ON/OFF (da /admin/retention)
+  const retSummary = ret?.summary || {};
   document.getElementById("st-kpis").innerHTML = `
     ${sc("Licenze attive", lic.active ?? 0, "green")}
     ${sc("Vendute totali", sales.totalSold ?? 0, "")}
@@ -2045,6 +2047,8 @@ async function loadStats(force = false) {
     ${sc("Installazioni totali", inst.total ?? 0, "")}
     ${sc("Download totali", dl.total ?? 0, "")}
     ${sc("Disinstallazioni", un.total ?? 0, "red")}
+    ${sc("Attivi con protezione ON", retSummary.activeEnabled ?? 0, "green")}
+    ${sc("Attivi con protezione OFF", retSummary.activeDisabled ?? 0, "red")}
     ${`<div class="stat-card"><div class="stat-val ${churn > 30 ? "red" : "gold"}">${churn}%</div><div class="stat-label">Tasso disinstallazione</div></div>`}
     ${`<div class="stat-card"><div class="stat-val ${net7 >= 0 ? "green" : "red"}">${net7 >= 0 ? "+" : ""}${net7.toLocaleString()}</div><div class="stat-label">Crescita netta 7g</div></div>`}
   `;
