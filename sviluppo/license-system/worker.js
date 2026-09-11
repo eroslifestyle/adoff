@@ -1555,6 +1555,7 @@ async function handleAdminFreeLicenses(request, env) {
 
   recent.sort((a, b) => b._gs - a._gs);
   return jsonResponse({
+    ok: true,
     summary: { total: rows.length, inGrace, registered, expired, graceExpiringSoon },
     trend,
     recent: recent.slice(0, RECENT_LIMIT).map((x) => x.row),
@@ -1649,6 +1650,20 @@ async function handleAdleakIngest(request, env) {
 
 async function handleAdleakRuns(request, env) {
   if (!await verifyAdminAuth(request.headers.get(ADMIN_TOKEN_HEADER), env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  // Stesso schema di handleAdleakIngest: senza questo, su D1 vuota la SELECT
+  // lancerebbe "no such table" e la dashboard riceverebbe HTML di errore invece di JSON.
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS harness_runs (
+      run_id TEXT PRIMARY KEY,
+      started_at INTEGER,
+      finished_at INTEGER,
+      extension_version TEXT,
+      domains_tested INTEGER,
+      domains_with_leak INTEGER,
+      total_leaks INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
   const url = new URL(request.url);
   const limitRaw = parseInt(url.searchParams.get("limit") || "20", 10);
   const limit = Number.isInteger(limitRaw) && limitRaw > 0 && limitRaw <= 100 ? limitRaw : 20;
@@ -1660,6 +1675,32 @@ async function handleAdleakRuns(request, env) {
 
 async function handleAdleakLatest(request, env) {
   if (!await verifyAdminAuth(request.headers.get(ADMIN_TOKEN_HEADER), env)) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  // Stesso schema di handleAdleakIngest: idempotente, evita "no such table" su D1 vuota.
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS harness_runs (
+      run_id TEXT PRIMARY KEY,
+      started_at INTEGER,
+      finished_at INTEGER,
+      extension_version TEXT,
+      domains_tested INTEGER,
+      domains_with_leak INTEGER,
+      total_leaks INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `).run();
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS harness_results (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      run_id TEXT NOT NULL,
+      domain TEXT NOT NULL,
+      http_status INTEGER,
+      requests INTEGER,
+      leaks INTEGER,
+      leak_rules TEXT,
+      detection INTEGER,
+      error TEXT
+    )
+  `).run();
   const run = (await env.DB.prepare(
     "SELECT run_id, started_at, finished_at, extension_version, domains_tested, domains_with_leak, total_leaks, created_at FROM harness_runs ORDER BY started_at DESC LIMIT 1"
   ).first());
@@ -5207,7 +5248,7 @@ async function handleAdminOpsStats(request, env) {
     // Top hostnames for ads_leaked (last 30 days)
     const thirtyDaysAgoDateStr = new Date(thirtyDaysAgo).toISOString().slice(0, 10);
     const leakRaw = await env.DB.prepare(
-      `SELECT hostname, SUM(ads_leaked) AS total FROM nav_stats WHERE day >= ? GROUP BY hostname ORDER BY total DESC LIMIT 20`
+      `SELECT hostname, SUM(ads_leaked) AS total FROM nav_stats WHERE day >= ? GROUP BY hostname HAVING total > 0 ORDER BY total DESC LIMIT 20`
     ).bind(thirtyDaysAgoDateStr).all();
 
     const topLeakHostnames = (leakRaw.results || []).map(r => ({ hostname: r.hostname, total: r.total }));
@@ -6533,11 +6574,12 @@ async function handleAdminAnalytics(request, env) {
   let uninstallAdvanced = { cohort: [], versions: [], funnel: {}, reasonTrend: {} };
   try {
     const uaRows = await env.DB.prepare(`
-      SELECT ROUND((ue.uninstall_ts - dh.install_ts) / 86400000) AS days_active,
+      SELECT ROUND((ue.uninstall_ts - ie.install_ts) / 86400000) AS days_active,
              ue.reason, COUNT(*) AS cnt
       FROM uninstall_events ue
-      JOIN device_heartbeat dh ON ue.device_id = dh.device_id
-      WHERE ue.uninstall_ts > dh.install_ts AND ue.uninstall_ts > ? AND dh.install_ts > ?
+      JOIN install_events ie ON ue.device_id = ie.device_id
+        AND ie.install_ts = (SELECT MAX(install_ts) FROM install_events WHERE device_id = ue.device_id)
+      WHERE ue.uninstall_ts > ie.install_ts AND ue.uninstall_ts > ? AND ie.install_ts > ?
       GROUP BY days_active, ue.reason
     `).bind(Date.now() - 30 * 86400000, Date.now() - 90 * 86400000).all();
 
@@ -6603,14 +6645,15 @@ async function handleAdminUninstallAnalytics(request, env) {
   try {
     const rows = await env.DB.prepare(`
       SELECT
-        ROUND((ue.uninstall_ts - dh.install_ts) / ${DAY}) AS days_active,
+        ROUND((ue.uninstall_ts - ie.install_ts) / ${DAY}) AS days_active,
         COUNT(*) AS count,
         ue.reason
       FROM uninstall_events ue
-      JOIN device_heartbeat dh ON ue.device_id = dh.device_id
-      WHERE ue.uninstall_ts > dh.install_ts
+      JOIN install_events ie ON ue.device_id = ie.device_id
+        AND ie.install_ts = (SELECT MAX(install_ts) FROM install_events WHERE device_id = ue.device_id)
+      WHERE ue.uninstall_ts > ie.install_ts
         AND ue.uninstall_ts > ?
-        AND dh.install_ts > ?
+        AND ie.install_ts > ?
       GROUP BY days_active, ue.reason
       ORDER BY days_active ASC
     `).bind(now - D30, now - 90 * DAY).all();

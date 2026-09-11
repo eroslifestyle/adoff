@@ -1252,6 +1252,11 @@ async function init() {
   // Enter key on login
   document.getElementById("loginPass").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
   document.getElementById("loginUser").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("loginPass").focus(); });
+
+  // Auto-refresh: un solo interval globale, ricarica solo la pagina attiva se il tab è visibile
+  setInterval(() => {
+    if (token && document.visibilityState === "visible") refreshCurrentPage();
+  }, 60000);
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────
@@ -2599,7 +2604,7 @@ async function loadAutofix(force = false) {
       '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:12px">' +
         '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--accent)">' + (data.candidates_added || 0) + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Nuove regole</div></div>' +
-        '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700">' + totalRules + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Regole totali</div></div>' +
+        '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700">' + totalRules + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Regole nel feed (raw)</div></div>' +
         '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700;color:#16a766">' + (data.open_leaks || 0) + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Leak aperti</div></div>' +
         '<div style="padding:12px;background:var(--input);border-radius:8px;text-align:center"><div style="font-size:22px;font-weight:700">' + (data.fixed_leaks || 0) + '</div><div style="font-size:11px;color:var(--muted);margin-top:2px">Leak fixati</div></div>' +
       '</div>' +
