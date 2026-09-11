@@ -5,6 +5,7 @@
 - [ ] **Scheda store da incollare a mano** nei Developer Dashboard (Chrome Web Store, AMO, Edge): l'API carica il pacchetto, non la descrizione. Finché non è fatto, online resta il claim assoluto vecchio — punto di rischio verso lo store. L'estensione non è cambiata: nessun bump di versione né upload del pacchetto necessari.
 - [ ] **Redirect 301 www→apex**: solo dal dashboard Cloudflare (Rules → Redirect Rules, hostname `www.adoff.app` → 301 all'apex). Né `CF_API_TOKEN` né l'OAuth di wrangler hanno il permesso di zona in scrittura (l'OAuth ha solo `zone (read)`).
 - [ ] **66 file del sito espongono l'account GitHub personale** `github.com/eroslifestyle` (incluso l'URL di download dell'APK Android). Preesistente; sfuggito perché il pre-deploy check cerca `erosdegrande`, non `eroslifestyle`. Rinominare il repo romperebbe i link di download: decisione dell'utente.
+- [ ] **Bug referral `/r/:code` ROTTO**: `adoff.app/r/TESTCODE` redirige a `/?ref=%3Acode` invece del codice reale — Cloudflare Pages non interpola i placeholder nella query string della destinazione (`site/_redirects`, regola invariata da prima della sessione, verificata con `git show 867dc46:site/_redirects`). Le regole statiche `/r/*` funzionano. Fix: Pages Function `site/functions/r/[code].js` o handler nel worker. Dettaglio: checkpoint `CP_20260911_1330.md`.
 
 ## Sessione 2026-09-07 (notte): applicate tutte le 8 proposte SEO — health 67 → 100
 
