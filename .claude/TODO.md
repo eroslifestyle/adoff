@@ -2,10 +2,47 @@
 
 ## Attivo
 
+- [ ] Verificare su Edge Partner Center quale delle 3 submission inviate in sessione 2026-09-12 è quella "in review" (l'ultima ha le note corrette, ma non verificato via dashboard)
+- [ ] Decidere se postare annuncio Telegram @adoffapp per 3.6.11 (Chrome+Firefox live, Edge in review, Safari bloccato — serve Mac/Xcode)
+- [ ] Correggere CLAUDE.md progetto: versione dichiarata 3.3.9 è stantia, quella reale è 3.6.11
 - [ ] **Scheda store da incollare a mano** nei Developer Dashboard (Chrome Web Store, AMO, Edge): l'API carica il pacchetto, non la descrizione. Finché non è fatto, online resta il claim assoluto vecchio — punto di rischio verso lo store. L'estensione non è cambiata: nessun bump di versione né upload del pacchetto necessari.
 - [ ] **Redirect 301 www→apex**: solo dal dashboard Cloudflare (Rules → Redirect Rules, hostname `www.adoff.app` → 301 all'apex). Né `CF_API_TOKEN` né l'OAuth di wrangler hanno il permesso di zona in scrittura (l'OAuth ha solo `zone (read)`).
 - [ ] **66 file del sito espongono l'account GitHub personale** `github.com/eroslifestyle` (incluso l'URL di download dell'APK Android). Preesistente; sfuggito perché il pre-deploy check cerca `erosdegrande`, non `eroslifestyle`. Rinominare il repo romperebbe i link di download: decisione dell'utente.
 - [ ] **Bug referral `/r/:code` ROTTO**: `adoff.app/r/TESTCODE` redirige a `/?ref=%3Acode` invece del codice reale — Cloudflare Pages non interpola i placeholder nella query string della destinazione (`site/_redirects`, regola invariata da prima della sessione, verificata con `git show 867dc46:site/_redirects`). Le regole statiche `/r/*` funzionano. Fix: Pages Function `site/functions/r/[code].js` o handler nel worker. Dettaglio: checkpoint `CP_20260911_1330.md`.
+
+## Sessione 2026-09-12: audit dashboard admin + release 3.6.11 (adoffEnabled) multi-store
+
+8 bug dashboard diagnosticati e fixati (JSON-parse-error su tabelle D1 mancanti, cohort
+disinstallazioni rotta da JOIN su tabella cancellata, tile fuorviante, placeholder falso,
+zero auto-refresh, crawler Autofix fermo da luglio riattivato via cron), più un bug bonus
+scoperto in verifica live (worker serviva /admin da un alias Cloudflare Pages stale). Poi
+release 3.6.11 con nuova feature `adoffEnabled` (traccia se la protezione è attiva/disattivata)
+distribuita su Chrome (pubblicato) e Firefox (pubblicato), Edge in review dopo rinnovo chiave
+API (con un incidente minore: submission doppia per errore, corretta subito), Safari bloccato
+(serve Mac). Checkpoint: `.claude/checkpoints/CP_20260912_0130.md` · vault
+`Memoria/progetti/AdOff/sessioni/2026-09-12-audit-dashboard-release-3611-multistore.md`.
+
+**Fatto:**
+- [x] 8 bug dashboard admin diagnosticati con causa esatta e fixati (commit `77d1ffc`)
+- [x] Bug bonus: dominio Pages stale nel worker (`master.*` invece del canonico) — trovato in verifica live, fixato (commit `bc271a5`)
+- [x] Fix Telegram: fallback senza thread se message_thread_id invalido — testato live (commit `ca531bf`)
+- [x] Feature `adoffEnabled` end-to-end (3 browser + worker + dashboard), versione 3.6.11 (commit `2aaec7f`)
+- [x] Chrome Web Store: pubblicato (upload SUCCESS + publish OK)
+- [x] Firefox AMO: pubblicato (web-ext sign riuscito)
+- [x] Edge: chiave API rinnovata dall'utente, submission inviata (3 tentativi, l'ultimo con note corrette)
+
+**Aperto:**
+- [ ] Verificare su Edge Partner Center quale submission è in review
+- [ ] Decidere annuncio Telegram @adoffapp
+- [ ] Safari: serve Mac con Xcode
+- [ ] CLAUDE.md progetto: versione stantia (3.3.9 → 3.6.11 reale)
+
+**Do NOT:**
+- NON toccare Stripe/trial dormiente né `adoffPlanTier()`
+- NON ripetere upload CWS se torna "in pending review"
+- NON inviare altre POST a Edge submissions "per controllare" — ogni chiamata è reale
+
+---
 
 ## Sessione 2026-09-07 (notte): applicate tutte le 8 proposte SEO — health 67 → 100
 
