@@ -3324,6 +3324,32 @@ async function notifyTelegram(text, env, threadId = TELEGRAM_SUPPORT_THREAD) {
         await new Promise((r) => setTimeout(r, 800 * attempt));
         continue;
       }
+      // 400 con thread_id → topic probabilmente cancellato/invalido (KV stantio): riprova
+      // una volta senza message_thread_id, così il messaggio arriva in chat principale
+      // invece di sparire.
+      if (res.status === 400 && threadId !== undefined) {
+        console.error(`[telegram] 400 con thread=${threadId}, fallback: retry senza message_thread_id`);
+        try {
+          const fbRes = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: env.TELEGRAM_CHAT_ID,
+              text,
+              parse_mode: "HTML",
+              disable_web_page_preview: true,
+            }),
+          });
+          if (!fbRes.ok) {
+            const fbTxt = await fbRes.text().catch(() => "");
+            console.error(`[telegram] fallback status=${fbRes.status} body=${fbTxt.slice(0, 200)}`);
+          }
+          return fbRes.ok;
+        } catch (fbErr) {
+          console.error(`[telegram] fallback fetch_error err=${fbErr && fbErr.message ? fbErr.message : fbErr}`);
+          return false;
+        }
+      }
       return false;
     } catch (e) {
       console.error(`[telegram] thread=${threadId} fetch_error attempt=${attempt} err=${e && e.message ? e.message : e}`);
