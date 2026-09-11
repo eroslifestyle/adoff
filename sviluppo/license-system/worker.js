@@ -9735,7 +9735,7 @@ export default {
       // mentre l'alias branch `master` riflette sempre l'ultimo deploy.
       let html = null;
       try {
-        const pagesResp = await fetch("https://master.adoff-site.pages.dev/admin-console", { cf: { cacheTtl: 300, cacheEverything: true }, redirect: "follow" });
+        const pagesResp = await fetch("https://adoff-site.pages.dev/admin-console", { cf: { cacheTtl: 300, cacheEverything: true }, redirect: "follow" });
         if (pagesResp.ok) {
           const txt = await pagesResp.text();
           if (txt && txt.length > 100000) html = txt; // sanity: la console e' ~145KB, non una 404 page
