@@ -5,7 +5,7 @@
 - [ ] Rotazione manuale 3 credenziali esposte (Telegram bot, Stripe, CWS OAuth) — **posticipata su richiesta esplicita dell'utente 2026-09-12, non urgente per ora**. Checklist dettagliata in "Sessione 2026-09-12 (continuazione)" sotto.
 - [ ] Verificare su Edge Partner Center quale delle 3 submission inviate in sessione 2026-09-12 è quella "in review" (l'ultima ha le note corrette, ma non verificato via dashboard)
 - [ ] Decidere se postare annuncio Telegram @adoffapp per 3.6.11 (Chrome+Firefox live, Edge in review, Safari bloccato — serve Mac/Xcode)
-- [ ] Correggere CLAUDE.md progetto: versione dichiarata 3.3.9 è stantia, quella reale è 3.6.11
+- [x] Correggere CLAUDE.md progetto: versione dichiarata 3.3.9 è stantia, quella reale è 3.6.11 — fatto 2026-09-12, commit 018afa2a (conteggio regole DNR verificato congruente: 180)
 - [ ] **Scheda store da incollare a mano** nei Developer Dashboard (Chrome Web Store, AMO, Edge): l'API carica il pacchetto, non la descrizione. Finché non è fatto, online resta il claim assoluto vecchio — punto di rischio verso lo store. L'estensione non è cambiata: nessun bump di versione né upload del pacchetto necessari.
 - [ ] **Redirect 301 www→apex**: solo dal dashboard Cloudflare (Rules → Redirect Rules, hostname `www.adoff.app` → 301 all'apex). Né `CF_API_TOKEN` né l'OAuth di wrangler hanno il permesso di zona in scrittura (l'OAuth ha solo `zone (read)`).
 - [ ] **66 file del sito espongono l'account GitHub personale** `github.com/eroslifestyle` (incluso l'URL di download dell'APK Android). Preesistente; sfuggito perché il pre-deploy check cerca `erosdegrande`, non `eroslifestyle`. Rinominare il repo romperebbe i link di download: decisione dell'utente.
@@ -120,7 +120,7 @@ API (con un incidente minore: submission doppia per errore, corretta subito), Sa
 - [ ] Verificare su Edge Partner Center quale submission è in review
 - [ ] Decidere annuncio Telegram @adoffapp
 - [ ] Safari: serve Mac con Xcode
-- [ ] CLAUDE.md progetto: versione stantia (3.3.9 → 3.6.11 reale)
+- [x] CLAUDE.md progetto: versione stantia (3.3.9 → 3.6.11 reale) — fatto 2026-09-12, commit 018afa2a (conteggio regole DNR verificato congruente: 180)
 
 **Do NOT:**
 - NON toccare Stripe/trial dormiente né `adoffPlanTier()`
