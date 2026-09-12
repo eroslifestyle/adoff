@@ -1,0 +1,57 @@
+{
+  "name": "AdOff — Review Poller",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Schedule 6h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// AdOff — Review Poller (n8n Code node, runOnceForAllItems)\n// Sorgenti: Firefox AMO (recensioni complete) + Edge (delta aggregato). CWS testi = richiede headless (non qui).\n// Stato (dedup) in workflow static data. Telegram: thread 24 (Recensioni).\n// Token/chat: da $env (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID in /opt/n8n/.env). Se $env è bloccato, sostituisci con valori o credenziale.\n\nconst AMO_SLUG = \"adoff\";\nconst EDGE_CRX = \"oddekkkjecbnogahoielolemebjlmclk\";\nconst THREAD = 24;\nconst stars = n => \"★\".repeat(Math.max(0, Math.min(5, n | 0))) + \"☆\".repeat(5 - Math.max(0, Math.min(5, n | 0)));\n\nconst token = $env.TELEGRAM_BOT_TOKEN;\nconst chat = $env.TELEGRAM_CHAT_ID;\nconst sd = $getWorkflowStaticData(\"global\");\nif (!Array.isArray(sd.amoSeen)) sd.amoSeen = [];\nif (sd.edgeCount === undefined) sd.edgeCount = null;\n\nconst messages = [];\n\n// Firefox AMO — recensioni complete\ntry {\n  const d = await this.helpers.httpRequest({ url: `https://addons.mozilla.org/api/v5/ratings/rating/?addon=${AMO_SLUG}&page_size=25`, json: true });\n  for (const r of (d.results || []).reverse()) {\n    const id = \"amo:\" + r.id;\n    if (sd.amoSeen.includes(id)) continue;\n    sd.amoSeen.push(id);\n    const body = (r.body || \"\").trim();\n    messages.push(`🦊 <b>Firefox AMO</b> ${stars(r.score)} (${r.score}/5)\\n👤 ${(r.user && r.user.name) || \"anon\"}\\n${body ? body.slice(0, 600) : \"<i>(senza testo)</i>\"}`);\n  }\n} catch (e) { messages.push(\"⚠️ AMO poll error: \" + e.message); }\n\n// Edge — solo aggregato (delta numero recensioni)\ntry {\n  const d = await this.helpers.httpRequest({ url: `https://microsoftedge.microsoft.com/addons/getproductdetailsbycrxid/${EDGE_CRX}`, json: true });\n  const count = d.ratingCount || 0, avg = d.averageRating || 0;\n  if (sd.edgeCount !== null && count > sd.edgeCount) {\n    messages.push(`🔷 <b>Edge Add-ons</b>: ${count - sd.edgeCount} nuova/e recensione/i (totale ${count}, media ${avg.toFixed(1)}/5).\\n<i>Edge non espone i testi via API — apri lo store.</i>`);\n  }\n  sd.edgeCount = count;\n} catch (e) { messages.push(\"⚠️ Edge poll error: \" + e.message); }\n\n// Scraper Playwright (testi CWS/Edge) — servizio HTTP locale su leobox\nconst SCRAPER_URL = $env.ADOFF_SCRAPER_URL || \"http://100.71.178.53:8788/poll\";\ntry {\n  const s = await this.helpers.httpRequest({ url: SCRAPER_URL, json: true, timeout: 180000 });\n  for (const r of (s.cws?.newReviews || [])) {\n    const body = (r.body || \"\").trim();\n    messages.push(`🟢 <b>Chrome Web Store</b> ${stars(r.score)} (${r.score}/5)\\n👤 ${r.author || \"anon\"}\\n${body ? body.slice(0, 600) : \"<i>(senza testo)</i>\"}`);\n  }\n  for (const r of (s.edge?.newReviews || [])) {\n    const body = (r.body || \"\").trim();\n    messages.push(`🔷 <b>Edge Add-ons</b> ${stars(r.score)} (${r.score}/5)\\n👤 ${r.author || \"anon\"}\\n${body ? body.slice(0, 600) : \"<i>(senza testo)</i>\"}`);\n  }\n} catch (e) { messages.push(\"⚠️ Scraper poll error: \" + e.message); }\n\nif (sd.amoSeen.length > 500) sd.amoSeen = sd.amoSeen.slice(-500);\n\n// Invio Telegram (thread 24)\nlet posted = 0;\nfor (const text of messages) {\n  try {\n    await this.helpers.httpRequest({\n      method: \"POST\",\n      url: `https://api.telegram.org/bot${token}/sendMessage`,\n      body: { chat_id: chat, message_thread_id: THREAD, text, parse_mode: \"HTML\", disable_web_page_preview: true },\n      json: true,\n    });\n    posted++;\n  } catch (e) { /* skip */ }\n}\n\nreturn [{ json: { checked: true, newReviews: messages.length, posted, edgeCount: sd.edgeCount, amoSeen: sd.amoSeen.length } }];\n"
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000002",
+      "name": "Poll & Notify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule 6h": {
+      "main": [
+        [
+          {
+            "node": "Poll & Notify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "id": "adoff-review-poller-361f1bca"
+}

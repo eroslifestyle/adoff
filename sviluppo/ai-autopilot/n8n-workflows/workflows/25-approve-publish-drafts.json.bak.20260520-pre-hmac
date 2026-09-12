@@ -1,0 +1,520 @@
+{
+  "name": "AdOff 25 - Approve & Publish Gemini Drafts",
+  "description": "Workflow di approval per draft generati da W20/21/22/23 (caption, email, ad copy, landing, plan, seo). Webhooks per approve/reject. Schedule ogni 30min per push approved -> posts_queue o Telegram notify.",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "draft-approve",
+        "responseMode": "responseNode",
+        "authentication": "none"
+      },
+      "id": "webhook-approve",
+      "name": "Webhook /draft-approve",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "draft-list",
+        "responseMode": "responseNode",
+        "authentication": "none"
+      },
+      "id": "webhook-list",
+      "name": "Webhook /draft-list",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "draft-bulk-approve",
+        "responseMode": "responseNode",
+        "authentication": "none"
+      },
+      "id": "webhook-bulk",
+      "name": "Webhook /draft-bulk-approve",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "schedule-30min",
+      "name": "Schedule every 30 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse /draft-approve: { draft_id, approver, action ('approve'|'reject') }\nconst body = $json.body || {};\nconst draft_id = body.draft_id;\nconst approver = body.approver || 'web-approver';\nconst action = body.action || 'approve';\n\nif (!draft_id) {\n  return [{ json: { ok: false, error: 'Missing draft_id' }, statusCode: 400 }];\n}\n\nconst newStatus = action === 'reject' ? 'rejected' : 'approved';\n\nreturn [{ json: { draft_id, approver, action: newStatus } }];"
+      },
+      "id": "parse-approve",
+      "name": "Parse approve request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse /draft-list: ?workflow=W20&asset_type=caption&lang=it&status=draft\n// Restituisce parametri di filtro (NOT SQL concatenato)\nconst query = $json.query || {};\nconst workflow = query.workflow || null;\nconst asset_type = query.asset_type || null;\nconst lang = query.lang || null;\nconst status = query.status || 'draft';\nconst limit = Math.min(parseInt(query.limit || '20'), 100);\nconst offset = Math.max(parseInt(query.offset || '0'), 0);\n\nreturn [{ json: { workflow, asset_type, lang, status, limit, offset } }];"
+      },
+      "id": "parse-list",
+      "name": "Parse list request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse /draft-bulk-approve: { draft_ids: [1,2,3], approver }\nconst body = $json.body || {};\nconst draft_ids = body.draft_ids || [];\nconst approver = body.approver || 'bulk-approver';\n\nif (!Array.isArray(draft_ids) || draft_ids.length === 0) {\n  return [{ json: { ok: false, error: 'Missing or empty draft_ids' }, statusCode: 400 }];\n}\n\nreturn [{ json: { draft_ids, approver, count: draft_ids.length } }];"
+      },
+      "id": "parse-bulk",
+      "name": "Parse bulk-approve request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.gemini_copy_drafts SET status = $1::text, approved_at = NOW(), approved_by = $2::text WHERE id = $3::bigint",
+        "options": {
+          "queryReplacement": "=[[$json.action, $json.approver, $json.draft_id]]"
+        }
+      },
+      "id": "db-update-single",
+      "name": "DB update single draft",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        680,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "adoff-pg-autopilot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, workflow, asset_type, platform, lang, status, body, created_at FROM adoff_autopilot.gemini_copy_drafts WHERE ($1::text IS NULL OR status = $1::text) AND ($2::text IS NULL OR workflow = $2::text) AND ($3::text IS NULL OR asset_type = $3::text) AND ($4::text IS NULL OR lang = $4::text) ORDER BY created_at DESC LIMIT $5::int OFFSET $6::int",
+        "options": {
+          "queryReplacement": "=[[$json.status, $json.workflow, $json.asset_type, $json.lang, $json.limit, $json.offset]]"
+        }
+      },
+      "id": "db-list-drafts",
+      "name": "DB fetch drafts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        680,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "adoff-pg-autopilot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as total FROM adoff_autopilot.gemini_copy_drafts WHERE ($1::text IS NULL OR status = $1::text) AND ($2::text IS NULL OR workflow = $2::text) AND ($3::text IS NULL OR asset_type = $3::text) AND ($4::text IS NULL OR lang = $4::text)",
+        "options": {
+          "queryReplacement": "=[[$json.status, $json.workflow, $json.asset_type, $json.lang]]"
+        }
+      },
+      "id": "db-count-drafts",
+      "name": "DB count total",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        900,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "adoff-pg-autopilot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.gemini_copy_drafts SET status = 'approved', approved_at = NOW(), approved_by = $1::text WHERE id = ANY($2::bigint[])",
+        "options": {
+          "queryReplacement": "=[[$json.approver, $json.draft_ids]]"
+        }
+      },
+      "id": "db-update-bulk",
+      "name": "DB update bulk drafts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        680,
+        600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "adoff-pg-autopilot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, workflow, asset_type, platform, lang, body, status FROM adoff_autopilot.gemini_copy_drafts WHERE status = 'approved' AND published_at IS NULL ORDER BY approved_at ASC LIMIT 50",
+        "options": {}
+      },
+      "id": "db-fetch-approved",
+      "name": "DB fetch approved (unpublished)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        800
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "adoff-pg-autopilot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Distribuisci approved drafts per asset_type\nconst items = $input.all();\nconst byType = {};\n\nfor (const it of items) {\n  const d = it.json;\n  const type = d.asset_type || 'unknown';\n  if (!byType[type]) byType[type] = [];\n  byType[type].push(d);\n}\n\nconst out = [];\nfor (const [type, drafts] of Object.entries(byType)) {\n  out.push({ json: { asset_type: type, drafts, count: drafts.length } });\n}\n\nreturn out;"
+      },
+      "id": "group-by-type",
+      "name": "Group by asset_type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Distribuisci caption_social -> posts_queue (webhook call)\nconst group = $json;\nif (group.asset_type !== 'caption_social') {\n  return [{ json: null }];\n}\n\nconst out = [];\nfor (const draft of group.drafts) {\n  out.push({\n    json: {\n      workflow: 'w25-publish',\n      asset_type: 'caption_social',\n      platform: draft.platform || 'instagram',\n      lang: draft.lang || 'it',\n      body: draft.body,\n      draft_id: draft.id,\n      source_workflow: draft.workflow\n    }\n  });\n}\n\nreturn out;"
+      },
+      "id": "route-caption",
+      "name": "Route caption -> posts_queue",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Distribuisci altri asset_type -> Telegram notify\nconst group = $json;\nconst typeLabel = {\n  'email_drip': '\ud83d\udce7 Email drip',\n  'ad_copy': '\ud83d\udce2 Ad copy',\n  'landing_section': '\ud83c\udfe0 Landing section',\n  'marketing_plan': '\ud83d\udccb Marketing plan',\n  'seo_brief': '\ud83d\udd0d SEO brief'\n}[group.asset_type] || group.asset_type;\n\nconst draftList = group.drafts\n  .map((d, i) => `  ${i+1}. [ID ${d.id}] ${d.lang} \u2014 ${d.workflow}`)\n  .join('\\n');\n\nconst text = `\ud83c\udfaf *${typeLabel}* \u2014 ${group.count} draft approved\\n\\n${draftList}\\n\\n\u26a0\ufe0f Copia manualmente nel rispettivo sistema.`;\n\nreturn [{ json: { text, asset_type: group.asset_type } }];"
+      },
+      "id": "format-notify",
+      "name": "Format Telegram notify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        850
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"chat_id\":\"{{ $env.TELEGRAM_CHAT_ID }}\",\"text\":{{ JSON.stringify($json.text) }},\"parse_mode\":\"Markdown\"}",
+        "options": {}
+      },
+      "id": "send-tg-notify",
+      "name": "Send Telegram notify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        850
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:5678/webhook/social-enqueue",
+        "sendBody": true,
+        "specifyBody": "json",
+        "method": "POST",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "push-posts-queue",
+      "name": "POST to posts_queue (W14)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, draft_id: $json.draft_id, status: $json.action, message: 'Draft ' + $json.action + ' successfully' } }}"
+      },
+      "id": "resp-approve",
+      "name": "Response /draft-approve",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, items: $json, total: $input.first().json.total, filters: $input.first().json.filters } }}"
+      },
+      "id": "resp-list",
+      "name": "Response /draft-list",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, count: $json.count, message: $json.count + ' draft(s) approved successfully' } }}"
+      },
+      "id": "resp-bulk",
+      "name": "Response /draft-bulk-approve",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        900,
+        600
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook /draft-approve": {
+      "main": [
+        [
+          {
+            "node": "Parse approve request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook /draft-list": {
+      "main": [
+        [
+          {
+            "node": "Parse list request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook /draft-bulk-approve": {
+      "main": [
+        [
+          {
+            "node": "Parse bulk-approve request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule every 30 min": {
+      "main": [
+        [
+          {
+            "node": "DB fetch approved (unpublished)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse approve request": {
+      "main": [
+        [
+          {
+            "node": "DB update single draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse list request": {
+      "main": [
+        [
+          {
+            "node": "DB fetch drafts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse bulk-approve request": {
+      "main": [
+        [
+          {
+            "node": "DB update bulk drafts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB update single draft": {
+      "main": [
+        [
+          {
+            "node": "Response /draft-approve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB fetch drafts": {
+      "main": [
+        [
+          {
+            "node": "DB count total",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB count total": {
+      "main": [
+        [
+          {
+            "node": "Response /draft-list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB update bulk drafts": {
+      "main": [
+        [
+          {
+            "node": "Response /draft-bulk-approve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB fetch approved (unpublished)": {
+      "main": [
+        [
+          {
+            "node": "Group by asset_type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group by asset_type": {
+      "main": [
+        [
+          {
+            "node": "Route caption -> posts_queue",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Format Telegram notify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route caption -> posts_queue": {
+      "main": [
+        [
+          {
+            "node": "POST to posts_queue (W14)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Telegram notify": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram notify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true
+  },
+  "active": false,
+  "id": "w25-approve-publish"
+}

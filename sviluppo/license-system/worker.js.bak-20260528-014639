@@ -1,0 +1,4388 @@
+/**
+ * AdOff License API — Cloudflare Worker
+ *
+ * Deploy su Cloudflare Workers (free tier: 100K req/giorno)
+ * Usa Cloudflare KV per storage licenze
+ *
+ * Endpoints:
+ *   POST /validate    — valida una license key
+ *   POST /activate    — attiva una key su un dispositivo
+ *   POST /deactivate  — rimuovi un dispositivo
+ *   POST /revoke      — revoca una licenza (admin)
+ *   GET  /health      — health check
+ *
+ * Setup:
+ *   1. Crea un Worker su Cloudflare Dashboard
+ *   2. Crea un KV namespace "ADOFF_LICENSES"
+ *   3. Bind il KV al Worker
+ *   4. Setta la variabile SECRET: wrangler secret put ADOFF_SECRET
+ *   5. Deploya: wrangler deploy
+ */
+
+// =============================================
+// CONFIGURAZIONE
+// =============================================
+
+const CORS_ALLOWED_ORIGINS = [
+  "https://adoff.app",
+  "https://www.adoff.app",
+  "chrome-extension://",
+];
+
+// Also allow any *.adoff-site.pages.dev (CF Pages preview deployments)
+function isAllowedOrigin(origin) {
+  if (!origin) return false;
+  if (CORS_ALLOWED_ORIGINS.some(a => origin === a || origin.startsWith(a))) return true;
+  if (/^https:\/\/[a-f0-9]+\.adoff-site\.pages\.dev$/.test(origin)) return true;
+  return false;
+}
+
+function getCorsHeaders(request) {
+  const origin = request ? request.headers.get("Origin") || "" : "";
+  const isAllowed = isAllowedOrigin(origin);
+  const headers = {
+    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Token, X-Account-Token",
+  };
+  if (isAllowed) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+  return headers;
+}
+
+// Placeholder costante per contesti senza request (es. cron)
+const CORS_HEADERS = {
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Token, X-Account-Token",
+};
+
+const MAX_DEVICES = 3;
+const RATE_LIMIT_MAX = 20;      // Max requests
+const RATE_LIMIT_WINDOW = 60;   // Per 60 secondi
+const ADMIN_TOKEN_HEADER = "X-Admin-Token";
+
+// =============================================
+// DATABASE D1 (AFFILIATI & REFERRAL)
+// =============================================
+
+async function getAffiliate(id, env) {
+  if (!env.DB) return null;
+  return await env.DB.prepare("SELECT * FROM affiliates WHERE id = ?").bind(id).first();
+}
+
+
+
+// =============================================
+// EMAIL (Resend API)
+// =============================================
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function emailTemplate(title, body, ctaText, ctaUrl) {
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>@media(prefers-color-scheme:dark){.email-bg{background:#0a0a1a!important}.email-card{background:#12122a!important;border-color:#2a2a4a!important}.email-title{color:#fff!important}.email-body,.email-body p,.email-body li,.email-body td{color:#c0c0d0!important}.email-footer p,.email-footer a{color:#8a8aaa!important}}</style>
+</head>
+<body style="margin:0;padding:0;background:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f7" class="email-bg"><tr><td align="center" style="padding:32px 16px">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%">
+  <!-- Logo -->
+  <tr><td align="center" style="padding-bottom:24px">
+    <span style="font-size:28px;font-weight:800;color:#1a1a2e">Ad<span style="color:#7c5cfc">Off</span></span>
+  </td></tr>
+  <!-- Card -->
+  <tr><td>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e5e5ea;border-radius:16px" class="email-card">
+      <tr><td style="padding:32px">
+        <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1a1a2e" class="email-title">${title}</h1>
+        <div style="color:#444;font-size:15px;line-height:1.7" class="email-body">${body}</div>
+        ${ctaText && ctaUrl ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-top:28px">
+          <a href="${ctaUrl}" style="display:inline-block;background:#7c5cfc;color:#ffffff;padding:14px 36px;border-radius:8px;font-weight:700;font-size:15px;text-decoration:none;mso-padding-alt:0" target="_blank">
+            <!--[if mso]><i style="mso-font-width:350%;mso-text-raise:21pt">&nbsp;</i><![endif]-->
+            <span style="mso-text-raise:10pt">${ctaText}</span>
+            <!--[if mso]><i style="mso-font-width:350%">&nbsp;</i><![endif]-->
+          </a>
+        </td></tr></table>` : ''}
+      </td></tr>
+    </table>
+  </td></tr>
+  <!-- Footer -->
+  <tr><td align="center" style="padding-top:24px" class="email-footer">
+    <p style="color:#999;font-size:12px;margin:0 0 6px">AdOff — Ads? Off! | <a href="https://adoff.app" style="color:#7c5cfc;text-decoration:none">adoff.app</a></p>
+    <p style="color:#999;font-size:12px;margin:0"><a href="https://adoff.app/support" style="color:#999;text-decoration:none">Supporto</a> &middot; <a href="https://adoff.app/privacy" style="color:#999;text-decoration:none">Privacy</a></p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+}
+
+const EMAIL_TEMPLATES = {
+  // --- ATTIVAZIONE ACCOUNT (dopo acquisto) ---
+  account_activation(activateUrl, plan, devices) {
+    const planNames = { monthly: "Mensile", annual: "Annuale", lifetime: "Lifetime" };
+    const safePlan = escapeHtml(planNames[plan] || plan);
+    const devLimit = devices || 3;
+    return {
+      subject: "Attiva il tuo account AdOff Pro!",
+      html: emailTemplate(
+        "Grazie per il tuo acquisto! 🎉",
+        `<p>La tua licenza <strong>AdOff Pro ${safePlan}</strong> e' pronta.</p>
+        <p>Clicca il bottone qui sotto per attivare il tuo account e impostare la password.</p>
+        <table style="width:100%;border-collapse:collapse;margin:20px 0;background:#f8f8fc;border-radius:8px;padding:16px">
+          <tr><td style="color:#888;padding:8px 16px">Piano</td><td style="color:#1a1a2e;font-weight:600;text-align:right;padding:8px 16px">${safePlan}</td></tr>
+          <tr><td style="color:#888;padding:8px 16px">Dispositivi</td><td style="color:#1a1a2e;font-weight:600;text-align:right;padding:8px 16px">${devLimit}</td></tr>
+        </table>
+        <p><strong>Dopo l'attivazione:</strong></p>
+        <ol style="padding-left:20px">
+          <li>Apri AdOff nel browser</li>
+          <li>Vai nelle Opzioni → Piano &amp; Licenza</li>
+          <li>Accedi con la tua email — la licenza e' gia' attiva!</li>
+        </ol>
+        <p style="color:#888;font-size:13px">Il link scade tra 24 ore. Se non hai effettuato tu questo acquisto, contattaci.</p>`,
+        "Attiva il tuo Account",
+        activateUrl
+      ),
+    };
+  },
+
+  // --- BENVENUTO (dopo primo acquisto) ---
+  welcome(email, plan) {
+    const safePlan = escapeHtml(plan || "Pro");
+    return {
+      subject: "Benvenuto in AdOff Pro! 👋",
+      html: emailTemplate(
+        "Benvenuto nella famiglia AdOff! 👋",
+        `<p>Ciao! Grazie per aver scelto <strong>AdOff Pro ${safePlan}</strong>.</p>
+        <p>Ecco cosa puoi fare con il tuo piano Pro:</p>
+        <ul style="padding-left:20px;line-height:2">
+          <li><strong>Stealth Mode</strong> — Invisibile ai sistemi anti-adblock</li>
+          <li><strong>Video Ad Blocking</strong> — Zero ads sulle piattaforme video</li>
+          <li><strong>Supporto prioritario</strong> — Risposte rapide dal nostro team</li>
+          <li><strong>Gestione dispositivi</strong> — Controlla tutto dal tuo account online</li>
+        </ul>
+        <p>Se hai domande, siamo qui per te.</p>`,
+        "Gestisci il tuo Account",
+        "https://adoff.app/account"
+      ),
+    };
+  },
+
+  // --- SCADENZA REMINDER ---
+  expiry_reminder(key, daysLeft, email) {
+    const safeKey = escapeHtml(key);
+    const d = parseInt(daysLeft);
+    const urgency = d <= 1 ? "⚠️ " : "";
+    return {
+      subject: `${urgency}AdOff Pro: il tuo abbonamento scade tra ${d} giorn${d === 1 ? "o" : "i"}`,
+      html: emailTemplate(
+        `Il tuo abbonamento scade tra ${d} giorn${d === 1 ? "o" : "i"}`,
+        `<p>La tua licenza AdOff Pro scadra' tra <strong>${d} giorn${d === 1 ? "o" : "i"}</strong>.</p>
+        <div style="background:#fff0f0;border:1px solid #f43f5e;border-radius:10px;padding:16px;margin:16px 0;text-align:center">
+          <p style="color:#f43f5e;font-weight:700;margin:0">⏰ ${d === 1 ? "Ultimo giorno!" : d === 3 ? "Mancano solo 3 giorni" : "Scade tra una settimana"}</p>
+        </div>
+        <p>Dopo la scadenza perderai:</p>
+        <ul style="padding-left:20px;color:#d44">
+          <li>Stealth Mode (anti-detection)</li>
+          <li>Video Ad Blocking avanzato</li>
+          <li>Supporto prioritario</li>
+        </ul>
+        <p>Il blocco ads di base resta <strong>gratuito per sempre</strong>.</p>`,
+        "Rinnova Adesso",
+        "https://adoff.app/#pricing"
+      ),
+    };
+  },
+
+  // --- SCADUTO ---
+  expired(key, email) {
+    return {
+      subject: "AdOff Pro: il tuo abbonamento e' scaduto",
+      html: emailTemplate(
+        "Il tuo abbonamento Pro e' scaduto 😔",
+        `<p>Le funzionalita' Pro di AdOff sono state disabilitate.</p>
+        <p>Il blocco ads di base continua a funzionare <strong>gratuitamente</strong>, ma hai perso:</p>
+        <ul style="padding-left:20px;color:#d44">
+          <li>Stealth Mode (anti-detection)</li>
+          <li>Video Ad Blocking avanzato</li>
+          <li>Supporto prioritario</li>
+        </ul>
+        <p>Rinnova per riattivare tutto immediatamente.</p>`,
+        "Rinnova Pro",
+        "https://adoff.app/#pricing"
+      ),
+    };
+  },
+
+  // --- PAGAMENTO FALLITO ---
+  payment_failed(email) {
+    return {
+      subject: "⚠️ AdOff Pro: pagamento non riuscito",
+      html: emailTemplate(
+        "Pagamento non riuscito ⚠️",
+        `<p>Il rinnovo del tuo abbonamento AdOff Pro non e' andato a buon fine.</p>
+        <p><strong>Cosa fare:</strong></p>
+        <ol style="padding-left:20px">
+          <li>Verifica che la carta di credito sia valida</li>
+          <li>Controlla che il saldo sia sufficiente</li>
+          <li>Riprova il pagamento</li>
+        </ol>
+        <p>Se il problema persiste, la licenza verra' sospesa automaticamente.</p>
+        <p style="color:#888;font-size:13px">Hai bisogno di aiuto? <a href="https://adoff.app/support" style="color:#7c5cfc">Contattaci</a></p>`,
+        "Aggiorna Pagamento",
+        "https://adoff.app/#pricing"
+      ),
+    };
+  },
+
+  // --- ABBONAMENTO CANCELLATO ---
+  cancelled(email) {
+    return {
+      subject: "AdOff Pro: abbonamento cancellato",
+      html: emailTemplate(
+        "Abbonamento cancellato",
+        `<p>Il tuo abbonamento AdOff Pro e' stato cancellato.</p>
+        <p>La licenza restera' attiva fino alla <strong>data di scadenza gia' pagata</strong>. Dopo, tornerai al piano Free.</p>
+        <p>Il blocco ads di base resta <strong>gratuito per sempre</strong>.</p>
+        <p>Se cambi idea, puoi riabbonarti in qualsiasi momento con un click.</p>
+        <p style="color:#888;font-size:13px">Ci manchi gia'. Se hai feedback, scrivici su <a href="https://adoff.app/support" style="color:#7c5cfc">adoff.app/support</a>.</p>`,
+        "Torna Pro",
+        "https://adoff.app/#pricing"
+      ),
+    };
+  },
+
+  // --- VERIFICA EMAIL ---
+  verify_email(email, verifyUrl) {
+    return {
+      subject: "AdOff — Verifica la tua email",
+      html: emailTemplate(
+        "Verifica la tua email ✉️",
+        `<p>Hai creato un account AdOff con questo indirizzo email.</p>
+        <p>Clicca il bottone qui sotto per verificare il tuo indirizzo e attivare l'account.</p>
+        <p style="color:#888;font-size:13px">Il link scade tra 24 ore. Se non hai richiesto tu questa registrazione, ignora questa email.</p>`,
+        "Verifica Email",
+        verifyUrl
+      ),
+    };
+  },
+
+  // --- RESET PASSWORD ---
+  reset_password(email, resetUrl) {
+    return {
+      subject: "AdOff — Reimposta la tua password",
+      html: emailTemplate(
+        "Reimposta la tua password 🔐",
+        `<p>Hai richiesto il reset della password per il tuo account AdOff.</p>
+        <p>Clicca il bottone qui sotto per scegliere una nuova password.</p>
+        <p style="color:#888;font-size:13px">Il link scade tra 1 ora. Se non hai richiesto tu questo reset, ignora questa email — la tua password resta invariata.</p>`,
+        "Reimposta Password",
+        resetUrl
+      ),
+    };
+  },
+
+  // --- PASSWORD CAMBIATA ---
+  password_changed(email) {
+    return {
+      subject: "AdOff — Password modificata",
+      html: emailTemplate(
+        "Password modificata con successo ✅",
+        `<p>La password del tuo account AdOff e' stata modificata.</p>
+        <p>Se sei stato tu, non devi fare nulla.</p>
+        <p style="color:#f43f5e"><strong>Se non sei stato tu</strong>, qualcuno potrebbe aver accesso al tuo account. Reimposta la password immediatamente.</p>`,
+        "Reimposta Password",
+        "https://adoff.app/account"
+      ),
+    };
+  },
+
+  // --- NUOVO DISPOSITIVO ---
+  new_device(email, deviceName) {
+    const safeName = escapeHtml(deviceName || "Dispositivo sconosciuto");
+    return {
+      subject: "AdOff — Nuovo dispositivo collegato",
+      html: emailTemplate(
+        "Nuovo dispositivo collegato 📱",
+        `<p>La tua licenza AdOff Pro e' stata attivata su un nuovo dispositivo:</p>
+        <div style="background:#f0ecff;border:1px solid #d0c8ff;border-radius:10px;padding:16px;margin:16px 0;text-align:center">
+          <p style="color:#7c5cfc;font-weight:700;font-size:16px;margin:0">${safeName}</p>
+        </div>
+        <p>Se sei stato tu, non devi fare nulla.</p>
+        <p>Se <strong>non riconosci</strong> questo dispositivo, vai nel tuo account e rimuovilo subito.</p>`,
+        "Gestisci Dispositivi",
+        "https://adoff.app/account"
+      ),
+    };
+  },
+
+  // --- LIMITE DISPOSITIVI RAGGIUNTO ---
+  device_limit(email, maxDevices) {
+    return {
+      subject: "AdOff — Limite dispositivi raggiunto",
+      html: emailTemplate(
+        "Limite dispositivi raggiunto ⚠️",
+        `<p>Hai provato ad attivare AdOff Pro su un nuovo dispositivo, ma hai gia' raggiunto il limite di <strong>${maxDevices} dispositivi</strong>.</p>
+        <p><strong>Cosa puoi fare:</strong></p>
+        <ul style="padding-left:20px">
+          <li>Vai nel tuo account e rimuovi un dispositivo che non usi piu'</li>
+          <li>Oppure fai upgrade a un piano con piu' dispositivi</li>
+        </ul>`,
+        "Gestisci Dispositivi",
+        "https://adoff.app/account"
+      ),
+    };
+  },
+
+  // --- TRIAL INIZIATO ---
+  trial_started(email) {
+    return {
+      subject: "AdOff Pro — 15 giorni gratis! 🎁",
+      html: emailTemplate(
+        "Il tuo trial Pro e' iniziato! 🎁",
+        `<p>Hai <strong>15 giorni gratuiti</strong> con tutte le funzionalita' Pro di AdOff:</p>
+        <ul style="padding-left:20px;line-height:2">
+          <li>✅ Stealth Mode — Invisibile ai sistemi anti-adblock</li>
+          <li>✅ Video Ad Blocking — Zero pubblicita' nei video</li>
+          <li>✅ 3 dispositivi inclusi</li>
+          <li>✅ Supporto prioritario</li>
+        </ul>
+        <p>Dopo i 15 giorni, puoi continuare con il piano Free (blocco ads completo) oppure scegliere un piano Pro a partire da <strong>€2,69/mese</strong>.</p>`,
+        "Scopri i Piani Pro",
+        "https://adoff.app/#pricing"
+      ),
+    };
+  },
+
+  // --- TRIAL SCADE ---
+  trial_expiring(email, daysLeft) {
+    const d = parseInt(daysLeft);
+    return {
+      subject: `AdOff — Il tuo trial Pro scade tra ${d} giorn${d === 1 ? "o" : "i"}`,
+      html: emailTemplate(
+        `Il trial scade tra ${d} giorn${d === 1 ? "o" : "i"} ⏰`,
+        `<p>Il tuo periodo di prova gratuito di AdOff Pro sta per terminare.</p>
+        <p>Dopo la scadenza, le funzionalita' Pro verranno disabilitate ma il blocco ads di base resta <strong>gratuito per sempre</strong>.</p>
+        <p>Per continuare con tutte le funzionalita' Pro, scegli un piano:</p>
+        <table style="width:100%;border-collapse:collapse;margin:16px 0">
+          <tr><td style="color:#888;padding:8px 0;border-bottom:1px solid #e5e5ea">Mensile</td><td style="color:#1a1a2e;font-weight:600;text-align:right;padding:8px 0;border-bottom:1px solid #e5e5ea">da €2,69/mese</td></tr>
+          <tr><td style="color:#888;padding:8px 0;border-bottom:1px solid #e5e5ea">Annuale</td><td style="color:#4ade80;font-weight:600;text-align:right;padding:8px 0;border-bottom:1px solid #e5e5ea">da €29,59/anno</td></tr>
+          <tr><td style="color:#888;padding:8px 0">Lifetime</td><td style="color:#fbbf24;font-weight:600;text-align:right;padding:8px 0">da €67,90</td></tr>
+        </table>`,
+        "Scegli il tuo Piano",
+        "https://adoff.app/#pricing"
+      ),
+    };
+  },
+
+  // --- TICKET SUPPORTO RICEVUTO ---
+  ticket_received(email, ticketId, subject) {
+    const safeId = escapeHtml(ticketId);
+    const safeSubject = escapeHtml(subject);
+    return {
+      subject: `AdOff Supporto — Ticket ${ticketId} ricevuto`,
+      html: emailTemplate(
+        "Abbiamo ricevuto la tua richiesta ✅",
+        `<p>Grazie per averci contattato. Il tuo ticket e' stato registrato:</p>
+        <div style="background:#0a0a1a;border:1px solid #2a2a4a;border-radius:10px;padding:16px;margin:16px 0">
+          <p style="color:#888;font-size:12px;margin:0 0 4px">TICKET ID</p>
+          <p style="color:#7c5cfc;font-weight:700;font-size:16px;margin:0;font-family:monospace">${safeId}</p>
+          <p style="color:#fff;margin:12px 0 0">${safeSubject}</p>
+        </div>
+        <p>Ti risponderemo il prima possibile. Il tempo medio di risposta e' di <strong>24 ore</strong>.</p>`,
+        "Stato del Ticket",
+        "https://adoff.app/support"
+      ),
+    };
+  },
+
+  // --- RISPOSTA TICKET ---
+  ticket_reply(email, ticketId, replyText) {
+    const safeId = escapeHtml(ticketId);
+    const safeReply = escapeHtml(replyText);
+    return {
+      subject: `AdOff Supporto — Risposta al ticket ${ticketId}`,
+      html: emailTemplate(
+        "Nuova risposta al tuo ticket 💬",
+        `<p>Abbiamo risposto al tuo ticket <strong>${safeId}</strong>:</p>
+        <div style="background:#f7f5ff;border-left:3px solid #7c5cfc;padding:16px;margin:16px 0;border-radius:0 8px 8px 0">
+          <p style="color:#333;margin:0;white-space:pre-wrap">${safeReply}</p>
+        </div>
+        <p style="color:#888;font-size:13px">Puoi rispondere direttamente dalla pagina supporto.</p>`,
+        "Vedi Ticket",
+        "https://adoff.app/support"
+      ),
+    };
+  },
+};
+
+async function sendEmail(to, subject, html, env) {
+  if (!env.RESEND_API_KEY) return { ok: false, error: "RESEND_API_KEY not set" };
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + env.RESEND_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "AdOff <noreply@adoff.app>",
+        to: [to],
+        subject,
+        html,
+      }),
+    });
+    const data = await res.json();
+    return { ok: res.ok, id: data.id, error: data.message };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+// =============================================
+// CRYPTO
+// =============================================
+
+async function hmacSign(data, secret) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(data));
+  return Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, 32);
+}
+
+// Confronto a tempo costante per prevenire timing attack sulle firme HMAC.
+function constantTimeEqual(a, b) {
+  const len = Math.max(a.length, b.length);
+  const ap = a.padEnd(len, "\0");
+  const bp = b.padEnd(len, "\0");
+  let mismatch = a.length ^ b.length;
+  for (let i = 0; i < len; i++) {
+    mismatch |= ap.charCodeAt(i) ^ bp.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
+async function validateSignature(raw, secret) {
+  if (!raw || raw.length < 36) return { valid: false, error: "Key too short" };
+
+  const payloadB64 = raw.slice(0, -32);
+  const signature = raw.slice(-32);
+
+  const expected = await hmacSign(payloadB64, secret);
+
+  if (!constantTimeEqual(signature, expected)) return { valid: false, error: "Invalid signature" };
+
+  try {
+    const padded = payloadB64 + "=".repeat((4 - (payloadB64.length % 4)) % 4);
+    const json = atob(padded.replace(/-/g, "+").replace(/_/g, "/"));
+    const payload = JSON.parse(json);
+    return { valid: true, payload };
+  } catch (e) {
+    return { valid: false, error: "Decode error" };
+  }
+}
+
+async function generateDeviceId(request, body, env) {
+  // Preferisci l'UUID inviato dal client (stabile tra sessioni) — caso normale.
+  if (body && body.deviceId && /^[0-9a-f-]{36}$/i.test(body.deviceId)) {
+    return body.deviceId;
+  }
+  // Fallback (client legacy senza UUID): hash SHA-256 keyed con il secret server,
+  // così l'id non è predicibile/forgiabile offline. CF-Connecting-IP è impostato
+  // da Cloudflare (non spoofabile dal client).
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  const ua = request.headers.get("User-Agent") || "unknown";
+  const secret = (env && env.ADOFF_SECRET) || "";
+  const data = new TextEncoder().encode(secret + "|" + ip + "|" + ua);
+  const buf = await crypto.subtle.digest("SHA-256", data);
+  return "fb_" + Array.from(new Uint8Array(buf)).slice(0, 12)
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Parses User-Agent to produce a human-readable device name.
+ * E.g. "Chrome on Windows 11", "Firefox on macOS"
+ */
+function parseBrowserName(request) {
+  const ua = request.headers.get("User-Agent") || "";
+  let browser = "Browser";
+  if (ua.includes("Edg/")) browser = "Edge";
+  else if (ua.includes("OPR/") || ua.includes("Opera/")) browser = "Opera";
+  else if (ua.includes("Firefox/")) browser = "Firefox";
+  else if (ua.includes("Chrome/")) browser = "Chrome";
+  else if (ua.includes("Safari/")) browser = "Safari";
+
+  let os = "Unknown OS";
+  if (ua.includes("Windows NT 10.0")) os = "Windows 10/11";
+  else if (ua.includes("Windows NT")) os = "Windows";
+  else if (ua.includes("Mac OS X")) os = "macOS";
+  else if (ua.includes("Linux")) os = "Linux";
+  else if (ua.includes("Android")) os = "Android";
+  else if (ua.includes("iPhone") || ua.includes("iPad")) os = "iOS";
+
+  return browser + " on " + os;
+}
+
+/**
+ * Normalize device list — supports both legacy string entries and new object entries.
+ * Always returns array of {id, name, lastSeen, ip} objects.
+ */
+function normalizeDeviceList(devices) {
+  if (!Array.isArray(devices)) return [];
+  return devices.map(d => {
+    if (typeof d === "string") {
+      return { id: d, name: "Unknown Device", lastSeen: 0, ip: "" };
+    }
+    return d;
+  });
+}
+
+/**
+ * Find a device index in the devices array by ID.
+ * Handles both legacy string format and new object format.
+ */
+function findDevice(devices, deviceId) {
+  return devices.findIndex(d => {
+    const id = typeof d === "string" ? d : d.id;
+    return id === deviceId;
+  });
+}
+
+// =============================================
+// RATE LIMITING
+// =============================================
+
+async function checkRateLimit(ip, env) {
+  const key = `rl:${ip}`;
+  const current = await env.ADOFF_LICENSES.get(key);
+
+  if (current) {
+    const count = parseInt(current);
+    if (count >= RATE_LIMIT_MAX) {
+      return false;
+    }
+    await env.ADOFF_LICENSES.put(key, String(count + 1), {
+      expirationTtl: RATE_LIMIT_WINDOW,
+    });
+  } else {
+    await env.ADOFF_LICENSES.put(key, "1", {
+      expirationTtl: RATE_LIMIT_WINDOW,
+    });
+  }
+  return true;
+}
+
+// =============================================
+// HANDLERS
+// =============================================
+
+async function handleValidate(body, env, request, opts = {}) {
+  // explicitActivation = true quando arriva da /activate (utente inserisce key esplicitamente).
+  // In quel caso un device in blacklist puo' essere ri-autorizzato: la blacklist serve
+  // a impedire ri-attivazione AUTOMATICA dopo rimozione, non a bloccare l'utente per sempre.
+  const explicitActivation = !!opts.explicitActivation;
+
+  let { key } = body;
+  if (!key) return jsonResponse({ valid: false, error: "Missing key" }, 400);
+
+  // Risolvi alias ADOFF-XXXX-XXXX-XXXX → raw key
+  if (key.startsWith("ADOFF-")) {
+    const raw = await env.ADOFF_LICENSES.get(`key:${key}`);
+    if (!raw) return jsonResponse({ valid: false, error: "License not found" });
+    key = raw;
+  }
+
+  const secret = env.ADOFF_SECRET;
+
+  // 1. Verifica firma HMAC
+  const sigCheck = await validateSignature(key, secret);
+  if (!sigCheck.valid) {
+    return jsonResponse({ valid: false, error: sigCheck.error });
+  }
+
+  // 1b. Sanity check: x negativo non e' un expiry valido
+  if (sigCheck.payload && sigCheck.payload.x < 0) {
+    return jsonResponse({ valid: false, error: "Invalid expiry" });
+  }
+
+  // 2. Controlla nel KV se la licenza esiste e non e' revocata
+  const licenseData = await env.ADOFF_LICENSES.get(`lic:${key}`, "json");
+
+  // Se non esiste record KV, la licenza e' stata eliminata dall'admin (o non e' mai stata creata).
+  // La firma HMAC offline da sola non basta: serve l'autorita' del KV.
+  // Senza questo check, `validateSignature` passerebbe e il device check ricreerebbe la licenza
+  // con `{...null, devices, ...}` resuscitandola silenziosamente.
+  if (!licenseData) {
+    return jsonResponse({ valid: false, error: "License not found", deleted: true });
+  }
+
+  if (licenseData.revoked) {
+    return jsonResponse({ valid: false, error: "License revoked" });
+  }
+
+  // 3. Controlla scadenza
+  const payload = sigCheck.payload;
+  if (payload.x > 0 && payload.x < Date.now() / 1000) {
+    return jsonResponse({ valid: false, error: "License expired", expired: true });
+  }
+
+  // 4. Controlla dispositivi
+  const deviceId = await generateDeviceId(request, body, env);
+  let devices = normalizeDeviceList(licenseData?.devices || []);
+  const maxDevices = licenseData?.deviceLimit || payload.d || MAX_DEVICES;
+  let bannedDevices = licenseData?.bannedDevices || [];
+  const existingIdx = findDevice(devices, deviceId);
+
+  // Controlla se il dispositivo è stato rimosso dalla dashboard.
+  // explicitActivation: l'utente sta riattivando esplicitamente con la key
+  //   → rimuovi il device dalla blacklist e procedi (illimitate riattivazioni consentite).
+  // !explicitActivation: validazione automatica/background → blocca.
+  if (bannedDevices.includes(deviceId)) {
+    if (!explicitActivation) {
+      return jsonResponse({
+        valid: false,
+        error: "Device deactivated",
+        deactivated: true,
+      });
+    }
+    bannedDevices = bannedDevices.filter(d => d !== deviceId);
+  }
+
+  if (existingIdx === -1) {
+    if (devices.length >= maxDevices) {
+      return jsonResponse({
+        valid: false,
+        error: "Device limit reached",
+        maxDevices,
+        currentDevices: devices.length,
+      });
+    }
+    // Registra nuovo dispositivo con metadati
+    devices.push({
+      id: deviceId,
+      name: parseBrowserName(request),
+      lastSeen: Date.now(),
+      ip: request.headers.get("CF-Connecting-IP") || "",
+    });
+    await env.ADOFF_LICENSES.put(`lic:${key}`, JSON.stringify({
+      ...licenseData,
+      devices,
+      bannedDevices,
+      lastValidated: Date.now(),
+      plan: payload.p,
+      email: payload.e,
+    }));
+  } else {
+    // Aggiorna lastSeen dispositivo esistente
+    devices[existingIdx] = {
+      ...devices[existingIdx],
+      lastSeen: Date.now(),
+      name: parseBrowserName(request),
+    };
+    await env.ADOFF_LICENSES.put(`lic:${key}`, JSON.stringify({
+      ...licenseData,
+      devices,
+      bannedDevices,
+      lastValidated: Date.now(),
+    }));
+  }
+
+  return jsonResponse({
+    valid: true,
+    plan: payload.p,
+    expires: payload.x > 0 ? payload.x : null,
+    expiresHuman: payload.x > 0
+      ? new Date(payload.x * 1000).toISOString().split("T")[0]
+      : "LIFETIME",
+    devices: devices.length,
+    maxDevices,
+  });
+}
+
+async function handleActivate(body, env, request) {
+  // Attivazione esplicita: l'utente inserisce la key manualmente.
+  // Differenza chiave vs /validate: il device puo' essere riautorizzato
+  // anche se era stato rimosso dalla dashboard (illimitate ri-attivazioni).
+  return handleValidate(body, env, request, { explicitActivation: true });
+}
+
+async function handleDeactivate(body, env, request) {
+  let { key } = body;
+  if (!key) return jsonResponse({ ok: false, error: "Missing key" }, 400);
+
+  // Risolvi alias ADOFF-XXXX-XXXX-XXXX → raw key
+  if (key.startsWith("ADOFF-")) {
+    const raw = await env.ADOFF_LICENSES.get(`key:${key}`);
+    if (!raw) return jsonResponse({ ok: false, error: "License not found" });
+    key = raw;
+  }
+
+  const deviceId = await generateDeviceId(request, body, env);
+  const licenseData = await env.ADOFF_LICENSES.get(`lic:${key}`, "json");
+
+  if (!licenseData) {
+    return jsonResponse({ ok: false, error: "License not found" });
+  }
+
+  const devices = normalizeDeviceList(licenseData.devices || [])
+    .filter(d => d.id !== deviceId);
+  await env.ADOFF_LICENSES.put(`lic:${key}`, JSON.stringify({
+    ...licenseData,
+    devices,
+  }));
+
+  return jsonResponse({ ok: true, devicesRemaining: devices.length });
+}
+
+async function handleRevoke(body, env, request) {
+  // Solo admin
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  let { key } = body;
+  if (!key) return jsonResponse({ ok: false, error: "Missing key" }, 400);
+
+  // Risolvi alias ADOFF-XXXX-XXXX-XXXX → raw key
+  if (key.startsWith("ADOFF-")) {
+    const raw = await env.ADOFF_LICENSES.get(`key:${key}`);
+    if (!raw) return jsonResponse({ ok: false, error: "License not found" });
+    key = raw;
+  }
+
+  const existing = await env.ADOFF_LICENSES.get(`lic:${key}`, "json") || {};
+  await env.ADOFF_LICENSES.put(`lic:${key}`, JSON.stringify({
+    ...existing,
+    revoked: true,
+    revokedAt: Date.now(),
+  }));
+
+  return jsonResponse({ ok: true, message: "License revoked" });
+}
+
+async function handleDeleteLicense(body, env, request) {
+  // Solo admin — elimina definitivamente una licenza dal KV
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  let { key } = body;
+  if (!key) return jsonResponse({ ok: false, error: "Missing key" }, 400);
+
+  let rawKey = key;
+  let adoffKey = null;
+
+  // Risolvi alias ADOFF-XXXX-XXXX-XXXX → raw key
+  if (key.startsWith("ADOFF-")) {
+    adoffKey = key;
+    const raw = await env.ADOFF_LICENSES.get(`key:${key}`);
+    if (!raw) return jsonResponse({ ok: false, error: "License not found" });
+    rawKey = raw;
+  }
+
+  // Leggi dati licenza PRIMA di eliminare
+  const licData = await env.ADOFF_LICENSES.get(`lic:${rawKey}`, "json");
+  if (!licData) return jsonResponse({ ok: false, error: "License not found in KV" });
+
+  if (!adoffKey && licData.key) adoffKey = licData.key;
+  const email = licData.email;
+
+  // Elimina licenza dal KV
+  await env.ADOFF_LICENSES.delete(`lic:${rawKey}`);
+
+  // Elimina alias key:ADOFF-...
+  if (adoffKey) {
+    await env.ADOFF_LICENSES.delete(`key:${adoffKey}`);
+  }
+
+  // Rimuovi dalla lista email se presente
+  if (email) {
+    const emailKeys = await env.ADOFF_LICENSES.get(`email:${email}`, "json") || [];
+    const filtered = emailKeys.filter(e => e.raw !== rawKey && e.key !== adoffKey);
+    if (filtered.length > 0) {
+      await env.ADOFF_LICENSES.put(`email:${email}`, JSON.stringify(filtered));
+    } else {
+      await env.ADOFF_LICENSES.delete(`email:${email}`);
+    }
+  }
+
+  return jsonResponse({ ok: true, message: "License permanently deleted" });
+}
+
+// =============================================
+// ADMIN — GENERAZIONE KEY SERVER-SIDE
+// =============================================
+
+async function handleAdminGenerateKey(body, env, request) {
+  // Autenticazione admin
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const { plan, months, email } = body;
+  // Accept both 'devices' (new) and 'deviceLimit' (legacy) for backward compatibility
+  const devicesInput = body.devices !== undefined ? body.devices : body.deviceLimit;
+
+  // Validazione input
+  const VALID_PLANS = ["pro", "lifetime", "monthly", "annual"];
+  if (!plan || !VALID_PLANS.includes(plan)) {
+    return jsonResponse({ ok: false, error: "Invalid plan" }, 400);
+  }
+  const deviceLimit = Math.min(Math.max(parseInt(devicesInput) || 3, 1), 10);
+  const monthsVal = plan === "lifetime" ? 0 : (Math.max(parseInt(months) || 1, 1));
+
+  const secret = env.ADOFF_SECRET;
+  if (!secret) return jsonResponse({ ok: false, error: "ADOFF_SECRET not configured" }, 500);
+
+  // Genera payload e firma (stessa logica del webhook)
+  const now = Math.floor(Date.now() / 1000);
+  const expires = plan === "lifetime" ? 0 : now + (monthsVal * 30 * 86400);
+  const payload = { c: now, d: deviceLimit, e: email || "", p: plan, v: 1, x: expires };
+  const payloadJson = JSON.stringify(payload);
+  const payloadB64 = btoa(payloadJson).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const signature = await hmacSign(payloadB64, secret);
+  const raw = payloadB64 + signature;
+
+  // Key leggibile
+  const keyHash = await hmacSign(raw, secret);
+  const kh = keyHash.toUpperCase();
+  const key = "ADOFF-" + kh.slice(0, 4) + "-" + kh.slice(4, 8) + "-" + kh.slice(8, 12);
+
+  // Salva nel KV
+  await env.ADOFF_LICENSES.put(`lic:${raw}`, JSON.stringify({
+    key,
+    raw,
+    plan,
+    email: email || "",
+    expires,
+    deviceLimit,
+    devices: [],
+    createdAt: Date.now(),
+    generatedBy: "admin",
+  }));
+  await env.ADOFF_LICENSES.put(`key:${key}`, raw);
+  if (email) {
+    const normalEmail = email.toLowerCase().trim();
+    // Email -> keys index (used by various lookups)
+    const existingKeys = await env.ADOFF_LICENSES.get(`email:${normalEmail}`, "json") || [];
+    existingKeys.push({ key, raw, plan, created: Date.now() });
+    await env.ADOFF_LICENSES.put(`email:${normalEmail}`, JSON.stringify(existingKeys));
+
+    // User account record — parity with Stripe webhook flow.
+    // Without this, the user dashboard (/account/devices) doesn't see admin-created licenses
+    // because it reads from user:{email}.licenses.
+    const userKey = `user:${normalEmail}`;
+    let user = await env.ADOFF_LICENSES.get(userKey, "json");
+    if (!user) {
+      user = {
+        email: normalEmail,
+        passwordHash: null,
+        salt: null,
+        emailVerified: false,
+        providers: [],
+        googleId: null,
+        microsoftId: null,
+        licenses: [raw],
+        createdAt: Date.now(),
+        lastLogin: null,
+        createdVia: "admin",
+      };
+    } else {
+      if (!Array.isArray(user.licenses)) user.licenses = [];
+      if (!user.licenses.includes(raw)) user.licenses.push(raw);
+    }
+    await env.ADOFF_LICENSES.put(userKey, JSON.stringify(user));
+  }
+
+  const expiresHuman = expires > 0
+    ? new Date(expires * 1000).toISOString().split("T")[0]
+    : "LIFETIME";
+
+  return jsonResponse({ ok: true, key, raw, plan, email: email || "", expiresHuman, devices: deviceLimit });
+}
+
+// =============================================
+// TICKET SYSTEM
+// =============================================
+
+async function handleCreateTicket(body, env, request) {
+  const required = ["category", "name", "email", "subject", "description"];
+  for (const field of required) {
+    if (!body[field]) return jsonResponse({ ok: false, error: `Missing field: ${field}` }, 400);
+  }
+
+  // Anti-bot: verifica Turnstile (il sito invia il token; l'estensione usa "extension")
+  const ip = request ? (request.headers.get("CF-Connecting-IP") || "") : "";
+  if (!await verifyTurnstile(body.turnstileToken, ip, env)) {
+    return jsonResponse({ ok: false, error: "Verification failed" }, 403);
+  }
+
+  // Generate ticket ID: TK-YYYYMMDD-XXXXXXXX (crypto random)
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
+  const randBytes = crypto.getRandomValues(new Uint8Array(4));
+  const rand = Array.from(randBytes).map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+  const ticketId = `TK-${dateStr}-${rand}`;
+
+  const ticket = {
+    id: ticketId,
+    category: body.category,
+    priority: body.priority || "low",
+    name: body.name,
+    email: body.email,
+    license: body.license || "",
+    subject: body.subject,
+    description: body.description,
+    browser: body.browser || "",
+    status: "open",
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+    replies: [],
+  };
+
+  // Save ticket
+  await env.ADOFF_LICENSES.put(`ticket:${ticketId}`, JSON.stringify(ticket));
+
+  // Add to ticket index
+  const index = await env.ADOFF_LICENSES.get("tickets:index", "json") || [];
+  index.unshift({ id: ticketId, category: ticket.category, priority: ticket.priority, subject: ticket.subject, email: ticket.email, status: "open", createdAt: ticket.createdAt });
+  // Keep last 500 tickets in index
+  if (index.length > 500) index.length = 500;
+  await env.ADOFF_LICENSES.put("tickets:index", JSON.stringify(index));
+
+  // Increment counter
+  const count = parseInt(await env.ADOFF_LICENSES.get("stats:total_tickets") || "0");
+  await env.ADOFF_LICENSES.put("stats:total_tickets", String(count + 1));
+
+  // Notifica Telegram (supporto)
+  const tgMsg = `\u{1F39F} <b>Nuovo ticket</b>\n` +
+    `\u{1F3F7} ${escapeHtml(ticket.category)} (${escapeHtml(ticket.priority)})\n` +
+    `\u{1F464} ${escapeHtml(ticket.name)} — ${escapeHtml(ticket.email)}\n` +
+    `\u{1F4CC} ${escapeHtml(ticket.subject)}\n` +
+    (ticket.license ? `\u{1F511} ${escapeHtml(ticket.license)}\n` : "") +
+    (ticket.browser ? `\u{1F310} ${escapeHtml(ticket.browser)}\n` : "") +
+    `\u{1F194} <code>${ticketId}</code>\n\n` +
+    `${escapeHtml(String(ticket.description).slice(-2500))}`;
+  await notifyTelegram(tgMsg, env);
+
+  return jsonResponse({ ok: true, ticketId, message: "Ticket created" });
+}
+
+async function handleListTickets(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  const url = new URL(request.url);
+  const statusFilter = url.searchParams.get("status");
+  const index = await env.ADOFF_LICENSES.get("tickets:index", "json") || [];
+  const tickets = statusFilter
+    ? index.filter(t => t.status === statusFilter)
+    : index;
+  return jsonResponse({ ok: true, tickets, total: tickets.length });
+}
+
+const TICKET_ID_RE = /^TK-\d{8}-[A-F0-9]{8}$/;
+
+async function handleGetTicket(request, env, ticketId) {
+  if (!TICKET_ID_RE.test(ticketId)) {
+    return jsonResponse({ ok: false, error: "Invalid ticket ID" }, 400);
+  }
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  const ticket = await env.ADOFF_LICENSES.get(`ticket:${ticketId}`, "json");
+  if (!ticket) return jsonResponse({ ok: false, error: "Ticket not found" }, 404);
+  return jsonResponse({ ok: true, ticket });
+}
+
+const VALID_TICKET_STATUSES = ["open", "in_progress", "resolved", "closed"];
+
+async function handleUpdateTicket(body, env, request, ticketId) {
+  if (!TICKET_ID_RE.test(ticketId)) {
+    return jsonResponse({ ok: false, error: "Invalid ticket ID" }, 400);
+  }
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  const ticket = await env.ADOFF_LICENSES.get(`ticket:${ticketId}`, "json");
+  if (!ticket) return jsonResponse({ ok: false, error: "Ticket not found" }, 404);
+
+  if (body.status) {
+    if (!VALID_TICKET_STATUSES.includes(body.status)) {
+      return jsonResponse({ ok: false, error: "Invalid status value" }, 400);
+    }
+    ticket.status = body.status;
+  }
+  if (body.reply) {
+    ticket.replies.push({ text: body.reply, by: "admin", at: new Date().toISOString() });
+  }
+  ticket.updatedAt = new Date().toISOString();
+  await env.ADOFF_LICENSES.put(`ticket:${ticketId}`, JSON.stringify(ticket));
+
+  // Update index status
+  const index = await env.ADOFF_LICENSES.get("tickets:index", "json") || [];
+  const idx = index.findIndex(t => t.id === ticketId);
+  if (idx >= 0) {
+    index[idx].status = ticket.status;
+    await env.ADOFF_LICENSES.put("tickets:index", JSON.stringify(index));
+  }
+
+  return jsonResponse({ ok: true, ticket });
+}
+
+// =============================================
+// TELEGRAM NOTIFY (supporto — thread 7)
+// =============================================
+
+const TELEGRAM_SUPPORT_THREAD = 7;
+
+async function notifyTelegram(text, env) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return false;
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: env.TELEGRAM_CHAT_ID,
+        message_thread_id: TELEGRAM_SUPPORT_THREAD,
+        text,
+        parse_mode: "HTML",
+        disable_web_page_preview: true,
+      }),
+    });
+    return res.ok;
+  } catch (_) {
+    return false;
+  }
+}
+
+// =============================================
+// AI SUPPORT CHATBOT (LLM locale via tunnel)
+// =============================================
+
+const CHAT_LANGS = ["it", "en", "de", "fr", "es", "pt"];
+const CHAT_MAX_MESSAGE = 2000;
+const CHAT_HISTORY_KEEP = 16;       // ultimi N messaggi tenuti in sessione
+const CHAT_SESSION_TTL = 86400;     // 24h
+const CHAT_MAX_TOKENS = 650;
+const SESSION_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
+
+// Knowledge base brand-safe (nessun brand famoso, nessun dato personale)
+const ADOFF_KB = `PRODOTTO
+AdOff e' un'estensione browser ad blocker universale con tecnologia stealth anti-detection (slogan "Ads? Off!"). Blocca pubblicita' su tutti i siti, invisibile ai sistemi anti-adblock. Disponibile per Chrome, Firefox, Safari, Edge e Opera.
+
+PIANI
+- Free: blocco ads di base (richieste di rete + elementi cosmetici nascosti dal DOM). Gratis per sempre.
+- Pro: in piu' neutralizza le pubblicita' video sulle piattaforme di video streaming e attiva l'evasione stealth anti-adblock avanzata.
+- Trial: 15 giorni di Pro gratuito (3 dispositivi) all'installazione. Dopo il trial si torna a Free.
+
+PREZZI (in base ai dispositivi: 3 / 5 / 10)
+- Mensile: 2,69 / 3,99 / 5,99 EUR al mese
+- Annuale: 29,59 / 39,99 / 59,99 EUR all'anno
+- Lifetime (pagamento unico): 67,90 / 89,90 / 129,90 EUR
+Default 3 dispositivi. Pagamento sicuro con carta, wallet del telefono o bonifico SEPA.
+
+COME ATTIVARE PRO
+1. Acquista dal sito o dalle Opzioni dell'estensione.
+2. Ricevi una email di attivazione account: imposta la password.
+3. La license key viene associata al tuo account.
+4. Apri il popup AdOff (icona nella toolbar) > Opzioni > sezione Licenza > incolla la key > Attiva.
+
+DISPOSITIVI
+Ogni piano consente un numero massimo di dispositivi (3, 5 o 10). Puoi gestire o rimuovere i dispositivi collegati dalla tua area account.
+
+ABBONAMENTO E RINNOVO
+Gli abbonamenti si rinnovano automaticamente. Puoi annullare quando vuoi dal portale clienti: alla cancellazione il Pro resta attivo fino alla fine del periodo gia' pagato, poi torna Free.
+
+RIMBORSI
+Diritto di recesso UE entro 14 giorni dall'acquisto. Il rimborso avviene con lo stesso metodo di pagamento, senza penali.
+
+RISOLUZIONE PROBLEMI
+- "Vedo ancora pubblicita'": verifica che la protezione sia attiva (toggle nel popup), che il sito non sia in pausa o in whitelist, e ricarica la pagina. Le pubblicita' video richiedono Pro o trial attivo.
+- "Un sito non funziona bene": metti AdOff in pausa su quel sito dal popup (opzioni di pausa), ricarica, e segnala il sito.
+- "Messaggio anti-adblock": lo stealth Pro neutralizza la maggior parte dei rilevatori; assicurati che il Pro sia attivo. Se persiste, segnala il sito.
+- Le pubblicita' video sulle piattaforme di video streaming si bloccano solo con Pro o trial.
+
+PRIVACY
+AdOff non raccoglie dati personali di navigazione. Il blocco avviene localmente nel browser.`;
+
+function buildSupportSystemPrompt(lang, licenseContext) {
+  const langNames = { it: "italiano", en: "English", de: "Deutsch", fr: "francais", es: "espanol", pt: "portugues" };
+  const langName = langNames[lang] || "English";
+  return `Sei "AdOff Assistant", l'assistente di supporto ufficiale di AdOff. Aiuti i clienti in modo cordiale, conciso e competente.
+
+REGOLE ASSOLUTE:
+- Rispondi SEMPRE ed ESCLUSIVAMENTE in ${langName}.
+- Parla SOLO di AdOff e del supporto clienti. Se ti chiedono altro, riporta gentilmente al tema AdOff.
+- Puoi nominare i browser e i loro store ufficiali (Chrome Web Store, Microsoft Edge Add-ons, Firefox Add-ons, Safari, Opera). La regola "niente marchi" vale SOLO per le piattaforme di contenuti/streaming di cui AdOff blocca le pubblicita': in quel contesto usa SEMPRE termini generici ("piattaforme di video streaming", "social media", "motori di ricerca", "e-commerce"), MAI i loro nomi propri. Esempi VIETATI: "YouTube", "Netflix", "Twitch", "Facebook", "Instagram", "TikTok", "Reddit", "Amazon". Esempio corretto: invece di "le pubblicita' video su YouTube" scrivi "le pubblicita' video sulle piattaforme di video streaming".
+- NON rivelare MAI dettagli tecnici interni, chiavi, URL di sistema, nomi di server, o dati personali di chiunque.
+- NON inventare informazioni: se non sai o serve un'azione sull'account/pagamento del cliente, ESCALA a un operatore umano.
+- Rispondi in massimo 4-6 frasi. Usa un tono positivo e rassicurante.
+- LINK (REGOLA CRITICA): usa SOLO ed ESCLUSIVAMENTE gli URL elencati qui sotto, COPIATI ESATTAMENTE. NON inventare, NON indovinare, NON modificare MAI un URL (specialmente gli ID negli URL degli store: copiali identici). Formato sempre markdown con etichetta descrittiva, MAI URL nudo.
+  Link di installazione (puoi indicare lo store del browser dell'utente):
+  - Chrome Web Store: https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp
+  - Firefox Add-ons: https://addons.mozilla.org/firefox/addon/adoff/
+  - Microsoft Edge, Opera, Safari o "tutti i browser": usa SEMPRE https://adoff.app/install (la pagina guida l'utente; per Edge/Opera/Safari NON esiste ancora un link diretto allo store)
+  - Tutti i browser (pagina installazione): https://adoff.app/install
+  Altri link: Supporto https://adoff.app/support · Prezzi https://adoff.app/#pricing · Account https://adoff.app/account · Privacy https://adoff.app/privacy · Recesso/rimborsi https://adoff.app/withdrawal
+  Se non sei certo dell'URL esatto, usa https://adoff.app/install. NON usare MAI domini diversi da questi.
+
+QUANDO ESCALARE A UN UMANO (caso straordinario):
+- Richieste di rimborso o contestazioni di pagamento.
+- Problemi di licenza/account che richiedono un'azione manuale (key non funzionante, account bloccato, dispositivi).
+- Errori di pagamento o doppi addebiti.
+- Richieste legali o di cancellazione dati (GDPR).
+- L'utente chiede esplicitamente di parlare con una persona.
+- Dopo 2 tentativi non sei riuscito a risolvere.
+
+FORMATO RISPOSTA (OBBLIGATORIO):
+Scrivi la tua risposta al cliente, poi SULL'ULTIMA RIGA aggiungi ESATTAMENTE questo tag di controllo (non visibile al cliente):
+<<<ESCALATE|no|other|>>>
+Se serve un operatore umano, metti "yes" e la categoria tra: billing, technical, account, legal, other, con una breve motivazione:
+<<<ESCALATE|yes|billing|richiesta rimborso>>>
+
+=== BASE DI CONOSCENZA ADOFF ===
+${ADOFF_KB}
+${licenseContext ? "\n=== CONTESTO LICENZA CLIENTE ===\n" + licenseContext : ""}`;
+}
+
+// Rete di sicurezza deterministica: forza escalation su intenti critici inequivocabili
+// (anche se il modello piccolo non emette il sentinel). Multilingua, accent-insensitive.
+const FORCE_ESCALATION = [
+  { category: "billing", words: ["rimbors", "refund", "ruckerstatt", "rückerstatt", "remboursement", "rembours", "reembols", "chargeback", "doppio addebito", "doppia addebito", "addebitat", "charged twice", "double charge", "charged me twice", "soldi indietro", "money back", "dispute", "contestazione", "fatturazione errata", "wrong charge", "abgebucht", "doble cargo", "cobrado dos veces"] },
+  { category: "legal",   words: ["gdpr", "cancella i miei dati", "cancellare i miei dati", "delete my data", "delete my account data", "right to erasure", "diritto all'oblio", "dati personali", "donnees personnelles", "datos personales", "data protection", "legal action", "avvocato", "lawyer", "denuncia"] },
+  { category: "account", words: ["parlare con un operatore", "parlare con una persona", "voglio un operatore", "operatore umano", "talk to a human", "speak to a human", "speak to someone", "real person", "human agent", "agent humain", "parler a un humain", "hablar con una persona", "agente humano", "mit einem menschen", "echte person"] },
+];
+function detectForceEscalation(message) {
+  const m = (message || "").toLowerCase();
+  for (const rule of FORCE_ESCALATION) {
+    if (rule.words.some(w => m.includes(w))) return rule.category;
+  }
+  return null;
+}
+
+// Sanifica i link: consenti adoff.app e gli store ufficiali (canonicalizzati per
+// correggere ID/path allucinati). Qualsiasi altro URL -> pagina installazione.
+function hostOf(url) {
+  try { return new URL(url).hostname.replace(/^www\./, "").toLowerCase(); } catch (e) { return ""; }
+}
+// host store -> URL canonico esatto (corregge eventuali ID/path inventati dal modello)
+const STORE_CANONICAL = {
+  "chromewebstore.google.com": "https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp",
+  "chrome.google.com":         "https://chromewebstore.google.com/detail/fcjfpfhdcpbjmihiikbblcokmjnhedhp",
+  "addons.mozilla.org":        "https://addons.mozilla.org/firefox/addon/adoff/",
+  // Edge non ancora pubblicato -> instrada alla pagina installazione (evita 404)
+  "microsoftedge.microsoft.com": "https://adoff.app/install",
+};
+function canonicalUrl(url) {
+  const h = hostOf(url);
+  if (h === "adoff.app") return url;
+  if (STORE_CANONICAL[h]) return STORE_CANONICAL[h];
+  return "https://adoff.app/install";
+}
+function sanitizeReplyLinks(text) {
+  if (!text) return text;
+  // rimuovi autolink markdown <url> che lasciano parentesi angolari visibili
+  text = text.replace(/<(https?:\/\/[^>\s]+)>?/g, "$1");
+  text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, function (_, label, url) {
+    return `[${label}](${canonicalUrl(url)})`;
+  });
+  text = text.replace(/(https?:\/\/[^\s)<]+)/g, function (url) {
+    return canonicalUrl(url);
+  });
+  return text;
+}
+
+// Rete deterministica brand-policy: il modello piccolo a volte nomina le piattaforme
+// di contenuti di cui AdOff blocca le pubblicita' (es. "YouTube") invece dei termini
+// generici. Qui le sostituiamo a valle, nella lingua della risposta. NON tocca i
+// browser/store ufficiali (Chrome, Edge, Firefox, Safari, Opera) ne' gli URL (gia'
+// canonicalizzati da sanitizeReplyLinks, che gira prima).
+const BRAND_GENERIC_TERMS = {
+  it: { video: "le piattaforme di video streaming", social: "i social media", live: "le piattaforme di live streaming", forum: "i forum", search: "i motori di ricerca", ecom: "i siti di e-commerce" },
+  en: { video: "video streaming platforms", social: "social media", live: "live streaming platforms", forum: "forums", search: "search engines", ecom: "e-commerce sites" },
+  de: { video: "Video-Streaming-Plattformen", social: "soziale Medien", live: "Live-Streaming-Plattformen", forum: "Foren", search: "Suchmaschinen", ecom: "E-Commerce-Seiten" },
+  fr: { video: "les plateformes de streaming video", social: "les reseaux sociaux", live: "les plateformes de live streaming", forum: "les forums", search: "les moteurs de recherche", ecom: "les sites e-commerce" },
+  es: { video: "las plataformas de video streaming", social: "las redes sociales", live: "las plataformas de live streaming", forum: "los foros", search: "los motores de busqueda", ecom: "los sitios de e-commerce" },
+  pt: { video: "as plataformas de video streaming", social: "as redes sociais", live: "as plataformas de live streaming", forum: "os foruns", search: "os motores de busca", ecom: "os sites de e-commerce" },
+};
+const BRAND_PATTERNS = [
+  { re: /\byou\s?tube\b/gi, key: "video" },
+  { re: /\bnetflix\b/gi, key: "video" },
+  { re: /\bvimeo\b/gi, key: "video" },
+  { re: /\bdailymotion\b/gi, key: "video" },
+  { re: /\btwitch\b/gi, key: "live" },
+  { re: /\b(facebook|instagram|tik\s?tok|snapchat|linkedin|pinterest)\b/gi, key: "social" },
+  { re: /\b(twitter|\bx\.com\b)\b/gi, key: "social" },
+  { re: /\breddit\b/gi, key: "forum" },
+  { re: /\bamazon\b/gi, key: "ecom" },
+];
+function sanitizeBrandNames(text, lang) {
+  if (!text) return text;
+  const terms = BRAND_GENERIC_TERMS[lang] || BRAND_GENERIC_TERMS.en;
+  for (const { re, key } of BRAND_PATTERNS) {
+    text = text.replace(re, terms[key]);
+  }
+  return text;
+}
+
+function parseEscalation(rawReply) {
+  let escalate = false, category = "other", reason = "";
+  // Match tollerante: cattura flag+categoria+motivo anche con sentinel malformato
+  const flag = rawReply.match(/ESCALATE\s*\|\s*(yes|no)\s*\|\s*([a-z]+)\s*\|?\s*([^\n>]*)/i);
+  if (flag) {
+    escalate = flag[1].toLowerCase() === "yes";
+    category = (flag[2] || "other").toLowerCase();
+    reason = (flag[3] || "").replace(/>+/g, "").trim();
+  }
+  // Rimuovi l'intero blocco sentinel (dal primo marcatore alla fine), ben o mal formato
+  let reply = rawReply
+    .replace(/\s*<{2,}\s*ESCALATE[\s\S]*$/i, "")
+    .replace(/\s*ESCALATE\s*\|[\s\S]*$/i, "")
+    .replace(/<{2,}|>{2,}/g, "")
+    .trim();
+  return { reply, escalate, category, reason };
+}
+
+async function callLocalLLM(messages, env) {
+  const url = env.LLM_API_URL;
+  const key = env.LLM_API_KEY;
+  if (!url || !key) return { ok: false, error: "LLM not configured" };
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 28000);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: env.LLM_MODEL || "fast-max",
+        messages,
+        max_tokens: CHAT_MAX_TOKENS,
+        temperature: 0.3,
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) return { ok: false, error: "LLM HTTP " + res.status };
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return { ok: false, error: "Empty LLM response" };
+    return { ok: true, content };
+  } catch (e) {
+    clearTimeout(timer);
+    return { ok: false, error: e.name === "AbortError" ? "LLM timeout" : e.message };
+  }
+}
+
+// Lookup best-effort dello stato licenza per email (contesto per il bot)
+async function buildLicenseContext(email, env) {
+  if (!email || !EMAIL_RE.test(email)) return "";
+  try {
+    const keys = await env.ADOFF_LICENSES.get(`email:${email.toLowerCase().trim()}`, "json");
+    if (!keys || keys.length === 0) return `Email ${email}: nessuna licenza trovata (forse utente Free o trial).`;
+    const last = keys[keys.length - 1];
+    const lic = await env.ADOFF_LICENSES.get(`lic:${last.raw}`, "json");
+    if (!lic) return `Email ${email}: licenza presente.`;
+    const status = lic.revoked ? "REVOCATA" : (lic.expires === 0 ? "Lifetime attiva" : (lic.expires * 1000 > Date.now() ? "attiva" : "SCADUTA"));
+    return `Email ${email}: piano ${lic.plan}, stato ${status}, dispositivi max ${lic.deviceLimit}.`;
+  } catch (_) {
+    return "";
+  }
+}
+
+const CHAT_FALLBACK_MSG = {
+  it: "Il nostro assistente AI non e' al momento disponibile. Lascia il tuo messaggio e il nostro team ti rispondera' via email al piu' presto.",
+  en: "Our AI assistant is currently unavailable. Leave your message and our team will reply by email as soon as possible.",
+  de: "Unser KI-Assistent ist derzeit nicht verfugbar. Hinterlasse deine Nachricht und unser Team antwortet dir per E-Mail.",
+  fr: "Notre assistant IA est momentanement indisponible. Laissez votre message, notre equipe vous repondra par email.",
+  es: "Nuestro asistente de IA no esta disponible ahora. Deja tu mensaje y nuestro equipo te respondera por email.",
+  pt: "O nosso assistente de IA esta indisponivel. Deixe a sua mensagem e a nossa equipa respondera por email.",
+};
+const CHAT_NEED_EMAIL_MSG = {
+  it: "Per inoltrare la tua richiesta a un operatore ho bisogno della tua email. Puoi indicarmela?",
+  en: "To forward your request to a human agent I need your email. Could you share it?",
+  de: "Um deine Anfrage an einen Mitarbeiter weiterzuleiten, brauche ich deine E-Mail. Kannst du sie angeben?",
+  fr: "Pour transmettre votre demande a un agent, j'ai besoin de votre email. Pouvez-vous l'indiquer ?",
+  es: "Para enviar tu solicitud a un agente necesito tu email. Puedes indicarmelo?",
+  pt: "Para encaminhar o teu pedido a um agente preciso do teu email. Podes indica-lo?",
+};
+const CHAT_ESCALATED_MSG = {
+  it: "Ho inoltrato la tua richiesta al nostro team: riceverai una risposta via email.",
+  en: "I have forwarded your request to our team: you'll receive a reply by email.",
+  de: "Ich habe deine Anfrage an unser Team weitergeleitet: du erhaltst eine Antwort per E-Mail.",
+  fr: "J'ai transmis votre demande a notre equipe : vous recevrez une reponse par email.",
+  es: "He enviado tu solicitud a nuestro equipo: recibiras una respuesta por email.",
+  pt: "Encaminhei o teu pedido a nossa equipa: receberas uma resposta por email.",
+};
+
+// --- Hardening & logging chat ---
+const CHAT_RL_PER_MIN = 8;
+const CHAT_RL_PER_DAY = 80;
+const CHAT_SESSION_MSG_CAP = 30;     // max messaggi utente per sessione
+const CHATLOG_TTL = 7776000;          // 90 giorni
+const CHATLOG_INDEX_MAX = 1000;
+
+// Rate-limit dedicato alla chat (per-minuto + per-giorno, per IP)
+async function checkChatRateLimit(ip, env) {
+  const now = Date.now();
+  const minKey = `crl:m:${ip}:${Math.floor(now / 60000)}`;
+  const dayKey = `crl:d:${ip}:${Math.floor(now / 86400000)}`;
+  const [mc, dc] = await Promise.all([
+    env.ADOFF_LICENSES.get(minKey).then(v => parseInt(v || "0")),
+    env.ADOFF_LICENSES.get(dayKey).then(v => parseInt(v || "0")),
+  ]);
+  if (mc >= CHAT_RL_PER_MIN || dc >= CHAT_RL_PER_DAY) return false;
+  await Promise.all([
+    env.ADOFF_LICENSES.put(minKey, String(mc + 1), { expirationTtl: 60 }),
+    env.ADOFF_LICENSES.put(dayKey, String(dc + 1), { expirationTtl: 86400 }),
+  ]);
+  return true;
+}
+
+// Anti prompt-injection: pattern di jailbreak/uso improprio noti
+const INJECTION_RE = /(ignore\s+(all\s+|the\s+)?(previous|above|prior)\s+(instructions|prompts)|disregard\s+(the\s+|all\s+)?(previous|above)|reveal\s+(your\s+)?(instructions|system\s*prompt|prompt)|show\s+me\s+(your\s+)?(system\s*)?prompt|you\s+are\s+now|act\s+as\s+(an?\s+)?(dan|jailbreak)|developer\s+mode|do\s+anything\s+now|ignora\s+(le\s+|tutte\s+le\s+)?(istruzioni|indicazioni)|dimentica\s+(le\s+)?istruzioni|sei\s+ora\s+un|mostrami\s+(il\s+)?(tuo\s+)?prompt|stampa\s+le\s+istruzioni|ignoriere\s+(die\s+)?anweisungen|ignore[zr]\s+les\s+instructions|ignora\s+las\s+instrucciones)/i;
+function looksLikeInjection(msg) { return INJECTION_RE.test(msg || ""); }
+
+const CHAT_DEFLECT_MSG = {
+  it: "Posso aiutarti solo con domande sul supporto di AdOff. Come posso esserti utile?",
+  en: "I can only help with AdOff support questions. How can I help?",
+  de: "Ich kann nur bei Fragen zum AdOff-Support helfen. Wie kann ich helfen?",
+  fr: "Je ne peux aider que pour les questions de support AdOff. Comment puis-je aider ?",
+  es: "Solo puedo ayudar con preguntas de soporte de AdOff. En que puedo ayudarte?",
+  pt: "So posso ajudar com perguntas de suporte do AdOff. Como posso ajudar?",
+};
+const CHAT_RL_MSG = {
+  it: "Troppi messaggi in poco tempo. Attendi qualche istante e riprova.",
+  en: "Too many messages in a short time. Please wait a moment and try again.",
+  de: "Zu viele Nachrichten in kurzer Zeit. Bitte kurz warten und erneut versuchen.",
+  fr: "Trop de messages en peu de temps. Patientez un instant et reessayez.",
+  es: "Demasiados mensajes en poco tiempo. Espera un momento e intentalo de nuevo.",
+  pt: "Demasiadas mensagens em pouco tempo. Aguarda um momento e tenta de novo.",
+};
+const CHAT_CAP_MSG = {
+  it: "Questa conversazione e' molto lunga. Per un aiuto piu' approfondito apri una richiesta dalla pagina di supporto.",
+  en: "This conversation is quite long. For deeper help please open a request from the support page.",
+  de: "Dieses Gesprach ist sehr lang. Fur weitere Hilfe offne bitte eine Anfrage auf der Supportseite.",
+  fr: "Cette conversation est tres longue. Pour une aide approfondie, ouvrez une demande sur la page de support.",
+  es: "Esta conversacion es muy larga. Para mas ayuda abre una solicitud en la pagina de soporte.",
+  pt: "Esta conversa e muito longa. Para mais ajuda abre um pedido na pagina de suporte.",
+};
+
+// Logging persistente conversazioni (retention 90gg) + indice per pannello admin
+async function logChat(sessionId, lang, history, meta, env) {
+  try {
+    const updatedAt = Date.now();
+    const rec = { sessionId, lang, updatedAt, escalated: !!meta.escalated, ticketId: meta.ticketId || "", email: meta.email || "", messages: history };
+    await env.ADOFF_LICENSES.put(`chatlog:${sessionId}`, JSON.stringify(rec), { expirationTtl: CHATLOG_TTL });
+    let idx = await env.ADOFF_LICENSES.get("chatlog:index", "json") || [];
+    if (!Array.isArray(idx)) idx = [];
+    const firstUser = history.find(m => m.role === "user");
+    const entry = {
+      sessionId, lang, updatedAt,
+      msgCount: history.filter(m => m.role === "user").length,
+      escalated: rec.escalated, ticketId: rec.ticketId, email: rec.email,
+      preview: firstUser ? String(firstUser.content).slice(0, 80) : "",
+    };
+    const at = idx.findIndex(x => x.sessionId === sessionId);
+    if (at >= 0) idx[at] = entry; else idx.unshift(entry);
+    if (idx.length > CHATLOG_INDEX_MAX) idx.length = CHATLOG_INDEX_MAX;
+    await env.ADOFF_LICENSES.put("chatlog:index", JSON.stringify(idx));
+  } catch (_) { /* logging best-effort */ }
+}
+
+async function handleChat(body, request, env) {
+  const lang = CHAT_LANGS.includes(body.lang) ? body.lang : "en";
+  const ip = request ? (request.headers.get("CF-Connecting-IP") || "0.0.0.0") : "0.0.0.0";
+
+  // Rate-limit dedicato chat
+  if (!await checkChatRateLimit(ip, env)) {
+    return jsonResponse({ ok: true, reply: CHAT_RL_MSG[lang], rateLimited: true }, 429);
+  }
+
+  // sessionId: valida o genera
+  let sessionId = body.sessionId;
+  if (!sessionId || !SESSION_ID_RE.test(sessionId)) {
+    const b = crypto.getRandomValues(new Uint8Array(16));
+    sessionId = Array.from(b).map(x => x.toString(16).padStart(2, "0")).join("");
+  }
+
+  const message = typeof body.message === "string" ? body.message.trim() : "";
+  if (!message || message.length > CHAT_MAX_MESSAGE) {
+    return jsonResponse({ ok: false, error: "Invalid message" }, 400);
+  }
+  const email = (typeof body.email === "string" && EMAIL_RE.test(body.email.trim())) ? body.email.trim().toLowerCase() : "";
+
+  // Carica storia sessione
+  const sessKey = `chat:${sessionId}`;
+  let history = await env.ADOFF_LICENSES.get(sessKey, "json") || [];
+  if (!Array.isArray(history)) history = [];
+
+  const isNewSession = history.length === 0;
+
+  // Anti-bot: Turnstile obbligatorio sul PRIMO messaggio (sessione nuova).
+  // L'estensione invia "extension" (esente, gia' rate-limited). Le sessioni esistenti sono fidate.
+  const token = body.turnstileToken;
+  if (isNewSession && token !== "extension") {
+    if (!await verifyTurnstile(token, ip, env)) {
+      return jsonResponse({ ok: false, error: "verification_required", needVerification: true }, 403);
+    }
+  }
+
+  // Anti prompt-injection: deflette senza chiamare il LLM (risparmia budget + sicuro)
+  if (looksLikeInjection(message)) {
+    return jsonResponse({ ok: true, sessionId, reply: CHAT_DEFLECT_MSG[lang] });
+  }
+
+  // Cap messaggi per sessione (anti-abuso conversazionale)
+  const userMsgCount = history.filter(m => m.role === "user").length;
+  if (userMsgCount >= CHAT_SESSION_MSG_CAP) {
+    return jsonResponse({ ok: true, sessionId, reply: CHAT_CAP_MSG[lang], capped: true });
+  }
+
+  // Contesto licenza (se email fornita)
+  const licenseContext = email ? await buildLicenseContext(email, env) : "";
+
+  // Costruisci messaggi per il LLM
+  const messages = [
+    { role: "system", content: buildSupportSystemPrompt(lang, licenseContext) },
+    ...history.slice(-CHAT_HISTORY_KEEP),
+    { role: "user", content: message },
+  ];
+
+  const llm = await callLocalLLM(messages, env);
+
+  // Fallback: LLM non disponibile -> il client mostra il form ticket
+  if (!llm.ok) {
+    return jsonResponse({ ok: true, sessionId, fallback: true, reply: CHAT_FALLBACK_MSG[lang] });
+  }
+
+  let { reply, escalate, category, reason } = parseEscalation(llm.content);
+
+  // Rete di sicurezza: forza escalation su intenti critici (il modello piccolo puo' non emettere il sentinel)
+  const forced = detectForceEscalation(message);
+  if (forced) {
+    escalate = true;
+    category = forced;
+    if (!reason) reason = "auto: intento critico rilevato (" + forced + ")";
+  }
+
+  // Difesa anti-allucinazione: neutralizza ogni URL non-adoff.app
+  reply = sanitizeReplyLinks(reply);
+  // Brand-policy: sostituisci i nomi delle piattaforme di contenuti con termini generici
+  reply = sanitizeBrandNames(reply, lang);
+
+  // Aggiorna e salva storia
+  history.push({ role: "user", content: message });
+  history.push({ role: "assistant", content: reply });
+  if (history.length > CHAT_HISTORY_KEEP) history = history.slice(-CHAT_HISTORY_KEEP);
+  await env.ADOFF_LICENSES.put(sessKey, JSON.stringify(history), { expirationTtl: CHAT_SESSION_TTL });
+
+  // Escalation a operatore umano (caso straordinario)
+  if (escalate) {
+    if (!email) {
+      // Serve l'email per poter rispondere
+      await logChat(sessionId, lang, history, { escalated: false, email }, env);
+      return jsonResponse({ ok: true, sessionId, escalate: true, needEmail: true, reply: CHAT_NEED_EMAIL_MSG[lang] });
+    }
+    // Crea ticket dalla conversazione + notifica Telegram
+    const transcript = history.map(m => (m.role === "user" ? "Utente" : "AI") + ": " + m.content).join("\n");
+    const ticket = await createTicketFromChat({
+      category: ["billing", "technical", "account", "legal", "other"].includes(category) ? category : "other",
+      email,
+      lang,
+      reason,
+      transcript,
+      sessionId,
+    }, env);
+    await logChat(sessionId, lang, history, { escalated: true, ticketId: ticket.ticketId, email }, env);
+    return jsonResponse({
+      ok: true,
+      sessionId,
+      escalate: true,
+      ticketId: ticket.ticketId,
+      reply: reply + "\n\n" + CHAT_ESCALATED_MSG[lang],
+    });
+  }
+
+  await logChat(sessionId, lang, history, { escalated: false, email }, env);
+  return jsonResponse({ ok: true, sessionId, reply });
+}
+
+// =============================================
+// ADMIN: storico conversazioni chatbot
+// =============================================
+
+async function handleAdminListChats(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  const idx = await env.ADOFF_LICENSES.get("chatlog:index", "json") || [];
+  return jsonResponse({ ok: true, chats: idx, total: idx.length });
+}
+
+async function handleAdminGetChat(request, env, sessionId) {
+  if (!/^[a-f0-9]{32}$/.test(sessionId)) {
+    return jsonResponse({ ok: false, error: "Invalid session id" }, 400);
+  }
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+  const rec = await env.ADOFF_LICENSES.get(`chatlog:${sessionId}`, "json");
+  if (!rec) return jsonResponse({ ok: false, error: "Not found" }, 404);
+  return jsonResponse({ ok: true, chat: rec });
+}
+
+// Crea un ticket a partire da una conversazione chat escalata
+async function createTicketFromChat({ category, email, lang, reason, transcript, sessionId }, env) {
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
+  const randBytes = crypto.getRandomValues(new Uint8Array(4));
+  const rand = Array.from(randBytes).map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+  const ticketId = `TK-${dateStr}-${rand}`;
+
+  const ticket = {
+    id: ticketId,
+    category,
+    priority: (category === "billing" || category === "legal") ? "high" : "normal",
+    name: email.split("@")[0],
+    email,
+    license: "",
+    subject: "[AI escalation] " + (reason || category),
+    description: transcript,
+    browser: "",
+    lang: lang || "en",
+    status: "open",
+    source: "ai-chat",
+    sessionId: sessionId || "",
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+    replies: [],
+  };
+
+  await env.ADOFF_LICENSES.put(`ticket:${ticketId}`, JSON.stringify(ticket));
+  const index = await env.ADOFF_LICENSES.get("tickets:index", "json") || [];
+  index.unshift({ id: ticketId, category, priority: ticket.priority, subject: ticket.subject, email, status: "open", source: "ai-chat", createdAt: ticket.createdAt });
+  if (index.length > 500) index.length = 500;
+  await env.ADOFF_LICENSES.put("tickets:index", JSON.stringify(index));
+  const count = parseInt(await env.ADOFF_LICENSES.get("stats:total_tickets") || "0");
+  await env.ADOFF_LICENSES.put("stats:total_tickets", String(count + 1));
+
+  // Notifica Telegram
+  const msg = `\u{1F916} <b>Escalation AI → umano</b>\n` +
+    `\u{1F3F7} ${escapeHtml(category)} (${ticket.priority})\n` +
+    `\u{1F4E7} ${escapeHtml(email)}\n` +
+    `\u{1F4DD} ${escapeHtml(reason || "-")}\n` +
+    `\u{1F194} <code>${ticketId}</code>\n\n` +
+    `<b>Conversazione:</b>\n${escapeHtml(transcript.slice(-2500))}`;
+  await notifyTelegram(msg, env);
+
+  return { ticketId };
+}
+
+// =============================================
+// STRIPE CHECKOUT SESSION
+// =============================================
+
+// Prezzi per piano + numero dispositivi, in centesimi EUR
+// La chiave e' "plan-devices", es. "monthly-3", "monthly-10"
+const PRICE_CONFIG = {
+  "monthly-3":  { amount: 269,   plan: "monthly",  devices: 3,  recurring: "month" },
+  "monthly-5":  { amount: 399,   plan: "monthly",  devices: 5,  recurring: "month" },
+  "monthly-10": { amount: 599,   plan: "monthly",  devices: 10, recurring: "month" },
+  "annual-3":   { amount: 2959,  plan: "annual",   devices: 3,  recurring: "year" },
+  "annual-5":   { amount: 3999,  plan: "annual",   devices: 5,  recurring: "year" },
+  "annual-10":  { amount: 5999,  plan: "annual",   devices: 10, recurring: "year" },
+  "lifetime-3":  { amount: 6790,  plan: "lifetime", devices: 3,  recurring: null },
+  "lifetime-5":  { amount: 8990,  plan: "lifetime", devices: 5,  recurring: null },
+  "lifetime-10": { amount: 12990, plan: "lifetime", devices: 10, recurring: null },
+};
+
+// Normalizza il numero di dispositivi al tier valido piu' vicino: 3, 5, 10
+// Valori 1 o 2 vengono arrotondati a 3 (tier minimo)
+function normalizeDevices(raw) {
+  const n = parseInt(raw) || 3;
+  if (n <= 3) return 3;
+  if (n <= 5) return 5;
+  return 10;
+}
+
+async function handleCreateCheckout(body, env) {
+  const { plan, lang, affiliate } = body;
+  const devices = normalizeDevices(body.devices);
+  const configKey = `${plan}-${devices}`;
+  const priceConfig = PRICE_CONFIG[configKey];
+  if (!priceConfig) return jsonResponse({ error: "Invalid plan or devices" }, 400);
+
+  const isRecurring = priceConfig.recurring !== null;
+  const params = new URLSearchParams();
+
+  // Usa price_data inline — prezzo fisso per piano+dispositivi, nessuno sconto
+  params.append("line_items[0][price_data][currency]", "eur");
+  params.append("line_items[0][price_data][unit_amount]", String(priceConfig.amount));
+  params.append("line_items[0][price_data][product_data][name]",
+    "AdOff Pro — " + plan.charAt(0).toUpperCase() + plan.slice(1) + " (" + devices + " device" + (devices > 1 ? "s" : "") + ")");
+  if (isRecurring) {
+    params.append("line_items[0][price_data][recurring][interval]", priceConfig.recurring);
+    params.append("line_items[0][price_data][recurring][interval_count]", "1");
+  }
+  params.append("line_items[0][quantity]", "1");
+  params.append("mode", isRecurring ? "subscription" : "payment");
+  params.append("success_url", "https://adoff.app/success?session_id={CHECKOUT_SESSION_ID}");
+  params.append("cancel_url", "https://adoff.app/#pricing");
+  params.append("custom_text[submit][message]", "AdOff Pro — Ads? Off!");
+
+  // Lingua checkout — sincronizzata con la lingua selezionata sul sito
+  const STRIPE_LOCALES = ['auto','bg','cs','da','de','el','en','es','et','fi','fil','fr','hr','hu','id','it','ja','ko','lt','lv','ms','mt','nb','nl','pl','pt','ro','ru','sk','sl','sv','th','tr','vi','zh'];
+  if (lang && STRIPE_LOCALES.indexOf(lang) !== -1) {
+    params.append("locale", lang);
+  }
+
+  // Metadata: piano e numero dispositivi come source of truth
+  params.append("metadata[plan]", plan);
+  params.append("metadata[devices]", String(devices));
+  if (affiliate) {
+    params.append("metadata[affiliate]", affiliate);
+    // client_reference_id e' utile per riconciliazione automatica in Stripe
+    params.append("client_reference_id", affiliate);
+  }
+  // Attribution: source-tagged conversions (independent of affiliate)
+  const source = body.source;
+  if (source && /^src-[a-z0-9_]{2,20}$/.test(source)) {
+    params.append("metadata[source]", source);
+  }
+
+  const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+    method: "POST",
+    headers: {
+      "Authorization": "Basic " + btoa(env.STRIPE_SECRET_KEY + ":"),
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: params.toString(),
+  });
+
+  const session = await res.json();
+  if (session.error) return jsonResponse({ error: session.error.message }, 400);
+  return jsonResponse({ url: session.url });
+}
+
+// =============================================
+// STRIPE WEBHOOK
+// =============================================
+
+async function verifyStripeSignature(body, sigHeader, secret) {
+  if (!sigHeader || !secret) return false;
+
+  const parts = {};
+  for (const item of sigHeader.split(",")) {
+    const [key, val] = item.split("=");
+    parts[key.trim()] = val;
+  }
+
+  const timestamp = parts.t;
+  const expectedSig = parts.v1;
+  if (!timestamp || !expectedSig) return false;
+
+  // Protegge da replay attack: rifiuta webhook piu' vecchi di 5 minuti
+  const age = Math.floor(Date.now() / 1000) - parseInt(timestamp);
+  if (age > 300) return false;
+
+  // Calcola firma HMAC-SHA256 con payload = timestamp.body
+  const signedPayload = timestamp + "." + body;
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(signedPayload));
+  const computed = Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  // Confronto costante per prevenire timing attack
+  // Paddiamo entrambe a 64 chars (SHA-256 hex) prima del confronto
+  const SIG_LEN = 64;
+  const computedPadded = computed.padEnd(SIG_LEN, "\0");
+  const expectedPadded = expectedSig.padEnd(SIG_LEN, "\0");
+  let mismatch = 0;
+  for (let i = 0; i < SIG_LEN; i++) {
+    mismatch |= computedPadded.charCodeAt(i) ^ expectedPadded.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
+async function handleStripeWebhook(request, env) {
+  const body = await request.text();
+  const sig = request.headers.get("Stripe-Signature");
+
+  // Verifica firma webhook Stripe (OBBLIGATORIO — secret mancante = errore di configurazione)
+  if (!env.STRIPE_WEBHOOK_SECRET) {
+    return jsonResponse({ error: "Webhook secret not configured" }, 500);
+  }
+  const valid = await verifyStripeSignature(body, sig, env.STRIPE_WEBHOOK_SECRET);
+  if (!valid) {
+    return jsonResponse({ error: "Invalid webhook signature" }, 401);
+  }
+
+  let event;
+  try {
+    event = JSON.parse(body);
+  } catch {
+    return jsonResponse({ error: "Invalid JSON" }, 400);
+  }
+
+  const type = event.type;
+
+  if (type === "checkout.session.completed") {
+    const session = event.data.object;
+    const email = session.customer_email || session.customer_details?.email || "";
+    const amount = session.amount_total || 0;
+
+    // Determina piano: prima da metadata.plan (source of truth), poi da price ranges
+    let plan = session.metadata?.plan || null;
+    if (!plan) {
+      const PLAN_PRICE_RANGES = [
+        { plan: "monthly",  minCents: 1,    maxCents: 699  },
+        { plan: "annual",   minCents: 700,  maxCents: 6999 },
+        { plan: "lifetime", minCents: 7000, maxCents: Infinity },
+      ];
+      for (const range of PLAN_PRICE_RANGES) {
+        if (amount >= range.minCents && amount <= range.maxCents) {
+          plan = range.plan;
+          break;
+        }
+      }
+    }
+    if (!plan) plan = "pro"; // ultimo fallback sicuro
+
+    // Affiliazione
+    const affiliateId = session.metadata?.affiliate || session.client_reference_id || null;
+    if (affiliateId) {
+      if (affiliateId.startsWith("ADO-")) {
+        // Flusso "Invita Amici": accredita 15 giorni al referrer
+        await creditReferralFriend(affiliateId, email, env, session.id);
+      } else {
+        // Flusso "Partner Affiliato": esistente
+        const currency = session.currency || "eur";
+        await registerReferral(affiliateId, email, session.id, amount, currency, env);
+      }
+    }
+
+    // Attribution: register paid conversion by source (independent of affiliate)
+    const attrSource = session.metadata?.source;
+    if (attrSource && /^src-[a-z0-9_]{2,20}$/.test(attrSource)) {
+      await bumpAttributionCounter(env, "paid:" + attrSource, 1);
+      await bumpAttributionCounter(env, "revenue:" + attrSource, amount);
+    }
+
+    // Numero dispositivi: da metadata.devices (source of truth), default 3
+    const devices = parseInt(session.metadata?.devices) || 3;
+    const PLAN_MONTHS = { monthly: 1, annual: 12, lifetime: 0 };
+    let months = PLAN_MONTHS[plan] !== undefined ? PLAN_MONTHS[plan] : 1;
+
+    // Genera license key
+    const now = Math.floor(Date.now() / 1000);
+    const expires = plan === "lifetime" ? 0 : now + (months * 30 * 86400);
+    const payload = { c: now, d: devices, e: email, p: plan, v: 1, x: expires };
+    const payloadJson = JSON.stringify(payload);
+
+    // Base64 encode
+    const payloadB64 = btoa(payloadJson)
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+    // HMAC signature
+    const signature = await hmacSign(payloadB64, env.ADOFF_SECRET);
+    const raw = payloadB64 + signature;
+
+    // Key leggibile
+    const keyHash = await hmacSign(raw, env.ADOFF_SECRET);
+    const kh = keyHash.toUpperCase();
+    const key = "ADOFF-" + kh.slice(0,4) + "-" + kh.slice(4,8) + "-" + kh.slice(8,12);
+
+    // BM-7: usa current_period_end da Stripe se disponibile (subscription)
+    // invece di calcolare mesi * 30 giorni
+    const subscription = session.subscription;
+    let finalExpires = expires;
+    if (subscription && plan !== "lifetime") {
+      try {
+        const subRes = await fetch("https://api.stripe.com/v1/subscriptions/" + subscription, {
+          headers: { "Authorization": "Basic " + btoa(env.STRIPE_SECRET_KEY + ":") },
+        });
+        const subData = await subRes.json();
+        if (subData.current_period_end) {
+          finalExpires = subData.current_period_end; // gia' unix timestamp
+        }
+      } catch (_) {
+        // Fallback al calcolo manuale se Stripe non risponde
+      }
+    }
+
+    const customerId = session.customer || "";
+
+    // Salva nel KV
+    await env.ADOFF_LICENSES.put(`lic:${raw}`, JSON.stringify({
+      key,
+      raw,
+      plan,
+      email,
+      expires: finalExpires,
+      deviceLimit: devices,
+      devices: [],
+      createdAt: Date.now(),
+      stripeSessionId: session.id,
+      stripeCustomerId: customerId,
+    }));
+
+    // Salva mapping key->raw per lookup
+    await env.ADOFF_LICENSES.put(`key:${key}`, raw);
+
+    // BA-4: Indice customer->keys per revoke O(1)
+    if (customerId) {
+      const custKeys = await env.ADOFF_LICENSES.get(`customer:${customerId}`, "json") || [];
+      custKeys.push(raw);
+      await env.ADOFF_LICENSES.put(`customer:${customerId}`, JSON.stringify(custKeys));
+    }
+
+    // BA-6: Indice expiry per cron O(1)
+    if (finalExpires > 0) {
+      const expiryDate = new Date(finalExpires * 1000).toISOString().slice(0, 10).replace(/-/g, "");
+      const expiryList = await env.ADOFF_LICENSES.get(`expiry:${expiryDate}`, "json") || [];
+      expiryList.push(raw);
+      await env.ADOFF_LICENSES.put(`expiry:${expiryDate}`, JSON.stringify(expiryList));
+    }
+
+    // Salva mapping email->keys
+    const existingKeys = await env.ADOFF_LICENSES.get(`email:${email}`, "json") || [];
+    existingKeys.push({ key, raw, plan, created: Date.now() });
+    await env.ADOFF_LICENSES.put(`email:${email}`, JSON.stringify(existingKeys));
+
+    // Incrementa contatore vendite per tier pricing
+    const currentSold = parseInt(await env.ADOFF_LICENSES.get("stats:total_sold") || "0");
+    await env.ADOFF_LICENSES.put("stats:total_sold", String(currentSold + 1));
+
+    // Auto-creazione account e invio email attivazione
+    if (email) {
+      const normalEmail = email.toLowerCase().trim();
+      const userKey = `user:${normalEmail}`;
+      let user = await env.ADOFF_LICENSES.get(userKey, "json");
+      const nowMs = Date.now();
+
+      if (!user) {
+        // Crea nuovo account (senza password — verra' impostata al primo accesso)
+        user = {
+          email: normalEmail,
+          passwordHash: null,
+          salt: null,
+          emailVerified: false,
+          providers: [],
+          googleId: null,
+          microsoftId: null,
+          licenses: [raw],
+          createdAt: nowMs,
+          lastLogin: null,
+          createdVia: "purchase",
+        };
+      } else {
+        // Account esistente — aggiungi licenza se non presente
+        if (!user.licenses) user.licenses = [];
+        if (!user.licenses.includes(raw)) {
+          user.licenses.push(raw);
+        }
+      }
+      await env.ADOFF_LICENSES.put(userKey, JSON.stringify(user));
+
+      // Genera token di attivazione (24h)
+      const activateBytes = crypto.getRandomValues(new Uint8Array(24));
+      const activateToken = Array.from(activateBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+      await env.ADOFF_LICENSES.put(
+        `account_activate:${activateToken}`,
+        JSON.stringify({ email: normalEmail, createdAt: nowMs }),
+        { expirationTtl: 86400 }
+      );
+
+      // Invia email di attivazione account (NO license key)
+      const activateUrl = "https://adoff.app/account/?activate=" + activateToken;
+      const tmpl = EMAIL_TEMPLATES.account_activation(activateUrl, plan, devices);
+      await sendEmail(normalEmail, tmpl.subject, tmpl.html, env);
+    }
+
+    return jsonResponse({ ok: true, message: "License created, account activated" });
+  }
+
+  if (type === "invoice.payment_failed") {
+    // Pagamento fallito — notifica via email, NON revocare subito (Stripe riprova)
+    const customerEmail = event.data.object.customer_email;
+    if (customerEmail) {
+      const tmpl = EMAIL_TEMPLATES.payment_failed(customerEmail);
+      await sendEmail(customerEmail, tmpl.subject, tmpl.html, env);
+    }
+    return jsonResponse({ ok: true, message: "Payment failed notification sent" });
+  }
+
+  if (type === "customer.subscription.deleted") {
+    // Cancellazione abbonamento — revoca licenza + notifica
+    const customerId = event.data.object.customer;
+    if (customerId) {
+      const { revoked, email: revokedEmail } = await revokeByCustomerId(customerId, env, type);
+      if (revokedEmail) {
+        const tmpl = EMAIL_TEMPLATES.cancelled(revokedEmail);
+        await sendEmail(revokedEmail, tmpl.subject, tmpl.html, env);
+      }
+      return jsonResponse({ ok: true, message: "Revoked " + revoked + " licenses, notification sent" });
+    }
+    return jsonResponse({ ok: true, message: "No customer ID for " + type });
+  }
+
+  if (type === "charge.refunded") {
+    // Rimborso — revoca licenza
+    const customerId = event.data.object.customer;
+    if (customerId) {
+      const result = await revokeByCustomerId(customerId, env, type);
+      return jsonResponse({ ok: true, message: "Refund: revoked " + result.revoked + " licenses" });
+    }
+    return jsonResponse({ ok: true, message: "Refund processed, no customer ID" });
+  }
+
+  return jsonResponse({ ok: true, message: "Event ignored: " + type });
+}
+
+// =============================================
+// REVOKE BY CUSTOMER ID
+// =============================================
+
+async function revokeByCustomerId(customerId, env, reason) {
+  // BA-4: usa indice customer->keys per O(1) invece di listing O(n)
+  const rawKeys = await env.ADOFF_LICENSES.get(`customer:${customerId}`, "json");
+  let revokedCount = 0;
+  let foundEmail = null;
+
+  if (rawKeys && rawKeys.length > 0) {
+    // Percorso veloce: usa l'indice
+    for (const raw of rawKeys) {
+      const data = await env.ADOFF_LICENSES.get(`lic:${raw}`, "json");
+      if (data && !data.revoked) {
+        data.revoked = true;
+        data.revokedAt = Date.now();
+        data.revokeReason = reason;
+        await env.ADOFF_LICENSES.put(`lic:${raw}`, JSON.stringify(data));
+        revokedCount++;
+        if (data.email) foundEmail = data.email;
+      }
+    }
+  } else {
+    // Fallback: listing completo per licenze create prima dell'indice
+    const list = await env.ADOFF_LICENSES.list({ prefix: "lic:" });
+    for (const key of list.keys) {
+      const data = await env.ADOFF_LICENSES.get(key.name, "json");
+      if (data && data.stripeCustomerId === customerId && !data.revoked) {
+        data.revoked = true;
+        data.revokedAt = Date.now();
+        data.revokeReason = reason;
+        await env.ADOFF_LICENSES.put(key.name, JSON.stringify(data));
+        revokedCount++;
+        if (data.email) foundEmail = data.email;
+      }
+    }
+  }
+
+  return { revoked: revokedCount, email: foundEmail };
+}
+
+// =============================================
+// SUCCESS PAGE (genera la key dalla session)
+// =============================================
+
+async function handleSuccess(request, env) {
+  const corsHeaders = getCorsHeaders(request);
+  const url = new URL(request.url);
+  const sessionId = url.searchParams.get("session_id");
+
+  // Se abbiamo session_id, recupera email dalla session Stripe
+  if (sessionId && env.STRIPE_SECRET_KEY) {
+    try {
+      const res = await fetch("https://api.stripe.com/v1/checkout/sessions/" + sessionId, {
+        headers: { "Authorization": "Basic " + btoa(env.STRIPE_SECRET_KEY + ":") },
+      });
+      const session = await res.json();
+      if (session.payment_status !== "paid") {
+        return new Response(JSON.stringify({ ok: false, pending: true }), {
+          status: 402,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+      const email = session.customer_email || session.customer_details?.email;
+      if (email) {
+        return new Response(JSON.stringify({ ok: true, email }), {
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+    } catch (e) {
+      // Fallback se Stripe non risponde
+    }
+  }
+
+  return new Response(successHTML(null, "La tua license key e' stata inviata via email. Controlla la posta in arrivo (e lo spam)."), {
+    headers: { "Content-Type": "text/html", ...corsHeaders },
+  });
+}
+
+function successHTML(key, message) {
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AdOff — Pagamento completato!</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:system-ui,sans-serif;background:#0a0a1a;color:#fff;min-height:100vh;display:flex;justify-content:center;align-items:center}
+  .card{background:#12122a;border:1px solid #2a2a4a;border-radius:16px;padding:40px;max-width:500px;text-align:center}
+  h1{font-size:24px;margin-bottom:8px;color:#4ade80}
+  .msg{color:#8a8aaa;margin-bottom:24px}
+  .key-box{background:#0a0a1a;border:2px solid #4ade80;border-radius:10px;padding:20px;margin:20px 0}
+  .key{font-size:24px;font-weight:700;font-family:monospace;color:#4ade80;letter-spacing:3px}
+  .raw{font-size:10px;color:#3a3a5a;word-break:break-all;margin-top:12px}
+  .btn{background:#7c5cfc;color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;margin-top:16px}
+  .btn:hover{background:#6a4ce0}
+  .instructions{text-align:left;margin-top:24px;padding:16px;background:#1a1a36;border-radius:8px}
+  .instructions h3{font-size:14px;margin-bottom:8px;color:#b8a9ff}
+  .instructions ol{padding-left:20px;color:#888;font-size:13px;line-height:2}
+  .footer{margin-top:20px;font-size:11px;color:#3a3a5a}
+</style></head><body>
+<div class="card">
+  <h1>${key ? 'Pagamento completato!' : 'Grazie!'}</h1>
+  <p class="msg">${message || 'Ecco la tua license key AdOff Pro:'}</p>
+  ${key ? `
+  <div class="key-box">
+    <div class="key" id="licenseKey">${key}</div>
+  </div>
+  <button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('licenseKey').textContent);this.textContent='Copiata!'">Copia License Key</button>
+  <div class="instructions">
+    <h3>Come attivare:</h3>
+    <ol>
+      <li>Apri il popup AdOff (icona nella toolbar)</li>
+      <li>Clicca "Opzioni" in basso</li>
+      <li>Vai alla sezione "Licenza"</li>
+      <li>Incolla la key e clicca "Attiva"</li>
+    </ol>
+  </div>` : ''}
+  <div class="footer">AdOff — Ads? Off!</div>
+</div>
+</body></html>`;
+}
+
+async function handleHealth() {
+  return jsonResponse({
+    status: "ok",
+    service: "AdOff License API",
+    timestamp: new Date().toISOString(),
+  });
+}
+
+// =============================================
+// ADMIN — LOGIN WITH USERNAME/PASSWORD
+// =============================================
+
+async function handleAdminLogin(body, env) {
+  const { username, password } = body;
+  if (!username || !password) {
+    return jsonResponse({ ok: false, error: "Missing credentials" }, 400);
+  }
+
+  // Get admin account from KV (or create default on first use)
+  let admin = await env.ADOFF_LICENSES.get("admin:account", "json");
+  if (!admin) {
+    // First login ever — create admin account with ADMIN_TOKEN as default password
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, "0")).join("");
+    const hash = await hashPasswordPBKDF2(env.ADMIN_TOKEN, saltHex);
+    admin = {
+      username: "admin",
+      passwordHash: hash,
+      salt: saltHex,
+      email: "",
+      createdAt: Date.now(),
+    };
+    await env.ADOFF_LICENSES.put("admin:account", JSON.stringify(admin));
+  }
+
+  // Verify credentials
+  if (username !== admin.username) {
+    return jsonResponse({ ok: false, error: "Invalid credentials" }, 401);
+  }
+
+  if (!await verifyPassword(password, admin.salt, admin.passwordHash)) {
+    return jsonResponse({ ok: false, error: "Invalid credentials" }, 401);
+  }
+
+  // Upgrade trasparente: ri-hash a PBKDF2 se l'hash memorizzato è legacy SHA-256
+  if (isLegacyPasswordHash(admin.passwordHash)) {
+    admin.passwordHash = await hashPasswordPBKDF2(password, admin.salt);
+    await env.ADOFF_LICENSES.put("admin:account", JSON.stringify(admin));
+  }
+
+  // Generate session token (valid 24h)
+  const sessionToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+  const session = {
+    token: sessionToken,
+    username: admin.username,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24h
+  };
+  await env.ADOFF_LICENSES.put("session:" + sessionToken, JSON.stringify(session), {
+    expirationTtl: 86400, // auto-delete after 24h
+  });
+
+  return jsonResponse({
+    ok: true,
+    token: sessionToken,
+    expiresIn: "24h",
+  });
+}
+
+async function handleAdminChangePassword(body, env, request) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  // Accept either session token or legacy ADMIN_TOKEN
+  const isAuth = await verifyAdminAuth(adminToken, env);
+  if (!isAuth) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+
+  const { currentPassword, newPassword, email } = body;
+
+  let admin = await env.ADOFF_LICENSES.get("admin:account", "json");
+  if (!admin) return jsonResponse({ ok: false, error: "No admin account" }, 500);
+
+  // Update password if provided
+  if (newPassword) {
+    if (!currentPassword && adminToken !== env.ADMIN_TOKEN) {
+      return jsonResponse({ ok: false, error: "Current password required" }, 400);
+    }
+    if (currentPassword) {
+      if (!await verifyPassword(currentPassword, admin.salt, admin.passwordHash)) {
+        return jsonResponse({ ok: false, error: "Current password incorrect" }, 401);
+      }
+    }
+    if (newPassword.length < 8) {
+      return jsonResponse({ ok: false, error: "Password must be at least 8 characters" }, 400);
+    }
+    const salt = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+      .map(b => b.toString(16).padStart(2, "0")).join("");
+    admin.passwordHash = await hashPasswordPBKDF2(newPassword, salt);
+    admin.salt = salt;
+  }
+
+  // Update email if provided
+  if (email !== undefined) {
+    admin.email = email;
+  }
+
+  await env.ADOFF_LICENSES.put("admin:account", JSON.stringify(admin));
+  return jsonResponse({ ok: true, message: "Account updated" });
+}
+
+async function handleAdminResetPassword(body, env) {
+  const { email } = body;
+  if (!email) return jsonResponse({ ok: false, error: "Email required" }, 400);
+
+  const admin = await env.ADOFF_LICENSES.get("admin:account", "json");
+  if (!admin || !admin.email || admin.email !== email) {
+    // Don't reveal if email exists
+    return jsonResponse({ ok: true, message: "If the email is registered, a reset link has been sent" });
+  }
+
+  // Generate reset token
+  const resetToken = Array.from(crypto.getRandomValues(new Uint8Array(20)))
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+  await env.ADOFF_LICENSES.put("reset:" + resetToken, JSON.stringify({
+    username: admin.username,
+    createdAt: Date.now(),
+  }), { expirationTtl: 3600 }); // 1h expiry
+
+  // Send email
+  const resetUrl = "https://adoff.app/mgmt-9f4a/?reset=" + resetToken;
+  const html = emailTemplate(
+    "Password Reset",
+    "Click the button below to reset your admin password. This link expires in 1 hour.",
+    "Reset Password",
+    resetUrl
+  );
+  await sendEmail(email, "AdOff Admin — Password Reset", html, env);
+
+  return jsonResponse({ ok: true, message: "If the email is registered, a reset link has been sent" });
+}
+
+async function handleAdminResetConfirm(body, env) {
+  const { resetToken, newPassword } = body;
+  if (!resetToken || !newPassword) {
+    return jsonResponse({ ok: false, error: "Missing token or password" }, 400);
+  }
+  if (newPassword.length < 8) {
+    return jsonResponse({ ok: false, error: "Password must be at least 8 characters" }, 400);
+  }
+
+  const resetData = await env.ADOFF_LICENSES.get("reset:" + resetToken, "json");
+  if (!resetData) {
+    return jsonResponse({ ok: false, error: "Invalid or expired reset token" }, 400);
+  }
+
+  const admin = await env.ADOFF_LICENSES.get("admin:account", "json");
+  if (!admin) return jsonResponse({ ok: false, error: "No admin account" }, 500);
+
+  const salt = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+  admin.passwordHash = await hashPasswordPBKDF2(newPassword, salt);
+  admin.salt = salt;
+  await env.ADOFF_LICENSES.put("admin:account", JSON.stringify(admin));
+  await env.ADOFF_LICENSES.delete("reset:" + resetToken);
+
+  return jsonResponse({ ok: true, message: "Password reset successfully" });
+}
+
+// LEGACY: hashing SHA-256 (usato SOLO come fallback di verifica per gli hash storici).
+// Per i NUOVI hash si usa hashPasswordPBKDF2. La verifica passa da verifyPassword.
+async function hashPassword(password, salt) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(salt + password);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+const PBKDF2_ITERATIONS = 210000;
+
+// Hashing password robusto (PBKDF2-SHA256). Formato: "pbkdf2$<iter>$<hexhash>".
+async function hashPasswordPBKDF2(password, salt, iterations = PBKDF2_ITERATIONS) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: enc.encode(salt), iterations, hash: "SHA-256" },
+    keyMaterial, 256
+  );
+  const hex = Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
+  return `pbkdf2$${iterations}$${hex}`;
+}
+
+// Verifica retro-compatibile: PBKDF2 se prefissato, altrimenti fallback SHA-256 legacy.
+// Confronto a tempo costante in entrambi i casi.
+async function verifyPassword(password, salt, storedHash) {
+  if (!storedHash) return false;
+  if (storedHash.startsWith("pbkdf2$")) {
+    const iterations = parseInt(storedHash.split("$")[1], 10) || PBKDF2_ITERATIONS;
+    const computed = await hashPasswordPBKDF2(password, salt, iterations);
+    return constantTimeEqual(computed, storedHash);
+  }
+  const computed = await hashPassword(password, salt);
+  return constantTimeEqual(computed, storedHash);
+}
+
+// true se l'hash è in formato legacy SHA-256 e va aggiornato a PBKDF2 dopo un login riuscito.
+function isLegacyPasswordHash(storedHash) {
+  return !!storedHash && !storedHash.startsWith("pbkdf2$");
+}
+
+async function verifyAdminAuth(token, env) {
+  if (!token) return false;
+  // Legacy: direct ADMIN_TOKEN match
+  if (token === env.ADMIN_TOKEN) return true;
+  // Session token
+  const session = await env.ADOFF_LICENSES.get("session:" + token, "json");
+  if (session && session.expiresAt > Date.now()) return true;
+  return false;
+}
+
+// =============================================
+// ADMIN — LICENSE LIST & STATS
+// =============================================
+
+async function handleAdminListLicenses(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const url = new URL(request.url);
+  const cursor = url.searchParams.get("cursor") || undefined;
+  const limitParam = parseInt(url.searchParams.get("limit")) || 50;
+  const limit = Math.min(Math.max(limitParam, 1), 200);
+  const filterPlan = url.searchParams.get("plan") || null;
+  const filterStatus = url.searchParams.get("status") || null; // active|expired|revoked
+
+  // List all lic: keys from KV with pagination
+  const listResult = await env.ADOFF_LICENSES.list({
+    prefix: "lic:",
+    limit: limit * 3, // fetch more to account for filtering
+    cursor,
+  });
+
+  const now = Math.floor(Date.now() / 1000);
+  const licenses = [];
+
+  for (const key of listResult.keys) {
+    const data = await env.ADOFF_LICENSES.get(key.name, "json");
+    if (!data) continue;
+
+    // Determine status
+    let status = "active";
+    if (data.revoked) status = "revoked";
+    else if (data.expires && data.expires > 0 && data.expires < now) status = "expired";
+
+    // Apply filters
+    if (filterPlan && data.plan !== filterPlan) continue;
+    if (filterStatus && status !== filterStatus) continue;
+
+    licenses.push({
+      raw: key.name.replace("lic:", ""),
+      key: data.key || null,
+      email: data.email || "",
+      plan: data.plan || "unknown",
+      status,
+      expires: data.expires || null,
+      expiresHuman: data.expires && data.expires > 0
+        ? new Date(data.expires * 1000).toISOString().slice(0, 10)
+        : "LIFETIME",
+      devices: (data.devices || []).length,
+      maxDevices: data.deviceLimit || MAX_DEVICES,
+      createdAt: data.createdAt || null,
+      activatedAt: data.activatedAt || null,
+    });
+
+    if (licenses.length >= limit) break;
+  }
+
+  return jsonResponse({
+    ok: true,
+    licenses,
+    total: licenses.length,
+    cursor: listResult.list_complete ? null : listResult.cursor,
+    hasMore: !listResult.list_complete,
+  });
+}
+
+async function handleAdminStats(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+
+  // Scan all licenses for aggregate stats
+  let totalLicenses = 0;
+  let activeLicenses = 0;
+  let expiredLicenses = 0;
+  let revokedLicenses = 0;
+  let lifetimeLicenses = 0;
+  let proLicenses = 0;
+  let totalDevices = 0;
+  const planCounts = {};
+  let cursor = undefined;
+
+  do {
+    const listResult = await env.ADOFF_LICENSES.list({
+      prefix: "lic:",
+      limit: 1000,
+      cursor,
+    });
+
+    for (const key of listResult.keys) {
+      const data = await env.ADOFF_LICENSES.get(key.name, "json");
+      if (!data) continue;
+
+      totalLicenses++;
+      const plan = data.plan || "unknown";
+      planCounts[plan] = (planCounts[plan] || 0) + 1;
+
+      if (data.revoked) {
+        revokedLicenses++;
+      } else if (data.expires && data.expires > 0 && data.expires < now) {
+        expiredLicenses++;
+      } else {
+        activeLicenses++;
+        if (plan === "lifetime") lifetimeLicenses++;
+        if (plan === "pro") proLicenses++;
+      }
+
+      totalDevices += (data.devices || []).length;
+    }
+
+    cursor = listResult.list_complete ? undefined : listResult.cursor;
+  } while (cursor);
+
+  // Read counters
+  const totalSold = parseInt(await env.ADOFF_LICENSES.get("stats:total_sold") || "0");
+  const totalTickets = parseInt(await env.ADOFF_LICENSES.get("stats:total_tickets") || "0");
+
+  return jsonResponse({
+    ok: true,
+    timestamp: new Date().toISOString(),
+    licenses: {
+      total: totalLicenses,
+      active: activeLicenses,
+      expired: expiredLicenses,
+      revoked: revokedLicenses,
+      lifetime: lifetimeLicenses,
+    },
+    plans: planCounts,
+    devices: {
+      total: totalDevices,
+      avgPerLicense: totalLicenses > 0 ? +(totalDevices / totalLicenses).toFixed(1) : 0,
+    },
+    sales: {
+      totalSold,
+    },
+    support: {
+      totalTickets,
+    },
+  });
+}
+
+// =============================================
+// TRACKING — INSTALL & DOWNLOAD
+// =============================================
+
+function getDateStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function parseBrowser(ua) {
+  if (!ua) return "unknown";
+  if (ua.includes("Edg/")) return "edge";
+  if (ua.includes("OPR/") || ua.includes("Opera/")) return "opera";
+  if (ua.includes("Firefox/")) return "firefox";
+  if (ua.includes("Chrome/")) return "chrome";
+  return "other";
+}
+
+async function appendToLog(env, logKey, entry, maxEntries) {
+  const log = await env.ADOFF_LICENSES.get(logKey, "json") || [];
+  log.unshift(entry);
+  if (log.length > maxEntries) log.length = maxEntries;
+  await env.ADOFF_LICENSES.put(logKey, JSON.stringify(log));
+}
+
+async function incrementCounter(env, key) {
+  const val = parseInt(await env.ADOFF_LICENSES.get(key) || "0");
+  await env.ADOFF_LICENSES.put(key, String(val + 1));
+  return val + 1;
+}
+
+async function bumpAttributionCounter(env, suffix, delta) {
+  const key = "attribution:" + suffix;
+  const val = parseInt(await env.ADOFF_LICENSES.get(key) || "0");
+  await env.ADOFF_LICENSES.put(key, String(val + delta));
+  return val + delta;
+}
+
+async function handleTrackInstall(request, env) {
+  const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
+  const rlKey = `ratelimit:install:${ip}`;
+  const rlVal = await env.ADOFF_LICENSES.get(rlKey);
+  if (rlVal) return jsonResponse({ ok: false, error: "Rate limit" }, 429);
+  await env.ADOFF_LICENSES.put(rlKey, "1", { expirationTtl: 3600 });
+
+  let body = {};
+  try { body = await request.json(); } catch { /* body optional */ }
+
+  const cf = request.cf || {};
+  const country = (cf.country || "XX").toUpperCase().slice(0, 2);
+  const city = cf.city || "";
+  const region = cf.region || "";
+  const tz = cf.timezone || "";
+  const browser = parseBrowser(request.headers.get("User-Agent") || "");
+  const source = ["chrome", "firefox", "edge", "opera", "direct"].includes(body.source) ? body.source : "direct";
+  const ref = typeof body.ref === "string" ? body.ref.slice(0, 32) : "";
+  const today = getDateStr();
+
+  await incrementCounter(env, "stats:installs");
+  await incrementCounter(env, `stats:installs:${today}`);
+  await incrementCounter(env, `stats:installs:country:${country}`);
+  await incrementCounter(env, `stats:installs:source:${source}`);
+  await incrementCounter(env, `stats:installs:browser:${browser}`);
+  await incrementCounter(env, `stats:geo:${country}`);
+
+  await appendToLog(env, "installs:log", {
+    ts: Date.now(), country, city, region, tz, browser, source, ref,
+  }, 1000);
+
+  return jsonResponse({ ok: true });
+}
+
+async function handleTrackDownload(request, env) {
+  const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
+  const rlKey = `ratelimit:download:${ip}`;
+  const rlVal = await env.ADOFF_LICENSES.get(rlKey);
+  if (rlVal) return jsonResponse({ ok: false, error: "Rate limit" }, 429);
+  await env.ADOFF_LICENSES.put(rlKey, "1", { expirationTtl: 60 });
+
+  let body = {};
+  try { body = await request.json(); } catch { /* body optional */ }
+
+  const cf = request.cf || {};
+  const country = (cf.country || "XX").toUpperCase().slice(0, 2);
+  const browser = ["chrome", "firefox", "edge", "opera", "other"].includes(body.browser)
+    ? body.browser
+    : parseBrowser(request.headers.get("User-Agent") || "");
+  const page = typeof body.page === "string" ? body.page.slice(0, 32) : "unknown";
+  const today = getDateStr();
+
+  await incrementCounter(env, "stats:downloads");
+  await incrementCounter(env, `stats:downloads:${today}`);
+  await incrementCounter(env, `stats:downloads:browser:${browser}`);
+
+  await appendToLog(env, "downloads:log", {
+    ts: Date.now(), country, browser, page,
+  }, 1000);
+
+  return jsonResponse({ ok: true });
+}
+
+// =============================================
+// ATTRIBUTION — SOURCE TRACKING (orthogonal to referral)
+// =============================================
+
+async function handleAttributionInstall(request, env) {
+  let body = {};
+  try { body = await request.json(); } catch { /* body optional */ }
+
+  const source = body.source;
+  if (source && /^src-[a-z0-9_]{2,20}$/.test(source)) {
+    await bumpAttributionCounter(env, "install:" + source, 1);
+  }
+
+  return jsonResponse({ ok: true });
+}
+
+async function handleAttributionStats(request, env) {
+  // Admin-only: verify auth token (same as handleAdminStats)
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  // Read all KV keys under "attribution:" prefix
+  const result = { install: {}, paid: {}, revenue: {} };
+  const list = await env.ADOFF_LICENSES.list({ prefix: "attribution:" });
+
+  for (const item of list.keys) {
+    const key = item.name;
+    const val = await env.ADOFF_LICENSES.get(key);
+    const numVal = parseInt(val || "0");
+
+    // Parse key format: "attribution:<type>:<source>"
+    const parts = key.split(":");
+    if (parts.length >= 3) {
+      const type = parts[1]; // "install", "paid", "revenue"
+      const source = parts.slice(2).join(":"); // source name (in case it has colons, unlikely)
+
+      if (type === "install" && result.install) {
+        result.install[source] = numVal;
+      } else if (type === "paid" && result.paid) {
+        result.paid[source] = numVal;
+      } else if (type === "revenue" && result.revenue) {
+        result.revenue[source] = numVal;
+      }
+    }
+  }
+
+  return jsonResponse(result);
+}
+
+// =============================================
+// ADMIN — ANALYTICS & REVENUE
+// =============================================
+
+async function handleAdminAnalytics(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const totalInstalls = parseInt(await env.ADOFF_LICENSES.get("stats:installs") || "0");
+  const totalDownloads = parseInt(await env.ADOFF_LICENSES.get("stats:downloads") || "0");
+  const today = getDateStr();
+  const todayInstalls = parseInt(await env.ADOFF_LICENSES.get(`stats:installs:${today}`) || "0");
+  const todayDownloads = parseInt(await env.ADOFF_LICENSES.get(`stats:downloads:${today}`) || "0");
+
+  // Last 7 days arrays
+  const last7Installs = [];
+  const last7Downloads = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+    const ic = parseInt(await env.ADOFF_LICENSES.get(`stats:installs:${d}`) || "0");
+    const dc = parseInt(await env.ADOFF_LICENSES.get(`stats:downloads:${d}`) || "0");
+    last7Installs.push({ date: d, count: ic });
+    last7Downloads.push({ date: d, count: dc });
+  }
+
+  // By country — scan geo keys
+  const geoList = await env.ADOFF_LICENSES.list({ prefix: "stats:geo:" });
+  const byCountry = [];
+  for (const k of geoList.keys) {
+    const cc = k.name.replace("stats:geo:", "");
+    const cnt = parseInt(await env.ADOFF_LICENSES.get(k.name) || "0");
+    byCountry.push({ country: cc, count: cnt });
+  }
+  byCountry.sort((a, b) => b.count - a.count);
+
+  // By source — scan install:country keys would be redundant; use source counters
+  const sources = ["chrome", "firefox", "edge", "opera", "direct"];
+  const bySource = {};
+  for (const s of sources) {
+    bySource[s] = parseInt(await env.ADOFF_LICENSES.get(`stats:installs:source:${s}`) || "0");
+  }
+
+  // By browser for downloads
+  const byBrowser = {
+    chrome: parseInt(await env.ADOFF_LICENSES.get("stats:downloads:browser:chrome") || "0"),
+    firefox: parseInt(await env.ADOFF_LICENSES.get("stats:downloads:browser:firefox") || "0"),
+    edge: parseInt(await env.ADOFF_LICENSES.get("stats:downloads:browser:edge") || "0"),
+    opera: parseInt(await env.ADOFF_LICENSES.get("stats:downloads:browser:opera") || "0"),
+    other: parseInt(await env.ADOFF_LICENSES.get("stats:downloads:browser:other") || "0"),
+  };
+
+  const installsLog = await env.ADOFF_LICENSES.get("installs:log", "json") || [];
+  const recentLog = installsLog.slice(0, 50);
+
+  return jsonResponse({
+    ok: true,
+    installs: {
+      total: totalInstalls,
+      today: todayInstalls,
+      last7days: last7Installs,
+      byCountry,
+      bySource,
+      recentLog,
+    },
+    downloads: {
+      total: totalDownloads,
+      today: todayDownloads,
+      last7days: last7Downloads,
+      byBrowser,
+    },
+  });
+}
+
+async function handleAdminRevenue(request, env) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const totalSold = parseInt(await env.ADOFF_LICENSES.get("stats:total_sold") || "0");
+  const mrr = parseInt(await env.ADOFF_LICENSES.get("stats:mrr") || "0");
+
+  const plans = ["monthly", "annual", "lifetime"];
+  const byPlan = {};
+  for (const p of plans) {
+    byPlan[p] = parseInt(await env.ADOFF_LICENSES.get(`stats:revenue:plan:${p}`) || "0");
+  }
+
+  // Last 30 days
+  const last30 = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+    const amount = parseInt(await env.ADOFF_LICENSES.get(`stats:revenue:${d}:amount`) || "0");
+    const count = parseInt(await env.ADOFF_LICENSES.get(`stats:revenue:${d}:count`) || "0");
+    last30.push({ date: d, amount, count });
+  }
+
+  const totalSoldCount = parseInt(await env.ADOFF_LICENSES.get("stats:total_sold") || "0");
+
+  return jsonResponse({
+    ok: true,
+    revenue: {
+      totalSold,
+      mrr,
+      byPlan,
+      last30days: last30,
+    },
+    sold: totalSoldCount,
+  });
+}
+
+// =============================================
+// ADMIN — LICENSE UPDATE
+// =============================================
+
+const VALID_PLANS_UPDATE = ["pro", "lifetime", "monthly", "annual"];
+
+async function handleAdminLicenseUpdate(body, env, request) {
+  const adminToken = request.headers.get(ADMIN_TOKEN_HEADER);
+  if (!await verifyAdminAuth(adminToken, env)) {
+    return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  }
+
+  const { key, updates } = body;
+  if (!key || !updates) return jsonResponse({ ok: false, error: "Missing key or updates" }, 400);
+
+  // Resolve raw key — support both display key (ADOFF-XXXX-...) and raw
+  let rawKey = key;
+  if (key.startsWith("ADOFF-")) {
+    rawKey = await env.ADOFF_LICENSES.get(`key:${key}`);
+    if (!rawKey) return jsonResponse({ ok: false, error: "License not found" }, 404);
+  }
+
+  const license = await env.ADOFF_LICENSES.get(`lic:${rawKey}`, "json");
+  if (!license) return jsonResponse({ ok: false, error: "License not found" }, 404);
+
+  if (updates.plan !== undefined) {
+    if (!VALID_PLANS_UPDATE.includes(updates.plan)) {
+      return jsonResponse({ ok: false, error: "Invalid plan" }, 400);
+    }
+    license.plan = updates.plan;
+  }
+  if (updates.expires !== undefined) {
+    license.expires = typeof updates.expires === "number" ? updates.expires : parseInt(updates.expires);
+  }
+  if (updates.deviceLimit !== undefined) {
+    const dl = Math.min(Math.max(parseInt(updates.deviceLimit) || 3, 1), 10);
+    license.deviceLimit = dl;
+  }
+  if (updates.email !== undefined) {
+    license.email = String(updates.email).slice(0, 128);
+  }
+
+  license.updatedAt = Date.now();
+  license.updatedBy = "admin";
+  await env.ADOFF_LICENSES.put(`lic:${rawKey}`, JSON.stringify(license));
+
+  return jsonResponse({ ok: true, message: "License updated", key: license.key || key });
+}
+
+// =============================================
+// ACCOUNT MANAGEMENT (Netflix-style device management)
+// =============================================
+
+/**
+ * Verify account session token.
+ * Returns session {raw, email} or null if invalid/expired.
+ */
+async function verifyAccountAuth(token, env) {
+  if (!token) return null;
+  const session = await env.ADOFF_LICENSES.get("account_session:" + token, "json");
+  if (!session || session.expiresAt < Date.now()) return null;
+  return session;
+}
+
+/**
+ * POST /account/login
+ * Body: {key: "ADOFF-XXXX-XXXX-XXXX or raw", email: "user@example.com"}
+ * Returns session token valid 24h.
+ */
+async function handleAccountLogin(body, env) {
+  const { key, email } = body;
+  if (!key || !email) {
+    return jsonResponse({ ok: false, error: "Missing key or email" }, 400);
+  }
+
+  // Resolve ADOFF-XXXX alias → raw key
+  let rawKey = key.trim();
+  if (rawKey.startsWith("ADOFF-")) {
+    const resolved = await env.ADOFF_LICENSES.get(`key:${rawKey}`);
+    if (!resolved) return jsonResponse({ ok: false, error: "License not found" }, 404);
+    rawKey = resolved;
+  }
+
+  // Load license data
+  const licData = await env.ADOFF_LICENSES.get(`lic:${rawKey}`, "json");
+  if (!licData) return jsonResponse({ ok: false, error: "License not found" }, 404);
+  if (licData.revoked) return jsonResponse({ ok: false, error: "License revoked" }, 403);
+
+  // Verify email matches
+  const storedEmail = (licData.email || "").toLowerCase().trim();
+  const inputEmail = email.toLowerCase().trim();
+  if (!storedEmail || storedEmail !== inputEmail) {
+    return jsonResponse({ ok: false, error: "Email does not match license" }, 401);
+  }
+
+  // Sync with user account record — keeps user:{email} up to date
+  const userKey = `user:${storedEmail}`;
+  const existingUser = await env.ADOFF_LICENSES.get(userKey, "json");
+  if (!existingUser) {
+    // Migrate legacy key-based login to unified account on first use
+    const legacyKeys = await env.ADOFF_LICENSES.get(`email:${storedEmail}`, "json") || [];
+    const allRaws = Array.from(new Set([rawKey, ...legacyKeys.map(k => k.raw).filter(Boolean)]));
+    await env.ADOFF_LICENSES.put(userKey, JSON.stringify({
+      email: storedEmail,
+      passwordHash: null,
+      salt: null,
+      emailVerified: true,
+      providers: [],
+      googleId: null,
+      microsoftId: null,
+      licenses: allRaws,
+      createdAt: Date.now(),
+      lastLogin: Date.now(),
+    }));
+  } else if (!existingUser.licenses.includes(rawKey)) {
+    existingUser.licenses.push(rawKey);
+    existingUser.lastLogin = Date.now();
+    await env.ADOFF_LICENSES.put(userKey, JSON.stringify(existingUser));
+  }
+
+  // Generate session token (32 bytes = 64 hex chars)
+  const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+  const token = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+
+  const now = Date.now();
+  const expiresAt = now + 24 * 60 * 60 * 1000; // 24h
+
+  await env.ADOFF_LICENSES.put(
+    "account_session:" + token,
+    JSON.stringify({ raw: rawKey, email: storedEmail, createdAt: now, expiresAt }),
+    { expirationTtl: 86400 }
+  );
+
+  const devices = normalizeDeviceList(licData.devices || []);
+  const maxDevices = licData.deviceLimit || MAX_DEVICES;
+  const expires = licData.expires || 0;
+
+  return jsonResponse({
+    ok: true,
+    token,
+    plan: licData.plan || "pro",
+    devices: devices.map(d => ({
+      id: d.id,
+      name: d.name || "Unknown Device",
+      lastSeen: d.lastSeen ? new Date(d.lastSeen).toISOString() : null,
+      ipPrefix: d.ip ? d.ip.split(".").slice(0, 2).join(".") + ".x.x" : null,
+    })),
+    maxDevices,
+    expires: expires > 0 ? expires : null,
+    expiresHuman: expires > 0
+      ? new Date(expires * 1000).toISOString().split("T")[0]
+      : "LIFETIME",
+  });
+}
+
+/**
+ * GET /account/devices
+ * Header: X-Account-Token: TOKEN
+ */
+async function handleAccountDevices(request, env) {
+  const token = request.headers.get("X-Account-Token");
+  const session = await verifyAccountAuth(token, env);
+  if (!session) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+
+  const normalEmail = (session.email || "").toLowerCase().trim();
+
+  // Source 1: user:{email}.licenses (canonical, kept in sync by Stripe webhook + admin)
+  const userRecord = await env.ADOFF_LICENSES.get(`user:${normalEmail}`, "json");
+  const userLicenses = Array.isArray(userRecord?.licenses) ? userRecord.licenses : [];
+
+  // Source 2: email:{email} index (fallback for legacy/admin licenses where user record may lag)
+  const emailIndexRaw = await env.ADOFF_LICENSES.get(`email:${normalEmail}`, "json") || [];
+  const emailIndexLicenses = emailIndexRaw.map(e => e?.raw).filter(Boolean);
+
+  // Source 3: original session license (final fallback)
+  const sessionLicenses = session.raw ? [session.raw] : [];
+
+  // Merge & dedup
+  const allLicenseRaws = [...new Set([...userLicenses, ...emailIndexLicenses, ...sessionLicenses])];
+
+  // Self-healing: if email index revealed licenses missing from user record, persist them
+  const missingFromUser = allLicenseRaws.filter(r => !userLicenses.includes(r));
+  if (userRecord && missingFromUser.length > 0) {
+    userRecord.licenses = allLicenseRaws;
+    await env.ADOFF_LICENSES.put(`user:${normalEmail}`, JSON.stringify(userRecord));
+  }
+
+  // Carica dati per ogni licenza
+  const licenses = [];
+  for (const rawKey of allLicenseRaws) {
+    const licData = await env.ADOFF_LICENSES.get(`lic:${rawKey}`, "json");
+    if (!licData || licData.revoked) continue;
+
+    const devices = normalizeDeviceList(licData.devices || []);
+    const maxDevices = licData.deviceLimit || MAX_DEVICES;
+    const now = Math.floor(Date.now() / 1000);
+    const isExpired = licData.expires > 0 && licData.expires < now;
+    const expiresHuman = licData.expires > 0
+      ? new Date(licData.expires * 1000).toLocaleDateString("it-IT")
+      : "LIFETIME";
+
+    licenses.push({
+      rawKey,
+      key: licData.key || null,
+      plan: licData.plan || "pro",
+      maxDevices,
+      expiresHuman,
+      isExpired,
+      devices: devices.map(d => ({
+        id: d.id,
+        name: d.name || "Unknown Device",
+        lastSeen: d.lastSeen ? new Date(d.lastSeen).toISOString() : null,
+        ipPrefix: d.ip ? d.ip.split(".").slice(0, 2).join(".") + ".x.x" : null,
+      })),
+    });
+  }
+
+  // Retrocompatibilità: se c'è una sola licenza, restituisci anche i campi flat
+  const primaryLic = licenses.find(l => l.rawKey === session.raw) || licenses[0];
+
+  return jsonResponse({
+    ok: true,
+    // Campi flat per retrocompatibilità con frontend esistente
+    plan: primaryLic?.plan || "pro",
+    maxDevices: primaryLic?.maxDevices || MAX_DEVICES,
+    hasLicense: licenses.length > 0,
+    licenseKey: primaryLic?.key || null,
+    expiresHuman: primaryLic?.expiresHuman || null,
+    isExpired: primaryLic?.isExpired || false,
+    devices: primaryLic?.devices || [],
+    // Nuovo: array con TUTTE le licenze
+    licenses,
+  });
+}
+
+/**
+ * POST /account/remove-device
+ * Header: X-Account-Token: TOKEN
+ * Body: {deviceId: "uuid-xxx"}
+ */
+async function handleAccountRemoveDevice(body, env, request) {
+  const token = request.headers.get("X-Account-Token");
+  const session = await verifyAccountAuth(token, env);
+  if (!session) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+
+  const { deviceId, licenseKey } = body;
+  if (!deviceId) return jsonResponse({ ok: false, error: "Missing deviceId" }, 400);
+
+  // Determina quale licenza usare
+  let targetRaw = session.raw;
+  if (licenseKey && licenseKey !== session.raw) {
+    // Verifica che la licenza appartenga all'utente
+    const userRecord = await env.ADOFF_LICENSES.get(`user:${session.email}`, "json");
+    if (!userRecord?.licenses?.includes(licenseKey)) {
+      return jsonResponse({ ok: false, error: "License not found or not owned" }, 403);
+    }
+    targetRaw = licenseKey;
+  }
+
+  // Rate limit: max 3 removals per day per license
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const rlKey = `deactivations:${targetRaw}:${today}`;
+  const rlVal = parseInt(await env.ADOFF_LICENSES.get(rlKey) || "0");
+  if (rlVal >= 3) {
+    return jsonResponse({ ok: false, error: "Rate limit: max 3 device removals per day" }, 429);
+  }
+
+  const licData = await env.ADOFF_LICENSES.get(`lic:${targetRaw}`, "json");
+  if (!licData) return jsonResponse({ ok: false, error: "License not found" }, 404);
+
+  const before = normalizeDeviceList(licData.devices || []);
+  const after = before.filter(d => d.id !== deviceId);
+
+  if (before.length === after.length) {
+    return jsonResponse({ ok: false, error: "Device not found" }, 404);
+  }
+
+  // Increment rate limit counter
+  await env.ADOFF_LICENSES.put(rlKey, String(rlVal + 1), { expirationTtl: 86400 });
+
+  // Aggiungi il dispositivo alla blacklist per impedire ri-attivazione automatica
+  const bannedDevices = licData.bannedDevices || [];
+  if (!bannedDevices.includes(deviceId)) {
+    bannedDevices.push(deviceId);
+  }
+
+  await env.ADOFF_LICENSES.put(`lic:${targetRaw}`, JSON.stringify({
+    ...licData,
+    devices: after,
+    bannedDevices,
+  }));
+
+  return jsonResponse({ ok: true, devicesRemaining: after.length });
+}
+
+/**
+ * POST /account/remove-all
+ * Header: X-Account-Token: TOKEN
+ */
+async function handleAccountRemoveAll(body, env, request) {
+  const token = request.headers.get("X-Account-Token");
+  const session = await verifyAccountAuth(token, env);
+  if (!session) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+
+  const { licenseKey } = body || {};
+
+  // Determina quale licenza usare
+  let targetRaw = session.raw;
+  if (licenseKey && licenseKey !== session.raw) {
+    // Verifica che la licenza appartenga all'utente
+    const userRecord = await env.ADOFF_LICENSES.get(`user:${session.email}`, "json");
+    if (!userRecord?.licenses?.includes(licenseKey)) {
+      return jsonResponse({ ok: false, error: "License not found or not owned" }, 403);
+    }
+    targetRaw = licenseKey;
+  }
+
+  const licData = await env.ADOFF_LICENSES.get(`lic:${targetRaw}`, "json");
+  if (!licData) return jsonResponse({ ok: false, error: "License not found" }, 404);
+
+  const devices = normalizeDeviceList(licData.devices || []);
+  const count = devices.length;
+
+  // Rate limit: removing all counts as N removals
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const rlKey = `deactivations:${targetRaw}:${today}`;
+  const rlVal = parseInt(await env.ADOFF_LICENSES.get(rlKey) || "0");
+  if (rlVal + count > 3) {
+    return jsonResponse({ ok: false, error: "Rate limit: max 3 device removals per day" }, 429);
+  }
+
+  if (count > 0) {
+    await env.ADOFF_LICENSES.put(rlKey, String(rlVal + count), { expirationTtl: 86400 });
+  }
+
+  // Aggiungi TUTTI i dispositivi alla blacklist per impedire ri-attivazione automatica
+  const bannedDevices = licData.bannedDevices || [];
+  for (const dev of devices) {
+    const devId = typeof dev === "string" ? dev : dev.id;
+    if (devId && !bannedDevices.includes(devId)) {
+      bannedDevices.push(devId);
+    }
+  }
+
+  await env.ADOFF_LICENSES.put(`lic:${targetRaw}`, JSON.stringify({
+    ...licData,
+    devices: [],
+    bannedDevices,
+  }));
+
+  return jsonResponse({ ok: true, removed: count });
+}
+
+// =============================================
+// AUTH — RATE LIMIT HELPER (10/IP/hour)
+// =============================================
+
+async function checkAuthRateLimit(ip, env) {
+  const key = `rl:auth:${ip}`;
+  const AUTH_LIMIT = 10;
+  const AUTH_WINDOW = 3600; // 1 hour
+  const current = await env.ADOFF_LICENSES.get(key);
+  if (current) {
+    const count = parseInt(current);
+    if (count >= AUTH_LIMIT) return false;
+    await env.ADOFF_LICENSES.put(key, String(count + 1), { expirationTtl: AUTH_WINDOW });
+  } else {
+    await env.ADOFF_LICENSES.put(key, "1", { expirationTtl: AUTH_WINDOW });
+  }
+  return true;
+}
+
+// =============================================
+// OAUTH HANDLERS
+// =============================================
+
+/**
+ * GET /oauth/{provider}/start
+ * Generates state, stores in KV, redirects to provider auth URL.
+ */
+async function handleOAuthStart(provider, env) {
+  if (!env.GOOGLE_OAUTH_CLIENT_ID && provider === "google") {
+    return jsonResponse({ ok: false, error: "OAuth not configured" }, 500);
+  }
+  if (!env.MICROSOFT_OAUTH_CLIENT_ID && provider === "microsoft") {
+    return jsonResponse({ ok: false, error: "OAuth not configured" }, 500);
+  }
+
+  // Generate cryptographically random state (32 bytes = 64 hex chars)
+  const stateBytes = crypto.getRandomValues(new Uint8Array(32));
+  const state = Array.from(stateBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+
+  await env.ADOFF_LICENSES.put(
+    `oauth_state:${state}`,
+    JSON.stringify({ provider, createdAt: Date.now() }),
+    { expirationTtl: 600 }
+  );
+
+  let authUrl;
+  if (provider === "google") {
+    const params = new URLSearchParams({
+      client_id: env.GOOGLE_OAUTH_CLIENT_ID,
+      redirect_uri: "https://api.adoff.app/oauth/google/callback",
+      response_type: "code",
+      scope: "openid email profile",
+      state,
+      access_type: "offline",
+      prompt: "consent",
+    });
+    authUrl = "https://accounts.google.com/o/oauth2/v2/auth?" + params.toString();
+  } else {
+    const params = new URLSearchParams({
+      client_id: env.MICROSOFT_OAUTH_CLIENT_ID,
+      redirect_uri: "https://api.adoff.app/oauth/microsoft/callback",
+      response_type: "code",
+      scope: "openid email profile User.Read",
+      state,
+    });
+    authUrl = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?" + params.toString();
+  }
+
+  return Response.redirect(authUrl, 302);
+}
+
+/**
+ * GET /oauth/{provider}/callback
+ * Verifies state, exchanges code for token, finds or creates user, returns session.
+ */
+async function handleOAuthCallback(provider, request, env) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+  const state = url.searchParams.get("state");
+
+  const errorRedirect = (msg) =>
+    Response.redirect("https://adoff.app/account/?error=" + encodeURIComponent(msg), 302);
+
+  if (!code || !state) return errorRedirect("missing_params");
+
+  // Verify and consume state
+  const stateData = await env.ADOFF_LICENSES.get(`oauth_state:${state}`, "json");
+  if (!stateData || stateData.provider !== provider) return errorRedirect("invalid_state");
+  await env.ADOFF_LICENSES.delete(`oauth_state:${state}`);
+
+  try {
+    // Exchange code for tokens
+    let tokenRes, userInfo;
+
+    if (provider === "google") {
+      if (!env.GOOGLE_OAUTH_CLIENT_ID || !env.GOOGLE_OAUTH_CLIENT_SECRET) {
+        return errorRedirect("oauth_not_configured");
+      }
+      const tokenParams = new URLSearchParams({
+        client_id: env.GOOGLE_OAUTH_CLIENT_ID,
+        client_secret: env.GOOGLE_OAUTH_CLIENT_SECRET,
+        code,
+        redirect_uri: "https://api.adoff.app/oauth/google/callback",
+        grant_type: "authorization_code",
+      });
+      tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: tokenParams.toString(),
+      });
+    } else {
+      if (!env.MICROSOFT_OAUTH_CLIENT_ID || !env.MICROSOFT_OAUTH_CLIENT_SECRET) {
+        return errorRedirect("oauth_not_configured");
+      }
+      const tokenParams = new URLSearchParams({
+        client_id: env.MICROSOFT_OAUTH_CLIENT_ID,
+        client_secret: env.MICROSOFT_OAUTH_CLIENT_SECRET,
+        code,
+        redirect_uri: "https://api.adoff.app/oauth/microsoft/callback",
+        grant_type: "authorization_code",
+        scope: "openid email profile User.Read",
+      });
+      tokenRes = await fetch("https://login.microsoftonline.com/common/oauth2/v2.0/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: tokenParams.toString(),
+      });
+    }
+
+    const tokenData = await tokenRes.json();
+    if (!tokenData.access_token) return errorRedirect("token_exchange_failed");
+
+    // Get user info from provider
+    let email, providerId;
+    if (provider === "google") {
+      const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { "Authorization": "Bearer " + tokenData.access_token },
+      });
+      userInfo = await userRes.json();
+      email = (userInfo.email || "").toLowerCase().trim();
+      providerId = userInfo.sub;
+    } else {
+      const userRes = await fetch("https://graph.microsoft.com/v1.0/me", {
+        headers: { "Authorization": "Bearer " + tokenData.access_token },
+      });
+      userInfo = await userRes.json();
+      email = (userInfo.mail || userInfo.userPrincipalName || "").toLowerCase().trim();
+      providerId = userInfo.id;
+    }
+
+    if (!email) return errorRedirect("no_email_from_provider");
+
+    // Find or create user account
+    const userKey = `user:${email}`;
+    let user = await env.ADOFF_LICENSES.get(userKey, "json");
+    const now = Date.now();
+
+    if (!user) {
+      // Create new account
+      user = {
+        email,
+        passwordHash: null,
+        salt: null,
+        emailVerified: true,
+        providers: [provider],
+        googleId: provider === "google" ? providerId : null,
+        microsoftId: provider === "microsoft" ? providerId : null,
+        licenses: [],
+        createdAt: now,
+        lastLogin: now,
+      };
+      // Import legacy licenses from email index
+      const legacyKeys = await env.ADOFF_LICENSES.get(`email:${email}`, "json") || [];
+      user.licenses = legacyKeys.map(k => k.raw).filter(Boolean);
+    } else {
+      // Update existing account
+      if (!user.providers.includes(provider)) user.providers.push(provider);
+      if (provider === "google") user.googleId = providerId;
+      if (provider === "microsoft") user.microsoftId = providerId;
+      user.emailVerified = true;
+      user.lastLogin = now;
+    }
+
+    await env.ADOFF_LICENSES.put(userKey, JSON.stringify(user));
+
+    // Resolve first active license for session
+    const firstRaw = user.licenses.length > 0 ? user.licenses[0] : null;
+
+    // Generate session token
+    const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+    const sessionToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+    const expiresAt = now + 24 * 60 * 60 * 1000;
+
+    await env.ADOFF_LICENSES.put(
+      `account_session:${sessionToken}`,
+      JSON.stringify({ raw: firstRaw, email, createdAt: now, expiresAt }),
+      { expirationTtl: 86400 }
+    );
+
+    return Response.redirect(
+      "https://adoff.app/account/?token=" + encodeURIComponent(sessionToken),
+      302
+    );
+  } catch (e) {
+    return errorRedirect("internal_error");
+  }
+}
+
+// =============================================
+// TURNSTILE ANTI-BOT VERIFICATION
+// =============================================
+
+/**
+ * Verify a Cloudflare Turnstile token server-side.
+ * @param {string} token  - cf-turnstile-response from the client
+ * @param {string} ip     - connecting IP for extra binding (optional, can be "")
+ * @param {object} env    - Worker env (must have TURNSTILE_SECRET_KEY binding)
+ * @returns {Promise<boolean>} true if valid
+ */
+async function verifyTurnstile(token, ip, env) {
+  if (!token) return false;
+  // Extension cannot render Turnstile widgets — allow bypass for extension logins
+  // (still rate-limited by IP via checkAuthRateLimit)
+  if (token === "extension") return true;
+  const secret = env.TURNSTILE_SECRET_KEY;
+  if (!secret) return false; // misconfigured — fail closed
+
+  try {
+    const body = new URLSearchParams({ secret, response: token });
+    if (ip) body.set("remoteip", ip);
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      body,
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data.success === true;
+  } catch (_) {
+    return false;
+  }
+}
+
+// =============================================
+// EMAIL + PASSWORD AUTH HANDLERS
+// =============================================
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * POST /auth/register
+ * Body: {email, password}
+ */
+async function handleAuthRegister(body, env, request) {
+  const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
+  if (!await checkAuthRateLimit(ip, env)) {
+    return jsonResponse({ ok: false, error: "Too many attempts. Try again in 1 hour." }, 429);
+  }
+
+  if (!await verifyTurnstile(body.turnstileToken, ip, env)) {
+    return jsonResponse({ ok: false, error: "Verifica anti-bot fallita. Riprova." }, 400);
+  }
+
+  const { email, password } = body;
+  if (!email || !password) return jsonResponse({ ok: false, error: "Missing email or password" }, 400);
+  if (!EMAIL_RE.test(email)) return jsonResponse({ ok: false, error: "Invalid email format" }, 400);
+  if (password.length < 8) return jsonResponse({ ok: false, error: "Password must be at least 8 characters" }, 400);
+
+  const normalEmail = email.toLowerCase().trim();
+  const userKey = `user:${normalEmail}`;
+  const now = Date.now();
+
+  let user = await env.ADOFF_LICENSES.get(userKey, "json");
+
+  if (user && user.passwordHash) {
+    return jsonResponse({ ok: false, error: "Account already exists" }, 409);
+  }
+
+  // Hash password with random salt
+  const salt = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+  const passwordHash = await hashPasswordPBKDF2(password, salt);
+
+  if (!user) {
+    // New account
+    const legacyKeys = await env.ADOFF_LICENSES.get(`email:${normalEmail}`, "json") || [];
+    user = {
+      email: normalEmail,
+      passwordHash,
+      salt,
+      emailVerified: false,
+      providers: ["password"],
+      googleId: null,
+      microsoftId: null,
+      licenses: legacyKeys.map(k => k.raw).filter(Boolean),
+      createdAt: now,
+      lastLogin: now,
+    };
+  } else {
+    // Existing OAuth account — add password provider
+    user.passwordHash = passwordHash;
+    user.salt = salt;
+    if (!user.providers.includes("password")) user.providers.push("password");
+    // For OAuth-linked accounts, email is already verified
+    if (!user.emailVerified) user.emailVerified = false;
+  }
+
+  await env.ADOFF_LICENSES.put(userKey, JSON.stringify(user));
+
+  // Generate email verification token
+  const verifyBytes = crypto.getRandomValues(new Uint8Array(20));
+  const verifyToken = Array.from(verifyBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+  await env.ADOFF_LICENSES.put(
+    `email_verify:${verifyToken}`,
+    JSON.stringify({ email: normalEmail }),
+    { expirationTtl: 86400 }
+  );
+
+  // Send verification email
+  const verifyUrl = "https://adoff.app/account/?verify=" + verifyToken;
+  const tmplVerify = EMAIL_TEMPLATES.verify_email(normalEmail, verifyUrl);
+  await sendEmail(normalEmail, tmplVerify.subject, tmplVerify.html, env);
+
+  return jsonResponse({ ok: true, message: "Controlla la tua email per la verifica" });
+}
+
+/**
+ * POST /auth/verify-email
+ * Body: {token}
+ */
+async function handleAuthVerifyEmail(body, env) {
+  const { token } = body;
+  if (!token) return jsonResponse({ ok: false, error: "Missing token" }, 400);
+
+  const verifyData = await env.ADOFF_LICENSES.get(`email_verify:${token}`, "json");
+  if (!verifyData) return jsonResponse({ ok: false, error: "Invalid or expired verification token" }, 400);
+
+  const userKey = `user:${verifyData.email}`;
+  const user = await env.ADOFF_LICENSES.get(userKey, "json");
+  if (!user) return jsonResponse({ ok: false, error: "User not found" }, 404);
+
+  user.emailVerified = true;
+  await env.ADOFF_LICENSES.put(userKey, JSON.stringify(user));
+  await env.ADOFF_LICENSES.delete(`email_verify:${token}`);
+
+  return jsonResponse({ ok: true });
+}
+
+/**
+ * POST /auth/login
+ * Body: {email, password}
+ */
+async function handleAuthLogin(body, env, request) {
+  const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
+  if (!await checkAuthRateLimit(ip, env)) {
+    return jsonResponse({ ok: false, error: "Too many attempts. Try again in 1 hour." }, 429);
+  }
+
+  if (!await verifyTurnstile(body.turnstileToken, ip, env)) {
+    return jsonResponse({ ok: false, error: "Verifica anti-bot fallita. Riprova." }, 400);
+  }
+
+  const { email, password } = body;
+  if (!email || !password) return jsonResponse({ ok: false, error: "Missing email or password" }, 400);
+
+  const normalEmail = email.toLowerCase().trim();
+  const user = await env.ADOFF_LICENSES.get(`user:${normalEmail}`, "json");
+
+  // Use generic error to prevent user enumeration
+  const INVALID = { ok: false, error: "Invalid credentials" };
+  if (!user || !user.passwordHash) return jsonResponse(INVALID, 401);
+  if (!user.emailVerified) {
+    return jsonResponse({ ok: false, error: "Email non verificata. Controlla la tua casella." }, 401);
+  }
+
+  if (!await verifyPassword(password, user.salt, user.passwordHash)) return jsonResponse(INVALID, 401);
+
+  // Upgrade trasparente a PBKDF2 se l'hash è legacy SHA-256 (riusa il put di lastLogin)
+  if (isLegacyPasswordHash(user.passwordHash)) {
+    user.passwordHash = await hashPasswordPBKDF2(password, user.salt);
+  }
+
+  // Update last login
+  user.lastLogin = Date.now();
+  await env.ADOFF_LICENSES.put(`user:${normalEmail}`, JSON.stringify(user));
+
+  // Resolve first active license for session
+  const firstRaw = user.licenses.length > 0 ? user.licenses[0] : null;
+  let licData = firstRaw ? await env.ADOFF_LICENSES.get(`lic:${firstRaw}`, "json") : null;
+
+  // Generate session token
+  const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+  const sessionToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+  const now = Date.now();
+  const expiresAt = now + 24 * 60 * 60 * 1000;
+
+  await env.ADOFF_LICENSES.put(
+    `account_session:${sessionToken}`,
+    JSON.stringify({ raw: firstRaw, email: normalEmail, createdAt: now, expiresAt }),
+    { expirationTtl: 86400 }
+  );
+
+  const expires = licData?.expires || 0;
+  const devices = normalizeDeviceList(licData?.devices || []);
+  const maxDevices = licData?.deviceLimit || MAX_DEVICES;
+
+  return jsonResponse({
+    ok: true,
+    token: sessionToken,
+    plan: licData?.plan || "free",
+    devices: devices.map(d => ({
+      id: d.id,
+      name: d.name || "Unknown Device",
+      lastSeen: d.lastSeen ? new Date(d.lastSeen).toISOString() : null,
+      ipPrefix: d.ip ? d.ip.split(".").slice(0, 2).join(".") + ".x.x" : null,
+    })),
+    maxDevices,
+    expires: expires > 0 ? expires : null,
+    expiresHuman: expires > 0
+      ? new Date(expires * 1000).toISOString().split("T")[0]
+      : "LIFETIME",
+  });
+}
+
+/**
+ * POST /auth/google-extension
+ * Called from the browser extension after getting a Google access token
+ * via chrome.identity.launchWebAuthFlow.
+ * Body: {email, googleId, name, accessToken}
+ * Skips Turnstile (extension cannot render widgets), keeps rate limiting.
+ */
+async function handleAuthGoogleExtension(body, env, request) {
+  const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
+  if (!await checkAuthRateLimit(ip, env)) {
+    return jsonResponse({ ok: false, error: "Too many attempts. Try again in 1 hour." }, 429);
+  }
+
+  const { email, googleId, name, accessToken } = body;
+  if (!email || !googleId || !accessToken) {
+    return jsonResponse({ ok: false, error: "Missing required fields" }, 400);
+  }
+
+  // Verify the access token is valid by calling Google userinfo
+  let verifiedEmail;
+  let verifiedGoogleId;
+  try {
+    const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: "Bearer " + accessToken },
+    });
+    if (!userRes.ok) return jsonResponse({ ok: false, error: "Invalid Google token" }, 401);
+    const userInfo = await userRes.json();
+    verifiedEmail    = (userInfo.email || "").toLowerCase().trim();
+    verifiedGoogleId = userInfo.sub;
+  } catch (_) {
+    return jsonResponse({ ok: false, error: "Google token verification failed" }, 401);
+  }
+
+  // Sanity check: claimed email/id must match what Google says
+  if (verifiedEmail !== (email || "").toLowerCase().trim() || verifiedGoogleId !== googleId) {
+    return jsonResponse({ ok: false, error: "Token mismatch" }, 401);
+  }
+
+  // Find or create user account (same logic as OAuth callback)
+  const userKey = `user:${verifiedEmail}`;
+  let user = await env.ADOFF_LICENSES.get(userKey, "json");
+  const now = Date.now();
+
+  if (!user) {
+    // Import legacy licenses from email index if present
+    const legacyKeys = await env.ADOFF_LICENSES.get(`email:${verifiedEmail}`, "json") || [];
+    user = {
+      email: verifiedEmail,
+      passwordHash: null,
+      salt: null,
+      emailVerified: true,
+      providers: ["google"],
+      googleId: verifiedGoogleId,
+      microsoftId: null,
+      licenses: legacyKeys.map(k => k.raw).filter(Boolean),
+      createdAt: now,
+      lastLogin: now,
+    };
+  } else {
+    if (!user.providers) user.providers = [];
+    if (!user.providers.includes("google")) user.providers.push("google");
+    user.googleId     = verifiedGoogleId;
+    user.emailVerified = true;
+    user.lastLogin    = now;
+  }
+
+  await env.ADOFF_LICENSES.put(userKey, JSON.stringify(user));
+
+  // Resolve first active license for session
+  const firstRaw = user.licenses && user.licenses.length > 0 ? user.licenses[0] : null;
+  let licData = firstRaw ? await env.ADOFF_LICENSES.get(`lic:${firstRaw}`, "json") : null;
+  let licenseKey = null;
+  if (licData) {
+    licenseKey = licData.key || firstRaw;
+  }
+
+  // Generate session token (24h)
+  const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+  const sessionToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+  const expiresAt = now + 24 * 60 * 60 * 1000;
+
+  await env.ADOFF_LICENSES.put(
+    `account_session:${sessionToken}`,
+    JSON.stringify({ raw: firstRaw, email: verifiedEmail, createdAt: now, expiresAt }),
+    { expirationTtl: 86400 }
+  );
+
+  const plan = licData?.plan || "free";
+  const expires = licData?.expires || 0;
+
+  return jsonResponse({
+    ok:         true,
+    token:      sessionToken,
+    email:      verifiedEmail,
+    plan,
+    licenseRaw: licenseKey,
+    expires:    expires > 0 ? expires : null,
+    expiresHuman: expires > 0
+      ? new Date(expires * 1000).toISOString().split("T")[0]
+      : (licenseKey ? "LIFETIME" : null),
+  });
+}
+
+/**
+ * POST /auth/forgot-password
+ * Body: {email}
+ */
+async function handleAuthForgotPassword(body, env, request) {
+  const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
+
+  if (!await verifyTurnstile(body.turnstileToken, ip, env)) {
+    return jsonResponse({ ok: false, error: "Verifica anti-bot fallita. Riprova." }, 400);
+  }
+
+  const { email } = body;
+  if (!email) return jsonResponse({ ok: false, error: "Missing email" }, 400);
+
+  // Always return the same message to prevent user enumeration
+  const RESPONSE = { ok: true, message: "Se l'email e' registrata, riceverai un link di reset" };
+
+  const normalEmail = email.toLowerCase().trim();
+  const user = await env.ADOFF_LICENSES.get(`user:${normalEmail}`, "json");
+  if (!user || !user.passwordHash) return jsonResponse(RESPONSE);
+
+  // Generate reset token (20 bytes = 40 hex chars)
+  const resetBytes = crypto.getRandomValues(new Uint8Array(20));
+  const resetToken = Array.from(resetBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+  await env.ADOFF_LICENSES.put(
+    `password_reset:${resetToken}`,
+    JSON.stringify({ email: normalEmail, createdAt: Date.now() }),
+    { expirationTtl: 3600 }
+  );
+
+  const resetUrl = "https://adoff.app/account/?reset=" + resetToken;
+  const tmplReset = EMAIL_TEMPLATES.reset_password(normalEmail, resetUrl);
+  await sendEmail(normalEmail, tmplReset.subject, tmplReset.html, env);
+
+  return jsonResponse(RESPONSE);
+}
+
+/**
+ * POST /auth/reset-password
+ * Body: {token, newPassword}
+ */
+async function handleAuthResetPassword(body, env) {
+  const { token, newPassword } = body;
+  if (!token || !newPassword) return jsonResponse({ ok: false, error: "Missing token or password" }, 400);
+  if (newPassword.length < 8) return jsonResponse({ ok: false, error: "Password must be at least 8 characters" }, 400);
+
+  const resetData = await env.ADOFF_LICENSES.get(`password_reset:${token}`, "json");
+  if (!resetData) return jsonResponse({ ok: false, error: "Invalid or expired reset token" }, 400);
+
+  const userKey = `user:${resetData.email}`;
+  const user = await env.ADOFF_LICENSES.get(userKey, "json");
+  if (!user) return jsonResponse({ ok: false, error: "User not found" }, 404);
+
+  const salt = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+  user.passwordHash = await hashPasswordPBKDF2(newPassword, salt);
+  user.salt = salt;
+
+  await env.ADOFF_LICENSES.put(userKey, JSON.stringify(user));
+  await env.ADOFF_LICENSES.delete(`password_reset:${token}`);
+
+  return jsonResponse({ ok: true });
+}
+
+/**
+ * POST /auth/activate-account
+ * Body: {token, password}
+ * Attiva un account creato automaticamente dopo acquisto.
+ */
+async function handleAuthActivateAccount(body, env) {
+  const { token, password } = body;
+  if (!token || !password) return jsonResponse({ ok: false, error: "Missing token or password" }, 400);
+  if (password.length < 8) return jsonResponse({ ok: false, error: "Password must be at least 8 characters" }, 400);
+
+  const activateData = await env.ADOFF_LICENSES.get(`account_activate:${token}`, "json");
+  if (!activateData) return jsonResponse({ ok: false, error: "Invalid or expired activation token" }, 400);
+
+  const userKey = `user:${activateData.email}`;
+  const user = await env.ADOFF_LICENSES.get(userKey, "json");
+  if (!user) return jsonResponse({ ok: false, error: "User not found" }, 404);
+
+  // Imposta password e attiva account
+  const salt = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+  user.passwordHash = await hashPasswordPBKDF2(password, salt);
+  user.salt = salt;
+  user.emailVerified = true; // Pagamento = email verificata
+  if (!user.providers.includes("password")) user.providers.push("password");
+
+  await env.ADOFF_LICENSES.put(userKey, JSON.stringify(user));
+  await env.ADOFF_LICENSES.delete(`account_activate:${token}`);
+
+  // Genera session token per login automatico
+  const sessionToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+  const session = {
+    email: activateData.email,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 giorni
+  };
+  await env.ADOFF_LICENSES.put(`account_session:${sessionToken}`, JSON.stringify(session), {
+    expirationTtl: 30 * 86400,
+  });
+
+  return jsonResponse({
+    ok: true,
+    token: sessionToken,
+    email: activateData.email,
+    licenses: user.licenses || []
+  });
+}
+
+// =============================================
+// ACCOUNT — LINK LICENSE & PROFILE
+// =============================================
+
+/**
+ * POST /account/link-license
+ * Header: X-Account-Token: TOKEN
+ * Body: {key}
+ */
+async function handleAccountLinkLicense(body, env, request) {
+  const token = request.headers.get("X-Account-Token");
+  const session = await verifyAccountAuth(token, env);
+  if (!session) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+
+  const { key } = body;
+  if (!key) return jsonResponse({ ok: false, error: "Missing key" }, 400);
+
+  // Resolve ADOFF-XXXX alias → raw key
+  let rawKey = key.trim();
+  if (rawKey.startsWith("ADOFF-")) {
+    const resolved = await env.ADOFF_LICENSES.get(`key:${rawKey}`);
+    if (!resolved) return jsonResponse({ ok: false, error: "License not found" }, 404);
+    rawKey = resolved;
+  }
+
+  const licData = await env.ADOFF_LICENSES.get(`lic:${rawKey}`, "json");
+  if (!licData) return jsonResponse({ ok: false, error: "License not found" }, 404);
+  if (licData.revoked) return jsonResponse({ ok: false, error: "License is revoked" }, 403);
+
+  // Load user account
+  const userKey = `user:${session.email}`;
+  const user = await env.ADOFF_LICENSES.get(userKey, "json");
+  if (!user) return jsonResponse({ ok: false, error: "Account not found" }, 404);
+
+  // Add raw key to user.licenses if not already present
+  if (!user.licenses.includes(rawKey)) {
+    user.licenses.push(rawKey);
+    await env.ADOFF_LICENSES.put(userKey, JSON.stringify(user));
+  }
+
+  // Update license email to match user email
+  if (licData.email !== session.email) {
+    licData.email = session.email;
+    await env.ADOFF_LICENSES.put(`lic:${rawKey}`, JSON.stringify(licData));
+  }
+
+  return jsonResponse({ ok: true });
+}
+
+/**
+ * GET /account/profile
+ * Header: X-Account-Token: TOKEN
+ */
+async function handleAccountProfile(request, env) {
+  const token = request.headers.get("X-Account-Token");
+  const session = await verifyAccountAuth(token, env);
+  if (!session) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+
+  const user = await env.ADOFF_LICENSES.get(`user:${session.email}`, "json");
+  if (!user) return jsonResponse({ ok: false, error: "Account not found" }, 404);
+
+  // Resolve license details
+  const now = Math.floor(Date.now() / 1000);
+  const licenses = [];
+  for (const raw of (user.licenses || [])) {
+    const lic = await env.ADOFF_LICENSES.get(`lic:${raw}`, "json");
+    if (!lic) continue;
+    const isExpired = lic.expires > 0 && lic.expires < now;
+    licenses.push({
+      key: lic.key || null,
+      plan: lic.plan || "unknown",
+      expires: lic.expires || null,
+      expiresHuman: lic.expires > 0
+        ? new Date(lic.expires * 1000).toISOString().split("T")[0]
+        : "LIFETIME",
+      status: lic.revoked ? "revoked" : isExpired ? "expired" : "active",
+      devices: (lic.devices || []).length,
+    });
+  }
+
+  // Resolve affiliate data if exists
+  let affiliate = null;
+  if (env.DB) {
+    affiliate = await env.DB.prepare("SELECT id, commission_rate FROM affiliates WHERE user_id = ? OR email = ?")
+      .bind(user.email, user.email).first();
+  }
+
+  return jsonResponse({
+    ok: true,
+    email: user.email,
+    providers: user.providers || [],
+    emailVerified: user.emailVerified || false,
+    licenses,
+    affiliate: affiliate ? { id: affiliate.id, rate: affiliate.commission_rate } : null,
+    createdAt: user.createdAt || null,
+  });
+}
+
+// =============================================
+// STATS
+// =============================================
+
+async function handleStats(env) {
+  const totalSold = parseInt(await env.ADOFF_LICENSES.get("stats:total_sold") || "0");
+  return jsonResponse({ sold: totalSold });
+}
+
+// =============================================
+// AFFILIATE ENDPOINTS
+// =============================================
+
+async function handleAffiliateStats(request, env) {
+  const url = new URL(request.url);
+  const affiliateId = url.searchParams.get("id");
+  if (!affiliateId) return jsonResponse({ error: "Missing affiliate ID" }, 400);
+
+  if (!env.DB) return jsonResponse({ error: "Database not configured" }, 500);
+
+  try {
+    const stats = await env.DB.prepare(`
+      SELECT 
+        COUNT(*) as total_sales
+      FROM referrals 
+      WHERE affiliate_id = ? AND status = 'confirmed'
+    `).bind(affiliateId).first();
+
+    const daysEarned = (stats.total_sales || 0) * 30; // 30 giorni per vendita
+
+    return jsonResponse({
+      ok: true,
+      affiliate_id: affiliateId,
+      sales: stats.total_sales || 0,
+      days_earned: daysEarned
+    });
+  } catch (e) {
+    return jsonResponse({ error: "Database error: " + e.message }, 500);
+  }
+}
+
+async function registerReferral(affiliateId, customerEmail, sessionId, amount, currency, env) {
+  if (!env.DB) return;
+  try {
+    const daysToAward = 30; // Premio Partner: 30 giorni
+    
+    // 1. Registra nel DB
+    await env.DB.prepare(
+      "INSERT INTO referrals (affiliate_id, customer_email, stripe_session_id, amount_total, currency, commission_amount, status) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    ).bind(affiliateId, customerEmail, sessionId, amount, currency, 0, "confirmed").run();
+
+    // 2. Trova email affiliato
+    const aff = await env.DB.prepare("SELECT email FROM affiliates WHERE id = ?").bind(affiliateId).first();
+    if (!aff) return;
+
+    // 3. Accredita giorni su KV
+    const userKey = `user:${aff.email}`;
+    const user = await env.ADOFF_LICENSES.get(userKey, "json");
+    if (user && user.licenses && user.licenses.length > 0) {
+      const rawKey = user.licenses[0];
+      const lic = await env.ADOFF_LICENSES.get(`lic:${rawKey}`, "json");
+      if (lic) {
+        const now = Math.floor(Date.now() / 1000);
+        const currentExp = (lic.expires && lic.expires > now) ? lic.expires : now;
+        lic.expires = currentExp + (daysToAward * 86400);
+        lic.updatedAt = Date.now();
+        await env.ADOFF_LICENSES.put(`lic:${rawKey}`, JSON.stringify(lic));
+      }
+    }
+  } catch (e) {
+    console.error("registerReferral Error:", e.message);
+  }
+}
+
+async function handleAffiliateRegister(request, env) {
+  const token = request.headers.get("X-Account-Token");
+  const session = await verifyAccountAuth(token, env);
+  if (!session) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+
+  if (!env.DB) return jsonResponse({ error: "Database not configured" }, 500);
+
+  const email = session.email;
+  // Verifica se gia' affiliato
+  const existing = await env.DB.prepare("SELECT id FROM affiliates WHERE email = ?").bind(email).first();
+  if (existing) return jsonResponse({ ok: true, affiliate_id: existing.id });
+
+  // Genera ID: parte dell'email + 3 random chars
+  const prefix = email.split('@')[0].replace(/[^a-z0-9]/gi, '').toLowerCase().slice(0, 10);
+  const suffix = Math.random().toString(36).slice(2, 5);
+  const affiliateId = `${prefix}-${suffix}`;
+
+  try {
+    await env.DB.prepare(
+      "INSERT INTO affiliates (id, email, user_id, commission_rate) VALUES (?, ?, ?, ?)"
+    ).bind(affiliateId, email, email, 0.20).run();
+    
+    return jsonResponse({ ok: true, affiliate_id: affiliateId });
+  } catch (e) {
+    return jsonResponse({ error: "Errore registrazione: " + e.message }, 500);
+  }
+}
+
+// =============================================
+// REFERRAL ENDPOINTS
+// =============================================
+
+const REFERRAL_CODE_REGEX = /^ADO-[A-Z0-9]{5,8}$/;
+
+async function handleReferralRegisterCode(body, env, request) {
+  const token = request.headers.get("X-Account-Token");
+  const session = await verifyAccountAuth(token, env);
+  if (!session) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+
+  const code = body && body.code;
+  if (!code || !REFERRAL_CODE_REGEX.test(code)) {
+    return jsonResponse({ ok: false, error: "Invalid code format" }, 400);
+  }
+
+  const existing = await env.ADOFF_LICENSES.get("referral:" + code, "json");
+  if (existing && existing.email !== session.email) {
+    return jsonResponse({ ok: false, error: "Code already claimed" }, 409);
+  }
+
+  await env.ADOFF_LICENSES.put(
+    "referral:" + code,
+    JSON.stringify({ email: session.email, createdAt: Date.now() })
+  );
+  await env.ADOFF_LICENSES.put("user_referral:" + session.email, JSON.stringify({ code, createdAt: Date.now() }));
+
+  const statsExisting = await env.ADOFF_LICENSES.get("referral_stats:" + code, "json");
+  if (!statsExisting) {
+    await env.ADOFF_LICENSES.put(
+      "referral_stats:" + code,
+      JSON.stringify({ count: 0, daysEarned: 0, history: [], paidEmails: [] })
+    );
+  }
+
+  return jsonResponse({ ok: true, code });
+}
+
+async function handleReferralStats(request, env) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+  if (!code || !REFERRAL_CODE_REGEX.test(code)) {
+    return jsonResponse({ ok: false, error: "Invalid code format" }, 400);
+  }
+
+  const stats = await env.ADOFF_LICENSES.get("referral_stats:" + code, "json")
+    || { count: 0, daysEarned: 0, history: [], paidEmails: [] };
+
+  return jsonResponse({
+    ok: true,
+    code,
+    count: stats.count,
+    daysEarned: stats.daysEarned,
+    history: stats.history,
+  });
+}
+
+async function creditReferralFriend(code, payerEmail, env, sessionId) {
+  if (!code || !code.startsWith("ADO-")) return;
+  const REFERRAL_DAYS_PER_FRIEND = 15;
+  try {
+    const mapping = await env.ADOFF_LICENSES.get("referral:" + code, "json");
+    if (!mapping || !mapping.email) return;
+    const referrerEmail = mapping.email;
+    if (referrerEmail.toLowerCase() === (payerEmail || "").toLowerCase()) return;
+
+    // Stripe idempotency: if we've already credited for this session, skip.
+    // session.id is unique per Stripe checkout, retried webhooks reuse the same id.
+    if (sessionId) {
+      const flagKey = "referral_credited:" + sessionId;
+      const already = await env.ADOFF_LICENSES.get(flagKey);
+      if (already) return;
+      // Mark immediately (best-effort lock — KV is eventually consistent but Stripe retries are seconds/minutes apart).
+      await env.ADOFF_LICENSES.put(flagKey, "1", { expirationTtl: 60 * 60 * 24 * 90 }); // 90 days
+    }
+
+    const stats = await env.ADOFF_LICENSES.get("referral_stats:" + code, "json")
+      || { count: 0, daysEarned: 0, history: [], paidEmails: [] };
+    if (stats.paidEmails.includes((payerEmail || "").toLowerCase())) return;
+
+    let credited = false;
+    const userRecord = await env.ADOFF_LICENSES.get("user:" + referrerEmail, "json");
+    if (userRecord && Array.isArray(userRecord.licenses) && userRecord.licenses.length > 0) {
+      const rawKey = userRecord.licenses[0];
+      const lic = await env.ADOFF_LICENSES.get("lic:" + rawKey, "json");
+      if (lic && lic.expires && lic.expires > 0) {
+        const now = Math.floor(Date.now() / 1000);
+        const base = lic.expires > now ? lic.expires : now;
+        lic.expires = base + (REFERRAL_DAYS_PER_FRIEND * 86400);
+        lic.updatedAt = Date.now();
+        await env.ADOFF_LICENSES.put("lic:" + rawKey, JSON.stringify(lic));
+        credited = true;
+      }
+    }
+    if (!credited) return; // No active time-limited license to credit — don't inflate stats.
+
+    stats.count += 1;
+    stats.daysEarned += REFERRAL_DAYS_PER_FRIEND;
+    stats.history.unshift({
+      date: Date.now(),
+      payerEmail: maskEmail(payerEmail),
+      daysEarned: REFERRAL_DAYS_PER_FRIEND,
+    });
+    if (stats.history.length > 50) stats.history.length = 50;
+    stats.paidEmails.push((payerEmail || "").toLowerCase());
+    await env.ADOFF_LICENSES.put("referral_stats:" + code, JSON.stringify(stats));
+  } catch (e) {
+    console.error("creditReferralFriend error:", e.message);
+  }
+}
+
+function maskEmail(email) {
+  if (!email) return "";
+  const [u, d] = email.split("@");
+  if (!d) return "***";
+  return (u.slice(0, 2) || "**") + "***@" + d;
+}
+
+async function handleAffiliateMe(request, env) {
+  const token = request.headers.get("X-Account-Token");
+  const session = await verifyAccountAuth(token, env);
+  if (!session) return jsonResponse({ ok: false, error: "Unauthorized" }, 401);
+  if (!env.DB) return jsonResponse({ ok: false, error: "Database not configured" }, 500);
+  const aff = await env.DB.prepare("SELECT id FROM affiliates WHERE email = ?").bind(session.email).first();
+  if (aff) return jsonResponse({ ok: true, registered: true, affiliate_id: aff.id });
+  return jsonResponse({ ok: true, registered: false });
+}
+
+// =============================================
+// ROUTER
+// =============================================
+
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+  });
+}
+
+// =============================================
+// CRON: CONTROLLO SCADENZE LICENZE (giornaliero)
+// =============================================
+
+async function handleScheduled(env) {
+  const now = Math.floor(Date.now() / 1000);
+  let reminders = 0, expired = 0, checked = 0;
+
+  // BA-6: usa indici expiry per O(1) — controlla solo le date rilevanti
+  // invece di iterare TUTTE le licenze
+  const checkDays = [-1, 0, 1, 3, 7]; // scadute ieri, oggi, tra 1/3/7 giorni
+  const processedRaws = new Set();
+
+  for (const offset of checkDays) {
+    const targetTs = now + offset * 86400;
+    const dateStr = new Date(targetTs * 1000).toISOString().slice(0, 10).replace(/-/g, "");
+    const rawKeys = await env.ADOFF_LICENSES.get(`expiry:${dateStr}`, "json");
+    if (!rawKeys) continue;
+
+    for (const raw of rawKeys) {
+      if (processedRaws.has(raw)) continue;
+      processedRaws.add(raw);
+
+      const data = await env.ADOFF_LICENSES.get(`lic:${raw}`, "json");
+      if (!data || data.revoked || !data.email || !data.expires || data.expires === 0) continue;
+      checked++;
+
+      const daysLeft = Math.floor((data.expires - now) / 86400);
+
+      // Licenza scaduta — invia email (una volta sola)
+      if (daysLeft < 0 && !data.expiredNotified) {
+        const tmpl = EMAIL_TEMPLATES.expired(data.key, data.email);
+        await sendEmail(data.email, tmpl.subject, tmpl.html, env);
+        data.expiredNotified = true;
+        await env.ADOFF_LICENSES.put(`lic:${raw}`, JSON.stringify(data));
+        expired++;
+        continue;
+      }
+
+      // Reminder: 7, 3, 1 giorni prima della scadenza
+      if ([7, 3, 1].includes(daysLeft)) {
+        const reminderKey = "reminder_" + daysLeft;
+        if (!data[reminderKey]) {
+          const tmpl = EMAIL_TEMPLATES.expiry_reminder(data.key, daysLeft, data.email);
+          await sendEmail(data.email, tmpl.subject, tmpl.html, env);
+          data[reminderKey] = true;
+          await env.ADOFF_LICENSES.put(`lic:${raw}`, JSON.stringify(data));
+          reminders++;
+        }
+      }
+    }
+  }
+
+  return { reminders, expired, checked };
+}
+
+export default {
+  // Cron trigger — eseguito da Cloudflare ogni giorno alle 09:00 UTC
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(handleScheduled(env));
+  },
+
+  async fetch(request, env) {
+    const corsHeaders = getCorsHeaders(request);
+
+    // CORS preflight
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders });
+    }
+
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    // Health check — no rate limit
+    if (path === "/health" && request.method === "GET") {
+      return handleHealth();
+    }
+
+    // Admin panel — served same-origin from KV, aggressive no-cache + forced version redirect
+    if (path === "/admin" && request.method === "GET") {
+      const html = await env.ADOFF_LICENSES.get("admin:html");
+      if (!html) return new Response("Admin panel not installed. Run: wrangler kv:key put --namespace-id=... admin:html --path=admin.html", { status: 404 });
+
+      // Genera hash del contenuto per versioning
+      const encoder = new TextEncoder();
+      const data = encoder.encode(html);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const contentHash = hashArray.slice(0, 8).map(b => b.toString(16).padStart(2, "0")).join("");
+
+      // Cache-busting: se il parametro v non corrisponde all'hash corrente, redirect
+      const requestedVersion = url.searchParams.get("v");
+      if (requestedVersion !== contentHash) {
+        const newUrl = new URL(url);
+        newUrl.searchParams.set("v", contentHash);
+        return Response.redirect(newUrl.toString(), 302);
+      }
+
+      // Headers con tutte le direttive anti-cache
+      const headers = new Headers();
+      headers.set("Content-Type", "text/html; charset=utf-8");
+      headers.set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0, s-maxage=0");
+      headers.set("Pragma", "no-cache");
+      headers.set("Expires", "0");
+      headers.set("ETag", '"' + contentHash + '"');
+      headers.set("X-Content-Hash", contentHash);
+      headers.set("CDN-Cache-Control", "no-store");
+      headers.set("Cloudflare-CDN-Cache-Control", "no-store");
+      headers.set("Surrogate-Control", "no-store");
+      headers.set("Vary", "*");
+
+      return new Response(html, { status: 200, headers });
+    }
+
+
+    // Stripe webhook — no rate limit (Stripe deve sempre passare)
+    if (path === "/stripe-webhook" && request.method === "POST") {
+      return handleStripeWebhook(request, env);
+    }
+
+    // Admin endpoints — no rate limit (autenticati via password admin)
+    // Rate limiting solo per endpoint pubblici
+    const isAdminEndpoint = path.startsWith("/admin");
+    if (!isAdminEndpoint) {
+      const ip = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
+      const allowed = await checkRateLimit(ip, env);
+      if (!allowed) {
+        return new Response(JSON.stringify({ error: "Rate limit exceeded" }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // Helper: garantisce che OGNI risposta abbia i CORS headers dinamici corretti
+    const withCors = async (handlerPromise) => {
+      const resp = await handlerPromise;
+      // Redirect responses (3xx) non vengono modificate — il browser le segue direttamente
+      if (resp.status >= 300 && resp.status < 400) return resp;
+      const newHeaders = new Headers(resp.headers);
+      for (const [k, v] of Object.entries(corsHeaders)) {
+        newHeaders.set(k, v);
+      }
+      return new Response(resp.body, { status: resp.status, headers: newHeaders });
+    };
+
+    // GET endpoints
+    if (request.method === "GET") {
+      if (path === "/stats") return withCors(handleStats(env));
+      if (path === "/affiliate/stats") return withCors(handleAffiliateStats(request, env));
+      if (path === "/affiliate/me") return withCors(handleAffiliateMe(request, env));
+      if (path === "/referral/stats") return withCors(handleReferralStats(request, env));
+      if (path === "/admin/stats") return withCors(handleAdminStats(request, env));
+      if (path === "/admin/analytics") return withCors(handleAdminAnalytics(request, env));
+      if (path === "/admin/revenue") return withCors(handleAdminRevenue(request, env));
+      if (path === "/admin/licenses") return withCors(handleAdminListLicenses(request, env));
+      if (path === "/admin/chats") return withCors(handleAdminListChats(request, env));
+      if (path.startsWith("/admin/chat/")) return withCors(handleAdminGetChat(request, env, path.split("/admin/chat/")[1]));
+      if (path === "/attribution/stats") return withCors(handleAttributionStats(request, env));
+      if (path === "/success") return withCors(handleSuccess(request, env));
+      if (path === "/tickets") return withCors(handleListTickets(request, env));
+      if (path.startsWith("/ticket/")) return withCors(handleGetTicket(request, env, path.split("/ticket/")[1]));
+      if (path === "/account/devices") return withCors(handleAccountDevices(request, env));
+      if (path === "/account/profile") return withCors(handleAccountProfile(request, env));
+      if (path === "/oauth/google/start") return handleOAuthStart("google", env); // redirect — no CORS wrap
+      if (path === "/oauth/microsoft/start") return handleOAuthStart("microsoft", env); // redirect — no CORS wrap
+      if (path === "/oauth/google/callback") return handleOAuthCallback("google", request, env); // redirect — no CORS wrap
+      if (path === "/oauth/microsoft/callback") return handleOAuthCallback("microsoft", request, env); // redirect — no CORS wrap
+      return new Response(JSON.stringify({ error: "Not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Auth endpoints — own rate limiting, before generic rate limit check
+    if (path === "/auth/register" && request.method === "POST") {
+      let authBody;
+      try { authBody = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400); }
+      return handleAuthRegister(authBody, env, request);
+    }
+    if (path === "/auth/login" && request.method === "POST") {
+      let authBody;
+      try { authBody = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400); }
+      return handleAuthLogin(authBody, env, request);
+    }
+    if (path === "/auth/verify-email" && request.method === "POST") {
+      let authBody;
+      try { authBody = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400); }
+      return handleAuthVerifyEmail(authBody, env);
+    }
+    if (path === "/auth/forgot-password" && request.method === "POST") {
+      let authBody;
+      try { authBody = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400); }
+      return handleAuthForgotPassword(authBody, env, request);
+    }
+    if (path === "/auth/reset-password" && request.method === "POST") {
+      let authBody;
+      try { authBody = await request.json(); } catch { return jsonResponse({ error: "Invalid JSON" }, 400); }
+      return handleAuthResetPassword(authBody, env);
+    }
+    if (path === "/auth/activate-account" && request.method === "POST") {
+      let authBody;
+      try { authBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleAuthActivateAccount(authBody, env));
+    }
+    if (path === "/auth/google-extension" && request.method === "POST") {
+      let authBody;
+      try { authBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleAuthGoogleExtension(authBody, env, request));
+    }
+    if (path === "/account/link-license" && request.method === "POST") {
+      let authBody;
+      try { authBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleAccountLinkLicense(authBody, env, request));
+    }
+    if (path === "/affiliate/register" && request.method === "POST") {
+      return withCors(handleAffiliateRegister(request, env));
+    }
+    if (path === "/referral/register-code" && request.method === "POST") {
+      let body;
+      try { body = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleReferralRegisterCode(body, env, request));
+    }
+
+    // Account management endpoints (own JSON parsing, before generic switch)
+    if (path === "/account/login" && request.method === "POST") {
+      const loginIp = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
+      if (!await checkAuthRateLimit(loginIp, env)) {
+        return withCors(jsonResponse({ ok: false, error: "Too many attempts, try again later" }, 429));
+      }
+      let accBody;
+      try { accBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleAccountLogin(accBody, env));
+    }
+    if (path === "/account/remove-device" && request.method === "POST") {
+      let accBody;
+      try { accBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleAccountRemoveDevice(accBody, env, request));
+    }
+    if (path === "/account/remove-all" && request.method === "POST") {
+      let accBody;
+      try { accBody = await request.json(); } catch { accBody = {}; }
+      return withCors(handleAccountRemoveAll(accBody, env, request));
+    }
+
+    // Checkout session (crea sessione Stripe con dark mode)
+    if (path === "/checkout" && request.method === "POST") {
+      let checkoutBody;
+      try { checkoutBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleCreateCheckout(checkoutBody, env));
+    }
+
+    // AI support chatbot
+    if (path === "/chat" && request.method === "POST") {
+      let chatBody;
+      try { chatBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleChat(chatBody, request, env));
+    }
+
+    // Attribution endpoints (GET /attribution/stats handled in the GET block above)
+    if (path === "/attribution/install" && request.method === "POST") {
+      return withCors(handleAttributionInstall(request, env));
+    }
+
+    // Ticket system
+    if (path === "/ticket" && request.method === "POST") {
+      let ticketBody;
+      try { ticketBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleCreateTicket(ticketBody, env, request));
+    }
+    if (path.startsWith("/ticket/") && request.method === "POST") {
+      let updateBody;
+      try { updateBody = await request.json(); } catch { return withCors(jsonResponse({ error: "Invalid JSON" }, 400)); }
+      return withCors(handleUpdateTicket(updateBody, env, request, path.split("/ticket/")[1]));
+    }
+
+    // Tracking endpoints — rate-limited, no auth, read request.cf before body parse
+    if (path === "/track/install" && request.method === "POST") {
+      return withCors(handleTrackInstall(request, env));
+    }
+    if (path === "/track/download" && request.method === "POST") {
+      return withCors(handleTrackDownload(request, env));
+    }
+
+    // POST endpoints
+    if (request.method !== "POST") {
+      return new Response(JSON.stringify({ error: "Method not allowed" }), {
+        status: 405,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return jsonResponse({ error: "Invalid JSON" }, 400);
+    }
+
+    switch (path) {
+      case "/validate":
+        return withCors(handleValidate(body, env, request));
+      case "/activate":
+        return withCors(handleActivate(body, env, request));
+      case "/deactivate":
+        return withCors(handleDeactivate(body, env, request));
+      case "/revoke":
+        return withCors(handleRevoke(body, env, request));
+      case "/admin/generate-key":
+        return withCors(handleAdminGenerateKey(body, env, request));
+      case "/admin/delete-license":
+        return withCors(handleDeleteLicense(body, env, request));
+      case "/admin/license-update":
+        return withCors(handleAdminLicenseUpdate(body, env, request));
+      case "/admin/login": {
+        const adminLoginIp = request.headers.get("CF-Connecting-IP") || "0.0.0.0";
+        if (!await checkAuthRateLimit(adminLoginIp, env)) {
+          return withCors(jsonResponse({ ok: false, error: "Too many attempts, try again later" }, 429));
+        }
+        return withCors(handleAdminLogin(body, env));
+      }
+      case "/admin/change-password":
+        return withCors(handleAdminChangePassword(body, env, request));
+      case "/admin/reset-password":
+        return withCors(handleAdminResetPassword(body, env));
+      case "/admin/reset-confirm":
+        return withCors(handleAdminResetConfirm(body, env));
+      default:
+        return new Response(JSON.stringify({ error: "Not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+    }
+  },
+};

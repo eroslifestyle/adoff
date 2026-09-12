@@ -1,0 +1,95 @@
+{
+  "name": "AdOff 12 - YouTube Factory (NotebookLM enqueue)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "days", "daysInterval": 1 }] }
+      },
+      "id": "trig",
+      "name": "Daily 06:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "command": "cat /home/mrxxx/adoff/sviluppo/ai-autopilot/n8n-workflows/data/youtube-seeds.json"
+      },
+      "id": "readseeds",
+      "name": "Read youtube-seeds.json",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Un item per seed. job_id stabile (PK) => ON CONFLICT DO NOTHING = idempotente.\nconst cfg = JSON.parse($input.first().json.stdout);\nconst seeds = (cfg.seeds || []).filter(s => s.job_id && Array.isArray(s.pdfs) && s.pdfs.length);\nreturn seeds.map(s => ({ json: {\n  job_id: s.job_id,\n  brand: s.brand || 'adoff',\n  title_hint: s.title_hint || '',\n  lang: s.lang || 'it',\n  mode: ['A','B','both'].includes(s.mode) ? s.mode : 'both',\n  topic: s.topic || '',\n  pdfs: s.pdfs\n}}));"
+      },
+      "id": "build",
+      "name": "Build jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Costruisce INSERT con array literal Postgres (source_pdfs TEXT[]).\nfunction lit(s){return String(s).replace(/'/g,\"''\");}\nconst out=[];\nfor (const it of $input.all()){\n  const j=it.json;\n  const arr='ARRAY['+ j.pdfs.map(p=>`'${lit(p)}'`).join(',') +']::text[]';\n  const sql=`INSERT INTO adoff_autopilot.youtube_queue `+\n    `(job_id,brand,title_hint,source_pdfs,topic,lang,mode,status) VALUES (`+\n    `'${lit(j.job_id)}','${lit(j.brand)}','${lit(j.title_hint)}',${arr},`+\n    `'${lit(j.topic)}','${lit(j.lang)}','${lit(j.mode)}','queued') `+\n    `ON CONFLICT (job_id) DO NOTHING;`;\n  out.push({json:{job_id:j.job_id,sql}});\n}\nreturn out;"
+      },
+      "id": "mksql",
+      "name": "Build INSERT SQL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sql }}",
+        "options": {}
+      },
+      "id": "enqueue",
+      "name": "Enqueue youtube_queue",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1120, 400],
+      "credentials": {
+        "postgres": { "id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres" }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ids=$input.all().map(i=>i.json.job_id);\nconst text=`🎬 *AdOff YouTube Factory* — ${ids.length} job NotebookLM accodati\\n\\n`+ids.map(i=>`• ${i}`).join('\\n')+`\\n\\nIl worker NotebookLM genererà A (Video Overview) + B (audio+caption 1080p). Il workflow 13 pubblicherà su YouTube.`;\nreturn [{json:{text}}];"
+      },
+      "id": "digest",
+      "name": "Build Telegram digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"chat_id\":\"{{ $env.TELEGRAM_CHAT_ID }}\",\"text\":{{ JSON.stringify($json.text) }},\"parse_mode\":\"Markdown\"}",
+        "options": {}
+      },
+      "id": "tg",
+      "name": "Telegram digest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 400]
+    }
+  ],
+  "connections": {
+    "Daily 06:00": { "main": [[{ "node": "Read youtube-seeds.json", "type": "main", "index": 0 }]] },
+    "Read youtube-seeds.json": { "main": [[{ "node": "Build jobs", "type": "main", "index": 0 }]] },
+    "Build jobs": { "main": [[{ "node": "Build INSERT SQL", "type": "main", "index": 0 }]] },
+    "Build INSERT SQL": { "main": [[{ "node": "Enqueue youtube_queue", "type": "main", "index": 0 }]] },
+    "Enqueue youtube_queue": { "main": [[{ "node": "Build Telegram digest", "type": "main", "index": 0 }]] },
+    "Build Telegram digest": { "main": [[{ "node": "Telegram digest", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "saveExecutionProgress": true },
+  "tags": ["adoff", "youtube", "notebooklm", "S12"],
+  "active": false
+}

@@ -1,0 +1,12 @@
+name = "adoff-tickets"
+workers_dev = false
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# KV per rate limiting
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "4a4b34a31bb640caab55bd811ba2923f"
+
+# Route (attivare quando adoff.app e' su Cloudflare):
+# route = { pattern = "api.adoff.app/tickets", zone_name = "adoff.app" }

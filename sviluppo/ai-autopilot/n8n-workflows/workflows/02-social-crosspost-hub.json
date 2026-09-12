@@ -1,0 +1,102 @@
+{
+  "name": "AdOff 02 - Social Cross-post Hub",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "adoff-crosspost",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "wh",
+      "name": "Webhook /crosspost",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 400],
+      "webhookId": "adoff-crosspost"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: { seed_post: '...', lang?: 'en', platforms?: ['twitter','mastodon','reddit'], reddit_subs?: [...] }\nconst body = $input.first().json.body || $input.first().json;\nconst seed = body.seed_post || '';\nconst lang = body.lang || 'en';\nconst platformsAll = ['twitter','mastodon','reddit','indiehackers','devto','linkedin'];\nconst platforms = Array.isArray(body.platforms) && body.platforms.length ? body.platforms : platformsAll;\nconst reddit_subs = body.reddit_subs || [];\nif (!seed || seed.length < 30) return [{ json: { error: 'seed_post required (min 30 chars)' }}];\nreturn platforms.map(p => ({ json: { seed, lang, platform: p, reddit_subs }}));"
+      },
+      "id": "fanout",
+      "name": "Fan-out per platform",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\":\"chat-max\",\"stream\":false,\"options\":{\"temperature\":0.7,\"num_predict\":600},\"prompt\":\"You rewrite a seed post for platform '{{ $json.platform }}' in language '{{ $json.lang }}'. Follow platform conventions:\\n- twitter: max 280 chars, hook + 1 link, casual\\n- mastodon: max 500 chars, FOSS-friendly, hashtags #privacy #adblock\\n- reddit: 200-500 words, problem-first, link in last paragraph with maker disclosure ('I built this')\\n- indiehackers: build-in-public tone, share metric or struggle, no hard sell\\n- devto: technical writeup, code block if relevant, link at end\\n- linkedin: professional, 1500 chars, story-driven, soft CTA\\n\\nReturn ONLY the rewritten post, no preamble, no quotes.\\n\\nSEED:\\n{{ $json.seed }}\\n\\n{{ $json.platform }} version:\"}",
+        "options": {"timeout": 60000, "response": {"response": {"neverError": true}}}
+      },
+      "id": "rewrite",
+      "name": "LLM rewrite",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\":\"fast-max\",\"stream\":false,\"format\":\"json\",\"options\":{\"temperature\":0.1,\"num_predict\":80},\"prompt\":\"Rate this social post on a scale 0-10 for: (a) value to reader (b) anti-spam (organic vs promo). Return ONLY JSON: {\\\"quality\\\": <int>, \\\"reason\\\": \\\"<short>\\\"}.\\n\\nPLATFORM: {{ $('Fan-out per platform').item.json.platform }}\\nPOST:\\n{{ $json.response }}\"}",
+        "options": {"timeout": 20000, "response": {"response": {"neverError": true}}}
+      },
+      "id": "quality",
+      "name": "Quality gate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const fanout = $('Fan-out per platform').item.json;\nconst draft = ($('LLM rewrite').item.json.response || '').trim();\nlet quality = 5, reason = '';\ntry {\n  const q = JSON.parse($input.first().json.response || '{}');\n  quality = parseInt(q.quality) || 5;\n  reason = q.reason || '';\n} catch(e) {}\nreturn [{ json: {\n  workflow: 'crosspost',\n  platform: fanout.platform,\n  lang: fanout.lang,\n  body: draft,\n  quality_score: quality,\n  quality_reason: reason,\n  status: quality >= 6 ? 'queued' : 'skipped',\n  reddit_subs: fanout.reddit_subs\n}}];"
+      },
+      "id": "assemble",
+      "name": "Assemble post",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.posts_queue (workflow, platform, lang, body, quality_score, status, scheduled_at) VALUES ($1,$2,$3,$4,$5,$6, NOW() + (random()*interval '4 hours')) RETURNING id, status;",
+        "options": {"queryReplacement": "={{ $json.workflow }},{{ $json.platform }},{{ $json.lang }},{{ $json.body }},{{ $json.quality_score }},{{ $json.status }}"}
+      },
+      "id": "queue",
+      "name": "Queue to posts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1340, 400],
+      "credentials": {"postgres": {"id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres"}}
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"queued\": {{ $input.all().length }} }"
+      },
+      "id": "resp",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1560, 400]
+    }
+  ],
+  "connections": {
+    "Webhook /crosspost": {"main": [[{"node": "Fan-out per platform", "type": "main", "index": 0}]]},
+    "Fan-out per platform": {"main": [[{"node": "LLM rewrite", "type": "main", "index": 0}]]},
+    "LLM rewrite": {"main": [[{"node": "Quality gate", "type": "main", "index": 0}]]},
+    "Quality gate": {"main": [[{"node": "Assemble post", "type": "main", "index": 0}]]},
+    "Assemble post": {"main": [[{"node": "Queue to posts", "type": "main", "index": 0}]]},
+    "Queue to posts": {"main": [[{"node": "Respond", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "saveExecutionProgress": true},
+  "tags": [{"name": "adoff"}, {"name": "content"}],
+  "active": false
+}

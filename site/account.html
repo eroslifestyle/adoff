@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="canonical" href="https://adoff.app/account/" />
+  
+<title>Account AdOff — Gestisci account e dispositivi</title>
+<meta content="Gestisci il tuo account AdOff, visualizza le tue licenze e copia il codice per l'estensione." name="description"/>
+<meta content="noindex, nofollow" name="robots"/>
+
+    <meta property="og:title" content="Account AdOff — Gestisci licenza e dispositivi" />
+    <meta property="og:description" content="Gestisci la tua licenza AdOff: visualizza piani, attiva su dispositivi, gestisci rinnovo." />
+  <link href="assets/logo.svg" rel="icon" type="image/svg+xml"/>
+<link href="/manifest.webmanifest" rel="manifest"/>
+<meta content="#0a0a1a" name="theme-color"/>
+<script async="" defer="" src="https://challenges.cloudflare.com/turnstile/v0/api.js"></script>
+<style>
+    :root {
+      --primary: #7c5cfc;
+      --primary-light: #9d82fd;
+      --primary-dark: #5a3de8;
+      --bg: #f7f7fb;
+      --card: #ffffff;
+      --success: #4ade80;
+      --error: #f43f5e;
+      --text: #1a1a2e;
+      --text-muted: #5a5a72;
+      --border: rgba(124, 92, 252, 0.18);
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #0a0a1a;
+      --card: #12122a;
+      --text: #e2e2f0;
+      --text-muted: #8888aa;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 40px;
+      text-decoration: none;
+    }
+    .logo img { width: 40px; height: 40px; }
+    .logo span { font-family: 'Lexend', sans-serif; font-weight: 700; font-size: 24px; color: var(--text); }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: var(--shadow);
+    }
+    h1, h2 { font-family: 'Lexend', sans-serif; font-size: 22px; margin-bottom: 8px; }
+    .subtitle { color: var(--text-muted); margin-bottom: 24px; font-size: 14px; }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .btn-google {
+      background: #fff;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .btn-google:hover { background: #f5f5f5; }
+    .btn-google svg { width: 20px; height: 20px; }
+    .btn-microsoft {
+      background: #2f2f2f;
+      color: var(--text);
+      margin-bottom: 20px;
+    }
+    .btn-microsoft:hover { background: #3a3a3a; }
+    .btn-microsoft svg { width: 20px; height: 20px; }
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--text);
+    }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      margin-top: 10px;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.05); }
+    .feedback {
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .feedback.error { display: block; background: rgba(244,63,94,0.15); color: var(--error); }
+    .feedback.success { display: block; background: rgba(74,222,128,0.15); color: var(--success); }
+    .feedback.info { display: block; background: rgba(124,92,252,0.15); color: var(--primary-light); }
+
+    /* Logged in state */
+    .license-card {
+      background: rgba(124,92,252,0.1);
+      border: 1px solid var(--primary);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .license-card .type { font-weight: 600; color: var(--primary-light); font-size: 14px; }
+    .license-card .key {
+      font-family: monospace;
+      font-size: 13px;
+      background: rgba(0,0,0,0.3);
+      padding: 10px 12px;
+      border-radius: 6px;
+      margin: 10px 0;
+      word-break: break-all;
+      user-select: all;
+    }
+    .license-card .expiry { font-size: 12px; color: var(--text-muted); }
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: var(--primary);
+      color: var(--text);
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .copy-btn:hover { filter: brightness(1.1); }
+    .copy-btn.copied { background: var(--success); }
+    .user-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .user-email { font-size: 14px; }
+    .logout-btn {
+      font-size: 13px;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .logout-btn:hover { color: var(--error); }
+    .no-license {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+    }
+    .no-license a { color: var(--primary-light); }
+    .hidden { display: none !important; }
+    .back-link {
+      margin-top: 24px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .back-link a { color: var(--primary-light); text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
+
+    .support-card {
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid var(--success);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 20px;
+    }
+    .support-card .support-title { font-weight: 600; color: var(--success); font-size: 14px; margin-bottom: 8px; }
+    .support-card .support-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5; }
+    .btn-support {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--success);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-support:hover { filter: brightness(1.1); }
+  </style>
+  <script src="/adoff-i18n.js?v=623d521a"></script>
+</head>
+<body>
+<div id="site-nav"></div>
+<script defer="" src="/adoff-i18n.js?v=623d521a"></script>
+<script src="/adoff-nav.js?v=e75acee8"></script>
+<script src="/adoff-footer.js?v=21299afa"></script>
+<a class="logo" href="/">
+<img alt="AdOff" src="assets/logo.svg"/>
+<span data-i18n="account.adoff">AdOff</span>
+</a>
+<!-- Login Card -->
+<div class="card" id="loginCard">
+<h1 data-i18n="account.accedi">Accedi</h1>
+<p class="subtitle" data-i18n="account.gestisci.le.tue.licenze.pro">Gestisci il tuo sostegno</p>
+<div class="feedback" id="feedback"></div>
+<a class="btn btn-google" href="https://api.adoff.app/oauth/google/start">
+<svg viewbox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path><path d="M12 5.38c1.62 0 3.5.53 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path></svg>
+      Accedi con Google
+    </a>
+<a class="btn btn-microsoft" href="https://api.adoff.app/oauth/microsoft/start">
+<svg viewbox="0 0 21 21"><rect fill="#f25022" height="9" width="9" x="1" y="1"></rect><rect fill="#7fba00" height="9" width="9" x="11" y="1"></rect><rect fill="#00a4ef" height="9" width="9" x="1" y="11"></rect><rect fill="#ffb900" height="9" width="9" x="11" y="11"></rect></svg>
+      Accedi con Microsoft
+    </a>
+<div class="divider" data-i18n="divider.oppure">oppure</div>
+<form id="loginForm">
+<div class="form-group">
+<label data-i18n="account.email" for="email">Email</label>
+<input id="email" name="email" placeholder="user@domain.com" required="" type="email"/>
+</div>
+<div class="form-group">
+<label data-i18n="account.password" for="password">Password</label>
+<input id="password" name="password" placeholder="Password" required="" type="password"/>
+</div>
+<div class="cf-turnstile" data-callback="onLoginTurnstileDone" data-sitekey="0x4AAAAAADAtLsfOV1PCgWx_" id="loginTurnstile" style="margin-bottom:12px;"></div>
+<button class="btn btn-primary" type="submit">Accedi</button>
+</form>
+<button class="btn btn-secondary" id="showRegister">Crea account</button>
+</div>
+<!-- Register Card -->
+<div class="card hidden" id="registerCard">
+<h2 data-i18n="account.crea.account">Crea account</h1>
+<p class="subtitle" data-i18n="account.nuovo.account.adoff">Nuovo account AdOff</p>
+<div class="feedback" id="registerFeedback"></div>
+<form id="registerForm">
+<div class="form-group">
+<label data-i18n="account.email" for="regEmail">Email</label>
+<input id="regEmail" name="email" placeholder="user@domain.com" required="" type="email"/>
+</div>
+<div class="form-group">
+<label data-i18n="account.password" for="regPassword">Password</label>
+<input id="regPassword" minlength="8" name="password" placeholder="Minimo 8 caratteri" required="" type="password"/>
+</div>
+<div class="cf-turnstile" data-callback="onRegisterTurnstileDone" data-sitekey="0x4AAAAAADAtLsfOV1PCgWx_" id="registerTurnstile" style="margin-bottom:12px;"></div>
+<button class="btn btn-primary" type="submit">Registrati</button>
+</form>
+<button class="btn btn-secondary" id="showLogin">Hai gia un account? Accedi</button>
+</div>
+<!-- Account Card (logged in) -->
+<div class="card hidden" id="accountCard">
+<div class="user-info">
+<span class="user-email" id="userEmail"></span>
+<button class="logout-btn" id="logoutBtn">Logout</button>
+</div>
+<h2 data-i18n="account.le.tue.licenze">Le tue licenze</h1>
+<p class="subtitle" data-i18n="account.copia.il.codice.nellestensione">Copia il codice nell'estensione</p>
+<div id="licensesContainer">
+<div class="no-license" data-i18n="no_license.caricamento">
+        Caricamento...
+      </div>
+
+<div id="supportContainer">
+<div class="support-card">
+<div class="support-title" data-i18n="account.support.title">Il tuo sostegno</div>
+<div class="support-desc" data-i18n="account.support.description">AdOff è gratuito per tutti. Il tuo abbonamento è ora un sostegno volontario: interromperlo non fa perdere nessuna funzione.</div>
+<button class="btn-support" id="portalBtn" onclick="openPortal()">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+<span data-i18n="account.support.manage">Gestisci o interrompi il sostegno</span>
+</button>
+<div class="feedback" id="portalFeedback"></div>
+</div>
+</div>
+<p class="back-link"><a href="/">← Torna alla home</a></p>
+<script>
+    const API_URL = "https://api.adoff.app";
+    let accountToken = null;
+    let loginTsToken = null;
+    let registerTsToken = null;
+
+    // Turnstile callbacks
+    window.onLoginTurnstileDone = (token) => { loginTsToken = token; };
+    window.onRegisterTurnstileDone = (token) => { registerTsToken = token; };
+
+    // DOM
+    const loginCard = document.getElementById("loginCard");
+    const registerCard = document.getElementById("registerCard");
+    const accountCard = document.getElementById("accountCard");
+    const feedback = document.getElementById("feedback");
+    const registerFeedback = document.getElementById("registerFeedback");
+    const licensesContainer = document.getElementById("licensesContainer");
+    const userEmailEl = document.getElementById("userEmail");
+
+    // Check URL params
+    const params = new URLSearchParams(window.location.search);
+    const tokenParam = params.get("token");
+    const errorParam = params.get("error");
+    const verifyParam = params.get("verify");
+    const resetParam = params.get("reset");
+    const activateParam = params.get("activate");
+
+    // Init
+    (async function init() {
+      // Handle errors from OAuth
+      if (errorParam) {
+        showFeedback(feedback, decodeError(errorParam), "error");
+      }
+
+      // Handle email verification
+      if (verifyParam) {
+        await handleVerifyEmail(verifyParam);
+        return;
+      }
+
+      // Handle account activation (post-purchase)
+      if (activateParam) {
+        showActivationForm(activateParam);
+        return;
+      }
+
+      // Handle password reset
+      if (resetParam) {
+        showResetForm(resetParam);
+        return;
+      }
+
+      // Handle token from OAuth
+      if (tokenParam) {
+        accountToken = tokenParam;
+        localStorage.setItem("adoffAccountToken", tokenParam);
+        // Clean URL
+        window.history.replaceState({}, "", "/account.html");
+        await showAccountView();
+        return;
+      }
+
+      // Check stored token
+      const storedToken = localStorage.getItem("adoffAccountToken");
+      if (storedToken) {
+        accountToken = storedToken;
+        await showAccountView();
+      }
+    })();
+
+    function decodeError(code) {
+      const errors = {
+        "missing_params": "Parametri mancanti.",
+        "invalid_state": "Sessione scaduta.",
+        "oauth_not_configured": "OAuth non disponibile.",
+        "token_exchange_failed": "Errore autenticazione.",
+        "no_email_from_provider": "Email non disponibile.",
+        "internal_error": "Errore server.",
+      };
+      return errors[code] || "Errore: " + code;
+    }
+
+    async function handleVerifyEmail(token) {
+      showFeedback(feedback, "Verifica in corso...", "info");
+      try {
+        const res = await fetch(API_URL + "/auth/verify-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showFeedback(feedback, "Email verificata!", "success");
+        } else {
+          showFeedback(feedback, data.error || "Token non valido.", "error");
+        }
+      } catch (e) {
+        showFeedback(feedback, "Errore connessione.", "error");
+      }
+    }
+
+    function showActivationForm(token) {
+      loginCard.classList.add("hidden");
+      registerCard.classList.add("hidden");
+      accountCard.classList.add("hidden");
+      // Create activation form dynamically
+      const container = document.querySelector(".card") || loginCard.parentElement;
+      const activationCard = document.createElement("div");
+      activationCard.className = "card";
+      activationCard.id = "activationCard";
+      activationCard.innerHTML = `
+        <h2 data-i18n="account.attiva.account">Attiva account</h1>
+        <p class="subtitle" data-i18n="account.imposta.una.password.per.accedere">Imposta una password per accedere.</p>
+        <form id="activationForm">
+          <div class="form-group">
+            <label for="activatePassword" data-i18n="account.password">Password</label>
+            <input type="password" id="activatePassword" placeholder="Min. 8 caratteri" required minlength="8" />
+          </div>
+          <div class="form-group">
+            <label for="activatePasswordConfirm" data-i18n="account.conferma">Conferma</label>
+            <input type="password" id="activatePasswordConfirm" placeholder="Ripeti password" required minlength="8" />
+          </div>
+          <button type="submit" class="btn btn-primary">Attiva</button>
+        </form>
+        <div id="activateFeedback" class="feedback"></div>
+      `;
+      container.after(activationCard);
+      loginCard.parentElement.style.display = "none";
+
+      document.getElementById("activationForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const pass = document.getElementById("activatePassword").value;
+        const confirm = document.getElementById("activatePasswordConfirm").value;
+        const fb = document.getElementById("activateFeedback");
+
+        if (pass !== confirm) {
+          showFeedback(fb, "Password non corrispondono.", "error");
+          return;
+        }
+        if (pass.length < 8) {
+          showFeedback(fb, "Minimo 8 caratteri.", "error");
+          return;
+        }
+
+        showFeedback(fb, "Elaborazione...", "info");
+        try {
+          const res = await fetch(API_URL + "/auth/activate-account", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token, password: pass }),
+          });
+          const data = await res.json();
+          if (data.ok) {
+            showFeedback(fb, "Account attivato!", "success");
+            accountToken = data.token;
+            localStorage.setItem("adoffAccountToken", data.token);
+            setTimeout(() => {
+              window.location.href = "/account.html";
+            }, 1500);
+          } else {
+            showFeedback(fb, data.error || "Errore.", "error");
+          }
+        } catch (e) {
+          showFeedback(fb, "Errore connessione.", "error");
+        }
+      };
+    }
+
+    function showResetForm(token) {
+      loginCard.classList.add("hidden");
+      registerCard.classList.add("hidden");
+      accountCard.classList.add("hidden");
+      // Create reset form dynamically
+      const container = document.querySelector(".card") || loginCard.parentElement;
+      const resetCard = document.createElement("div");
+      resetCard.className = "card";
+      resetCard.id = "resetCard";
+      resetCard.innerHTML = `
+        <h2 data-i18n="account.reimposta.password">Reimposta password</h1>
+        <p class="subtitle" data-i18n="account.imposta.una.nuova.password">Imposta una nuova password.</p>
+        <form id="resetForm">
+          <div class="form-group">
+            <label for="resetPassword" data-i18n="account.nuova.password">Nuova password</label>
+            <input type="password" id="resetPassword" placeholder="Min. 8 caratteri" required minlength="8" />
+          </div>
+          <div class="form-group">
+            <label for="resetPasswordConfirm" data-i18n="account.conferma">Conferma</label>
+            <input type="password" id="resetPasswordConfirm" placeholder="Ripeti password" required minlength="8" />
+          </div>
+          <button type="submit" class="btn btn-primary">Salva</button>
+        </form>
+        <div id="resetFeedback" class="feedback"></div>
+      `;
+      container.after(resetCard);
+      loginCard.parentElement.style.display = "none";
+
+      document.getElementById("resetForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const pass = document.getElementById("resetPassword").value;
+        const confirm = document.getElementById("resetPasswordConfirm").value;
+        const fb = document.getElementById("resetFeedback");
+
+        if (pass !== confirm) {
+          showFeedback(fb, "Password non corrispondono.", "error");
+          return;
+        }
+
+        showFeedback(fb, "Elaborazione...", "info");
+        try {
+          const res = await fetch(API_URL + "/auth/reset-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token, newPassword: pass }),
+          });
+          const data = await res.json();
+          if (data.ok) {
+            showFeedback(fb, "Password salvata!", "success");
+            setTimeout(() => {
+              window.location.href = "/account.html";
+            }, 1500);
+          } else {
+            showFeedback(fb, data.error || "Errore.", "error");
+          }
+        } catch (e) {
+          showFeedback(fb, "Errore connessione.", "error");
+        }
+      };
+    }
+
+    async function showAccountView() {
+      loginCard.classList.add("hidden");
+      registerCard.classList.add("hidden");
+      accountCard.classList.remove("hidden");
+
+      // Fetch account info
+      try {
+        const res = await fetch(API_URL + "/account/me", {
+          headers: { "X-Account-Token": accountToken },
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          logout();
+          return;
+        }
+        userEmailEl.textContent = data.email;
+        renderLicenses(data.licenses || []);
+      } catch (e) {
+        licensesContainer.innerHTML = '<div class="no-license">Errore connessione.</div>';
+      }
+    }
+
+    function renderLicenses(licenses) {
+      if (!licenses.length) {
+        licensesContainer.innerHTML = `
+          <div class="no-license">
+            <p data-i18n="account.nessuna.licenza">Nessuna licenza.</p>
+            <p style="margin-top:10px"><a href="/install.html">Installa gratis</a></p>
+          </div>`;
+        return;
+      }
+
+      licensesContainer.innerHTML = licenses.map(lic => {
+        const expiry = lic.type === "lifetime" ? "Lifetime" :
+          (lic.expiresAt ? new Date(lic.expiresAt).toLocaleDateString() : "N/A");
+        return `
+          <div class="license-card">
+            <div class="type">${lic.type === "lifetime" ? "Free Lifetime" : "Free " + (lic.period || "")}</div>
+            <div class="key" id="key-${lic.id}">${lic.licenseKey}</div>
+            <button class="copy-btn" onclick="copyKey('${lic.licenseKey}', this)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copia
+            </button>
+            <p class="expiry">Scade: ${expiry} | Dispositivi: ${lic.devices || 3}</p>
+          </div>`;
+      }).join("");
+    }
+
+    function copyKey(key, btn) {
+      navigator.clipboard.writeText(key).then(() => {
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copiato`;
+        btn.classList.add("copied");
+        setTimeout(() => {
+          btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copia`;
+          btn.classList.remove("copied");
+        }, 2000);
+      });
+    }
+
+    function logout() {
+      localStorage.removeItem("adoffAccountToken");
+      accountToken = null;
+      accountCard.classList.add("hidden");
+      loginCard.classList.remove("hidden");
+    }
+
+    function showFeedback(el, msg, type) {
+      el.textContent = msg;
+      el.className = "feedback " + type;
+    }
+
+    // Event listeners
+    document.getElementById("showRegister").onclick = () => {
+      loginCard.classList.add("hidden");
+      registerCard.classList.remove("hidden");
+    };
+
+    document.getElementById("showLogin").onclick = () => {
+      registerCard.classList.add("hidden");
+      loginCard.classList.remove("hidden");
+    };
+
+    document.getElementById("logoutBtn").onclick = logout;
+
+    // Portal button handler
+    async function openPortal() {
+      const btn = document.getElementById("portalBtn");
+      const fb = document.getElementById("portalFeedback");
+      if (!accountToken) {
+        showFeedback(fb, t("account.support.error.not_logged_in") || "Effettua il login per gestire il tuo abbonamento.", "error");
+        return;
+      }
+      btn.disabled = true;
+      showFeedback(fb, t("account.support.loading") || "Apertura...", "info");
+      try {
+        const res = await fetch(API_URL + "/portal?format=json&return_url=" + encodeURIComponent(window.location.href), {
+          headers: { "X-Account-Token": accountToken }
+        });
+        const data = await res.json();
+        if (data.ok && data.url) {
+          window.location.href = data.url;
+        } else {
+          showFeedback(fb, (t("account.support.error.generic") || "Impossibile aprire il portale.") + ' <a href="/support.html" style="color:var(--primary-light)">' + (t("account.support.contact_support") || "Contatta il supporto") + '</a>', "error");
+          btn.disabled = false;
+        }
+      } catch (e) {
+        showFeedback(fb, (t("account.support.error.generic") || "Errore di connessione.") + ' <a href="/support.html" style="color:var(--primary-light)">' + (t("account.support.contact_support") || "Contatta il supporto") + '</a>', "error");
+        btn.disabled = false;
+      }
+    }
+
+    document.getElementById("loginForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      showFeedback(feedback, "Accesso...", "info");
+
+      try {
+        const res = await fetch(API_URL + "/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, turnstileToken: loginTsToken || "" }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          accountToken = data.token;
+          localStorage.setItem("adoffAccountToken", data.token);
+          await showAccountView();
+        } else {
+          showFeedback(feedback, data.error || "Credenziali errate.", "error");
+        }
+      } catch (e) {
+        showFeedback(feedback, "Errore connessione.", "error");
+      }
+    };
+
+    document.getElementById("registerForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("regEmail").value;
+      const password = document.getElementById("regPassword").value;
+      showFeedback(registerFeedback, "Elaborazione...", "info");
+
+      try {
+        const res = await fetch(API_URL + "/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, turnstileToken: registerTsToken || "" }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          if (data.requiresVerification) {
+            showFeedback(registerFeedback, "Verifica la tua email.", "success");
+          } else {
+            accountToken = data.token;
+            localStorage.setItem("adoffAccountToken", data.token);
+            await showAccountView();
+          }
+        } else {
+          showFeedback(registerFeedback, data.error || "Errore.", "error");
+        }
+      } catch (e) {
+        showFeedback(registerFeedback, "Errore connessione.", "error");
+      }
+    };
+  </script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

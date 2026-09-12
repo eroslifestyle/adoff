@@ -1,0 +1,150 @@
+{
+  "name": "HMAC Auth Validator",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "workflow-trigger",
+      "name": "When called",
+      "type": "n8n-nodes-base.workflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// HMAC-SHA256 Webhook Authentication Validator\n// Validates X-AdOff-Signature header against request body\n\nconst crypto = require('crypto');\nconst secret = process.env.WEBHOOK_HMAC_SECRET;\n\nif (!secret) {\n  return { ok: false, reason: 'WEBHOOK_HMAC_SECRET not configured' };\n}\n\nconst signature = $input.first().json.$headers?.['x-adoff-signature'];\nif (!signature) {\n  return { ok: false, reason: 'missing_signature_header' };\n}\n\nconst bodyRaw = $input.first().json.$body;\nif (!bodyRaw) {\n  return { ok: false, reason: 'empty_body' };\n}\n\n// Calculate expected HMAC\nconst expectedHmac = crypto\n  .createHmac('sha256', Buffer.from(secret, 'hex'))\n  .update(bodyRaw, 'utf8')\n  .digest('hex');\n\n// Timing-safe comparison (prevent timing attacks)\ntry {\n  crypto.timingSafeEqual(\n    Buffer.from(signature, 'hex'),\n    Buffer.from(expectedHmac, 'hex')\n  );\n  return {\n    ok: true,\n    payload: $input.first().json,\n    timestamp: new Date().toISOString()\n  };\n} catch (err) {\n  return {\n    ok: false,\n    reason: 'invalid_signature',\n    timestamp: new Date().toISOString()\n  };\n}"
+      },
+      "id": "validate-hmac",
+      "name": "Validate HMAC Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $node[\"Validate HMAC Signature\"].json.ok }}",
+              "operator": "equals",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-valid",
+      "name": "Valid Signature?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, payload: $node[\"Validate HMAC Signature\"].json.payload } }}"
+      },
+      "id": "return-success",
+      "name": "Return Valid",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        800,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, reason: $node[\"Validate HMAC Signature\"].json.reason } }}",
+        "responseCode": 401
+      },
+      "id": "return-invalid",
+      "name": "Return Invalid (401)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        800,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "method": "POST",
+        "contentType": "application/json",
+        "body": "={{ { chat_id: $env.TELEGRAM_CHAT_ID, text: `⚠️ Webhook auth failed: ${$node[\"Validate HMAC Signature\"].json.reason} at ${new Date().toISOString()}`, parse_mode: 'HTML' } }}"
+      },
+      "id": "log-to-telegram",
+      "name": "Log Auth Failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        650,
+        450
+      ],
+      "onError": "continueErrorHandling"
+    }
+  ],
+  "connections": {
+    "When called": {
+      "main": [
+        [
+          {
+            "node": "Validate HMAC Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate HMAC Signature": {
+      "main": [
+        [
+          {
+            "node": "Valid Signature?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Signature?": {
+      "main": [
+        [
+          {
+            "node": "Return Valid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Auth Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Auth Failure": {
+      "main": [
+        [
+          {
+            "node": "Return Invalid (401)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "id": "w29-hmac-auth-validator"
+}

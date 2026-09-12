@@ -1,0 +1,712 @@
+{
+  "name": "W41 Learning Loop Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "intervalUnit": "hours",
+              "interval": 24
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "schedule_daily",
+      "name": "Schedule Daily 04:00 UTC",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        250,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "path": "learning-run",
+        "options": {}
+      },
+      "id": "webhook_manual",
+      "name": "Webhook Manual Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        200
+      ],
+      "webhookId": "learning-run-hmac-w29"
+    },
+    {
+      "parameters": {
+        "node": "schedule_daily",
+        "output": true
+      },
+      "id": "wait_schedule",
+      "name": "Wait for Schedule",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        450,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "node": "webhook_manual",
+        "output": true
+      },
+      "id": "wait_webhook",
+      "name": "Wait for Webhook",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        450,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "=",
+              "value2": 1
+            }
+          ]
+        }
+      },
+      "id": "merge_triggers",
+      "name": "Merge Triggers",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "credentials": "adoff-pg-autopilot-credential-1234",
+        "query": "SELECT marketing_config.config_data->>'learning_loop_lookback_days' AS lookback_days\nFROM marketing_config\nWHERE key = 'learning_loop_settings'\nLIMIT 1",
+        "options": {}
+      },
+      "id": "load_config",
+      "name": "Load Learning Config",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        850,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const lookbackDays = items[0].json.lookback_days || 14;\nconst lookbackDate = new Date();\nlookbackDate.setDate(lookbackDate.getDate() - parseInt(lookbackDays));\n\nreturn {\n  lookback_days: parseInt(lookbackDays),\n  lookback_iso: lookbackDate.toISOString(),\n  query_ts: new Date().toISOString()\n};"
+      },
+      "id": "compute_window",
+      "name": "Compute Lookback Window",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "credentials": "adoff-pg-autopilot-credential-1234",
+        "query": "SELECT \n  m.id, m.platform, m.likes, m.comments, m.shares, m.views, \n  m.engagement_rate, m.raw_payload, m.social_published_id, m.measured_at,\n  sp.caption, sp.hashtags, sp.lang, sp.asset_type, sp.published_at,\n  gcd.body, gcd.topic_tag\nFROM metrics m\nLEFT JOIN social_published sp ON m.social_published_id = sp.id\nLEFT JOIN gemini_copy_drafts gcd ON sp.draft_id = gcd.id\nWHERE m.measured_at >= $1::TIMESTAMP\nORDER BY m.measured_at DESC",
+        "queryParams": [
+          "{{ $node[\"compute_window\"].json.lookback_iso }}"
+        ],
+        "options": {}
+      },
+      "id": "load_metrics_window",
+      "name": "Load Metrics (14-day window)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        1250,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const metrics = items;\n\nif (metrics.length === 0) {\n  return {\n    status: 'cold_start',\n    message: 'No metrics available yet (system warm-up phase)',\n    metrics_count: 0,\n    uses_defaults: true\n  };\n}\n\nconst aggregated = {\n  metrics_count: metrics.length,\n  total_engagement: 0,\n  platforms: {},\n  languages: {},\n  period_hours: metrics.length > 0 ? Math.round((Date.now() - new Date(metrics[metrics.length - 1].measured_at)) / 3600000) : 0\n};\n\nmetrics.forEach(m => {\n  const engagement = (m.likes || 0) + (m.comments || 0) * 2 + (m.shares || 0) * 3;\n  aggregated.total_engagement += engagement;\n  \n  if (!aggregated.platforms[m.platform]) {\n    aggregated.platforms[m.platform] = {\n      count: 0,\n      avg_engagement: 0,\n      total_engagement: 0\n    };\n  }\n  aggregated.platforms[m.platform].count++;\n  aggregated.platforms[m.platform].total_engagement += engagement;\n  \n  if (m.lang) {\n    if (!aggregated.languages[m.lang]) {\n      aggregated.languages[m.lang] = { count: 0, total_engagement: 0 };\n    }\n    aggregated.languages[m.lang].count++;\n    aggregated.languages[m.lang].total_engagement += engagement;\n  }\n});\n\nreturn aggregated;"
+      },
+      "id": "validate_metrics",
+      "name": "Validate & Summarize Metrics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1450,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "{{ $node[\"validate_metrics\"].json.status }}",
+              "operation": "equals",
+              "value2": "cold_start"
+            }
+          ]
+        }
+      },
+      "id": "check_cold_start",
+      "name": "Is Cold Start?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1650,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "credentials": "adoff-pg-autopilot-credential-1234",
+        "query": "INSERT INTO marketing_config (key, config_data, last_updated)\nVALUES ('learning_loop_cold_start', '{\"status\": \"cold_start\", \"reason\": \"no metrics in window\", \"uses_defaults\": true}'::jsonb, NOW())\nON CONFLICT (key) DO UPDATE SET config_data = EXCLUDED.config_data, last_updated = NOW()",
+        "options": {}
+      },
+      "id": "insert_cold_start_config",
+      "name": "Insert Cold Start Config",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        1850,
+        50
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const telegramToken = $env.TELEGRAM_BOT_TOKEN;\nconst chatId = $env.TELEGRAM_CHAT_ID_ADMIN;\nconst timestamp = new Date().toISOString().split('T')[0];\n\nreturn {\n  token: telegramToken,\n  chat_id: chatId,\n  message: `⚠️ Learning Loop W41 — ${timestamp}\\n\\nStatus: COLD START (no metrics)\\nMetrics count: 0\\nDefault values have been set.\\nSystem will be ready after first metrics arrive.`,\n  parse_mode: 'HTML'\n};"
+      },
+      "id": "prepare_cold_start_telegram",
+      "name": "Prepare Cold Start Telegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1850,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/bot{{ $node[\"prepare_cold_start_telegram\"].json.token }}/sendMessage",
+        "method": "POST",
+        "bodyParameters": [
+          {
+            "name": "chat_id",
+            "value": "{{ $node[\"prepare_cold_start_telegram\"].json.chat_id }}"
+          },
+          {
+            "name": "text",
+            "value": "{{ $node[\"prepare_cold_start_telegram\"].json.message }}"
+          },
+          {
+            "name": "parse_mode",
+            "value": "{{ $node[\"prepare_cold_start_telegram\"].json.parse_mode }}"
+          }
+        ],
+        "options": {}
+      },
+      "id": "send_cold_start_telegram",
+      "name": "Send Cold Start Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        2050,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const metrics = $node[\"load_metrics_window\"].json;\n\nif (!metrics || metrics.length === 0) {\n  return [];\n}\n\nconst topicScores = {};\n\nmetrics.forEach(m => {\n  const topic = m.topic_tag || 'untagged';\n  const engagement = (m.likes || 0) + (m.comments || 0) * 2 + (m.shares || 0) * 3;\n  const engagementRate = m.engagement_rate || 0;\n  \n  if (!topicScores[topic]) {\n    topicScores[topic] = {\n      topic: topic,\n      count: 0,\n      total_engagement: 0,\n      total_impressions: m.views || 0,\n      weighted_engagement_rate: 0,\n      posts: []\n    };\n  }\n  \n  topicScores[topic].count++;\n  topicScores[topic].total_engagement += engagement;\n  topicScores[topic].total_impressions += (m.views || 0);\n  topicScores[topic].posts.push({\n    id: m.social_published_id,\n    published_at: m.published_at,\n    engagement_rate: engagementRate\n  });\n});\n\n// Calcola weighted engagement rate\nObject.keys(topicScores).forEach(t => {\n  const topic = topicScores[t];\n  if (topic.total_impressions > 0) {\n    topic.weighted_engagement_rate = (topic.total_engagement / topic.total_impressions * 100).toFixed(2);\n  }\n  // Trend: slope ultimi 7gg vs prima\n  const now = Date.now();\n  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;\n  const recentPosts = topic.posts.filter(p => new Date(p.published_at) > sevenDaysAgo).length;\n  topic.trend_recent_days = recentPosts;\n  delete topic.posts; // remove per output\n});\n\nreturn Object.values(topicScores).sort((a, b) => b.total_engagement - a.total_engagement);"
+      },
+      "id": "compute_topic_scores",
+      "name": "Compute Topic Scores",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const metrics = $node[\"load_metrics_window\"].json;\n\nif (!metrics || metrics.length === 0) {\n  return [];\n}\n\nconst hashtagScores = {};\n\nmetrics.forEach(m => {\n  if (!m.hashtags) return;\n  \n  const hashtags = typeof m.hashtags === 'string' ? m.hashtags.split(',').map(h => h.trim()) : m.hashtags;\n  const engagement = (m.likes || 0) + (m.comments || 0) * 2 + (m.shares || 0) * 3;\n  \n  hashtags.forEach(tag => {\n    if (!hashtagScores[tag]) {\n      hashtagScores[tag] = {\n        hashtag: tag,\n        count: 0,\n        total_engagement: 0,\n        avg_engagement: 0\n      };\n    }\n    hashtagScores[tag].count++;\n    hashtagScores[tag].total_engagement += engagement;\n  });\n});\n\nObject.keys(hashtagScores).forEach(tag => {\n  hashtagScores[tag].avg_engagement = (hashtagScores[tag].total_engagement / hashtagScores[tag].count).toFixed(2);\n});\n\nreturn Object.values(hashtagScores)\n  .sort((a, b) => b.total_engagement - a.total_engagement)\n  .slice(0, 30); // Top 30"
+      },
+      "id": "compute_hashtag_perf",
+      "name": "Compute Top 30 Hashtags",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const metrics = $node[\"load_metrics_window\"].json;\n\nif (!metrics || metrics.length === 0) {\n  return {\n    instagram: { weekday: ['18:00', '19:00', '20:00'], weekend: ['15:00', '16:00', '17:00'] },\n    tiktok: { weekday: ['19:00', '20:00', '21:00'], weekend: ['14:00', '15:00', '16:00'] },\n    facebook: { weekday: ['17:00', '18:00', '19:00'], weekend: ['12:00', '13:00', '14:00'] }\n  };\n}\n\nconst timings = {};\n\nmetrics.forEach(m => {\n  const platform = m.platform || 'unknown';\n  if (!m.published_at) return;\n  \n  const pubDate = new Date(m.published_at);\n  const hour = String(pubDate.getUTCHours()).padStart(2, '0');\n  const dow = pubDate.getUTCDay();\n  const isDayType = (dow === 0 || dow === 6) ? 'weekend' : 'weekday';\n  const timeKey = `${hour}:00`;\n  \n  if (!timings[platform]) {\n    timings[platform] = { weekday: {}, weekend: {} };\n  }\n  \n  const engagement = (m.likes || 0) + (m.comments || 0) * 2 + (m.shares || 0) * 3;\n  \n  if (!timings[platform][isDayType][timeKey]) {\n    timings[platform][isDayType][timeKey] = { count: 0, total_engagement: 0 };\n  }\n  timings[platform][isDayType][timeKey].count++;\n  timings[platform][isDayType][timeKey].total_engagement += engagement;\n});\n\n// Convert to top 3 times per platform/day type\nconst result = {};\nObject.keys(timings).forEach(platform => {\n  result[platform] = {};\n  ['weekday', 'weekend'].forEach(dayType => {\n    const times = Object.entries(timings[platform][dayType])\n      .sort((a, b) => b[1].total_engagement - a[1].total_engagement)\n      .slice(0, 3)\n      .map(([time]) => time);\n    result[platform][dayType] = times.length > 0 ? times : ['12:00', '18:00'];\n  });\n});\n\nreturn result;"
+      },
+      "id": "compute_best_times",
+      "name": "Compute Best Post Times",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2050,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const metrics = $node[\"load_metrics_window\"].json;\n\nif (!metrics || metrics.length === 0) {\n  return [];\n}\n\nconst formatScores = {};\n\nmetrics.forEach(m => {\n  const format = m.asset_type || 'video';\n  const engagement = (m.likes || 0) + (m.comments || 0) * 2 + (m.shares || 0) * 3;\n  \n  if (!formatScores[format]) {\n    formatScores[format] = {\n      format: format,\n      count: 0,\n      total_engagement: 0,\n      avg_engagement: 0\n    };\n  }\n  formatScores[format].count++;\n  formatScores[format].total_engagement += engagement;\n});\n\nObject.keys(formatScores).forEach(f => {\n  formatScores[f].avg_engagement = (formatScores[f].total_engagement / formatScores[f].count).toFixed(2);\n});\n\nreturn Object.values(formatScores).sort((a, b) => b.avg_engagement - a.avg_engagement);"
+      },
+      "id": "compute_format_rank",
+      "name": "Compute Format Ranking",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const metrics = $node[\"load_metrics_window\"].json;\n\nif (!metrics || metrics.length === 0) {\n  return [];\n}\n\nconst langScores = {};\n\nmetrics.forEach(m => {\n  const lang = m.lang || 'unknown';\n  const engagement = (m.likes || 0) + (m.comments || 0) * 2 + (m.shares || 0) * 3;\n  const views = m.views || 1;\n  \n  if (!langScores[lang]) {\n    langScores[lang] = {\n      lang: lang,\n      count: 0,\n      total_engagement: 0,\n      total_views: 0,\n      engagement_rate: 0\n    };\n  }\n  langScores[lang].count++;\n  langScores[lang].total_engagement += engagement;\n  langScores[lang].total_views += views;\n});\n\nObject.keys(langScores).forEach(lang => {\n  const score = langScores[lang];\n  score.engagement_rate = (score.total_engagement / score.total_views * 100).toFixed(2);\n});\n\nreturn Object.values(langScores).sort((a, b) => b.engagement_rate - a.engagement_rate);"
+      },
+      "id": "compute_lang_perf",
+      "name": "Compute Language Performance",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "credentials": "adoff-pg-autopilot-credential-1234",
+        "query": "INSERT INTO marketing_config (key, config_data, last_updated) \nVALUES \n  ('topic_scores', $1::jsonb, NOW()),\n  ('top_hashtags', $2::jsonb, NOW()),\n  ('best_post_times', $3::jsonb, NOW()),\n  ('winning_formats', $4::jsonb, NOW()),\n  ('lang_performance', $5::jsonb, NOW()),\n  ('last_learning_run_at', $6::jsonb, NOW())\nON CONFLICT (key) DO UPDATE SET config_data = EXCLUDED.config_data, last_updated = NOW()",
+        "queryParams": [
+          "{{ JSON.stringify($node[\"compute_topic_scores\"].json) }}",
+          "{{ JSON.stringify($node[\"compute_hashtag_perf\"].json) }}",
+          "{{ JSON.stringify($node[\"compute_best_times\"].json) }}",
+          "{{ JSON.stringify($node[\"compute_format_rank\"].json) }}",
+          "{{ JSON.stringify($node[\"compute_lang_perf\"].json) }}",
+          "{{ JSON.stringify({timestamp: new Date().toISOString()}) }}"
+        ],
+        "options": {}
+      },
+      "id": "update_marketing_config",
+      "name": "Update Marketing Config",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        2650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "credentials": "adoff-pg-autopilot-credential-1234",
+        "query": "INSERT INTO performance_insights (topic, metric_type, score, details, valid_until, created_at)\nSELECT \n  topic,\n  'topic_score' AS metric_type,\n  (weighted_engagement_rate::FLOAT) AS score,\n  jsonb_build_object(\n    'count', count,\n    'total_engagement', total_engagement,\n    'total_impressions', total_impressions,\n    'trend_recent_days', trend_recent_days\n  ) AS details,\n  NOW() + INTERVAL '24 hours' AS valid_until,\n  NOW() AS created_at\nFROM jsonb_to_recordset($1::jsonb) \n  AS t(topic TEXT, count INT, total_engagement BIGINT, total_impressions BIGINT, weighted_engagement_rate TEXT, trend_recent_days INT)",
+        "queryParams": [
+          "{{ JSON.stringify($node[\"compute_topic_scores\"].json) }}"
+        ],
+        "options": {}
+      },
+      "id": "insert_topic_insights",
+      "name": "Insert Topic Insights",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        2650,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "credentials": "adoff-pg-autopilot-credential-1234",
+        "query": "INSERT INTO performance_insights (topic, metric_type, score, details, valid_until, created_at)\nSELECT \n  hashtag,\n  'hashtag_score' AS metric_type,\n  (avg_engagement::FLOAT) AS score,\n  jsonb_build_object(\n    'count', count,\n    'total_engagement', total_engagement,\n    'avg_engagement', avg_engagement\n  ) AS details,\n  NOW() + INTERVAL '24 hours' AS valid_until,\n  NOW() AS created_at\nFROM jsonb_to_recordset($1::jsonb) \n  AS t(hashtag TEXT, count INT, total_engagement BIGINT, avg_engagement TEXT)",
+        "queryParams": [
+          "{{ JSON.stringify($node[\"compute_hashtag_perf\"].json) }}"
+        ],
+        "options": {}
+      },
+      "id": "insert_hashtag_insights",
+      "name": "Insert Hashtag Insights",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        2650,
+        550
+      ]
+    },
+    {
+      "parameters": {
+        "credentials": "adoff-pg-autopilot-credential-1234",
+        "query": "UPDATE content_seeds \nSET perf_score = COALESCE(\n  (SELECT (config_data->scores_by_topic->(topic_tag)::TEXT)::FLOAT \n   FROM marketing_config \n   WHERE key = 'topic_scores'),\n  perf_score\n),\nmodified_at = NOW()\nWHERE topic_tag IS NOT NULL",
+        "options": {}
+      },
+      "id": "update_content_seeds_perf",
+      "name": "Update Content Seeds Perf Score",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        2650,
+        650
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const topicScores = $node[\"compute_topic_scores\"].json;\nconst hashtagPerf = $node[\"compute_hashtag_perf\"].json;\nconst bestTimes = $node[\"compute_best_times\"].json;\nconst langPerf = $node[\"compute_lang_perf\"].json;\nconst metricsCount = $node[\"validate_metrics\"].json.metrics_count;\n\nconst topTopic = topicScores.length > 0 ? topicScores[0].topic : 'N/A';\nconst topHashtag = hashtagPerf.length > 0 ? hashtagPerf[0].hashtag : 'N/A';\nconst topLang = langPerf.length > 0 ? langPerf[0].lang : 'N/A';\nconst topLangEngagement = langPerf.length > 0 ? langPerf[0].engagement_rate : 'N/A';\nconst dateStr = new Date().toISOString().split('T')[0];\n\nconst telegramToken = $env.TELEGRAM_BOT_TOKEN;\nconst chatId = $env.TELEGRAM_CHAT_ID_ADMIN;\n\nconst message = `\n✅ <b>Learning Loop W41 — ${dateStr}</b>\\n\\n\n📊 <b>Analytics Summary</b>\\n\nMetrics analyzed: <b>${metricsCount}</b>\\n\nTop Topic: <b>#${topTopic}</b>\\nTop Hashtag: <b>${topHashtag}</b>\\nTop Language: <b>${topLang}</b> (+${topLangEngagement}% engagement)\\n\\n\n🎯 <b>Config Updated</b>\\n\n✓ topic_scores\\n✓ top_hashtags (top 30)\\n✓ best_post_times (by platform/weekday)\\n✓ winning_formats\\n✓ lang_performance\\n✓ last_learning_run_at\\n\\n\n🗂️ <b>Performance Insights Stored</b>\\n\nTopic records: ${topicScores.length}\\nHashtag records: ${hashtagPerf.length}\\nLanguage records: ${langPerf.length}\\n\\n\n⏰ <b>Next Cycle Ready</b>\\nReady for W00 Master Orchestrator + content generation.`;\n\nreturn {\n  token: telegramToken,\n  chat_id: chatId,\n  message: message,\n  parse_mode: 'HTML',\n  metrics_count: metricsCount,\n  insights_generated: {\n    topics: topicScores.length,\n    hashtags: hashtagPerf.length,\n    languages: langPerf.length\n  }\n};"
+      },
+      "id": "prepare_success_telegram",
+      "name": "Prepare Success Telegram Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        2850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/bot{{ $node[\"prepare_success_telegram\"].json.token }}/sendMessage",
+        "method": "POST",
+        "bodyParameters": [
+          {
+            "name": "chat_id",
+            "value": "{{ $node[\"prepare_success_telegram\"].json.chat_id }}"
+          },
+          {
+            "name": "text",
+            "value": "{{ $node[\"prepare_success_telegram\"].json.message }}"
+          },
+          {
+            "name": "parse_mode",
+            "value": "{{ $node[\"prepare_success_telegram\"].json.parse_mode }}"
+          }
+        ],
+        "options": {}
+      },
+      "id": "send_success_telegram",
+      "name": "Send Success Report (Telegram)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        3050,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return {\n  execution_status: 'success',\n  metrics_processed: $node[\"validate_metrics\"].json.metrics_count,\n  topic_scores_generated: $node[\"compute_topic_scores\"].json.length,\n  hashtag_scores_generated: $node[\"compute_hashtag_perf\"].json.length,\n  format_rankings: $node[\"compute_format_rank\"].json.length,\n  language_performance: $node[\"compute_lang_perf\"].json.length,\n  config_keys_updated: 6,\n  insights_inserted: true,\n  seeds_perf_updated: true,\n  report_sent: true,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "final_status",
+      "name": "Final Execution Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        3250,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Daily 04:00 UTC": {
+      "main": [
+        [
+          {
+            "node": "Wait for Schedule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Wait for Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Schedule": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Webhook": {
+      "main": [
+        [
+          {
+            "node": "Merge Triggers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Triggers": {
+      "main": [
+        [
+          {
+            "node": "Load Learning Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Learning Config": {
+      "main": [
+        [
+          {
+            "node": "Compute Lookback Window",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Lookback Window": {
+      "main": [
+        [
+          {
+            "node": "Load Metrics (14-day window)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Metrics (14-day window)": {
+      "main": [
+        [
+          {
+            "node": "Validate & Summarize Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Summarize Metrics": {
+      "main": [
+        [
+          {
+            "node": "Is Cold Start?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Cold Start?": {
+      "main": [
+        [
+          {
+            "node": "Insert Cold Start Config",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Compute Topic Scores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Cold Start Config": {
+      "main": [
+        [
+          {
+            "node": "Prepare Cold Start Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Cold Start Telegram": {
+      "main": [
+        [
+          {
+            "node": "Send Cold Start Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Topic Scores": {
+      "main": [
+        [
+          {
+            "node": "Compute Top 30 Hashtags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Top 30 Hashtags": {
+      "main": [
+        [
+          {
+            "node": "Compute Best Post Times",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Best Post Times": {
+      "main": [
+        [
+          {
+            "node": "Compute Format Ranking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Format Ranking": {
+      "main": [
+        [
+          {
+            "node": "Compute Language Performance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Language Performance": {
+      "main": [
+        [
+          {
+            "node": "Update Marketing Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Marketing Config": {
+      "main": [
+        [
+          {
+            "node": "Insert Topic Insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Topic Insights": {
+      "main": [
+        [
+          {
+            "node": "Insert Hashtag Insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Hashtag Insights": {
+      "main": [
+        [
+          {
+            "node": "Update Content Seeds Perf Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Content Seeds Perf Score": {
+      "main": [
+        [
+          {
+            "node": "Prepare Success Telegram Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Success Telegram Report": {
+      "main": [
+        [
+          {
+            "node": "Send Success Report (Telegram)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Success Report (Telegram)": {
+      "main": [
+        [
+          {
+            "node": "Final Execution Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "41e7c9b2-d0f4-4a2c-8f1b-9c0e3d8f5a1b",
+  "meta": {
+    "instanceId": "w41-learning-loop-engine",
+    "templatesCount": 0,
+    "nodesCount": 26,
+    "connectionCount": 25,
+    "settingsCount": 0,
+    "triggerCount": 2,
+    "testData": {
+      "nodeId": "schedule_daily",
+      "data": {
+        "main": [
+          [
+            {
+              "json": {},
+              "pairedItem": {
+                "item": 0
+              }
+            }
+          ]
+        ]
+      }
+    }
+  },
+  "id": "w41-learning-loop-engine"
+}

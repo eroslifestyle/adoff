@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Как работает AdOff: технология скрытой блокировки рекламы</title>
+  <meta name="description" content="AdOff блокирует рекламу тремя уровнями: сетевой блокировкой, косметической фильтрацией и антиобнаружением. Полный технический разбор." />
+  <link rel="canonical" href="https://adoff.app/ru/how-it-works" />
+  <link rel="alternate" hreflang="it" href="https://adoff.app/it/how-it-works" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/how-it-works" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/de/how-it-works" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/fr/how-it-works" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/es/how-it-works" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/pt/how-it-works" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/ru/how-it-works" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/ar/how-it-works" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/how-it-works" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/hi/how-it-works" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/how-it-works" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/how-it-works" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/tr/how-it-works" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/id/how-it-works" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/pl/how-it-works" />
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/how-it-works" />
+  <!-- hreflang -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Как работает AdOff: технология скрытой блокировки рекламы" />
+  <meta property="og:description" content="AdOff блокирует рекламу тремя уровнями: сетевой блокировкой, косметической фильтрацией и антиобнаружением. Полный технический разбор." />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/ru/how-it-works" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Как работает AdOff: технология скрытой блокировки рекламы" />
+  <meta name="twitter:description" content="AdOff блокирует рекламу тремя уровнями: сетевой блокировкой, косметической фильтрацией и антиобнаружением. Полный технический разбор." />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <link rel="preload" id="adoff-font" href="/assets/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin /><style id="adoff-critical">@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:optional;src:url("/assets/fonts/InterVariable.woff2") format("woff2-variations")}@font-face{font-family:"Inter";font-style:italic;font-weight:100 900;font-display:optional;src:url("/assets/fonts/InterVariable-Italic.woff2") format("woff2-variations")}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--deep-space:     #0a0a1a;--midnight-blue:  #12122a;--shield-purple:  #7c5cfc;--shield-purple-light: #b8a9ff;--shield-purple-dark:  #4c3ad4;--soft-purple:    #b8a9ff;--pure-white:     #ffffff;--steel-gray:     #8a8aaa;--success-green:  #4ade80;--alert-red:      #f43f5e;--bg:           var(--deep-space);--surface:      var(--midnight-blue);--surface-2:    #1a1a36;--surface-warm: #15152e;--text:         #e2e2f0;--text-muted:   var(--steel-gray);--text-dim:     #80809a;--accent:       var(--shield-purple);--accent-btn:   #7252f8;--accent-light: var(--shield-purple-light);--accent-dim:   var(--shield-purple-dark);--accent-soft:  rgba(124, 92, 252, 0.12);--accent-line:  rgba(124, 92, 252, 0.34);--success:      var(--success-green);--success-bg:   rgba(74, 222, 128, 0.10);--danger:       var(--alert-red);--danger-bg:    rgba(244, 63, 94, 0.08);--border:        rgba(124, 92, 252, 0.18);--border-strong: rgba(124, 92, 252, 0.48);--border-subtle: rgba(255, 255, 255, 0.06);--radius-sm:  8px;--radius:     12px;--radius-lg:  18px;--radius-pill: 999px;--ease:       cubic-bezier(0.2, 0.8, 0.2, 1);--t-fast:     150ms var(--ease);--t:          220ms var(--ease);--t-slow:     420ms var(--ease);--container:        min(64rem, 92vw);--container-wide:   min(72rem, 94vw);--primary:        var(--accent);--primary-light:  var(--accent-light);--primary-dark:   var(--accent-dim);--card:           var(--surface);--card-hover:     var(--surface-2);--error:          var(--danger);--warning:        var(--accent);--shadow:         0 1px 0 var(--border-strong);--shadow-glow:    0 0 40px rgba(124, 92, 252, 0.18);--shadow-card:    0 4px 24px rgba(0, 0, 0, 0.4);--transition:     var(--t)}html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}body{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:17px;line-height:1.65;overflow-x:hidden}a{color:var(--accent-light);text-decoration:none;transition:color var(--t)}a:hover{color:var(--pure-white)}strong{color:var(--text);font-weight:700}h1,h2{font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;font-weight:800;line-height:1.1;letter-spacing:-0.025em;color:var(--text)}h1{font-size:clamp(2.4rem,5.5vw,4.2rem)}h2{font-size:clamp(1.7rem,3.8vw,2.8rem)}h1 em,h2 em,.hero__headline em{font-style:italic;color:var(--accent);font-weight:800}.container,.container--wide{margin:0 auto;padding:0 24px}.container{max-width:var(--container)}.container--wide{max-width:var(--container-wide)}section{padding:clamp(72px,9vw,116px) 0}.wordmark{display:inline-flex;align-items:baseline;font-family:"Inter",sans-serif;font-weight:800;letter-spacing:-0.04em;line-height:1;color:var(--pure-white)}.wordmark__off{color:var(--accent)}.wordmark__dot{color:var(--accent)}.wordmark--hero{font-size:clamp(2.8rem,7vw,5rem);margin-bottom:24px;display:flex;width:fit-content}.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 26px;border-radius:var(--radius);font-family:"Inter",sans-serif;font-size:0.98rem;font-weight:600;letter-spacing:-0.005em;text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform var(--t),background var(--t),color var(--t),border-color var(--t),box-shadow var(--t);white-space:normal;text-align:center;line-height:1.3;font-variant-numeric:tabular-nums}.btn--primary{background:var(--accent-btn);color:var(--pure-white);border-color:var(--accent-btn);box-shadow:0 0 0 0 var(--accent-line)}.btn--primary:hover{background:var(--accent-light);color:var(--deep-space);border-color:var(--accent-light);transform:translateY(-1px);box-shadow:0 0 0 4px var(--accent-soft);text-decoration:none}.btn--primary:active{transform:translateY(0)}.btn--outline{background:transparent;color:var(--text);border:1px solid var(--border-strong)}.btn--outline:hover{border-color:var(--accent);color:var(--accent-light);background:transparent;text-decoration:none}.btn--ghost{background:transparent;color:var(--text-muted);border-color:transparent;padding:12px 14px}.btn--ghost:hover{color:var(--accent-light);text-decoration:none}.btn--lg{padding:18px 34px;font-size:1.05rem}.btn--xl{padding:18px 34px;font-size:1.05rem;border-radius:var(--radius)}.nav__inner{max-width:var(--container-wide);margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}.nav__logo{display:flex;align-items:center;gap:10px;color:var(--pure-white);text-decoration:none}.nav__logo:hover{color:var(--accent-light)}.nav__logo img{width:28px;height:28px;border-radius:6px;object-fit:contain}.nav__links{display:flex;align-items:center;gap:28px;list-style:none}.nav__links a{color:var(--text-muted);font-size:0.92rem;font-weight:500;text-decoration:none;transition:color var(--t)}.nav__links a:hover{color:var(--pure-white)}.hero{padding:clamp(72px,11vw,140px) 0 clamp(48px,7vw,80px);position:relative;overflow:hidden}.hero::before{content:'';position:absolute;top:-160px;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(ellipse at center,rgba(124,92,252,0.10) 0%,transparent 65%);pointer-events:none;z-index:0}.hero>.container{position:relative;z-index:1}.hero__media{position:relative;margin:clamp(36px,6vw,64px) auto 0;max-width:700px}.hero__shots{display:flex;align-items:center;justify-content:center;gap:20px}.hero__shots-main,.hero__shots-pop{height:auto;border-radius:12px;border:1px solid var(--border);box-shadow:0 18px 44px rgba(0,0,0,0.5)}.hero__shots-main{width:60%}.hero__shots-pop{width:27%;border-color:var(--border-strong)}@media (max-width:620px){.hero__shots{flex-direction:column;align-items:center;gap:16px}.hero__shots-main,.hero__shots-pop{width:100%;max-width:380px}}.hero__eyebrow{font-family:"Inter",sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-light);margin-bottom:22px;display:inline-flex;align-items:center;gap:10px}.hero__eyebrow-dot{width:7px;height:7px;border-radius:50%;background:var(--success);flex-shrink:0;box-shadow:0 0 12px rgba(74,222,128,0.6)}.hero__headline,.hero__title{font-family:"Inter",sans-serif;font-size:clamp(2.5rem,6vw,4.4rem);font-weight:800;line-height:1.05;letter-spacing:-0.03em;margin-bottom:28px;color:var(--text);background:none;-webkit-text-fill-color:currentColor;background-clip:unset;-webkit-background-clip:unset;max-width:22ch}.hero__headline em{font-style:italic;color:var(--accent);-webkit-text-fill-color:var(--accent)}.hero__tagline{font-family:"Inter",sans-serif;font-style:italic;font-size:clamp(1.3rem,2.8vw,1.7rem);font-weight:600;color:var(--accent-light);margin:0 0 18px;letter-spacing:-0.01em}.hero__sub{font-size:clamp(1.05rem,2vw,1.2rem);color:var(--text-muted);max-width:56ch;margin:0 0 36px;line-height:1.65}.hero__sub strong{color:var(--text);font-weight:600}.hero__cta-group{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:32px}.hero__trust-strip{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;color:var(--text-dim);font-size:0.86rem}.hero__trust-strip span{display:inline-flex;align-items:center;gap:6px}.hero__trust-strip .dot-sep{color:var(--border-strong)}.hero__note{margin-top:14px;font-size:0.85rem;color:var(--text-dim)}.social-proof__divider{width:1px;height:36px;background:var(--border-subtle);flex-shrink:0}@media (max-width:640px){.social-proof__divider{display:none}}.stealth__arrow{font-family:"Inter",sans-serif;align-self:center;font-size:1.8rem;color:var(--accent);padding:0 6px}.plan-card .btn{width:100%;justify-content:center;text-align:center;margin-top:auto;min-height:44px;font-size:0.94rem}.reveal{opacity:1;transform:none}.reveal-delay-1{transition-delay:0.06s}.reveal-delay-2{transition-delay:0.12s}.reveal-delay-3{transition-delay:0.18s}.reveal-delay-4{transition-delay:0.24s}@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}*,*::before,*::after{animation-duration:0.001ms!important;transition-duration:0.001ms!important}}@media (max-width:980px){.stealth__arrow{display:none}}@media (max-width:768px){body{font-size:16px}section{padding:60px 0}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}.wordmark--hero{font-size:clamp(2.2rem,11vw,3.6rem)}}@media (max-width:480px){.hero__cta-group{flex-direction:column}.btn--lg,.btn--xl{width:100%}}:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}a:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.skip-link{position:absolute;left:-9999px;top:0;z-index:1000;padding:12px 20px;background:var(--accent);color:var(--pure-white);border-radius:0 0 var(--radius) 0;font-weight:600}.skip-link:focus{left:0}body,body h1,body h2,body h3,body h4,body h5,body h6,body p,body span,body div,body section,body article,body blockquote,body figcaption,body ul,body ol,body li,body label,body small,body .article-page,body .article-page h1,body .article-page h2,body .article-page h3,body .article-page p,body .article-page li,body .legal-page,body .legal-page p,body .legal-page h2,body .tech-card,body .tech-card p,body .step-list,body .step-list li,body .cta-box,body .cta-box p{text-align:center}html[dir="rtl"] body,html[dir="rtl"] body *{text-align:center}html[dir="rtl"] table,html[dir="rtl"] table *,html[dir="rtl"] .compare__table,html[dir="rtl"] .compare__table *,html[dir="rtl"] .plan-features,html[dir="rtl"] .plan-features *,html[dir="rtl"] pre,html[dir="rtl"] code{text-align:right}body *:not(table):not(tr):not(td):not(th):not(thead):not(tbody):not(tfoot):not(pre):not(code):not(.plan-features):not(.plan-features *):not(.guarantee__list):not(.guarantee__list *):not(.compare__table):not(.compare__table *):not(.faq-item__panel):not(.faq-item__panel *):not(input):not(textarea):not(select):not(.ticket-form):not(.ticket-form *):not(form):not(form *):not(.ba-col__list):not(.ba-col__list *){text-align:center!important}html[dir="rtl"] body *:not(table):not(tr):not(td):not(th):not(pre):not(code):not(.plan-features *):not(.compare__table *){text-align:center!important}body .section-title,body .section-label,body .section-sub,body .hero__headline,body .hero__sub,body .hero__tagline,body .hero__eyebrow,body .hero__note,body .guarantee__title,body .guarantee__sub,body .problem__twist h3,body .problem__twist p,body .solution__reveal,body .final-cta__headline,body .platforms__footnote,body .stealth__how h2,body .stealth__callout,body .platforms-card__title,body .platforms-card__cat,body .platforms-card__brands,body .platforms-card__note,body .feature-card__title,body .feature-card__desc,body .feature-card__benefit,body .pain-card__title,body .pain-card__desc,body .pain-card__number,body .trust-card__title,body .trust-card__desc,body .testi-card__name,body .testi-card__role,body .testi-card__quote,body .plan-name,body .plan-note,body .plan-features,body .step__title,body .step__desc,body .how-step__title,body .how-step__desc,body .compare-badge-wrap,body .compare-badge,body article.article-page>*,body .legal-page>*{margin-left:auto!important;margin-right:auto!important}body article.article-page p,body article.article-page h1,body article.article-page h2,body article.article-page h3,body article.article-page ul,body article.article-page ol{max-width:70ch;margin-left:auto!important;margin-right:auto!important}body .solution__points,body .solution__points li,body .solution__points li *,body .ba-col__list,body .ba-col__list li,body .ba-col__list li *,body ul li:has(>.g-check),body ul li:has(>svg),body ul li:has(>.check),body .feature-card__benefit,body .feature-card__benefit *,body .stealth-tech__list,body .stealth-tech__list li,body .stealth-tech__list li *,body .compare__row,body .compare__row *,body .compare__cell,body ul[class*="__list"],body ul[class*="__list"] li,body ul[class*="__list"] li *,body ol[class*="__list"],body ol[class*="__list"] li,body ol[class*="__list"] li *{text-align:left!important;margin-left:0!important;margin-right:0!important}body .solution__points,body .ba-col__list,body .stealth-tech__list,body ul[class*="__list"]{display:inline-block;text-align:left!important;margin-left:auto!important;margin-right:auto!important}body .btn,body a.btn,body button.btn,body .wordmark,body .wordmark--inline,body .wordmark-tagline,body .solution__brand,body .hero__cta-group,body .hero__cta-group>*,body .cta-group,body .cta-group>*,body .final-cta,body .final-cta>*,body .install-cta,body .install-cta>*{margin-left:auto!important;margin-right:auto!important}body .hero__cta-group,body .cta-group{display:flex!important;justify-content:center!important;flex-wrap:wrap!important;gap:12px}body .solution__brand,body p:has(>.wordmark),body div:has(>a.btn:only-child){text-align:center!important;display:block}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.001ms!important;transition-duration:0.001ms!important}}@media (max-width:768px){body{font-size:16px}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}}table th{font-variant-numeric:tabular-nums lining-nums}thead th{padding:16px 20px;text-align:left;font-family:"Inter",sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);white-space:nowrap}thead th:first-child{color:var(--pure-white)}@media (max-width:768px){body{font-size:16px}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}thead{display:none}}table *{text-align:left}img{max-width:100%;display:block}h1,h2,h3{font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;font-weight:800;line-height:1.1;letter-spacing:-0.025em;color:var(--text)}h3{font-weight:700;font-size:clamp(1.05rem,2vw,1.25rem);letter-spacing:-0.005em}.step{text-align:left;padding:0}code{text-align:left}</style><link rel="preload" href="/style.css?v=be9cdea8" as="style" onload="this.onload=null;this.rel='stylesheet'" /><noscript><link rel="stylesheet" href="/style.css?v=be9cdea8" /></noscript>
+  <style>
+    .article-page { max-width: 780px; margin: 0 auto; padding: 80px 24px 100px; }
+    .article-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: #fff; margin-bottom: 12px; }
+    .article-page .meta { font-size: 0.88rem; color: #8888aa; margin-bottom: 40px; }
+    .article-page h2 { font-size: 1.5rem; color: #fff; margin: 48px 0 16px; }
+    .article-page h3 { font-size: 1.2rem; color: #e2e2f0; margin: 32px 0 12px; }
+    .article-page p { color: #b0b0c8; line-height: 1.8; margin-bottom: 16px; }
+    .article-page ul, .article-page ol { color: #b0b0c8; margin: 0 0 20px 24px; line-height: 1.8; }
+    .article-page li { margin-bottom: 8px; }
+    .article-page strong { color: #fff; }
+    .article-page .highlight { color: #4ade80; font-weight: 700; }
+    .tech-card { background: var(--midnight-blue, #12122a); border: 1px solid #2a2a4a; border-radius: 14px; padding: 24px; margin: 20px 0; }
+    .tech-card h3 { color: var(--accent, #7c5cfc); margin: 0 0 12px; font-size: 1.1rem; }
+    .tech-card p { margin-bottom: 0; }
+    .comp-table { width: 100%; border-collapse: collapse; margin: 24px 0 32px; }
+    .comp-table th, .comp-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #2a2a4a; }
+    .comp-table th { color: #8888aa; font-size: 0.85rem; text-transform: uppercase; }
+    .comp-table td { color: #b0b0c8; }
+    .comp-table .check { color: #4ade80; font-weight: 700; }
+    .comp-table .cross { color: #f43f5e; }
+    .comp-table .partial { color: #fbbf24; }
+    .cta-box { background: var(--midnight-blue, #12122a); border: 1px solid rgba(124,92,252,0.3); border-radius: 14px; padding: 32px; text-align: center; margin: 48px 0; }
+    .cta-box h3 { color: #fff; margin: 0 0 12px; }
+    .cta-box p { color: #8888aa; margin-bottom: 20px; }
+    .cta-box .btn { display: inline-block; background: var(--accent, #7c5cfc); color: #fff; padding: 12px 28px; border-radius: 10px; font-weight: 700; text-decoration: none; transition: all 0.2s; }
+    .cta-box .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,92,252,0.3); }
+    .layer-badge { display: inline-block; background: var(--accent, #7c5cfc); color: #fff; font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .pro-badge { background: #f59e0b; }
+    .step-list { counter-reset: steps; list-style: none; margin: 0 0 20px 0; padding: 0; }
+    .step-list li { counter-increment: steps; position: relative; padding-left: 44px; margin-bottom: 14px; color: #b0b0c8; line-height: 1.7; }
+    .step-list li::before { content: counter(steps); position: absolute; left: 0; top: 0; width: 28px; height: 28px; background: var(--accent, #7c5cfc); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #fff; }
+  </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "Как установить и использовать блокировщик рекламы AdOff в Chrome",
+    "description": "Установите AdOff за три шага и наслаждайтесь полностью свободным от рекламы браузингом благодаря трём уровням защиты.",
+    "step": [
+      {
+        "@type": "HowToStep",
+        "name": "Установите AdOff из Chrome Web Store",
+        "text": "Откройте Chrome Web Store и найдите AdOff или скачайте расширение напрямую с adoff.app. Нажмите «Добавить в Chrome» и подтвердите установку.",
+        "position": 1
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Закрепите расширение для быстрого доступа",
+        "text": "Нажмите значок пазла на панели инструментов Chrome, найдите AdOff в списке и нажмите значок булавки, чтобы иконка AdOff всегда была видна.",
+        "position": 2
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Просматривайте интернет без рекламы",
+        "text": "AdOff активируется автоматически. Сетевая блокировка, косметическая фильтрация и скрытая защита работают в фоновом режиме. Настройка не требуется.",
+        "position": 3
+      }
+    ],
+    "tool": [
+      {
+        "@type": "HowToTool",
+        "name": "Браузер Google Chrome"
+      }
+    ]
+  }
+  </script>
+  </head>
+<body>
+  <div id="site-nav"></div>
+  <script src="/adoff-i18n.js?v=623d521a"></script>
+  <script src="/adoff-nav.js?v=e75acee8" defer></script>
+  <article class="article-page">
+
+    <h1>Как работает AdOff: технология скрытой блокировки рекламы</h1>
+    <p class="meta">Обновлено в апреле 2026 &nbsp;·&nbsp; 8 мин чтения &nbsp;·&nbsp; Технический разбор</p>
+
+    <p>
+      Большинство блокировщиков рекламы используют единственный грубый инструмент: список URL для блокировки. Это работает
+      до тех пор, пока сайт не поймёт, что его используют — и тогда начинается гонка вооружений. AdOff был создан иначе,
+      с нуля, используя <strong>три независимых уровня защиты</strong>, которые работают совместно и обеспечивают
+      по-настоящему незаметный, безупречный браузинг.
+    </p>
+    <p>
+      На этой странице подробно описана работа каждого уровня — с достаточным количеством технических деталей для любопытных,
+      но написана так, что разобраться сможет каждый. Независимо от того, являетесь ли вы разработчиком, желающим понять
+      архитектуру, или обычным пользователем, которому интересно, почему AdOff продолжает работать там, где другие
+      блокировщики сдаются, — вы попали по адресу.
+    </p>
+
+    <!-- ===================== LAYER 1 ===================== -->
+    <h2>Уровень 1 — Сетевая блокировка</h2>
+    <span class="layer-badge">Активен на всех тарифах</span>
+
+    <p>
+      Первый и наиболее эффективный уровень работает на сетевом уровне, останавливая HTTP-запросы, связанные с рекламой,
+      <em>ещё до того, как они будут загружены</em> браузером. Данные не загружаются, скрипты не выполняются,
+      пиксели отслеживания не загружаются. Ресурс просто никогда не запрашивается.
+    </p>
+
+    <div class="tech-card">
+      <h3>🔧 Chrome API: declarativeNetRequest</h3>
+      <p>
+        AdOff использует API Chrome <strong>declarativeNetRequest</strong> — тот же современный API, который применяется
+        в корпоративных инструментах безопасности. В отличие от устаревшего API <code>webRequest</code>,
+        declarativeNetRequest обрабатывается непосредственно движком браузера без каких-либо накладных расходов на JavaScript.
+        Правила компилируются один раз при установке и сопоставляются практически без нагрузки на процессор для каждого
+        последующего запроса.
+      </p>
+    </div>
+
+    <h3>107+ правил точечной блокировки</h3>
+    <p>
+      AdOff поставляется с <strong>180 тщательно отобранными сетевыми правилами</strong>, направленными против
+      инфраструктуры доставки рекламы, используемой наиболее распространёнными рекламными сетями. Вместо того чтобы
+      поддерживать огромный список отдельных доменов, требующий постоянного обновления, правила AdOff нацелены на
+      структурные паттерны доставки рекламы:
+    </p>
+    <ul>
+      <li><strong>Домены рекламных серверов</strong> — хосты, обслуживающие баннерную рекламу, видеоролики и спонсорский контент</li>
+      <li><strong>Конечные точки отслеживания и аналитики</strong> — пиксели, маяки и сборщики событий, профилирующие ваше поведение</li>
+      <li><strong>Инфраструктура ретаргетинга</strong> — межсайтовые трекеры, преследующие вас с сайта на сайт</li>
+      <li><strong>URL-адреса программируемых рекламных бирж</strong> — конечные точки аукционов рекламных показов в реальном времени</li>
+      <li><strong>Пути CDN, используемые исключительно для рекламы</strong> — паттерны доставки контента, характерные для рекламных пакетов</li>
+    </ul>
+
+    <h3>Почему блокировка на сетевом уровне важна</h3>
+    <p>
+      Когда реклама блокируется на сетевом уровне, <strong>страница загружается быстрее</strong>. Речь идёт не просто
+      об удалении видимого баннера — это означает, что браузеру никогда не придётся открывать TCP-соединения с
+      рекламными серверами, выполнять DNS-запросы для доменов отслеживания и запускать сторонний JavaScript, на котором
+      основана работа рекламы.
+    </p>
+    <p>
+      Исследования новостных сайтов с большим количеством рекламы постоянно показывают, что блокировка на сетевом
+      уровне сокращает время загрузки страниц на 30–60%. Каждый заблокированный рекламный запрос — это соединение,
+      которое не нужно открывать, скрипт, который не нужно разбирать, и пакет данных, который не потребляет ваш трафик.
+    </p>
+
+    <div class="tech-card">
+      <h3>⚡ Преимущество по производительности</h3>
+      <p>
+        Поскольку правила declarativeNetRequest обрабатываются движком браузера на C++ — а не JavaScript —
+        AdOff добавляет <strong>нулевую нагрузку на процессор</strong> при обычном браузинге. Сопоставление происходит
+        до того, как сетевой стек даже начинает запрос. JavaScript на каждой странице не выполняется, а расширение
+        практически не использует память в простое.
+      </p>
+    </div>
+
+    <!-- ===================== LAYER 2 ===================== -->
+    <h2>Уровень 2 — Косметическая фильтрация</h2>
+    <span class="layer-badge">Активен на всех тарифах</span>
+
+    <p>
+      Не вся реклама поступает через сетевые запросы, которые можно заблокировать заранее. Часть рекламы отображается
+      непосредственно в HTML страницы, загружается с того же домена, что и контент, или внедряется через JavaScript
+      первой стороны. Для таких случаев AdOff использует <strong>косметическую фильтрацию</strong> — технику скрытия
+      рекламных элементов из DOM с помощью CSS, не нарушая окружающую вёрстку.
+    </p>
+
+    <h3>CSS-инъекция в изолированном окружении</h3>
+    <p>
+      Контентный скрипт AdOff работает в <strong>ISOLATED world</strong> Chrome — изолированной среде выполнения,
+      полностью отделённой от JavaScript самой страницы. Это означает, что расширение может наблюдать и изменять DOM,
+      оставаясь незаметным для скриптов страницы, у которых нет доступа к области видимости изолированного окружения.
+    </p>
+    <p>
+      Косметический фильтр внедряет CSS-таблицу стилей, применяющую правила <code>display: none</code> и
+      <code>visibility: hidden</code> к известным селекторам рекламных контейнеров. Эти селекторы тщательно
+      поддерживаются для охвата стандартных имён классов, идентификаторов и структурных паттернов рекламных слотов
+      на тысячах сайтов.
+    </p>
+
+    <div class="tech-card">
+      <h3>🎨 Без смещения вёрстки — без пустых мест</h3>
+      <p>
+        Распространённая проблема примитивных блокировщиков рекламы заключается в том, что удаление элемента из DOM
+        вызывает прыжки или перекомпоновку окружающего контента. CSS-правила AdOff используют <code>display: none</code>
+        с приоритетом <code>!important</code> и применяются до первой отрисовки браузера там, где это возможно,
+        предотвращая любые видимые смещения вёрстки. Место, которое заняла бы реклама, просто не появляется.
+      </p>
+    </div>
+
+    <h3>Сканирование DOM и динамическая инъекция</h3>
+    <p>
+      Современные сайты крайне динамичны — они загружают контент после разбора исходного HTML, внедряют рекламные
+      слоты через JavaScript и непрерывно обновляют DOM. Контентный скрипт AdOff отслеживает DOM на предмет вновь
+      вставленных элементов, соответствующих рекламным паттернам, и немедленно применяет правила скрытия — как
+      правило, в пределах одного кадра анимации. Вы не увидите мигания рекламы перед её исчезновением.
+    </p>
+
+    <h3>Нейтрализация видеорекламы <span style="font-size:0.75rem;color:#f59e0b;">(free)</span></h3>
+    <p>
+      На платформах видеостриминга большинство видеоплееров используют стандартный рекламный SDK для управления
+      видеорекламой (преролы, мидроллы, построллы). Эта функция доступна всем бесплатно и позволяет
+      заменить стандартный SDK нейтральным стабом — видео запускается напрямую без прерываний.
+    </p>
+    <p>
+      Это работает через два взаимодополняющих механизма:
+    </p>
+    <ul>
+      <li><strong>Перенаправление на уровне сети</strong> — запросы на загрузку рекламного SDK перехватываются и перенаправляются к локальному файлу стаба, входящему в состав расширения</li>
+      <li><strong>Инъекция на уровне страницы</strong> — стаб внедряется до выполнения каких-либо скриптов сайта, поэтому даже плееры, которые включают рекламный SDK внутри себя, первыми обнаруживают нейтральную версию</li>
+    </ul>
+    <p>
+      Стаб реализует полную поверхность API оригинального SDK, но никогда не отдаёт рекламу. Когда плеер
+      вызывает <code>start()</code>, стаб немедленно отправляет сигнал «реклама завершена» — плеер возобновляет
+      видео так, как если бы рекламная пауза завершилась естественным образом. Это универсально: работает на
+      любом сайте в мире, использующем данный SDK, без необходимости вести ручной список сайтов.
+    </p>
+    <p>
+      На крупных видеоплатформах специальный обработчик ускоряет воспроизведение рекламы в 16 раз и
+      автоматически нажимает кнопку пропуска с человекоподобной задержкой.
+    </p>
+
+    <!-- ===================== LAYER 3 ===================== -->
+    <h2>Уровень 3 — Скрытое антиобнаружение <span style="font-size:0.8rem;color:#f59e0b;">(free)</span></h2>
+    <span class="layer-badge pro-badge">Включено для всех</span>
+
+    <p>
+      Именно здесь AdOff наиболее значительно отличается от обычных блокировщиков рекламы. Многие сайты теперь
+      запускают активные скрипты <em>защиты от блокировщиков</em> — код, единственная цель которого состоит в том,
+      чтобы обнаружить, используете ли вы блокировщик, и если да — прервать ваш опыт стеной, предупреждением
+      или ухудшенным контентом.
+    </p>
+    <p>
+      Скрытый уровень AdOff, работающий в <strong>MAIN world</strong> Chrome, действует на том же уровне, что и
+      JavaScript самой страницы. Он точечно нейтрализует обнаружение антиблокировщика до того, как оно успевает
+      запуститься. Вот как работает каждая техника:
+    </p>
+
+    <div class="tech-card">
+      <h3>🪤 Подмена приманки</h3>
+      <p>
+        Скрипты защиты от блокировщиков обычно работают, внедряя небольшой элемент-«приманку» — узел DOM, стилизованный
+        под рекламный контейнер — и затем проверяя, равны ли его размеры нулю или был ли он удалён блокировщиком.
+        Модуль подмены приманки AdOff сохраняет эти элементы в DOM, сообщает правдоподобные размеры при запросе
+        их геометрии и гарантирует, что скрипт обнаружения получит сигнал «всё в порядке», который ожидает.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>📦 Подмена переменных</h3>
+      <p>
+        Рекламные сети внедряют глобальные JavaScript-переменные и свойства в объект <code>window</code>, сигнализируя
+        о своём присутствии. Скрипты защиты от блокировщиков проверяют наличие этих переменных, чтобы убедиться, что
+        реклама загружена. Модуль подмены переменных AdOff восстанавливает ожидаемое глобальное пространство имён —
+        создавая лёгкие объекты-заглушки, проходящие проверки наличия — чтобы страница считала, что рекламные скрипты
+        успешно выполнились, хотя никакой реальной рекламы доставлено не было.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>🔌 Перехват Fetch / XHR</h3>
+      <p>
+        Некоторые системы обнаружения вообще не используют DOM — они делают прямой вызов <code>fetch()</code> или
+        <code>XMLHttpRequest</code> к известной рекламной конечной точке и измеряют время ответа или код статуса.
+        Если запрос заблокирован, он мгновенно завершается ошибкой, выдавая присутствие блокировщика. AdOff
+        оборачивает как <code>window.fetch</code>, так и <code>XMLHttpRequest</code> прокси-обработчиками, которые
+        обнаруживают запросы к известным рекламным доменам и возвращают синтетические ответы, имитирующие успешную
+        загрузку рекламы.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>🛡️ Нейтрализатор скриптов</h3>
+      <p>
+        Известные скрипты защиты от блокировщиков определяются по их URL-паттернам и сигнатурам содержимого. Когда
+        браузер пытается загрузить один из таких скриптов, скрытый уровень перехватывает выполнение и заменяет логику
+        скрипта инертной заглушкой, удовлетворяющей любые обратные вызовы завершения без выполнения какой-либо работы
+        по обнаружению. Код страницы получает разрешённое промисс или пустой обратный вызов, и путь обнаружения
+        никогда не достигается.
+      </p>
+    </div>
+
+    <div class="tech-card">
+      <h3>👁️ MutationObserver — Защита в реальном времени</h3>
+      <p>
+        Сайты могут внедрять новые скрипты обнаружения в любое время после начальной загрузки страницы — запускаемые
+        действиями пользователя, глубиной прокрутки или таймерами. MutationObserver AdOff непрерывно наблюдает
+        за добавлением новых элементов <code>&lt;script&gt;</code> в документ. Когда один из них соответствует
+        известной сигнатуре антиблокировщика, скрытый уровень нейтрализует его до выполнения первой инструкции.
+        Это гарантирует защиту даже от отложенных или лениво загружаемых систем обнаружения.
+      </p>
+    </div>
+
+    <!-- ===================== HOW THEY WORK TOGETHER ===================== -->
+    <h2>Как три уровня работают вместе</h2>
+
+    <p>
+      Каждый уровень независим — если один обойдён или неприменим, остальные продолжают работать. Но их настоящая
+      сила — в том, как они дополняют друг друга:
+    </p>
+
+    <ul>
+      <li>
+        <strong>Сетевая блокировка</strong> устраняет большинство рекламных пакетов до их появления в браузере,
+        сокращая поверхность атаки для скриптов обнаружения, которые могут обнаружить только то, что было заблокировано.
+      </li>
+      <li>
+        <strong>Косметическая фильтрация</strong> обрабатывает рекламу первой стороны и любые остатки, проскользнувшие
+        через сетевой уровень, сохраняя визуальный опыт чистым и не оставляя следов в DOM.
+      </li>
+      <li>
+        <strong>Скрытое антиобнаружение</strong> оборачивает два других уровня в плащ невидимости, убеждая страницу
+        в том, что никакого блокировщика нет — и антирекламный пейволл никогда не срабатывает.
+      </li>
+    </ul>
+
+    <p>
+      Результат — опыт браузинга, который не просто свободен от рекламы, а такой, при котором сайты никогда не
+      узнают, что вы используете блокировщик рекламы. Никаких предупреждений, никаких пейволлов, никаких ухудшений
+      контента, никаких оверлеев «пожалуйста, отключите блокировщик рекламы».
+    </p>
+
+    <!-- ===================== PRIVACY ===================== -->
+    <h2>Конфиденциальность как принцип</h2>
+
+    <p>
+      AdOff обрабатывает всё <strong>локально в вашем браузере</strong>. Нет удалённых серверов, анализирующих
+      вашу историю браузинга, никакая телеметрия не отправляется домой, и ни один список посещённых URL никогда
+      не покидает ваше устройство. Расширение запрашивает только разрешения, которые ему действительно нужны:
+    </p>
+    <ul>
+      <li><strong>declarativeNetRequest</strong> — для применения правил сетевой блокировки</li>
+      <li><strong>storage</strong> — для локального сохранения ваших настроек и счётчика рекламы</li>
+      <li><strong>tabs</strong> — для отображения счётчика значка для каждого сайта</li>
+      <li><strong>scripting</strong> — для внедрения косметических фильтров и скрытых скриптов</li>
+    </ul>
+    <p>
+      Никакого сквозного разрешения «читать все ваши данные на всех сайтах». Никакого SDK аналитики внутри расширения.
+      То, что происходит в вашем браузере, остаётся в вашем браузере.
+    </p>
+
+    <!-- ===================== HOW TO INSTALL ===================== -->
+    <h2>Начало работы за 3 шага</h2>
+
+    <ol class="step-list">
+      <li>
+        <strong>Установите AdOff</strong> из Chrome Web Store или скачайте <code>.zip</code> напрямую
+        с <a href="../install.html" style="color:var(--accent, #7c5cfc);">adoff.app/install</a>. Chrome запросит подтверждение
+        разрешений — ознакомьтесь и примите.
+      </li>
+      <li>
+        <strong>Закрепите расширение</strong>, нажав значок пазла на панели инструментов Chrome, найдя
+        AdOff в выпадающем списке и кликнув значок булавки. Щит AdOff постоянно отображается на панели инструментов.
+      </li>
+      <li>
+        <strong>Просматривайте интернет как обычно.</strong> Все три уровня автоматически активируются на каждой
+        посещаемой странице. Нажмите на значок AdOff в любое время, чтобы узнать, сколько рекламы и запросов
+        заблокировано, или приостановить защиту на конкретном сайте.
+      </li>
+    </ol>
+
+    <p>
+      Для стандартного использования никакая настройка не требуется. Опытные пользователи могут изучить страницу
+      настроек для управления белым списком, настройки поведения блокировки для каждого сайта или активации
+      скрытых функций бесплатно для всех.
+    </p>
+
+    <!-- ===================== CTA ===================== -->
+    <div class="cta-box">
+      <h3>Готовы почувствовать разницу?</h3>
+      <p>Все три уровня защиты бесплатны всегда. Банковская карта не требуется.</p>
+      <a href="../install.html" class="btn">Установить AdOff бесплатно →</a>
+    </div>
+
+        <p>Техническая справка: API <a href="https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest" rel="noopener" target="_blank">declarativeNetRequest в Chromium</a> — официальный механизм, с помощью которого расширения блокируют сетевые запросы.</p>
+      </article>
+  
+  <script src="/adoff-footer.js?v=21299afa" defer></script>
+  
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

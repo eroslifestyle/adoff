@@ -1,0 +1,16 @@
+[Unit]
+Description=AdOff — Esecuzione fix suggerimenti approvati (Claude implementa + deploya)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=mrxxx
+WorkingDirectory=/home/mrxxx/adoff
+# Gate di sicurezza: per eseguire davvero impostare SUGG_EXECUTE_CONFIRM=1
+# (es. override con `systemctl edit` o drop-in). Default = no-op.
+Environment=SUGG_EXECUTE_CONFIRM=0
+ExecStart=/usr/bin/bash /home/mrxxx/adoff/sviluppo/ai-autopilot/scripts/suggestions-execute-approved.sh
+TimeoutStartSec=5400
+StandardOutput=append:/var/log/adoff-suggestions-execute.log
+StandardError=append:/var/log/adoff-suggestions-execute.log

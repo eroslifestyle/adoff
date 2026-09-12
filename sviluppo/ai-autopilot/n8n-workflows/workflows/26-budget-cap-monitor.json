@@ -1,0 +1,542 @@
+{
+  "name": "AdOff 26 - Gemini Budget Cap Monitor",
+  "id": "w26-budget-cap-monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 60
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 60 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Create tables if not exist (idempotent)\nCREATE TABLE IF NOT EXISTS adoff_autopilot.budget_alerts (\n  id SERIAL PRIMARY KEY,\n  timestamp TIMESTAMPTZ DEFAULT NOW(),\n  severity TEXT NOT NULL CHECK (severity IN ('warning', 'critical')),\n  daily_cost_eur NUMERIC(10,2),\n  monthly_cost_eur NUMERIC(10,2),\n  n_calls_24h INTEGER,\n  message TEXT,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);\n\nCREATE TABLE IF NOT EXISTS adoff_autopilot.workflow_kill_switch (\n  id SERIAL PRIMARY KEY,\n  workflow_id TEXT UNIQUE NOT NULL,\n  disabled BOOLEAN DEFAULT false,\n  reason TEXT,\n  set_at TIMESTAMPTZ DEFAULT NOW()\n);\n\n-- Ensure indexes\nCREATE INDEX IF NOT EXISTS idx_budget_alerts_severity ON adoff_autopilot.budget_alerts(severity);\nCREATE INDEX IF NOT EXISTS idx_budget_alerts_timestamp ON adoff_autopilot.budget_alerts(timestamp DESC);\nCREATE INDEX IF NOT EXISTS idx_workflow_kill_switch_workflow_id ON adoff_autopilot.workflow_kill_switch(workflow_id);"
+      },
+      "id": "db-setup",
+      "name": "DB setup tables",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        480,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Query token costs from gemini_copy_drafts\nSELECT\n  COALESCE(model, 'unknown') as model,\n  COUNT(*) as n_calls_24h,\n  SUM(COALESCE(tokens_in, 0)) as total_tokens_in,\n  SUM(COALESCE(tokens_out, 0)) as total_tokens_out,\n  SUM(COALESCE(tokens_in, 0) * CASE\n    WHEN model = 'gemini-2.5-flash' THEN 0.075\n    WHEN model = 'gemini-2.5-pro' THEN 1.25\n    ELSE 0.075\n  END / 1000000 +\n  COALESCE(tokens_out, 0) * CASE\n    WHEN model = 'gemini-2.5-flash' THEN 0.30\n    WHEN model = 'gemini-2.5-pro' THEN 10.0\n    ELSE 0.30\n  END / 1000000) as cost_usd_24h\nFROM adoff_autopilot.gemini_copy_drafts\nWHERE created_at >= NOW() - INTERVAL '24 hours'\nGROUP BY model\nORDER BY cost_usd_24h DESC;"
+      },
+      "id": "query-daily-cost",
+      "name": "Query daily cost",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        700,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Query monthly costs\nSELECT\n  COALESCE(model, 'unknown') as model,\n  COUNT(*) as n_calls_month,\n  SUM(COALESCE(tokens_in, 0)) as total_tokens_in,\n  SUM(COALESCE(tokens_out, 0)) as total_tokens_out,\n  SUM(COALESCE(tokens_in, 0) * CASE\n    WHEN model = 'gemini-2.5-flash' THEN 0.075\n    WHEN model = 'gemini-2.5-pro' THEN 1.25\n    ELSE 0.075\n  END / 1000000 +\n  COALESCE(tokens_out, 0) * CASE\n    WHEN model = 'gemini-2.5-flash' THEN 0.30\n    WHEN model = 'gemini-2.5-pro' THEN 10.0\n    ELSE 0.30\n  END / 1000000) as cost_usd_month\nFROM adoff_autopilot.gemini_copy_drafts\nWHERE created_at >= date_trunc('month', NOW())\nGROUP BY model\nORDER BY cost_usd_month DESC;"
+      },
+      "id": "query-monthly-cost",
+      "name": "Query monthly cost",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        700,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aggregate daily + monthly costs, convert USD to EUR\nconst daily_items = $('Query daily cost').getAll();\nconst monthly_items = $('Query monthly cost').getAll();\n\nlet daily_cost_usd = 0, monthly_cost_usd = 0, n_calls_24h = 0;\n\nfor (const item of daily_items) {\n  daily_cost_usd += parseFloat(item.json.cost_usd_24h || 0);\n  n_calls_24h += parseInt(item.json.n_calls_24h || 0);\n}\n\nfor (const item of monthly_items) {\n  monthly_cost_usd += parseFloat(item.json.cost_usd_month || 0);\n}\n\nconst daily_cost_eur = daily_cost_usd * 0.92;\nconst monthly_cost_eur = monthly_cost_usd * 0.92;\n\nreturn [{\n  json: {\n    daily_cost_usd: parseFloat(daily_cost_usd.toFixed(4)),\n    daily_cost_eur: parseFloat(daily_cost_eur.toFixed(4)),\n    monthly_cost_usd: parseFloat(monthly_cost_usd.toFixed(4)),\n    monthly_cost_eur: parseFloat(monthly_cost_eur.toFixed(4)),\n    n_calls_24h: n_calls_24h,\n    timestamp: new Date().toISOString(),\n    threshold_warning_eur: 2,\n    threshold_critical_eur: 5,\n    threshold_critical_monthly_eur: 30\n  }\n}];"
+      },
+      "id": "calculate-costs",
+      "name": "Calculate costs (EUR)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.daily_cost_eur }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-warning",
+      "name": "If daily >= 2 EUR",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.daily_cost_eur }}",
+              "rightValue": 5,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-critical-daily",
+      "name": "If daily >= 5 EUR",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.monthly_cost_eur }}",
+              "rightValue": 30,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-critical-monthly",
+      "name": "If monthly >= 30 EUR",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.budget_alerts (severity, daily_cost_eur, monthly_cost_eur, n_calls_24h, message)\nVALUES ($1, $2, $3, $4, $5)\nRETURNING id, timestamp, severity;",
+        "options": {
+          "queryReplacement": "=warning,{{ $json.daily_cost_eur }},{{ $json.monthly_cost_eur }},{{ $json.n_calls_24h }},{{ 'Daily Gemini spend ' + $json.daily_cost_eur + ' EUR reached warning threshold (>= 2 EUR)' }}"
+        }
+      },
+      "id": "insert-alert-warning",
+      "name": "Insert alert WARNING",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1540,
+        220
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.budget_alerts (severity, daily_cost_eur, monthly_cost_eur, n_calls_24h, message)\nVALUES ($1, $2, $3, $4, $5)\nRETURNING id, timestamp, severity;",
+        "options": {
+          "queryReplacement": "=critical,{{ $json.daily_cost_eur }},{{ $json.monthly_cost_eur }},{{ $json.n_calls_24h }},{{ 'CRITICAL: Daily Gemini spend ' + $json.daily_cost_eur + ' EUR exceeded limit (>= 5 EUR). Disabling Gemini workflows.' }}"
+        }
+      },
+      "id": "insert-alert-critical-daily",
+      "name": "Insert alert CRITICAL (daily)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1540,
+        100
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.budget_alerts (severity, daily_cost_eur, monthly_cost_eur, n_calls_24h, message)\nVALUES ($1, $2, $3, $4, $5)\nRETURNING id, timestamp, severity;",
+        "options": {
+          "queryReplacement": "=critical,{{ $json.daily_cost_eur }},{{ $json.monthly_cost_eur }},{{ $json.n_calls_24h }},{{ 'CRITICAL: Monthly Gemini spend ' + $json.monthly_cost_eur + ' EUR exceeded limit (>= 30 EUR). Review budget immediately.' }}"
+        }
+      },
+      "id": "insert-alert-critical-monthly",
+      "name": "Insert alert CRITICAL (monthly)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1540,
+        450
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.workflow_kill_switch (workflow_id, disabled, reason)\nVALUES ('w20-gemini-copywriter-caption', true, 'Daily budget threshold exceeded: ' || $1 || ' EUR')\nON CONFLICT (workflow_id) DO UPDATE SET disabled = true, reason = EXCLUDED.reason, set_at = NOW()\nRETURNING workflow_id, disabled, reason;"
+      },
+      "id": "disable-workflow-daily",
+      "name": "Disable workflows (daily)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1760,
+        100
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.workflow_kill_switch (workflow_id, disabled, reason)\nVALUES ('w20-gemini-copywriter-caption', true, 'Monthly budget threshold exceeded: ' || $1 || ' EUR')\nON CONFLICT (workflow_id) DO UPDATE SET disabled = true, reason = EXCLUDED.reason, set_at = NOW()\nRETURNING workflow_id, disabled, reason;"
+      },
+      "id": "disable-workflow-monthly",
+      "name": "Disable workflows (monthly)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1760,
+        450
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"{{ $env.TELEGRAM_CHAT_ID }}\",\n  \"text\": \"⚠️ AdOff Gemini Budget WARNING\\n\\nDaily spend: {{ $json.daily_cost_eur }} EUR\\nMonthly spend: {{ $json.monthly_cost_eur }} EUR\\nCalls (24h): {{ $json.n_calls_24h }}\\n\\nThreshold: 2 EUR/day, 5 EUR critical, 30 EUR/month critical\"\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "notify-telegram-warning",
+      "name": "Telegram: WARNING",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"{{ $env.TELEGRAM_CHAT_ID }}\",\n  \"text\": \"🚨 CRITICAL: AdOff Gemini Budget Exceeded\\n\\nDaily spend: {{ $json.daily_cost_eur }} EUR (limit: 5 EUR)\\nMonthly spend: {{ $json.monthly_cost_eur }} EUR\\nCalls (24h): {{ $json.n_calls_24h }}\\n\\n⚠️ Gemini workflows DISABLED to prevent further charges\"\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "notify-telegram-critical",
+      "name": "Telegram: CRITICAL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1980,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"{{ $env.TELEGRAM_CHAT_ID }}\",\n  \"text\": \"🚨 CRITICAL: Monthly Gemini Budget Exceeded\\n\\nMonthly spend: {{ $json.monthly_cost_eur }} EUR (limit: 30 EUR)\\n\\n⚠️ Review budget and spending patterns immediately\"\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "notify-telegram-critical-monthly",
+      "name": "Telegram: CRITICAL (monthly)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1980,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "budget-status",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-budget-status",
+      "name": "Webhook: /budget-status",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        2200,
+        300
+      ],
+      "webhookId": "budget-status-endpoint"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"snapshot\": {\n    \"timestamp\": \"{{ new Date().toISOString() }}\",\n    \"daily_cost_eur\": {{ $json.daily_cost_eur }},\n    \"daily_cost_usd\": {{ $json.daily_cost_usd }},\n    \"monthly_cost_eur\": {{ $json.monthly_cost_eur }},\n    \"monthly_cost_usd\": {{ $json.monthly_cost_usd }},\n    \"n_calls_24h\": {{ $json.n_calls_24h }},\n    \"status\": \"{{ $json.daily_cost_eur >= 5 ? 'CRITICAL' : ($json.daily_cost_eur >= 2 ? 'WARNING' : 'OK') }}\"\n  },\n  \"thresholds\": {\n    \"warning_daily_eur\": 2,\n    \"critical_daily_eur\": 5,\n    \"critical_monthly_eur\": 30\n  }\n}"
+      },
+      "id": "respond-webhook",
+      "name": "Respond webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        2420,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Every 60 min": {
+      "main": [
+        [
+          {
+            "node": "DB setup tables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB setup tables": {
+      "main": [
+        [
+          {
+            "node": "Query daily cost",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Query monthly cost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query daily cost": {
+      "main": [
+        [
+          {
+            "node": "Calculate costs (EUR)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query monthly cost": {
+      "main": [
+        [
+          {
+            "node": "Calculate costs (EUR)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate costs (EUR)": {
+      "main": [
+        [
+          {
+            "node": "If daily >= 2 EUR",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Webhook: /budget-status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If daily >= 2 EUR": {
+      "main": [
+        [
+          {
+            "node": "Insert alert WARNING",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Insert alert WARNING": {
+      "main": [
+        [
+          {
+            "node": "Telegram: WARNING",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert alert CRITICAL (daily)": {
+      "main": [
+        [
+          {
+            "node": "Disable workflows (daily)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram: CRITICAL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert alert CRITICAL (monthly)": {
+      "main": [
+        [
+          {
+            "node": "Disable workflows (monthly)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Telegram: CRITICAL (monthly)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Disable workflows (daily)": {
+      "main": [
+        [
+          {
+            "node": "Telegram: CRITICAL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Disable workflows (monthly)": {
+      "main": [
+        [
+          {
+            "node": "Telegram: CRITICAL (monthly)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: /budget-status": {
+      "main": [
+        [
+          {
+            "node": "Respond webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "active": false
+}

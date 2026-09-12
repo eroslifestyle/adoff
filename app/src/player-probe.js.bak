@@ -1,0 +1,109 @@
+(function() {
+  'use strict';
+
+  try {
+    // Impedisce esecuzione multipla dello stesso script nello stesso world
+    if (window.__adoffPlayerProbe) {
+      return;
+    }
+    window.__adoffPlayerProbe = true;
+
+    // Il frame principale e' gia' gestito dal manifest
+    try {
+      if (window.top === window.self) {
+        return;
+      }
+    } catch (e) {
+      return;
+    }
+
+    var timeoutId = null;
+    var observer = null;
+
+    function rilevaPlayer() {
+      try {
+        if (document.querySelector('video, audio')) {
+          return true;
+        }
+        // Qui si accetta una corrispondenza parziale sul nome: i contenitori dei player hanno nomi composti
+        if (document.querySelector('[id*="player" i], [id*="jwplayer" i], [id*="videojs" i], [class*="player" i], [class*="jwplayer" i], [class*="videojs" i]')) {
+          return true;
+        }
+        return false;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function attivaStealth() {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      try {
+        chrome.runtime.sendMessage(
+          { action: 'richiediStealthFrame' },
+          function(response) {
+            if (chrome.runtime.lastError) {
+              return;
+            }
+            if (response && response.pro === true && response.nonce && /^ao_[0-9a-f]{8}$/.test(response.nonce)) {
+              try {
+                var root = document.documentElement;
+                if (root) {
+                  root.setAttribute('data-adoff-stealth', response.nonce);
+                }
+                var script = document.createElement('script');
+                script.src = chrome.runtime.getURL('src/stealth.js');
+                script.onload = function() {
+                  this.remove();
+                };
+                var appendTarget = root || document.head || document.body;
+                if (appendTarget) {
+                  appendTarget.appendChild(script);
+                }
+              } catch (e) {
+                // CSP o altro errore di iniezione: silenzio
+              }
+            }
+          }
+        );
+      } catch (e) {
+        // Errore nella comunicazione col service worker
+      }
+    }
+
+    if (rilevaPlayer()) {
+      attivaStealth();
+      return;
+    }
+
+    try {
+      observer = new MutationObserver(function() {
+        if (rilevaPlayer()) {
+          attivaStealth();
+        }
+      });
+
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true
+      });
+
+      timeoutId = setTimeout(function() {
+        if (observer) {
+          observer.disconnect();
+          observer = null;
+        }
+      }, 25000);
+    } catch (e) {
+      // MutationObserver non disponibile o.observe fallita
+    }
+  } catch (e) {
+    // Errore inatteso: non compromettere la pagina
+  }
+})();

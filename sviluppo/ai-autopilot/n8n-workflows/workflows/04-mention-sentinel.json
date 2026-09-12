@@ -1,0 +1,261 @@
+{
+  "name": "AdOff 04 - Mention Sentinel (Reddit+HN)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "trigger-schedule",
+      "name": "Every 30 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Keyword target — 15 lingue + brand competitor\nconst keywords = [\n  'adoff', 'ad off chrome', 'ad-off extension',\n  'ublock origin not working', 'ublock origin manifest v3', 'ublock alternative',\n  'adblock plus alternative', 'adguard alternative',\n  'best ad blocker 2026', 'youtube adblocker', 'youtube anti adblock',\n  'manifest v3 ad blocker', 'mv3 adblock', 'chrome adblocker not working',\n  'youtube ad skip', 'youtube ad blocker chrome 2026'\n];\nreturn keywords.map(k => ({ json: { keyword: k }}));"
+      },
+      "id": "keywords",
+      "name": "Keywords list",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.reddit.com/search.json?q={{ encodeURIComponent($json.keyword) }}&sort=new&t=day&limit=25",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "AdOffMentionBot/1.0 (research; +https://adoff.app)"
+            }
+          ]
+        }
+      },
+      "id": "reddit-search",
+      "name": "Reddit search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://hn.algolia.com/api/v1/search_by_date?query={{ encodeURIComponent($json.keyword) }}&tags=(story,comment)&hitsPerPage=20",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "hn-search",
+      "name": "HN search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize Reddit results -> mentions schema\nconst items = $input.all();\nconst out = [];\nfor (const it of items) {\n  const keyword = it.json.keyword || '';\n  const data = it.json.data;\n  if (!data || !data.children) continue;\n  for (const child of data.children) {\n    const d = child.data;\n    if (!d || !d.id) continue;\n    out.push({ json: {\n      source: 'reddit',\n      source_id: d.id,\n      url: 'https://reddit.com' + (d.permalink || ''),\n      lang: 'en',\n      author: d.author || 'anonymous',\n      title: d.title || '',\n      body: (d.selftext || d.body || '').slice(0, 4000),\n      keywords_matched: [keyword],\n      score: d.score || 0,\n      num_comments: d.num_comments || 0,\n      created_utc: d.created_utc || 0,\n      subreddit: d.subreddit || ''\n    }});\n  }\n}\nreturn out;"
+      },
+      "id": "reddit-normalize",
+      "name": "Reddit normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize HN Algolia results\nconst items = $input.all();\nconst out = [];\nfor (const it of items) {\n  const keyword = it.json.keyword || '';\n  const hits = it.json.hits;\n  if (!Array.isArray(hits)) continue;\n  for (const h of hits) {\n    out.push({ json: {\n      source: 'hn',\n      source_id: String(h.objectID),\n      url: h.url || ('https://news.ycombinator.com/item?id=' + h.objectID),\n      lang: 'en',\n      author: h.author || 'anonymous',\n      title: h.title || h.story_title || '',\n      body: (h.comment_text || h.story_text || '').replace(/<[^>]*>/g,'').slice(0, 4000),\n      keywords_matched: [keyword],\n      score: h.points || 0,\n      num_comments: h.num_comments || 0,\n      created_utc: h.created_at_i || 0,\n      subreddit: ''\n    }});\n  }\n}\nreturn out;"
+      },
+      "id": "hn-normalize",
+      "name": "HN normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Compute hotness 0-100 + filter noise\nreturn $input.all().map(it => {\n  const d = it.json;\n  const ageHours = (Date.now()/1000 - (d.created_utc || 0)) / 3600;\n  const ageFactor = Math.max(0, 1 - ageHours/72);  // 72h decay\n  const popFactor = Math.min(1, (d.score + d.num_comments * 2) / 100);\n  const hotness = Math.round((ageFactor * 60) + (popFactor * 40));\n  return { json: { ...d, hotness_score: hotness }};\n}).filter(it => {\n  // Filter: skip self-references + low value\n  const t = (it.json.title + ' ' + it.json.body).toLowerCase();\n  if (t.includes('adoff.app') && it.json.author === 'adoff_dev') return false;\n  if (it.json.title.length < 10 && it.json.body.length < 30) return false;\n  return true;\n});"
+      },
+      "id": "score-filter",
+      "name": "Score + filter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"fast-max\",\n  \"stream\": false,\n  \"format\": \"json\",\n  \"options\": {\"temperature\": 0.2, \"num_predict\": 200},\n  \"prompt\": \"You analyze online mentions of ad blocker products. Given the post below, return ONLY a JSON object with these keys: sentiment (positive|neutral|negative|hostile), intent (question|recommendation|complaint|news|other), opportunity_score (0-10 integer, how good a chance to respond and add value).\\n\\nTITLE: {{ $json.title }}\\nBODY: {{ $json.body }}\\n\\nReturn JSON only.\"\n}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "llm-classify",
+      "name": "LLM classify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge LLM classification back into mention. Robust to malformed JSON.\nconst it = $input.first().json;\nconst original = $('Score + filter').item.json;\nlet sentiment='neutral', intent='other', opportunity=0;\ntry {\n  const raw = it.response || it.message?.content || '';\n  const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;\n  sentiment = parsed.sentiment || 'neutral';\n  intent = parsed.intent || 'other';\n  opportunity = parseInt(parsed.opportunity_score) || 0;\n} catch(e) {}\nreturn [{ json: { ...original, sentiment, intent, opportunity_score: opportunity }}];"
+      },
+      "id": "llm-merge",
+      "name": "Merge LLM",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.mentions (source, source_id, url, lang, author, title, body, keywords_matched, sentiment, intent, hotness_score) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT (source, source_id) DO UPDATE SET hotness_score = GREATEST(adoff_autopilot.mentions.hotness_score, EXCLUDED.hotness_score), sentiment = EXCLUDED.sentiment, intent = EXCLUDED.intent RETURNING id, hotness_score;",
+        "options": {
+          "queryReplacement": "={{ $json.source }},{{ $json.source_id }},{{ $json.url }},{{ $json.lang }},{{ $json.author }},{{ $json.title }},{{ $json.body }},{{ JSON.stringify($json.keywords_matched) }},{{ $json.sentiment }},{{ $json.intent }},{{ $json.hotness_score }}"
+        }
+      },
+      "id": "pg-upsert",
+      "name": "Upsert mention",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1780, 400],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Merge LLM').item.json.hotness_score }}",
+              "rightValue": 50,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "leftValue": "={{ $('Merge LLM').item.json.opportunity_score }}",
+              "rightValue": 6,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-hot",
+      "name": "If HOT mention",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2000, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.posts_queue (workflow, platform, target_url, parent_mention_id, lang, body, status) VALUES ($1,$2,$3,$4,$5,$6,'queued') RETURNING id;",
+        "options": {
+          "queryReplacement": "=mention_reply,{{ $('Merge LLM').item.json.source }},{{ $('Merge LLM').item.json.url }},{{ $('Upsert mention').item.json.id }},{{ $('Merge LLM').item.json.lang }},DRAFT_PENDING"
+        }
+      },
+      "id": "queue-reply",
+      "name": "Queue reply draft",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [2220, 320],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 30 min": {
+      "main": [[{"node": "Keywords list", "type": "main", "index": 0}]]
+    },
+    "Keywords list": {
+      "main": [[
+        {"node": "Reddit search", "type": "main", "index": 0},
+        {"node": "HN search", "type": "main", "index": 0}
+      ]]
+    },
+    "Reddit search": {
+      "main": [[{"node": "Reddit normalize", "type": "main", "index": 0}]]
+    },
+    "HN search": {
+      "main": [[{"node": "HN normalize", "type": "main", "index": 0}]]
+    },
+    "Reddit normalize": {
+      "main": [[{"node": "Score + filter", "type": "main", "index": 0}]]
+    },
+    "HN normalize": {
+      "main": [[{"node": "Score + filter", "type": "main", "index": 0}]]
+    },
+    "Score + filter": {
+      "main": [[{"node": "LLM classify", "type": "main", "index": 0}]]
+    },
+    "LLM classify": {
+      "main": [[{"node": "Merge LLM", "type": "main", "index": 0}]]
+    },
+    "Merge LLM": {
+      "main": [[{"node": "Upsert mention", "type": "main", "index": 0}]]
+    },
+    "Upsert mention": {
+      "main": [[{"node": "If HOT mention", "type": "main", "index": 0}]]
+    },
+    "If HOT mention": {
+      "main": [
+        [{"node": "Queue reply draft", "type": "main", "index": 0}],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": [{"name": "adoff"}, {"name": "intel"}],
+  "active": false
+}

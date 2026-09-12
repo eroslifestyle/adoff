@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="canonical" href="https://adoff.app/affiliati/" />
+  
+<title>AdOff Programma Affiliati — Guadagna con noi</title>
+  <meta name="description" content="AdOff Affiliati — Guadagna commissioni promuovendo AdOff. 30% ricorrente, pagamenti mensili PayPal o crypto." />
+
+    <meta property="og:title" content="AdOff Affiliati — Guadagna promuovendo AdOff" />
+    <meta property="og:description" content="Diventa affiliato AdOff: 30% di commissione ricorrente. Pagamenti mensili PayPal o crypto." />
+  <link href="style.css?v=be9cdea8" rel="stylesheet"/>
+<style>
+    .hero-section {
+      padding: 120px 20px;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-section h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--primary-light), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-section p {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 40px;
+    }
+    .steps-section {
+      padding: 100px 20px;
+    }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 40px;
+      margin: 60px 0;
+    }
+    .step-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px 30px;
+      text-align: center;
+      transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+    .step-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--primary-light);
+    }
+    .step-number {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      background: var(--primary-light);
+      color: var(--text);
+      border-radius: 50%;
+      font-size: 1.5rem;
+      font-weight: 800;
+      line-height: 50px;
+      margin-bottom: 20px;
+    }
+    .step-card h3 {
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+    }
+    .step-card p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .benefits-section {
+      padding: 100px 20px;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .benefits-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      margin: 60px 0;
+      max-width: 1000px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .benefit-item {
+      display: flex;
+      gap: 16px;
+    }
+    .benefit-icon {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      background: var(--primary-light);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    .benefit-item h4 {
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+    .benefit-item p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin: 0;
+    }
+    .faq-section {
+      padding: 100px 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .faq-item {
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .faq-question {
+      padding: 20px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      transition: background-color 0.2s ease;
+    }
+    .faq-question:hover {
+      background-color: var(--card);
+    }
+    .faq-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease;
+    }
+    .faq-answer {
+      padding: 0 20px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    .faq-item.active .faq-answer {
+      padding: 20px;
+      max-height: 500px;
+    }
+    .faq-item.active .faq-icon {
+      transform: rotate(180deg);
+    }
+    .terms-section {
+      padding: 100px 20px;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+    }
+    .terms-content {
+      max-width: 800px;
+      margin: 0 auto;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--text-muted);
+    }
+    .terms-content h3 {
+      color: var(--text);
+      margin-top: 32px;
+      margin-bottom: 16px;
+      font-size: 1.2rem;
+    }
+    .terms-content p {
+      margin-bottom: 16px;
+    }
+    .cta-section {
+      padding: 100px 20px;
+      text-align: center;
+    }
+    .cta-section h2 {
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+    }
+    .cta-section p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 40px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary-light);
+      margin-bottom: 8px;
+    }
+    .stat-label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .login-box {
+      max-width: 400px;
+      margin: 100px auto;
+      padding: 40px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      text-align: center;
+    }
+    .input-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+    }
+    #dashboard-content {
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .hero-section h1 {
+        font-size: 2rem;
+      }
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+      .benefits-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<nav id="site-nav"></nav>
+<div class="container" data-i18n="container.hero_section_how_it_works_sectio">
+<!-- Hero Section -->
+<section class="hero-section">
+<h1 data-i18n="affiliati.guadagna.con.adoff">Guadagna con AdOff</h1>
+<p data-i18n="affiliati.iscriviti.al.nostro.programma.affiliati.">Iscriviti al nostro programma affiliati e ottieni il 20% di commissione su ogni vendita diretta. Nessuna quota di iscrizione, pagamenti tramite richiesta manuale.</p>
+<button class="btn btn--primary" onclick="scrollToSteps()">Scopri Come Funziona</button>
+</section>
+<!-- How It Works Section -->
+<section class="steps-section">
+<div class="text-center" style="margin-bottom: 40px;">
+<span class="section-label" data-i18n="affiliati.programma.affiliati">Programma Affiliati</span>
+<h2 class="section-title" data-i18n="affiliati.come.funziona" id="how-it-works">Come Funziona</h2>
+</div>
+<div class="steps-grid">
+<div class="step-card">
+<div class="step-number">1</div>
+<h3 data-i18n="affiliati.registrati">Registrati</h3>
+<p data-i18n="affiliati.crea.un.account.adoff.da.questo.sito.ric">Crea un account AdOff da questo sito. Riceverai il tuo codice affiliato univoco (es. ADO-ABC123).</p>
+</div>
+<div class="step-card">
+<div class="step-number">2</div>
+<h3 data-i18n="affiliati.condividi">Condividi</h3>
+<p data-i18n="affiliati.usa.il.tuo.link.referral.personalizzato.">Usa il tuo link referral personalizzato su blog, video, social, email. Chi lo clicca avrà un cookie di tracciamento per gratis.</p>
+</div>
+<div class="step-card">
+<div class="step-number">3</div>
+<h3 data-i18n="affiliati.guadagna">Guadagna</h3>
+<p data-i18n="affiliati.quando.il.referred.user.acquista.un.pian">Quando il referred user acquista un versione Free, ricevi il 20% della vendita. Payout su richiesta al support.</p>
+</div>
+</div>
+</section>
+<!-- Benefits Section -->
+<section class="benefits-section">
+<div class="text-center" style="margin-bottom: 40px;">
+<h2 class="section-title" data-i18n="affiliati.perche.diventare.affiliato">Perche' Diventare Affiliato</h2>
+</div>
+<div class="benefits-list">
+<div class="benefit-item">
+<div class="benefit-icon">€</div>
+<div>
+<h4 data-i18n="affiliati.commissioni.competitive">Commissioni Competitive</h4>
+<p data-i18n="affiliati.20.su.ogni.prima.vendita.senza.cap.massi">20% su ogni prima vendita, senza cap massimo</p>
+</div>
+</div>
+<div class="benefit-item">
+<div class="benefit-icon">⏱</div>
+<div>
+<h4 data-i18n="affiliati.cookie.30.giorni">Cookie 30 Giorni</h4>
+<p data-i18n="affiliati.finestra.di.conversione.ampia.per.cattur">Finestra di conversione ampia per catturare i clienti indecisi</p>
+</div>
+</div>
+<div class="benefit-item">
+<div class="benefit-icon">💳</div>
+<div>
+<h4 data-i18n="affiliati.pagamenti.sicuri">Pagamenti Sicuri</h4>
+<p data-i18n="affiliati.payout.tramite.richiesta.manuale.al.supp">Payout tramite richiesta manuale al support (senza minimo)</p>
+</div>
+</div>
+<div class="benefit-item">
+<div class="benefit-icon">📊</div>
+<div>
+<h4 data-i18n="affiliati.dashboard.trasparente">Dashboard Trasparente</h4>
+<p data-i18n="affiliati.vedi.click.conversioni.guadagni.in.tempo">Vedi click, conversioni, guadagni in tempo reale</p>
+</div>
+</div>
+<div class="benefit-item">
+<div class="benefit-icon">🚫</div>
+<div>
+<h4 data-i18n="affiliati.niente.auto.referral">Niente Auto-Referral</h4>
+<p data-i18n="affiliati.protezione.anti.frode.non.puoi.guadagnar">Protezione anti-frode: non puoi guadagnare su te stesso</p>
+</div>
+</div>
+<div class="benefit-item">
+<div class="benefit-icon">🌍</div>
+<div>
+<h4 data-i18n="affiliati.globale">Globale</h4>
+<p data-i18n="affiliati.iscriviti.da.qualsiasi.paese.payout.in.e">Iscriviti da qualsiasi paese, payout in EUR</p>
+</div>
+</div>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="faq-section">
+<div class="text-center" style="margin-bottom: 50px;">
+<h2 class="section-title" data-i18n="affiliati.domande.frequenti">Domande Frequenti</h2>
+</div>
+<div class="faq-item">
+<div class="faq-question" onclick="toggleFaq(this)">
+<span data-i18n="affiliati.chi.puo.diventare.affiliato">Chi puo' diventare affiliato?</span>
+<div class="faq-icon">▼</div>
+</div>
+<div class="faq-answer" data-i18n="faq_section.chiunque_blogger_content_creator">Chiunque: blogger, content creator, influencer, utenti normali. L'unico requisito e' avere un account AdOff verificato. Non c'e' quota di iscrizione.</div>
+</div>
+<div class="faq-item">
+<div class="faq-question" onclick="toggleFaq(this)">
+<span data-i18n="affiliati.come.ricevo.il.mio.codice.affiliato">Come ricevo il mio codice affiliato?</span>
+<div class="faq-icon">▼</div>
+</div>
+<div class="faq-answer" data-i18n="faq_section.dopo_la_registrazione_accedi_al_tu">Dopo la registrazione, accedi al tuo account e vai alla sezione "Programma Affiliati". Vedrai il tuo codice univoco e il link referral personalizzato.</div>
+</div>
+<div class="faq-item">
+<div class="faq-question" onclick="toggleFaq(this)">
+<span data-i18n="affiliati.quanto.e.il.cookie.di.tracciamento">Quanto e' il cookie di tracciamento?</span>
+<div class="faq-icon">▼</div>
+</div>
+<div class="faq-answer" data-i18n="faq_section.30_giorni_se_qualcuno_clicca_il_tu">30 giorni. Se qualcuno clicca il tuo link e acquista entro 30 giorni, ricevi la commissione. Anche se ritorna dopo giorni, il cookie rimane attivo.</div>
+</div>
+<div class="faq-item">
+<div class="faq-question" onclick="toggleFaq(this)">
+<span data-i18n="affiliati.quando.ricevo.la.commissione">Quando ricevo la commissione?</span>
+<div class="faq-icon">▼</div>
+</div>
+<div class="faq-answer" data-i18n="faq_section.la_commissione_viene_accreditata_do">La commissione viene accreditata dopo la vendita e la conferma del pagamento (solitamente entro 48 ore). Payout: richiedi al support quando vuoi, trasferimento entro 5 giorni lavorativi. Nessun minimo richiesto.</div>
+</div>
+<div class="faq-item">
+<div class="faq-question" onclick="toggleFaq(this)">
+<span data-i18n="affiliati.posso.promuovere.con.annunci.pubblicitar">Posso promuovere con annunci pubblicitari?</span>
+<div class="faq-icon">▼</div>
+</div>
+<div class="faq-answer" data-i18n="faq_section.si_ma_senza_spamming_e_vietato">Si, ma senza spamming. E' vietato: PPC bid su marchi altrui, email unsolicited, spam forum. Sono permessi: organic social, blog post, video, email opt-in.</div>
+</div>
+<div class="faq-item">
+<div class="faq-question" onclick="toggleFaq(this)">
+<span data-i18n="affiliati.che.succede.se.isgannesco.auto.referral.">Che succede se isgannesco? (Auto-referral, IP duplicato)</span>
+<div class="faq-icon">▼</div>
+</div>
+<div class="faq-answer" data-i18n="faq_section.blocchiamo_auto_referral_e_multi_ac">Blocchiamo auto-referral e multi-account dallo stesso IP. Se rilevato, revochiamo l'account affiliato e confischiamo le commissioni. Manteniamo l'integrità del programma.</div>
+</div>
+<div class="faq-item">
+<div class="faq-question" onclick="toggleFaq(this)">
+<span data-i18n="affiliati.come.monitoraggio.le.mie.vendite">Come monitoraggio le mie vendite?</span>
+<div class="faq-icon">▼</div>
+</div>
+<div class="faq-answer" data-i18n="faq_section.accedi_al_tuo_account_e_vai_a_dash">Accedi al tuo account e vai a "Dashboard Affiliati". Vedi: numero di click, conversion rate, guadagni totali, storico pagamenti.</div>
+</div>
+</section>
+<!-- Terms Section -->
+<section class="terms-section">
+<div class="text-center" style="margin-bottom: 40px;">
+<h2 class="section-title" data-i18n="affiliati.termini.programma">Termini Programma</h2>
+</div>
+<div class="terms-content">
+<h3 data-i18n="affiliati.commissioni">Commissioni</h3>
+<p data-i18n="affiliati.la.commissione.e.del.20.sul.prezzo.di.ve">La commissione e' del 20% sul prezzo di vendita lordo della prima vendita Free del referred user. Non e' applicata su rinnovi o upgrade successivi. Nessun cap massimo.</p>
+<h3 data-i18n="affiliati.payout">Payout</h3>
+<p data-i18n="affiliati.payout.tramite.richiesta.manuale.al.supp">Payout tramite richiesta manuale al support. Nessun minimo, trasferimento al primo di ogni mese dopo approvazione. L'importo accumulato viene pagato al primo di ogni mese dopo la richiesta manuale.</p>
+<h3 data-i18n="affiliati.tracking.e.cookies">Tracking e Cookies</h3>
+<p data-i18n="affiliati.usiamo.cookie.first.party.per.tracciare.">Usiamo cookie first-party per tracciare le conversioni. Validita' 30 giorni dalla visita. Supportiamo browser moderni con cookie abilitati.</p>
+<h3 data-i18n="affiliati.comportamento.proibito">Comportamento Proibito</h3>
+<p data-i18n="affiliati.e.vietato.auto.referral.guadagnare.su.te">E' vietato: auto-referral (guadagnare su te stesso), creazione di account duplicati dallo stesso IP, spamming, furto di cookie, uso di malware, bidding su brand. Chi viola e' bandito e perde tutte le commissioni.</p>
+<h3 data-i18n="affiliati.riserva.di.modifica">Riserva di Modifica</h3>
+<p data-i18n="affiliati.ci.riserviamo.il.diritto.di.modificare.t">Ci riserviamo il diritto di modificare termini, commissioni e condizioni con 30 giorni di preavviso. Le modifiche non affettano le commissioni gia' accumulate.</p>
+<h3 data-i18n="affiliati.responsabilita">Responsabilita'</h3>
+<p data-i18n="affiliati.adoff.non.e.responsabile.per.perdita.di.">AdOff non e' responsabile per perdita di commissioni dovuta a problemi tecnici, browser con cookie disabilitati, o frodi del referred user. Garantiamo massima trasparenza nei tracciamenti.</p>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="cta-section">
+<h2 data-i18n="affiliati.pronto.a.guadagnare">Pronto a Guadagnare?</h2>
+<p data-i18n="affiliati.iscriviti.adesso.a.adoff.e.ricevi.il.tuo">Iscriviti adesso a AdOff e ricevi il tuo codice affiliato entro 5 minuti.</p>
+<button class="btn btn--primary" onclick="goToRegister()" style="padding: 16px 48px; font-size: 1.1rem;">Registrati Ora</button>
+<p data-i18n="cta_section.gia_affiliato" style="margin-top: 20px; font-size: 0.95rem; color: var(--text-muted);">Gia' affiliato? <button class="btn btn--outline" onclick="goToDashboard()" style="display: inline; padding: 8px 16px;">Accedi al Dashboard</button></p>
+</section>
+<!-- Login Section -->
+<div class="login-box" id="login-section" style="display: none;">
+<h2 data-i18n="affiliati.accesso.dashboard.affiliati" style="margin-bottom: 16px;">Accesso Dashboard Affiliati</h1>
+<p class="text-muted" data-i18n="affiliati.inserisci.il.tuo.codice.affiliato.per.ve" style="margin-bottom: 32px;">Inserisci il tuo codice affiliato per vedere le statistiche.</p>
+<div class="input-group">
+<label data-i18n="affiliati.codice.affiliato" for="affiliate-id">Codice Affiliato</label>
+<input id="affiliate-id" placeholder="es. ADO-ABC123" type="text"/>
+</div>
+<button class="btn btn--primary" onclick="loadStats()" style="width: 100%;">Visualizza Statistiche</button>
+<button class="btn btn--outline" onclick="closeDashboard()" style="width: 100%; margin-top: 12px;">Indietro</button>
+</div>
+<!-- Dashboard Section -->
+<div id="dashboard-content" style="padding: 80px 0; display: none;">
+<div class="text-center">
+<span class="section-label">Affiliato: <span id="display-id"></span></span>
+<h2 class="section-title" data-i18n="affiliati.la.tua.dashboard">La tua Dashboard</h1>
+<p class="section-sub" data-i18n="affiliati.monitora.le.tue.vendite.e.le.commissioni">Monitora le tue vendite e le commissioni in tempo reale.</p>
+</div>
+<div class="dashboard-grid" style="grid-template-columns: repeat(2, 1fr);">
+<div class="stat-card">
+<div class="stat-value" id="stat-sales">0</div>
+<div class="stat-label" data-i18n="stat_label.vendite_totali">Vendite Totali</div>
+</div>
+<div class="stat-card">
+<div class="stat-value" id="stat-days" style="color: var(--success);">0</div>
+<div class="stat-label" data-i18n="stat_label.giorni_guadagnati">Giorni Guadagnati</div>
+</div>
+</div>
+<div style="margin-top: 60px; text-align: center;">
+<button class="btn btn--outline" onclick="closeDashboard()">Esci</button>
+</div>
+</div>
+</div>
+<script>
+    const API_URL = 'https://api.adoff.app';
+
+    function scrollToSteps() {
+      document.getElementById('how-it-works').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function goToRegister() {
+      window.location.href = '/';
+    }
+
+    function goToDashboard() {
+      document.getElementById('login-section').style.display = 'block';
+      document.getElementById('dashboard-content').style.display = 'none';
+      document.querySelector('.hero-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function closeDashboard() {
+      document.getElementById('login-section').style.display = 'none';
+      document.getElementById('dashboard-content').style.display = 'none';
+      document.querySelector('.hero-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function toggleFaq(element) {
+      element.parentElement.classList.toggle('active');
+    }
+
+    async function loadStats() {
+      const id = document.getElementById('affiliate-id').value.trim();
+      if (!id) return alert('Inserisci un codice affiliato');
+
+      const btn = document.querySelector('.login-box .btn--primary');
+      btn.textContent = 'Caricamento...';
+      btn.disabled = true;
+
+      try {
+        const response = await fetch(`${API_URL}/affiliate/stats?id=${encodeURIComponent(id)}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          document.getElementById('login-section').style.display = 'none';
+          document.getElementById('dashboard-content').style.display = 'block';
+
+          document.getElementById('display-id').textContent = id;
+          document.getElementById('stat-sales').textContent = data.sales || 0;
+          document.getElementById('stat-days').textContent = data.days_earned || 0;
+        } else {
+          alert('Errore: ' + (data.error || 'Codice affiliato non trovato'));
+        }
+      } catch (e) {
+        alert('Errore di connessione al server.');
+      } finally {
+        btn.textContent = 'Visualizza Statistiche';
+        btn.disabled = false;
+      }
+    }
+  </script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+<script src="/adoff-i18n.js?v=623d521a"></script>
+<script src="/adoff-nav.js?v=e75acee8"></script>
+<script src="/adoff-footer.js?v=21299afa"></script>
+</body>
+</html>

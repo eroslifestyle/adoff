@@ -1,0 +1,115 @@
+{
+  "name": "AdOff 13 - YouTube Publisher (meta LLM + upload API)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "minutes", "minutesInterval": 30 }] }
+      },
+      "id": "trig",
+      "name": "Every 30 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT job_id, lang, title_hint, LEFT(COALESCE(transcript,''),6000) AS tr, COALESCE(video_b_path,'') AS vb, COALESCE(video_a_path,'') AS va FROM adoff_autopilot.youtube_queue WHERE status='done' AND published=false ORDER BY completed_at LIMIT 2;",
+        "options": {}
+      },
+      "id": "pick",
+      "name": "Pick ready",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [460, 400],
+      "credentials": {
+        "postgres": { "id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres" }
+      }
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\":\"chat-max\",\"stream\":false,\"options\":{\"temperature\":0.5,\"num_predict\":500},\"prompt\":\"Sei il content strategist YouTube del brand AdOff (ad blocker universale, invisibile all'anti-adblock). REGOLE: mai nominare brand/piattaforme reali (solo termini generici); SEO-friendly; lingua={{ $json.lang }}. Dato questo contenuto (trascrizione NotebookLM):\\n\\n{{ JSON.stringify($json.tr) }}\\n\\nhint titolo: {{ JSON.stringify($json.title_hint) }}\\n\\nProduci SOLO JSON: {\\\"title\\\":\\\"<=100 char, hook + keyword\\\",\\\"description\\\":\\\"3-5 frasi + 3 bullet valore + CTA -> adoff.app + riga finale '🤖 Canale assistito da AI'\\\",\\\"tags\\\":[\\\"8-12 tag generici minuscoli\\\"]}\"}",
+        "options": { "timeout": 60000 }
+      },
+      "id": "llm",
+      "name": "LLM meta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse meta LLM + brand-guard (no brand reali) + UPDATE SQL.\nfunction lit(s){return String(s).replace(/'/g,\"''\");}\nconst BAN=/youtube|google|facebook|instagram|tiktok|amazon|reddit|twitch|outbrain/i;\nconst out=[];\nfor (const it of $input.all()){\n  const s=it.json;\n  // job_id/lang vengono dal nodo Pick (stesso item index)\n  const src=$('Pick ready').all()[$input.all().indexOf(it)].json;\n  let p={};\n  try{p=JSON.parse(s.response||s.data||s.body||'{}');}catch{p={};}\n  let title=(p.title||src.title_hint||'AdOff').trim();\n  let desc=(p.description||'').trim();\n  let tags=Array.isArray(p.tags)?p.tags:[];\n  let guard='ok';\n  if(!title||BAN.test(title)||BAN.test(desc)){\n    title=(src.title_hint||'AdOff — zero pubblicità, ovunque').slice(0,100);\n    desc='Blocca ogni pubblicità in modo invisibile. -> adoff.app\\n\\n🤖 Canale assistito da AI';\n    tags=['adblock','privacy','navigazione','no ads','browser','sicurezza'];\n    guard='fallback';\n  }\n  tags=tags.filter(t=>!BAN.test(t)).slice(0,15);\n  const tagsLit='ARRAY['+tags.map(t=>`'${lit(t)}'`).join(',')+']::text[]';\n  const sql=`UPDATE adoff_autopilot.youtube_queue SET `+\n    `yt_title='${lit(title.slice(0,100))}',`+\n    `yt_desc='${lit(desc.slice(0,4900))}',`+\n    `yt_tags=${tags.length?tagsLit:'NULL'} `+\n    `WHERE job_id='${lit(src.job_id)}';`;\n  out.push({json:{job_id:src.job_id,title,guard,sql}});\n}\nreturn out;"
+      },
+      "id": "guard",
+      "name": "Parse meta + guard",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sql }}",
+        "options": {}
+      },
+      "id": "savemeta",
+      "name": "Save meta",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1120, 400],
+      "credentials": {
+        "postgres": { "id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres" }
+      }
+    },
+    {
+      "parameters": {
+        "command": "=python3 /home/mrxxx/adoff/sviluppo/ai-autopilot/n8n-workflows/scripts/youtube-upload.py --job {{ $json.job_id }} --variant B"
+      },
+      "id": "upload",
+      "name": "Upload to YouTube",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const out=[];\nfor (const it of $input.all()){\n  let r={};\n  try{r=JSON.parse((it.json.stdout||'').trim().split('\\n').pop());}catch{r={};}\n  const url=r.url||'(vedi log)';\n  const jid=r.job_id||'?';\n  out.push({json:{text:`✅ *YouTube pubblicato*\\njob: ${jid}\\nvariante: ${r.variant||'?'}\\n${url}\\n(privacy=private: rivedi e rendi pubblico)`}});\n}\nreturn out;"
+      },
+      "id": "msg",
+      "name": "Build confirm",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 400]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"chat_id\":\"{{ $env.TELEGRAM_CHAT_ID }}\",\"text\":{{ JSON.stringify($json.text) }},\"parse_mode\":\"Markdown\"}",
+        "options": {}
+      },
+      "id": "tg",
+      "name": "Telegram confirm",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 400]
+    }
+  ],
+  "connections": {
+    "Every 30 min": { "main": [[{ "node": "Pick ready", "type": "main", "index": 0 }]] },
+    "Pick ready": { "main": [[{ "node": "LLM meta", "type": "main", "index": 0 }]] },
+    "LLM meta": { "main": [[{ "node": "Parse meta + guard", "type": "main", "index": 0 }]] },
+    "Parse meta + guard": { "main": [[{ "node": "Save meta", "type": "main", "index": 0 }]] },
+    "Save meta": { "main": [[{ "node": "Upload to YouTube", "type": "main", "index": 0 }]] },
+    "Upload to YouTube": { "main": [[{ "node": "Build confirm", "type": "main", "index": 0 }]] },
+    "Build confirm": { "main": [[{ "node": "Telegram confirm", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "saveExecutionProgress": true },
+  "tags": ["adoff", "youtube", "publisher", "S13"],
+  "active": false
+}

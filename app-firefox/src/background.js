@@ -1,0 +1,1217 @@
+(function () {
+  "use strict";
+  // Tier canonico del piano. Da quando AdOff e' gratuito per tutti questa
+  // funzione ritorna sempre "premium": ogni funzione e' sbloccata senza
+  // licenza e senza scadenza. La firma resta invariata perche' i chiamanti
+  // passano ancora il nome del piano, e per poter tornare indietro toccando
+  // un punto solo. Il grado di sostenitore NON si deduce da qui: usa
+  // adoffSupporterKind(). Invariante presidiato da
+  // sviluppo/tests/test-plan-tier-consistency.js.
+  function adoffPlanTier() {
+    return "premium";
+  }
+
+  // Carica il modulo di verifica del feed regole (condiviso col test Node).
+  // Chrome/Safari: service worker classico → importScripts. Firefox: il modulo
+  // e' il primo script di background.scripts, qui servono solo i fallback.
+  if (typeof importScripts === "function") {
+    importScripts("rules-feed-verify.js");
+  }
+
+  // ---- Costanti storage ----
+  const STORAGE_ENABLED    = "adoffEnabled";
+  const STORAGE_ADS        = "adoffAdsBlocked";
+  const STORAGE_REQ        = "adoffReqBlocked";
+  const STORAGE_TRIAL_END  = "adoffTrialEnd";
+  const STORAGE_WHITELIST  = "adoffWhitelist";
+  const STORAGE_SHOW_BADGE   = "adoffShowBadge";
+  const STORAGE_SHOW_COUNTER = "adoffShowCounter";
+  const STORAGE_DAILY_STATS = "adoffDailyStats";
+  const TRIAL_DAYS         = 15;
+
+  // Data limite per badge Founding Member (3 mesi dal lancio)
+  const FOUNDER_CUTOFF = new Date("2026-07-01T00:00:00Z").getTime();
+
+  // Serializza i read-modify-write del contatore ads: due messaggi concorrenti
+  // potrebbero altrimenti leggere lo stesso valore e perdere un incremento.
+  let adsWriteChain = Promise.resolve();
+  function incrementAdsCounter(count) {
+    adsWriteChain = adsWriteChain.then(() => new Promise((resolve) => {
+      chrome.storage.local.get([STORAGE_ADS, STORAGE_REQ, STORAGE_DAILY_STATS], (result) => {
+        const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+        const daily = result[STORAGE_DAILY_STATS] || {};
+        const prev = daily[today] || { ads: 0, req: 0 };
+        daily[today] = { ads: prev.ads + count, req: prev.req };
+        // keep 90 days max to bound storage
+        const keys = Object.keys(daily).sort();
+        if (keys.length > 90) {
+          keys.slice(0, keys.length - 90).forEach((k) => delete daily[k]);
+        }
+        chrome.storage.local.set({
+          [STORAGE_ADS]: (result[STORAGE_ADS] || 0) + count,
+          [STORAGE_DAILY_STATS]: daily,
+        }, resolve);
+      });
+    }));
+    return adsWriteChain;
+  }
+
+  // Changelog per versione (ultime 3 voci per popup)
+  const CHANGELOGS = {
+      "3.6.0": [
+        "AdOff e' ora gratuito per tutti: ogni funzione e' attiva senza account e senza scadenze",
+        "Non serve fare nulla: e' gia' tutto sbloccato",
+        "Se avevi un abbonamento attivo, sei passato a Sostenitore: puoi interromperlo quando vuoi senza perdere nessuna funzione"
+      ],
+
+      
+      
+
+      "3.5.84": [
+        "Gli annunci vengono saltati subito invece di essere accelerati",
+        "L'attesa iniziale e' ridotta al minimo"
+      ],
+      "3.5.83": [
+        "Gli annunci inseriti dentro il video vengono ora saltati invece che accelerati",
+        "Attesa iniziale ridotta al minimo"
+      ],
+      "3.5.82": [
+        "Attesa iniziale piu' breve: gli annunci vengono scaricati alla risoluzione minima",
+        "Il video torna subito alla massima qualita' appena l'annuncio finisce"
+      ],
+      "3.5.81": [
+        "Risolto il blocco su schermo nero durante gli annunci",
+        "L'annuncio puo' essere riprodotto a qualsiasi risoluzione, il contenuto resta al massimo"
+      ],
+      "3.5.80": [
+        "Il video parte sempre alla massima risoluzione disponibile",
+        "Recuperata la qualita' bassa che era rimasta memorizzata dalle versioni precedenti"
+      ],
+      "3.5.79": [
+        "Risolti i salti di posizione: il video non riparte piu' da un punto sbagliato dopo un annuncio",
+        "La qualita' del video non viene piu' abbassata durante gli annunci: resta sempre quella scelta",
+        "Rimossa la ricarica di soccorso che poteva far ripartire il video dall'inizio"
+      ],
+      "3.5.78": [
+        "Fix: all'avvio di un video la qualita' poteva restare bassa dopo l'annuncio, facendo perdere l'alta definizione",
+        "La qualita' viene ora rilevata mentre scorre il contenuto, non durante l'annuncio"
+      ],
+      "3.5.77": [
+        "Fix: gli abbonamenti annuali e Premium non venivano riconosciuti in alcune schermate e su alcune piattaforme video, riattivando gli annunci",
+        "Riconoscimento del piano unificato in un unico punto, identico su tutti i browser"
+      ],
+      "3.5.76": [
+        "Reintegrato il fix dell'hash di integrita' della licenza perso accidentalmente nel merge della 3.5.75",
+        "Senza questo fix il blocco pubblicita' sulle piattaforme video restava disattivato per tutti gli abbonati Pro, Lifetime e Premium",
+        "Verificata la presenza del fix su tutti i file dell'estensione per Chrome, Firefox e Safari"
+      ],
+      "3.5.75": [
+        "Risolto il bug che impediva il caricamento dell'estensione su Chrome: un campo deprecato nelle regole faceva rifiutare l'intero ruleset",
+        "Le regole dei negozi (936/937) usano ora excludedInitiatorDomains al posto del campo excludedDomains non piu' supportato",
+        "Verificato il ruleset completo: nessun altro campo deprecato presente su Chrome, Firefox e Safari"
+      ],      "3.5.73": [
+        "Risolto definitivamente il bug degli spot residui sulle piattaforme video per gli abbonati Premium/Pro",
+        "Il cold-load (rimozione aggressiva streamingData) e' stato disabilitato perche' corrompeva la negoziazione qualita' con i server delle piattaforme video",
+        "Lo strip adPlacements + mangle + inject isInlinePlaybackNoAd bastano a rimuovere gli spot client-side senza side-effect",
+      ],
+      "3.5.71": [
+        "Corretto il riconoscimento del piano Premium: ora i piani premium_monthly, premium_annual e premium_annual_founder attivano correttamente il blocco pubblicita' sulle piattaforme video",
+        "Il controllo usa ora un match prefisso (startsWith premium) invece di un match esatto che non scattava mai con i nomi reali dei piani",
+        "Verificato su tutti e tre i browser (Chrome, Firefox, Safari)",
+      ],
+      "3.5.70": [
+        "Risolto un problema che sulle piattaforme video mostrava di nuovo tutte le pubblicita' agli abbonati Premium",
+        "Il riconoscimento dell'abbonamento Premium ora funziona anche sulle piattaforme video",
+        "Nessun impatto sugli altri piani: Pro, Trial e Free restano invariati",
+      ],
+      "3.5.69": [
+        "Risolto il blocco dei login con Google e di altri provider su alcuni siti",
+        "I siti con piu' sottodomini vengono riconosciuti correttamente",
+        "Verificato che non indebolisce il blocco dei popunder",
+      ],
+      "3.5.68": [
+        "Ridotti a uno solo i clic necessari per avviare o fermare il video",
+        "Rimossa la restituzione del gesto che causava un passaggio di stato di troppo",
+        "Verificato sul sito reale e sui lettori video puliti",
+      ],
+      "3.5.67": [
+        "Bloccato il caricatore pubblicitario servito dal sito stesso e non dal suo circuito",
+        "La difesa contro le finestre aperte dai riquadri raggiunge ora gli utenti",
+        "Riconosciuti i circuiti anche quando cambiano indirizzo con un sottodominio",
+      ],
+      "3.5.66": [
+        "Bloccate le finestre pubblicitarie aperte da un riquadro creato al momento",
+        "Riconosciuti i circuiti anche quando cambiano indirizzo con un sottodominio",
+        "Le difese seguono il lettore dentro i riquadri di altri siti",
+      ],
+      "3.5.65": [
+        "Il comando arriva al lettore al primo clic anche quando la pubblicita' prova a rubarlo",
+        "Riconosciuti i collegamenti invisibili stesi sopra il video anche fuori dai lettori incorporati",
+        "Un clic dell'utente resta una sola azione: nessun comando ripetuto",
+      ],
+      "3.5.64": [
+        "Protezione confermata contro le finestre che si aprono al clic sul play",
+        "Riconoscimento dei circuiti pubblicitari dal loro indirizzo",
+        "Difesa attiva anche dentro i lettori video incorporati",
+      ],
+      "3.5.63": [
+        "Blocco delle finestre pubblicitarie che si aprono al primo clic",
+        "Riconoscimento dei circuiti di affiliazione dal loro indirizzo",
+        "Difesa piu' severa sui link invisibili sovrapposti al video",
+      ],
+      "3.5.62": [
+      "Protezione attiva anche dentro i player incorporati",
+      "Blocco degli annunci a comparsa indipendente dal sito",
+      "Riconoscimento dei circuiti pubblicitari che cambiano indirizzo"
+      ],
+    "3.5.61": [
+      "Protezione piu' solida contro i siti che provano a disattivarla",
+      "Riconoscimento dei domini piu' rigoroso",
+      "Il ripristino del layout a protezione spenta ora e' completo",
+    ],
+    "3.5.60": [
+      "Blocco popunder da iframe di player video",
+      "Correzione crash stub IMA durante navigazione",
+      "Aggiornamento automatico filtri dal server",
+    ],
+    "3.1.0": [
+      "Sistema referral: invita amici, guadagna Pro gratis",
+      "Prompt recensioni intelligente",
+      "Badge Founding Member per early adopter",
+    ],
+    "3.0.0": [
+      "Nuovo design completo",
+      "Sistema whitelist avanzato con pausa temporanea",
+      "Supporto 6 lingue",
+    ],
+  };
+
+  // ---- Genera codice referral unico (SEC-2: crypto-secure) ----
+  function generateReferralCode() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const arr = new Uint8Array(5);
+    crypto.getRandomValues(arr);
+    return "ADO-" + Array.from(arr, (b) => chars[b % chars.length]).join("");
+  }
+
+  // ---- Genera UUID stabile per questo dispositivo ----
+  function generateDeviceUuid() {
+    if (typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+    // Fallback per ambienti che non supportano randomUUID
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+    });
+  }
+
+  // ---- Consenso telemetria (opt-in esplicito, default OFF) ----
+  // Nessun invio remoto (install/heartbeat/uninstall) senza il consenso
+  // dell'utente. La navigazione anonima ha il suo opt-in separato
+  // (adoffNavOptIn) e resta indipendente.
+  async function hasTelemetryConsent() {
+    try {
+      const r = await new Promise((res) => chrome.storage.local.get("adoffTelemetryOptIn", res));
+      return r.adoffTelemetryOptIn === true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Genera e persiste l'UUID del dispositivo al primo avvio.
+  // ID casuale NON-fingerprint: e' un identificatore casuale generato una
+  // sola volta con crypto.randomUUID() (fallback v4 da Math.random), non
+  // deriva da alcuna caratteristica del dispositivo/browser.
+  chrome.storage.local.get("adoffDeviceId", (result) => {
+    if (!result.adoffDeviceId) {
+      chrome.storage.local.set({
+        adoffDeviceId: generateDeviceUuid(),
+        adoffInstallDate: Date.now(),
+      });
+    }
+  });
+
+  // ---- Tracking server-side (install, heartbeat, uninstall) ----
+
+  // Identifica il source di installazione dal browser.
+  function getBrowserSource() {
+    const ua = navigator.userAgent;
+    if (ua.includes("Firefox")) return "firefox";
+    if (ua.includes("Edg/")) return "edge";
+    if (ua.includes("OPR/") || ua.includes("Opera")) return "opera";
+    if (ua.includes("Safari") && !ua.includes("Chrome")) return "safari";
+    return "chrome";
+  }
+
+  // Traccia installazione al server (device-level). SOLO con consenso esplicito.
+  async function trackInstall(adoffDeviceId, plan = "free") {
+    if (!(await hasTelemetryConsent())) return;
+    try {
+      const manifest = chrome.runtime.getManifest();
+      const version = manifest.version;
+      const { adoffReferralCode } = await new Promise(r => chrome.storage.local.get("adoffReferralCode", r));
+      await fetch(`${API_BASE}/track/install`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deviceId: adoffDeviceId,
+          source: getBrowserSource(),
+          ref: adoffReferralCode || "",
+          plan,
+          version,
+        }),
+      });
+    } catch (e) {
+      console.error("[AdOff] trackInstall error:", e);
+    }
+  }
+
+  // Heartbeat periodico per tracking real-time retention. SOLO con consenso.
+  async function trackHeartbeat(adoffDeviceId, installTs) {
+    if (!(await hasTelemetryConsent())) return;
+    try {
+      const manifest = chrome.runtime.getManifest();
+      const { adoffLicense, adoffTrialEnd, adoffEnabled } = await new Promise(r => chrome.storage.local.get(["adoffLicense", "adoffTrialEnd", "adoffEnabled"]));
+      const now = Date.now();
+      const isProTrial = !!(adoffLicense?.key || (adoffTrialEnd && adoffTrialEnd > now));
+      const plan = isProTrial ? "pro" : "free";
+      await fetch(`${API_BASE}/track/heartbeat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deviceId: adoffDeviceId,
+          plan,
+          version: manifest.version,
+          installTs: installTs || now,
+          enabled: adoffEnabled !== false, // default true: l'estensione è attiva all'install
+        }),
+      });
+    } catch (e) {
+      console.error("[AdOff] trackHeartbeat error:", e);
+    }
+  }
+
+  // Traccia disinstallazione al server. SOLO con consenso.
+  async function trackUninstall(adoffDeviceId, reason, comment, wasPro, version) {
+    if (!(await hasTelemetryConsent())) return;
+    try {
+      await fetch(`${API_BASE}/track/uninstall`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deviceId: adoffDeviceId,
+          reason,
+          comment: comment || "",
+          wasPro: wasPro || false,
+          version,
+        }),
+      });
+    } catch (e) {
+      console.error("[AdOff] trackUninstall error:", e);
+    }
+  }
+
+  const API_BASE = "https://api.adoff.app";
+
+  // ---- Storage promise helpers ----
+  // chrome.storage con promise non esiste su Firefox: si passa dai callback.
+  function storageGet(keys) {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(keys, (r) => { void chrome.runtime.lastError; resolve(r || {}); });
+    });
+  }
+  function storageSet(obj) {
+    return new Promise((resolve) => {
+      chrome.storage.local.set(obj, () => { void chrome.runtime.lastError; resolve(); });
+    });
+  }
+
+  // ---- Validazione licenza (centralizzata) ----
+  // Errori server fatali → invalida cache. "Device limit reached" NON e' qui (ritryable).
+  const FATAL_LIC_ERRORS = new Set([
+    "License not found",
+    "License revoked",
+    "License expired",
+    "Device deactivated",
+    "Invalid signature",
+    "Invalid expiry",
+  ]);
+
+  // Stesso algoritmo di license-client.js e content.js. Se le tre copie
+  // divergono, il gate Pro si chiude su licenze valide: e' un hash di
+  // integrita' calcolato su TUTTO l'oggetto licenza serializzato.
+  function computeIntegrity(licData) {
+    const raw = JSON.stringify(licData, licData && typeof licData === "object" ? Object.keys(licData).sort() : null);
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < raw.length; i++) {
+      hash ^= raw.charCodeAt(i);
+      hash = Math.imul(hash, 0x01000193);
+    }
+    hash = ((hash >>> 0) ^ 0x5f3759df).toString(36);
+    return "ao_" + hash;
+  }
+
+  async function revalidateLicense(reason) {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(["adoffLicense", "adoffDeviceId"], async (result) => {
+        const lic = result.adoffLicense;
+        if (!lic?.valid || !lic?.rawKey) { resolve({ skipped: true }); return; }
+        try {
+          const resp = await fetch("https://api.adoff.app/validate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: lic.rawKey, deviceId: result.adoffDeviceId }),
+          });
+          const data = await resp.json();
+          if (data.valid) {
+            // Aggiorna cache (devices/maxDevices possono essere cambiati)
+            const updated = {
+              ...lic,
+              valid: true,
+              plan: data.plan || lic.plan,
+              expires: data.expires ?? lic.expires,
+              expiresHuman: data.expiresHuman || lic.expiresHuman,
+              devices: data.devices ?? lic.devices,
+              maxDevices: data.maxDevices ?? lic.maxDevices,
+              email: data.email ?? lic.email ?? null,
+              lastValidated: Date.now(),
+            };
+            // CRITICO: l'hash va ricalcolato sullo STESSO oggetto che salviamo.
+            // Senza questo content.js confronta l'hash vecchio con l'oggetto
+            // nuovo — lastValidated cambia a ogni giro — conclude che la licenza
+            // e' manomessa e declassa un cliente pagante a Free. Accadeva a
+            // ogni avvio del browser (revalidateLicense("startup")).
+            chrome.storage.local.set({
+              adoffLicense: updated,
+              adoffIntegrity: computeIntegrity(updated),
+            });
+            resolve({ valid: true });
+            return;
+          }
+          // Fatal? → invalida cache
+          const isFatal = FATAL_LIC_ERRORS.has(data.error)
+            || data.deactivated || data.deleted || data.expired;
+          if (isFatal) {
+            let plan = "revoked";
+            if (data.deactivated) plan = "deactivated";
+            else if (data.deleted || data.error === "License not found") plan = "deleted";
+            else if (data.expired || data.error === "License expired") plan = "expired";
+            chrome.storage.local.set({
+              adoffLicense: { valid: false, rawKey: lic.rawKey, plan, lastValidated: Date.now() },
+            });
+            chrome.storage.local.remove("adoffIntegrity");
+            resolve({ valid: false, fatal: true, error: data.error, reason });
+            return;
+          }
+          // Errore non fatale (es. Device limit reached) — non tocchiamo cache
+          resolve({ valid: false, fatal: false, error: data.error });
+        } catch (_) {
+          // Errore rete — mantiene cache esistente
+          resolve({ valid: null, network: true });
+        }
+      });
+    });
+  }
+
+  // Imposta la pagina di survey post-disinstallazione (cattura il "perché ci disinstalli").
+  // CON consenso telemetria: passa deviceId come query param così il server può
+  // de-anonimizzare il survey. SENZA consenso: URL senza alcun identificatore.
+  async function updateUninstallURL() {
+    try {
+      const consent = await hasTelemetryConsent();
+      chrome.storage.local.get(["adoffLicense", STORAGE_TRIAL_END, "adoffDeviceId"], (r) => {
+        const now = Date.now();
+        const lic = r && r.adoffLicense;
+        const hasLicense = !!(lic && lic.valid);
+        const trialOn = typeof r[STORAGE_TRIAL_END] === "number" && now < r[STORAGE_TRIAL_END];
+        const wasPro = (hasLicense || trialOn) ? "1" : "0";
+        const v = chrome.runtime.getManifest().version;
+        // Puntiamo alla pagina HTML sul sito, non all'endpoint API: il worker
+        // non serve HTML via GET, restituirebbe JSON grezzo {"error":"Not found"}.
+        // La pagina del sito raccoglie il feedback e poi POSTa al worker.
+        let url = `https://adoff.app/uninstall.html?v=${encodeURIComponent(v)}&pro=${wasPro}`;
+        if (consent) {
+          url += `&deviceId=${encodeURIComponent(r.adoffDeviceId || "")}`;
+        }
+        if (chrome.runtime.setUninstallURL) chrome.runtime.setUninstallURL(url);
+      });
+    } catch (_) { /* best-effort, non bloccante */ }
+  }
+  updateUninstallURL();
+
+  // 1) Al riavvio del browser
+  chrome.runtime.onStartup.addListener(() => {
+    revalidateLicense("startup");
+    updateUninstallURL();
+    syncRemoteRules();
+  });
+
+  // 2) Daily alarm — controllo periodico anche con browser sempre aperto
+  const ALARM_MESSAGES_POLL = "adoffMessagesPoll";
+  const ALARM_LIC_CHECK = "adoffLicDailyCheck";
+  chrome.alarms.get(ALARM_LIC_CHECK, (existing) => {
+    if (!existing) {
+      // periodInMinutes 1440 = 24h. delayInMinutes 5 per non saturare al boot.
+      chrome.alarms.create(ALARM_LIC_CHECK, { delayInMinutes: 5, periodInMinutes: 24 * 60 });
+    }
+  });
+
+  chrome.alarms.get(ALARM_MESSAGES_POLL, (existing) => {
+    if (!existing) {
+      chrome.alarms.create(ALARM_MESSAGES_POLL, { delayInMinutes: 2, periodInMinutes: 20 });
+    }
+  });
+
+  // ---- Privacy navigation flush alarm ----
+  const ALARM_NAV_FLUSH = "adoffNavFlush";
+  chrome.alarms.get(ALARM_NAV_FLUSH, (existing) => {
+    if (!existing) {
+      chrome.alarms.create(ALARM_NAV_FLUSH, { delayInMinutes: 5, periodInMinutes: 60 });
+    }
+  });
+
+  // ---- Init storage al primo install ----
+  chrome.runtime.onInstalled.addListener((details) => {
+    chrome.storage.local.get(null, (result) => {
+      const defaults = {};
+      if (result[STORAGE_ENABLED] === undefined) defaults[STORAGE_ENABLED] = true;
+      if (result[STORAGE_ADS]     === undefined) defaults[STORAGE_ADS]     = 0;
+      if (result[STORAGE_REQ]     === undefined) defaults[STORAGE_REQ]     = 0;
+      if (result[STORAGE_WHITELIST] === undefined) defaults[STORAGE_WHITELIST] = [];
+
+      // Primo install
+      if (details.reason === "install") {
+        // Trial: durata da TRIAL_DAYS (autorita' vera = token firmato dal server)
+        if (result[STORAGE_TRIAL_END] === undefined) {
+          defaults[STORAGE_TRIAL_END] = Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000;
+        }
+
+        // Data installazione (per Founding Member)
+        defaults.adoffInstallDate = Date.now();
+        defaults.adoffIsFounder = Date.now() < FOUNDER_CUTOFF;
+
+        // Codice referral unico
+        if (!result.adoffReferralCode) {
+          defaults.adoffReferralCode = generateReferralCode();
+          defaults.adoffReferralCount = 0;
+          defaults.adoffReferralDays = 0;
+          defaults.adoffReferralHistory = [];
+        }
+
+        // Init review prompt
+        defaults.adoffReviewPromptCount = 0;
+        defaults.adoffReviewDismissed = false;
+        defaults.adoffReviewDone = false;
+        defaults.adoffMilestones = {};
+      }
+
+      // Aggiornamento estensione — flag changelog
+      if (details.reason === "update") {
+        const currentVersion = chrome.runtime.getManifest().version;
+        const seenVersions = result.adoffChangelogSeen || [];
+        if (!seenVersions.includes(currentVersion) && CHANGELOGS[currentVersion]) {
+          defaults.adoffShowChangelog = true;
+          defaults.adoffNewVersion = currentVersion;
+        }
+
+        // Se non ha ancora installDate (utente pre-esistente), impostala ora
+        if (!result.adoffInstallDate) {
+          defaults.adoffInstallDate = Date.now();
+          defaults.adoffIsFounder = Date.now() < FOUNDER_CUTOFF;
+        }
+
+        // Se non ha referral code, generalo
+        if (!result.adoffReferralCode) {
+          defaults.adoffReferralCode = generateReferralCode();
+          defaults.adoffReferralCount = 0;
+          defaults.adoffReferralDays = 0;
+          defaults.adoffReferralHistory = [];
+        }
+      }
+
+      if (Object.keys(defaults).length > 0) {
+        chrome.storage.local.set(defaults);
+      }
+
+      // Track install al server (solo al primo install)
+      if (details.reason === "install") {
+        chrome.storage.local.get(["adoffDeviceId", STORAGE_TRIAL_END], (r2) => {
+          const isTrial = !!(r2[STORAGE_TRIAL_END] && r2[STORAGE_TRIAL_END] > Date.now());
+          trackInstall(r2.adoffDeviceId, isTrial ? "trial" : "free");
+          // Avvia alarm heartbeat (1 ora)
+          chrome.alarms.create("adoffHeartbeat", { periodInMinutes: 60 });
+        });
+        // Guardia extra: non fidarsi solo di details.reason === "install" —
+        // se Chrome rifà scattare onInstalled(install) su un profilo già
+        // inizializzato, questo flag persistito impedisce comunque il replay.
+        if (!result.adoffOnboardingShown) {
+          chrome.tabs.create({ url: chrome.runtime.getURL("src/onboarding.html") });
+          chrome.storage.local.set({ adoffOnboardingShown: true });
+        }
+      }
+    });
+
+    // Il blocking non dipende da nessuno stato remoto: nessuna sincronizzazione
+    // licenza/trial al bootstrap. La telemetria opt-in resta indipendente.
+    updateUninstallURL();
+  });
+
+  // ---- Badge ----
+  function formatBadgeCount(n) {
+    if (n >= 1000000) return (n / 1000000).toFixed(0) + "M";
+    if (n >= 10000) return (n / 1000).toFixed(0) + "K";
+    if (n >= 1000) return (n / 1000).toFixed(1) + "K";
+    return String(n);
+  }
+
+  // showBadge: mostra il badge (ON/OFF stato). showCounter: mostra il numero di ads.
+  // Entrambi rispettano le impostazioni in Opzioni (adoffShowBadge default ON, adoffShowCounter default OFF).
+  function updateBadge(isEnabled, totalBlocked, showBadge, showCounter, unreadMessages) {
+    if (showBadge === false) {
+      chrome.action.setBadgeText({ text: "" });
+      return;
+    }
+    if (!isEnabled) {
+      chrome.action.setBadgeText({ text: "OFF" });
+      chrome.action.setBadgeBackgroundColor({ color: "#e74c3c" });
+    } else if (unreadMessages > 0) {
+      chrome.action.setBadgeText({ text: String(Math.min(unreadMessages, 99)) });
+      chrome.action.setBadgeBackgroundColor({ color: "#27ae60" });
+    } else {
+      const text = (showCounter && totalBlocked > 0) ? formatBadgeCount(totalBlocked) : "ON";
+      chrome.action.setBadgeText({ text });
+      chrome.action.setBadgeBackgroundColor({ color: "#6c5ce7" });
+    }
+    chrome.action.setBadgeTextColor({ color: "#ffffff" });
+  }
+
+  function refreshBadge() {
+    chrome.storage.local.get(
+      [STORAGE_ENABLED, STORAGE_ADS, STORAGE_REQ, STORAGE_SHOW_BADGE, STORAGE_SHOW_COUNTER, "adoffUnreadMessages"],
+      (result) => {
+        const isEnabled = result[STORAGE_ENABLED] !== false;
+        const total = (result[STORAGE_ADS] || 0) + (result[STORAGE_REQ] || 0);
+        updateBadge(isEnabled, total, result[STORAGE_SHOW_BADGE] !== false, result[STORAGE_SHOW_COUNTER] !== false, result.adoffUnreadMessages || 0);
+      }
+    );
+  }
+
+  refreshBadge();
+
+  chrome.storage.onChanged.addListener((changes) => {
+    if (changes[STORAGE_ENABLED] || changes[STORAGE_ADS] || changes[STORAGE_REQ] ||
+        changes[STORAGE_SHOW_BADGE] || changes[STORAGE_SHOW_COUNTER] || changes.adoffUnreadMessages) {
+      refreshBadge();
+    }
+  });
+
+  // ---- Contatore richieste bloccate (MV3-safe: chrome.alarms + getMatchedRules) ----
+  const ALARM_FLUSH_REQ = "adoff-flush-req";
+  const STORAGE_LAST_CHECK = "adoffLastReqCheck";
+
+  // Rule IDs che sono tracking/analytics, NON ads reali — non contarli nel badge
+  // 4: google-analytics, 5: googletagmanager
+  // 20-22: facebook pixel/events/signals
+  // 80-90: moatads, doubleverify, ias, scorecardresearch, quantserve, hotjar, mixpanel, segment, amplitude, newrelic, sentry
+  // 175-176: youtube stats/qoe (analytics, non ads)
+  // 180-181, 183: twitter jot/adsct/analytics
+  // 190-191: gemius, addthis
+  // 211: analytics.tiktok
+  // 962: yadro.ru (LiveInternet counter)
+  // 965: histats
+  const TRACKING_RULE_IDS = new Set([
+    4, 5, 20, 21, 22,
+    80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
+    175, 176, 180, 181, 183,
+    190, 191, 211, 962, 965,
+  ]);
+
+  // Crea alarm persistente (sopravvive ai restart del SW)
+  chrome.alarms.get(ALARM_FLUSH_REQ, (existing) => {
+    if (!existing) {
+      chrome.alarms.create(ALARM_FLUSH_REQ, { periodInMinutes: 1 });
+    }
+  });
+
+  // Ad ogni tick, leggi regole matchate dal timestamp dell'ultimo check
+  // Conta SOLO le regole che bloccano ads reali (non tracking/analytics)
+  chrome.alarms.onAlarm.addListener(async (alarm) => {
+    if (alarm.name === ALARM_LIC_CHECK) {
+      revalidateLicense("daily-alarm");
+      updateUninstallURL();
+      syncRemoteRules();
+      return;
+    }
+    if (alarm.name === "adoffHeartbeat") {
+      chrome.storage.local.get(["adoffDeviceId", "adoffInstallDate"], (r) => {
+        if (r.adoffDeviceId) {
+          trackHeartbeat(r.adoffDeviceId, r.adoffInstallDate);
+        }
+      });
+      return;
+    }
+    if (alarm.name === ALARM_MESSAGES_POLL) {
+      const stored = await storageGet(["adoffUserEmail"]);
+      const email = stored.adoffUserEmail;
+      if (!email) return;
+      try {
+        const resp = await fetch(`${API_BASE}/messages?email=${encodeURIComponent(email)}`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const threads = Array.isArray(data.threads) ? data.threads : [];
+        const totalUnread = threads.reduce((s, t) => s + (t.unread_by_user || 0), 0);
+        await storageSet({ adoffUnreadMessages: totalUnread });
+      } catch (e) {}
+      return;
+    }
+
+    // ---- Privacy navigation flush ----
+    if (alarm.name === ALARM_NAV_FLUSH) {
+      const stored = await storageGet(["adoffNavOptIn", "adoffDeviceId", "adoffNavBuffer"]);
+      if (!stored.adoffNavOptIn || !stored.adoffDeviceId) return;
+
+      const buffer = stored.adoffNavBuffer || {};
+      const hostnames = Object.keys(buffer);
+      if (hostnames.length === 0) return;
+
+      // Tronca a max 50 entries
+      const entries = hostnames.slice(0, 50).map(hostname => ({
+        hostname,
+        adsBlocked: buffer[hostname]?.adsBlocked || 0,
+        adsLeaked: buffer[hostname]?.adsLeaked || 0,
+        errors: buffer[hostname]?.errors || 0,
+      }));
+
+      try {
+        const resp = await fetch(`${API_BASE}/track/nav-batch`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceId: stored.adoffDeviceId, entries }),
+        });
+        if (resp.ok) {
+          // Flush OK → rimuovi solo gli hostname inviati, mantieni il resto per il prossimo giro
+          const remaining = {};
+          hostnames.slice(50).forEach((h) => { remaining[h] = buffer[h]; });
+          await storageSet({ adoffNavBuffer: remaining });
+        } else {
+          // Flush fallito → mantieni buffer ma tronca a max 200 hostname totali
+          const maxHostnames = 200;
+          if (hostnames.length > maxHostnames) {
+            const trimmed = {};
+            hostnames.slice(0, maxHostnames).forEach(h => trimmed[h] = buffer[h]);
+            await storageSet({ adoffNavBuffer: trimmed });
+          }
+        }
+      } catch (e) {
+        // Errore rete → mantieni buffer (già troncato sopra se necessario)
+      }
+      return;
+    }
+    if (alarm.name !== ALARM_FLUSH_REQ) return;
+
+    chrome.storage.local.get([STORAGE_ENABLED, STORAGE_REQ, STORAGE_LAST_CHECK, STORAGE_DAILY_STATS], (result) => {
+      const lastCheck = result[STORAGE_LAST_CHECK] || 0;
+      const now = Date.now();
+
+      // Protezione disattivata: non contare. Avanza comunque il timestamp
+      // cosi' il backlog accumulato in OFF non viene conteggiato al re-enable.
+      if (result[STORAGE_ENABLED] === false) {
+        chrome.storage.local.set({ [STORAGE_LAST_CHECK]: now });
+        return;
+      }
+
+      chrome.declarativeNetRequest.getMatchedRules(
+        { minTimeStamp: lastCheck },
+        (details) => {
+          const rules = details.rulesMatchedInfo || [];
+          const adCount = rules.filter((r) => !TRACKING_RULE_IDS.has(r.rule.ruleId)).length;
+          const updates = { [STORAGE_LAST_CHECK]: now };
+          if (adCount > 0) {
+            updates[STORAGE_REQ] = (result[STORAGE_REQ] || 0) + adCount;
+            // Aggiorna daily stats per req
+            const today = new Date().toISOString().slice(0, 10);
+            const daily = result[STORAGE_DAILY_STATS] || {};
+            const prev = daily[today] || { ads: 0, req: 0 };
+            daily[today] = { ads: prev.ads, req: prev.req + adCount };
+            // keep 90 days
+            const keys = Object.keys(daily).sort();
+            if (keys.length > 90) {
+              keys.slice(0, keys.length - 90).forEach((k) => delete daily[k]);
+            }
+            updates[STORAGE_DAILY_STATS] = daily;
+          }
+          chrome.storage.local.set(updates);
+        }
+      );
+    });
+  });
+
+  // ---- Toggle network rules ----
+  function toggleNetworkRules(enabled) {
+    if (enabled) {
+      chrome.declarativeNetRequest.updateEnabledRulesets({
+        enableRulesetIds: ["adblock_rules"],
+      });
+    } else {
+      chrome.declarativeNetRequest.updateEnabledRulesets({
+        disableRulesetIds: ["adblock_rules"],
+      });
+    }
+  }
+
+  // ---- IMA SDK redirect rules (Pro/Trial only) ----
+  // Regole dinamiche: redirect imasdk verso stub locale.
+  // Attivate solo quando l'utente ha Pro o Trial attivo.
+  // Paramount+ SSAI: excludedInitiatorDomains esclude il redirect IMA su
+  // piattaforme che usano Google DAI con stream ads-server-side (mirror
+  // dell'esclusione sulle static rules 220/900). Isolato per categoria.
+  const PREMIUM_STREAMING_INITIATORS = ["paramountplus.com"];
+  // Domini della piattaforma video, usati come initiator per le regole di allow.
+  const VIDEO_PLATFORM_DOMAINS = ["youtube.com", "youtube-nocookie.com", "m.youtube.com"];
+
+  // Gli annunci video della piattaforma inviano ping di conferma verso doubleclick.
+  // Le regole di blocco generiche su quel dominio sono attive SEMPRE, anche senza
+  // abbonamento. Se quei ping vengono bloccati il player non riproduce l'annuncio
+  // ne' passa al contenuto: resta appeso al timeout, 10-15 secondi di schermo nero.
+  // Con abbonamento attivo abbiamo lo skip a runtime che termina l'annuncio, quindi
+  // il blocco va mantenuto. SENZA abbonamento (o in modalita' compatibilita') non
+  // c'e' nessuno skip: bloccarli produce solo lo schermo nero, quindi li lasciamo
+  // passare e l'utente vede un annuncio regolare con player fluido.
+  const AD_PING_ALLOW_RULES = [
+    { id: 50010, priority: 2500, action: { type: "allow" }, condition: { urlFilter: "||doubleclick.net", initiatorDomains: VIDEO_PLATFORM_DOMAINS, resourceTypes: ["xmlhttprequest", "image", "ping", "script", "sub_frame", "media", "other"] } },
+    { id: 50011, priority: 2500, action: { type: "allow" }, condition: { urlFilter: "||googlesyndication.com", initiatorDomains: VIDEO_PLATFORM_DOMAINS, resourceTypes: ["xmlhttprequest", "image", "ping", "script", "sub_frame", "media", "other"] } },
+  ];
+  const AD_PING_ALLOW_IDS = [50010, 50011];
+
+  const IMA_REDIRECT_RULES = [
+    { id: 50001, priority: 3, action: { type: "redirect", redirect: { extensionPath: "/stubs/google-ima3.js" } }, condition: { urlFilter: "||imasdk.googleapis.com/js/sdkloader/ima3.js", resourceTypes: ["script"], excludedInitiatorDomains: PREMIUM_STREAMING_INITIATORS } },
+    { id: 50002, priority: 3, action: { type: "redirect", redirect: { extensionPath: "/stubs/google-ima3.js" } }, condition: { urlFilter: "||imasdk.googleapis.com/js/sdkloader/ima3_dai.js", resourceTypes: ["script"], excludedInitiatorDomains: PREMIUM_STREAMING_INITIATORS } },
+  ];
+
+  function updateImaRules() {
+    chrome.storage.local.get(
+      ["adoffLicense", STORAGE_ENABLED, "adoffYtCompat"],
+      (result) => {
+      const lic = result.adoffLicense || {};
+      const enabled = result[STORAGE_ENABLED] !== false;
+      // Sbloccato per tutti: adoffPlanTier ritorna sempre "premium". Il gate
+      // passa comunque dalla funzione canonica, cosi' per tornare indietro
+      // basta rimettere mano a quella e non a ogni singolo punto.
+      const isPro = adoffPlanTier(lic.type) !== "free"
+        || adoffPlanTier(lic.plan) !== "free";
+      // Ping degli annunci sulla piattaforma video: vedi AD_PING_ALLOW_RULES.
+      // A protezione spenta le regole vengono rimosse, per non lasciarle appese.
+      const needAdPingAllow = enabled && (!isPro || result.adoffYtCompat === true);
+      chrome.declarativeNetRequest.updateDynamicRules(
+        needAdPingAllow
+          ? { removeRuleIds: AD_PING_ALLOW_IDS, addRules: AD_PING_ALLOW_RULES }
+          : { removeRuleIds: AD_PING_ALLOW_IDS }
+      ).catch(() => { /* ignore */ });
+
+
+      // Il redirect si attiva SOLO se Pro/Trial E protezione attiva.
+      // Se l'utente disattiva AdOff il redirect va rimosso, altrimenti
+      // imasdk resterebbe rediretto allo stub anche a protezione spenta.
+      if (isPro && enabled) {
+        chrome.declarativeNetRequest.updateDynamicRules({
+          removeRuleIds: [50001, 50002],
+          addRules: IMA_REDIRECT_RULES,
+        });
+      } else {
+        chrome.declarativeNetRequest.updateDynamicRules({
+          removeRuleIds: [50001, 50002],
+        });
+      }
+
+      // ---- YouTube ad rules: Pro/Trial ONLY (anti SABR-backoff) ----
+      // In Free, bloccare a metà gli ad di YouTube fa scattare il SABR-backoff
+      // (schermo nero ~80% durata ad) SENZA la mitigazione injectNoAd (Pro-only)
+      // → esperienza rotta. Quindi le regole YT-specifiche sono attive SOLO con
+      // Pro/Trial: Free = YouTube intatto (ad normali, player fluido). Completa
+      // il design v3.3.6 "piattaforme video = solo Pro". Feature-detect updateStaticRules
+      // (Chrome 111+): se assente (browser vecchio) degrada senza regressione.
+      const YT_AD_RULE_IDS = [170, 171, 172, 173, 174, 175, 176, 179];
+      try {
+        if (chrome.declarativeNetRequest.updateStaticRules) {
+          // Modalita' compatibilita': l'utente ha segnalato attese/schermo nero.
+          // Disattiviamo anche il blocco di RETE degli ad, non solo lo strip
+          // client: se le richieste restano bloccate il backoff scatta lo stesso
+          // e l'interruttore non servirebbe a niente.
+          const ytOn = isPro && enabled && result.adoffYtCompat !== true;
+          chrome.declarativeNetRequest.updateStaticRules({
+            rulesetId: "adblock_rules",
+            [ytOn ? "enableRuleIds" : "disableRuleIds"]: YT_AD_RULE_IDS,
+          }).catch(() => { /* ignore */ });
+        }
+      } catch (_) { /* updateStaticRules non supportato — degrada */ }
+    });
+  }
+
+  // ---- Whitelist allow rules (sito in pausa = nativo) ----
+  // La pausa non basta a fermare content.js: serve esentare il dominio
+  // anche a livello rete (blocchi statici + redirect IMA). allowAllRequests
+  // sul main_frame del dominio esenta l'intero albero di richieste (inclusi
+  // gli iframe del player). priority alta per battere redirect(3) e block(1).
+  const WL_ALLOW_BASE_ID = 51000;
+  const WL_ALLOW_MAX     = 1000;
+  function updateWhitelistAllowRules() {
+    chrome.storage.local.get(STORAGE_WHITELIST, (result) => {
+      const list = (result[STORAGE_WHITELIST] || []).filter(Boolean).slice(0, WL_ALLOW_MAX);
+      chrome.declarativeNetRequest.getDynamicRules((existing) => {
+        const oldIds = (existing || [])
+          .filter((r) => r.id >= WL_ALLOW_BASE_ID && r.id < WL_ALLOW_BASE_ID + WL_ALLOW_MAX)
+          .map((r) => r.id);
+        const addRules = list.map((domain, i) => ({
+          id: WL_ALLOW_BASE_ID + i,
+          priority: 2000,
+          action: { type: "allowAllRequests" },
+          condition: { requestDomains: [domain], resourceTypes: ["main_frame", "sub_frame"] },
+        }));
+        chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: oldIds, addRules });
+      });
+    });
+  }
+
+  // ---- Remote rule-feed (MV3-native: declarativeNetRequest dynamic rules) ----
+  // Mantiene i filtri freschi senza aspettare la review dello store: il service
+  // worker scarica un JSON firmato da adoff.app e lo applica a runtime.
+  // SICUREZZA: firma ECDSA P-256 obbligatoria, solo azioni block/allow (mai
+  // redirect/modifyHeaders da fonte remota), main_frame solo con dominio,
+  // id forzati in un range riservato, apply atomico con rollback.
+  // Il feed è DISABILITATO (REMOTE_RULES_ENABLED = false) finché il backend non
+  // firma i payload. Vedi docs/RULES-FEED-PROTOCOL.md.
+  const REMOTE_RULES_ENABLED = false;
+  const REMOTE_RULES_URL = "https://adoff.app/rules-feed.json";
+  const REMOTE_RULES_BASE_ID = 60000;
+  const REMOTE_RULES_FETCH_TIMEOUT_MS = 20000;
+  const REMOTE_RULES_RESERVED = 100;
+  const REMOTE_RULES_CHUNK = 2000;
+  const REMOTE_RULES_MIN_INTERVAL_MS = 6 * 60 * 60 * 1000;
+  const REMOTE_RULES_ID_SPAN = 40000;
+  // D) Key rotation: mappa chiavi di firma del feed. jwk reali = placeholder
+  // null (TODO backend, MAI chiavi inventate). "active" = chiave corrente,
+  // "deprecated" = in rotazione (ancora accettata per il grace period), assente
+  // dalla mappa = rifiutata. Processo completo in docs/RULES-FEED-PROTOCOL.md.
+  const RULES_FEED_KEYS = {
+    // TODO: sostituire con il JWK reale quando il backend firma ("active").
+    // "rules-feed-2026-01": { jwk: null, status: "active" },
+  };
+  // Legacy single-key option usata solo se la mappa e' vuota.
+  const RULES_FEED_PUBLIC_KEY_JWK = null;
+
+  // A) Quota REALE delle regole dinamiche MV3. Il feed contiene SOLO regole
+  // "safe" (block/allow/upgradeScheme, mai redirect/modifyHeaders) → il budget
+  // giusto è MAX_NUMBER_OF_DYNAMIC_RULES. In Chrome ≥ M120 vale 30.000; le
+  // unsafe rules (redirect/modifyHeaders) hanno budget separato di soli 5.000
+  // (MAX_NUMBER_OF_UNSAFE_DYNAMIC_RULES). ATTENZIONE STORICA (incidente
+  // v3.5.59, 2026-08-02): 35.143 regole in una singola updateDynamicRules()
+  // atomica sfondarono il limite e fallì silenziosamente → chunking + cap su
+  // questa quota. MAI usare MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES: deprecata
+  // (Chrome 120 / Firefox 126), indicava il vecchio budget COMBINATO 5.000.
+  // Valori per browser (verificati su doc ufficiali, 2026-09-12):
+  // - Chrome/Edge/Opera: MAX_NUMBER_OF_DYNAMIC_RULES = 30.000 (safe dynamic).
+  // - Firefox: MAX_NUMBER_OF_DYNAMIC_RULES = 5.000 (la costante esiste ma il
+  //   budget safe dynamic in Firefox è 5.000; MDN, tabella limiti).
+  // - Safari: espone MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES = 30.000 (non
+  //   deprecata lì, budget combinato dynamic+session).
+  // Fonti: developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest
+  //        (Value 30000 / Value 5000, Chrome 120+);
+  //        developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest
+  //        (e subpage .../MAX_NUMBER_OF_DYNAMIC_RULES: "in Firefox: 5000, in
+  //        Chrome: 30000"; .../MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES:
+  //        "In Safari, this property has a value of 30,000").
+  function realDynamicQuota() {
+    try {
+      const dnr = chrome.declarativeNetRequest;
+      // Budget per regole SAFE (noi usiamo solo block/allow). In Chrome è 30.000.
+      if (Number.isInteger(dnr.MAX_NUMBER_OF_DYNAMIC_RULES) && dnr.MAX_NUMBER_OF_DYNAMIC_RULES > 0) {
+        return dnr.MAX_NUMBER_OF_DYNAMIC_RULES;
+      }
+      // Safari ≥ 16.4 espone solo la combinata (30.000, dynamic+session) — la
+      // accettiamo SOLO se ≥ 5.000, così non rischia mai di alzare il cap sopra
+      // il budget dynamic puro di un browser con costanti mancanti.
+      if (Number.isInteger(dnr.MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES) &&
+          dnr.MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES >= 5000) {
+        return dnr.MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES;
+      }
+    } catch (_) { /* nop */ }
+    // Fallback conservativo: 5.000 = valore minimo garantito cross-browser
+    // (Chrome unsafe budget / Firefox safe dynamic budget). Documentato in
+    // docs/RULES-FEED-PROTOCOL.md § "Quota reale DNR (fonte)".
+    return 5000;
+  }
+
+  // Il feed contiene solo block/allow → budget regole applicabili = quota reale
+  // meno un margine di riserva, MAI un numero fisso assunto.
+  function remoteRulesCap() {
+    return Math.max(0, realDynamicQuota() - REMOTE_RULES_RESERVED);
+  }
+
+  function updateDynamicRulesAsync(opts) {
+    return new Promise((resolve) => {
+      chrome.declarativeNetRequest.updateDynamicRules(opts, () => {
+        resolve(chrome.runtime.lastError ? chrome.runtime.lastError.message : null);
+      });
+    });
+  }
+
+  function clearRemoteRules() {
+    chrome.declarativeNetRequest.getDynamicRules((existing) => {
+      const oldIds = (existing || [])
+        .filter((r) => r.id >= REMOTE_RULES_BASE_ID && r.id < REMOTE_RULES_BASE_ID + REMOTE_RULES_ID_SPAN)
+        .map((r) => r.id);
+      if (oldIds.length) chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: oldIds });
+    });
+  }
+
+  // Kill-switch: il feed resta disabilitato finché il backend non firma i payload.
+  function syncRemoteRules(force) {
+    if (!REMOTE_RULES_ENABLED) return;
+
+    let enabled = true;
+    chrome.storage.local.get([STORAGE_ENABLED], (st) => {
+      if (st[STORAGE_ENABLED] === false) { enabled = false; }
+      if (!enabled) { clearRemoteRules(); return; }
+
+      chrome.storage.local.get(["adoffRemoteRulesSync", "adoffRemoteRulesCount", "adoffRulesFeedVersion"], (st) => {
+        const lastSync = st.adoffRemoteRulesSync || 0;
+        const lastCount = st.adoffRemoteRulesCount || 0;
+        // Throttle: NON toccare adoffRemoteRulesSync qui, altrimenti ogni avvio del
+        // service worker sposterebbe in avanti la scadenza e il feed non si aggiornerebbe mai.
+        if (lastCount > 0 && (Date.now() - lastSync) < REMOTE_RULES_MIN_INTERVAL_MS && !force) return;
+
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), REMOTE_RULES_FETCH_TIMEOUT_MS);
+        fetch(REMOTE_RULES_URL + "?t=" + Date.now(), { signal: ctrl.signal, cache: "no-store" })
+          .then((res) => {
+            clearTimeout(t);
+            if (!res.ok) return null;
+            return res.json();
+          })
+          .then(async (data) => {
+            if (!data) return;
+
+            // Verifica completa PRIMA di toccare le regole esistenti: struttura,
+            // scadenza, monotonia versione (anti-replay/rollback), allowlist
+            // azioni, firma ECDSA P-256. Qualunque fallimento → mantieni il
+            // ruleset precedente e logga.
+            const verified = await verifyRulesFeedSignature(data, {
+              keys: RULES_FEED_KEYS,
+              publicKeyJwk: RULES_FEED_PUBLIC_KEY_JWK,
+              storedVersion: st.adoffRulesFeedVersion || 0,
+            });
+            if (!verified.ok) {
+              console.warn("[adoff] Feed remoto rifiutato: " + verified.error);
+              return;
+            }
+
+            const result = await applyAtomic(data, {
+              baseId: REMOTE_RULES_BASE_ID,
+              idSpan: REMOTE_RULES_ID_SPAN,
+              maxRules: remoteRulesCap(),
+              realQuota: realDynamicQuota(),
+              chunkSize: REMOTE_RULES_CHUNK,
+              getDynamicRules: () => new Promise((resolve) => {
+                chrome.declarativeNetRequest.getDynamicRules((r) => resolve(r || []));
+              }),
+              updateDynamicRules: updateDynamicRulesAsync,
+            });
+            if (!result.ok) {
+              // Ramo B (rifiuto quota/id) o rollback: feed precedente intatto,
+              // adoffRulesFeedVersion NON avanzata.
+              console.warn("[adoff] Apply feed fallito: " + result.error);
+              chrome.storage.local.set({ adoffRemoteRulesError: result.error });
+              return;
+            }
+
+            // Versione salvata SOLO dopo Ramo A completato (impedisce replay/rollback)
+            chrome.storage.local.set({
+              adoffRulesFeedVersion: data.version || 0,
+              adoffRemoteRulesVer: data.version || 0,
+              adoffRemoteRulesSync: Date.now(),
+              adoffRemoteRulesCount: result.applied,
+              adoffRemoteRulesError: null,
+            });
+          })
+          .catch((e) => {
+            console.warn("[adoff] Feed remoto non raggiungibile: " + (e && e.message ? e.message : ""));
+          });
+      });
+    });
+  }
+
+  // Aggiorna regole IMA + whitelist + feed remoto all'avvio e quando cambiano gli stati rilevanti
+  updateImaRules();
+  updateWhitelistAllowRules();
+  syncRemoteRules();
+  chrome.storage.onChanged.addListener((changes) => {
+    if (changes.adoffLicense || changes.adoffTrialEnd || changes.adoffTrialToken ||
+        changes[STORAGE_ENABLED] || changes.adoffYtCompat) {
+      updateImaRules();
+    }
+    if (changes[STORAGE_ENABLED]) {
+      syncRemoteRules();
+    }
+    if (changes[STORAGE_WHITELIST]) {
+      updateWhitelistAllowRules();
+    }
+  });
+
+  // ---- Gestione messaggi: whitelist ----
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    // EA-6: rifiuta messaggi da estensioni esterne o pagine web
+    if (sender.id !== chrome.runtime.id) return false;
+
+    // Lo script anti-pubblico è dichiarato nel manifest solo per il frame principale,
+    // quindi nei player ospitati in un iframe di terze parti non arriva; il sottoframe
+    // chiede qui il verdetto invece di ricalcolarlo per conto suo, così la decisione
+    // resta in un punto solo.
+    if (message.action === "richiediStealthFrame") {
+      chrome.storage.local.get([
+        "adoffLicense", "adoffTrialEnd", "adoffTrialToken",
+        "adoffTrialExpired", "adoffDeviceId", "adoffIntegrity",
+        "adoffWhitelist", STORAGE_ENABLED
+      ], (stored) => {
+        if (stored[STORAGE_ENABLED] === false) {
+          sendResponse({ pro: false });
+          return;
+        }
+
+        // Pausa sito: verifica whitelist
+        let tabUrl;
+        try {
+          tabUrl = sender.tab && sender.tab.url ? new URL(sender.tab.url) : null;
+        } catch (_) {
+          tabUrl = null;
+        }
+        if (tabUrl) {
+          const hostname = tabUrl.hostname;
+          const whitelist = stored.adoffWhitelist || [];
+          const whitelisted = whitelist.some(entry => {
+            if (entry === hostname) return true;
+            if (hostname.endsWith("." + entry)) return true;
+            return false;
+          });
+          if (whitelisted) {
+            sendResponse({ pro: false });
+            return;
+          }
+        }
+
+        const lic = stored.adoffLicense || {};
+        const storedIntegrity = stored.adoffIntegrity;
+        // Il campo reale e' "valid": su un nome inesistente la negazione risulta
+        // sempre vera e il controllo di integrita' viene scavalcato del tutto.
+        const integrityValid =
+          !lic.valid ||
+          (storedIntegrity != null && storedIntegrity === computeIntegrity(lic));
+
+        // L'integrita' non governa piu' l'accesso: da quando tutto e'
+        // gratuito una licenza manomessa non fa ottenere niente che non
+        // si abbia gia', mentre spegnere le difese colpiva l'utente
+        // legittimo con lo storage corrotto. `integrityValid` resta
+        // calcolato: serve alla revoca server-side, non al gate.
+        const pro =
+          adoffPlanTier(lic.type) !== "free" ||
+          adoffPlanTier(lic.plan) !== "free";
+
+        if (!pro) {
+          sendResponse({ pro: false });
+        } else {
+          const rand = Math.random();
+          const hex = ("0000000" + Math.floor(rand * 0xffffffff).toString(16)).slice(-8);
+          sendResponse({ pro: true, nonce: "ao_" + hex });
+        }
+      });
+      return true;
+    }
+
+    // EM-6: incremento atomico contatore ads bloccati (evita race condition in content.js)
+    if (message.action === "incrementAdsBlocked") {
+      const count = (typeof message.count === "number" && message.count > 0) ? message.count : 0;
+      if (count > 0) {
+        incrementAdsCounter(count);
+      }
+      sendResponse({ ok: true });
+      return false;
+    }
+    if (message.action === "addToWhitelist") {
+      const domain = message.domain;
+      if (!domain) { sendResponse({ ok: false, error: "missing domain" }); return true; }
+
+      chrome.storage.local.get(STORAGE_WHITELIST, (result) => {
+        const list = result[STORAGE_WHITELIST] || [];
+        if (!list.includes(domain)) {
+          list.push(domain);
+          chrome.storage.local.set({ [STORAGE_WHITELIST]: list }, () => {
+            sendResponse({ ok: true, whitelist: list });
+          });
+        } else {
+          sendResponse({ ok: true, whitelist: list });
+        }
+      });
+      return true; // risposta asincrona
+    }
+
+    if (message.action === "removeFromWhitelist") {
+      const domain = message.domain;
+      if (!domain) { sendResponse({ ok: false, error: "missing domain" }); return true; }
+
+      chrome.storage.local.get(STORAGE_WHITELIST, (result) => {
+        const list = (result[STORAGE_WHITELIST] || []).filter((d) => d !== domain);
+        chrome.storage.local.set({ [STORAGE_WHITELIST]: list }, () => {
+          sendResponse({ ok: true, whitelist: list });
+        });
+      });
+      return true;
+    }
+
+    if (message.action === "getWhitelist") {
+      chrome.storage.local.get(STORAGE_WHITELIST, (result) => {
+        sendResponse({ ok: true, whitelist: result[STORAGE_WHITELIST] || [] });
+      });
+      return true;
+    }
+
+    if (message.action === "isWhitelisted") {
+      const domain = message.domain;
+      if (!domain) { sendResponse({ ok: false, whitelisted: false }); return true; }
+
+      chrome.storage.local.get(STORAGE_WHITELIST, (result) => {
+        const list = result[STORAGE_WHITELIST] || [];
+        // EA-7: matching esatto o subdomain — evita false positive bidirezionali
+        const whitelisted = list.some((d) => domain === d || domain.endsWith("." + d));
+        sendResponse({ ok: true, whitelisted });
+      });
+      return true;
+    }
+
+    // Privacy navigation opt-in consent changed
+    if (message.action === "navConsentChanged") {
+      chrome.storage.local.get("adoffDeviceId", (result) => {
+        const deviceId = result.adoffDeviceId;
+        if (!deviceId) { sendResponse({ ok: false, error: "no deviceId" }); return true; }
+
+        const action = message.optIn === true ? "opt_in" : "opt_out";
+        fetch(`${API_BASE}/track/consent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceId, action, policyVersion: "2.0" }),
+        }).then(() => {
+          // Se opt-out, svuota il buffer locale
+          if (message.optIn === false) {
+            chrome.storage.local.remove("adoffNavBuffer");
+          }
+          sendResponse({ ok: true });
+        }).catch(() => {
+          sendResponse({ ok: false, error: "fetch failed" });
+        });
+      });
+      return true;
+    }
+
+    return false;
+  });
+
+})();

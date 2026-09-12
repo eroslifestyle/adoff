@@ -1,0 +1,352 @@
+{
+  "name": "AdOff 42 - OAuth Token Manager",
+  "description": "Manages OAuth token lifecycle for 8 platforms. Stores tokens in adoff_autopilot.oauth_tokens table. Auto-refreshes tokens 24h before expiration every 6 hours. Provides webhook endpoints for manual token injection and status listing.",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "sched_refresh",
+      "name": "Every 6 hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "path": "oauth-inject-token",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "webhook_inject",
+      "name": "Webhook: inject token",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        500
+      ],
+      "webhookId": "a1a0efa0-a275-4f9c-b03c-a3d18548c655"
+    },
+    {
+      "parameters": {
+        "path": "oauth-list-status",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "webhook_status",
+      "name": "Webhook: list status",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        700
+      ],
+      "webhookId": "0cc01d85-ea21-4079-9fbc-cbeb4c5f91cf"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst signature = $request.headers?.['x-adoff-signature'];\nconst body = $request.body;\nconst secret = process.env.WEBHOOK_SIGNING_SECRET || 'dev-secret';\n\nif (signature && body) {\n  const hmac = crypto.createHmac('sha256', secret)\n    .update(JSON.stringify(body))\n    .digest('hex');\n  if (hmac !== signature) {\n    return [{ json: { error: 'Invalid signature', authenticated: false } }];\n  }\n}\n\nreturn [{ json: { authenticated: true, triggered_at: new Date().toISOString() } }];"
+      },
+      "id": "auth",
+      "name": "Validate HMAC",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, platform, access_token, refresh_token, expires_at, status FROM adoff_autopilot.oauth_tokens WHERE status='active' AND expires_at IS NOT NULL AND expires_at < NOW() + INTERVAL '24 hours' ORDER BY expires_at ASC;",
+        "options": {}
+      },
+      "id": "fetch_expiring",
+      "name": "Fetch expiring tokens",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        720,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.oauth_tokens (platform, access_token, refresh_token, expires_at, status, last_refreshed) VALUES ($1, $2, $3, $4, 'active', NOW()) ON CONFLICT (platform) DO UPDATE SET access_token=EXCLUDED.access_token, refresh_token=COALESCE(EXCLUDED.refresh_token, adoff_autopilot.oauth_tokens.refresh_token), expires_at=EXCLUDED.expires_at, status='active', last_refreshed=NOW() RETURNING platform, access_token, expires_at, status;",
+        "options": {
+          "queryReplacement": "='{{ $json.platform }}', '{{ $json.access_token }}', {{ $json.refresh_token ? `'${$json.refresh_token}'` : 'NULL' }}, '{{ $json.expires_at }}'"
+        }
+      },
+      "id": "upsert_token",
+      "name": "UPSERT token in DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        720,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT platform, access_token, refresh_token, expires_at, status, last_refreshed, client_id FROM adoff_autopilot.oauth_tokens ORDER BY platform ASC;",
+        "options": {}
+      },
+      "id": "fetch_all_tokens",
+      "name": "Fetch all token statuses",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        480,
+        700
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $request.body || {};\nconst { platform, access_token, refresh_token, expires_in } = body;\n\nif (!platform || !access_token) {\n  return [{ json: {error: 'Missing required fields: platform, access_token', received: body}}];\n}\n\nconst expiresIn = expires_in || 7200;\nconst expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();\n\nreturn [{ json: {\n  platform: platform,\n  access_token: access_token,\n  refresh_token: refresh_token || null,\n  expires_in: expiresIn,\n  expires_at: expiresAt,\n  valid: true\n}}];"
+      },
+      "id": "parse_inject_request",
+      "name": "Parse inject request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all() || [];\nconst statusList = items.map(item => ({\n  platform: item.json.platform,\n  status: item.json.status,\n  expires_at: item.json.expires_at,\n  last_refreshed: item.json.last_refreshed,\n  days_until_expiry: item.json.expires_at ? Math.floor((new Date(item.json.expires_at) - new Date()) / (1000 * 60 * 60 * 24)) : null,\n  has_token: !!item.json.access_token,\n  client_id: item.json.client_id || null\n}));\n\nreturn [{ json: {\n  status: 'success',\n  timestamp: new Date().toISOString(),\n  total_platforms: statusList.length,\n  tokens: statusList\n} }];"
+      },
+      "id": "build_status_list",
+      "name": "Build status list",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'ok', platform: $json.platform, message: 'Token injected successfully', expires_at: $json.expires_at } }}"
+      },
+      "id": "resp_inject_ok",
+      "name": "Respond inject OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        960,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "resp_status_ok",
+      "name": "Respond status OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        960,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 401,
+        "responseBody": "={{ { error: 'Unauthorized', message: $json.error } }}"
+      },
+      "id": "resp_auth_fail",
+      "name": "Respond auth fail",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        600,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 200,
+        "responseBody": "={{ { status: 'ok', message: 'Refresh cycle complete' } }}"
+      },
+      "id": "resp_refresh_complete",
+      "name": "Respond refresh complete",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        960,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Every 6 hours": {
+      "main": [
+        [
+          {
+            "node": "Fetch expiring tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: inject token": {
+      "main": [
+        [
+          {
+            "node": "Validate HMAC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: list status": {
+      "main": [
+        [
+          {
+            "node": "Validate HMAC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate HMAC": {
+      "main": [
+        [
+          {
+            "node": "Parse inject request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch all token statuses",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond auth fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch expiring tokens": {
+      "main": [
+        [
+          {
+            "node": "Respond refresh complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse inject request": {
+      "main": [
+        [
+          {
+            "node": "UPSERT token in DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UPSERT token in DB": {
+      "main": [
+        [
+          {
+            "node": "Respond inject OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch all token statuses": {
+      "main": [
+        [
+          {
+            "node": "Build status list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build status list": {
+      "main": [
+        [
+          {
+            "node": "Respond status OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond auth fail": {
+      "main": []
+    },
+    "Respond refresh complete": {
+      "main": []
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromAnotherTeam"
+  },
+  "active": false,
+  "id": "w42-oauth-token-manager"
+}

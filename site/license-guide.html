@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Come funziona AdOff - Tutto gratis, per tutti</title>
+<meta content="AdOff e' completamente gratis: ogni funzione attiva dal primo giorno. Come funziona, dispositivi, domande frequenti." name="description"/>
+<meta content="index, follow" name="robots"/>
+<link href="https://adoff.app/license-guide" rel="canonical"/>
+<!-- Open Graph -->
+
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta content="article" property="og:type"/>
+<meta content="AdOff: tutto gratis, trasparente e semplice" property="og:title"/>
+<meta content="Ogni funzione inclusa, gratis. Dispositivi, multi-browser e FAQ." property="og:description"/>
+<meta content="https://adoff.app/license-guide" property="og:url"/>
+<meta content="AdOff" property="og:site_name"/>
+<!-- Twitter Card -->
+<meta content="summary" name="twitter:card"/>
+AdOff: tutto gratis
+<meta content="Ogni funzione inclusa, gratis. FAQ su dispositivi e multi-browser." name="twitter:description"/>
+<link href="/assets/icon128.png" rel="icon" type="image/png"/>
+<link href="/manifest.webmanifest" rel="manifest"/>
+<meta content="#0a0a1a" name="theme-color"/>
+<style>
+    /* ============================================================
+       BASE + DARK THEME
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #f7f7fb;
+      --bg2:      #eef0f7;
+      --card:     #ffffff;
+      --card2:    #eef0f7;
+      --border:   rgba(124, 92, 252, 0.16);
+      --accent:   #7c5cfc;
+      --accent2:  #9b7ffe;
+      --text:     #1a1a2e;
+      --text2:    #5a5a72;
+      --text3:    #6d6d85;
+      --green:    #22c55e;
+      --yellow:   #fbbf24;
+      --radius:   12px;
+    }
+
+    :root[data-theme="dark"] {
+      --bg:       #0a0a1a;
+      --bg2:      #0f0f22;
+      --card:     #12122a;
+      --card2:    #1a1a35;
+      --border:   #2a2a4a;
+      --text:     #e8e8f0;
+      --text2:    #9a9ab8;
+      --text3:    #6a6a88;
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ============================================================
+       LAYOUT
+    ============================================================ */
+    .page-wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+
+    /* ============================================================
+       HERO
+    ============================================================ */
+    .hero {
+      text-align: center;
+      padding: 80px 0 60px;
+    }
+
+    .hero__eyebrow {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      background: rgba(124,92,252,0.12);
+      border: 1px solid rgba(124,92,252,0.25);
+      border-radius: 999px;
+      padding: 6px 16px;
+      margin-bottom: 24px;
+    }
+
+    .hero__title {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .hero__sub {
+      font-size: 1.1rem;
+      color: var(--text2);
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ============================================================
+       SECTION HEADINGS
+    ============================================================ */
+    .section {
+      margin-bottom: 64px;
+    }
+
+    .section__label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 8px;
+    }
+
+    .section__title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .section__sub {
+      font-size: 1rem;
+      color: var(--text2);
+      margin-bottom: 32px;
+    }
+
+    /* ============================================================
+       PLAN CARDS
+    ============================================================ */
+    .plan-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .plan-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      position: relative;
+      transition: border-color .2s;
+    }
+
+    .plan-card:hover { border-color: var(--accent); }
+
+    .plan-card--popular {
+      border-color: var(--accent);
+      background: linear-gradient(160deg, #1a1a40 0%, var(--card) 100%);
+    }
+
+    .plan-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .plan-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+
+    .plan-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .plan-price-range {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--accent2);
+      margin-bottom: 4px;
+    }
+
+    .plan-price-note {
+      font-size: 0.82rem;
+      color: var(--text3);
+      margin-bottom: 16px;
+    }
+
+    .plan-features {
+      list-style: none;
+      font-size: 0.9rem;
+      color: var(--text2);
+    }
+
+    .plan-features li {
+      padding: 3px 0;
+    }
+
+    .plan-features li::before {
+      content: '\2713\a0';
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    /* ============================================================
+       DEVICE TIER TABLE
+    ============================================================ */
+    .tier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+    }
+
+    .tier-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      transition: border-color .2s;
+    }
+
+    .tier-card:hover { border-color: var(--accent); }
+
+    .tier-icon { font-size: 2rem; margin-bottom: 10px; }
+
+    .tier-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .tier-desc {
+      font-size: 0.85rem;
+      color: var(--text2);
+      margin-bottom: 14px;
+    }
+
+    .tier-prices {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .tier-price-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+    }
+
+    .tier-price-label { color: var(--text3); }
+    .tier-price-val { color: var(--text); font-weight: 600; }
+
+    /* ============================================================
+       STEPS
+    ============================================================ */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .step__num {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--text);
+      font-weight: 800;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step__content {}
+
+    .step__title {
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .step__desc {
+      font-size: 0.9rem;
+      color: var(--text2);
+    }
+
+    .step__desc a {
+      color: var(--accent2);
+    }
+
+    /* ============================================================
+       DEVICE MANAGEMENT CALLOUT
+    ============================================================ */
+    .callout {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 20px;
+    }
+
+    .callout__title {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 1.05rem;
+      margin-bottom: 12px;
+    }
+
+    .callout__list {
+      list-style: none;
+      font-size: 0.92rem;
+      color: var(--text2);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .callout__list li::before {
+      content: '\25B6\a0';
+      color: var(--accent2);
+      font-size: 0.7rem;
+    }
+
+    /* ============================================================
+       FAQ
+    ============================================================ */
+    .faq {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .faq-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .faq-q {
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 0.98rem;
+      font-weight: 600;
+      padding: 18px 20px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      transition: color .2s;
+    }
+
+    .faq-q:hover { color: var(--accent2); }
+
+    .faq-q__arrow {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--card2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      transition: transform .2s, background .2s;
+    }
+
+    .faq-item.open .faq-q__arrow {
+      transform: rotate(180deg);
+      background: var(--accent);
+    }
+
+    .faq-a {
+      display: none;
+      padding: 0 20px 18px;
+      font-size: 0.9rem;
+      color: var(--text2);
+      line-height: 1.65;
+      border-top: 1px solid var(--border);
+    }
+
+    .faq-item.open .faq-a { display: block; }
+
+    /* ============================================================
+       CTA SECTION
+    ============================================================ */
+    .cta-section {
+      text-align: center;
+      background: linear-gradient(135deg, rgba(124,92,252,0.15) 0%, rgba(10,10,26,0) 80%);
+      border: 1px solid rgba(124,92,252,0.25);
+      border-radius: 20px;
+      padding: 56px 32px;
+    }
+
+    .cta-section__title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .cta-section__sub {
+      font-size: 1rem;
+      color: var(--text2);
+      margin-bottom: 28px;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 14px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background .2s, transform .1s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    .cta-note { /* removed */ }
+
+    /* ============================================================
+       DIVIDER
+    ============================================================ */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 48px 0;
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 600px) {
+      .hero { padding: 56px 0 40px; }
+      .hero__title { font-size: 1.8rem; }
+      .plan-grid { grid-template-columns: 1fr; }
+      .tier-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script src="/adoff-i18n.js?v=623d521a"></script>
+</head>
+<body>
+<!-- Shared nav injected by adoff-nav.js?v=e75acee8 -->
+<script defer="" src="/adoff-i18n.js?v=623d521a"></script>
+<script src="/adoff-nav.js?v=e75acee8"></script>
+<div class="page-wrapper">
+<!-- ============================================================
+         HERO
+    ============================================================ -->
+<section class="hero">
+<span class="hero__eyebrow" data-i18n="license_guide.licenze">Licenze</span>
+<h1 class="hero__title" data-i18n="license_guide.come.funzionano.le.licenze.adoff">AdOff: tutto gratis, per tutti</h1>
+<p class="hero__sub" data-i18n="license_guide.semplice.e.trasparente.nessuna.sorpresa.">Semplice e trasparente. Nessun costo, nessuna carta. Installi e funziona. Fatto.</p>
+</section>
+<!-- ============================================================
+         PLANS
+    ============================================================ -->
+<section class="section">
+<div class="section__label" data-i18n="section.piani">Piani</div>
+<h2 class="section__title" data-i18n="license_guide.scegli.il.tuo.ciclo.di.fatturazione">Una sola versione, tutto incluso</h2>
+<p class="section__sub" data-i18n="license_guide.tutti.i.piani.pro.includono.ogni.funzion">Ogni funzione e' inclusa: anti-rilevamento invisibile, neutralizzazione annunci video e supporto.</p>
+<div class="plan-grid">
+<!-- Monthly -->
+<div class="plan-card">
+<div class="plan-icon">📅</div>
+<div class="plan-name" data-i18n="section.pro_mensile">Gratis</div>
+<div class="plan-price-range" data-i18n="section.299">Gratis<span style="font-size:1rem;font-weight:400;color:var(--text3)">/always</span></div>
+<div class="plan-price-note" data-i18n="section.fatturato_mensilmente_cancella_qua">Tutto incluso, senza limiti</div>
+<ul class="plan-features">
+<li data-i18n="license_guide.tutte.le.funzioni.pro">Tutte le funzioni incluse</li>
+<li>Nessun account nei primi 30 giorni, poi account gratuito</li>
+<li>Nessuna carta di credito richiesta</li>
+</ul>
+</div>
+<!-- Annual -->
+<div class="plan-card plan-card--popular">
+<span class="plan-badge" data-i18n="license_guide.11088.più.consigliato">Sostenitore</span>
+<div class="plan-icon">💛</div>
+<div class="plan-name" data-i18n="section.pro_annuale">Sostegno opzionale</div>
+<div class="plan-price-range" data-i18n="section.19992499">Gratis<span style="font-size:1rem;font-weight:400;color:var(--text3)">/always</span></div>
+<div class="plan-price-note" data-i18n="section.prezzo_founder_1999_per_i_primi_1">Sostieni il progetto. Non sblocca nulla.</div>
+<ul class="plan-features">
+<li>Tutte le funzioni restano gratuite per tutti</li>
+<li>Il sostegno e' completamente volontario</li>
+<li>Puoi interrompere quando vuoi</li>
+</ul>
+</div>
+</div>
+</section>
+<div class="divider"></div>
+<!-- ============================================================
+         HOW IT WORKS
+    ============================================================ -->
+<section class="section">
+<div class="section__label" data-i18n="section.attivazione">Attivazione</div>
+<h2 class="section__title" data-i18n="license_guide.come.iniziare">Come iniziare</h2>
+<p class="section__sub" data-i18n="license_guide.dallacquisto.alla.protezione.attiva.in.m">Dall'installazione alla protezione attiva in meno di due minuti.</p>
+<div class="steps">
+<div class="step">
+<div class="step__num">1</div>
+<div class="step__content">
+<div class="step__title" data-i18n="section.scegli_il_tuo_piano_e_livello_dispo">Installa AdOff</div>
+<div class="step__desc" data-i18n="section.scegli_mensile_o_annuale_poi_selez">Scarica AdOff dal Chrome Web Store. E' gratis per tutti, ogni funzione attiva.</div>
+</div>
+</div>
+<div class="step">
+<div class="step__num">2</div>
+<div class="step__content">
+<div class="step__title" data-i18n="section.completa_il_pagamento_via_stripe_s">Il blocco parte subito</div>
+<div class="step__desc" data-i18n="section.i_pagamenti_sono_elaborati_da_strip">AdOff is free and open source. No payments, no credit cards, no data collected.</div>
+</div>
+</div>
+<div class="step">
+<div class="step__num">3</div>
+<div class="step__content">
+<div class="step__title" data-i18n="section.ricevi_la_tua_chiave_di_licenza_via">Sfida un sito anti-adblock</div>
+<div class="step__desc" data-i18n="section.dopo_il_pagamento_la_tua_chiave_di">Lo Stealth Mode e' attivo di default: i siti con sistemi anti-adblock non ti bloccano l'accesso.</div>
+</div>
+</div>
+<div class="step">
+<div class="step__num">4</div>
+<div class="step__content">
+<div class="step__title" data-i18n="section.inserisci_la_chiave_nelle_impostazi">Personalizza se vuoi</div>
+<div class="step__desc" data-i18n="section.apri_lestensione_adoff_clicca_l">Apri l'estensione AdOff → clicca l'icona → <strong>Opzioni</strong>: whitelist, pausa per sito, statistiche. Tutto opzionale, funziona anche senza toccare nulla.</div>
+</div>
+</div>
+<div class="step">
+<div class="step__num">5</div>
+<div class="step__content">
+<div class="step__title" data-i18n="section.fatto_pro_attivo_su_questo_disposi">Fatto. Protezione attiva</div>
+<div class="step__desc" data-i18n="section.lanti_rilevamento_invisibile_e_la">L'anti-rilevamento invisibile e la neutralizzazione annunci video sono attivi. Installalo su quanti dispositivi vuoi: e' gratis.</div>
+</div>
+</div>
+</div>
+</section>
+<div class="divider"></div>
+<!-- ============================================================
+         DEVICE MANAGEMENT
+    ============================================================ -->
+<section class="section">
+<div class="section__label" data-i18n="section.gestione_dispositivi">Gestione Dispositivi</div>
+<h2 class="section__title" data-i18n="license_guide.gestisci.i.dispositivi.come.un.servizio.">Usa AdOff su tutti i tuoi dispositivi</h2>
+<p class="section__sub" data-i18n="section.il_tuo_piano_limita_quanti_disposit">AdOff e' gratis su tutti i tuoi dispositivi, senza limiti di installazioni.</p>
+<div class="callout">
+<div class="callout__title">🔐 Nessun limite di dispositivi</div>
+<ul class="callout__list">
+<li>Installa AdOff su quanti browser vuoi, nessun limite</li>
+<li>Ogni installazione e' indipendente e gratuita</li>
+<li>Funziona su Chrome, Edge, Brave, Opera, Firefox e Safari</li>
+<li>Le impostazioni si gestiscono localmente in ogni browser</li>
+<li>Nessun account necessario nei primi 30 giorni, poi account gratuito</li>
+</ul>
+</div>
+<div class="callout" style="border-left-color: var(--yellow);">
+<div class="callout" style="border-left-color: var(--green);">
+<div class="callout__title">✅ Zero limiti, per davvero</div>
+<ul class="callout__list">
+<li>Nessuna notifica, nessun limite da raggiungere</li>
+<li>AdOff e' gratuito per l'uso personale su tutti i tuoi dispositivi</li>
+<li>Se hai dubbi, scrivici: <a href="https://adoff.app/support.html">supporto</a></li>
+</ul>
+</div>
+</div>
+</section>
+<div class="divider"></div>
+<!-- ============================================================
+         FAQ
+    ============================================================ -->
+<section class="section">
+<div class="section__label">FAQ</div>
+<h2 class="section__title" data-i18n="license_guide.domande.frequenti">Domande frequenti</h2>
+<p class="section__sub" data-i18n="license_guide.risposte.rapide.alle.domande.di.licenza.">Risposte rapide alle domande più comuni.</p>
+<div class="faq">
+<div class="faq-item">
+<button class="faq-q" onclick="toggleFaq(this)">
+            Posso usare AdOff su più dispositivi?
+            <span class="faq-q__arrow">▼</span>
+</button>
+<div class="faq-a">
+            Sì. AdOff è gratis per l'uso personale su tutti i tuoi dispositivi, senza limiti. Installalo dove vuoi.
+          </div>
+</div>
+<div class="faq-item">
+<button class="faq-q" onclick="toggleFaq(this)">
+            Posso usare AdOff su browser diversi sullo stesso computer?
+            <span class="faq-q__arrow">▼</span>
+</button>
+<div class="faq-a">
+            Sì. Chrome, Firefox, Edge, Brave e gli altri sono tutti supportati, anche contemporaneamente. Ogni installazione è indipendente e gratuita.
+          </div>
+</div>
+<div class="faq-item">
+<button class="faq-q" onclick="toggleFaq(this)">
+            Cosa succede se reinstallo il browser o resetto il computer?
+            <span class="faq-q__arrow" data-i18n="license_guide.9660">▼</span>
+</button>
+<div class="faq-a">
+            Le tue impostazioni (whitelist, statistiche, preferenze) sono memorizzate nel profilo del browser. Se reinstalli il browser, le impostazioni locali vengono azzerate: puoi esportarle prima da Opzioni &gt; Avanzate &gt; Esporta e reimportarle dopo.
+          </div>
+</div>
+<div class="faq-item">
+<button class="faq-q" onclick="toggleFaq(this)">
+            Posso usare AdOff su tutti i miei dispositivi?
+            <span class="faq-q__arrow" data-i18n="license_guide.9660">▼</span>
+</button>
+<div class="faq-a">
+            Sì. AdOff è gratis per l'uso personale su tutti i dispositivi, senza limiti.
+          </div>
+</div>
+<div class="faq-item">
+<button class="faq-q" onclick="toggleFaq(this)">
+            Cosa include AdOff?
+            <span class="faq-q__arrow">▼</span>
+</button>
+<div class="faq-a">
+            AdOff is free, with everything included. <strong>Anti-detection stealth mode</strong> (invisible to anti-adblock systems), <strong>video ad blocking</strong> on streaming platforms (zero pre-roll and mid-roll), and detailed statistics are all included.
+</div>
+<div class="faq-item">
+<button class="faq-q" onclick="toggleFaq(this)">
+            Is there a free trial?
+            <span class="faq-q__arrow" data-i18n="license_guide.9660">▼</span>
+</button>
+<div class="faq-a">
+            No. AdOff is 100% free from day one. No trial period, no paywall. Everything is included, forever. No credit card required.
+          </div>
+</div>
+<div class="faq-item">
+<button class="faq-q" onclick="toggleFaq(this)">
+            AdOff resta gratis per sempre?
+            <span class="faq-q__arrow">▼</span>
+</button>
+<div class="faq-a">
+            Sì. Tutte le funzioni sono gratuite: blocco rete, filtro cosmetico, video ads, Stealth Mode. Se vuoi sostenere il progetto, puoi farlo volontariamente — ma non sblocca nulla, perché tutto è già incluso.
+          </div>
+</div>
+<div class="faq-item">
+<button class="faq-q" onclick="toggleFaq(this)">
+            I miei dati sono al sicuro?
+            <span class="faq-q__arrow">▼</span>
+</button>
+<div class="faq-a">
+            AdOff non raccoglie dati personali, non traccia i siti che visiti e non invia telemetria. Tutto resta sul tuo dispositivo. Il codice è open source e verificabile.
+          </div>
+</div>
+</div>
+</section>
+<div class="divider"></div>
+<!-- ============================================================
+         CTA
+    ============================================================ -->
+<section class="cta-section">
+<h2 class="cta-section__title" data-i18n="license_guide.pronto.a.stare.senza.annunci">Pronto a stare senza annunci?</h2>
+<p class="cta-section__sub" data-i18n="license_guide.inizia.con.la.prova.gratuita.di.15.giorn">Gratis, senza limiti. Nessuna carta di credito richiesta.</p>
+<a class="btn-primary" href="/install.html">Installa gratis</a>
+<p class="cta-free-note" data-i18n="license_guide.15.giorni.gratis.garanzia.rimborso.30.gi">Gratis, tutto incluso. Nessuna carta.</p>
+</section>
+</div><!-- /page-wrapper -->
+<!-- Shared footer injected by adoff-footer.js?v=21299afa -->
+<script src="/adoff-footer.js?v=21299afa"></script>
+<script>
+    // ============================================================
+    // FAQ ACCORDION
+    // ============================================================
+    function toggleFaq(btn) {
+      var item = btn.closest('.faq-item');
+      var isOpen = item.classList.contains('open');
+      // close all
+      document.querySelectorAll('.faq-item.open').forEach(function(el) {
+        el.classList.remove('open');
+      });
+      // open this one if it was closed
+      if (!isOpen) {
+        item.classList.add('open');
+      }
+    }
+  </script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

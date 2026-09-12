@@ -1,0 +1,134 @@
+const { chromium } = require('playwright');
+const path = require('path');
+const fs = require('fs');
+
+// Percorso estensione
+const EXTENSION_PATH = path.resolve(__dirname, '../../app');
+
+// Verifica esistenza estensione
+const manifestPath = path.join(EXTENSION_PATH, 'manifest.json');
+if (!fs.existsSync(manifestPath)) {
+  console.error(`manifest.json non trovato in ${EXTENSION_PATH}`);
+  process.exit(1);
+}
+
+let context = null;
+
+async function run() {
+  try {
+    context = await chromium.launchPersistentContext('', {
+      headless: false,
+      args: [
+        `--disable-extensions-except=${EXTENSION_PATH}`,
+        `--load-extension=${EXTENSION_PATH}`
+      ],
+      ignoreDefaultArgs: ['--disable-extensions']
+    });
+
+    // Attesa iniziale per registrazione service worker
+    await new Promise(r => setTimeout(r, 3000));
+
+    let sw = context.serviceWorkers()[0];
+
+    if (!sw) {
+      console.log('Service worker non ancora attivo, in attesa...');
+      sw = await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Timeout service worker')), 15000);
+        context.on('serviceworker', worker => {
+          clearTimeout(timeout);
+          resolve(worker);
+        });
+      });
+    }
+
+    console.log('Service worker rilevato\n');
+
+    // Esecuzione nel contesto del service worker
+    const report = await sw.evaluate(async () => {
+      const result = {};
+
+      // Ruleset abilitati
+      result.enabledRulesets = await chrome.declarativeNetRequest.getEnabledRulesets();
+
+      // Caricamento regole con regexFilter
+      const rulesUrl = chrome.runtime.getURL('rules/adblock-rules.json');
+      let rules = [];
+      try {
+        const resp = await fetch(rulesUrl);
+        if (resp.ok) {
+          const data = await resp.json();
+          rules = Array.isArray(data) ? data : (data.rules || []);
+        }
+      } catch (_) {}
+
+      result.regexRules = [];
+      for (const rule of rules) {
+        if (rule.condition?.regexFilter) {
+          const check = await chrome.declarativeNetRequest.isRegexSupported({
+            regex: rule.condition.regexFilter,
+            isCaseSensitive: false,
+            requireCapturing: false
+          });
+          result.regexRules.push({
+            id: rule.id,
+            regex: rule.condition.regexFilter,
+            isSupported: check.isSupported,
+            reason: check.reason || null
+          });
+        }
+      }
+
+      result.availableStaticRuleCount = await chrome.declarativeNetRequest.getAvailableStaticRuleCount();
+
+      return result;
+    });
+
+    // Stampa report
+    console.log('=== REGOLE ABILITATE ===');
+    if (report.enabledRulesets.length === 0) {
+      console.log('NESSUN RULESET ABILITATO');
+    } else {
+      report.enabledRulesets.forEach(rs => console.log(`  - ${rs}`));
+    }
+
+    console.log('\n=== VERIFICA REGEX FILTER ===');
+    if (report.regexRules.length === 0) {
+      console.log('Nessuna regola con regexFilter trovata');
+    } else {
+      for (const r of report.regexRules) {
+        if (r.isSupported) {
+          console.log(`  [OK] id=${r.id} regex="${r.regex}"`);
+        } else {
+          console.log(`  [NON SUPPORTATA] id=${r.id} regex="${r.regex}" reason=${r.reason}`);
+        }
+      }
+    }
+
+    console.log(`\n=== REGOLE STATIC DISPONIBILI ===`);
+    console.log(`  ${report.availableStaticRuleCount}`);
+
+    const rifiutate = report.regexRules.filter(r => !r.isSupported);
+    console.log('\n=== RISULTATO ===');
+    if (report.enabledRulesets.length === 0) {
+      console.log('FALLITO: nessun ruleset abilitato');
+      process.exit(1);
+    } else if (rifiutate.length > 0) {
+      console.log(`${rifiutate.length} REGEX RIFIUTATE`);
+      rifiutate.forEach(r => console.log(`  - ${r.regex} (id=${r.id}): ${r.reason}`));
+      process.exit(1);
+    } else {
+      console.log('TUTTE SUPPORTATE');
+      process.exit(0);
+    }
+
+  } catch (err) {
+    console.error('Errore durante il test:', err.message);
+    process.exit(1);
+  } finally {
+    if (context) {
+      await context.close();
+    }
+  }
+}
+
+run();

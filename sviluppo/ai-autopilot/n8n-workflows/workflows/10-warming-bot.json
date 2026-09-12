@@ -1,0 +1,99 @@
+{
+  "name": "AdOff 10 - Account Warming Bot (Reddit organic)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {"interval": [{"field": "hours", "hoursInterval": 8}]}
+      },
+      "id": "trig",
+      "name": "3x daily",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM adoff_autopilot.accounts WHERE platform='reddit' AND status='warming' AND (action_count_24h < 3) AND (cooldown_until IS NULL OR cooldown_until <= NOW()) LIMIT 1;",
+        "options": {}
+      },
+      "id": "pick-account",
+      "name": "Pick warming account",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [460, 400],
+      "credentials": {"postgres": {"id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres"}}
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pick 1 of 8 neutral subreddits (NOT ad-blocker related — warming = unrelated activity)\nconst neutral = ['programming','webdev','privacy','chrome','firefox','technology','SideProject','InternetIsBeautiful'];\nconst sub = neutral[Math.floor(Math.random()*neutral.length)];\nreturn [{ json: { sub, account: $('Pick warming account').item.json }}];"
+      },
+      "id": "choose-sub",
+      "name": "Choose neutral sub",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.reddit.com/r/{{ $json.sub }}/hot.json?limit=15",
+        "options": {"timeout": 15000, "response": {"response": {"neverError": true}}},
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "User-Agent", "value": "AdOffWarmingBot/1.0"}]}
+      },
+      "id": "fetch-hot",
+      "name": "Fetch hot posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pick 1 post where commenting adds value\nconst items = $input.first().json.data?.children || [];\nconst eligible = items.filter(c => {\n  const d = c.data;\n  if (!d || d.locked || d.over_18 || d.num_comments > 100) return false;\n  const age = (Date.now()/1000 - d.created_utc)/3600;\n  return age >= 2 && age <= 24;\n});\nif (!eligible.length) return [];\nconst pick = eligible[Math.floor(Math.random() * eligible.length)].data;\nreturn [{ json: {\n  thread_id: pick.id,\n  url: 'https://reddit.com' + pick.permalink,\n  title: pick.title,\n  body: (pick.selftext || '').slice(0, 2000),\n  sub: pick.subreddit\n}}];"
+      },
+      "id": "pick-thread",
+      "name": "Pick thread",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\":\"chat-max\",\"stream\":false,\"options\":{\"temperature\":0.7,\"num_predict\":300},\"prompt\":\"Write a Reddit comment as a regular dev hanging out on r/{{ $json.sub }}. Add genuine value to the thread. CRITICAL: do NOT mention AdOff, ad blockers, or any product. This is account warming — pure organic contribution. 30-150 words. Casual tone.\\n\\nTHREAD TITLE: {{ $json.title }}\\nTHREAD BODY: {{ $json.body }}\\n\\nComment:\"}",
+        "options": {"timeout": 60000, "response": {"response": {"neverError": true}}}
+      },
+      "id": "comment",
+      "name": "Generate comment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.posts_queue (workflow, platform, account_id, target_url, lang, body, quality_score, status, scheduled_at) VALUES ('warming', 'reddit', $1::bigint, $2, 'en', $3, 7.0, 'queued', NOW() + (random() * interval '2 hours')) RETURNING id;",
+        "options": {"queryReplacement": "={{ $('Choose neutral sub').item.json.account.id }},{{ $('Pick thread').item.json.url }},{{ $json.response }}"}
+      },
+      "id": "queue",
+      "name": "Queue warming comment",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1560, 400],
+      "credentials": {"postgres": {"id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres"}}
+    }
+  ],
+  "connections": {
+    "3x daily": {"main": [[{"node": "Pick warming account", "type": "main", "index": 0}]]},
+    "Pick warming account": {"main": [[{"node": "Choose neutral sub", "type": "main", "index": 0}]]},
+    "Choose neutral sub": {"main": [[{"node": "Fetch hot posts", "type": "main", "index": 0}]]},
+    "Fetch hot posts": {"main": [[{"node": "Pick thread", "type": "main", "index": 0}]]},
+    "Pick thread": {"main": [[{"node": "Generate comment", "type": "main", "index": 0}]]},
+    "Generate comment": {"main": [[{"node": "Queue warming comment", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "saveExecutionProgress": true},
+  "tags": [{"name": "adoff"}, {"name": "warming"}],
+  "active": false
+}

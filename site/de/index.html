@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AdOff: Kostenloser Ad Blocker, unsichtbar für Anti-Adblock</title>
+<meta content="AdOff blockiert Werbung, Pop-ups und Tracker auf jeder Website. 100 % kostenlos, alle Funktionen ab dem ersten Tag. In einer Minute installiert." name="description"/>
+<meta content="index, follow, max-image-preview:large, max-snippet:-1" name="robots"/>
+<link href="https://adoff.app/de/" rel="canonical"/>
+<link href="https://adoff.app/" hreflang="it" rel="alternate"/>
+<link href="https://adoff.app/en/" hreflang="en" rel="alternate"/>
+<link href="https://adoff.app/de/" hreflang="de" rel="alternate"/>
+<link href="https://adoff.app/fr/" hreflang="fr" rel="alternate"/>
+<link href="https://adoff.app/es/" hreflang="es" rel="alternate"/>
+<link href="https://adoff.app/pt/" hreflang="pt" rel="alternate"/>
+<link href="https://adoff.app/ru/" hreflang="ru" rel="alternate"/>
+<link href="https://adoff.app/ar/" hreflang="ar" rel="alternate"/>
+<link href="https://adoff.app/zh/" hreflang="zh" rel="alternate"/>
+<link href="https://adoff.app/hi/" hreflang="hi" rel="alternate"/>
+<link href="https://adoff.app/ja/" hreflang="ja" rel="alternate"/>
+<link href="https://adoff.app/ko/" hreflang="ko" rel="alternate"/>
+<link href="https://adoff.app/tr/" hreflang="tr" rel="alternate"/>
+<link href="https://adoff.app/id/" hreflang="id" rel="alternate"/>
+<link href="https://adoff.app/pl/" hreflang="pl" rel="alternate"/>
+<link href="https://adoff.app/en/" hreflang="x-default" rel="alternate"/>
+<!-- hreflang — 15 lingue -->
+<meta content="website" property="og:type"/>
+<meta content="AdOff, bester unsichtbarer Ad Blocker 2026 | Werbung kostenlos blockieren" property="og:title"/>
+<meta content="AdOff blockiert alle Werbung auf Chrome, Edge, Brave und Firefox. Stealth-Modus Anti-Erkennung, Video-Anzeigen-Neutralisierung. 100 % kostenlos." property="og:description"/>
+<meta content="https://adoff.app/assets/og-image.png" property="og:image"/>
+<meta content="https://adoff.app/de/" property="og:url"/>
+<meta content="AdOff" property="og:site_name"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="AdOff, bester unsichtbarer Ad Blocker 2026 | Werbung kostenlos blockieren" name="twitter:title"/>
+<meta content="AdOff blockiert alle Werbung auf Chrome, Edge, Brave und Firefox. Stealth-Modus Anti-Erkennung, Video-Anzeigen-Neutralisierung. 100 % kostenlos." name="twitter:description"/>
+<meta content="https://adoff.app/assets/og-image.png" name="twitter:image"/>
+<link href="/assets/logo.svg" rel="icon" type="image/svg+xml"/>
+<link href="/manifest.webmanifest" rel="manifest"/>
+<meta content="#f7f7fb" name="theme-color"/>
+<!-- Anti-FOUC: applica il tema salvato PRIMA del render -->
+<script>
+    (function(){
+      try {
+        var t = localStorage.getItem('adoff_theme');
+        if (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) t = 'dark';
+        if (t === 'dark') document.documentElement.setAttribute('data-theme','dark');
+      } catch(e){}
+    })();
+  </script>
+<link href="/style.css?v=be9cdea8" rel="stylesheet"/>
+<script src="/affiliate-tracking.js?v=61581869"></script>
+<script src="/adoff-i18n.js?v=623d521a"></script>
+<!-- Organization JSON-LD -->
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "AdOff",
+    "alternateName": ["AdOff Ad Blocker", "AdOff Adblocker", "Ad Off", "Ads Off", "Add Off", "AdsOff"],
+    "url": "https://adoff.app",
+    "logo": "https://adoff.app/assets/icon128.png",
+    "description": "AdOff è un'estensione browser Manifest V3 che blocca la pubblicità su ogni sito restando invisibile al rilevamento anti-adblock. Disponibile su Chrome, Edge, Brave, Opera, Firefox e Safari.",
+    "disambiguatingDescription": "AdOff è un'estensione browser ad-blocker. Non ha alcuna relazione con l'autore Arnold Adoff, con hotel o altre entità che condividono il nome \"Adoff\".",
+    "sameAs": ["/r/repo"]
+  }
+  </script>
+<!-- WebSite JSON-LD -->
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "AdOff",
+    "alternateName": ["Ad Off", "Add Off", "AdOff Ad Blocker", "AdOff Adblocker", "Ads Off", "AdsOff"],
+    "url": "https://adoff.app",
+    "inLanguage": ["it","en","de","fr","es","pt","ru","ar","zh","hi","ja","ko","tr","id","pl"],
+    "description": "AdOff è l'ad blocker gratuito che blocca pubblicità e tracker su ogni sito, invisibile ai sistemi anti-adblock.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "AdOff",
+      "url": "https://adoff.app"
+    }
+  }
+  </script>
+<!-- SoftwareApplication JSON-LD -->
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AdOff",
+    "alternateName": "AdOff Ad Blocker",
+    "applicationCategory": "BrowserExtension",
+    "operatingSystem": "Chrome, Edge, Brave, Opera, Firefox, Safari",
+    "description": "Ad blocker stealth invisibile ai rilevamenti anti-adblock. Blocca banner, popup, tracker e ads video. Zero configurazione. Tutto gratis.",
+    "url": "https://adoff.app",
+    "downloadUrl": "https://adoff.app/install",
+    "softwareVersion": "3.6.10",
+    "softwareHelp": "https://adoff.app/guide",
+    "isAccessibleForFree": true,
+    "inLanguage": ["it","en","de","fr","es","pt","ru","ar","zh","hi","ja","ko","tr","id","pl"],
+    "featureList": [
+      "180 regole di blocco a livello di rete (declarativeNetRequest)",
+      "Filtro cosmetico CSS per banner, slot pubblicitari e cookie wall",
+      "Stub IMA SDK universale per neutralizzare gli ads video",
+      "Stealth Mode anti-rilevamento: i siti che rilevano uBlock Origin o AdBlock Plus non rilevano AdOff",
+      "Whitelist per sito con 4 modalità di pausa",
+      "Contatore che conta solo gli ads reali bloccati",
+      "Zero raccolta dati, nessuna telemetria"
+    ],
+    "publisher": {
+      "@type": "Organization",
+      "name": "AdOff",
+      "url": "https://adoff.app"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR",
+      "description": "Gratis: tutte le funzioni incluse, senza account e senza scadenze."
+    }
+  }
+  </script>
+<!-- FAQ JSON-LD -->
+<script type="application/ld+json">{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+        {
+            "@type": "Question",
+            "name": "Wie funktioniert AdOff?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "AdOff blockiert Anfragen an Werbeserver und blendet Werbe-Elemente auf der Seite aus. Einfach installieren und sofort aktiv, ohne Einrichtung."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Muss ich etwas konfigurieren?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Nein. Installiere AdOff und der Schutz ist sofort aktiv. Kein Konto, keine Einstellungen nötig."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Funktioniert es auch bei Videos?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Ja. AdOff neutralisiert Videoanzeigen auf großen Streaming-Plattformen mit dem IMA-Standard."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Und die Meldungen „AdBlock deaktivieren“?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Stealth-Technologie macht AdOff unsichtbar für Anti-Adblock-Systeme, sodass du weiter surfst ohne diese Wände zu sehen."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Sammelt ihr meine Daten?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Nein. AdOff ist Open Source, sammelt und verkauft keine persönlichen Daten und trackt dein Surfverhalten nicht."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Was kostet es?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Nichts. AdOff ist kostenlos: jede Funktion ist aktiv, kein Konto und kein Ablauf. Wenn du möchtest, kannst du das Projekt unterstützen, aber es schaltet nichts frei."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Auf welchen Browsern funktioniert es?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Chrome, Firefox, Edge, Opera und Brave. Safari folgt."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "Kann ich jederzeit kündigen?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Ja. Wenn du das Projekt unterstützt, kannst du jederzeit aufhören, mit einem Klick, ohne eine Funktion zu verlieren."
+            }
+        }
+    ]
+}</script>
+</head>
+<body>
+<div id="top">
+<!-- NAV (auto-iniettata) -->
+<nav id="site-nav"></nav>
+<!-- ======= 1. HERO ======= -->
+<header class="hero-v3">
+<div class="container--wide">
+<div class="hero-v3__grid">
+<div class="reveal">
+<span class="hero-v3__eyebrow" data-i18n="home.hero.eyebrow">Werbung? Aus!</span>
+<h1 class="hero-v3__title" data-i18n-html="home.hero.title">Blockiere die Werbung, <em>kostenlos</em>.</h1>
+<p class="hero-v3__sub" data-i18n="home.hero.sub">Videos ohne Unterbrechungen. Nichts einzurichten, nichts zu bezahlen: AdOff installieren und sauber surfen, auf jeder Seite.</p>
+<div class="hero-v3__cta">
+<a class="btn btn--primary btn--lg" data-i18n="home.hero.cta1" href="install.html">Kostenlos zum Browser hinzufügen</a>
+<a class="btn btn--outline btn--lg" data-i18n="home.hero.cta2" href="#prima-dopo">Sieh den Unterschied</a>
+</div>
+<ul class="trust-strip">
+<li data-i18n="home.trust.free">Kostenlos, ohne Limits</li>
+<li data-i18n="home.trust.trial">Alles inklusive</li>
+<li data-i18n="home.trust.nocard">Keine Kreditkarte nötig</li>
+</ul>
+</div>
+<div class="hero-v3__visual reveal reveal-delay-1">
+<img alt="Il pannello di AdOff mostra gli annunci bloccati in tempo reale" fetchpriority="high" height="512" loading="eager" src="/assets/mockup.webp" width="512"/>
+</div>
+</div>
+</div>
+</header>
+<!-- ======= 2. BEFORE / AFTER (asset reale) ======= -->
+<section class="sec sec--alt" id="prima-dopo">
+<div class="container--wide">
+<div class="sec__head reveal">
+<span class="sec__label" data-i18n="home.ba.label">Vorher und nachher</span>
+<h2 class="sec__title" data-i18n="home.ba.title">Gleiche Seite. Zwei Welten.</h2>
+<p class="sec__sub" data-i18n="home.ba.sub">Links das Web von heute: Banner, Pop-ups, Video-Werbung, Tracker. Rechts dieselbe Seite mit AdOff: sauber und leicht.</p>
+</div>
+<div class="ba-v3 reveal reveal-delay-1">
+<figure class="ba-v3__figure">
+<img alt="Confronto: senza AdOff 8 annunci e 15 tracker, con AdOff 0 annunci e 0 tracker" height="800" loading="lazy" src="/assets/before-after.png" width="1280"/>
+</figure>
+<p class="ba-v3__caption" data-i18n-html="home.ba.caption">8 Ads · 15 Tracker · 3,2 s Ladezeit werden zu 0 Ads · 0 Tracker · 0,8 s.</p>
+</div>
+</div>
+</section>
+<!-- ======= 3. ANTI-ADBLOCK WALL KILLER ======= -->
+<section class="sec">
+<div class="container">
+<div class="wall reveal">
+<span class="wall__badge" data-i18n-html="home.wall.badge">Deinen AdBlock deaktivieren, um fortzufahren</span>
+<h2 class="wall__title" data-i18n-html="home.wall.title">Schluss mit Meldungen wie „AdBlock deaktivieren“.</h2>
+<p class="wall__text" data-i18n="home.wall.text">Stealth-Technologie macht AdOff unsichtbar für Anti-Adblock-Systeme. Diese Wände, die deine Seite blockieren? Sie erscheinen einfach nicht mehr.</p>
+<div style="margin-top: 26px;">
+<a class="btn btn--primary" data-i18n="home.wall.cta" href="install.html">Kostenlos zum Browser hinzufügen</a>
+</div>
+</div>
+</div>
+</section>
+<!-- ======= 4. BENEFIT CARDS ======= -->
+<section class="sec sec--alt">
+<div class="container--wide">
+<div class="sec__head reveal">
+<span class="sec__label" data-i18n="home.why.label">Warum AdOff</span>
+<h2 class="sec__title" data-i18n="home.why.title">Alles, was du brauchst. Nichts, was du nicht brauchst.</h2>
+</div>
+<div class="bgrid">
+<div class="bcard reveal"><div class="bcard__ico">⚡</div><div class="bcard__t" data-i18n="home.b1.t">Schneller</div><div class="bcard__d" data-i18n="home.b1.d">Seiten laden schneller: ohne das Gewicht von Werbung und Trackern sparst du Zeit und Datenvolumen.</div></div>
+<div class="bcard reveal reveal-delay-1"><div class="bcard__ico">🔒</div><div class="bcard__t" data-i18n="home.b2.t">Echte Privatsphäre</div><div class="bcard__d" data-i18n="home.b2.d">Keine Tracker, die dir online folgen. Null Daten gesammelt, null Daten verkauft.</div></div>
+<div class="bcard reveal reveal-delay-2"><div class="bcard__ico">🎯</div><div class="bcard__t" data-i18n="home.b3.t">Keine Ablenkungen</div><div class="bcard__d" data-i18n="home.b3.d">Lies, schau und surfe ohne Pop-ups, Banner oder Unterbrechungen.</div></div>
+<div class="bcard reveal"><div class="bcard__ico">🎬</div><div class="bcard__t" data-i18n="home.b4.t">Saubere Videos</div><div class="bcard__d" data-i18n="home.b4.d">Werbung vor und während Videos auf Streaming-Plattformen verschwindet.</div></div>
+<div class="bcard reveal reveal-delay-1"><div class="bcard__ico">🕶️</div><div class="bcard__t" data-i18n="home.b5.t">Anti-Erkennung</div><div class="bcard__d" data-i18n="home.b5.d">Funktioniert auch dort, wo andere Adblocker erkannt und blockiert werden.</div></div>
+<div class="bcard reveal reveal-delay-2"><div class="bcard__ico">🧩</div><div class="bcard__t" data-i18n="home.b6.t">Null Einrichtung</div><div class="bcard__d" data-i18n="home.b6.d">Installieren und loslegen. Kein Konto, keine Einstellungen, kein Handbuch.</div></div>
+</div>
+</div>
+</section>
+<!-- ======= 5. PLATFORM STRIP ======= -->
+<section class="sec" style="padding-top: clamp(40px,5vw,64px); padding-bottom: clamp(40px,5vw,64px);">
+<div class="container">
+<p class="text-center text-muted" data-i18n-html="home.platforms" style="font-size: 0.95rem;">Funktioniert auf Chrome · Firefox · Edge · Opera · Brave — Safari folgt</p>
+</div>
+</section>
+<!-- ======= 6. OPEN SOURCE TRUST ======= -->
+<section class="sec sec--alt">
+<div class="container">
+<div class="sec__head reveal">
+<span class="sec__label" data-i18n="home.os.label">Transparenz</span>
+<h2 class="sec__title" data-i18n="home.os.title">Offener Code. Von jedem überprüfbar.</h2>
+<p class="sec__sub" data-i18n-html="home.os.sub">Keine Blackbox. Jede Zeile von AdOff ist öffentlich auf GitHub: du kannst genau prüfen, was sie tut — und was sie mit deinen Daten nicht tut.</p>
+</div>
+<div class="text-center reveal reveal-delay-1">
+<a class="btn btn--outline btn--lg" href="/r/repo" rel="noopener" target="_blank">
+<svg aria-hidden="true" fill="currentColor" height="18" viewbox="0 0 24 24" width="18"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.5.53-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.5.53.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.5.53.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"></path></svg>
+<span data-i18n="home.os.cta">Code auf GitHub ansehen</span>
+</a>
+</div>
+</div>
+</section>
+<!-- ======= 7. PRICING TEASER ======= -->
+<section class="sec">
+<div class="container--wide">
+<div class="sec__head reveal">
+<span class="sec__label" data-i18n="home.pricing.label">Alles inklusive</span>
+<h2 class="sec__title" data-i18n="home.pricing.title">Alles inklusive, kostenlos.</h2>
+</div>
+<div class="ptease reveal reveal-delay-1">
+<div class="pcard">
+<div class="pcard__name" data-i18n="home.p.free.name">Alles inklusive</div>
+<div class="pcard__price">0€</div>
+<div class="pcard__note" data-i18n="home.p.free.note">Kostenlos, kein Konto, keine Limits.</div>
+<ul class="pcard__feats">
+<li data-i18n="home.p.free.f1">Blockiert Werbung und Tracker auf jeder Seite</li>
+<li data-i18n="home.p.free.f2">180 Netzwerkregeln, 15 Sprachen</li>
+<li data-i18n="home.p.free.f3">Open Source, null Tracking</li>
+<li data-i18n="home.p.free.f4">Stealth Anti-Adblock — goodbye Wände</li>
+<li data-i18n="home.p.free.f5">Videoanzeigen neutralisiert</li>
+</ul>
+<a class="btn btn--primary" data-i18n="home.p.free.cta" href="install.html">Kostenlos installieren</a>
+</div>
+</div>
+<p class="text-center reveal" data-i18n="home.p.support" style="margin-top: 20px; color: var(--text-muted, #6b7280); font-size: 0.95rem;">Wenn es dir gefällt, kannst du das Projekt unterstützen. Es schaltet nichts frei: du hast bereits alles.</p>
+</div>
+</section>
+<!-- ======= 8. GUARANTEE ======= -->
+<section class="sec sec--alt">
+<div class="container">
+<div class="sec__head reveal">
+<span class="sec__label" data-i18n="home.guar.label">Null Risiko</span>
+<h2 class="sec__title" data-i18n="home.guar.title">Probiere ohne jedes Risiko.</h2>
+</div>
+<div class="bgrid reveal reveal-delay-1" style="max-width: 640px; margin: 0 auto;">
+<div class="bcard"><div class="bcard__ico" style="color:var(--success);background:var(--tint-green);">✓</div><div class="bcard__t" data-i18n="home.guar.g1.t">Kostenlos, ohne Limits</div><div class="bcard__d" data-i18n="home.guar.g1.d">Jede Funktion ist ab dem ersten Tag aktiv, keine Karte und kein Ablauf.</div></div>
+</div>
+</div>
+</section>
+<!-- ======= 9. FAQ ======= -->
+<section class="sec">
+<div class="container">
+<div class="sec__head reveal">
+<span class="sec__label" data-i18n="home.faq.label">Häufige Fragen</span>
+<h2 class="sec__title" data-i18n="home.faq.title">Du hast Fragen? Wir antworten.</h2>
+</div>
+<div class="faq-section reveal reveal-delay-1" style="max-width: 680px; margin: 0 auto;">
+<div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q1">Wie funktioniert AdOff?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a1">AdOff blockiert Anfragen an Werbeserver und blendet Werbe-Elemente auf der Seite aus. Einfach installieren und sofort aktiv, ohne Einrichtung.</span></div></div>
+<div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q2">Muss ich etwas konfigurieren?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a2">Nein. Installiere AdOff und der Schutz ist sofort aktiv. Kein Konto, keine Einstellungen nötig.</span></div></div>
+<div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q3">Funktioniert es auch bei Videos?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a3">Ja. AdOff neutralisiert Videoanzeigen auf großen Streaming-Plattformen mit dem IMA-Standard.</span></div></div>
+<div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q4">Und die Meldungen „AdBlock deaktivieren“?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a4">Stealth-Technologie macht AdOff unsichtbar für Anti-Adblock-Systeme, sodass du weiter surfst ohne diese Wände zu sehen.</span></div></div>
+<div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q5">Sammelt ihr meine Daten?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a5">Nein. AdOff ist Open Source, sammelt und verkauft keine persönlichen Daten und trackt dein Surfverhalten nicht.</span></div></div>
+<div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q6">Was kostet es?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a6">Nichts. AdOff ist kostenlos: jede Funktion ist aktiv, kein Konto und kein Ablauf. Wenn du möchtest, kannst du das Projekt unterstützen, aber es schaltet nichts frei.</span></div></div>
+<div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q7">Auf welchen Browsern funktioniert es?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a7">Chrome, Firefox, Edge, Opera und Brave. Safari folgt.</span></div></div>
+<div class="faq-item"><button class="faq-question"><span data-i18n="home.faq.q8">Kann ich jederzeit kündigen?</span></button><div class="faq-answer"><span class="faq-answer-inner" data-i18n="home.faq.a8">Ja. Wenn du das Projekt unterstützt, kannst du jederzeit aufhören, mit einem Klick, ohne eine Funktion zu verlieren.</span></div></div>
+</div>
+</div>
+</section>
+<!-- ======= 10. CTA FINALE ======= -->
+<section class="sec sec--alt">
+<div class="container">
+<div class="sec__head reveal" style="margin-bottom: 0;">
+<h2 class="sec__title" data-i18n="home.final.title">Bereit, ohne Werbung zu surfen?</h2>
+<p class="sec__sub" data-i18n="home.final.sub" style="margin-bottom: 30px;">AdOff ist in 30 Sekunden installiert. Kein Konto, keine Kreditkarte.</p>
+<a class="btn btn--primary btn--lg" data-i18n="home.final.cta" href="install.html">Kostenlos zum Browser hinzufügen</a>
+<p class="text-muted" data-i18n="home.final.note" style="font-size: 0.85rem; margin-top: 18px;">Open Source · Funktioniert sofort · Kein Konto</p>
+</div>
+</div>
+</section>
+<!-- FOOTER -->
+<footer id="adoff-footer"></footer>
+<!-- SCRIPTS -->
+<script src="/adoff-nav.js?v=e75acee8"></script>
+<script src="/adoff-footer.js?v=21299afa"></script>
+<script>
+    // FAQ accordion
+    document.querySelectorAll('.faq-question').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var item = this.closest('.faq-item');
+        var answer = item.querySelector('.faq-answer');
+        var isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(function(i) {
+          i.classList.remove('open');
+          i.querySelector('.faq-answer').style.maxHeight = '0';
+        });
+        if (!isOpen) {
+          item.classList.add('open');
+          answer.style.maxHeight = answer.scrollHeight + 'px';
+        }
+      });
+    });
+
+    // Reveal on scroll — SAFE: nasconde solo se l'observer è attivo (body.js-reveal).
+    (function(){
+      var els = document.querySelectorAll('.reveal');
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!('IntersectionObserver' in window) || reduce) { return; } // contenuto già visibile di default
+      document.body.classList.add('js-reveal');
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('is-visible'); io.unobserve(en.target); } });
+      }, { rootMargin: '0px 0px -6% 0px', threshold: 0.01 });
+      els.forEach(function(e){ io.observe(e); });
+      // Safety net: dopo 2.5s rivela comunque tutto ciò che è già nel viewport o è rimasto indietro
+      setTimeout(function(){ els.forEach(function(e){ e.classList.add('is-visible'); }); }, 2500);
+    })();
+  </script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){})});}</script>
+</div></body>
+</html>

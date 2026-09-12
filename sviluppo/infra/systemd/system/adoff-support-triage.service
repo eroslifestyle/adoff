@@ -1,0 +1,16 @@
+[Unit]
+Description=AdOff — Triage automatico ticket di supporto (Claude: base→risposta, complessi→Telegram)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=mrxxx
+WorkingDirectory=/home/mrxxx/adoff
+# Gate auto-invio email ai clienti: 0 = PROPOSE (bozze su Telegram), 1 = AUTO (risponde+chiude).
+# I rimborsi/fatturazione/legale restano SEMPRE gestione umana, anche con 1.
+Environment=SUPPORT_AUTO_REPLY=0
+ExecStart=/usr/bin/bash /home/mrxxx/adoff/sviluppo/ai-autopilot/scripts/support-triage.sh
+TimeoutStartSec=2400
+StandardOutput=append:/var/log/adoff-support-triage.log
+StandardError=append:/var/log/adoff-support-triage.log

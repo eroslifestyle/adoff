@@ -1,0 +1,840 @@
+{
+  "id": "w00-master-orchestrator",
+  "name": "00 — Master Strategy Orchestrator (Daily Regista)",
+  "description": "Daily orchestrator that drives the complete content generation & approval cycle: kill-switch check → load config → pick topics/languages → generate marketing strategy → create multi-language copy → queue for approval. Runs daily @ 05:00 UTC (cron: '0 5 * * *') + manual webhook POST /orchestrator-run-now with HMAC validation.",
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Rome",
+    "saveExecutionProgress": true,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all"
+  },
+  "nodes": [
+    {
+      "id": "n00-001-cron-schedule",
+      "name": "Schedule (Daily @ 05:00 UTC)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        200
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cron",
+              "expression": "0 5 * * *"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n00-002-webhook-manual",
+      "name": "Webhook POST /orchestrator-run-now (HMAC)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        380
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "orchestrator-run-now",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "w00-orchestrator-run-now"
+    },
+    {
+      "id": "n00-003-hmac-validate",
+      "name": "HMAC Auth (W29 sub-workflow call)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        480,
+        380
+      ],
+      "parameters": {
+        "workflowId": "={{ $env.W29_WORKFLOW_ID }}",
+        "workflow": {}
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "n00-004-kill-switch-check",
+      "name": "Check kill_switch table (Postgres)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT disabled, reason FROM adoff_autopilot.workflow_kill_switch WHERE workflow_id = 'w00-master-orchestrator' LIMIT 1",
+        "nodeCredentialType": "postgres",
+        "credentialsName": "adoff-pg-autopilot-credential-1234",
+        "returnAll": true
+      }
+    },
+    {
+      "id": "n00-005-kill-switch-check-result",
+      "name": "If kill_switch disabled=true",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $input.first().json[0]?.disabled === true }}",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n00-006-kill-switch-exit",
+      "name": "Exit: kill_switch disabled",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        200
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const row = $input.first().json[0];\nconst msg = `🛑 Orchestrator disabled. Reason: ${row?.reason || 'manual kill-switch'}`;\nreturn [{ json: { ok: false, status: 'disabled', message: msg, exit_time: new Date().toISOString() } }];"
+      }
+    },
+    {
+      "id": "n00-007-load-config",
+      "name": "Load config (W28 sub-workflow)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        400
+      ],
+      "parameters": {
+        "workflowId": "={{ $env.W28_WORKFLOW_ID }}",
+        "workflow": {}
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "n00-008-idempotency-check",
+      "name": "Idempotency check (W27)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        300
+      ],
+      "parameters": {
+        "workflowId": "={{ $env.W27_WORKFLOW_ID }}",
+        "workflow": {}
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "n00-009-idempotency-result",
+      "name": "If already run today",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json?.already_executed === true }}",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n00-010-pick-topics",
+      "name": "Pick today's topics (code)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1700,
+        400
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Pick TOP N (default 3) topics by perf_score: 70% top + 30% fresh\n// Input: from W28 config + DB lookup\nconst N = 3;\nconst config = $input.first().json?.data || {};\nconst perf_threshold = config.topic_perf_threshold || 0.6;\n\n// TODO: In a real scenario, query content_seeds table:\n// SELECT topic, active, used_count, perf_score FROM adoff_autopilot.content_seeds\n// WHERE active=true AND used_count < 5 ORDER BY perf_score DESC\n// For now, mock data:\n\nconst topics = [\n  { topic: 'ad-free-browsing', used_count: 2, perf_score: 0.95 },\n  { topic: 'privacy-protection', used_count: 1, perf_score: 0.88 },\n  { topic: 'faster-web', used_count: 3, perf_score: 0.82 },\n  { topic: 'skiptube-ads', used_count: 0, perf_score: 0.70 },\n  { topic: 'popup-blocker', used_count: 1, perf_score: 0.65 }\n];\n\nconst topPerformers = topics.filter(t => t.perf_score >= perf_threshold).sort((a,b) => b.perf_score - a.perf_score);\nconst freshTopics = topics.filter(t => t.used_count === 0 || t.used_count < 2).sort(() => Math.random() - 0.5);\n\nconst selected = [];\nconst countTop = Math.ceil(N * 0.7);\nconst countFresh = N - countTop;\n\nselected.push(...topPerformers.slice(0, countTop));\nselected.push(...freshTopics.slice(0, countFresh));\n\nreturn [{ json: { topics: selected.slice(0, N), topic_count: selected.length, selection_method: '70% top + 30% fresh' } }];"
+      }
+    },
+    {
+      "id": "n00-011-pick-languages",
+      "name": "Pick today's languages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1700,
+        550
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Pick top 5 langs by perf_score + always IT + EN\nconst config = $input.first().json?.data || {};\nconst lang_perf = config.lang_performance || { it: 0.98, en: 0.95, de: 0.85, fr: 0.80, es: 0.75 };\n\nconst sorted = Object.entries(lang_perf)\n  .sort(([,a], [,b]) => b - a)\n  .map(([lang]) => lang);\n\nconst mandatory = ['it', 'en'];\nconst candidates = [...new Set([...mandatory, ...sorted])];\nconst selected = candidates.slice(0, 5);\n\nreturn [{ json: { languages: selected, lang_count: selected.length, from_config: true } }];"
+      }
+    },
+    {
+      "id": "n00-012-merge-inputs",
+      "name": "Merge: topics + langs + config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        475
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Merge outputs from topics picker + langs picker + config loader\nconst inputs = $input.all();\nconst result = {};\n\ninputs.forEach(item => {\n  const { topics, topic_count, languages, lang_count, data } = item.json;\n  if (topics) result.topics = topics;\n  if (topic_count !== undefined) result.topic_count = topic_count;\n  if (languages) result.languages = languages;\n  if (lang_count !== undefined) result.lang_count = lang_count;\n  if (data) result.config = data;\n});\n\nreturn [{ json: result }];"
+      }
+    },
+    {
+      "id": "n00-013-gen-strategy",
+      "name": "Generate strategy (W22)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        2100,
+        350
+      ],
+      "parameters": {
+        "workflowId": "={{ $env.W22_WORKFLOW_ID }}",
+        "workflow": {
+          "body": "={{ { goal: 'Incrementare install AdOff su 5 browser (Chrome, Firefox, Safari, Edge, Opera) nei prossimi 30 giorni, minimizzando costo/install. Leva: organico social + community + earned media.', timeframe: 'prossimi 30 giorni', target_audience: 'Utenti 25-45 anni desktop, infastiditi da ads invasive, privacy-consci, tech-savvy', budget_note: 'Budget bassissimo, 100% organic + community', channels_hint: $json.languages?.map(l => `organic_social_${l}`) || ['organic_social_it', 'organic_social_en'], lang: $json.languages?.[0] || 'it', constraints: 'NO brand famosi, NO prezzi specifici, voice: energica/brillante (Ava), leva frustrazione + promessa: Ads? Off!' } }}"
+        },
+        "onError": "continueErrorOutput"
+      }
+    },
+    {
+      "id": "n00-013a-gen-multiformat",
+      "name": "Multi-format generator (W49) - TOP topic",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        2100,
+        550
+      ],
+      "parameters": {
+        "workflowId": "={{ $env.W49_WORKFLOW_ID }}",
+        "workflow": {
+          "body": "={{ { top_topic: $json.topics?.[0]?.topic || 'ad-free-browsing', perf_score: $json.topics?.[0]?.perf_score || 0.85, langs: $json.languages || ['it', 'en'], content_types: ['thread', 'carousel', 'reel_script'], max_output: 3 } }}"
+        },
+        "onError": "continueErrorOutput"
+      }
+    },
+    {
+      "id": "n00-013b-crisis-check",
+      "name": "Check crisis_log (W48 monitor)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        550
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as crisis_count FROM adoff_autopilot.crisis_log WHERE severity IN ('high','critical') AND resolved=false AND created_at > NOW() - INTERVAL '1 hour'",
+        "nodeCredentialType": "postgres",
+        "credentialsName": "adoff-pg-autopilot-credential-1234",
+        "returnAll": true
+      }
+    },
+    {
+      "id": "n00-013c-crisis-decision",
+      "name": "If crisis_count > 0",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1700,
+        550
+      ],
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ parseInt($input.first().json[0]?.crisis_count || 0) }}",
+              "operation": "greaterThan",
+              "value2": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n00-013d-crisis-abort",
+      "name": "Crisis abort → Telegram alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        550
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const crisis_count = $input.first().json[0]?.crisis_count || 0;\nconst msg = `🚨 CRISIS ACTIVE (${crisis_count} incident). Orchestrator W00 skipped for today. Manual intervention required.`;\n\nreturn [{ json: { ok: false, status: 'crisis_abort', message: msg, crisis_count: crisis_count, timestamp: new Date().toISOString() } }];"
+      }
+    },
+    {
+      "id": "n00-013e-trigger-visual-assets",
+      "name": "Trigger W50 visual-asset-pipeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2300,
+        450
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "{{ $env.N8N_HOST }}/webhook/visual-asset-create",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "hmacAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "draft_id",
+              "value": "={{ $json.draft_id || '' }}"
+            },
+            {
+              "name": "asset_type",
+              "value": "caption_social"
+            },
+            {
+              "name": "trigger_source",
+              "value": "w00-master-orchestrator"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "retry": {
+            "enabled": true,
+            "maxTries": 3,
+            "waitBetweenTries": 2000
+          }
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "n00-014-loop-calendar",
+      "name": "Loop over calendar entries",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2500,
+        350
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "n00-015-extract-entry",
+      "name": "Extract calendar entry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2700,
+        350
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Extract single calendar entry from strategy output\n// Check if it's scheduled for today\nconst today = new Date().toISOString().split('T')[0];\nconst entry = $json;\nconst isTodayEntry = entry.scheduled_day && entry.scheduled_day.includes(today);\n\nif (!isTodayEntry) {\n  // Skip non-today entries\n  return [];\n}\n\nreturn [{ json: { ...entry, process_today: true, timestamp: new Date().toISOString() } }];"
+      }
+    },
+    {
+      "id": "n00-016-gen-copy-multiline",
+      "name": "Generate copy (W20 - per lang)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        2900,
+        350
+      ],
+      "parameters": {
+        "workflowId": "={{ $env.W20_WORKFLOW_ID }}",
+        "workflow": {
+          "body": "={{ { concept: $json.copy_brief || 'AdOff blocca ads invasive: video puliti, navigazione veloce, privacy totale. Ads? Off!', langs: [$json.lang || 'it'], platforms: ['instagram', 'facebook', 'tiktok'], tone: 'energica, brillante, diretta (stile Ava Multilingual)' } }}"
+        },
+        "onError": "continueErrorOutput"
+      }
+    },
+    {
+      "id": "n00-017-store-drafts",
+      "name": "Store drafts in DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        3100,
+        350
+      ],
+      "parameters": {
+        "operation": "insert",
+        "table": "adoff_autopilot.gemini_copy_drafts",
+        "columns": "id, topic, lang, platform, caption, hashtags, cta, status, created_at, version",
+        "values": "={{ $uuid() }},{{ $json.topic || 'auto-from-calendar' }},{{ $json.lang || 'it' }},{{ 'instagram' }},{{ $json.caption || '' }},{{ JSON.stringify($json.hashtags || []) }},{{ $json.cta || '' }},'draft',{{ new Date().toISOString() }},'1.0'",
+        "nodeCredentialType": "postgres",
+        "credentialsName": "adoff-pg-autopilot-credential-1234"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "n00-018-queue-approval",
+      "name": "Push to approval (W25)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        3300,
+        350
+      ],
+      "parameters": {
+        "workflowId": "={{ $env.W25_WORKFLOW_ID }}",
+        "workflow": {
+          "body": "={{ { draft_id: $json.id, status: 'pending_approval', auto_approve: false } }}"
+        },
+        "onError": "continueErrorOutput"
+      }
+    },
+    {
+      "id": "n00-019-update-seeds",
+      "name": "Update content_seeds.used_count",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        3500,
+        350
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.content_seeds SET used_count = used_count + 1, last_used = NOW() WHERE topic = {{ $json.topic }}",
+        "nodeCredentialType": "postgres",
+        "credentialsName": "adoff-pg-autopilot-credential-1234"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "n00-020-telegram-report",
+      "name": "Send enriched Telegram report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3700,
+        350
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const date = new Date();\nconst dateStr = date.toISOString().split('T')[0];\nconst topics = $json.topics?.slice(0, 3)?.map(t => `${t.topic} (perf ${t.perf_score?.toFixed(2) || 'N/A'})`).join(', ') || 'N/A';\nconst langs = $json.languages?.join(', ') || 'N/A';\nconst visual_queue = $json.visual_queue_count || 0;\nconst crisis = $json.crisis_count || 0;\nconst budget = $json.estimated_budget_today || '$0.85';\n\nconst msg = `✅ W00 Master ${dateStr}:\n` +\n  `• Topics: ${topics}\n` +\n  `• Languages: ${langs}\n` +\n  `• Drafts created: ${$json.drafts_count || 0}\n` +\n  `• Multi-format items (thread/carousel/reel): ${$json.multiformat_count || 0}\n` +\n  `• Visual assets queued (W50): ${visual_queue}\n` +\n  `• Crisis incidents: ${crisis}\n` +\n  `• Budget today: ${budget}`;\n\nreturn [{ json: { message: msg, severity: 'info', workflow_id: 'w00-master-orchestrator', timestamp: new Date().toISOString() } }];"
+      }
+    },
+    {
+      "id": "n00-021-telegram-send",
+      "name": "Send to Telegram (W30)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        3900,
+        350
+      ],
+      "parameters": {
+        "workflowId": "={{ $env.W30_WORKFLOW_ID }}",
+        "workflow": {
+          "body": "={{ { message: $json.message, severity: $json.severity, workflow_id: $json.workflow_id } }}"
+        },
+        "onError": "continueErrorOutput"
+      }
+    },
+    {
+      "id": "n00-022-final-response",
+      "name": "Respond to webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        4100,
+        350
+      ],
+      "parameters": {
+        "respond": "json",
+        "value": "={{ { ok: true, workflow_id: 'w00-master-orchestrator', execution_status: 'completed', timestamp: new Date().toISOString(), topic_count: $json.topic_count || 0, lang_count: $json.lang_count || 0, drafts_generated: $json.drafts_count || 0, approval_queue_count: $json.approval_count || 0, execution_time_ms: $json.execution_ms || 'N/A' } }}"
+      }
+    },
+    {
+      "id": "n00-023-dry-run-mode",
+      "name": "DRY_RUN mode check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2300,
+        200
+      ],
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ process.env.ORCHESTRATOR_DRY_RUN || 'false' }}",
+              "operation": "equals",
+              "value2": "true"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n00-024-dry-run-log",
+      "name": "DRY_RUN: log plan only",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2500,
+        200
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const plan = {\n  workflow_id: 'w00-master-orchestrator-v2',\n  dry_run: true,\n  timestamp: new Date().toISOString(),\n  topics: $json.topics || [],\n  languages: $json.languages || [],\n  sub_workflows_would_call: [\n    { id: 'w28-config-loader', name: 'Load centralized config' },\n    { id: 'w22-gemini-strategist', name: 'Generate 30-day marketing strategy' },\n    { id: 'w49-multi-format-content', name: 'Generate thread/carousel/reel for TOP topic' },\n    { id: 'w20-gemini-copy-caption', name: 'Generate captions for each lang/platform' },\n    { id: 'w50-visual-asset-pipeline', name: 'Generate visual assets for drafts (async webhook)' },\n    { id: 'w25-approve-publish', name: 'Queue drafts for approval' }\n  ],\n  estimated_execution_time_sec: 180,\n  estimated_cost_usd: '$0.80 per run (depends on Gemini token count)',\n  crisis_check_enabled: true,\n  next_action: 'If satisfied, set ORCHESTRATOR_DRY_RUN=false and re-run'\n};\n\nreturn [{ json: plan }];"
+      }
+    },
+    {
+      "id": "n00-025-error-handler",
+      "name": "Catch errors → W30 notifier",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        200
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Error handler triggered by onError: continueErrorOutput on sub-workflows\nconst err = items[0]?.json?.error || items[0]?.json?.message || 'Unknown error';\nconst log = {\n  workflow_id: 'w00-master-orchestrator',\n  status: 'error',\n  error: String(err).slice(0, 500),\n  timestamp: new Date().toISOString(),\n  severity: 'warning'\n};\n\nreturn [{ json: log }];"
+      }
+    }
+  ],
+  "connections": {
+    "Schedule (Daily @ 05:00 UTC)": {
+      "main": [
+        [
+          {
+            "node": "Check kill_switch table (Postgres)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook POST /orchestrator-run-now (HMAC)": {
+      "main": [
+        [
+          {
+            "node": "HMAC Auth (W29 sub-workflow call)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HMAC Auth (W29 sub-workflow call)": {
+      "main": [
+        [
+          {
+            "node": "Check kill_switch table (Postgres)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check kill_switch table (Postgres)": {
+      "main": [
+        [
+          {
+            "node": "If kill_switch disabled=true",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If kill_switch disabled=true": {
+      "main": [
+        [
+          {
+            "node": "Exit: kill_switch disabled",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Load config (W28 sub-workflow)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load config (W28 sub-workflow)": {
+      "main": [
+        [
+          {
+            "node": "Idempotency check (W27)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Idempotency check (W27)": {
+      "main": [
+        [
+          {
+            "node": "If already run today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If already run today": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Pick today's topics (code)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick today's topics (code)": {
+      "main": [
+        [
+          {
+            "node": "Pick today's languages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick today's languages": {
+      "main": [
+        [
+          {
+            "node": "Merge: topics + langs + config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge: topics + langs + config": {
+      "main": [
+        [
+          {
+            "node": "Check crisis_log (W48 monitor)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check crisis_log (W48 monitor)": {
+      "main": [
+        [
+          {
+            "node": "If crisis_count > 0",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If crisis_count > 0": {
+      "main": [
+        [
+          {
+            "node": "Crisis abort → Telegram alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate strategy (W22)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crisis abort → Telegram alert": {
+      "main": [
+        [
+          {
+            "node": "Respond to webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate strategy (W22)": {
+      "main": [
+        [
+          {
+            "node": "Multi-format generator (W49) - TOP topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Multi-format generator (W49) - TOP topic": {
+      "main": [
+        [
+          {
+            "node": "DRY_RUN mode check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DRY_RUN mode check": {
+      "main": [
+        [
+          {
+            "node": "DRY_RUN: log plan only",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop over calendar entries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DRY_RUN: log plan only": {
+      "main": [
+        [
+          {
+            "node": "Respond to webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop over calendar entries": {
+      "main": [
+        [
+          {
+            "node": "Extract calendar entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract calendar entry": {
+      "main": [
+        [
+          {
+            "node": "Generate copy (W20 - per lang)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate copy (W20 - per lang)": {
+      "main": [
+        [
+          {
+            "node": "Store drafts in DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store drafts in DB": {
+      "main": [
+        [
+          {
+            "node": "Trigger W50 visual-asset-pipeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger W50 visual-asset-pipeline": {
+      "main": [
+        []
+      ]
+    },
+    "Update content_seeds.used_count": {
+      "main": [
+        [
+          {
+            "node": "Send enriched Telegram report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send enriched Telegram report": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram (W30)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Telegram (W30)": {
+      "main": [
+        [
+          {
+            "node": "Respond to webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to webhook": {
+      "main": [
+        []
+      ]
+    }
+  }
+}

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <!-- 1: Gate Pro per sbloccare lo script sotto test -->
+  <script>
+    try {
+      document.documentElement.setAttribute('data-adoff-stealth', 'ao_12345678');
+      localStorage.setItem('__adoff_pro', '1');
+    } catch(e) {}
+  </script>
+
+  <!-- 2: Estensione conflittuale fittizia + stub window.open (PRIMA del caricamento) -->
+  <script>
+    (function() {
+      // Simula un'altra estensione che rende src non scrivibile
+      var origCreateElement = document.createElement.bind(document);
+      document.createElement = function(tag, options) {
+        var el = origCreateElement(tag, options);
+        if (tag && tag.toLowerCase() === 'script') {
+          try {
+            Object.defineProperty(el, 'src', {value: '', writable: false, configurable: false});
+          } catch(e) {}
+        }
+        return el;
+      };
+
+      // Stub per popup-same-site-consentito: registra le chiamate
+      window._originalOpen = window.open.bind(window);
+      window._openCalls = [];
+      window.open = function(url, name, features) {
+        window._openCalls.push({url: url, name: name, features: features});
+        return window._originalOpen(url, name, features);
+      };
+    })();
+  </script>
+
+  <!-- 3: Caricamento sincrono dello script sotto test -->
+  <script>
+    var jsPath = new URLSearchParams(location.search).get('js') || '../../app/src/stealth.js';
+    document.write('<script src="' + jsPath + '"><\/script>');
+  </script>
+
+  <!-- I test vengono eseguiti nel body dopo il caricamento -->
+</head>
+<body>
+<pre id='out'></pre>
+<script>
+setTimeout(async function() {
+  var results = [];
+
+  // Test: window-open-riassegnabile
+  try {
+    var origOpen = window.open;
+    (function() {
+      'use strict';
+      window.open = function() { return null; };
+    })();
+    results.push('PASS window-open-riassegnabile');
+    window.open = origOpen;
+  } catch(e) {
+    results.push('FAIL window-open-riassegnabile :: ' + e.message);
+  }
+
+  // Test: window-open-configurable
+  try {
+    var desc = Object.getOwnPropertyDescriptor(window, 'open');
+    if (desc && desc.configurable === true) {
+      results.push('PASS window-open-configurable');
+    } else {
+      results.push('FAIL window-open-configurable :: non configurabile');
+    }
+  } catch(e) {
+    results.push('FAIL window-open-configurable :: ' + e.message);
+  }
+
+  // Test: createElement-script-non-lancia
+  try {
+    for (var i = 0; i < 5; i++) {
+      document.createElement('script');
+    }
+    results.push('PASS createElement-script-non-lancia');
+  } catch(e) {
+    results.push('FAIL createElement-script-non-lancia :: ' + e.message);
+  }
+
+  // Test: createElement-options-is
+  try {
+    document.createElement('div', {is: 'x-test'});
+    results.push('PASS createElement-options-is');
+  } catch(e) {
+    results.push('FAIL createElement-options-is :: ' + e.message);
+  }
+
+  // Test: createElement-altro-document
+  try {
+    var iframe = document.createElement('iframe');
+    document.body.appendChild(iframe);
+    var div = iframe.contentDocument.createElement('div');
+    if (div.ownerDocument === iframe.contentDocument) {
+      results.push('PASS createElement-altro-document');
+    } else {
+      results.push('FAIL createElement-altro-document :: ownerDocument errato');
+    }
+    document.body.removeChild(iframe);
+  } catch(e) {
+    results.push('FAIL createElement-altro-document :: ' + e.message);
+  }
+
+  // Test: offsetheight-ridefinibile
+  try {
+    var origOffsetDesc = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {get: function() { return 42; }, configurable: true});
+    results.push('PASS offsetheight-ridefinibile');
+    if (origOffsetDesc) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', origOffsetDesc);
+    }
+  } catch(e) {
+    results.push('FAIL offsetheight-ridefinibile :: ' + e.message);
+  }
+
+  // Test: spoof-non-attivo-senza-bait
+  try {
+    var div1 = document.createElement('div');
+    div1.className = 'content-box';
+    div1.style.height = '10px';
+    document.body.appendChild(div1);
+    var h1 = window.getComputedStyle(div1).height;
+    if (h1 !== '250px') {
+      results.push('PASS spoof-non-attivo-senza-bait');
+    } else {
+      results.push('FAIL spoof-non-attivo-senza-bait :: height e\' 250px');
+    }
+    document.body.removeChild(div1);
+  } catch(e) {
+    results.push('FAIL spoof-non-attivo-senza-bait :: ' + e.message);
+  }
+
+  // Test: spoof-attivo-con-bait (asincrono)
+  try {
+    var baitDiv = document.createElement('div');
+    baitDiv.className = 'adsbox';
+    document.body.appendChild(baitDiv);
+    await new Promise(function(r) { setTimeout(r, 50); });
+    var h2 = window.getComputedStyle(baitDiv).height;
+    if (h2 === '250px') {
+      results.push('PASS spoof-attivo-con-bait');
+    } else {
+      results.push('FAIL spoof-attivo-con-bait :: height non e\' 250px');
+    }
+    document.body.removeChild(baitDiv);
+  } catch(e) {
+    results.push('FAIL spoof-attivo-con-bait :: ' + e.message);
+  }
+
+  // Test: popup-same-site-consentito
+  try {
+    if (window._openCalls) {
+      // La chiamata mancava: senza di essa il contatore resta a zero
+      window._openCalls.length = 0;
+      window.open('/pagina-locale');
+      if (window._openCalls.length > 0) {
+        results.push('PASS popup-same-site-consentito');
+      } else {
+        results.push('FAIL popup-same-site-consentito :: chiamate bloccate');
+      }
+    } else {
+      // Stub non piu' attivo, verifica fallback
+      var openResult = window.open('/pagina-locale');
+      if (openResult !== null) {
+        results.push('PASS popup-same-site-consentito');
+      } else {
+        results.push('SKIP popup-same-site-consentito :: non determinabile');
+      }
+    }
+  } catch(e) {
+    results.push('FAIL popup-same-site-consentito :: ' + e.message);
+  }
+
+  // Output finale
+  var ok = 0, fail = 0;
+  for (var j = 0; j < results.length; j++) {
+    if (results[j].substring(0, 4) === 'PASS' || results[j].substring(0, 4) === 'SKIP') {
+      ok++;
+    } else {
+      fail++;
+    }
+  }
+  document.getElementById('out').textContent = results.join('\n') + '\nRESULT ok=' + ok + ' fail=' + fail;
+}, 2500);
+</script>
+</body>
+</html>

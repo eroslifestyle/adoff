@@ -1,0 +1,713 @@
+{
+  "id": "w48-crisis-manager",
+  "name": "48 — Crisis Manager (Hub Centrale — Severity Classifier + Playbook)",
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Rome",
+    "saveExecutionProgress": true,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all"
+  },
+  "nodes": [
+    {
+      "id": "node-001-schedule-trigger",
+      "name": "Every 5 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-002-db-setup",
+      "name": "DB setup: crisis_log table",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        480,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE IF NOT EXISTS adoff_autopilot.crisis_log (id BIGSERIAL PRIMARY KEY, severity TEXT NOT NULL CHECK (severity IN ('low', 'medium', 'high', 'critical')), trigger_source TEXT NOT NULL, trigger_id TEXT, classification TEXT, automated_action_taken TEXT, human_notified BOOLEAN DEFAULT false, human_responded BOOLEAN DEFAULT false, human_action TEXT, resolved BOOLEAN DEFAULT false, created_at TIMESTAMPTZ DEFAULT NOW(), resolved_at TIMESTAMPTZ);\nCREATE INDEX IF NOT EXISTS idx_crisis_log_severity ON adoff_autopilot.crisis_log(severity);\nCREATE INDEX IF NOT EXISTS idx_crisis_log_created_at ON adoff_autopilot.crisis_log(created_at DESC);\nCREATE TABLE IF NOT EXISTS adoff_autopilot.workflow_kill_switch (id SERIAL PRIMARY KEY, workflow_id TEXT UNIQUE NOT NULL, disabled BOOLEAN DEFAULT false, reason TEXT, set_at TIMESTAMPTZ DEFAULT NOW());\nCREATE INDEX IF NOT EXISTS idx_workflow_kill_switch_workflow_id ON adoff_autopilot.workflow_kill_switch(workflow_id);"
+      },
+      "continueOnFail": false
+    },
+    {
+      "id": "node-003-aggregate-errors",
+      "name": "Aggregate: errors (15min)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        720,
+        150
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as error_count, MAX(CASE WHEN severity='critical' THEN 1 ELSE 0 END) as has_critical, json_agg(json_build_object('workflow_id', workflow_id, 'severity', severity) LIMIT 5) as top_errors FROM adoff_autopilot.workflow_errors WHERE notified_at > NOW() - INTERVAL '15 minutes';"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-004-aggregate-budget",
+      "name": "Aggregate: budget alerts (1h)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        720,
+        280
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as alert_count, MAX(CASE WHEN severity='critical' THEN 1 ELSE 0 END) as has_critical_budget, SUM(daily_cost_eur) as total_daily_cost_eur FROM adoff_autopilot.budget_alerts WHERE timestamp > NOW() - INTERVAL '1 hour';"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-005-aggregate-engagement",
+      "name": "Aggregate: escalations (30min)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        720,
+        410
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as escalation_count FROM adoff_autopilot.engagement_inbox WHERE status='escalated' AND created_at > NOW() - INTERVAL '30 minutes';"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-006-aggregate-publish",
+      "name": "Aggregate: publish anomaly (1h)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        720,
+        540
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as publish_count_1h FROM adoff_autopilot.social_published WHERE published_at > NOW() - INTERVAL '1 hour';"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-007-aggregate-content",
+      "name": "Aggregate: brand violations (1h)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        720,
+        670
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as brand_violation_count FROM adoff_autopilot.gemini_copy_drafts WHERE status='rejected' AND brand_guard_reason LIKE '%brand_leak%' AND created_at > NOW() - INTERVAL '1 hour';"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-008-merge-signals",
+      "name": "Code: Merge signals",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        400
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const signals = {errors: {count: items[0]?.json?.error_count || 0, has_critical: items[0]?.json?.has_critical==1}, budget: {count: items[1]?.json?.alert_count || 0, has_critical: items[1]?.json?.has_critical_budget==1}, engagement: {count: items[2]?.json?.escalation_count || 0}, publish: {count_1h: items[3]?.json?.publish_count_1h || 0}, content: {violation_count: items[4]?.json?.brand_violation_count || 0}}; return [{json: {signals, timestamp: new Date().toISOString()}}];"
+      }
+    },
+    {
+      "id": "node-009-classify-gemini",
+      "name": "Code: Classify severity (simple logic)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        400
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const s = items[0]?.json?.signals || {}; let severity='low'; let primary='No crisis detected'; const actions = []; if(s.errors?.count > 20) {severity='medium'; primary='Error spike detected'; actions.push('w00-master-orchestrator');} if(s.budget?.has_critical) {severity='high'; primary='Budget critical'; actions.push('w15-cyber-purge-producer');} if(s.engagement?.count > 5) {actions.push('engagement_pause');} if(s.content?.violation_count > 5) {severity='critical'; primary='Brand violation spike';} return [{json: {classification: {overall_severity: severity, primary_issue: primary, requires_human: severity in ['high','critical'], automated_actions: actions}}}];"
+      }
+    },
+    {
+      "id": "node-010-if-lowmed",
+      "name": "IF low/medium?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond",
+              "operator": {
+                "type": "string",
+                "operation": "regex",
+                "sideType": "expression"
+              },
+              "leftValue": "={{ $json.classification.overall_severity }}",
+              "rightValue": "^(low|medium)$"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-011-disable-workflows",
+      "name": "DB: Disable workflows",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1680,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.workflow_kill_switch (workflow_id, disabled, reason, set_at) VALUES ('w00-master-orchestrator', true, 'W48 crisis low/medium', NOW()), ('w15-cyber-purge-producer', true, 'W48 crisis low/medium', NOW()), ('w22-gemini-strategist-calendar', true, 'W48 crisis low/medium', NOW()), ('w25-approve-publish-drafts', true, 'W48 crisis low/medium', NOW()) ON CONFLICT (workflow_id) DO UPDATE SET disabled=EXCLUDED.disabled, reason=EXCLUDED.reason, set_at=NOW() RETURNING workflow_id, disabled;"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-012-if-highcritical",
+      "name": "IF high/critical?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        500
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond",
+              "operator": {
+                "type": "string",
+                "operation": "regex",
+                "sideType": "expression"
+              },
+              "leftValue": "={{ $json.classification.overall_severity }}",
+              "rightValue": "^(high|critical)$"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-013-format-telegram",
+      "name": "Code: Format Telegram alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        450
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const c = items[0]?.json?.classification || {}; const cid = 'CRS-'+Date.now(); const msg = `🚨 CRISIS ${new Date().toISOString()}\\n*Severity:* \\`${c.overall_severity}\\`\\n*Issue:* ${c.primary_issue}\\n*ID:* \\`${cid}\\`\\n\\n/crisis-ack-${cid}  |  /crisis-rollback-${cid}`; return [{json: {crisis_id: cid, severity: c.overall_severity, message: msg}}];"
+      }
+    },
+    {
+      "id": "node-014-webhook-ack",
+      "name": "Webhook /crisis/ack",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        350
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "crisis-ack",
+        "responseMode": "responseNode"
+      },
+      "webhookId": "crisis-ack-wh"
+    },
+    {
+      "id": "node-015-webhook-rollback",
+      "name": "Webhook /crisis/rollback",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        500
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "crisis-rollback",
+        "responseMode": "responseNode"
+      },
+      "webhookId": "crisis-rollback-wh"
+    },
+    {
+      "id": "node-016-insert-crisis-log",
+      "name": "DB: INSERT crisis_log",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1920,
+        600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.crisis_log (severity, trigger_source, trigger_id, classification, automated_action_taken, human_notified, created_at) VALUES ($1, 'w48-crisis-manager', $2, $3, $4, $5, NOW()) RETURNING id;",
+        "options": {
+          "queryReplacement": "={{ $json.classification.overall_severity }},={{ $json.crisis_id || 'auto' }},={{ JSON.stringify($json.classification) }},={{ JSON.stringify($json.classification.automated_actions) }},{{ $json.classification.overall_severity in ['high','critical'] ? 'true' : 'false' }}"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-017-recovery-check",
+      "name": "Every 60 min (Recovery)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        250,
+        800
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 60
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-018-check-signals-normal",
+      "name": "DB: Check if signals normal",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        480,
+        800
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT (SELECT COUNT(*) FROM adoff_autopilot.workflow_errors WHERE notified_at > NOW()-INTERVAL '30 min') as err_cnt, (SELECT COUNT(*) FROM adoff_autopilot.budget_alerts WHERE timestamp > NOW()-INTERVAL '30 min' AND severity='critical') as budget_crit_cnt, (SELECT COUNT(*) FROM adoff_autopilot.engagement_inbox WHERE status='escalated' AND created_at > NOW()-INTERVAL '30 min') as escalation_cnt;"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-019-if-recovered",
+      "name": "IF all signals <threshold?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        800
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "c1",
+              "operator": {
+                "type": "number",
+                "operation": "<"
+              },
+              "leftValue": "={{ $json.err_cnt }}",
+              "rightValue": "5"
+            },
+            {
+              "id": "c2",
+              "operator": {
+                "type": "number",
+                "operation": "=="
+              },
+              "leftValue": "={{ $json.budget_crit_cnt }}",
+              "rightValue": "0"
+            },
+            {
+              "id": "c3",
+              "operator": {
+                "type": "number",
+                "operation": "<"
+              },
+              "leftValue": "={{ $json.escalation_cnt }}",
+              "rightValue": "2"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-020-mark-resolved",
+      "name": "DB: Mark crisis resolved",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        960,
+        800
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.crisis_log SET resolved=true, resolved_at=NOW() WHERE resolved=false AND id=(SELECT id FROM adoff_autopilot.crisis_log ORDER BY created_at DESC LIMIT 1) RETURNING id;"
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-021-reenable-workflows",
+      "name": "DB: Re-enable workflows",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1200,
+        800
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot DB"
+        }
+      },
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.workflow_kill_switch SET disabled=false, reason='W48 auto-recovery', set_at=NOW() WHERE reason LIKE '%W48 crisis%' RETURNING workflow_id;"
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Every 5 min": {
+      "main": [
+        [
+          {
+            "node": "DB setup: crisis_log table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB setup: crisis_log table": {
+      "main": [
+        [
+          {
+            "node": "Aggregate: errors (15min)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Aggregate: budget alerts (1h)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Aggregate: escalations (30min)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Aggregate: publish anomaly (1h)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Aggregate: brand violations (1h)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate: errors (15min)": {
+      "main": [
+        [
+          {
+            "node": "Code: Merge signals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate: budget alerts (1h)": {
+      "main": [
+        [
+          {
+            "node": "Code: Merge signals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate: escalations (30min)": {
+      "main": [
+        [
+          {
+            "node": "Code: Merge signals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate: publish anomaly (1h)": {
+      "main": [
+        [
+          {
+            "node": "Code: Merge signals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate: brand violations (1h)": {
+      "main": [
+        [
+          {
+            "node": "Code: Merge signals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Merge signals": {
+      "main": [
+        [
+          {
+            "node": "Code: Classify severity (simple logic)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Classify severity (simple logic)": {
+      "main": [
+        [
+          {
+            "node": "IF low/medium?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF high/critical?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF low/medium?": {
+      "main": [
+        [
+          {
+            "node": "DB: Disable workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Disable workflows": {
+      "main": [
+        [
+          {
+            "node": "DB: INSERT crisis_log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF high/critical?": {
+      "main": [
+        [
+          {
+            "node": "Code: Format Telegram alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Format Telegram alert": {
+      "main": [
+        [
+          {
+            "node": "Webhook /crisis/ack",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Webhook /crisis/rollback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook /crisis/ack": {
+      "main": [
+        [
+          {
+            "node": "DB: INSERT crisis_log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook /crisis/rollback": {
+      "main": [
+        [
+          {
+            "node": "DB: INSERT crisis_log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every 60 min (Recovery)": {
+      "main": [
+        [
+          {
+            "node": "DB: Check if signals normal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Check if signals normal": {
+      "main": [
+        [
+          {
+            "node": "IF all signals <threshold?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF all signals <threshold?": {
+      "main": [
+        [
+          {
+            "node": "DB: Mark crisis resolved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB: Mark crisis resolved": {
+      "main": [
+        [
+          {
+            "node": "DB: Re-enable workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

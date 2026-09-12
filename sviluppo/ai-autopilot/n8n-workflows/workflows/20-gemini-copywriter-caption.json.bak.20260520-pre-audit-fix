@@ -1,0 +1,229 @@
+{
+  "id": "w20-gemini-copy-caption",
+  "name": "20 — Gemini Copywriter Caption Multilingua",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Rome",
+    "saveExecutionProgress": true,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all"
+  },
+  "nodes": [
+    {
+      "id": "node-001-trigger-manual",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 200],
+      "parameters": {}
+    },
+    {
+      "id": "node-002-trigger-webhook",
+      "name": "Webhook /gemini/caption",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 380],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gemini-copywriter-caption",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "webhookId": "gemini-copywriter-caption-wh"
+    },
+    {
+      "id": "node-003-set-defaults",
+      "name": "Set defaults",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// Set defaults + esplodi (lang × platform) → 1 item per (lang, platform)\nconst input = items[0]?.json?.body || items[0]?.json || {};\nconst concept = input.concept || 'AdOff blocca la pubblicità invasiva: video puliti, navigazione veloce, privacy.';\nconst langs = Array.isArray(input.langs) && input.langs.length ? input.langs : ['it','en','de','fr','es'];\nconst platforms = Array.isArray(input.platforms) && input.platforms.length ? input.platforms : ['instagram','facebook','tiktok'];\nconst tone = input.tone || 'energica, brillante, diretta (stile Ava Multilingual)';\nconst videoMasterId = input.video_master_id || null;\nconst out = [];\nfor (const lang of langs) {\n  for (const platform of platforms) {\n    out.push({ json: { concept, lang, platform, tone, video_master_id: videoMasterId } });\n  }\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "node-004-split-batches",
+      "name": "Throttle (1 req)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [720, 300],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "node-005-build-prompt",
+      "name": "Build Gemini prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const { concept, lang, platform, tone, video_master_id } = $json;\nconst LANG_NAMES = { it:'italiano', en:'English', de:'Deutsch', fr:'français', es:'español', pt:'português', ru:'русский', ar:'العربية', zh:'中文', tr:'Türkçe', id:'Bahasa Indonesia', pl:'polski', hi:'हिन्दी', ja:'日本語', ko:'한국어' };\nconst langName = LANG_NAMES[lang] || lang;\nconst caps = { instagram: { caption_min:30, caption_max:2000, hashtag_min:5, hashtag_max:10 }, facebook: { caption_min:30, caption_max:2000, hashtag_min:3, hashtag_max:6 }, tiktok: { caption_min:30, caption_max:1500, hashtag_min:4, hashtag_max:8 } };\nconst c = caps[platform] || caps.instagram;\nconst prompt = `Sei copywriter brand AdOff. Crea caption + hashtag per ${platform.toUpperCase()} in ${langName}.\\n\\nVINCOLI ASSOLUTI (violazione = output rigettato):\\n1. MAI nominare brand famosi: YouTube, Google, Facebook, Instagram, TikTok, Twitter, X, Amazon, Reddit, Twitch, GitHub, LinkedIn. Usa sinonimi (\"piattaforme video\", \"social media\", \"e-commerce\", \"forum online\").\\n2. MAI scrivere \"149 KB\", \"149KB\", \"149 kilobyte\" o varianti.\\n3. Voice: ${tone}. Frasi brevi, ritmo alto, niente buzzword fumose.\\n4. Leva la frustrazione utente (pubblicità invasive, video interrotti, popup) e proponi la promessa pulita di AdOff (\"Ads? Off!\").\\n5. NIENTE prezzi specifici, NIENTE claim medici/finanziari/garanzie.\\n6. Lingua: solo ${langName}, niente mix.\\n\\nSPECIFICHE PIATTAFORMA:\\n- caption: ${c.caption_min}–${c.caption_max} caratteri.\\n- hashtag: ${c.hashtag_min}–${c.hashtag_max}, attinenti, niente spam.\\n- cta: 1 frase imperativa, max 80 caratteri, in ${langName}.\\n\\nCONCEPT: ${concept}\\n\\nRESTITUISCI SOLO JSON VALIDO (no markdown fences, no testo prima/dopo):\\n{ \"caption\": \"...\", \"hashtags\": [\"#x\",\"#y\"], \"cta\": \"...\" }`;\nreturn [{ json: { ...$json, prompt, video_master_id } }];"
+      }
+    },
+    {
+      "id": "node-006-http-gemini",
+      "name": "Gemini 2.5 Flash",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contents:[{role:'user',parts:[{text:$json.prompt}]}], generationConfig:{ temperature:0.85, topP:0.95, maxOutputTokens:800, responseMimeType:'application/json', thinkingConfig:{thinkingBudget:0} }, safetySettings:[ {category:'HARM_CATEGORY_HARASSMENT',threshold:'BLOCK_NONE'}, {category:'HARM_CATEGORY_HATE_SPEECH',threshold:'BLOCK_NONE'}, {category:'HARM_CATEGORY_SEXUALLY_EXPLICIT',threshold:'BLOCK_NONE'}, {category:'HARM_CATEGORY_DANGEROUS_CONTENT',threshold:'BLOCK_NONE'} ] }) }}",
+        "options": {
+          "timeout": 30000,
+          "response": { "response": { "fullResponse": false, "neverError": true } }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "adoff-gemini-credential-2026",
+          "name": "AdOff Gemini API (ServerN8N free/tier1)"
+        }
+      }
+    },
+    {
+      "id": "node-007-parse-guard",
+      "name": "Parse + Brand-guard + Build SQL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1440, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const meta = $('Build Gemini prompt').item.json;\nconst resp = $json;\nconst esc = (s) => s == null ? 'NULL' : `'${String(s).replace(/'/g, \"''\")}'`;\nlet text = '';\ntry { text = resp.candidates?.[0]?.content?.parts?.[0]?.text || ''; } catch(e){}\nlet parsed = null;\ntry { parsed = JSON.parse(text); } catch(e) {\n  const m = text.match(/\\{[\\s\\S]*\\}/);\n  if (m) { try { parsed = JSON.parse(m[0]); } catch(e2){} }\n}\nif (!parsed || !parsed.caption) {\n  return [{ json: { ...meta, ok:false, reason:'gemini_no_valid_json', raw:text.slice(0,300) } }];\n}\nconst caption = String(parsed.caption || '').trim();\nconst hashtags = Array.isArray(parsed.hashtags) ? parsed.hashtags.map(h=>String(h).trim()).filter(Boolean) : [];\nconst cta = String(parsed.cta || '').trim();\nconst BRANDS = /\\b(YouTube|Google|Facebook|Instagram|TikTok|Twitter|Amazon|Reddit|Twitch|GitHub|LinkedIn)\\b/i;\nconst SIZE_LEAK = /149\\s*(KB|K B|kilobyte|kilobytes)/i;\nconst full = [caption, ...hashtags, cta].join(' ');\nif (BRANDS.test(full)) return [{ json: { ...meta, ok:false, reason:'brand_leak', preview:caption.slice(0,200) } }];\nif (SIZE_LEAK.test(full)) return [{ json: { ...meta, ok:false, reason:'149kb_leak', preview:caption.slice(0,200) } }];\nif (caption.length < 25) return [{ json: { ...meta, ok:false, reason:'caption_too_short', preview:caption } }];\nif (caption.length > 2200) return [{ json: { ...meta, ok:false, reason:'caption_too_long', preview:caption.slice(0,200) } }];\nif (hashtags.length < 2) return [{ json: { ...meta, ok:false, reason:'too_few_hashtags', preview:caption.slice(0,200) } }];\nconst body = JSON.stringify({ caption, hashtags, cta });\nconst tokens_in = resp.usageMetadata?.promptTokenCount || 0;\nconst tokens_out = resp.usageMetadata?.candidatesTokenCount || 0;\nconst sql = `INSERT INTO adoff_autopilot.gemini_copy_drafts (workflow, asset_type, platform, lang, concept, body, status, brand_guard_ok, video_master_id, model, tokens_in, tokens_out) VALUES ('w20-caption', 'caption_social', ${esc(meta.platform)}, ${esc(meta.lang)}, ${esc(meta.concept)}, ${esc(body)}::jsonb, 'draft', true, ${esc(meta.video_master_id)}, 'gemini-2.5-flash', ${tokens_in}, ${tokens_out}) RETURNING id;`;\nreturn [{ json: { ...meta, ok:true, caption, hashtags, cta, model:'gemini-2.5-flash', tokens_in, tokens_out, sql } }];"
+      }
+    },
+    {
+      "id": "node-008-if-ok",
+      "name": "IF ok?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1680, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "loose" },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-ok",
+              "operator": { "type": "boolean", "operation": "true" },
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-009-pg-insert",
+      "name": "Postgres INSERT gemini_copy_drafts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1920, 220],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sql }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot Postgres"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-010-log-fail",
+      "name": "Log fail (no DB)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1920, 400],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "console.warn('[w20] copy rejected:', JSON.stringify({ lang:$json.lang, platform:$json.platform, reason:$json.reason, preview:$json.preview }));\nreturn [{ json: { ...$json, dropped:true } }];"
+      }
+    },
+    {
+      "id": "node-011-loop-back",
+      "name": "Wait 1s (rate limit)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2160, 300],
+      "parameters": {
+        "amount": 1,
+        "unit": "seconds"
+      }
+    },
+    {
+      "id": "node-012-merge",
+      "name": "Loop done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2400, 300],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Set defaults", "type": "main", "index": 0 }]]
+    },
+    "Webhook /gemini/caption": {
+      "main": [[{ "node": "Set defaults", "type": "main", "index": 0 }]]
+    },
+    "Set defaults": {
+      "main": [[{ "node": "Throttle (1 req)", "type": "main", "index": 0 }]]
+    },
+    "Throttle (1 req)": {
+      "main": [
+        [{ "node": "Loop done", "type": "main", "index": 0 }],
+        [{ "node": "Build Gemini prompt", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Gemini prompt": {
+      "main": [[{ "node": "Gemini 2.5 Flash", "type": "main", "index": 0 }]]
+    },
+    "Gemini 2.5 Flash": {
+      "main": [[{ "node": "Parse + Brand-guard + Build SQL", "type": "main", "index": 0 }]]
+    },
+    "Parse + Brand-guard + Build SQL": {
+      "main": [[{ "node": "IF ok?", "type": "main", "index": 0 }]]
+    },
+    "IF ok?": {
+      "main": [
+        [{ "node": "Postgres INSERT gemini_copy_drafts", "type": "main", "index": 0 }],
+        [{ "node": "Log fail (no DB)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Postgres INSERT gemini_copy_drafts": {
+      "main": [[{ "node": "Wait 1s (rate limit)", "type": "main", "index": 0 }]]
+    },
+    "Log fail (no DB)": {
+      "main": [[{ "node": "Wait 1s (rate limit)", "type": "main", "index": 0 }]]
+    },
+    "Wait 1s (rate limit)": {
+      "main": [[{ "node": "Throttle (1 req)", "type": "main", "index": 0 }]]
+    }
+  },
+  "tags": [
+    { "name": "adoff" },
+    { "name": "gemini" },
+    { "name": "copywriting" },
+    { "name": "v2026" }
+  ]
+}

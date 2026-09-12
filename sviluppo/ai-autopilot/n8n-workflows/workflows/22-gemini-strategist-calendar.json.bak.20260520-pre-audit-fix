@@ -1,0 +1,158 @@
+{
+  "id": "w22-gemini-strategist",
+  "name": "22 — Gemini Strategist + Calendar Editoriale",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Rome",
+    "saveExecutionProgress": true,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all"
+  },
+  "nodes": [
+    {
+      "id": "n22-001-trigger-manual",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 200],
+      "parameters": {}
+    },
+    {
+      "id": "n22-002-trigger-webhook",
+      "name": "Webhook /gemini/strategy",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 380],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gemini-strategy",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "webhookId": "gemini-strategy-wh"
+    },
+    {
+      "id": "n22-003-set-defaults",
+      "name": "Set brief",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const input = items[0]?.json?.body || items[0]?.json || {};\nconst brief = {\n  goal: input.goal || 'Aumentare installazioni AdOff su browser desktop nei prossimi 30 giorni minimizzando il costo per install',\n  timeframe: input.timeframe || 'next 30 days',\n  target_audience: input.target_audience || 'utenti 25-45 anni infastiditi dalla pubblicità invasiva, attenti alla privacy, fluenti in inglese o italiano, usano browser desktop quotidianamente',\n  budget_note: input.budget_note || 'budget bassissimo, leva organico + community + earned media',\n  channels_hint: Array.isArray(input.channels_hint) && input.channels_hint.length ? input.channels_hint : ['organic_social','community','content_seo','press','referral'],\n  lang: input.lang || 'it',\n  constraints: input.constraints || 'no menzioni brand famosi, no claim medici/finanziari, brand voice energica/brillante'\n};\nreturn [{ json: brief }];"
+      }
+    },
+    {
+      "id": "n22-004-build-prompt",
+      "name": "Build strategist prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const b = $json;\nconst LANG_NAMES = { it:'italiano', en:'English', de:'Deutsch', fr:'français', es:'español' };\nconst langName = LANG_NAMES[b.lang] || b.lang;\nconst schema = JSON.stringify({\n  executive_summary: 'string',\n  positioning_one_liner: 'string',\n  target_personas: [{ name:'string', demographic:'string', pain:'string', hook:'string' }],\n  channels: [{ name:'string', why:'string', weekly_actions: ['string'], kpis:['string'] }],\n  calendar: [{ day:1, channel:'string', asset_type:'string', theme:'string', hook:'string', copy_brief:'string' }],\n  success_metrics: ['string'],\n  risks: ['string']\n});\nconst prompt = `Sei Head of Marketing AdOff. Crea un piano marketing operativo in ${langName}.\\n\\nBRIEF\\n- Goal: ${b.goal}\\n- Timeframe: ${b.timeframe}\\n- Target: ${b.target_audience}\\n- Budget: ${b.budget_note}\\n- Channels hint: ${b.channels_hint.join(', ')}\\n- Constraints: ${b.constraints}\\n\\nVINCOLI ASSOLUTI: MAI nominare brand famosi (YouTube, Google, Facebook, Instagram, TikTok, Twitter, X, Amazon, Reddit, Twitch, GitHub, LinkedIn) — usa sinonimi. MAI scrivere \"149 KB\"/varianti. Voice: energica, brillante, diretta. Output solo in ${langName}.\\n\\nDELIVERABLE: piano azionabile + calendar di 30 giorni (1 entry/giorno con channel, asset_type es. post/email/video, theme, hook 1 frase, copy_brief 1-2 frasi).\\n\\n3-5 target_personas. 3-5 channels con weekly_actions concreti (non generici).\\n\\nRESTITUISCI SOLO JSON VALIDO (no markdown fences):\\n${schema}`;\nreturn [{ json: { ...b, prompt, model:'gemini-2.5-pro' } }];"
+      }
+    },
+    {
+      "id": "n22-005-http-gemini",
+      "name": "Gemini 2.5 Pro",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [ { "name": "Content-Type", "value": "application/json" } ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contents:[{role:'user',parts:[{text:$json.prompt}]}], generationConfig:{ temperature:0.7, topP:0.95, maxOutputTokens:8192, responseMimeType:'application/json' }, safetySettings:[{category:'HARM_CATEGORY_HARASSMENT',threshold:'BLOCK_NONE'},{category:'HARM_CATEGORY_HATE_SPEECH',threshold:'BLOCK_NONE'},{category:'HARM_CATEGORY_SEXUALLY_EXPLICIT',threshold:'BLOCK_NONE'},{category:'HARM_CATEGORY_DANGEROUS_CONTENT',threshold:'BLOCK_NONE'}] }) }}",
+        "options": {
+          "timeout": 180000,
+          "response": { "response": { "fullResponse": false, "neverError": true } }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "adoff-gemini-credential-2026",
+          "name": "AdOff Gemini API (ServerN8N free/tier1)"
+        }
+      }
+    },
+    {
+      "id": "n22-006-parse-guard",
+      "name": "Parse + Brand-guard + Build SQL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 300],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const meta = $('Build strategist prompt').item.json;\nconst resp = $json;\nconst esc = (s) => s == null ? 'NULL' : `'${String(s).replace(/'/g,\"''\")}'`;\nlet text = '';\ntry { text = resp.candidates?.[0]?.content?.parts?.[0]?.text || ''; } catch(e){}\nlet parsed = null;\ntry { parsed = JSON.parse(text); } catch(e){ const m=text.match(/\\{[\\s\\S]*\\}/); if(m){ try{ parsed=JSON.parse(m[0]); }catch(e2){} } }\nif (!parsed || !parsed.executive_summary) return [{ json: { ...meta, ok:false, reason:'gemini_no_valid_json', raw:text.slice(0,400) } }];\nconst BRANDS = /\\b(YouTube|Google|Facebook|Instagram|TikTok|Twitter|Amazon|Reddit|Twitch|GitHub|LinkedIn)\\b/i;\nconst SIZE_LEAK = /149\\s*(KB|K B|kilobyte|kilobytes)/i;\nconst full = JSON.stringify(parsed);\nif (BRANDS.test(full)) return [{ json: { ...meta, ok:false, reason:'brand_leak', preview:full.slice(0,300) } }];\nif (SIZE_LEAK.test(full)) return [{ json: { ...meta, ok:false, reason:'149kb_leak', preview:full.slice(0,300) } }];\nconst body = JSON.stringify(parsed);\nconst tokens_in = resp.usageMetadata?.promptTokenCount || 0;\nconst tokens_out = resp.usageMetadata?.candidatesTokenCount || 0;\nconst sql = `INSERT INTO adoff_autopilot.gemini_copy_drafts (workflow, asset_type, platform, lang, concept, body, status, brand_guard_ok, model, tokens_in, tokens_out) VALUES ('w22-strategy', 'marketing_plan', 'master_plan', ${esc(meta.lang)}, ${esc(meta.goal)}, ${esc(body)}::jsonb, 'draft', true, 'gemini-2.5-pro', ${tokens_in}, ${tokens_out}) RETURNING id;`;\nreturn [{ json: { ...meta, ok:true, parsed, tokens_in, tokens_out, sql, calendar_size:(parsed.calendar||[]).length, n_personas:(parsed.target_personas||[]).length, n_channels:(parsed.channels||[]).length } }];"
+      }
+    },
+    {
+      "id": "n22-007-if-ok",
+      "name": "IF ok?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1440, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "loose" },
+          "combinator": "and",
+          "conditions": [ { "id": "ok", "operator": { "type": "boolean", "operation": "true" }, "leftValue": "={{ $json.ok }}", "rightValue": "" } ]
+        }
+      }
+    },
+    {
+      "id": "n22-008-pg-insert",
+      "name": "Postgres INSERT plan",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1680, 220],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sql }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot Postgres"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "n22-009-log-fail",
+      "name": "Log fail",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1680, 400],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "console.warn('[w22] strategy reject:', JSON.stringify({ lang:$json.lang, reason:$json.reason, preview:($json.preview||$json.raw||'').slice(0,200) }));\nreturn [{ json: { ...$json, dropped:true } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": { "main": [[{ "node": "Set brief", "type": "main", "index": 0 }]] },
+    "Webhook /gemini/strategy": { "main": [[{ "node": "Set brief", "type": "main", "index": 0 }]] },
+    "Set brief": { "main": [[{ "node": "Build strategist prompt", "type": "main", "index": 0 }]] },
+    "Build strategist prompt": { "main": [[{ "node": "Gemini 2.5 Pro", "type": "main", "index": 0 }]] },
+    "Gemini 2.5 Pro": { "main": [[{ "node": "Parse + Brand-guard + Build SQL", "type": "main", "index": 0 }]] },
+    "Parse + Brand-guard + Build SQL": { "main": [[{ "node": "IF ok?", "type": "main", "index": 0 }]] },
+    "IF ok?": {
+      "main": [
+        [{ "node": "Postgres INSERT plan", "type": "main", "index": 0 }],
+        [{ "node": "Log fail", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "tags": [
+    { "name": "adoff" }, { "name": "gemini" }, { "name": "strategy" }, { "name": "v2026" }
+  ]
+}

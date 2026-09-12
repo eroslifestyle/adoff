@@ -1,0 +1,213 @@
+{
+  "summary": "L'integrazione mostra un potenziale significativo ma è afflitta da vulnerabilità di sicurezza critiche (SQL Injection), bug di correttezza fondamentali (perdita di stato nei workflow) e rischi operativi elevati (cost runaway, assenza di retry). L'approccio è innovativo ma l'implementazione attuale è troppo fragile e insicura per l'ambiente di produzione. Le fondamenta di sicurezza, robustezza e data-flow devono essere completamente riviste prima di procedere. I brand-guard sono un buon inizio ma facilmente aggirabili.",
+  "score_overall": "30/100",
+  "findings": [
+    {
+      "id": "F001",
+      "severity": "critical",
+      "category": "security",
+      "workflow": "global",
+      "title": "Vulnerabilità SQL Injection tramite costruzione manuale delle query",
+      "description": "Le query SQL vengono costruite concatenando stringhe con una funzione di escape manuale (`.replace(/'/g, \"''\")`). Questo metodo è notoriamente insicuro e non protegge da tecniche di injection avanzate. Un input malevolo in campi come `concept` o `seed` potrebbe compromettere il database.",
+      "evidence": "const sql = `INSERT INTO adoff_autopilot.gemini_copy_drafts (..., concept, ...) VALUES (..., ${esc(meta.concept)}, ...);`;\nconst esc = (s) => s == null ? 'NULL' : `'${String(s).replace(/'/g, \"''\")}'`;",
+      "impact": "Esecuzione di codice arbitrario sul database, esfiltrazione di dati, corruzione o cancellazione di tabelle (es. `gemini_copy_drafts`).",
+      "suggested_fix": "Riscrivere tutte le query utilizzando query parametrizzate, supportate nativamente dal nodo Postgres di n8n. Invece di costruire la stringa SQL, passare i valori come parametri separati. Es: `query: 'INSERT INTO ... VALUES ($1, $2)', parameters: [meta.platform, meta.lang]`.",
+      "priority": "1 (do now)"
+    },
+    {
+      "id": "F002",
+      "severity": "critical",
+      "category": "correctness",
+      "workflow": "w20, w21, w22, w23",
+      "title": "Perdita di stato dei metadati prima del salvataggio su DB",
+      "description": "I nodi `Parse + Brand-guard` tentano di recuperare i metadati da un nodo precedente (`$('Node Name').item.json`) dopo una chiamata HTTP. I nodi HTTP, per default, non passano i dati di input al loro output. Di conseguenza, `meta` è `undefined` o si riferisce a un'esecuzione non correlata (race condition in queue mode), causando il fallimento del salvataggio o l'inserimento di dati errati/nulli.",
+      "evidence": "const meta = $('Build Gemini prompt').item.json; // This data is lost after the HTTP node\nconst sql = `... VALUES ('w20-caption', 'caption_social', ${esc(meta.platform)}, ${esc(meta.lang)}, ...)`",
+      "impact": "La maggior parte delle esecuzioni fallirà silenziosamente o inserirà record incompleti nel database (con `platform`, `lang`, `concept` nulli), rendendo i dati inutilizzabili.",
+      "suggested_fix": "In tutti i nodi HTTP Request (`Gemini ...`), abilitare l'opzione 'Add to Input Data' (o simile, a seconda della versione esatta del nodo) per unire la risposta della API con i dati di input. In alternativa, passare esplicitamente i metadati necessari nel body della richiesta per poi estrarli dalla risposta (meno pulito).",
+      "priority": "1 (do now)"
+    },
+    {
+      "id": "F003",
+      "severity": "high",
+      "category": "security",
+      "workflow": "global",
+      "title": "Rischio elevato di Prompt Injection da input utente",
+      "description": "I dati forniti dall'utente (es. `concept`, `seed`, `brief.goal`) vengono inseriti direttamente nei prompt senza alcuna sanificazione o tecnica di mitigazione. Un utente malintenzionato può inserire istruzioni per bypassare le regole del brand, rivelare il system prompt o generare contenuti dannosi.",
+      "evidence": "const prompt = `...\\nCONCEPT: ${concept}\\n...`; // 'concept' comes directly from webhook body",
+      "impact": "Generazione di contenuti che violano la brand policy, leak di informazioni confidenziali sulla strategia di prompting, utilizzo dell'API per scopi non autorizzati a spese dell'azienda.",
+      "suggested_fix": "Implementare una difesa a più livelli: 1) Aggiungere un meta-prompt che istruisca il modello a trattare l'input dell'utente solo come dati e a non interpretare mai istruzioni da esso. 2) Utilizzare delimitatori chiari (es. `<user_input>...</user_input>`). 3) Sanificare l'input per rimuovere frasi chiave come 'ignora le istruzioni precedenti'.",
+      "priority": "1 (do now)"
+    },
+    {
+      "id": "F004",
+      "severity": "high",
+      "category": "robustness",
+      "workflow": "w20, w21, w23",
+      "title": "Rischio di Cost Runaway per input non validati",
+      "description": "I nodi 'esplodi' generano un item per ogni combinazione di input (es. `langs × platforms`). Non c'è alcun limite alla dimensione degli array di input accettati dal webhook. Una singola richiesta con array molto grandi può scatenare centinaia di chiamate API costose (specialmente con Gemini Pro), portando a costi imprevisti e molto elevati.",
+      "evidence": "const langs = Array.isArray(input.langs) && input.langs.length ? input.langs : ['it','en','de','fr','es'];\n// No check on input.langs.length, could be 1000.",
+      "impact": "Esaurimento rapido del budget API, potenzialmente migliaia di euro di spesa da una singola richiesta malevola o errata.",
+      "suggested_fix": "Aggiungere una validazione all'inizio del workflow (es. nel nodo 'Set defaults') per limitare la dimensione massima degli array di input. Es: `if (langs.length > 10) throw new Error('Too many languages requested');`.",
+      "priority": "1 (do now)"
+    },
+    {
+      "id": "F005",
+      "severity": "high",
+      "category": "robustness",
+      "workflow": "global",
+      "title": "Nessuna strategia di Retry per fallimenti API",
+      "description": "Le chiamate API a Gemini sono configurate con `neverError: true` e non hanno un meccanismo di retry. Se l'API restituisce un errore transiente (es. 429 Rate Limit, 500 Internal Server Error, timeout), l'esecuzione fallisce immediatamente e l'item viene scartato. La produzione richiede resilienza a questi fallimenti comuni.",
+      "evidence": "\"options\": {\n  \"response\": { \"response\": { \"fullResponse\": false, \"neverError\": true } }\n}",
+      "impact": "Perdita di dati e fallimenti non necessari dei workflow a causa di problemi di rete o instabilità temporanea dell'API. Bassa affidabilità del sistema.",
+      "suggested_fix": "Implementare una logica di retry con backoff esponenziale. In n8n, questo può essere fatto disabilitando `neverError`, impostando 'Continue on Fail' sul nodo HTTP e creando un loop che ritenta un numero limitato di volte (es. 3) con un nodo Wait intermedio.",
+      "priority": "2 (do this week)"
+    },
+    {
+      "id": "F006",
+      "severity": "high",
+      "category": "architecture",
+      "workflow": "global",
+      "title": "Manca un workflow di approvazione e pubblicazione",
+      "description": "Il database è progettato per un flusso 'draft' -> 'approved', ma non esiste alcun processo o workflow per gestire questa transizione. I contenuti vengono generati e rimangono in stato 'draft' indefinitamente, senza un modo per un operatore di revisionarli, approvarli e schedularli per la pubblicazione.",
+      "evidence": "CREATE TABLE ... (\n  status TEXT NOT NULL DEFAULT 'draft',\n  approved_at TIMESTAMPTZ,\n  approved_by TEXT\n);",
+      "impact": "L'intero sistema genera contenuti che non possono essere utilizzati, rendendolo di fatto inutile per lo scopo finale di pubblicazione. Il valore del lavoro è bloccato nel database.",
+      "suggested_fix": "Creare un'interfaccia utente semplice (es. Retool, Appsmith) per visualizzare i draft. Aggiungere due nuovi workflow n8n attivati da webhook: 1) `approve-draft` che aggiorna lo stato e i campi `approved_*`. 2) `publish-approved` che viene eseguito da un cron e pubblica i contenuti approvati.",
+      "priority": "1 (do now)"
+    },
+    {
+      "id": "F007",
+      "severity": "high",
+      "category": "data_quality",
+      "workflow": "global",
+      "title": "Brand-guard inefficace per lingue non latine",
+      "description": "La regex per il brand-guard usa i word boundaries (`\\b`), che funzionano solo per lingue che separano le parole con spazi. È completamente inefficace per lingue come giapponese, cinese o arabo, dove i nomi dei brand (es. `グーグル`) non sarebbero delimitati da `\\b`.",
+      "evidence": "const BRANDS = /\\b(YouTube|Google|Facebook|...)\\b/i;",
+      "impact": "Generazione e potenziale pubblicazione di contenuti che violano la brand policy in mercati non anglofoni/europei, con possibili conseguenze legali o di partnership.",
+      "suggested_fix": "Rimuovere i `\\b` e accettare il rischio di falsi positivi (es. bloccare 'scrapbook' per 'book'). In alternativa, creare regex specifiche per lingua o, meglio ancora, aggiungere un passaggio di validazione LLM-based: 'Does the following text mention any of the forbidden brands? Answer YES or NO.'",
+      "priority": "2 (do this week)"
+    },
+    {
+      "id": "F008",
+      "severity": "medium",
+      "category": "robustness",
+      "workflow": "global",
+      "title": "Mascheramento di errori API con `neverError: true`",
+      "description": "L'uso di `neverError: true` trasforma un fallimento della chiamata HTTP (es. 401 Unauthorized, 400 Bad Request) in un'esecuzione di successo del nodo. La logica successiva deve ispezionare manualmente la risposta per capire se è un errore, rendendo il codice più complesso e soggetto a bug. Gli errori di configurazione (es. API key errata) potrebbero non essere immediatamente evidenti.",
+      "evidence": "\"response\": { \"response\": { \"fullResponse\": false, \"neverError\": true } }",
+      "impact": "Debugging difficile, errori silenziosi che vengono trattati come 'output non valido dal LLM' invece che come problemi infrastrutturali, ritardando la risoluzione dei problemi reali.",
+      "suggested_fix": "Rimuovere `neverError: true`. Gestire i percorsi di errore esplicitamente. Usare il ramo 'error' dei nodi o l'opzione 'Continue on Fail' per distinguere tra fallimenti recuperabili (da ritentare) e fallimenti definitivi (da notificare).",
+      "priority": "2 (do this week)"
+    },
+    {
+      "id": "F009",
+      "severity": "medium",
+      "category": "architecture",
+      "workflow": "global",
+      "title": "Mancanza di idempotenza nei webhook",
+      "description": "I webhook non implementano alcun meccanismo di idempotenza. Se un client invia la stessa richiesta due volte (es. per un retry di rete), verranno eseguite due operazioni identiche, portando alla creazione di contenuti duplicati nel database.",
+      "evidence": "Webhook /gemini/caption: {\n  \"httpMethod\": \"POST\",\n  \"path\": \"gemini-copywriter-caption\"\n}",
+      "impact": "Dati duplicati, confusione per il team di revisione, spreco di token API e risorse di calcolo.",
+      "suggested_fix": "Richiedere un header `Idempotency-Key` nella richiesta webhook. All'inizio del workflow, controllare una tabella Redis o Postgres per vedere se la chiave è già stata processata. Se sì, restituire la risposta precedente; altrimenti, eseguire il workflow e salvare la chiave.",
+      "priority": "3 (do later)"
+    },
+    {
+      "id": "F010",
+      "severity": "medium",
+      "category": "architecture",
+      "workflow": "w20, w21, w22, w23",
+      "title": "Osservabilità e alerting inconsistenti",
+      "description": "Solo il workflow W15 ha notifiche di successo/fallimento su Telegram. Gli altri quattro workflow falliscono silenziosamente: i loro errori vengono registrati solo nei log del container n8n, che nessuno monitora attivamente. Questo rende impossibile rilevare proattivamente problemi su gran parte del sistema.",
+      "evidence": "W20, W21, W22, W23 have a `Log fail` node that only does `console.warn(...)`.",
+      "impact": "I workflow potrebbero essere non funzionanti per giorni o settimane senza che nessuno se ne accorga, bloccando la pipeline di contenuti.",
+      "suggested_fix": "Creare un workflow riutilizzabile ('sub-workflow') per le notifiche e invocarlo da tutti i workflow in caso di errore. Standardizzare il formato dei messaggi di errore per includere ID dell'esecuzione, nome del workflow e motivo del fallimento.",
+      "priority": "2 (do this week)"
+    },
+    {
+      "id": "F011",
+      "severity": "medium",
+      "category": "security",
+      "workflow": "global",
+      "title": "Brand-guard regex bypassabile con varianti",
+      "description": "La regex `BRANDS` è vulnerabile a semplici tecniche di evasione come l'uso di caratteri omoglifi (es. Gооgle con 'o' cirilliche), inserimento di caratteri invisibili, o varianti come 'YouTube .com'. Anche la regola `SIZE_LEAK` è fragile e non copre varianti come '149-KB'.",
+      "evidence": "const BRANDS = /\\b(YouTube|Google|Facebook|...)\\b/i;\nconst SIZE_LEAK = /149\\s*(KB|K B|kilobyte|kilobytes)/i;",
+      "impact": "Contenuti che violano le policy possono superare i controlli ed essere salvati nel DB, richiedendo una pulizia manuale e mettendo a rischio il brand.",
+      "suggested_fix": "Rafforzare le regex: normalizzare il testo (rimuovere punteggiatura, spazi extra, convertire a NFD per caratteri unicode) prima del test. Aggiungere varianti comuni alla lista (es. `(You|Y-)Tube`). Per `SIZE_LEAK`, usare `149[\\s-]*k(ilo)?b(yte)?s?`.",
+      "priority": "3 (do later)"
+    },
+    {
+      "id": "F012",
+      "severity": "medium",
+      "category": "correctness",
+      "workflow": "global",
+      "title": "Parsing del JSON di output troppo permissivo e fragile",
+      "description": "Il codice tenta di estrarre un blocco JSON da una stringa di testo con una regex (`.match(/\\{[\\s\\S]*\\}/)`). Questo approccio è fragile e può fallire se il modello restituisce testo aggiuntivo, più di un oggetto JSON, o un JSON malformato. L'uso di `responseMimeType:'application/json'` aiuta ma non è una garanzia assoluta.",
+      "evidence": "try { parsed = JSON.parse(text); } catch(e) {\n  const m = text.match(/\\{[\\s\\S]*\\}/);\n  if (m) { try { parsed = JSON.parse(m[0]); } catch(e2){} }\n}",
+      "impact": "Fallimenti intermittenti nella generazione di contenuti quando il modello non restituisce un JSON pulito, anche se il contenuto principale è valido.",
+      "suggested_fix": "Rafforzare il prompt per essere ancora più esplicito sulla restituzione di solo JSON. Considerare l'uso di librerie di parsing JSON più robuste che possono correggere errori minori. Aggiungere un passaggio di retry specifico se il parsing fallisce, chiedendo al modello di 'correggere il JSON fornito'.",
+      "priority": "3 (do later)"
+    },
+    {
+      "id": "F013",
+      "severity": "low",
+      "category": "data_quality",
+      "workflow": "global",
+      "title": "Validazione della struttura dell'output JSON insufficiente",
+      "description": "Dopo il parsing, il codice controlla solo la presenza di una o due chiavi (es. `!parsed.caption`). Non viene validata la struttura completa dell'oggetto (es. che `hashtags` sia un array di stringhe, che `headlines` abbia 3 elementi). L'LLM potrebbe restituire dati in un formato inaspettato che verrebbero salvati nel DB.",
+      "evidence": "if (!parsed || !parsed.caption) {\n  return [{ json: { ...meta, ok:false, reason:'gemini_no_valid_json' } }];\n} // No other checks on parsed structure",
+      "impact": "Inserimento di dati di bassa qualità o con struttura errata nel DB, che potrebbe causare errori nei sistemi a valle (es. l'interfaccia di approvazione o il sistema di pubblicazione).",
+      "suggested_fix": "Utilizzare una libreria di validazione di schemi JSON (es. Zod o Ajv) in un nodo Code per validare la struttura dell'oggetto `parsed` contro uno schema predefinito prima di procedere con la costruzione della query SQL.",
+      "priority": "2 (do this week)"
+    },
+    {
+      "id": "F014",
+      "severity": "low",
+      "category": "robustness",
+      "workflow": "w20, w21, w23",
+      "title": "Rate limiting basato su Wait è inefficace per carichi concorrenti",
+      "description": "L'uso di `SplitInBatches` con `batchSize: 1` e un nodo `Wait` serializza le chiamate *all'interno di una singola esecuzione*. Tuttavia, non previene che più esecuzioni di workflow (attivate da webhook concorrenti) vengano eseguite in parallelo, superando comunque il rate limit dell'API.",
+      "evidence": "Throttle (1 req) [SplitInBatches] -> ... -> Wait 1s -> [Loop back to Throttle]",
+      "impact": "Fallimenti dovuti a errori 429 (Too Many Requests) durante picchi di carico, nonostante il tentativo di throttling.",
+      "suggested_fix": "Per un vero rate limiting, utilizzare un sistema di locking esterno (es. Redis) per garantire che solo N chiamate API vengano effettuate per unità di tempo sull'intero sistema. In alternativa, considerare un proxy API come LiteLLM che ha funzionalità di rate limiting integrate.",
+      "priority": "3 (do later)"
+    },
+    {
+      "id": "F015",
+      "severity": "low",
+      "category": "project_consistency",
+      "workflow": "w15",
+      "title": "Il prompt di fallback per Gemini perde il contesto specifico del video",
+      "description": "Quando la chiamata a Ollama fallisce il brand-guard, il workflow W15 esegue un fallback a Gemini. Tuttavia, il prompt per Gemini è generico e si basa solo sul `concept`, omettendo i dettagli specifici dello script video generato (`headline`, `specs`, `outro`) che erano stati forniti a Ollama.",
+      "evidence": "prompt: `...CONCEPT: ${ $('Parse build JSON').first().json.concept }...`\n// Missing headline, specs, outro from the build step.",
+      "impact": "Il testo generato dal fallback potrebbe essere di qualità inferiore e meno pertinente al video specifico rispetto a quello generato dal sistema primario.",
+      "suggested_fix": "Modificare il nodo 'Gemini parse + assemble' per accedere ai dati del nodo 'Parse build JSON' e includere nel prompt di fallback gli stessi dettagli dello script forniti al prompt di Ollama.",
+      "priority": "4 (optional)"
+    },
+    {
+      "id": "F016",
+      "severity": "low",
+      "category": "architecture",
+      "workflow": "global",
+      "title": "Configurazione decentralizzata e duplicata tra i workflow",
+      "description": "Valori di configurazione come la lista dei brand vietati, i nomi delle lingue (`LANG_NAMES`), e i limiti di caratteri per piattaforma sono duplicati in nodi Code attraverso più workflow. Questo rende la manutenzione difficile e soggetta a errori.",
+      "evidence": "W20: const BRANDS = /.../i;\nW21: const BAN = '...YouTube, Google...';\nW23: const BRANDS = /.../i;",
+      "impact": "Aggiornare una regola richiede la modifica manuale di più punti, con il rischio di dimenticarne uno e creare inconsistenza nel comportamento del sistema.",
+      "suggested_fix": "Centralizzare la configurazione. Creare un workflow 'config' che, quando chiamato, restituisce un oggetto JSON con tutte le configurazioni. Gli altri workflow possono chiamare questo sub-workflow all'inizio per caricare le regole aggiornate.",
+      "priority": "3 (do later)"
+    }
+  ],
+  "missing_critical_features": [
+    "Un'interfaccia utente e un workflow backend per la revisione e approvazione dei contenuti in stato 'draft'.",
+    "Un sistema di scheduling (cron) per la pubblicazione automatica dei contenuti approvati.",
+    "Un meccanismo di budget cap o di alerting in tempo reale per prevenire spese API incontrollate.",
+    "Un workflow di test automatizzato per validare le modifiche ai prompt contro un set di casi di test predefiniti.",
+    "Autenticazione sui webhook (es. bearer token, HMAC) per la sicurezza una volta rimossa la dipendenza da Tailscale."
+  ],
+  "quick_wins": [
+    "Riscrivere immediatamente tutte le query SQL per usare parametri, eliminando la vulnerabilità SQLi.",
+    "Correggere la perdita di stato dei dati nei workflow abilitando l'opzione per unire l'input con l'output nei nodi HTTP.",
+    "Aggiungere un limite massimo alla dimensione degli array di input nei webhook per prevenire il cost runaway.",
+    "Centralizzare le notifiche di errore in un sub-workflow e aggiungerlo a tutti e 5 i workflow per una migliore osservabilità.",
+    "Standardizzare e rafforzare la regex del brand-guard e applicarla consistentemente in tutti i workflow.",
+    "Aggiungere una validazione di base dello schema JSON dell'output LLM per migliorare la qualità dei dati salvati."
+  ]
+}

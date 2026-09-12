@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Benutzerhandbuch AdOff — komplette Einrichtung</title>
+  <meta name="description" content="Vollständige AdOff-Anleitung: Installation, Popup-Steuerung, Seitenpause, Free-Lizenz, Empfehlungsprogramm, Datenschutz und Fehlerbehebung." />
+  <link rel="canonical" href="https://adoff.app/de/guide"/>
+<link rel="alternate" hreflang="it" href="https://adoff.app/guide"/>
+<link rel="alternate" hreflang="en" href="https://adoff.app/en/guide"/>
+<link rel="alternate" hreflang="de" href="https://adoff.app/de/guide"/>
+<link rel="alternate" hreflang="fr" href="https://adoff.app/fr/guide"/>
+<link rel="alternate" hreflang="es" href="https://adoff.app/es/guide"/>
+<link rel="alternate" hreflang="pt" href="https://adoff.app/pt/guide"/>
+<link rel="alternate" hreflang="ru" href="https://adoff.app/ru/guide"/>
+<link rel="alternate" hreflang="ar" href="https://adoff.app/ar/guide"/>
+<link rel="alternate" hreflang="zh" href="https://adoff.app/zh/guide"/>
+<link rel="alternate" hreflang="hi" href="https://adoff.app/hi/guide"/>
+<link rel="alternate" hreflang="ja" href="https://adoff.app/ja/guide"/>
+<link rel="alternate" hreflang="ko" href="https://adoff.app/ko/guide"/>
+<link rel="alternate" hreflang="tr" href="https://adoff.app/tr/guide"/>
+<link rel="alternate" hreflang="id" href="https://adoff.app/id/guide"/>
+<link rel="alternate" hreflang="pl" href="https://adoff.app/pl/guide"/>
+<link rel="alternate" hreflang="x-default" href="https://adoff.app/en/guide"/>
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="AdOff Benutzerhandbuch · Vollständige Einrichtungsanleitung" />
+  <meta property="og:description" content="Alles, was du über AdOff wissen musst: Einrichtung, Funktionen, Free-Lizenz, Empfehlungsprogramm." />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta content="https://adoff.app/de/guide" property="og:url"/>
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AdOff Benutzerhandbuch · Vollständige Einrichtungsanleitung" />
+  <meta name="twitter:description" content="Alles, was du über AdOff wissen musst: Einrichtung, Funktionen, Free-Lizenz, Empfehlungsprogramm." />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+  <!-- hreflang -->
+<link rel="preload" id="adoff-font" href="/assets/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin /><style id="adoff-critical">@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:optional;src:url("/assets/fonts/InterVariable.woff2") format("woff2-variations")}@font-face{font-family:"Inter";font-style:italic;font-weight:100 900;font-display:optional;src:url("/assets/fonts/InterVariable-Italic.woff2") format("woff2-variations")}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--deep-space:     #0a0a1a;--midnight-blue:  #12122a;--shield-purple:  #7c5cfc;--shield-purple-light: #b8a9ff;--shield-purple-dark:  #4c3ad4;--soft-purple:    #b8a9ff;--pure-white:     #ffffff;--steel-gray:     #8a8aaa;--success-green:  #4ade80;--alert-red:      #f43f5e;--bg:           var(--deep-space);--surface:      var(--midnight-blue);--surface-2:    #1a1a36;--surface-warm: #15152e;--text:         #e2e2f0;--text-muted:   var(--steel-gray);--text-dim:     #80809a;--accent:       var(--shield-purple);--accent-btn:   #7252f8;--accent-light: var(--shield-purple-light);--accent-dim:   var(--shield-purple-dark);--accent-soft:  rgba(124, 92, 252, 0.12);--accent-line:  rgba(124, 92, 252, 0.34);--success:      var(--success-green);--success-bg:   rgba(74, 222, 128, 0.10);--danger:       var(--alert-red);--danger-bg:    rgba(244, 63, 94, 0.08);--border:        rgba(124, 92, 252, 0.18);--border-strong: rgba(124, 92, 252, 0.48);--border-subtle: rgba(255, 255, 255, 0.06);--radius-sm:  8px;--radius:     12px;--radius-lg:  18px;--radius-pill: 999px;--ease:       cubic-bezier(0.2, 0.8, 0.2, 1);--t-fast:     150ms var(--ease);--t:          220ms var(--ease);--t-slow:     420ms var(--ease);--container:        min(64rem, 92vw);--container-wide:   min(72rem, 94vw);--primary:        var(--accent);--primary-light:  var(--accent-light);--primary-dark:   var(--accent-dim);--card:           var(--surface);--card-hover:     var(--surface-2);--error:          var(--danger);--warning:        var(--accent);--shadow:         0 1px 0 var(--border-strong);--shadow-glow:    0 0 40px rgba(124, 92, 252, 0.18);--shadow-card:    0 4px 24px rgba(0, 0, 0, 0.4);--transition:     var(--t)}html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}body{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:17px;line-height:1.65;overflow-x:hidden}a{color:var(--accent-light);text-decoration:none;transition:color var(--t)}a:hover{color:var(--pure-white)}strong{color:var(--text);font-weight:700}h1,h2{font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;font-weight:800;line-height:1.1;letter-spacing:-0.025em;color:var(--text)}h1{font-size:clamp(2.4rem,5.5vw,4.2rem)}h2{font-size:clamp(1.7rem,3.8vw,2.8rem)}h1 em,h2 em,.hero__headline em{font-style:italic;color:var(--accent);font-weight:800}.container,.container--wide{margin:0 auto;padding:0 24px}.container{max-width:var(--container)}.container--wide{max-width:var(--container-wide)}section{padding:clamp(72px,9vw,116px) 0}.wordmark{display:inline-flex;align-items:baseline;font-family:"Inter",sans-serif;font-weight:800;letter-spacing:-0.04em;line-height:1;color:var(--pure-white)}.wordmark__off{color:var(--accent)}.wordmark__dot{color:var(--accent)}.wordmark--hero{font-size:clamp(2.8rem,7vw,5rem);margin-bottom:24px;display:flex;width:fit-content}.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 26px;border-radius:var(--radius);font-family:"Inter",sans-serif;font-size:0.98rem;font-weight:600;letter-spacing:-0.005em;text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform var(--t),background var(--t),color var(--t),border-color var(--t),box-shadow var(--t);white-space:normal;text-align:center;line-height:1.3;font-variant-numeric:tabular-nums}.btn--primary{background:var(--accent-btn);color:var(--pure-white);border-color:var(--accent-btn);box-shadow:0 0 0 0 var(--accent-line)}.btn--primary:hover{background:var(--accent-light);color:var(--deep-space);border-color:var(--accent-light);transform:translateY(-1px);box-shadow:0 0 0 4px var(--accent-soft);text-decoration:none}.btn--primary:active{transform:translateY(0)}.btn--outline{background:transparent;color:var(--text);border:1px solid var(--border-strong)}.btn--outline:hover{border-color:var(--accent);color:var(--accent-light);background:transparent;text-decoration:none}.btn--ghost{background:transparent;color:var(--text-muted);border-color:transparent;padding:12px 14px}.btn--ghost:hover{color:var(--accent-light);text-decoration:none}.btn--lg{padding:18px 34px;font-size:1.05rem}.btn--xl{padding:18px 34px;font-size:1.05rem;border-radius:var(--radius)}.nav__inner{max-width:var(--container-wide);margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}.nav__logo{display:flex;align-items:center;gap:10px;color:var(--pure-white);text-decoration:none}.nav__logo:hover{color:var(--accent-light)}.nav__logo img{width:28px;height:28px;border-radius:6px;object-fit:contain}.nav__links{display:flex;align-items:center;gap:28px;list-style:none}.nav__links a{color:var(--text-muted);font-size:0.92rem;font-weight:500;text-decoration:none;transition:color var(--t)}.nav__links a:hover{color:var(--pure-white)}.hero{padding:clamp(72px,11vw,140px) 0 clamp(48px,7vw,80px);position:relative;overflow:hidden}.hero::before{content:'';position:absolute;top:-160px;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(ellipse at center,rgba(124,92,252,0.10) 0%,transparent 65%);pointer-events:none;z-index:0}.hero>.container{position:relative;z-index:1}.hero__media{position:relative;margin:clamp(36px,6vw,64px) auto 0;max-width:700px}.hero__shots{display:flex;align-items:center;justify-content:center;gap:20px}.hero__shots-main,.hero__shots-pop{height:auto;border-radius:12px;border:1px solid var(--border);box-shadow:0 18px 44px rgba(0,0,0,0.5)}.hero__shots-main{width:60%}.hero__shots-pop{width:27%;border-color:var(--border-strong)}@media (max-width:620px){.hero__shots{flex-direction:column;align-items:center;gap:16px}.hero__shots-main,.hero__shots-pop{width:100%;max-width:380px}}.hero__eyebrow{font-family:"Inter",sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-light);margin-bottom:22px;display:inline-flex;align-items:center;gap:10px}.hero__eyebrow-dot{width:7px;height:7px;border-radius:50%;background:var(--success);flex-shrink:0;box-shadow:0 0 12px rgba(74,222,128,0.6)}.hero__headline,.hero__title{font-family:"Inter",sans-serif;font-size:clamp(2.5rem,6vw,4.4rem);font-weight:800;line-height:1.05;letter-spacing:-0.03em;margin-bottom:28px;color:var(--text);background:none;-webkit-text-fill-color:currentColor;background-clip:unset;-webkit-background-clip:unset;max-width:22ch}.hero__headline em{font-style:italic;color:var(--accent);-webkit-text-fill-color:var(--accent)}.hero__tagline{font-family:"Inter",sans-serif;font-style:italic;font-size:clamp(1.3rem,2.8vw,1.7rem);font-weight:600;color:var(--accent-light);margin:0 0 18px;letter-spacing:-0.01em}.hero__sub{font-size:clamp(1.05rem,2vw,1.2rem);color:var(--text-muted);max-width:56ch;margin:0 0 36px;line-height:1.65}.hero__sub strong{color:var(--text);font-weight:600}.hero__cta-group{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:32px}.hero__trust-strip{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;color:var(--text-dim);font-size:0.86rem}.hero__trust-strip span{display:inline-flex;align-items:center;gap:6px}.hero__trust-strip .dot-sep{color:var(--border-strong)}.hero__note{margin-top:14px;font-size:0.85rem;color:var(--text-dim)}.social-proof__divider{width:1px;height:36px;background:var(--border-subtle);flex-shrink:0}@media (max-width:640px){.social-proof__divider{display:none}}.stealth__arrow{font-family:"Inter",sans-serif;align-self:center;font-size:1.8rem;color:var(--accent);padding:0 6px}.plan-card .btn{width:100%;justify-content:center;text-align:center;margin-top:auto;min-height:44px;font-size:0.94rem}.reveal{opacity:1;transform:none}.reveal-delay-1{transition-delay:0.06s}.reveal-delay-2{transition-delay:0.12s}.reveal-delay-3{transition-delay:0.18s}.reveal-delay-4{transition-delay:0.24s}@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}*,*::before,*::after{animation-duration:0.001ms!important;transition-duration:0.001ms!important}}@media (max-width:980px){.stealth__arrow{display:none}}@media (max-width:768px){body{font-size:16px}section{padding:60px 0}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}.wordmark--hero{font-size:clamp(2.2rem,11vw,3.6rem)}}@media (max-width:480px){.hero__cta-group{flex-direction:column}.btn--lg,.btn--xl{width:100%}}:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}a:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.skip-link{position:absolute;left:-9999px;top:0;z-index:1000;padding:12px 20px;background:var(--accent);color:var(--pure-white);border-radius:0 0 var(--radius) 0;font-weight:600}.skip-link:focus{left:0}body,body h1,body h2,body h3,body h4,body h5,body h6,body p,body span,body div,body section,body article,body blockquote,body figcaption,body ul,body ol,body li,body label,body small,body .article-page,body .article-page h1,body .article-page h2,body .article-page h3,body .article-page p,body .article-page li,body .legal-page,body .legal-page p,body .legal-page h2,body .tech-card,body .tech-card p,body .step-list,body .step-list li,body .cta-box,body .cta-box p{text-align:center}html[dir="rtl"] body,html[dir="rtl"] body *{text-align:center}html[dir="rtl"] table,html[dir="rtl"] table *,html[dir="rtl"] .compare__table,html[dir="rtl"] .compare__table *,html[dir="rtl"] .plan-features,html[dir="rtl"] .plan-features *,html[dir="rtl"] pre,html[dir="rtl"] code{text-align:right}body *:not(table):not(tr):not(td):not(th):not(thead):not(tbody):not(tfoot):not(pre):not(code):not(.plan-features):not(.plan-features *):not(.guarantee__list):not(.guarantee__list *):not(.compare__table):not(.compare__table *):not(.faq-item__panel):not(.faq-item__panel *):not(input):not(textarea):not(select):not(.ticket-form):not(.ticket-form *):not(form):not(form *):not(.ba-col__list):not(.ba-col__list *){text-align:center!important}html[dir="rtl"] body *:not(table):not(tr):not(td):not(th):not(pre):not(code):not(.plan-features *):not(.compare__table *){text-align:center!important}body .section-title,body .section-label,body .section-sub,body .hero__headline,body .hero__sub,body .hero__tagline,body .hero__eyebrow,body .hero__note,body .guarantee__title,body .guarantee__sub,body .problem__twist h3,body .problem__twist p,body .solution__reveal,body .final-cta__headline,body .platforms__footnote,body .stealth__how h2,body .stealth__callout,body .platforms-card__title,body .platforms-card__cat,body .platforms-card__brands,body .platforms-card__note,body .feature-card__title,body .feature-card__desc,body .feature-card__benefit,body .pain-card__title,body .pain-card__desc,body .pain-card__number,body .trust-card__title,body .trust-card__desc,body .testi-card__name,body .testi-card__role,body .testi-card__quote,body .plan-name,body .plan-note,body .plan-features,body .step__title,body .step__desc,body .how-step__title,body .how-step__desc,body .compare-badge-wrap,body .compare-badge,body article.article-page>*,body .legal-page>*{margin-left:auto!important;margin-right:auto!important}body article.article-page p,body article.article-page h1,body article.article-page h2,body article.article-page h3,body article.article-page ul,body article.article-page ol{max-width:70ch;margin-left:auto!important;margin-right:auto!important}body .solution__points,body .solution__points li,body .solution__points li *,body .ba-col__list,body .ba-col__list li,body .ba-col__list li *,body ul li:has(>.g-check),body ul li:has(>svg),body ul li:has(>.check),body .feature-card__benefit,body .feature-card__benefit *,body .stealth-tech__list,body .stealth-tech__list li,body .stealth-tech__list li *,body .compare__row,body .compare__row *,body .compare__cell,body ul[class*="__list"],body ul[class*="__list"] li,body ul[class*="__list"] li *,body ol[class*="__list"],body ol[class*="__list"] li,body ol[class*="__list"] li *{text-align:left!important;margin-left:0!important;margin-right:0!important}body .solution__points,body .ba-col__list,body .stealth-tech__list,body ul[class*="__list"]{display:inline-block;text-align:left!important;margin-left:auto!important;margin-right:auto!important}body .btn,body a.btn,body button.btn,body .wordmark,body .wordmark--inline,body .wordmark-tagline,body .solution__brand,body .hero__cta-group,body .hero__cta-group>*,body .cta-group,body .cta-group>*,body .final-cta,body .final-cta>*,body .install-cta,body .install-cta>*{margin-left:auto!important;margin-right:auto!important}body .hero__cta-group,body .cta-group{display:flex!important;justify-content:center!important;flex-wrap:wrap!important;gap:12px}body .solution__brand,body p:has(>.wordmark),body div:has(>a.btn:only-child){text-align:center!important;display:block}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.001ms!important;transition-duration:0.001ms!important}}@media (max-width:768px){body{font-size:16px}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}}table th{font-variant-numeric:tabular-nums lining-nums}thead th{padding:16px 20px;text-align:left;font-family:"Inter",sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);white-space:nowrap}thead th:first-child{color:var(--pure-white)}@media (max-width:768px){body{font-size:16px}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}thead{display:none}}table *{text-align:left}img{max-width:100%;display:block}h1,h2,h3{font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;font-weight:800;line-height:1.1;letter-spacing:-0.025em;color:var(--text)}h3{font-weight:700;font-size:clamp(1.05rem,2vw,1.25rem);letter-spacing:-0.005em}.step{text-align:left;padding:0}code{text-align:left}</style><link rel="preload" href="/style.css?v=be9cdea8" as="style" onload="this.onload=null;this.rel='stylesheet'" /><noscript><link rel="stylesheet" href="/style.css?v=be9cdea8" /></noscript>
+  <style>
+    /* ===== Guide page styles ===== */
+    .guide-page {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 60px 24px 100px;
+    }
+
+    .guide-page .guide-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .guide-page .guide-header h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+
+    .guide-page .guide-header .guide-version {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .guide-page .guide-header .guide-tagline {
+      font-size: 1.1rem;
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+
+    /* Table of contents */
+    .guide-toc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-bottom: 56px;
+    }
+
+    .guide-toc h2 {
+      font-size: 1.1rem;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .guide-toc ol {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      columns: 2;
+      column-gap: 32px;
+    }
+
+    @media (max-width: 600px) {
+      .guide-toc ol { columns: 1; }
+    }
+
+    .guide-toc li {
+      break-inside: avoid;
+      margin-bottom: 6px;
+    }
+
+    .guide-toc a {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      font-weight: 500;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 4px 0;
+      transition: color var(--transition);
+    }
+
+    .guide-toc a:hover { color: var(--primary-light); }
+
+    .guide-toc .toc-num {
+      color: var(--primary-light);
+      font-weight: 700;
+      font-size: 0.82rem;
+      min-width: 22px;
+    }
+
+    /* Sections */
+    .guide-section {
+      margin-bottom: 56px;
+      scroll-margin-top: 80px;
+    }
+
+    .guide-section h2 {
+      font-size: 1.4rem;
+      color: var(--text);
+      margin-bottom: 8px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .guide-section h2 .sec-icon {
+      font-size: 1.3rem;
+    }
+
+    .guide-section h3 {
+      font-size: 1.05rem;
+      color: var(--primary-light);
+      margin: 24px 0 10px;
+    }
+
+    .guide-section p,
+    .guide-section li {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.75;
+      margin-bottom: 8px;
+    }
+
+    .guide-section ul,
+    .guide-section ol {
+      padding-left: 0;
+      list-style: none;
+      margin: 10px 0 16px;
+    }
+
+    .guide-section ul li::before {
+      content: "→ ";
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+
+    .guide-section ol {
+      counter-reset: steps;
+    }
+
+    .guide-section ol li {
+      counter-increment: steps;
+      padding-left: 28px;
+      position: relative;
+    }
+
+    .guide-section ol li::before {
+      content: counter(steps) ".";
+      position: absolute;
+      left: 0;
+      color: var(--primary-light);
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+
+    .guide-section strong {
+      color: var(--text);
+    }
+
+    .guide-section code {
+      background: rgba(124, 92, 252, 0.12);
+      color: var(--primary-light);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.88rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    /* Info boxes */
+    .guide-info {
+      background: rgba(124, 92, 252, 0.06);
+      border: 1px solid rgba(124, 92, 252, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin: 16px 0;
+    }
+
+    .guide-info p { margin-bottom: 0; }
+
+    .guide-info--green {
+      background: rgba(74, 222, 128, 0.06);
+      border-color: rgba(74, 222, 128, 0.2);
+    }
+
+    .guide-info--yellow {
+      background: rgba(251, 191, 36, 0.06);
+      border-color: rgba(251, 191, 36, 0.2);
+    }
+
+    /* Tables */
+    .guide-table-wrap {
+      overflow-x: auto;
+      margin: 16px 0;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .guide-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      min-width: 400px;
+    }
+
+    .guide-table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .guide-table td {
+      padding: 10px 16px;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .guide-table td:first-child {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .guide-table tr:last-child td { border-bottom: none; }
+    .guide-table tr:hover { background: var(--card-hover); }
+
+    .check { color: var(--success); font-weight: 700; }
+    .cross { color: var(--error); }
+
+    /* Back to top */
+    .guide-back-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .guide-back-top:hover { color: var(--primary-light); }
+  </style>
+    <script src="/adoff-i18n.js?v=623d521a"></script>
+</head>
+<body>
+
+  <!-- NAV -->
+  <div id="site-nav"></div>
+  <script src="/adoff-nav.js?v=e75acee8"></script>
+
+  <main class="guide-page">
+
+    <!-- HEADER -->
+    <div class="guide-header">
+      <img src="/assets/icon128.png" alt="AdOff" style="width:64px;height:64px;border-radius:16px;margin:0 auto 16px;box-shadow:0 0 32px rgba(124,92,252,0.4);" />
+      <h1>Benutzerhandbuch</h1>
+      <p class="guide-version">AdOff v3.6.10 · Letzte Aktualisierung: 29. Juli 2026</p>
+      <p class="guide-tagline">Alles, was du wissen musst, um AdOff optimal zu nutzen.</p>
+    </div>
+
+    <!-- TABLE OF CONTENTS -->
+    <nav class="guide-toc" id="toc">
+      <h2>Inhaltsverzeichnis</h2>
+      <ol>
+        <li><a href="#s1"><span class="toc-num">1</span> Was ist AdOff</a></li>
+        <li><a href="#s2"><span class="toc-num">2</span> Installation</a></li>
+        <li><a href="#s3"><span class="toc-num">3</span> Erster Start</a></li>
+        <li><a href="#s4"><span class="toc-num">4</span> Das Popup</a></li>
+        <li><a href="#s5"><span class="toc-num">5</span> Pause für Website</a></li>
+        <li><a href="#s6"><span class="toc-num">6</span> Optionsseite</a></li>
+        <li><a href="#s7"><span class="toc-num">7</span> Ausgeschlossene Seiten</a></li>
+        <li><a href="#s8"><span class="toc-num">8</span> Plan &amp; Lizenz</a></li>
+        <li><a href="#s9"><span class="toc-num">9</span> Empfehlungen</a></li>
+        <li><a href="#s10"><span class="toc-num">10</span> Statistiken</a></li>
+        <li><a href="#s11"><span class="toc-num">11</span> Erweitert</a></li>
+        <li><a href="#s12"><span class="toc-num">12</span> FAQ</a></li>
+        <li><a href="#s13"><span class="toc-num">13</span> Problem melden</a></li>
+        <li><a href="#s14"><span class="toc-num">14</span> Vorschläge</a></li>
+        <li><a href="#s15"><span class="toc-num">15</span> Wie es funktioniert</a></li>
+        <li><a href="#s16"><span class="toc-num">16</span> Fehlerbehebung</a></li>
+        <li><a href="#s17"><span class="toc-num">17</span> Datenschutz</a></li>
+        <li><a href="#s18"><span class="toc-num">18</span> Sprachen</a></li>
+        <li><a href="#s19"><span class="toc-num">19</span> Deinstallation</a></li>
+        <li><a href="#s20"><span class="toc-num">20</span> Kontakt</a></li>
+      </ol>
+    </nav>
+
+    <!-- ===== 1. WAS IST ADOFF ===== -->
+    <div class="guide-section" id="s1">
+      <h2><span class="sec-icon">&#128736;</span> 1. Was ist AdOff</h2>
+      <p>AdOff ist eine Erweiterung für Chrome, die Werbung auf allen Websites blockiert. Sie arbeitet auf vier Ebenen ,  Netzwerk, Seite, Video-Werbung-Neutralisierung (nur Free/Free) und Stealth (nur Free/Free) ,  für ein sauberes und schnelles Surferlebnis.</p>
+      <ul>
+        <li>Blockiert Werbung auf jeder Website; Video-Werbung-Neutralisierung auf Streaming-Plattformen <strong>(Free/Free)</strong></li>
+        <li><strong>Stealth Mode</strong> (Free/Free): macht AdOff für Anti-Adblock-Websites unsichtbar</li>
+        <li>Ist <strong>federleicht</strong> ,  ein Bruchteil des Gewichts der Konkurrenz</li>
+        <li>Sammelt keine persönlichen Daten: alles funktioniert lokal</li>
+        <li>15 Sprachen: Italienisch, Englisch, Deutsch, Französisch, Spanisch, Portugiesisch</li>
+        <li>Website-Pause mit 4 Dauern: Besuch, 1 Stunde, 1 Tag, dauerhaft</li>
+        <li>Empfehlungssystem zum Verdienen von kostenlosen Free-Tagen</li>
+      </ul>
+    </div>
+
+    <!-- ===== 2. INSTALLATION ===== -->
+    <div class="guide-section" id="s2">
+      <h2><span class="sec-icon">&#128229;</span> 2. Installation</h2>
+
+      <h3>Aus dem Chrome Web Store</h3>
+      <ol>
+        <li>Gehe zur AdOff-Seite im Chrome Web Store</li>
+        <li>Klicke auf <strong>"Zu Chrome hinzufügen"</strong></li>
+        <li>Bestätige mit <strong>"Erweiterung hinzufügen"</strong></li>
+        <li>AdOff ist sofort aktiv</li>
+      </ol>
+
+      <h3>Symbol in der Symbolleiste anheften</h3>
+      <ol>
+        <li>Klicke auf das <strong>Puzzle</strong>-Symbol (Erweiterungen) oben rechts im Browser</li>
+        <li>Finde <strong>AdOff</strong> in der Liste</li>
+        <li>Klicke auf die <strong>Stecknadel</strong> neben AdOff</li>
+        <li>Das Symbol erscheint in der Symbolleiste für schnellen Zugriff</li>
+      </ol>
+    </div>
+
+    <!-- ===== 3. ERSTER START ===== -->
+    <div class="guide-section" id="s3">
+      <h2><span class="sec-icon">&#127881;</span> 3. Erster Start</h2>
+      <p>Wenn du AdOff zum ersten Mal installierst:</p>
+      <ul>
+        <li>Eine <strong>Willkommensseite</strong> mit Anweisungen zum Anheften des Symbols öffnet sich</li>
+        <li>Der <strong>vollständige Schutz</strong> wird sofort aktiviert</li>
+        <li>Ein <strong>eindeutiger Empfehlungscode</strong> wird generiert (Format: <code>ADO-XXXXX</code>)</li>
+        <li>AdOff beginnt sofort mit der Werbeblocker-Funktion</li>
+        <li>Wenn du vor dem 1. Juli 2026 installierst, erhältst du das permanente <strong>Founding Member-Badge</strong></li>
+      </ul>
+    </div>
+
+    <!-- ===== 4. DAS POPUP ===== -->
+    <div class="guide-section" id="s4">
+      <h2><span class="sec-icon">&#128444;</span> 4. Das Popup</h2>
+      <p>Klicke auf das AdOff-Symbol in der Symbolleiste, um das Popup zu öffnen.</p>
+
+      <h3>Kopfzeile</h3>
+      <p>Logo, Name "AdOff", Lizenz-Badge (<strong>FREE</strong> / <strong>Free Xtg</strong> / free) und <strong>FOUNDER</strong>-Badge (wenn berechtigt).</p>
+
+      <h3>Globaler Schalter</h3>
+      <p>EIN/AUS-Schalter zum Aktivieren oder Deaktivieren von AdOff auf allen Websites. Violettes Badge = aktiv, rotes Badge = deaktiviert.</p>
+
+      <h3>Zähler</h3>
+      <ul>
+        <li><strong>Blockierte Anzeigen</strong>: von Seiten entfernte Werbeelemente</li>
+        <li><strong>Blockierte Anfragen</strong>: abgefangene HTTP-Anfragen an Werbeserver</li>
+      </ul>
+      <p>Zahlen werden abgekürzt: 1.500 wird zu "1,5K", 2.300.000 wird zu "2,3M".</p>
+
+      <h3>Aktuelle Website</h3>
+      <p>Die Domain der besuchten Website mit der Schaltfläche <strong>"Hier pausieren"</strong>.</p>
+
+      <h3>Lizenz-Banner</h3>
+      <p>Nur für Free-Nutzer ("Free 15 Tage kostenlos testen") und Free-Nutzer ("Free aktiv ,  noch X Tage") sichtbar. Für Free-Nutzer ausgeblendet.</p>
+
+      <h3>Bewertungsaufforderung</h3>
+      <p>Erscheint nach 100+ blockierten Anzeigen und 5+ Tagen nach der Installation. Maximal 3 Mal, mit 14 Tagen Pause dazwischen. Drei Optionen: "Bewertung abgeben", "Nicht jetzt", "Nie mehr".</p>
+
+      <h3>Änderungsprotokoll</h3>
+      <p>Nach einem Update werden die Neuigkeiten angezeigt. Schließen mit dem X.</p>
+
+      <h3>Links unten</h3>
+      <p><strong>Hilfe</strong> (öffnet die FAQ in den Optionen) und <strong>Optionen</strong> (öffnet die vollständige Seite).</p>
+    </div>
+
+    <!-- ===== 5. PAUSE FÜR WEBSITE ===== -->
+    <div class="guide-section" id="s5">
+      <h2><span class="sec-icon">&#9208;</span> 5. Pause für Website</h2>
+      <p>Deaktiviere AdOff auf einer einzelnen Website, ohne es überall auszuschalten.</p>
+
+      <h3>So pausierst du</h3>
+      <ol>
+        <li>Besuche die Website</li>
+        <li>Klicke auf das AdOff-Symbol in der Symbolleiste</li>
+        <li>Klicke auf <strong>"Hier pausieren"</strong></li>
+        <li>Wähle die Dauer</li>
+      </ol>
+
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>Option</th><th>Was passiert</th></tr></thead>
+          <tbody>
+            <tr><td>Nur dieser Besuch</td><td>Wird wieder aktiv, wenn du den Tab schließt</td></tr>
+            <tr><td>1 Stunde</td><td>Wird nach 60 Minuten wieder aktiv</td></tr>
+            <tr><td>1 Tag</td><td>Wird nach 24 Stunden wieder aktiv</td></tr>
+            <tr><td>Immer (Whitelist)</td><td>Bleibt dauerhaft deaktiviert</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>So reaktivierst du</h3>
+      <p>Besuche die pausierte Website, klicke auf das AdOff-Symbol, du siehst "Pausiert ,  [Typ]", klicke auf <strong>"Reaktivieren"</strong>.</p>
+
+      <div class="guide-info">
+        <p><strong>Hinweis:</strong> Abgelaufene Pausen werden automatisch entfernt. Die Blockierung gilt auch für Subdomains: Wenn du <code>example.com</code> pausierst, wird auch <code>blog.example.com</code> ausgeschlossen.</p>
+      </div>
+    </div>
+
+    <!-- ===== 6. OPTIONSSEITE ===== -->
+    <div class="guide-section" id="s6">
+      <h2><span class="sec-icon">&#9881;</span> 6. Optionsseite</h2>
+      <p>Klicke im Popup auf <strong>"Optionen"</strong> oder rechtsklicke auf das AdOff-Symbol > "Optionen".</p>
+
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>Bereich</th><th>Funktion</th></tr></thead>
+          <tbody>
+            <tr><td>Allgemein</td><td>Blockierschalter, Badge, Zähler, Sprache</td></tr>
+            <tr><td>Ausgeschlossene Seiten</td><td>Whitelist-Verwaltung</td></tr>
+            <tr><td>Plan &amp; Lizenz</td><td>Planstatus, Preise, Lizenzschlüssel-Aktivierung</td></tr>
+            <tr><td>Statistiken</td><td>Gesamtzähler und Zurücksetzen</td></tr>
+            <tr><td>Freunde einladen</td><td>Empfehlungslink, schnelles Teilen, Verlauf</td></tr>
+            <tr><td>Erweitert</td><td>Backup exportieren/importieren, vollständiges Zurücksetzen</td></tr>
+            <tr><td>Hilfe</td><td>FAQ-Assistent + Website-Meldung</td></tr>
+            <tr><td>Vorschläge</td><td>Funktionen vorschlagen, Fehler, Verbesserungen</td></tr>
+            <tr><td>Info</td><td>Version, Website-Link, Datenschutz, Support</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 7. AUSGESCHLOSSENE SEITEN ===== -->
+    <div class="guide-section" id="s7">
+      <h2><span class="sec-icon">&#128737;</span> 7. Ausgeschlossene Seiten (Whitelist)</h2>
+      <h3>Eine Website hinzufügen</h3>
+      <ol>
+        <li>Gehe zu <strong>Optionen > Ausgeschlossene Seiten</strong></li>
+        <li>Gib die Domain ein (z.B. <code>example.com</code>)</li>
+        <li>Klicke auf <strong>"Hinzufügen"</strong> oder drücke Enter</li>
+      </ol>
+
+      <h3>Exportieren und Importieren</h3>
+      <p><strong>Exportieren</strong>: Lade die Whitelist als JSON-Datei herunter. <strong>Importieren</strong>: Lade eine JSON-Datei hoch. Einträge werden validiert (Domain max. 255 Zeichen, erlaubter Typ). Ungültige werden ignoriert.</p>
+    </div>
+
+    <!-- ===== 8. PLAN UND LIZENZ ===== -->
+    <div class="guide-section" id="s8">
+      <h2><span class="sec-icon">&#10024;</span> 8. Plan &amp; Lizenz</h2>
+
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>Plan</th><th>Preis</th><th>Enthält</th></tr></thead>
+          <tbody>
+            <tr><td>AdOff</td><td>Kostenlos, ohne Konto und ohne Limits</td><td>Vollständige Werbeblockierung, CSS-Elementausblendung, Video-Werbeneutralisierung, Stealth-Modus</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Free vs. Free: Was ändert sich</h3>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>Funktion</th><th>Free</th><th>Free</th></tr></thead>
+          <tbody>
+            <tr><td>Werbeblocker auf allen Websites</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>DOM-Elemente ausblenden</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>HTTP-Anfragen an Werbenetzwerke blockieren</td><td><span class="check">&#10003;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td><strong>Video-Werbung-Neutralisierung</strong> (Streaming)</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td><strong>Stealth Mode</strong> (Anti-Erkennung)</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>Prioritäts-Updates</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+            <tr><td>Dedizierter Support</td><td><span class="cross">&#10007;</span></td><td><span class="check">&#10003;</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="guide-info--green guide-info">
+        <p><strong>Die grundlegende Werbeblocker-Funktion funktioniert in Free.</strong> Die exklusiven Free-Funktionen sind: Video-Werbung-Neutralisierung (Streaming-Plattformen) und Stealth Mode (Anti-Erkennung). Ohne Stealth Mode können einige Websites den Werbeblocker erkennen.</p>
+      </div>
+
+      <h3>Eine Free-Lizenz aktivieren</h3>
+      <ol>
+        <li>Kaufe auf <strong>adoff.app</strong></li>
+        <li>Erhalte den Schlüssel per E-Mail: <code>XXXX-XXXX-XXXX-XXXX</code></li>
+        <li>Gehe zu <strong>Optionen > Plan &amp; Lizenz</strong></li>
+        <li>Gib den Schlüssel ein und klicke auf <strong>"Aktivieren"</strong></li>
+      </ol>
+    </div>
+
+    <!-- ===== 9. EMPFEHLUNGEN ===== -->
+    <div class="guide-section" id="s9">
+      <h2><span class="sec-icon">&#127873;</span> 9. Empfehlungssystem</h2>
+      <p>Verdiene kostenlose Free-Tage, indem du Freunde einlädst.</p>
+      <ol>
+        <li>Bei der ersten Installation erhältst du einen eindeutigen Code: <code>ADO-XXXXX</code></li>
+        <li>Teile den Link <code>adoff.app/r/DEIN-CODE</code></li>
+        <li>Wenn ein Freund zu Free wechselt, erhältst du <strong>+15 kostenlose Free-Tage</strong></li>
+        <li>Die Tage akkumulieren sich ohne Limit</li>
+      </ol>
+      <p>Gehe zu <strong>Optionen > Freunde einladen</strong> für den Link, schnelles Teilen (WhatsApp, Telegram, E-Mail) und das Empfehlungs-Dashboard.</p>
+    </div>
+
+    <!-- ===== 10. STATISTIKEN ===== -->
+    <div class="guide-section" id="s10">
+      <h2><span class="sec-icon">&#128202;</span> 10. Statistiken</h2>
+      <p>Unter <strong>Optionen > Statistiken</strong> findest du die Gesamtzähler für blockierte Anzeigen und abgefangene Anfragen. Du kannst sie mit "Statistiken zurücksetzen" zurücksetzen (Bestätigung erforderlich).</p>
+    </div>
+
+    <!-- ===== 11. ERWEITERT ===== -->
+    <div class="guide-section" id="s11">
+      <h2><span class="sec-icon">&#128295;</span> 11. Erweiterte Einstellungen</h2>
+      <ul>
+        <li><strong>Einstellungen exportieren</strong>: vollständiges JSON-Backup (Lizenzdaten aus Sicherheitsgründen ausgeschlossen)</li>
+        <li><strong>Einstellungen importieren</strong>: aus Backup wiederherstellen. Lizenzfelder werden automatisch ignoriert</li>
+        <li><strong>Alles zurücksetzen</strong>: löscht alles, einschließlich der Lizenz. Nicht rückgängig zu machen. Doppelte Bestätigung erforderlich</li>
+      </ul>
+    </div>
+
+    <!-- ===== 12. FAQ ===== -->
+    <div class="guide-section" id="s12">
+      <h2><span class="sec-icon">&#128172;</span> 12. FAQ-Assistent</h2>
+      <p>Unter <strong>Optionen > Hilfe</strong> findest du einen integrierten Assistenten. Stelle eine Frage oder klicke auf einen der 12 verfügbaren Schnell-Chips:</p>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>Thema</th><th>Beispiel</th></tr></thead>
+          <tbody>
+            <tr><td>Wie AdOff funktioniert</td><td>"wie funktioniert es", "was macht es"</td></tr>
+            <tr><td>Website funktioniert nicht</td><td>"Website kaputt", "weiße Seite"</td></tr>
+            <tr><td>Video-Werbung</td><td>"Video-Werbung", "Pre-Roll"</td></tr>
+            <tr><td>Website ausschließen</td><td>"Whitelist", "Pause"</td></tr>
+            <tr><td>Preisfrage</td><td>"kostenlos", "plan", "preis"</td></tr>
+            <tr><td>Datenschutz</td><td>"Datenschutz", "Tracking"</td></tr>
+            <tr><td>Leistung</td><td>"langsam", "verlangsamt"</td></tr>
+            <tr><td>Anti-Adblock</td><td>"erkannt", "Mauer"</td></tr>
+            <tr><td>Lizenz</td><td>"Lizenz", "Schlüssel"</td></tr>
+            <tr><td>Deinstallation</td><td>"deinstallieren", "entfernen"</td></tr>
+            <tr><td>Aktualisierung</td><td>"aktualisieren", "Update"</td></tr>
+            <tr><td>Cookie-Banner</td><td>"Cookie", "DSGVO"</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 13. PROBLEM MELDEN ===== -->
+    <div class="guide-section" id="s13">
+      <h2><span class="sec-icon">&#9888;</span> 13. Probleme melden</h2>
+      <p>Wenn eine Website mit AdOff nicht funktioniert, melde es unter <strong>Optionen > Hilfe > Problem melden</strong>.</p>
+      <ol>
+        <li>Gib die <strong>URL der Website</strong> ein (Pflichtfeld)</li>
+        <li>Wähle den <strong>Typ</strong>: Website funktioniert nicht / Werbung sichtbar / Anti-Adblock / Sonstiges</li>
+        <li>Füge <strong>Beschreibung</strong> und <strong>E-Mail</strong> hinzu (optional)</li>
+        <li>Löse das <strong>mathematische Captcha</strong></li>
+        <li>Klicke auf <strong>"Meldung senden"</strong></li>
+      </ol>
+      <p>Das Formular enthält Anti-Bot-Schutzmaßnahmen: Honeypot, Timing, Captcha, Rate-Limit (max. 3/Stunde), Anti-Spam, Deduplizierung.</p>
+    </div>
+
+    <!-- ===== 14. VORSCHLÄGE ===== -->
+    <div class="guide-section" id="s14">
+      <h2><span class="sec-icon">&#128161;</span> 14. Vorschläge</h2>
+      <p>Unter <strong>Optionen > Vorschläge</strong> kannst du Funktionen vorschlagen, Fehler melden oder Verbesserungen einreichen. Fülle Titel (Pflichtfeld), Beschreibung und E-Mail (optional) aus. Deine Vorschläge erscheinen in einer Liste unter dem Formular.</p>
+    </div>
+
+    <!-- ===== 15. WIE ES FUNKTIONIERT ===== -->
+    <div class="guide-section" id="s15">
+      <h2><span class="sec-icon">&#9881;</span> 15. Wie AdOff funktioniert (technisch)</h2>
+
+      <h3>Ebene 1 ,  Netzwerkblockierung</h3>
+      <p>AdOff nutzt die <code>declarativeNetRequest</code>-API von Chrome, um HTTP-Anfragen an Werbeserver zu blockieren, <strong>bevor der Browser sie herunterlädt</strong>. Über 180 Regeln decken die wichtigsten Werbenetzwerke und viele weitere Werbenetzwerke ab.</p>
+
+      <h3>Ebene 2 ,  Kosmetisches Filtern</h3>
+      <p>Für Werbung, die vom gleichen Domain der Website geliefert wird, nutzt AdOff CSS und JavaScript, um sie <strong>von der Seite auszublenden</strong>: präzise Selektoren, MutationObserver für dynamische Inhalte, Zusammenklappen leerer Container.</p>
+
+      <h3>Ebene 3 ,  Video-Werbung-Neutralisierung (nur Free/Free) <span style="background:rgba(124,92,252,0.18);color:#9d82fd;font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:2px 8px;border-radius:100px;border:1px solid rgba(124,92,252,0.3);vertical-align:middle;margin-left:6px;">Free</span></h3>
+      <p>Die meisten Video-Player verwenden ein Standard-Werbe-SDK für Unterbrechungen (Pre-Roll, Mid-Roll, Post-Roll). AdOff <strong>ersetzt es durch eine neutrale Version</strong>, die dem Player sofort mitteilt "keine Werbung" ,  das Video startet ohne Unterbrechungen. Funktioniert automatisch auf jeder Website der Welt. Auf den wichtigsten Video-Plattformen: Beschleunigung auf 16x + automatischer Klick auf "Anzeige überspringen". <strong>Exklusive Free-Funktion.</strong></p>
+
+      <h3>Ebene 4 ,  Stealth Mode (nur Free/Free)</h3>
+      <p>Fängt Anti-Adblock-Prüfungen ab und lässt die Website glauben, alles sei sichtbar:</p>
+      <ul>
+        <li><strong>CSS-Spoofing</strong>: Eigenschaften von Köder-Elementen werden gefälscht</li>
+        <li><strong>Netzwerkabfangen</strong>: Erkennungsskripte erhalten leere Antworten</li>
+        <li><strong>Simulierte Variablen</strong>: Werbe-SDKs werden vorbelegt</li>
+        <li><strong>Skript-Neutralisierung</strong>: Anti-Adblock-Skripte werden vor der Ausführung blockiert</li>
+        <li><strong>Anti-Scroll-Lock</strong>: verhindert, dass Walls das Scrollen blockieren</li>
+      </ul>
+      <div class="guide-info">
+        <p>Stealth wird auf den wichtigsten Plattformen (Video, Social Media, E-Commerce) und anderen großen Websites automatisch deaktiviert, wo es stören würde.</p>
+      </div>
+    </div>
+
+    <!-- ===== 16. FEHLERBEHEBUNG ===== -->
+    <div class="guide-section" id="s16">
+      <h2><span class="sec-icon">&#128736;</span> 16. Fehlerbehebung</h2>
+
+      <h3>Eine Website funktioniert nicht</h3>
+      <ol>
+        <li>Klicke auf das AdOff-Symbol und nutze <strong>"Hier pausieren"</strong></li>
+        <li>Lade die Seite neu</li>
+        <li>Wenn es im Pause-Modus funktioniert: melde uns die Website</li>
+        <li>Wenn es auch im Pause-Modus nicht funktioniert: das Problem liegt nicht bei AdOff</li>
+      </ol>
+
+      <h3>Ich sehe noch Werbung</h3>
+      <ol>
+        <li>Überprüfe, ob AdOff <strong>aktiv</strong> ist (violettes Badge)</li>
+        <li>Überprüfe, ob die Website nicht auf der <strong>Whitelist</strong> steht</li>
+        <li><strong>Lade die Seite neu</strong></li>
+        <li>Wenn es anhält: melde uns die Website</li>
+      </ol>
+
+      <h3>"Deaktiviere deinen Werbeblocker"</h3>
+      <ol>
+        <li><strong>Lade die Seite neu</strong></li>
+        <li>Überprüfe, ob du <strong>Free oder Free</strong> hast (Stealth Mode wird benötigt)</li>
+        <li>Wenn es weiterhin passiert: nutze "Hier pausieren" und melde es uns</li>
+      </ol>
+
+      <h3>AdOff wird nicht aktiviert</h3>
+      <p>Gehe zu <code>chrome://extensions/</code>, überprüfe ob es aktiviert ist. Wenn Fehler vorhanden sind, versuche es zu entfernen und neu zu installieren.</p>
+    </div>
+
+    <!-- ===== 17. DATENSCHUTZ ===== -->
+    <div class="guide-section" id="s17">
+      <h2><span class="sec-icon">&#128274;</span> 17. Datenschutz und Sicherheit</h2>
+
+      <div class="guide-info--green guide-info">
+        <p><strong>AdOff sammelt KEINE persönlichen Daten, verfolgt NICHT die von dir besuchten Websites, sendet KEINE Telemetrie, teilt KEINE Daten mit Dritten und injiziert KEINE Werbung.</strong></p>
+      </div>
+
+      <h3>Berechtigungen und Zweck</h3>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>Berechtigung</th><th>Wofür sie verwendet wird</th></tr></thead>
+          <tbody>
+            <tr><td><code>storage</code></td><td>Einstellungen und Zähler lokal speichern</td></tr>
+            <tr><td><code>declarativeNetRequest</code></td><td>Anfragen an Werbenetzwerke blockieren</td></tr>
+            <tr><td><code>activeTab</code></td><td>Die Domain für die Website-Pause kennen</td></tr>
+            <tr><td><code>scripting</code></td><td>Content-Skripte zum Ausblenden von Werbung einschleusen</td></tr>
+            <tr><td><code>webNavigation</code></td><td>Blockierung zum richtigen Zeitpunkt aktivieren</td></tr>
+            <tr><td><code>&lt;all_urls&gt;</code></td><td>Auf allen Websites funktionieren</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Externe Kommunikation</h3>
+      <p>AdOff kommuniziert mit externen Servern <strong>nur auf deine Aktion hin</strong>: Website-Meldung, Vorschlag, Lizenzaktivierung, automatische Neuvalidierung (alle 7 Tage für Free). Die Kommunikation erfolgt über Cloudflare Workers.</p>
+      <p><a href="/privacy.html">Vollständige Datenschutzerklärung lesen</a></p>
+    </div>
+
+    <!-- ===== 18. SPRACHEN ===== -->
+    <div class="guide-section" id="s18">
+      <h2><span class="sec-icon">&#127760;</span> 18. Unterstützte Sprachen</h2>
+      <div class="guide-table-wrap">
+        <table class="guide-table">
+          <thead><tr><th>Sprache</th><th>Code</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Italiano</td><td>it</td><td><span class="check">Vollständig</span></td></tr>
+            <tr><td>English</td><td>en</td><td><span class="check">Vollständig</span></td></tr>
+            <tr><td>Deutsch</td><td>de</td><td><span class="check">Vollständig</span></td></tr>
+            <tr><td>Français</td><td>fr</td><td><span class="check">Vollständig</span></td></tr>
+            <tr><td>Español</td><td>es</td><td><span class="check">Vollständig</span></td></tr>
+            <tr><td>Português</td><td>pt</td><td><span class="check">Vollständig</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Sprache ändern: <strong>Optionen > Allgemein > Sprache</strong>. Mit "Automatisch" wird die Browser-Sprache verwendet (Fallback: Englisch).</p>
+    </div>
+
+    <!-- ===== 19. DEINSTALLATION ===== -->
+    <div class="guide-section" id="s19">
+      <h2><span class="sec-icon">&#128465;</span> 19. Deinstallation</h2>
+      <ol>
+        <li>Gehe zu <code>chrome://extensions/</code></li>
+        <li>Finde AdOff und klicke auf <strong>"Entfernen"</strong></li>
+        <li>Bestätige</li>
+      </ol>
+      <p>Lokale Einstellungen werden gelöscht. Die Free-Lizenz bleibt auf dem Server gültig. Der Empfehlungscode geht verloren.</p>
+
+      <div class="guide-info--yellow guide-info">
+        <p><strong>Vor der Deinstallation</strong>: exportiere deine Einstellungen unter Optionen > Erweitert > Exportieren. Nach der Neuinstallation importiere die Datei, um alles wiederherzustellen (die Lizenz muss mit dem Schlüssel erneut aktiviert werden).</p>
+      </div>
+    </div>
+
+    <!-- ===== 20. KONTAKT ===== -->
+    <div class="guide-section" id="s20">
+      <h2><span class="sec-icon">&#128231;</span> 20. Kontakt &amp; Support</h2>
+      <ul>
+        <li><strong>Website</strong>: <a href="/index.html">adoff.app</a></li>
+        <li><strong>Support</strong>: <a href="/support.html">adoff.app/support</a> (Kontaktformular)</li>
+        <li><strong>Website-Meldungen</strong>: aus der Erweiterung (Optionen > Hilfe)</li>
+        <li><strong>Vorschläge</strong>: aus der Erweiterung (Optionen > Vorschläge)</li>
+      </ul>
+      <p>Bei Problemen mit der Free-Lizenz nutze das Support-Formular und gib deinen Lizenzschlüssel an.</p>
+    </div>
+
+    <a href="#toc" class="guide-back-top">&#8593; Zurück zum Inhaltsverzeichnis</a>
+
+  </main>
+
+  <!-- FOOTER -->
+
+  <script src="/adoff-footer.js?v=21299afa"></script>
+  
+
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

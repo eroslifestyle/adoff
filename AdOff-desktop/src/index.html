@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdOff VPN</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="logo">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <circle cx="20" cy="20" r="20" fill="#7252f8"/>
+          <path d="M20 8L28 14V22L20 28L12 22V14L20 8Z" fill="white" opacity="0.9"/>
+          <circle cx="20" cy="18" r="4" fill="#7252f8"/>
+        </svg>
+        <span class="logo-text">AdOff VPN</span>
+      </div>
+      <div class="license-badge" id="licenseBadge">
+        <span class="license-status" id="licenseStatus">Verifica licenza...</span>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="connect-section">
+        <div class="status-circle" id="statusCircle">
+          <div class="status-inner">
+            <span class="status-icon" id="statusIcon">⏻</span>
+            <span class="status-label" id="statusLabel">Disconnesso</span>
+          </div>
+        </div>
+        <button class="connect-btn" id="connectBtn" disabled>Connetti</button>
+        <p class="status-detail" id="statusDetail"></p>
+      </section>
+
+      <section class="servers-section">
+        <h2>Server VPN</h2>
+        <div class="server-list" id="serverList">
+          <div class="server-item" data-id="us-nyc-1">
+            <span class="flag">🇺🇸</span>
+            <div class="server-info">
+              <span class="server-name">New York</span>
+              <span class="server-country">Stati Uniti</span>
+            </div>
+            <div class="server-meta">
+              <span class="server-load">32%</span>
+              <span class="server-ping">24ms</span>
+            </div>
+          </div>
+          <div class="server-item" data-id="de-fra-1">
+            <span class="flag">🇩🇪</span>
+            <div class="server-info">
+              <span class="server-name">Francoforte</span>
+              <span class="server-country">Germania</span>
+            </div>
+            <div class="server-meta">
+              <span class="server-load">18%</span>
+              <span class="server-ping">31ms</span>
+            </div>
+          </div>
+          <div class="server-item" data-id="nl-ams-1">
+            <span class="flag">🇳🇱</span>
+            <div class="server-info">
+              <span class="server-name">Amsterdam</span>
+              <span class="server-country">Paesi Bassi</span>
+            </div>
+            <div class="server-meta">
+              <span class="server-load">45%</span>
+              <span class="server-ping">38ms</span>
+            </div>
+          </div>
+          <div class="server-item" data-id="ch-zur-1">
+            <span class="flag">🇨🇭</span>
+            <div class="server-info">
+              <span class="server-name">Zurigo</span>
+              <span class="server-country">Svizzera</span>
+            </div>
+            <div class="server-meta">
+              <span class="server-load">12%</span>
+              <span class="server-ping">42ms</span>
+            </div>
+          </div>
+          <div class="server-item premium" data-id="uk-lon-1">
+            <span class="flag">🇬🇧</span>
+            <div class="server-info">
+              <span class="server-name">Londra</span>
+              <span class="server-country">Regno Unito</span>
+            </div>
+            <div class="server-meta">
+              <span class="server-load">28%</span>
+              <span class="server-ping">35ms</span>
+            </div>
+            <span class="premium-tag">Premium</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>AdOff VPN — Premium</p>
+    </footer>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

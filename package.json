@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "adm-zip": "^0.6.0",
+    "archiver": "^8.0.0",
+    "javascript-obfuscator": "^5.5.0",
+    "playwright": "^1.62.1",
+    "terser": "^5.50.0"
+  },
+  "scripts": {
+    "test": "npm run test:static",
+    "test:static": "node -e \"['app','app-firefox','app-safari'].forEach(d=>require('./'+d+'/manifest.json'));console.log('OK: manifest.json x3 validi')\" && for d in app app-firefox app-safari; do for f in $d/src/*.js; do node --check \"$f\" || exit 1; done; done && echo 'OK: syntax check src/*.js x3 browser' && for t in sviluppo/tests/test-license-integrity.js sviluppo/tests/test-plan-gates-e2e.js sviluppo/tests/test-dnr-feed-signature.js sviluppo/tests/test-plan-tier-consistency.js sviluppo/tests/test-free-gate-removed.js sviluppo/tests/test-security-invariants.js sviluppo/tests/test-rules-no-content-block.js; do if [ -f \"$t\" ]; then echo \"-- run $t\"; node \"$t\" || exit 1; else echo \"-- SKIP (non ancora creato) $t\"; fi; done && echo 'ALL STATIC TESTS DONE'",
+    "test:e2e": "for t in sviluppo/tests/canary-feed-falsepositives.js sviluppo/tests/test-admin-xss.js; do if [ -f \"$t\" ]; then echo \"-- run $t\"; node \"$t\" || exit 1; else echo \"-- SKIP (non ancora creato) $t\"; fi; done && echo 'ALL E2E TESTS DONE'",
+    "test:security": "for t in sviluppo/tests/test-security-invariants.js sviluppo/tests/test-free-gate-removed.js sviluppo/tests/test-admin-xss.js; do if [ -f \"$t\" ]; then echo \"-- run $t\"; node \"$t\" || exit 1; else echo \"-- SKIP (non ancora creato) $t\"; fi; done && echo 'ALL SECURITY TESTS DONE'"
+  }
+}

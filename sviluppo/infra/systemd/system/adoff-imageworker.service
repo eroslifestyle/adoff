@@ -1,0 +1,8 @@
+[Unit]
+Description=AdOff Image Worker (Flux gen from queue)
+After=adoff-sdserver.service
+
+[Service]
+Type=oneshot
+User=mrxxx
+ExecStart=/usr/bin/python3 /home/mrxxx/sdcpp/image-worker.py

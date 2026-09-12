@@ -1,0 +1,18 @@
+[Unit]
+Description=AdOff media server (read-only bank .mp4 -> media.adoff.app, per IG/FB media_public_url)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mrxxx
+Environment=MEDIA_BANK=/home/mrxxx/adoff/sviluppo/marketing/video-engine/output/bank
+Environment=MEDIA_PORT=8791
+ExecStart=/usr/bin/python3 /home/mrxxx/adoff/sviluppo/ai-autopilot/n8n-workflows/scripts/media_server.py
+Restart=always
+RestartSec=8
+StandardOutput=append:/var/log/adoff-media-server.log
+StandardError=append:/var/log/adoff-media-server.log
+
+[Install]
+WantedBy=multi-user.target

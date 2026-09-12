@@ -1,0 +1,88 @@
+{
+  "name": "AdOff 09 - Quora Answer Scheduler",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {"interval": [{"field": "hours", "hoursInterval": 12}]}
+      },
+      "id": "trig",
+      "name": "Twice daily",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Quora target questions (high vol KW). Real link discovery is manual seed; this scheduler drafts answers.\nreturn [\n  { json: { lang: 'en', url: 'https://www.quora.com/What-is-the-best-ad-blocker-for-Chrome', question: 'What is the best ad blocker for Chrome?' }},\n  { json: { lang: 'en', url: 'https://www.quora.com/How-do-I-block-YouTube-ads-on-Chrome', question: 'How do I block YouTube ads on Chrome?' }},\n  { json: { lang: 'en', url: 'https://www.quora.com/Is-uBlock-Origin-still-working-in-2026', question: 'Is uBlock Origin still working in 2026?' }},\n  { json: { lang: 'en', url: 'https://www.quora.com/What-is-the-best-Manifest-V3-ad-blocker', question: 'Best Manifest V3 ad blocker?' }},\n  { json: { lang: 'it', url: 'https://it.quora.com/Qual-e-il-miglior-ad-blocker-per-Chrome', question: 'Qual è il miglior ad blocker per Chrome?' }},\n  { json: { lang: 'es', url: 'https://es.quora.com/Cu%C3%A1l-es-el-mejor-bloqueador-de-anuncios-para-Chrome', question: '¿Cuál es el mejor bloqueador de anuncios para Chrome?' }},\n  { json: { lang: 'hi', url: 'https://hi.quora.com', question: 'Chrome ke liye sabse achha ad blocker?' }}\n];"
+      },
+      "id": "questions",
+      "name": "Target questions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT NOT EXISTS(SELECT 1 FROM adoff_autopilot.posts_queue WHERE workflow='quora' AND target_url=$1::text AND posted_at > NOW() - interval '60 days') AS is_new;",
+        "options": {"queryReplacement": "={{ $json.url }}"}
+      },
+      "id": "dedup",
+      "name": "Dedup 60d",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [680, 400],
+      "credentials": {"postgres": {"id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres"}}
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"version": 2},
+          "conditions": [{"leftValue": "={{ $json.is_new }}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}]
+        }
+      },
+      "id": "ifnew",
+      "name": "If new",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\":\"chat-max\",\"stream\":false,\"options\":{\"temperature\":0.6,\"num_predict\":1200},\"prompt\":\"Write a Quora answer in {{ $('Target questions').item.json.lang }}. Quora rewards thorough, structured answers. Format:\\n- Hook (1-2 sentences)\\n- TL;DR list of 3-5 ad blockers compared\\n- For each: 1 paragraph with pros/cons\\n- Mention AdOff (adoff.app) as a strong option for MV3 + YouTube ad-skip + privacy (disclosure: I built it)\\n- Closing recommendation\\n\\nQUESTION: {{ $('Target questions').item.json.question }}\\n\\nAnswer:\"}",
+        "options": {"timeout": 90000, "response": {"response": {"neverError": true}}}
+      },
+      "id": "draft",
+      "name": "Draft answer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 320]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.posts_queue (workflow, platform, target_url, lang, body, quality_score, status, scheduled_at) VALUES ('quora', 'quora', $1, $2, $3, 7.0, 'queued', NOW() + (random() * interval '24 hours')) RETURNING id, status;",
+        "options": {"queryReplacement": "={{ $('Target questions').item.json.url }},{{ $('Target questions').item.json.lang }},{{ $json.response }}"}
+      },
+      "id": "queue",
+      "name": "Queue answer",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1340, 320],
+      "credentials": {"postgres": {"id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres"}}
+    }
+  ],
+  "connections": {
+    "Twice daily": {"main": [[{"node": "Target questions", "type": "main", "index": 0}]]},
+    "Target questions": {"main": [[{"node": "Dedup 60d", "type": "main", "index": 0}]]},
+    "Dedup 60d": {"main": [[{"node": "If new", "type": "main", "index": 0}]]},
+    "If new": {"main": [[{"node": "Draft answer", "type": "main", "index": 0}], []]},
+    "Draft answer": {"main": [[{"node": "Queue answer", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "saveExecutionProgress": true},
+  "tags": [{"name": "adoff"}, {"name": "content"}],
+  "active": false
+}

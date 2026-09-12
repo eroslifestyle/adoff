@@ -1,0 +1,216 @@
+const { chromium } = require('playwright');
+const path = require('path');
+const fs = require('fs');
+
+const EXTENSION_PATH = path.resolve(__dirname, '../../app');
+const TARGET_URL = process.env.TARGET_URL || 'https://streaming-community.red/titles/27865-guarda-batman-caped-crusader-streaming/watching.html';
+const OUT_DIR = path.resolve(__dirname, 'out');
+
+const AD_PATTERNS = [
+  'ima3', 'imasdk', 'doubleclick', 'googlesyndication',
+  'vast', 'vmap', 'adserver', 'adsystem', 'prebid', 'zoneid', 'popunder'
+];
+
+async function collectFrameData(page, frame) {
+  try {
+    return await frame.evaluate(() => {
+      const result = { url: window.location.href };
+      try {
+        const htmlEl = document.documentElement;
+        result.dataAdOffStealth = htmlEl ? htmlEl.getAttribute('data-adoff-stealth') : null;
+      } catch (_) { result.dataAdOffStealth = null; }
+      try {
+        result.windowOpenReplaced = typeof window.open === 'function' && window.open.name === 'safeOpen';
+      } catch (_) { result.windowOpenReplaced = false; }
+      try {
+        result.googleImaExists = typeof google !== 'undefined' && typeof google.ima !== 'undefined';
+        if (result.googleImaExists) {
+          const adsLoaderSrc = google.ima.AdsLoader ? google.ima.AdsLoader.toString() : '';
+          result.imaAdDisplayContainerExists = typeof google.ima.AdDisplayContainer !== 'undefined';
+          result.imaAdsLoaderHasAdoff = adsLoaderSrc.includes('adoff') || !adsLoaderSrc.includes('[native');
+        } else {
+          result.imaAdDisplayContainerExists = false;
+          result.imaAdsLoaderHasAdoff = false;
+        }
+      } catch (_) {
+        result.googleImaExists = false;
+        result.imaAdDisplayContainerExists = false;
+        result.imaAdsLoaderHasAdoff = false;
+      }
+      try {
+        const videos = Array.from(document.querySelectorAll('video'));
+        result.videoCount = videos.length;
+        result.videos = videos.map(v => ({
+          currentTime: v.currentTime,
+          duration: v.duration,
+          paused: v.paused
+        }));
+      } catch (_) {
+        result.videoCount = 0;
+        result.videos = [];
+      }
+      return result;
+    });
+  } catch (e) {
+    return { url: frame.url(), error: e.message };
+  }
+}
+
+async function findPlayerFrame(page) {
+  const mainFrame = page.mainFrame();
+  const candidates = page.frames().filter(f =>
+    f.url() !== mainFrame.url() && f.url() !== 'about:blank'
+  );
+  if (candidates.length === 0) {
+    console.warn('[AVVISO] Nessun frame player rilevato');
+    return null;
+  }
+  if (candidates.length === 1) return candidates[0];
+  let best = candidates[0];
+  let maxArea = 0;
+  for (const f of candidates) {
+    try {
+      const box = await f.evaluate(() => {
+        const el = document.querySelector('iframe');
+        if (!el) return { width: 0, height: 0 };
+        return { width: el.offsetWidth, height: el.offsetHeight };
+      }).catch(() => ({ width: 0, height: 0 }));
+      const area = box.width * box.height;
+      if (area > maxArea) {
+        maxArea = area;
+        best = f;
+      }
+    } catch (_) {}
+  }
+  return best;
+}
+
+async function startPlayback(playerFrame, page) {
+  const selectors = [
+    'button[class*="play"]', 'button[class*="Play"]',
+    '[aria-label*="play"]', '[aria-label*="Play"]',
+    '.vjs-big-play-button', '.ytp-play-button', '.play-button'
+  ];
+  for (const sel of selectors) {
+    try {
+      await playerFrame.click(sel, { timeout: 2000 });
+      console.log(`[AVVIO] Click su ${sel}`);
+      return;
+    } catch (_) {}
+  }
+  try {
+    await playerFrame.click('video', { timeout: 2000 });
+    console.log('[AVVIO] Click su video');
+    return;
+  } catch (_) {}
+  try {
+    await playerFrame.click('body', { timeout: 2000 });
+    console.log('[AVVIO] Click su body');
+    return;
+  } catch (_) {}
+  const box = page.viewportSize();
+  await page.mouse.click(box.width / 2, box.height / 2);
+  console.log('[AVVIO] Click centro viewport');
+}
+
+function filterAdRequests(requests) {
+  return requests.filter(req => {
+    const url = req.url.toLowerCase();
+    return AD_PATTERNS.some(p => url.includes(p));
+  });
+}
+
+(async () => {
+  if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
+
+  const networkRequests = [];
+  const context = await chromium.launchPersistentContext('', {
+    headless: false,
+    viewport: { width: 1366, height: 900 },
+    args: [
+      '--disable-extensions-except=' + EXTENSION_PATH,
+      '--load-extension=' + EXTENSION_PATH,
+      '--mute-audio'
+    ],
+    ignoreDefaultArgs: ['--disable-extensions']
+  });
+
+  try {
+    const page = context.pages()[0];
+
+    page.on('request', req => {
+      networkRequests.push({ url: req.url(), resourceType: req.resourceType() });
+    });
+
+    console.log('[ATTESA] Attesa 25000ms per sync service worker...');
+    await page.waitForTimeout(25000);
+
+    console.log('[NAVIGAZIONE] Caricamento ' + TARGET_URL);
+    await page.goto(TARGET_URL, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    await page.waitForTimeout(8000);
+
+    const mainFrame = page.mainFrame();
+    const playerFrame = await findPlayerFrame(page);
+
+    console.log('[COLLETA] Dati prima avvio...');
+    const primaAvvio = {
+      mainFrame: await collectFrameData(page, mainFrame),
+      playerFrame: playerFrame ? await collectFrameData(page, playerFrame) : null
+    };
+
+    console.log('[AVVIO] Tentativo avvio riproduzione...');
+    if (playerFrame) {
+      await startPlayback(playerFrame, page);
+    } else {
+      await page.mouse.click(683, 450);
+    }
+    await page.waitForTimeout(15000);
+
+    console.log('[COLLETA] Dati dopo avvio...');
+    const dopoAvvio = {
+      mainFrame: await collectFrameData(page, mainFrame),
+      playerFrame: playerFrame ? await collectFrameData(page, playerFrame) : null
+    };
+
+    const screenshotPath = path.join(OUT_DIR, 'player-dopo-avvio.png');
+    await page.screenshot({ path: screenshotPath });
+    console.log('[SCREENSHOT] Salvato ' + screenshotPath);
+
+    const richiesteSospette = filterAdRequests(networkRequests);
+
+    const output = {
+      timestamp: new Date().toISOString(),
+      targetUrl: TARGET_URL,
+      primaAvvio,
+      dopoAvvio,
+      richiesteSospette,
+      totaleRichieste: networkRequests.length
+    };
+
+    const jsonPath = path.join(OUT_DIR, 'player-diagnosi.json');
+    fs.writeFileSync(jsonPath, JSON.stringify(output, null, 2));
+    console.log('[OUTPUT] Salvato ' + jsonPath);
+
+    console.log('\n========== RIEPILOGO ==========');
+    console.log('PRIMA DELL\'AVVIO:');
+    console.log('  Frame principale - stealth: ' + (primaAvvio.mainFrame.dataAdOffStealth || 'NON ATTIVO'));
+    if (primaAvvio.playerFrame) {
+      console.log('  Frame player - stealth: ' + (primaAvvio.playerFrame.dataAdOffStealth || 'NON ATTIVO'));
+    }
+    console.log('DOPO L\'AVVIO:');
+    console.log('  Frame principale - stealth: ' + (dopoAvvio.mainFrame.dataAdOffStealth || 'NON ATTIVO'));
+    if (dopoAvvio.playerFrame) {
+      console.log('  Frame player - stealth: ' + (dopoAvvio.playerFrame.dataAdOffStealth || 'NON ATTIVO'));
+    }
+    console.log('RICHIESTE SOSPETTE (' + richiesteSospette.length + '):');
+    if (richiesteSospette.length === 0) {
+      console.log('  Nessuna richiesta pubblicitaria rilevata');
+    } else {
+      richiesteSospette.forEach(r => console.log('  ' + r.resourceType + ': ' + r.url));
+    }
+    console.log('==============================\n');
+
+  } finally {
+    await context.close();
+  }
+})();

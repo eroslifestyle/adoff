@@ -1,0 +1,96 @@
+{
+  "name": "AdOff 06 - Newsjacking Watcher",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {"interval": [{"field": "hours", "hoursInterval": 1}]}
+      },
+      "id": "trig",
+      "name": "Every hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Newsjacking sources: Google News RSS + HN front-page + key blogs\nreturn [\n  { json: { source: 'google_news', topic: 'manifest v3 ad blocker', url: 'https://news.google.com/rss/search?q=%22manifest+v3%22+ad+blocker&hl=en&gl=US' }},\n  { json: { source: 'google_news', topic: 'youtube anti adblock', url: 'https://news.google.com/rss/search?q=%22youtube%22+%22ad+blocker%22+(crackdown+OR+block+OR+ban)&hl=en' }},\n  { json: { source: 'google_news', topic: 'chrome extension policy', url: 'https://news.google.com/rss/search?q=chrome+extension+policy+OR+%22chrome+web+store%22+change&hl=en' }},\n  { json: { source: 'hn_front', topic: 'hn front-page', url: 'https://hn.algolia.com/api/v1/search_by_date?tags=front_page&query=adblock+OR+%22ad+blocker%22+OR+%22manifest+v3%22+OR+%22youtube+ads%22' }}\n];"
+      },
+      "id": "sources",
+      "name": "News sources",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {"timeout": 20000, "response": {"response": {"neverError": true, "responseFormat": "text"}}},
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "User-Agent", "value": "AdOffNewsBot/1.0"}]}
+      },
+      "id": "fetch",
+      "name": "Fetch feed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst out = [];\nfor (const it of items) {\n  const ctx = it.json;\n  const body = ctx.data || ctx.body || '';\n  const text = typeof body === 'string' ? body : JSON.stringify(body);\n  const source = ctx.source || 'unknown';\n  const topic = ctx.topic || '';\n  if (source === 'hn_front') {\n    try {\n      const j = JSON.parse(text);\n      for (const h of (j.hits || [])) {\n        out.push({ json: {\n          source: 'hn', url: h.url || ('https://news.ycombinator.com/item?id='+h.objectID),\n          title: h.title || h.story_title || '',\n          summary: (h.story_text || '').replace(/<[^>]*>/g,'').slice(0,500),\n          relevance: topic,\n          urgency: (h.points||0) > 100 ? 'high' : 'normal',\n          published_at: h.created_at\n        }});\n      }\n    } catch(e) {}\n  } else {\n    // Parse RSS minimal\n    const items_rx = /<item>([\\s\\S]*?)<\\/item>/g;\n    let m;\n    while ((m = items_rx.exec(text)) !== null) {\n      const block = m[1];\n      const title = (block.match(/<title>(?:<!\\[CDATA\\[)?([^<\\]]+)/) || [])[1] || '';\n      const link = (block.match(/<link>([^<]+)/) || [])[1] || '';\n      const desc = (block.match(/<description>(?:<!\\[CDATA\\[)?([\\s\\S]*?)\\]?\\]?<\\/description>/) || [])[1] || '';\n      const pub = (block.match(/<pubDate>([^<]+)/) || [])[1] || '';\n      if (!link) continue;\n      out.push({ json: {\n        source: 'google_news', url: link, title,\n        summary: desc.replace(/<[^>]*>/g,'').slice(0,500),\n        relevance: topic, urgency: 'normal',\n        published_at: pub\n      }});\n    }\n  }\n}\nreturn out;"
+      },
+      "id": "parse",
+      "name": "Parse news",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\":\"chat-max\",\"stream\":false,\"options\":{\"temperature\":0.5,\"num_predict\":500},\"prompt\":\"You write newsjacking responses for AdOff (privacy-first ad blocker Chrome extension, available adoff.app). News below. Write a 100-word draft response: a tweet thread (3-4 tweets) + Reddit-style comment angle. Make it concrete, useful to readers, mention AdOff once with disclosure. No clickbait. If the news is irrelevant to ad-blocking, respond ONLY with the word: SKIP\\n\\nNEWS TITLE: {{ $json.title }}\\nSUMMARY: {{ $json.summary }}\\nURL: {{ $json.url }}\\n\\nDraft:\"}",
+        "options": {"timeout": 60000, "response": {"response": {"neverError": true}}}
+      },
+      "id": "draft",
+      "name": "LLM draft response",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const orig = $('Parse news').item.json;\nconst llm = $input.first().json;\nconst draft = (llm.response || llm.message?.content || '').trim();\nif (!draft || draft.toUpperCase().startsWith('SKIP')) return [];\nreturn [{ json: { ...orig, response_draft: draft }}];"
+      },
+      "id": "filter-skip",
+      "name": "Filter SKIP",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.news_events (source, url, title, summary, relevance, urgency, response_draft, published_at) VALUES ($1,$2,$3,$4,$5,$6,$7, NULLIF($8,'')::timestamptz) ON CONFLICT (url) DO NOTHING RETURNING id;",
+        "options": {"queryReplacement": "={{ $json.source }},{{ $json.url }},{{ $json.title }},{{ $json.summary }},{{ $json.relevance }},{{ $json.urgency }},{{ $json.response_draft }},{{ $json.published_at }}"}
+      },
+      "id": "store",
+      "name": "Store news event",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1560, 400],
+      "credentials": {"postgres": {"id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres"}}
+    }
+  ],
+  "connections": {
+    "Every hour": {"main": [[{"node": "News sources", "type": "main", "index": 0}]]},
+    "News sources": {"main": [[{"node": "Fetch feed", "type": "main", "index": 0}]]},
+    "Fetch feed": {"main": [[{"node": "Parse news", "type": "main", "index": 0}]]},
+    "Parse news": {"main": [[{"node": "LLM draft response", "type": "main", "index": 0}]]},
+    "LLM draft response": {"main": [[{"node": "Filter SKIP", "type": "main", "index": 0}]]},
+    "Filter SKIP": {"main": [[{"node": "Store news event", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "saveExecutionProgress": true},
+  "tags": [{"name": "adoff"}, {"name": "intel"}],
+  "active": false
+}
