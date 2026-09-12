@@ -14,6 +14,17 @@
 - [ ] Spegnere endpoint backend `/free-license` e `/trial` (senza più client dopo rimozione free-gate)
 - [ ] Testare quota DNR reale su browser vivo prima di riattivare il feed remoto
 
+### Bonifica segreti → vault TPM (sessione 2026-09-12/13, in quest'ordine)
+
+- [ ] **1. PROSSIMO — backup del vault A MANO DELL'UTENTE**: `secret backup /mnt/backup/secrets-backup/vault-$(date +%Y%m%d-%H%M).tpm.bak` — passphrase ≥12 char digitata da lui, MAI da un agente, MAI in chat. Ultimo backup: 2026-08-30. Precondizione della fase C. Contesto: checkpoint `CP_20260913_0120.md` · vault `[[2026-09-12-heartbeat-401-e-bonifica-segreti]]`.
+- [ ] 2. FASE C (solo dopo il backup): cancellare i file in chiaro. ZERO consumatori, cancellabili subito: `minimax-cookies.json/.txt`, `adoff-android-release.jks`, ssh-key Oracle in `migrati-dropbox/`, `adoff-youtube-oauth-refresh.txt(+.personal-bak)`, i 9 `*.bak`. Poi `adoff-stores.env` e `keyok-aruba.env`.
+- [ ] 3. Convertire i consumatori fuori da AdOff/keyok: Trading → `mt5-autologin.ini` (comando wine, vuole un path su disco, lancio manuale); Loquil → `dump_topics.py:18`.
+- [ ] 4. `~/.config/rclone/rclone.conf` ha credenziali Google inline in chiaro (fuori da ~/.secrets): decidere come gestirlo, rclone non legge dal vault.
+- [ ] 5. `N8N_ENCRYPTION_KEY`/`N8N_PG_PASSWORD` servono a `n8n-workflows/scripts/setup-credentials.sh` ma non esistono né nel vault né nel file: l'utente deve fornirli.
+- [ ] 6. `loquil-telegram-user.env` e `omnia-premium.env` sono TEMPLATE VUOTI: da compilare nel vault quando le chiavi esisteranno.
+- [ ] 7. `gsc_query.py`: cleanup atexit non signal-safe + filename fisso (race). Rischio basso.
+- [ ] 8. Il mirror `/mnt/backup/Dropbox/` ha copie degli script ed è sincronizzato sul cloud: passata dedicata separata.
+
 ## Sessione 2026-09-12 (continuazione): remediation sicurezza completa — 3 round
 
 Remediation di sicurezza completa su AdOff a partire da un audit esterno dettagliato (round 1:
