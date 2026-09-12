@@ -10,6 +10,51 @@
 - [ ] **Redirect 301 www→apex**: solo dal dashboard Cloudflare (Rules → Redirect Rules, hostname `www.adoff.app` → 301 all'apex). Né `CF_API_TOKEN` né l'OAuth di wrangler hanno il permesso di zona in scrittura (l'OAuth ha solo `zone (read)`).
 - [ ] **66 file del sito espongono l'account GitHub personale** `github.com/eroslifestyle` (incluso l'URL di download dell'APK Android). Preesistente; sfuggito perché il pre-deploy check cerca `erosdegrande`, non `eroslifestyle`. Rinominare il repo romperebbe i link di download: decisione dell'utente.
 - [ ] **Bug referral `/r/:code` ROTTO**: `adoff.app/r/TESTCODE` redirige a `/?ref=%3Acode` invece del codice reale — Cloudflare Pages non interpola i placeholder nella query string della destinazione (`site/_redirects`, regola invariata da prima della sessione, verificata con `git show 867dc46:site/_redirects`). Le regole statiche `/r/*` funzionano. Fix: Pages Function `site/functions/r/[code].js` o handler nel worker. Dettaglio: checkpoint `CP_20260911_1330.md`.
+- [ ] Decidere strategia di sincronizzazione con `origin/main` per i 3 commit di remediation sicurezza (`37cf332`→`1c6cc6b`→`a03097f`) — procedura nota (snapshot sanificato + force-push, vedi sezione dedicata), non eseguita
+- [ ] Spegnere endpoint backend `/free-license` e `/trial` (senza più client dopo rimozione free-gate)
+- [ ] Testare quota DNR reale su browser vivo prima di riattivare il feed remoto
+
+## Sessione 2026-09-12 (continuazione): remediation sicurezza completa — 3 round
+
+Remediation di sicurezza completa su AdOff a partire da un audit esterno dettagliato (round 1:
+telemetria, feed DNR, XSS admin, VPN Android, permessi), poi una revisione indipendente sui
+difetti residui (round 2: bug quota reale nel feed DNR, rimozione completa free-gate per
+allineare il codice al claim pubblico "gratis per tutti", XSS admin completato, VPN rimossa
+anche dal manifest, test infra divisa), poi una terza correzione (round 3: la costante di quota
+DNR usata in round 2 violava una regola permanente già scritta in questo stesso file, riga 509 —
+corretta con WebSearch delle doc ufficiali). Tre commit locali: `37cf332`, `1c6cc6b`, `a03097f`
+(HEAD). Checkpoint: `.claude/checkpoints/CP_20260912_1835.md` · vault
+`Memoria/progetti/AdOff/sessioni/adoff-remediation-sicurezza-3-round-2026-09-12.md`.
+
+**Fatto:**
+- [x] Round 1: telemetria opt-in (fingerprint canvas/audio/WebGL eliminato, consenso esplicito su ogni invio)
+- [x] Round 1: feed DNR firmato v1 (ECDSA P-256, kill-switch REMOTE_RULES_ENABLED=false, docs/RULES-FEED-PROTOCOL.md)
+- [x] Round 1: XSS admin v1 (esc() su panel.html/admin-console.html, Chart.js self-hosted, CSP, token in memoria)
+- [x] Round 1: VPN Android disabilitata a runtime
+- [x] Round 1: permessi manifest puliti (activeTab/declarativeNetRequestFeedback rimossi), .venv untracked (1260 file)
+- [x] Round 2: feed DNR quota-aware (bug reale corretto: allocazione ID fuori range, apply a due rami A/B con rollback)
+- [x] Round 2: free-gate esecutivo rimosso completamente (syncFreeLicense/applyFreeGate eliminati) — il codice ora rispetta il claim pubblico "gratis per tutti, senza account, senza scadenze"; adoffPlanTier() NON toccato (resta il gate universale intenzionale)
+- [x] Round 2: XSS admin completato su admin-app.js (city/country/browser/source, GSC, href sitemap)
+- [x] Round 2: VPN Android rimossa anche dal manifest (non solo runtime)
+- [x] Round 2: test infra divisa test:static/e2e/security, 2 nuovi test (security-invariants 112 asserzioni, rules-no-content-block 7/7)
+- [x] Round 3: fix costante quota DNR (`MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES` → `MAX_NUMBER_OF_DYNAMIC_RULES`, con fonte WebSearch e riferimento all'incidente v3.5.59)
+- [x] Tutti i test verificati indipendentemente dal main (non solo dichiarati dai sub-agenti): test:static, test:security, test:e2e tutti verdi
+
+**Aperto:**
+- [ ] **Decisione utente su sincronizzazione `origin/main`**: la procedura è già nota e documentata in questo file (vedi sezione precedente, riga ~45: rigenerare snapshot orfano sanificato + force-push) ma NON eseguita in questa sessione — fuori mandato (il compito era la remediation, non la pubblicazione)
+- [ ] Spegnere endpoint backend `/free-license` e `/trial` — non hanno più alcun client dopo la rimozione del free-gate, ma restano attivi lato server (task server-side separato, fuori da questo repo)
+- [ ] Smoke test manuale della admin console (site/admin-console.html, site/panel.html) dopo il prossimo deploy delle nuove risorse statiche (site/assets/*.js, site/vendor/chart.umd.min.js)
+- [ ] Testare la quota DNR reale su browser vivo (Chrome/Firefox/Safari) — finora solo simulata nei test Node
+- [ ] Decisione owner sui file `.bak` pre-esistenti con vecchio codice free-gate (non tracciati da git, non rimossi)
+
+**Do NOT:**
+- NON riattivare `REMOTE_RULES_ENABLED` senza che il backend implementi firma ECDSA reale (requisiti in `docs/RULES-FEED-PROTOCOL.md`)
+- NON reintrodurre il free-gate esecutivo (syncFreeLicense/applyFreeGate) — modello attuale gratis-per-tutti reale, coerente col claim pubblico
+- NON usare `MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES` come prima scelta per la quota DNR (corretto in round 3, vedi anche riga 509 sotto — regola preesistente confermata)
+- NON dichiarare la VPN Android funzionante — disabilitata e rimossa dal manifest finché non esiste forwarding reale testato su device
+- NON fidarsi del solo report di un sub-agent senza verifica diretta (in questa sessione un sub-agent ha rimosso per errore un import Kotlin ancora in uso — trovato solo con verifica indipendente)
+
+---
 
 ## Sessione 2026-09-12 (continuazione): incidente sicurezza repo pubblico + bonifica
 
