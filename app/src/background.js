@@ -900,21 +900,46 @@
   // Legacy single-key option usata solo se la mappa e' vuota.
   const RULES_FEED_PUBLIC_KEY_JWK = null;
 
-  // A) Quota REALE delle regole dinamiche MV3. Fonte: la costante esposta a
-  // runtime dall'API — Chrome/Safari/Firefox espongono
-  // MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES (30.000 su Chrome stable ≥ M120,
-  // 5.000 su Firefox < M129, 10.000 su Firefox ≥ M129 per dynamic+session COMBINED;
-  // Safari ≥ 16.4 allinea Chrome). Fonti: developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest#type-MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
-  // developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest,
-  // developer.apple.com/documentation/safariservices/safari-web-extensions. Se il
-  // browser non espone la costante a runtime → fallback CONSERVATIVO dichiarato.
+  // A) Quota REALE delle regole dinamiche MV3. Il feed contiene SOLO regole
+  // "safe" (block/allow/upgradeScheme, mai redirect/modifyHeaders) → il budget
+  // giusto è MAX_NUMBER_OF_DYNAMIC_RULES. In Chrome ≥ M120 vale 30.000; le
+  // unsafe rules (redirect/modifyHeaders) hanno budget separato di soli 5.000
+  // (MAX_NUMBER_OF_UNSAFE_DYNAMIC_RULES). ATTENZIONE STORICA (incidente
+  // v3.5.59, 2026-08-02): 35.143 regole in una singola updateDynamicRules()
+  // atomica sfondarono il limite e fallì silenziosamente → chunking + cap su
+  // questa quota. MAI usare MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES: deprecata
+  // (Chrome 120 / Firefox 126), indicava il vecchio budget COMBINATO 5.000.
+  // Valori per browser (verificati su doc ufficiali, 2026-09-12):
+  // - Chrome/Edge/Opera: MAX_NUMBER_OF_DYNAMIC_RULES = 30.000 (safe dynamic).
+  // - Firefox: MAX_NUMBER_OF_DYNAMIC_RULES = 5.000 (la costante esiste ma il
+  //   budget safe dynamic in Firefox è 5.000; MDN, tabella limiti).
+  // - Safari: espone MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES = 30.000 (non
+  //   deprecata lì, budget combinato dynamic+session).
+  // Fonti: developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest
+  //        (Value 30000 / Value 5000, Chrome 120+);
+  //        developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest
+  //        (e subpage .../MAX_NUMBER_OF_DYNAMIC_RULES: "in Firefox: 5000, in
+  //        Chrome: 30000"; .../MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES:
+  //        "In Safari, this property has a value of 30,000").
   function realDynamicQuota() {
     try {
       const dnr = chrome.declarativeNetRequest;
-      const limit = dnr.MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES || dnr.MAX_NUMBER_OF_DYNAMIC_RULES;
-      if (Number.isInteger(limit) && limit > 0) return limit;
+      // Budget per regole SAFE (noi usiamo solo block/allow). In Chrome è 30.000.
+      if (Number.isInteger(dnr.MAX_NUMBER_OF_DYNAMIC_RULES) && dnr.MAX_NUMBER_OF_DYNAMIC_RULES > 0) {
+        return dnr.MAX_NUMBER_OF_DYNAMIC_RULES;
+      }
+      // Safari ≥ 16.4 espone solo la combinata (30.000, dynamic+session) — la
+      // accettiamo SOLO se ≥ 5.000, così non rischia mai di alzare il cap sopra
+      // il budget dynamic puro di un browser con costanti mancanti.
+      if (Number.isInteger(dnr.MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES) &&
+          dnr.MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES >= 5000) {
+        return dnr.MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES;
+      }
     } catch (_) { /* nop */ }
-    return 5000; // fallback conservativo documentato (vedi protocol)
+    // Fallback conservativo: 5.000 = valore minimo garantito cross-browser
+    // (Chrome unsafe budget / Firefox safe dynamic budget). Documentato in
+    // docs/RULES-FEED-PROTOCOL.md § "Quota reale DNR (fonte)".
+    return 5000;
   }
 
   // Il feed contiene solo block/allow → budget regole applicabili = quota reale

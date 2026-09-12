@@ -20,24 +20,39 @@
 
 ## Quota reale DNR (fonte)
 
-Il limite applicato è la costante esposta a runtime dall'API:
+Il feed contiene SOLO regole "safe" (`block`/`allow`/`upgradeScheme`, mai
+`redirect`/`modifyHeaders`), quindi il budget di riferimento è il limite delle
+regole dinamiche safe, NON quello delle unsafe. Il limite applicato è la
+costante esposta a runtime dall'API (verificato su doc ufficiali 2026-09-12):
 
-- `chrome.declarativeNetRequest.MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES` —
-  30.000 su Chrome/Edge/Opera stable (saldo combinato dynamic+session).
-  Fonte: developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest
-  (sezione "Property: MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES").
-- Firefox: esposta via `browser.declarativeNetRequest` (WebExtension API
-  mirror); il limite combinato è più basso di Chrome su versioni meno recenti.
-  Fonte: developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest
-- Safari ≥ 16.4: allinea il modello Chrome (dichiarativo MV3 nativo).
-  Fonte: developer.apple.com/documentation/safariservices/safari-web-extensions
+- `chrome.declarativeNetRequest.MAX_NUMBER_OF_DYNAMIC_RULES` — **30.000** su
+  Chrome/Edge/Opera (Chrome ≥ M120; le "unsafe rules" — redirect/modifyHeaders
+  — hanno budget SEPARATO di soli 5.000,
+  `MAX_NUMBER_OF_UNSAFE_DYNAMIC_RULES`). Fonte:
+  developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest
+  ("MAX_NUMBER_OF_DYNAMIC_RULES … Value 30000").
+- Firefox: `MAX_NUMBER_OF_DYNAMIC_RULES` = **5.000**. Fonte:
+  developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest/MAX_NUMBER_OF_DYNAMIC_RULES
+  ("This limit is: in Firefox: 5000, in Chrome: 30000").
+- Safari ≥ 16.4: espone `MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES` = **30.000**
+  (budget combinato dynamic+session, non deprecata lì). Fonte:
+  developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest/MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES
+  ("In Safari, this property has a value of 30,000").
 
-**Fallback conservativo dichiarato**: se un browser non espone la costante a
-runtime (`realDynamicQuota()` ritorna `5000`), il client non rifiuta il feed per
-questo motivo ma conta le regole REALI presenti per calcolare headroom. Il
-numero 5000 è un limite minimo storico garantito; il conteggio reale previene
-il superamento anche in questo caso. Documentare in `adoffRemoteRulesError`
-qualsiasi apply rifiutato per quota.
+**ATTENZIONE STORICA (incidente v3.5.59, 2026-08-02)**: 35.143 regole in una
+singola `updateDynamicRules()` atomica sfondarono il limite e fallirono
+silenziosamente → da qui chunking + cap su questa quota. **MAI ripristinare**
+`MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES` come prima scelta su Chrome/Firefox:
+lì è deprecata (Chrome 120 / Firefox 126) e indicava il vecchio budget
+COMBINATO di 5.000.
+
+**Fallback conservativo dichiarato**: se un browser non espone nessuna costante
+a runtime (`realDynamicQuota()` ritorna `5000`), il client non rifiuta il feed
+per questo motivo ma conta le regole REALI presenti per calcolare headroom. Il
+numero 5000 è il minimo garantito cross-browser (budget safe dynamic Firefox /
+budget unsafe Chrome); il conteggio reale previene il superamento anche in
+questo caso. Documentare in `adoffRemoteRulesError` qualsiasi apply rifiutato
+per quota.
 
 ## Strategia a due rami (apply)
 
