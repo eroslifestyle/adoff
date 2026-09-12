@@ -1,12 +1,12 @@
 # AdOff Android App
 
-Ad blocking for Android via local VPN.
+Android app: UI e struttura del progetto presenti; la protezione VPN NON è ancora funzionante (packet forwarding non implementato) — disabilitata di default, in sviluppo.
 
 ## Status
 
 **Phase 1** ✅ — DNS guide live at adoff.app/android-dns
 **Phase 2** ✅ — Flutter scaffold (license, VPN API client, crypto keys)
-**Phase 3** 🚧 — VPN + blocking logic (IN PROGRESS)
+**Phase 3** 🚧 — VPN + blocking logic (IN PROGRESS — VPN disabled: packet forwarding not implemented, echo-loop risk; service guarded, never establishes)
 **Phase 4** ⬜ — Build + test
 **Phase 5** ⬜ — Publish (F-Droid + APK)
 **Phase 6** ⬜ — Metrics + monitoring

@@ -14,11 +14,8 @@ class MainActivity : FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "startVpn" -> {
-                    val intent = Intent(this, VpnService::class.java).apply {
-                        action = VpnService.ACTION_START
-                    }
-                    startService(intent)
-                    result.success(true)
+                    // ponytail: VPN forwarding non implementato — errore esplicito al chiamante, il servizio non parte
+                    result.error("EXPERIMENTAL", "VPN protection is experimental and not yet functional", null)
                 }
                 "stopVpn" -> {
                     val intent = Intent(this, VpnService::class.java).apply {

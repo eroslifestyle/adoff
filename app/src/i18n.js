@@ -144,6 +144,7 @@ const i18n = (function () {
       "opt.privacyTitle": "Privacy — Dati di Navigazione Anonimi",
       "opt.privacyDesc": "Se attivi questa opzione, AdOff condivide in forma aggregata e anonima il nome dei siti che visiti (mai l'URL completo) e il numero di annunci bloccati/non bloccati su quel sito. Serve a verificare se il blocco funziona davvero. Puoi disattivarlo in qualsiasi momento: i dati già raccolti verranno cancellati subito.",
       "opt.privacyToggleLabel": "Condividi dati anonimi di efficacia",
+      "opt.telemetryToggleLabel": "Aiuta a migliorare AdOff (opzionale, anonimo — nessun dato di navigazione, nessun fingerprinting)",
       "opt.privacyLink": "Leggi la <a href=\"https://adoff.app/privacy\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a> completa.",
 
       // Generale section
@@ -456,6 +457,7 @@ const i18n = (function () {
       "opt.privacyTitle": "Privacy — Anonymous Navigation Data",
       "opt.privacyDesc": "If you enable this option, AdOff shares in aggregate and anonymous form the name of the sites you visit (never the full URL) and the number of ads blocked/unblocked on that site. This helps verify if blocking really works. You can disable it at any time: already collected data will be deleted immediately.",
       "opt.privacyToggleLabel": "Share anonymous effectiveness data",
+      "opt.telemetryToggleLabel": "Help improve AdOff (optional, anonymous — no browsing data, no fingerprinting)",
       "opt.privacyLink": "Read the full <a href=\"https://adoff.app/privacy\" target=\"_blank\" rel=\"noopener\">Privacy Policy</a>.",
 
       // General section

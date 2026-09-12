@@ -14,10 +14,10 @@ class SettingsScreen extends StatelessWidget {
           _SettingsTile(
             icon: Icons.vpn_lock,
             title: 'VPN Mode',
-            subtitle: 'Full ad blocking — uses VPN slot',
+            subtitle: 'Coming soon — under development',
             trailing: Switch(
-              value: true,
-              onChanged: (v) {},
+              value: false,
+              onChanged: null, // ponytail: VPN forwarding non implementato — toggle disabilitato
               activeColor: const Color(0xFF7C5CFC),
             ),
           ),

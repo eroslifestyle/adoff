@@ -329,6 +329,7 @@ const FILE_PROFILES = {
   "popup-blocker.js":  "high",
   "player-probe.js":   "high",
   "license-client.js": "high",
+  "rules-feed-verify.js": "medium",
   "content.js":        "medium",
   "background.js":     "medium",
   "popup.js":          "low",
@@ -543,6 +544,7 @@ function checkSync() {
     "src/content.js", "src/popup.js", "src/popup.html", "src/popup.css",
     "src/options.js", "src/options.html", "src/options.css", "src/onboarding.js",
     "src/license-client.js", "src/i18n.js", "src/ads-hide.css", "src/popup-blocker.js",
+    "src/rules-feed-verify.js",
     "rules/adblock-rules.json",
   ];
   const dirs = { chrome: "app", firefox: "app-firefox", safari: "app-safari" };

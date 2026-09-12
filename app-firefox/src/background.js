@@ -11,16 +11,23 @@
     return "premium";
   }
 
+  // Carica il modulo di verifica del feed regole (condiviso col test Node).
+  // Chrome/Safari: service worker classico → importScripts. Firefox: il modulo
+  // e' il primo script di background.scripts, qui servono solo i fallback.
+  if (typeof importScripts === "function") {
+    importScripts("rules-feed-verify.js");
+  }
+
   // ---- Costanti storage ----
   const STORAGE_ENABLED    = "adoffEnabled";
   const STORAGE_ADS        = "adoffAdsBlocked";
-  const STORAGE_REQ         = "adoffReqBlocked";
-  const STORAGE_TRIAL_END   = "adoffTrialEnd";
-  const STORAGE_WHITELIST   = "adoffWhitelist";
-  const STORAGE_SHOW_BADGE  = "adoffShowBadge";
+  const STORAGE_REQ        = "adoffReqBlocked";
+  const STORAGE_TRIAL_END  = "adoffTrialEnd";
+  const STORAGE_WHITELIST  = "adoffWhitelist";
+  const STORAGE_SHOW_BADGE   = "adoffShowBadge";
   const STORAGE_SHOW_COUNTER = "adoffShowCounter";
   const STORAGE_DAILY_STATS = "adoffDailyStats";
-  const TRIAL_DAYS          = 15;
+  const TRIAL_DAYS         = 15;
 
   // Data limite per badge Founding Member (3 mesi dal lancio)
   const FOUNDER_CUTOFF = new Date("2026-07-01T00:00:00Z").getTime();
@@ -57,6 +64,7 @@
         "Se avevi un abbonamento attivo, sei passato a Sostenitore: puoi interromperlo quando vuoi senza perdere nessuna funzione"
       ],
 
+      
       
 
       "3.5.84": [
@@ -198,154 +206,23 @@
     });
   }
 
-  // ---- Fingerprint browser resilient (lazy/cached, zero deps, Web Crypto API) ----
-  // Combina canvas + audio + screen + platform + WebGL + timezone/language.
-  // Fallback: hash SHA-256 di adoffDeviceId se tutto fallisce.
-  var _cachedFingerprint = null;
-
-  async function generateResilientFingerprint() {
-    if (_cachedFingerprint !== null) return _cachedFingerprint;
+  // ---- Consenso telemetria (opt-in esplicito, default OFF) ----
+  // Nessun invio remoto (install/heartbeat/uninstall) senza il consenso
+  // dell'utente. La navigazione anonima ha il suo opt-in separato
+  // (adoffNavOptIn) e resta indipendente.
+  async function hasTelemetryConsent() {
     try {
-      var components = [];
-      var fallbackDeviceId = null;
-
-      // Leggi deviceId per fallback
-      try {
-        fallbackDeviceId = await new Promise(function(r) {
-          chrome.storage.local.get("adoffDeviceId", r);
-        }).then(function(r) { return r.adoffDeviceId; });
-      } catch (_) {}
-
-      // Canvas 2D fingerprint
-      try {
-        var canvas = document.createElement("canvas");
-        canvas.width = 200;
-        canvas.height = 50;
-        var ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.textBaseline = "top";
-          ctx.font = "14px Arial";
-          ctx.fillStyle = "#f60";
-          ctx.fillRect(125, 1, 62, 20);
-          ctx.fillStyle = "#069";
-          ctx.fillText("AdOff", 2, 15);
-          ctx.fillStyle = "rgba(102,204,0,0.7)";
-          ctx.fillText("fingerprint", 4, 27);
-          var dataUrl = canvas.toDataURL();
-          var canvasHash = await crypto.subtle.digest(
-            "SHA-256",
-            new TextEncoder().encode(dataUrl)
-          );
-          components.push(btoaFromBytes(canvasHash));
-        }
-      } catch (_) {}
-
-      // AudioContext fingerprint
-      try {
-        var AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx) {
-          var ac = new AudioCtx();
-          var oscillator = ac.createOscillator();
-          var analyser = ac.createAnalyser();
-          var gainNode = ac.createGain();
-          gainNode.gain.value = 0;
-          oscillator.type = "triangle";
-          oscillator.frequency.value = 12345;
-          oscillator.connect(analyser);
-          analyser.connect(gainNode);
-          gainNode.connect(ac.destination);
-          oscillator.start(0);
-          var bins = new Float32Array(analyser.frequencyBinCount);
-          analyser.getFloatFrequencyData(bins);
-          var audioSummary = bins.slice(0, 32).map(function(b) { return b.toFixed(3); }).join(",");
-          var audioHash = await crypto.subtle.digest(
-            "SHA-256",
-            new TextEncoder().encode(audioSummary)
-          );
-          components.push(btoaFromBytes(audioHash));
-          try { oscillator.stop(); } catch (_) {}
-          try { ac.close(); } catch (_) {}
-        }
-      } catch (_) {}
-
-      // Screen
-      try {
-        components.push([
-          screen.width, screen.height, screen.colorDepth, screen.pixelDepth
-        ].join("x"));
-      } catch (_) {}
-
-      // Platform + hardwareConcurrency
-      try {
-        components.push(navigator.platform || "");
-        components.push(String(navigator.hardwareConcurrency || 0));
-      } catch (_) {}
-
-      // WebGL renderer (UNMASKED_RENDERER + UNMASKED_VENDOR)
-      try {
-        var gl = document.createElement("canvas").getContext("webgl")
-             || document.createElement("canvas").getContext("experimental-webgl");
-        if (gl) {
-          var ext = gl.getExtension("WEBGL_debug_renderer_info");
-          if (ext) {
-            var vendor = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) || "";
-            var renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) || "";
-            components.push(vendor + "|" + renderer);
-          }
-        }
-      } catch (_) {}
-
-      // Timezone + Language
-      try {
-        var ro = Intl.DateTimeFormat().resolvedOptions();
-        components.push(ro.timeZone || "");
-        components.push(navigator.language || "");
-        components.push((navigator.languages || []).slice(0, 3).join(","));
-      } catch (_) {}
-
-      // Combina e hash
-      var combined = components.join("||");
-      var hash = await crypto.subtle.digest(
-        "SHA-256",
-        new TextEncoder().encode(combined)
-      );
-      _cachedFingerprint = btoaFromBytes(hash);
-      return _cachedFingerprint;
+      const r = await new Promise((res) => chrome.storage.local.get("adoffTelemetryOptIn", res));
+      return r.adoffTelemetryOptIn === true;
     } catch (_) {
-      // Fallback finale: hash del deviceId o stringa statica
-      try {
-        var did = await new Promise(function(r) {
-          chrome.storage.local.get("adoffDeviceId", r);
-        }).then(function(res) { return res.adoffDeviceId; });
-        if (did) {
-          var fbHash = await crypto.subtle.digest(
-            "SHA-256",
-            new TextEncoder().encode("fallback-fp:" + did)
-          );
-          _cachedFingerprint = btoaFromBytes(fbHash);
-          return _cachedFingerprint;
-        }
-      } catch (_2) {}
-      _cachedFingerprint = null;
-      return null;
+      return false;
     }
   }
 
-  // Helper: Uint8Array → base64
-  function btoaFromBytes(bytes) {
-    if (typeof bytes === "object" && bytes.constructor.name === "Uint8Array") {
-      var bin = "";
-      for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-      return btoa(bin);
-    }
-    // ArrayBuffer
-    var arr = new Uint8Array(bytes);
-    var bin = "";
-    for (var j = 0; j < arr.length; j++) bin += String.fromCharCode(arr[j]);
-    return btoa(bin);
-  }
-
-  // Genera e persiste l'UUID del dispositivo al primo avvio
+  // Genera e persiste l'UUID del dispositivo al primo avvio.
+  // ID casuale NON-fingerprint: e' un identificatore casuale generato una
+  // sola volta con crypto.randomUUID() (fallback v4 da Math.random), non
+  // deriva da alcuna caratteristica del dispositivo/browser.
   chrome.storage.local.get("adoffDeviceId", (result) => {
     if (!result.adoffDeviceId) {
       chrome.storage.local.set({
@@ -367,8 +244,9 @@
     return "chrome";
   }
 
-  // Traccia installazione al server (device-level).
+  // Traccia installazione al server (device-level). SOLO con consenso esplicito.
   async function trackInstall(adoffDeviceId, plan = "free") {
+    if (!(await hasTelemetryConsent())) return;
     try {
       const manifest = chrome.runtime.getManifest();
       const version = manifest.version;
@@ -382,8 +260,6 @@
           ref: adoffReferralCode || "",
           plan,
           version,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          fingerprint: await generateResilientFingerprint(),
         }),
       });
     } catch (e) {
@@ -391,8 +267,9 @@
     }
   }
 
-  // Heartbeat periodico per tracking real-time retention.
+  // Heartbeat periodico per tracking real-time retention. SOLO con consenso.
   async function trackHeartbeat(adoffDeviceId, installTs) {
+    if (!(await hasTelemetryConsent())) return;
     try {
       const manifest = chrome.runtime.getManifest();
       const { adoffLicense, adoffTrialEnd, adoffEnabled } = await new Promise(r => chrome.storage.local.get(["adoffLicense", "adoffTrialEnd", "adoffEnabled"]));
@@ -415,8 +292,9 @@
     }
   }
 
-  // Traccia disinstallazione al server.
+  // Traccia disinstallazione al server. SOLO con consenso.
   async function trackUninstall(adoffDeviceId, reason, comment, wasPro, version) {
+    if (!(await hasTelemetryConsent())) return;
     try {
       await fetch(`${API_BASE}/track/uninstall`, {
         method: "POST",
@@ -500,7 +378,7 @@
   }
 
   // Sincronizza trial col server — autorità SERVER per il countdown.
-  // Chiama POST /trial con {deviceId, fingerprint} come JSON body.
+  // Chiama POST /trial con {deviceId} (il fingerprint e stato rimosso: privacy).
   async function syncTrialBg() {
     try {
       const { adoffDeviceId } = await new Promise((r) =>
@@ -508,7 +386,7 @@
       const deviceId = adoffDeviceId || generateDeviceUuid();
       if (!adoffDeviceId) chrome.storage.local.set({ adoffDeviceId: deviceId });
 
-      const fingerprint = await generateResilientFingerprint();
+      const fingerprint = null; // ponytail: fingerprint rimosso (privacy), backend ignora il campo assente
       const resp = await fetch(`${API_BASE}/trial`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -594,7 +472,7 @@
         await storageSet({ adoffDeviceId: deviceId });
       }
 
-      const fingerprint = await generateResilientFingerprint();
+      const fingerprint = null; // ponytail: fingerprint rimosso (privacy)
 
       const response = await fetch(API_BASE + "/free-license", {
         method: "POST",
@@ -809,9 +687,11 @@
   }
 
   // Imposta la pagina di survey post-disinstallazione (cattura il "perché ci disinstalli").
-  // Passa deviceId come query param così il server può de-anonimizzare il survey.
-  function updateUninstallURL() {
+  // CON consenso telemetria: passa deviceId come query param così il server può
+  // de-anonimizzare il survey. SENZA consenso: URL senza alcun identificatore.
+  async function updateUninstallURL() {
     try {
+      const consent = await hasTelemetryConsent();
       chrome.storage.local.get(["adoffLicense", STORAGE_TRIAL_END, "adoffDeviceId"], (r) => {
         const now = Date.now();
         const lic = r && r.adoffLicense;
@@ -819,11 +699,13 @@
         const trialOn = typeof r[STORAGE_TRIAL_END] === "number" && now < r[STORAGE_TRIAL_END];
         const wasPro = (hasLicense || trialOn) ? "1" : "0";
         const v = chrome.runtime.getManifest().version;
-        const deviceId = r.adoffDeviceId || "";
         // Puntiamo alla pagina HTML sul sito, non all'endpoint API: il worker
         // non serve HTML via GET, restituirebbe JSON grezzo {"error":"Not found"}.
         // La pagina del sito raccoglie il feedback e poi POSTa al worker.
-        const url = `https://adoff.app/uninstall.html?deviceId=${encodeURIComponent(deviceId)}&v=${encodeURIComponent(v)}&pro=${wasPro}`;
+        let url = `https://adoff.app/uninstall.html?v=${encodeURIComponent(v)}&pro=${wasPro}`;
+        if (consent) {
+          url += `&deviceId=${encodeURIComponent(r.adoffDeviceId || "")}`;
+        }
         if (chrome.runtime.setUninstallURL) chrome.runtime.setUninstallURL(url);
       });
     } catch (_) { /* best-effort, non bloccante */ }
@@ -1279,9 +1161,13 @@
 
   // ---- Remote rule-feed (MV3-native: declarativeNetRequest dynamic rules) ----
   // Mantiene i filtri freschi senza aspettare la review dello store: il service
-  // worker scarica un JSON firmato-per-origine da adoff.app e lo applica a runtime.
-  // SICUREZZA: solo azioni block/allow (mai redirect/modifyHeaders da fonte remota),
-  // id forzati in un range riservato, condition ricostruita con soli campi safe.
+  // worker scarica un JSON firmato da adoff.app e lo applica a runtime.
+  // SICUREZZA: firma ECDSA P-256 obbligatoria, solo azioni block/allow (mai
+  // redirect/modifyHeaders da fonte remota), main_frame solo con dominio,
+  // id forzati in un range riservato, apply atomico con rollback.
+  // Il feed è DISABILITATO (REMOTE_RULES_ENABLED = false) finché il backend non
+  // firma i payload. Vedi docs/RULES-FEED-PROTOCOL.md.
+  const REMOTE_RULES_ENABLED = false;
   const REMOTE_RULES_URL = "https://adoff.app/rules-feed.json";
   const REMOTE_RULES_BASE_ID = 60000;
   const REMOTE_RULES_FETCH_TIMEOUT_MS = 20000;
@@ -1289,11 +1175,10 @@
   const REMOTE_RULES_CHUNK = 2000;
   const REMOTE_RULES_MIN_INTERVAL_MS = 6 * 60 * 60 * 1000;
   const REMOTE_RULES_ID_SPAN = 40000;
-  const SAFE_REMOTE_ACTIONS = ["block", "allow"];
-  const SAFE_REMOTE_RESOURCE_TYPES = [
-    "main_frame", "sub_frame", "script", "image", "stylesheet",
-    "xmlhttprequest", "media", "font", "object", "ping", "websocket", "other",
-  ];
+  // TODO: backend deve fornire la chiave pubblica reale (ECDSA P-256) per la
+  // firma del feed. PLACEHOLDER vuoto: finché resta così la verifica fallisce
+  // chiaramente con "chiave pubblica non configurata" e il feed resta spento.
+  const RULES_FEED_PUBLIC_KEY_JWK = null;
 
   // Il feed contiene solo block/allow, quindi rientra nel budget delle regole "safe"
   // (MAX_NUMBER_OF_DYNAMIC_RULES, 30.000 su Chrome) e non in quello legacy da 5.000.
@@ -1315,40 +1200,6 @@
     });
   }
 
-  function removeOldRemoteRules() {
-    return new Promise((resolve) => {
-      chrome.declarativeNetRequest.getDynamicRules((existing) => {
-        const ids = (existing || [])
-          .filter((r) => r.id >= REMOTE_RULES_BASE_ID && r.id < REMOTE_RULES_BASE_ID + REMOTE_RULES_ID_SPAN)
-          .map((r) => r.id);
-        if (!ids.length) return resolve(null);
-        chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: ids }, () => {
-          resolve(chrome.runtime.lastError ? chrome.runtime.lastError.message : null);
-        });
-      });
-    });
-  }
-
-  function sanitizeRemoteRule(raw, assignedId) {
-    if (!raw || typeof raw !== "object") return null;
-    const action = raw.action && typeof raw.action === "object" ? raw.action : null;
-    if (!action || !SAFE_REMOTE_ACTIONS.includes(action.type)) return null;
-    const cond = raw.condition && typeof raw.condition === "object" ? raw.condition : null;
-    if (!cond) return null;
-    const safeCond = {};
-    if (typeof cond.urlFilter === "string") safeCond.urlFilter = cond.urlFilter.slice(0, 500);
-    if (typeof cond.regexFilter === "string") safeCond.regexFilter = cond.regexFilter.slice(0, 500);
-    if (Array.isArray(cond.requestDomains)) safeCond.requestDomains = cond.requestDomains.slice(0, 200);
-    if (Array.isArray(cond.initiatorDomains)) safeCond.initiatorDomains = cond.initiatorDomains.slice(0, 200);
-    if (Array.isArray(cond.resourceTypes)) {
-      const rt = cond.resourceTypes.filter((t) => SAFE_REMOTE_RESOURCE_TYPES.includes(t));
-      if (rt.length) safeCond.resourceTypes = rt;
-    }
-    if (!safeCond.urlFilter && !safeCond.regexFilter && !safeCond.requestDomains) return null;
-    const prio = Number.isInteger(raw.priority) ? Math.min(Math.max(raw.priority, 1), 100) : 1;
-    return { id: assignedId, priority: prio, action: { type: action.type }, condition: safeCond };
-  }
-
   function clearRemoteRules() {
     chrome.declarativeNetRequest.getDynamicRules((existing) => {
       const oldIds = (existing || [])
@@ -1358,13 +1209,16 @@
     });
   }
 
+  // Kill-switch: il feed resta disabilitato finché il backend non firma i payload.
   function syncRemoteRules(force) {
+    if (!REMOTE_RULES_ENABLED) return;
+
     let enabled = true;
     chrome.storage.local.get([STORAGE_ENABLED], (st) => {
       if (st[STORAGE_ENABLED] === false) { enabled = false; }
       if (!enabled) { clearRemoteRules(); return; }
 
-      chrome.storage.local.get(["adoffRemoteRulesSync", "adoffRemoteRulesCount"], (st) => {
+      chrome.storage.local.get(["adoffRemoteRulesSync", "adoffRemoteRulesCount", "adoffRulesFeedVersion"], (st) => {
         const lastSync = st.adoffRemoteRulesSync || 0;
         const lastCount = st.adoffRemoteRulesCount || 0;
         // Throttle: NON toccare adoffRemoteRulesSync qui, altrimenti ogni avvio del
@@ -1379,51 +1233,50 @@
             if (!res.ok) return null;
             return res.json();
           })
-          .then((data) => {
-            if (!data || !Array.isArray(data.rules)) return;
+          .then(async (data) => {
+            if (!data) return;
 
-            const cap = remoteRulesCap();
-            const addRules = [];
-            let skipped = 0;
-            for (const raw of data.rules) {
-              if (addRules.length >= cap) { skipped++; continue; }
-              const r = sanitizeRemoteRule(raw, REMOTE_RULES_BASE_ID + addRules.length);
-              if (r) addRules.push(r);
+            // Verifica completa PRIMA di toccare le regole esistenti: struttura,
+            // scadenza, monotonia versione (anti-replay/rollback), allowlist
+            // azioni, firma ECDSA P-256. Qualunque fallimento → mantieni il
+            // ruleset precedente e logga.
+            const verified = await verifyRulesFeedSignature(data, {
+              publicKeyJwk: RULES_FEED_PUBLIC_KEY_JWK,
+              storedVersion: st.adoffRulesFeedVersion || 0,
+            });
+            if (!verified.ok) {
+              console.warn("[adoff] Feed remoto rifiutato: " + verified.error);
+              return;
             }
-            if (skipped > 0) console.warn("[adoff] Feed troncato: " + addRules.length + "/" + data.rules.length + " (cap " + cap + ", scartate " + skipped + ")");
 
-            removeOldRemoteRules().then((err) => {
-              if (err) {
-                chrome.storage.local.set({ adoffRemoteRulesError: err });
-                return;
-              }
+            const result = await applyAtomic(data, {
+              baseId: REMOTE_RULES_BASE_ID,
+              idSpan: REMOTE_RULES_ID_SPAN,
+              maxRules: remoteRulesCap(),
+              chunkSize: REMOTE_RULES_CHUNK,
+              getDynamicRules: () => new Promise((resolve) => {
+                chrome.declarativeNetRequest.getDynamicRules((r) => resolve(r || []));
+              }),
+              updateDynamicRules: updateDynamicRulesAsync,
+            });
+            if (!result.ok) {
+              console.warn("[adoff] Apply feed fallito (nessuna rimozione eseguita): " + result.error);
+              chrome.storage.local.set({ adoffRemoteRulesError: result.error });
+              return;
+            }
 
-              let applied = 0;
-              const addChunk = (offset) => {
-                if (offset >= addRules.length) {
-                  chrome.storage.local.set({
-                    adoffRemoteRulesVer: data.version || 0,
-                    adoffRemoteRulesSync: Date.now(),
-                    adoffRemoteRulesCount: applied,
-                    adoffRemoteRulesError: null,
-                  });
-                  return;
-                }
-                const chunk = addRules.slice(offset, offset + REMOTE_RULES_CHUNK);
-                updateDynamicRulesAsync({ addRules: chunk }).then((err) => {
-                  if (err) {
-                    console.warn("[adoff] Blocco aggiunta fallito: " + chunk.length + " regole, da " + (offset + 1) + ", err: " + err);
-                    chrome.storage.local.set({ adoffRemoteRulesError: err });
-                    return;
-                  }
-                  applied += chunk.length;
-                  addChunk(offset + REMOTE_RULES_CHUNK);
-                });
-              };
-              addChunk(0);
+            // Versione salvata SOLO dopo apply riuscito (impedisce replay/rollback)
+            chrome.storage.local.set({
+              adoffRulesFeedVersion: data.version || 0,
+              adoffRemoteRulesVer: data.version || 0,
+              adoffRemoteRulesSync: Date.now(),
+              adoffRemoteRulesCount: result.applied,
+              adoffRemoteRulesError: null,
             });
           })
-          .catch(() => {});
+          .catch((e) => {
+            console.warn("[adoff] Feed remoto non raggiungibile: " + (e && e.message ? e.message : ""));
+          });
       });
     });
   }
@@ -1455,29 +1308,6 @@
     // sync giornaliero.
     if (message && message.action === "refreshFreeLicense") {
       syncFreeLicense();
-      return false;
-    }
-
-    // Handler messaggio navConsentChanged per opt-in privacy
-    if (message && message.action === "navConsentChanged") {
-      chrome.storage.local.get("adoffDeviceId", (r) => {
-        if (!r.adoffDeviceId) return;
-        const deviceId = r.adoffDeviceId;
-        const optIn = message.optIn === true;
-        fetch(`${API_BASE}/track/consent`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            deviceId,
-            action: optIn ? "opt_in" : "opt_out",
-            policyVersion: "2.0"
-          }),
-        }).catch(() => {});
-        // Se opt_out, rimuovi buffer
-        if (!optIn) {
-          chrome.storage.local.remove("adoffNavBuffer");
-        }
-      });
       return false;
     }
 
@@ -1605,6 +1435,30 @@
         // EA-7: matching esatto o subdomain — evita false positive bidirezionali
         const whitelisted = list.some((d) => domain === d || domain.endsWith("." + d));
         sendResponse({ ok: true, whitelisted });
+      });
+      return true;
+    }
+
+    // Privacy navigation opt-in consent changed
+    if (message.action === "navConsentChanged") {
+      chrome.storage.local.get("adoffDeviceId", (result) => {
+        const deviceId = result.adoffDeviceId;
+        if (!deviceId) { sendResponse({ ok: false, error: "no deviceId" }); return true; }
+
+        const action = message.optIn === true ? "opt_in" : "opt_out";
+        fetch(`${API_BASE}/track/consent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceId, action, policyVersion: "2.0" }),
+        }).then(() => {
+          // Se opt-out, svuota il buffer locale
+          if (message.optIn === false) {
+            chrome.storage.local.remove("adoffNavBuffer");
+          }
+          sendResponse({ ok: true });
+        }).catch(() => {
+          sendResponse({ ok: false, error: "fetch failed" });
+        });
       });
       return true;
     }

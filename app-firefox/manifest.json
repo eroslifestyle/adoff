@@ -17,15 +17,18 @@
   "permissions": [
     "storage",
     "declarativeNetRequest",
-    "declarativeNetRequestFeedback",
-    "activeTab",
     "alarms"
+  ],
+  "optional_permissions": [
+    "identity",
+    "identity.email"
   ],
   "host_permissions": [
     "<all_urls>"
   ],
   "background": {
     "scripts": [
+      "src/rules-feed-verify.js",
       "src/background.js"
     ]
   },

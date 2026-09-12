@@ -47,6 +47,53 @@ Nessun segreto (chiavi private, token, endpoint privati) è incluso nel codice
 client. La validazione crittografica delle licenze è firmata e verificata
 **lato server**; il client esegue solo controlli pubblici.
 
+## Telemetria opzionale (opt-in)
+
+**Di default non viene inviata alcuna telemetria.** Esiste un'unica telemetria
+di base, **spenta finché l'utente non la attiva** con l'apposito toggle in
+Opzioni → Privacy ("Aiuta a migliorare AdOff…"). Nessuna nuova installazione
+invia nulla.
+
+### Cosa viene raccolto SE l'utente attiva il toggle
+
+- **Eventi**: installazione, heartbeat periodico (circa 1 volta/ora: solo
+  versione attiva/disattiva e piano), disinstallazione (solo se compilata la
+  survey di feedback).
+- **Identificatore**: un `deviceId` **casuale, non-fingerprint** — un UUID
+  generato una sola volta con `crypto.randomUUID()` e salvato in locale. Non
+  deriva da alcuna caratteristica del dispositivo o del browser.
+- **Campi di installazione**: versione dell'estensione, browser di provenienza
+  (Chrome/Firefox/Safari/Edge/Opera, ricavato dallo user agent), eventuale
+  codice referral.
+
+### Cosa NON viene mai raccolto
+
+- **NESSUN fingerprinting**: il vecchio fingerprint (canvas, AudioContext,
+  WebGL, schermo, piattaforma, timezone) è stato **rimosso dal codice**.
+- **NESSUN dato di navigazione** in questa telemetria: la condivisione anonima
+  di dati di efficacia (nomi di siti, mai URL) è un **opt-in separato e
+  indipendente** (toggle "Condividi dati anonimi di efficacia") che resta
+  spento di default.
+- Nessun contenuto di pagina, nessuna cronologia, nessuna lista di siti visitati.
+
+### URL di disinstallazione
+
+Senza consenso telemetria, la pagina mostrata alla disinstallazione NON
+contiene alcun identificatore (nessun `deviceId` in query string). Con
+consenso, include il `deviceId` casuale per collegare la survey al feedback.
+
+### Come disattivare
+
+Opzioni → Privacy → spegni il toggle "Aiuta a migliorare AdOff". Gli invii
+cessano immediatamente (l'heartbeat controlla il consenso a ogni esecuzione).
+Dati raccolti in precedenza: gestione dal backend, vedi supporto.
+
+### Perché esiste
+
+Le statistiche aggregate (quante installazioni attive, su quale versione)
+servono a capire se un aggiornamento rompe il blocking. È la telemetria minima:
+nessun dato di navigazione, nessun fingerprint, disattivabile con un click.
+
 ## GDPR & dichiarazioni store
 
 - **Base legale**: l'unico trattamento di dati personali è la validazione della
@@ -62,4 +109,4 @@ client. La validazione crittografica delle licenze è firmata e verificata
   privacy policy chiara) è il vero vantaggio competitivo della categoria, non
   l'offuscamento.
 
-_Ultimo aggiornamento: 2026-06-02._
+_Ultimo aggiornamento: 2026-09-12._

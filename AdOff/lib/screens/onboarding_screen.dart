@@ -51,8 +51,8 @@ class _WelcomeStep extends StatelessWidget {
   Widget build(BuildContext context) => _StepLayout(
     emoji: '🛡️',
     title: 'Welcome to AdOff',
-    subtitle: 'Block ads and trackers across all your Android apps — without a VPN app.',
-    body: 'AdOff uses a local VPN to filter DNS queries and block known ad and tracker domains at the system level.',
+    subtitle: 'Android protection is under development.',
+    body: 'AdOff for Android is not functional yet — VPN protection is disabled by default while we build it. In the meantime, check out the AdOff browser extension and the DNS guide in Settings.',
   );
 }
 
@@ -74,8 +74,8 @@ class _DnsStep extends StatelessWidget {
   Widget build(BuildContext context) => _StepLayout(
     emoji: '🌐',
     title: 'How it works',
-    subtitle: 'DNS-level ad blocking.',
-    body: 'Every app asks the internet for website addresses via DNS. AdOff checks every request against a blocklist and blocks the bad ones — before any connection is made.',
+    subtitle: 'DNS-level ad blocking (planned).',
+    body: 'Once ready, AdOff will check DNS requests against a blocklist and block the bad ones — before any connection is made. This feature is still in development.',
   );
 }
 
@@ -97,7 +97,7 @@ class _TrialStep extends StatelessWidget {
     emoji: '🎉',
     title: 'Start your trial',
     subtitle: '15 days of AdOff Pro — free.',
-    body: 'Activate your trial to unlock:\n• Ad and tracker blocking on all apps\n• DNS-level protection\n• VPN blocking with app-level control\n\nNo credit card required.',
+    body: 'Your trial unlocks the full app as it develops:\n• Today: DNS guide and project preview\n• Coming soon: ad and tracker blocking (in development, not functional yet)\n\nNo credit card required.',
     showCTA: true,
     onCTAPress: () => Navigator.pushReplacementNamed(context, '/home'),
   );

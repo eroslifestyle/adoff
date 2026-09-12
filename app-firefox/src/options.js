@@ -217,6 +217,24 @@
     });
   }
 
+  // ===== TELEMETRY OPT-IN (default OFF) =====
+  // Governa gli invii install/heartbeat/uninstall. La navigazione anonima ha
+  // il suo opt-in separato (navOptInToggle) e resta indipendente.
+
+  const telemetryOptInToggle = document.getElementById("telemetryOptInToggle");
+
+  chrome.storage.local.get("adoffTelemetryOptIn", (r) => {
+    if (telemetryOptInToggle) {
+      telemetryOptInToggle.checked = r.adoffTelemetryOptIn === true;
+    }
+  });
+
+  if (telemetryOptInToggle) {
+    telemetryOptInToggle.addEventListener("change", () => {
+      chrome.storage.local.set({ adoffTelemetryOptIn: telemetryOptInToggle.checked });
+    });
+  }
+
   // ===== WHITELIST =====
 
   const addSiteInput  = document.getElementById("addSiteInput");

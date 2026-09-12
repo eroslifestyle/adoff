@@ -37,10 +37,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _toggleVpn(bool value) async {
     if (value) {
-      await VpnServiceManager.instance.start();
-    } else {
-      await VpnServiceManager.instance.stop();
+      // ponytail: VPN forwarding non implementato — non invochiamo il canale nativo, mostriamo "Coming soon"
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Coming soon'),
+          content: const Text(
+            'Android protection is under development. '
+            'The VPN service is not functional yet and is disabled by default.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
     }
+    await VpnServiceManager.instance.stop();
     await _checkVpnStatus();
   }
 
@@ -119,8 +136,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 title: const Text('VPN Protection'),
-                subtitle: Text(_vpnRunning ? 'Active' : 'Inactive'),
-                value: _vpnRunning,
+                subtitle: const Text('Coming soon — under development'),
+                value: false,
                 onChanged: _toggleVpn,
               ),
             ),

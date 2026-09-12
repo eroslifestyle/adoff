@@ -67,11 +67,10 @@ class VpnService : android.net.VpnService() {
                 return START_NOT_STICKY
             }
             ACTION_START, null -> {
-                if (vpnInterface == null) {
-                    startForeground(NOTIFICATION_ID, buildNotification("AdOff is protecting your device"))
-                    startVpn()
-                }
-                return START_STICKY
+                // ponytail: VPN forwarding non implementato (echo loop, no checksum) — disabilitato finché non esiste forwarding reale
+                notifyExperimental()
+                stopSelf()
+                return START_NOT_STICKY
             }
         }
         return START_NOT_STICKY
@@ -89,6 +88,21 @@ class VpnService : android.net.VpnService() {
         super.onRevoke()
     }
 
+    /**
+     * Show an informational notification (not foreground — service stops right after).
+     * Started via startService(), so no ForegroundServiceDidNotStartInTimeException risk.
+     */
+    private fun notifyExperimental() {
+        try {
+            val nm = getSystemService(NotificationManager::class.java)
+            nm.notify(NOTIFICATION_ID, buildNotification(
+                "AdOff VPN protection is experimental and not yet functional"))
+        } catch (e: Exception) {
+            Log.w("AdOffVPN", "notify failed: ${e.message}")
+        }
+    }
+
+    // ponytail: codice sotto disattivato — base per sviluppo futuro, mai chiamato finché il forwarding non è reale
     private fun startVpn() {
         val builder = Builder()
             .setSession("AdOff")
