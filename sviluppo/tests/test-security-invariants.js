@@ -269,29 +269,31 @@ function testaGateAntiDoppiaIstanza() {
 }
 
 // =============================================================================
-// TEST 4: nessun fallback trial bypassabile
+// TEST 4: il tier canonico esiste e non consulta lo storage (gratis per tutti).
+// isTrialActive e' stata RIMOSSA col free-gate (2026-09): l'invariante vivo oggi
+// e' adoffPlanTier(), che deve restare l'unico punto di gate (bug 2026-08-04).
 // =============================================================================
 function testaNoTrialBypass() {
-  console.log('\n=== TEST 4: No fallback trial bypassabile ===');
+  console.log('\n=== TEST 4: Tier canonico unico, nessun fallback trial ===');
 
   for (const target of TARGETS) {
-    const contentJs = ottieniContenuto(target, 'src', 'content.js');
-    const backgroundJs = ottieniContenuto(target, 'src', 'background.js');
-
-    for (const [nome, contenuto] of [['content.js', contentJs], ['background.js', backgroundJs]]) {
+    // content.js NON ha piu' il gate (rimosso col free-gate 2026-09): il tier
+    // canonico vive in background.js e onboarding.js.
+    for (const nome of ['onboarding.js', 'background.js']) {
+      const contenuto = ottieniContenuto(target, 'src', nome);
       if (!contenuto) {
         fail('T4', `${target}/${nome}`, 'File non trovato');
         continue;
       }
 
-      const corpo = estraiCorpoAsyncFunction(contenuto, 'isTrialActive');
+      const corpo = estraiFunzione(contenuto, 'adoffPlanTier');
       if (!corpo) {
-        fail('T4', `${target}/${nome}`, 'Funzione isTrialActive non trovata');
+        fail('T4', `${target}/${nome}`, 'Funzione adoffPlanTier non trovata');
         continue;
       }
 
-      if (corpo.includes('adoffTrialEnd')) {
-        fail('T4', `${target}/${nome}`, 'Trovato accesso a adoffTrialEnd in isTrialActive');
+      if (/isTrialActive|adoffTrialEnd/.test(corpo.body || corpo)) {
+        fail('T4', `${target}/${nome}`, 'adoffPlanTier consulta simboli trial rimossi');
       } else {
         ok('T4', `${target}/${nome}`);
       }
@@ -327,17 +329,19 @@ function testaCoerenzaTrial() {
   if (!lcApp) {
     fail('T5', 'app/license-client.js', 'File non trovato');
   } else {
-    // L'espressione e' scritta come "15 * 24 * 60 * 60 * 1000": va valutata,
-    // non letta come primo numero (leggere solo "15" dava un falso positivo).
-    const matchTrialMs = lcApp.match(/TRIAL_DURATION_MS\s*=\s*([\d\s*]+);/);
+    // TRIAL_DURATION_MS e' migrato in background.js col free-gate (2026-09):
+    // se presente va verificato, se assente non e' un fallimento (simbolo dormiente).
+    const lcMs = lcApp.match(/TRIAL_DURATION_MS\s*=\s*([\d\s*]+);/);
+    const bgMs = bgApp ? bgApp.match(/TRIAL_DURATION_MS\s*=\s*([\d\s*]+);/) : null;
+    const matchTrialMs = lcMs || bgMs;
     if (!matchTrialMs) {
-      fail('T5', 'app/license-client.js', 'TRIAL_DURATION_MS non trovato');
+      ok('T5', 'TRIAL_DURATION_MS assente (dormiente) — nessuna coerenza da presidiare');
     } else {
       const trialMs = matchTrialMs[1].split('*').reduce((a, n) => a * parseInt(n.trim(), 10), 1);
       if (trialMs !== TRIAL_MS_ATTESO) {
-        fail('T5', 'app/license-client.js TRIAL_DURATION_MS', `Atteso ${TRIAL_MS_ATTESO}, ottenuto ${trialMs}`);
+        fail('T5', 'TRIAL_DURATION_MS', `Atteso ${TRIAL_MS_ATTESO}, ottenuto ${trialMs}`);
       } else {
-        ok('T5', 'app/license-client.js TRIAL_DURATION_MS');
+        ok('T5', `TRIAL_DURATION_MS = ${trialMs}ms`);
       }
     }
   }
@@ -482,7 +486,12 @@ function testaRegoleNonPinnate() {
   }
 
   // a) Nessun urlFilter deve appuntare un dominio di famiglia numerata
-  // Pattern: lettere+ cifre+ . tld (es. abc123.example.com)
+  // Pattern: lettere+ cifre+ . tld (es. abc123.example.com).
+  // Esclusione documentata: ||mks98.com (id 947) e' il dominio ATTUALE della
+  // famiglia popunder mks{NN}.com — il numero e' parte del nome reale, la
+  // rotazione della famiglia produce DOMINI DIVERSI (mks97, mks99...) ciascuno
+  // da aggiungere come regola propria, non un suffisso della stessa URL.
+  const ECCEZIONI_PINNATE = new Set(['||mks98.com']);
   const reDominioNumerato = /^(\|\|)?[a-zA-Z]{2,}\d+\.[a-zA-Z]{2,}$/;
   for (let i = 0; i < contents.length; i++) {
     const rules = contents[i];
@@ -490,7 +499,7 @@ function testaRegoleNonPinnate() {
     for (const rule of rules) {
       if (rule.action && rule.action.type === 'block' && rule.condition && rule.condition.urlFilter) {
         const filtro = rule.condition.urlFilter;
-        if (reDominioNumerato.test(filtro)) {
+        if (reDominioNumerato.test(filtro) && !ECCEZIONI_PINNATE.has(filtro)) {
           fail('T9a', fileRules[i], `Regola ${rule.id} appunta dominio numerato: ${filtro}`);
           trovato = true;
         }
@@ -621,6 +630,148 @@ function testaBuildIncludeContentScript() {
 }
 
 // =============================================================================
+// TEST 12: nessun fingerprinting in background.js
+// Il service worker non tocca canvas/audio/webgl: se uno di questi simboli
+// compare e' un segnale di fingerprinting introdotto di nascosto.
+// =============================================================================
+function testaNoFingerprinting() {
+  console.log('\n=== TEST 12: Nessun fingerprinting in background.js ===');
+  const simboli = ['getContext', 'toDataURL', 'AudioContext', 'createOscillator', 'WebGLRenderingContext', 'getParameter'];
+
+  for (const target of TARGETS) {
+    const contenuto = ottieniContenuto(target, 'src', 'background.js');
+    if (!contenuto) {
+      fail('T12', `${target}/background.js`, 'File non trovato');
+      continue;
+    }
+    const trovati = simboli.filter(s => contenuto.includes(s));
+    if (trovati.length) {
+      fail('T12', `${target}/background.js`, `Simboli fingerprinting: ${trovati.join(', ')}`);
+    } else {
+      ok('T12', `${target}/background.js`);
+    }
+  }
+}
+
+// =============================================================================
+// TEST 13: il feed remoto resta DISATTIVATO in tutti i background.js.
+// Solo chi ha le chiavi backend puo' riattivarlo: il default deve restare off.
+// =============================================================================
+function testaFeedRemotoOff() {
+  console.log('\n=== TEST 13: REMOTE_RULES_ENABLED = false sui 3 target ===');
+
+  for (const target of TARGETS) {
+    const contenuto = ottieniContenuto(target, 'src', 'background.js');
+    if (!contenuto) {
+      fail('T13', `${target}/background.js`, 'File non trovato');
+      continue;
+    }
+    const match = contenuto.match(/REMOTE_RULES_ENABLED\s*=\s*(true|false)/);
+    if (!match) {
+      fail('T13', `${target}/background.js`, 'Costante REMOTE_RULES_ENABLED non trovata');
+    } else if (match[1] !== 'false') {
+      fail('T13', `${target}/background.js`, `REMOTE_RULES_ENABLED = ${match[1]} (atteso false)`);
+    } else {
+      ok('T13', `${target}/background.js`);
+    }
+  }
+}
+
+// =============================================================================
+// TEST 14: console admin/panel — niente handler inline, CSP presente.
+// Un handler inline annulla la protezione della CSP script-src 'self'.
+// =============================================================================
+function testaConsoleHtml() {
+  console.log('\n=== TEST 14: HTML console senza handler inline + CSP ===');
+  const pagine = ['site/admin-console.html', 'site/panel.html'];
+  const reInline = /\son(error|load|click|mouseover)\s*=\s*["'a-zA-Z]/i;
+
+  for (const rel of pagine) {
+    let html;
+    try {
+      html = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    } catch (e) {
+      fail('T14', rel, 'impossibile leggere: ' + e.message);
+      continue;
+    }
+
+    // Tolgo i CORPI degli script inline prima di cercare "onload=" nel codice JS
+    const senzaScript = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+    if (reInline.test(senzaScript)) {
+      fail('T14', rel, 'handler HTML inline trovato fuori dagli script');
+    } else {
+      ok('T14', `${rel} — nessun handler inline`);
+    }
+
+    if (/Content-Security-Policy/i.test(html)) {
+      ok('T14', `${rel} — CSP meta presente`);
+    } else {
+      fail('T14', rel, 'meta Content-Security-Policy assente');
+    }
+  }
+}
+
+// =============================================================================
+// TEST 15: nessun secret plausibile nel codice di produzione.
+// Pattern base: chiavi provider note mai devono finire nei sorgenti shippati.
+// =============================================================================
+function testaNoSegretiHardcoded() {
+  console.log('\n=== TEST 15: Nessun secret hardcoded in app*/src e site ===');
+  const reSegreto = /sk_live|AKIA[0-9A-Z]{16}|BEGIN (?:RSA )?PRIVATE KEY|BEGIN EC PRIVATE KEY/;
+  const globs = [];
+
+  for (const target of TARGETS) {
+    const srcDir = path.join(ROOT, target, 'src');
+    for (const f of fs.readdirSync(srcDir)) {
+      if (f.endsWith('.js')) globs.push(path.join(srcDir, f));
+    }
+  }
+  const siteAssets = path.join(ROOT, 'site', 'assets');
+  if (fs.existsSync(siteAssets)) {
+    for (const f of fs.readdirSync(siteAssets)) {
+      if (f.endsWith('.js')) globs.push(path.join(siteAssets, f));
+    }
+  }
+
+  let scansionati = 0;
+  let tuttoOk = true;
+  for (const file of globs) {
+    scansionati++;
+    const testo = fs.readFileSync(file, 'utf8');
+    const match = testo.match(reSegreto);
+    if (match) {
+      fail('T15', path.relative(ROOT, file), `secret plausibile: ${match[0]}`);
+      tuttoOk = false;
+    }
+  }
+  if (tuttoOk) ok('T15', `${scansionati} file .js scansionati, nessun match`);
+}
+
+// =============================================================================
+// TEST 16: il free-gate non torna nei background.js.
+// Rimosso 2026-09: ogni simbolo residuo e' una regressione del paywall.
+// (Dettaglio per-file in test-free-gate-removed.js; qui l'aggregatore minimo.)
+// =============================================================================
+function testaFreeGateAssente() {
+  console.log('\n=== TEST 16: Simboli free-gate assenti dai background.js ===');
+  const simboli = ['applyFreeGate', 'syncFreeLicense', '/free-license'];
+
+  for (const target of TARGETS) {
+    const contenuto = ottieniContenuto(target, 'src', 'background.js');
+    if (!contenuto) {
+      fail('T16', `${target}/background.js`, 'File non trovato');
+      continue;
+    }
+    const trovati = simboli.filter(s => contenuto.includes(s));
+    if (trovati.length) {
+      fail('T16', `${target}/background.js`, `Simboli free-gate: ${trovati.join(', ')}`);
+    } else {
+      ok('T16', `${target}/background.js`);
+    }
+  }
+}
+
+// =============================================================================
 // MAIN
 // =============================================================================
 /*
@@ -679,6 +830,11 @@ function main() {
   testaRegoleNonPinnate();
   testaBuildIncludeContentScript();
   testaProtezioneContestiFigli();
+  testaNoFingerprinting();
+  testaFeedRemotoOff();
+  testaConsoleHtml();
+  testaNoSegretiHardcoded();
+  testaFreeGateAssente();
 
   console.log('\n' + '='.repeat(70));
   console.log(`RIEPILOGO: ${passati} passati / ${falliti} falliti`);

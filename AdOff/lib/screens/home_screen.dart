@@ -147,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListTile(
                 leading: const Icon(Icons.dns, color: Color(0xFF8A8AAA)),
                 title: const Text('DNS-only mode'),
-                subtitle: const Text('Works alongside other VPNs'),
+                subtitle: const Text('In development — not yet available'),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                 onTap: () {
                   showDialog(
@@ -159,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         '1. Open Settings → Network & Internet → Private DNS\n'
                         '2. Select "Private DNS provider hostname"\n'
                         '3. Enter: dns.adguard.com\n\n'
-                        'This works alongside any VPN app.',
+                        'DNS-only blocking is in development, not yet available.',
                       ),
                       actions: [
                         TextButton(

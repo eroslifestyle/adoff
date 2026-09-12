@@ -29,6 +29,9 @@ import androidx.core.app.NotificationCompat
 class VpnService : android.net.VpnService() {
 
     companion object {
+        // ponytail: flag di sicurezza — non rimuovere finché il forwarding reale non è implementato E testato su device
+        const val VPN_FEATURE_SHIPPABLE = false
+
         const val CHANNEL_ID = "adoff_vpn_channel"
         const val NOTIFICATION_ID = 1
         const val ACTION_START = "app.adoff.action.START"

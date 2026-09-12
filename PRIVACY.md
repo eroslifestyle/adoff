@@ -20,8 +20,9 @@ Nessun dato di navigazione lascia il browser.
 ## Cosa viene salvato (solo in locale, `chrome.storage.local`)
 
 Impostazioni e contatori dell'utente, con prefisso `adoff*`: stato on/off,
-whitelist siti, contatori ads bloccati, dati trial/licenza, lingua,
-referral, milestone. Restano sul dispositivo.
+whitelist siti, contatori ads bloccati, lingua, dati di un eventuale account
+o licenza di sostegno (volontari, mai richiesti per il blocking), referral,
+milestone. Restano sul dispositivo.
 
 ## Perché AdOff chiede "accesso ai dati su tutti i siti"
 

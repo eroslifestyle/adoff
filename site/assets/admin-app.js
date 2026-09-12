@@ -308,7 +308,7 @@ async function loadOutreach(force=false){
   const wrap=document.getElementById("outreachList");
   wrap.innerHTML='<div class="loading-center"><div class="loader"></div></div>';
   const d=await api("/admin/outreach");
-  if(!d.ok){ wrap.innerHTML='<div class="loading-center" style="color:var(--danger)">Errore: '+(d.error||"")+'</div>'; return; }
+  if(!d.ok){ wrap.innerHTML='<div class="loading-center" style="color:var(--danger)">Errore: '+esc(d.error||"")+'</div>'; return; }
   _outState={records:d.records||{}, refCounts:d.refCounts||{}}; _outLoaded=true;
   renderOutreach();
 }
@@ -318,7 +318,7 @@ function renderOutreach(){
     if(it.pri!==lastPri){ const h=document.createElement("div"); h.className="card-title"; h.style.margin="18px 0 6px"; h.textContent=OUT_TIERS[it.pri]; wrap.appendChild(h); lastPri=it.pri; }
     const rec=_outState.records[it.id]||{}; const rc=rec.refCode||"";
     const conv=rc&&_outState.refCounts[rc.toUpperCase()];
-    const convTxt=rc?(conv?conv.count+" conversioni · €"+(conv.revenueCents/100).toFixed(2):"0 conversioni"):"—";
+    const convTxt=rc?(conv?esc(conv.count)+" conversioni · €"+(conv.revenueCents/100).toFixed(2):"0 conversioni"):"—";
     const card=document.createElement("div"); card.className="card"; card.style.marginBottom="10px"; card.id="oc-"+it.id;
     card.style.borderColor=_outBorder(rec.status);
     card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px"><b>'+it.t+'</b><span style="font-size:11px;color:var(--muted)">'+it.c+'</span></div>'
@@ -362,8 +362,8 @@ function genOutreachCode(){
 async function registerOutreachCode(){
   const code=document.getElementById("orefreg").dataset.code; const msg=document.getElementById("orefmsg");
   const d=await api("/admin/outreach-code",{method:"POST",body:JSON.stringify({code})});
-  if(d.ok){ msg.innerHTML='✓ Codice <b>'+code+'</b> '+(d.already?"già registrato":"registrato")+'. Link creator: <b>https://adoff.app/r/'+code+'</b>'; toast("Codice registrato"); }
-  else { msg.innerHTML='<span style="color:var(--danger)">Errore: '+(d.error||"")+'</span>'; }
+  if(d.ok){ msg.innerHTML='✓ Codice <b>'+esc(code)+'</b> '+(d.already?"già registrato":"registrato")+'. Link creator: <b>https://adoff.app/r/'+esc(code)+'</b>'; toast("Codice registrato"); }
+  else { msg.innerHTML='<span style="color:var(--danger)">Errore: '+esc(d.error||"")+'</span>'; }
 }
 
 // ── CHAT AI (storico conversazioni chatbot) ──────────────────
@@ -414,7 +414,6 @@ async function openChat(sid) {
   if (!d.ok) { document.getElementById("ticketDetail").innerHTML = `<p style="color:var(--danger)">Errore: ${esc(d.error)}</p>`; return; }
   const c = d.chat || {};
   const msgs = c.messages || [];
-  const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   document.getElementById("ticketDetail").innerHTML = `
     <div style="margin-bottom:12px;color:var(--muted);font-size:12px">
       ${esc((c.lang||"").toUpperCase())} · ${Number(msgs.length) || 0} messaggi · ${esc(c.email || "nessuna email")}
@@ -512,7 +511,7 @@ async function loadDashboard(force = false) {
   ]);
 
   if (!stats.ok) {
-    document.getElementById("dash-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${stats.error || "Impossibile caricare dati"}</div>`;
+    document.getElementById("dash-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${esc(stats.error || "Impossibile caricare dati")}</div>`;
     document.getElementById("recentInstalls").innerHTML = "";
     toast("Errore caricamento stats", "error");
     return;
@@ -566,10 +565,10 @@ async function loadDashboard(force = false) {
     instWrap.innerHTML = `<div class="table-wrap"><table>
       <thead><tr><th>Paese</th><th>Città</th><th>Browser</th><th>Sorgente</th><th>Quando</th></tr></thead>
       <tbody>${log.slice(0,10).map(e => `<tr>
-        <td>${flag(e.country)} ${e.country || "?"}</td>
-        <td>${e.city || "–"}</td>
+        <td>${flag(e.country)} ${esc(e.country || "?")}</td>
+        <td>${esc(e.city || "–")}</td>
         <td>${browserBadge(e.browser)}</td>
-        <td><span style="color:var(--muted)">${e.source || "–"}</span></td>
+        <td><span style="color:var(--muted)">${esc(e.source || "–")}</span></td>
         <td style="color:var(--muted)">${timeAgo(e.ts)}</td>
       </tr>`).join("")}</tbody>
     </table></div>`;
@@ -579,12 +578,14 @@ async function loadDashboard(force = false) {
 }
 
 function sc(label, value, cls) {
-  return `<div class="stat-card"><div class="stat-val ${cls}">${value.toLocaleString()}</div><div class="stat-label">${label}</div></div>`;
+  // Valore da API: i numeri passano da toLocaleString, tutto il resto viene escapato (mai HTML-safe per assunzione)
+  const v = (typeof value === "number" && Number.isFinite(value)) ? value.toLocaleString() : esc(value);
+  return `<div class="stat-card"><div class="stat-val ${cls}">${v}</div><div class="stat-label">${esc(label)}</div></div>`;
 }
 
 function browserBadge(b) {
   const icons = { chrome:"🌐", firefox:"🦊", edge:"🔷", opera:"🔴", other:"❔", unknown:"❔" };
-  return `<span style="font-size:13px">${icons[b] || "❔"} ${b || "?"}</span>`;
+  return `<span style="font-size:13px">${icons[b] || "❔"} ${esc(b || "?")}</span>`;
 }
 
 // ── LICENSES ─────────────────────────────────────────────────
@@ -871,7 +872,7 @@ async function loadFinance(force = false) {
   document.getElementById("fin-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>`;
   const d = await api("/admin/revenue");
   if (!d.ok) {
-    document.getElementById("fin-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${d.error || "Impossibile caricare dati"}</div>`;
+    document.getElementById("fin-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${esc(d.error || "Impossibile caricare dati")}</div>`;
     toast("Errore caricamento dati finanziari", "error");
     return;
   }
@@ -920,7 +921,7 @@ async function loadAnalytics(force = false) {
   document.getElementById("ana-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>`;
   const d = await api("/admin/analytics");
   if (!d.ok) {
-    document.getElementById("ana-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${d.error || "Impossibile caricare dati"}</div>`;
+    document.getElementById("ana-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${esc(d.error || "Impossibile caricare dati")}</div>`;
     toast("Errore caricamento analytics", "error");
     return;
   }
@@ -950,7 +951,7 @@ async function loadAnalytics(force = false) {
           <span style="font-size:18px">${flag(c.country)}</span>
           <span style="width:32px;color:var(--muted);font-size:12px">${esc(c.country)}</span>
           <div class="country-bar progress"><div class="progress-fill" style="width:${Math.round(c.count/maxCnt*100)}%"></div></div>
-          <span style="font-size:13px;font-weight:600;min-width:32px;text-align:right">${c.count}</span>
+          <span style="font-size:13px;font-weight:600;min-width:32px;text-align:right">${esc(c.count)}</span>
         </div>`).join("")
     : `<div class="empty"><div class="empty-icon">🌍</div><p>Nessun dato geografico</p></div>`;
 
@@ -963,7 +964,7 @@ async function loadAnalytics(force = false) {
     <div style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;margin-bottom:4px">
         <span>${bIcons[b]} ${b.charAt(0).toUpperCase()+b.slice(1)}</span>
-        <span style="font-weight:600">${bData[b] || 0}</span>
+        <span style="font-weight:600">${esc(bData[b] || 0)}</span>
       </div>
       <div class="progress"><div class="progress-fill" style="width:${Math.round((bData[b]||0)/bMax*100)}%"></div></div>
     </div>`).join("");
@@ -975,8 +976,8 @@ async function loadAnalytics(force = false) {
         <thead><tr><th>Quando</th><th>Paese</th><th>Città</th><th>Browser</th></tr></thead>
         <tbody>${log.map(e => `<tr>
           <td style="color:var(--muted)">${timeAgo(e.ts)}</td>
-          <td>${flag(e.country)} ${e.country||"?"}</td>
-          <td>${e.city||"–"}</td>
+          <td>${flag(e.country)} ${esc(e.country||"?")}</td>
+          <td>${esc(e.city||"–")}</td>
           <td>${browserBadge(e.browser)}</td>
         </tr>`).join("")}</tbody>
       </table></div>`
@@ -1001,15 +1002,15 @@ const SOURCE_LABELS = { chrome:"🌐 Chrome", firefox:"🦊 Firefox", edge:"🔷
 function barList(rows, opts = {}) {
   const data = rows.filter(r => opts.keepZero || r.value > 0);
   if (!data.length) return `<div class="empty"><div class="empty-icon">${opts.icon || "📭"}</div><p>${opts.empty || "Nessun dato"}</p></div>`;
-  const max = Math.max(1, ...data.map(r => r.value));
+  const max = Math.max(1, ...data.map(r => Number(r.value) || 0));
   const color = opts.color || "var(--accent)";
   return data.map(r => `
     <div style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px">
         <span>${esc(r.label)}</span>
-        <span style="font-weight:600">${r.value.toLocaleString()}${opts.suffix || ""}</span>
+        <span style="font-weight:600">${(Number(r.value) || 0).toLocaleString()}${opts.suffix || ""}</span>
       </div>
-      <div class="progress"><div class="progress-fill" style="width:${Math.round(r.value/max*100)}%;background:${color}"></div></div>
+      <div class="progress"><div class="progress-fill" style="width:${Math.round((Number(r.value) || 0)/max*100)}%;background:${color}"></div></div>
     </div>`).join("");
 }
 
@@ -1025,7 +1026,7 @@ async function loadStats(force = false) {
     api("/admin/retention"),
   ]);
   if (!ana.ok && !stats.ok) {
-    document.getElementById("st-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${ana.error || stats.error || "Impossibile caricare dati"}</div>`;
+    document.getElementById("st-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${esc(ana.error || stats.error || "Impossibile caricare dati")}</div>`;
     toast("Errore caricamento statistiche", "error");
     return;
   }
@@ -1076,7 +1077,7 @@ async function loadStats(force = false) {
           <span style="font-size:18px">${flag(c.country)}</span>
           <span style="width:32px;color:var(--muted);font-size:12px">${esc(c.country)}</span>
           <div class="country-bar progress"><div class="progress-fill" style="width:${Math.round(c.count/maxCnt*100)}%"></div></div>
-          <span style="font-size:13px;font-weight:600;min-width:32px;text-align:right">${c.count}</span>
+          <span style="font-size:13px;font-weight:600;min-width:32px;text-align:right">${esc(c.count)}</span>
         </div>`).join("")
     : `<div class="empty"><div class="empty-icon">🌍</div><p>Nessun dato geografico</p></div>`;
 
@@ -1121,8 +1122,8 @@ async function loadStats(force = false) {
         <thead><tr><th>Quando</th><th>Paese</th><th>Città</th><th>Browser</th></tr></thead>
         <tbody>${ilog.map(e => `<tr>
           <td style="color:var(--muted)">${timeAgo(e.ts)}</td>
-          <td>${flag(e.country)} ${e.country||"?"}</td>
-          <td>${e.city||"–"}</td>
+          <td>${flag(e.country)} ${esc(e.country||"?")}</td>
+          <td>${esc(e.city||"–")}</td>
           <td>${browserBadge(e.browser)}</td>
         </tr>`).join("")}</tbody>
       </table></div>`
@@ -1135,7 +1136,7 @@ async function loadStats(force = false) {
         <thead><tr><th>Quando</th><th>Motivo</th><th>Commento</th><th>Browser</th><th>Paese</th><th>Pro</th></tr></thead>
         <tbody>${ulog.map(e => `<tr>
           <td style="color:var(--muted)">${timeAgo(e.ts)}</td>
-          <td>${(REASON_LABELS[e.reason] || e.reason || "?")}</td>
+          <td>${esc(REASON_LABELS[e.reason] || e.reason || "?")}</td>
           <td style="max-width:240px;${e.comment ? "" : "color:var(--muted)"}">${e.comment ? esc(e.comment) : "–"}</td>
           <td>${browserBadge(e.browser)}</td>
           <td>${flag(e.country)} ${e.country || "?"}</td>
@@ -1217,10 +1218,10 @@ async function loadEfficacia(force = false) {
         <thead><tr><th>Dominio</th><th style="text-align:right">Occorrenze (30g)</th></tr></thead>
         <tbody>${hosts.map(h => `<tr>
           <td style="font-family:monospace;font-size:12px">${esc(h.hostname)}</td>
-          <td style="text-align:right;font-weight:600">${(h.total || 0).toLocaleString()}</td>
+          <td style="text-align:right;font-weight:600">${(Number(h.total) || 0).toLocaleString()}</td>
         </tr>`).join("")}</tbody>
       </table></div>`
-    : effEmpty("📭", ops.ok ? "Nessun ad-leak segnalato dalla telemetria (ottimo)" : "Telemetria non disponibile: " + (ops.error || "nessun dato"));
+    : effEmpty("📭", ops.ok ? "Nessun ad-leak segnalato dalla telemetria (ottimo)" : "Telemetria non disponibile: " + esc(ops.error || "nessun dato"));
 
   // 2) Nostri test automatici: adleak-latest (endpoint nuovo: 404 = stato vuoto legittimo)
   const testEl = document.getElementById("effTestLeaks");
@@ -1228,12 +1229,12 @@ async function loadEfficacia(force = false) {
   if (!doms) {
     testEl.innerHTML = effEmpty("🤖", leak && leak.error && leak.error !== "Not found" ? ("Errore: " + esc(leak.error)) : "Nessun run del crawler disponibile ancora. " + EFF_ENDPOINT_PENDING);
   } else if (!doms.length) {
-    testEl.innerHTML = effEmpty("✅", `Ultimo run (${esc(leak.extensionVersion || "?")}): ${leak.domainsTested ?? 0} domini testati, nessun leak. Ottimo.`);
+    testEl.innerHTML = effEmpty("✅", `Ultimo run (${esc(leak.extensionVersion || "?")}): ${esc(leak.domainsTested ?? 0)} domini testati, nessun leak. Ottimo.`);
   } else {
     testEl.innerHTML = `
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
         Run ${esc(leak.runId || "")} · ${fmtDate((leak.finishedAt || leak.startedAt || 0) / 1000)} · versione ${esc(leak.extensionVersion || "?")} ·
-        ${leak.domainsTested ?? 0} domini testati · <b style="color:var(--danger)">${leak.domainsWithLeak ?? doms.length} con leak</b> · ${leak.totalLeaks ?? 0} leak totali
+        ${leak.domainsTested ?? 0} domini testati · <b style="color:var(--danger)">${esc(leak.domainsWithLeak ?? doms.length)} con leak</b> · ${esc(leak.totalLeaks ?? 0)} leak totali
       </div>
       <div class="table-wrap"><table>
         <thead><tr><th>Dominio</th><th style="text-align:right">Richieste</th><th style="text-align:right">Leak</th><th>Rilevato</th><th>Esito</th></tr></thead>
@@ -1348,7 +1349,7 @@ async function loadSeo(force = false) {
   document.getElementById("seo-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>`;
   const d = await api("/admin/seo");
   if (!d.ok) {
-    document.getElementById("seo-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${d.error || "Impossibile caricare"}</div>`;
+    document.getElementById("seo-kpis").innerHTML = `<div class="loading-center" style="grid-column:1/-1;color:var(--danger)">Errore: ${esc(d.error || "Impossibile caricare")}</div>`;
     toast("Errore caricamento SEO", "error");
     return;
   }
@@ -1403,10 +1404,10 @@ async function loadSeo(force = false) {
     ? `<div class="table-wrap"><table><thead><tr><th>Pagina</th><th>Clicks</th><th>Impr.</th><th>CTR</th><th>Pos</th></tr></thead><tbody>${
         pages.map(r => `<tr>
           <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="mono" style="font-size:12px" title="${esc(r.key)}">${esc(r.key)}</span></td>
-          <td>${r.clicks.toLocaleString()}</td>
-          <td>${r.impressions.toLocaleString()}</td>
-          <td>${r.ctr}%</td>
-          <td>${r.position}</td>
+          <td>${(Number(r.clicks) || 0).toLocaleString()}</td>
+          <td>${(Number(r.impressions) || 0).toLocaleString()}</td>
+          <td>${esc(r.ctr)}%</td>
+          <td>${esc(r.position)}</td>
         </tr>`).join("")
       }</tbody></table></div>`
     : `<div class="empty"><p>Nessun dato</p></div>`;
@@ -1430,10 +1431,10 @@ async function loadSeo(force = false) {
         const web = (s.contents || []).find(c => c.type === "web") || {};
         return `<tr>
           <td><span class="mono" style="font-size:11px" title="${esc(s.path)}">${esc((s.path || "").split("/").pop())}</span></td>
-          <td style="color:${s.errors > 0 ? "var(--danger)" : "var(--success)"}">${s.errors}</td>
-          <td style="color:${s.warnings > 0 ? "var(--gold)" : "var(--muted)"}">${s.warnings}</td>
+          <td style="color:${Number(s.errors) > 0 ? "var(--danger)" : "var(--success)"}">${Number(s.errors) || 0}</td>
+          <td style="color:${Number(s.warnings) > 0 ? "var(--gold)" : "var(--muted)"}">${Number(s.warnings) || 0}</td>
           <td style="font-size:12px;color:var(--muted)">${s.lastSubmitted ? new Date(s.lastSubmitted).toLocaleDateString() : "—"}</td>
-          <td style="font-size:12px">${web.submitted || 0} / ${web.indexed || 0}</td>
+          <td style="font-size:12px">${Number(web.submitted) || 0} / ${Number(web.indexed) || 0}</td>
         </tr>`;
       }).join("")
     }</tbody></table></div>`;
@@ -1557,9 +1558,9 @@ async function loadSeoAgent(force = false) {
     ? `<div class="table-wrap"><table><thead><tr><th>Data</th><th>HS</th><th>Findings</th><th>Applicati</th><th>Deploy</th><th>Commit</th><th>Modello</th><th>Durata</th></tr></thead><tbody>${
         runs.map(r => `<tr>
           <td style="font-size:12px;white-space:nowrap">${saFmtDate(r.generated_at)}</td>
-          <td style="color:var(--${saHealthColor(r.health_score || 0) === "green" ? "success" : saHealthColor(r.health_score || 0) === "gold" ? "gold" : "danger"})">${r.health_score ?? "—"}</td>
-          <td>${r.findings_total ?? 0}${r.findings_high ? ` <span style="color:var(--danger)">(${r.findings_high} high)</span>` : ""}</td>
-          <td>${r.applied_count ?? 0}${r.proposed_count ? ` <span style="opacity:.6;font-size:11px">+${r.proposed_count} prop.</span>` : ""}</td>
+          <td style="color:var(--${saHealthColor(r.health_score || 0) === "green" ? "success" : saHealthColor(r.health_score || 0) === "gold" ? "gold" : "danger"})">${esc(r.health_score ?? "—")}</td>
+          <td>${esc(r.findings_total ?? 0)}${r.findings_high ? ` <span style="color:var(--danger)">(${esc(r.findings_high)} high)</span>` : ""}</td>
+          <td>${esc(r.applied_count ?? 0)}${r.proposed_count ? ` <span style="opacity:.6;font-size:11px">+${esc(r.proposed_count)} prop.</span>` : ""}</td>
           <td>${r.deployed ? "✅" : "—"}</td>
           <td style="font-size:11px"><code>${r.commit_sha ? saEsc(r.commit_sha) : "—"}</code></td>
           <td style="font-size:11px">${saEsc(r.model_used || "—")}</td>
@@ -1596,7 +1597,7 @@ async function loadAutofix(force = false) {
   try {
     const data = await api("/admin/autofix/status");
     if (!data.ok) {
-      resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">' + (data.error || "Errore") + '</div>';
+      resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">' + esc(data.error || "Errore") + '</div>';
       return;
     }
     const sm = data.shadow_mode;
@@ -1635,7 +1636,7 @@ async function loadAutofix(force = false) {
       '</div>';
     loadAutofixLeaks();
   } catch(e) {
-    resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">Errore: ' + e.message + '</div>';
+    resultsEl.innerHTML = '<div style="color:var(--error);font-size:13px">Errore: ' + esc(e.message) + '</div>';
   }
 }
 
@@ -1657,7 +1658,7 @@ async function loadAutofixLeaks() {
       return;
     }
     if (!data.ok) {
-      panel.innerHTML = '<div style="color:var(--error);font-size:13px;padding:8px">Errore: ' + (data.error || "sconosciuto") + '</div>';
+      panel.innerHTML = '<div style="color:var(--error);font-size:13px;padding:8px">Errore: ' + esc(data.error || "sconosciuto") + '</div>';
       return;
     }
     _autofixLeaks = data;
@@ -1722,7 +1723,7 @@ function renderLeakCard(leak, bucket) {
   const confColor = leak.confidence === "high" ? "#e66550" : leak.confidence === "medium" ? "#ffbc6b" : "#8a8a8a";
   const decision  = leak.decision || null;
   const decisionBadge = decision
-    ? '<span style="background:var(--input);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:10px;color:var(--muted);margin-left:4px">Deciso: ' + decision + '</span>'
+    ? '<span style="background:var(--input);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:10px;color:var(--muted);margin-left:4px">Deciso: ' + esc(decision) + '</span>'
     : '';
   const fpBadge  = leak.fp_suspect
     ? '<span style="background:rgba(255,188,107,.15);color:#ffbc6b;border-radius:20px;padding:2px 8px;font-size:10px;margin-left:4px">possibile FP</span>'
@@ -1750,7 +1751,7 @@ function renderLeakCard(leak, bucket) {
     ? '<button class="btn btn-sm btn-outline" style="margin-top:8px" data-fetch-shot="' + esc(leak.fingerprint) + '">🖼 Screenshot</button>'
     : '';
 
-  const noteId  = "note-" + leak.fingerprint;
+  const noteId  = "note-" + esc(leak.fingerprint);
   const noteVal = leak.note || "";
 
   return (
@@ -1887,12 +1888,12 @@ async function inspectSeoUrl() {
     <div style="font-size:13px">
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px">
         <span style="color:${indexColor};font-weight:700;font-size:14px">${indexText}</span>
-        ${coverageResult.issue ? `<span style="color:var(--danger)">⚠️ ${coverageResult.issue}</span>` : ""}
+        ${coverageResult.issue ? `<span style="color:var(--danger)">⚠️ ${esc(coverageResult.issue)}</span>` : ""}
         ${mobileResult.verdict === "PASS" ? '<span style="color:var(--success)">📱 Mobile OK</span>' : mobileResult.verdict === "FAIL" ? '<span style="color:var(--danger)">📱 Mobile issue</span>' : ""}
       </div>
-      ${indexResult.sitemap ? `<div style="color:var(--muted);font-size:12px;margin-bottom:4px">Sitemap: <span style="color:var(--success)">✅ Trovato</span> — ${indexResult.sitemap}</div>` : ""}
+      ${indexResult.sitemap ? `<div style="color:var(--muted);font-size:12px;margin-bottom:4px">Sitemap: <span style="color:var(--success)">✅ Trovato</span> — ${esc(indexResult.sitemap)}</div>` : ""}
       ${indexResult.lastCrawlTime ? `<div style="color:var(--muted);font-size:12px;margin-bottom:4px">Ultimo crawl: ${new Date(indexResult.lastCrawlTime).toLocaleDateString()}</div>` : ""}
-      ${issues ? `<div style="color:var(--danger);font-size:12px;margin-top:6px">Problema: ${issues}</div>` : '<div style="color:var(--success);font-size:12px;margin-top:6px">✅ Nessun problema rilevato</div>'}
+      ${issues ? `<div style="color:var(--danger);font-size:12px;margin-top:6px">Problema: ${esc(issues)}</div>` : '<div style="color:var(--success);font-size:12px;margin-top:6px">✅ Nessun problema rilevato</div>'}
     </div>
   `;
 }
@@ -1908,15 +1909,21 @@ async function batchInspectSitemap() {
   }
   const results = d.results || [];
   const indexed = results.filter(r => r.indexed).length;
+  // URL sitemap da API: valido SOLO https, altrimenti testo semplice (mai href arbitrario)
+  let smUrl = "";
+  try { const u = new URL(d.sitemapUrl || "https://adoff.app/sitemap.xml"); if (u.protocol === "https:") smUrl = u.href; } catch { }
+  const smLink = smUrl
+    ? `<a href="${esc(smUrl)}" target="_blank" rel="noopener" style="color:var(--accent)">sitemap</a>`
+    : `<span class="mono">${esc((d.sitemapUrl || "sitemap.xml").slice(0, 60))}</span> (link non valido)`;
   document.getElementById("seo-batch-results").innerHTML = `
     <div style="margin-bottom:12px;font-size:13px;color:var(--muted)">
-      ${d.inspected}/${d.total} URL ispezionate (max 20 per batch · <a href="${d.sitemapUrl || "https://adoff.app/sitemap.xml"}" target="_blank" style="color:var(--accent)">sitemap</a>)
-      — <span style="color:var(--success)">✅ ${indexed} indicizzate</span> / <span style="color:var(--danger)">❌ ${results.length - indexed} no</span>
+      ${esc(d.inspected)}/${esc(d.total)} URL ispezionate (max 20 per batch · ${smLink})
+      — <span style="color:var(--success)">✅ ${esc(indexed)} indicizzate</span> / <span style="color:var(--danger)">❌ ${esc(results.length - indexed)} no</span>
     </div>
     <div class="table-wrap"><table><thead><tr><th>URL</th><th>Stato</th></tr></thead><tbody>${
       results.map(r => `<tr>
         <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="mono" style="font-size:11px" title="${esc(r.url)}">${esc(r.url)}</span></td>
-        <td style="color:${r.indexed ? "var(--success)" : "var(--danger)"}">${r.indexed ? "✅ Indexed" : "❌ " + (r.status || "Not indexed")}</td>
+        <td style="color:${r.indexed ? "var(--success)" : "var(--danger)"}">${r.indexed ? "✅ Indexed" : "❌ " + esc(r.status || "Not indexed")}</td>
       </tr>`).join("")
     }</tbody></table></div>
   `;
@@ -1997,7 +2004,7 @@ async function openTicket(id) {
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
         <div>
           <span class="badge badge-${t.status === "open" ? "open" : "closed"}">${esc(t.status)}</span>
-          <span style="margin-left:10px;color:var(--muted);font-size:12px">${t.email || ""}</span>
+          <span style="margin-left:10px;color:var(--muted);font-size:12px">${esc(t.email || "")}</span>
         </div>
         <div style="display:flex;gap:8px">
           ${t.status === "open"
@@ -2006,7 +2013,7 @@ async function openTicket(id) {
         </div>
       </div>
       <div class="ticket-reply">
-        <div class="reply-meta">${t.email || "Anonimo"} — ${t.createdAt ? new Date(t.createdAt).toLocaleString("it-IT") : ""}</div>
+        <div class="reply-meta">${esc(t.email || "Anonimo")} — ${t.createdAt ? new Date(t.createdAt).toLocaleString("it-IT") : ""}</div>
         <div class="reply-text">${esc(t.description || t.body || t.message || "")}</div>
       </div>
       ${replies.map(r => `
@@ -2082,12 +2089,12 @@ async function loadSuggestions(force = false) {
       </tr></thead>
       <tbody>
         ${list.map(s => `<tr>
-          <td><span class="mono">${s.id || "–"}</span></td>
-          <td>${SUGG_TYPE_ICON[s.type] || ""} ${s.type || "–"}</td>
+          <td><span class="mono">${esc(s.id || "–")}</span></td>
+          <td>${SUGG_TYPE_ICON[s.type] || ""} ${esc(s.type || "–")}</td>
           <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title || "–")}</td>
-          <td>${s.votes != null ? s.votes : 1}</td>
+          <td>${s.votes != null ? esc(s.votes) : 1}</td>
           <td style="color:var(--muted)">${esc(s.cluster || "–")}</td>
-          <td><span class="badge badge-${SUGG_STATUS_BADGE[s.status] || "open"}">${s.status || "new"}</span></td>
+          <td><span class="badge badge-${SUGG_STATUS_BADGE[s.status] || "open"}">${esc(s.status || "new")}</span></td>
           <td style="color:var(--muted)">${s.created_at ? new Date(s.created_at.replace(" ","T")+"Z").toLocaleDateString("it-IT") : "–"}</td>
           <td><button class="btn btn-sm btn-outline" data-sugg-id="${esc(s.id)}">Apri</button></td>
         </tr>`).join("")}
@@ -2108,7 +2115,7 @@ function openSuggestion(id) {
   document.getElementById("suggDetail").innerHTML = `
     <div style="margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-        <span class="badge badge-${SUGG_STATUS_BADGE[s.status] || "open"}">${s.status || "new"}</span>
+        <span class="badge badge-${SUGG_STATUS_BADGE[s.status] || "open"}">${esc(s.status || "new")}</span>
         <span style="color:var(--muted);font-size:12px">${esc(s.email || "anon")} · ${esc(s.browser || "")}</span>
       </div>
       <div class="ticket-reply">

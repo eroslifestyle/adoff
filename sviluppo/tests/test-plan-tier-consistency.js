@@ -12,7 +12,15 @@ const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..", "..");
 const TARGETS = ["app", "app-firefox", "app-safari"];
+// File dove adoffPlanTier DEVE esistere ed essere usata (gate canonico o display piano).
 const FILES = ["background.js", "content.js", "license-client.js", "options.js", "popup.js", "onboarding.js"];
+// Dal 2026-08: il free-gate è rimosso. content.js e license-client.js NON hanno
+// più alcun gate → adoffPlanTier lì è vietata (codice morto). Il test ora verifica
+// l'invariante DUPLICE:
+//  - dove il gate serve: adoffPlanTier presente, usata, in-scope, ritorna "premium";
+//  - dove il gate NON deve esserci: adoffPlanTier assente (nessun residuo di gating).
+const PLAN_TIER_REQUIRED = ["background.js", "options.js", "popup.js", "onboarding.js"];
+const PLAN_TIER_FORBIDDEN = ["content.js", "license-client.js"];
 
 // Tutti i piani emessi dal server — adoffPlanTier li deve digerire tutti restituendo "premium".
 const PLAN_CASES = [
@@ -90,6 +98,13 @@ for (const t of TARGETS) {
 
     checks++;
     const r = funcRange(src, "adoffPlanTier");
+
+    // Invariante nuova: nei file senza gate la funzione NON deve esistere.
+    if (PLAN_TIER_FORBIDDEN.includes(f)) {
+      if (r) { console.log(`FAIL ${t}/${f}: adoffPlanTier non deve esistere qui (nessun gate ammesso)`); fail++; }
+      else { console.log(`ok   ${t}/${f}  nessun gate (adoffPlanTier assente, corretto)`); }
+      continue;
+    }
     if (!r) { console.log(`FAIL ${t}/${f}: adoffPlanTier assente`); fail++; continue; }
     if (src.indexOf("function adoffPlanTier", r.defIdx + 1) >= 0) {
       console.log(`FAIL ${t}/${f}: definizione duplicata nello stesso file`); fail++; continue;

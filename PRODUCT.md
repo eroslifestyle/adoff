@@ -10,14 +10,14 @@ AdOff è un ad blocker browser (Manifest V3) per Chrome, Firefox, Safari, Edge e
 
 Il sito serve a:
 1. Far installare gratis (CTA primario sempre verso `install.html`)
-2. Convertire trial → Pro via Stripe checkout (€2.69/mese · €29.59/anno · €67.90 lifetime, 3 device base)
-3. Costruire fiducia sul claim privacy-first (zero telemetria, GDPR by design)
+2. Offrire il sostegno volontario al progetto (donazione/account facoltativi — mai richiesti per il blocking)
+3. Costruire fiducia sul claim privacy-first (nessuna telemetria di navigazione; telemetria aggregata solo opt-in, GDPR by design)
 
 ## Users
 
 **Primario** — utenti 25–55 non tecnici, stufi della pubblicità, comfort tech medio. Vogliono "installa e dimentica". Frustrati specificamente da: pre-roll video, banner invasivi, wall "disattiva il tuo ad blocker", browser lenti per script terzi.
 
-**Secondario** — utenti tecnici (developer, sysadmin, ricercatori privacy) che cercano una soluzione MV3 davvero light e zero-telemetria, alternativa a uBlock Origin in via di depcrecazione e AdGuard percepito come pesante.
+**Secondario** — utenti tecnici (developer, sysadmin, ricercatori privacy) che cercano una soluzione MV3 davvero light e senza telemetria di navigazione, alternativa a uBlock Origin in via di depcrecazione e AdGuard percepito come pesante.
 
 **Anti-utente** — chi vuole personalizzare 5000 regole, scrivere filter list, contribuire al codice. AdOff non è uBlock: è la "macchina invisibile che funziona già configurata".
 
@@ -27,7 +27,7 @@ Sicuro, minimale, premium. Mai hacker-style, mai cringe. Frasi corte, una idea p
 
 **Da fare**:
 - Verbi attivi al presente: *"Blocca", "Si nasconde", "Funziona"*
-- Numeri come prova (numero di regole, dimensione, anni di trial)
+- Numeri come prova (numero di regole, dimensione)
 - Frasi a contrasto (problema → soluzione)
 - Italiano come lingua sorgente, traduzione 15 lingue gestita da `adoff-i18n.js`
 
@@ -70,6 +70,6 @@ Cosa il sito DEVE ricordare:
 
 - **Honesty over hype** — preferire un claim verificabile a uno emotivo. Es. *"Blocca 130+ tipi di richieste pubblicitarie"* batte *"Blocca tutte le pubblicità del web"*.
 - **Premium feel beats feature parity** — non vinciamo elencando feature (chi vince è chi ha più regole). Vinciamo facendo sentire il prodotto come ben fatto.
-- **Privacy by design come asset** — *"Zero dati raccolti"* è il vero differenziatore, da usare ovunque ma senza ripetersi: meglio mostrarlo nella struttura (no GA, no Pixel, niente cookie banner) che dichiararlo a parole.
-- **Trial come gateway, non come bait** — i 15 giorni di Pro gratis sono un onboarding, non un trucco di conversione: nessuna carta richiesta, scade silenziosamente a Free, niente dark pattern.
+- **Privacy by design come asset** — *"Nessun dato di navigazione raccolto"* è il vero differenziatore, da usare ovunque ma senza ripetersi: meglio mostrarlo nella struttura (no GA, no Pixel, niente cookie banner) che dichiararlo a parole. Telemetria aggregata solo opt-in, mai di navigazione.
+- **Gratis senza gate** — nessun account, trial o scadenza condiziona il blocking: installi e funziona. Account e donazioni sono volontari, mai un passo obbligato.
 - **Sales letter vs editorial** — il sito attuale è una sales letter long-form. La direzione che stiamo prendendo riduce il pathos manipolatorio (countdown, "ogni minuto che aspetti...", "il colpo finale") verso un tono editoriale fermo: il prodotto si difende da solo.

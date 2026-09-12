@@ -312,140 +312,9 @@
     }
   }
 
-  // ---- TRIAL — server-anchored, verifica firma ECDSA P-256 ----
-  // L'autorità del trial è il server (endpoint /trial → tabella D1). Il service
-  // worker verifica il token firmato con la chiave pubblica: la scadenza non è
-  // falsificabile via DevTools/storage. Vedi license-client.js (stessa logica).
   const API_BASE = "https://api.adoff.app";
-  const HEARTBEAT_INTERVAL_MS = 60 * 60 * 1000; // 1 ora
-  const TRIAL_DURATION_MS = TRIAL_DAYS * 24 * 60 * 60 * 1000;
-  const TRIAL_MARGIN_MS = 24 * 60 * 60 * 1000;
-  const TRIAL_PUBKEY_JWK = {
-    kty: "EC", crv: "P-256",
-    x: "FnIroHHVzo3v01gENPaA2U70c58sduDD6hGS0EhCATc",
-    y: "tAzRBzVK1O8ul76s2euNrqV0L4f1qmEtvcKB_HqpfrY",
-  };
 
-  function trialB64uToBytes(s) {
-    s = s.replace(/-/g, "+").replace(/_/g, "/");
-    while (s.length % 4) s += "=";
-    const bin = atob(s);
-    const out = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-    return out;
-  }
-
-  let _trialPubKeyPromise = null;
-  function importTrialPubKey() {
-    if (!_trialPubKeyPromise) {
-      _trialPubKeyPromise = crypto.subtle.importKey(
-        "jwk", TRIAL_PUBKEY_JWK,
-        { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]
-      );
-    }
-    return _trialPubKeyPromise;
-  }
-
-  async function verifyTrialToken(token, localDeviceId) {
-    if (!token || typeof token !== "string" || token.indexOf(".") < 0) return null;
-    try {
-      const [payloadB64, sigB64] = token.split(".");
-      const pubKey = await importTrialPubKey();
-      const ok = await crypto.subtle.verify(
-        { name: "ECDSA", hash: "SHA-256" }, pubKey,
-        trialB64uToBytes(sigB64), new TextEncoder().encode(payloadB64)
-      );
-      if (!ok) return null;
-      const payload = JSON.parse(new TextDecoder().decode(trialB64uToBytes(payloadB64)));
-      if (localDeviceId && payload.deviceId && payload.deviceId !== localDeviceId) return null;
-      return payload;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  // Trial attivo? Autorità = token firmato dal server (anti-furbo).
-  // NON c'è più fallback locale — solo il server decide la scadenza.
-  async function isTrialActive(result, now) {
-    const payload = result.adoffTrialToken
-      ? await verifyTrialToken(result.adoffTrialToken, result.adoffDeviceId)
-      : null;
-    // Se il token è valido e non scaduto → trial attivo
-    // Se non c'è token o è scaduto → trial NON attivo (no fallback)
-    if (payload) return payload.trialEnd > now;
-    // Nessun fallback: il server dice scaduto = scaduto
-    return false;
-  }
-
-  // Sincronizza trial col server — autorità SERVER per il countdown.
-  // Chiama POST /trial con {deviceId} (il fingerprint e stato rimosso: privacy).
-  async function syncTrialBg() {
-    try {
-      const { adoffDeviceId } = await new Promise((r) =>
-        chrome.storage.local.get("adoffDeviceId", r));
-      const deviceId = adoffDeviceId || generateDeviceUuid();
-      if (!adoffDeviceId) chrome.storage.local.set({ adoffDeviceId: deviceId });
-
-      const fingerprint = null; // ponytail: fingerprint rimosso (privacy), backend ignora il campo assente
-      const resp = await fetch(`${API_BASE}/trial`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId, fingerprint }),
-      });
-      if (!resp.ok) return;
-      const data = await resp.json();
-      if (!data) return;
-
-      // Gestione trial bloccato dal server (anti-abuse)
-      if (data.allowed === false) {
-        chrome.storage.local.set({
-          adoffTrialBlocked: true,
-          adoffTrialBlockedFallback: data.fallback || "account",
-          adoffTrialBlockedMsg: data.message || "Trial già usato",
-        });
-        return;
-      }
-
-      // Salva source se account-linked
-      if (data.source === "account-linked") {
-        chrome.storage.local.set({ adoffTrialSource: "account-linked" });
-      }
-
-      // Se c'è un token firmato, verificare e salvare
-      if (data.token) {
-        const payload = await verifyTrialToken(data.token, deviceId);
-        if (!payload) return; // firma non valida → non fidarsi
-        chrome.storage.local.set({
-          adoffTrialToken: data.token,
-          adoffTrialEnd: payload.trialEnd,
-          adoffTrialStart: payload.trialStart,
-          adoffTrialSeen: Date.now(),
-          adoffTrialExpired: !data.active,
-          adoffTrialBlocked: false,
-          adoffFingerprint: fingerprint,
-        });
-        return;
-      }
-
-      // Trial attivo ma senza token (account-linked) — salva dates dal server
-      if (data.trialStart && data.trialEnd) {
-        chrome.storage.local.set({
-          adoffTrialEnd: data.trialEnd,
-          adoffTrialStart: data.trialStart,
-          adoffTrialSeen: Date.now(),
-          adoffTrialExpired: false,
-          adoffTrialBlocked: false,
-          adoffFingerprint: fingerprint,
-        });
-      }
-    } catch (_) { /* offline — riprova al prossimo trigger */ }
-  }
-
-
-  // ---- LICENZA FREE — 30 giorni, poi serve la registrazione ----
-  // Autorita' = token firmato dal server (stessa chiave del trial). Senza
-  // token verificabile NON si blocca mai: un server irraggiungibile non deve
-  // spegnere l'ad blocking a chi l'ha gia'.
+  // ---- Storage promise helpers ----
   // chrome.storage con promise non esiste su Firefox: si passa dai callback.
   function storageGet(keys) {
     return new Promise((resolve) => {
@@ -456,147 +325,6 @@
     return new Promise((resolve) => {
       chrome.storage.local.set(obj, () => { void chrome.runtime.lastError; resolve(); });
     });
-  }
-
-  const FREE_DAY_MS = 24 * 60 * 60 * 1000;
-  const FREE_REMINDER_DAYS = [7, 14, 21, 28];
-  const FREE_BADGE_WARN_DAYS = 7;
-
-  async function syncFreeLicense() {
-    try {
-      const stored = await storageGet(["adoffDeviceId"]);
-
-      let deviceId = stored.adoffDeviceId;
-      if (!deviceId) {
-        deviceId = generateDeviceUuid();
-        await storageSet({ adoffDeviceId: deviceId });
-      }
-
-      const fingerprint = null; // ponytail: fingerprint rimosso (privacy)
-
-      const response = await fetch(API_BASE + "/free-license", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId, fingerprint })
-      });
-
-      if (!response.ok) return;
-
-      const data = await response.json();
-
-      if (!data.token) return;
-
-      const payload = await verifyTrialToken(data.token, deviceId);
-      if (!payload) return;
-
-      await storageSet({
-        adoffFreeToken: data.token,
-        adoffFreeGateStart: payload.gateStart,
-        adoffFreeGrantEnd: payload.grantEnd,
-        adoffFreeRegistered: payload.registered === true,
-        adoffFreeSyncedAt: Date.now()
-      });
-
-      await applyFreeGate();
-    } catch (_) {}
-  }
-
-  async function readFreeState() {
-    const stored = await storageGet([
-      "adoffFreeToken",
-      "adoffDeviceId",
-      "adoffFreeGateStart",
-      "adoffFreeGrantEnd",
-      "adoffFreeRegistered"
-    ]);
-
-    const token = stored.adoffFreeToken;
-    const deviceId = stored.adoffDeviceId;
-
-    if (!token || !deviceId) {
-      return {
-        valid: false,
-        registered: false,
-        grantEnd: 0,
-        gateStart: 0,
-        daysLeft: 0,
-        expired: false
-      };
-    }
-
-    const payload = await verifyTrialToken(token, deviceId);
-
-    if (!payload) {
-      return {
-        valid: false,
-        registered: false,
-        grantEnd: 0,
-        gateStart: 0,
-        daysLeft: 0,
-        expired: false
-      };
-    }
-
-    const registered = payload.registered === true;
-    const grantEnd = payload.grantEnd;
-    const gateStart = payload.gateStart;
-    const expired = !registered && Date.now() >= grantEnd;
-    const daysLeft = Math.max(0, Math.ceil((grantEnd - Date.now()) / FREE_DAY_MS));
-
-    return { valid: true, registered, grantEnd, gateStart, daysLeft, expired };
-  }
-
-  async function applyFreeGate() {
-    const state = await readFreeState();
-
-    await storageSet({ adoffFreeExpired: state.expired });
-
-    if (state.expired) {
-      toggleNetworkRules(false);
-
-      chrome.action.setBadgeBackgroundColor({ color: "#e74c3c" });
-      chrome.action.setBadgeText({ text: "!" });
-
-      const notified = await storageGet(["adoffFreeExpiredNotified"]);
-      if (!notified.adoffFreeExpiredNotified) {
-        chrome.tabs.create({ url: chrome.runtime.getURL("src/onboarding.html?expired=1") });
-        await storageSet({ adoffFreeExpiredNotified: true });
-      }
-    } else {
-      await storageSet({ adoffFreeExpiredNotified: false });
-
-      const enabled = await storageGet(["adoffEnabled"]);
-      toggleNetworkRules(enabled.adoffEnabled !== false);
-
-      if (state.valid && !state.registered && state.daysLeft <= FREE_BADGE_WARN_DAYS) {
-        chrome.action.setBadgeBackgroundColor({ color: "#f39c12" });
-        chrome.action.setBadgeText({ text: state.daysLeft + "g" });
-      } else {
-        refreshBadge();
-      }
-    }
-  }
-
-  async function checkFreeReminders() {
-    const state = await readFreeState();
-
-    if (!state.valid || state.registered || state.expired) return;
-
-    const elapsedDays = Math.floor((Date.now() - state.gateStart) / FREE_DAY_MS);
-
-    const stored = await storageGet(["adoffFreeRemindersShown"]);
-    const shown = stored.adoffFreeRemindersShown || [];
-
-    const milestone = FREE_REMINDER_DAYS
-      .filter(function(d) { return d <= elapsedDays && shown.indexOf(d) === -1; })
-      .pop();
-
-    if (milestone !== undefined) {
-      chrome.tabs.create({ url: chrome.runtime.getURL("src/onboarding.html?remind=" + milestone) });
-
-      shown.push(milestone);
-      await storageSet({ adoffFreeRemindersShown: shown });
-    }
   }
 
   // ---- Validazione licenza (centralizzata) ----
@@ -715,8 +443,6 @@
   // 1) Al riavvio del browser
   chrome.runtime.onStartup.addListener(() => {
     revalidateLicense("startup");
-    syncTrialBg();
-    syncFreeLicense().then(checkFreeReminders);
     updateUninstallURL();
     syncRemoteRules();
   });
@@ -826,11 +552,8 @@
       }
     });
 
-    // Ancora/riconcilia il trial col server. Su "update" questo RIPRISTINA la
-    // scadenza autorevole dal server anche se lo storage locale fosse stato
-    // azzerato → il countdown non si resetta mai più tra un aggiornamento e l'altro.
-    syncTrialBg();
-    syncFreeLicense().then(checkFreeReminders);
+    // Il blocking non dipende da nessuno stato remoto: nessuna sincronizzazione
+    // licenza/trial al bootstrap. La telemetria opt-in resta indipendente.
     updateUninstallURL();
   });
 
@@ -880,9 +603,6 @@
     if (changes[STORAGE_ENABLED] || changes[STORAGE_ADS] || changes[STORAGE_REQ] ||
         changes[STORAGE_SHOW_BADGE] || changes[STORAGE_SHOW_COUNTER] || changes.adoffUnreadMessages) {
       refreshBadge();
-      if (changes[STORAGE_ENABLED]) {
-        applyFreeGate();
-      }
     }
   });
 
@@ -919,8 +639,6 @@
   chrome.alarms.onAlarm.addListener(async (alarm) => {
     if (alarm.name === ALARM_LIC_CHECK) {
       revalidateLicense("daily-alarm");
-      syncTrialBg();
-      syncFreeLicense().then(checkFreeReminders);
       updateUninstallURL();
       syncRemoteRules();
       return;
@@ -1073,19 +791,15 @@
 
   function updateImaRules() {
     chrome.storage.local.get(
-      ["adoffLicense", "adoffTrialEnd", "adoffTrialToken", "adoffTrialExpired",
-       "adoffDeviceId", "adoffIntegrity", STORAGE_ENABLED, "adoffYtCompat"],
-      async (result) => {
+      ["adoffLicense", STORAGE_ENABLED, "adoffYtCompat"],
+      (result) => {
       const lic = result.adoffLicense || {};
       const enabled = result[STORAGE_ENABLED] !== false;
-      const trialOk = await isTrialActive(result, Date.now());
       // Sbloccato per tutti: adoffPlanTier ritorna sempre "premium". Il gate
       // passa comunque dalla funzione canonica, cosi' per tornare indietro
-      // basta rimettere mano a quella e non a ogni singolo punto. Il trial
-      // resta nella condizione perche' continua a girare a vuoto.
+      // basta rimettere mano a quella e non a ogni singolo punto.
       const isPro = adoffPlanTier(lic.type) !== "free"
-        || adoffPlanTier(lic.plan) !== "free"
-        || trialOk;
+        || adoffPlanTier(lic.plan) !== "free";
       // Ping degli annunci sulla piattaforma video: vedi AD_PING_ALLOW_RULES.
       // A protezione spenta le regole vengono rimosse, per non lasciarle appese.
       const needAdPingAllow = enabled && (!isPro || result.adoffYtCompat === true);
@@ -1175,21 +889,38 @@
   const REMOTE_RULES_CHUNK = 2000;
   const REMOTE_RULES_MIN_INTERVAL_MS = 6 * 60 * 60 * 1000;
   const REMOTE_RULES_ID_SPAN = 40000;
-  // TODO: backend deve fornire la chiave pubblica reale (ECDSA P-256) per la
-  // firma del feed. PLACEHOLDER vuoto: finché resta così la verifica fallisce
-  // chiaramente con "chiave pubblica non configurata" e il feed resta spento.
+  // D) Key rotation: mappa chiavi di firma del feed. jwk reali = placeholder
+  // null (TODO backend, MAI chiavi inventate). "active" = chiave corrente,
+  // "deprecated" = in rotazione (ancora accettata per il grace period), assente
+  // dalla mappa = rifiutata. Processo completo in docs/RULES-FEED-PROTOCOL.md.
+  const RULES_FEED_KEYS = {
+    // TODO: sostituire con il JWK reale quando il backend firma ("active").
+    // "rules-feed-2026-01": { jwk: null, status: "active" },
+  };
+  // Legacy single-key option usata solo se la mappa e' vuota.
   const RULES_FEED_PUBLIC_KEY_JWK = null;
 
-  // Il feed contiene solo block/allow, quindi rientra nel budget delle regole "safe"
-  // (MAX_NUMBER_OF_DYNAMIC_RULES, 30.000 su Chrome) e non in quello legacy da 5.000.
-  // Firefox espone limiti piu bassi: leggiamo sempre la costante, mai un numero fisso.
-  function remoteRulesCap() {
+  // A) Quota REALE delle regole dinamiche MV3. Fonte: la costante esposta a
+  // runtime dall'API — Chrome/Safari/Firefox espongono
+  // MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES (30.000 su Chrome stable ≥ M120,
+  // 5.000 su Firefox < M129, 10.000 su Firefox ≥ M129 per dynamic+session COMBINED;
+  // Safari ≥ 16.4 allinea Chrome). Fonti: developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest#type-MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
+  // developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest,
+  // developer.apple.com/documentation/safariservices/safari-web-extensions. Se il
+  // browser non espone la costante a runtime → fallback CONSERVATIVO dichiarato.
+  function realDynamicQuota() {
     try {
       const dnr = chrome.declarativeNetRequest;
-      const limit = dnr.MAX_NUMBER_OF_DYNAMIC_RULES || dnr.MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES;
-      if (Number.isInteger(limit) && limit > 0) return Math.max(0, limit - REMOTE_RULES_RESERVED);
+      const limit = dnr.MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES || dnr.MAX_NUMBER_OF_DYNAMIC_RULES;
+      if (Number.isInteger(limit) && limit > 0) return limit;
     } catch (_) { /* nop */ }
-    return 4900;
+    return 5000; // fallback conservativo documentato (vedi protocol)
+  }
+
+  // Il feed contiene solo block/allow → budget regole applicabili = quota reale
+  // meno un margine di riserva, MAI un numero fisso assunto.
+  function remoteRulesCap() {
+    return Math.max(0, realDynamicQuota() - REMOTE_RULES_RESERVED);
   }
 
   function updateDynamicRulesAsync(opts) {
@@ -1241,6 +972,7 @@
             // azioni, firma ECDSA P-256. Qualunque fallimento → mantieni il
             // ruleset precedente e logga.
             const verified = await verifyRulesFeedSignature(data, {
+              keys: RULES_FEED_KEYS,
               publicKeyJwk: RULES_FEED_PUBLIC_KEY_JWK,
               storedVersion: st.adoffRulesFeedVersion || 0,
             });
@@ -1253,6 +985,7 @@
               baseId: REMOTE_RULES_BASE_ID,
               idSpan: REMOTE_RULES_ID_SPAN,
               maxRules: remoteRulesCap(),
+              realQuota: realDynamicQuota(),
               chunkSize: REMOTE_RULES_CHUNK,
               getDynamicRules: () => new Promise((resolve) => {
                 chrome.declarativeNetRequest.getDynamicRules((r) => resolve(r || []));
@@ -1260,12 +993,14 @@
               updateDynamicRules: updateDynamicRulesAsync,
             });
             if (!result.ok) {
-              console.warn("[adoff] Apply feed fallito (nessuna rimozione eseguita): " + result.error);
+              // Ramo B (rifiuto quota/id) o rollback: feed precedente intatto,
+              // adoffRulesFeedVersion NON avanzata.
+              console.warn("[adoff] Apply feed fallito: " + result.error);
               chrome.storage.local.set({ adoffRemoteRulesError: result.error });
               return;
             }
 
-            // Versione salvata SOLO dopo apply riuscito (impedisce replay/rollback)
+            // Versione salvata SOLO dopo Ramo A completato (impedisce replay/rollback)
             chrome.storage.local.set({
               adoffRulesFeedVersion: data.version || 0,
               adoffRemoteRulesVer: data.version || 0,
@@ -1302,14 +1037,6 @@
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // EA-6: rifiuta messaggi da estensioni esterne o pagine web
     if (sender.id !== chrome.runtime.id) return false;
-
-    // L'onboarding chiede un ricontrollo quando l'utente torna sulla scheda
-    // dopo essersi registrato: senza, il nuovo stato arriverebbe solo col
-    // sync giornaliero.
-    if (message && message.action === "refreshFreeLicense") {
-      syncFreeLicense();
-      return false;
-    }
 
     // Lo script anti-pubblico è dichiarato nel manifest solo per il frame principale,
     // quindi nei player ospitati in un iframe di terze parti non arriva; il sottoframe
@@ -1355,26 +1082,22 @@
           !lic.valid ||
           (storedIntegrity != null && storedIntegrity === computeIntegrity(lic));
 
-        isTrialActive(stored, Date.now()).then(trialActive => {
-          // L'integrita' non governa piu' l'accesso: da quando tutto e'
-          // gratuito una licenza manomessa non fa ottenere niente che non
-          // si abbia gia', mentre spegnere le difese colpiva l'utente
-          // legittimo con lo storage corrotto. `integrityValid` resta
-          // calcolato: serve alla revoca server-side, non al gate.
-          const pro =
-            adoffPlanTier(lic.type) !== "free" ||
-            adoffPlanTier(lic.plan) !== "free" ||
-            trialActive;
+        // L'integrita' non governa piu' l'accesso: da quando tutto e'
+        // gratuito una licenza manomessa non fa ottenere niente che non
+        // si abbia gia', mentre spegnere le difese colpiva l'utente
+        // legittimo con lo storage corrotto. `integrityValid` resta
+        // calcolato: serve alla revoca server-side, non al gate.
+        const pro =
+          adoffPlanTier(lic.type) !== "free" ||
+          adoffPlanTier(lic.plan) !== "free";
 
-          if (!pro) {
-            sendResponse({ pro: false });
-            return;
-          }
-
+        if (!pro) {
+          sendResponse({ pro: false });
+        } else {
           const rand = Math.random();
           const hex = ("0000000" + Math.floor(rand * 0xffffffff).toString(16)).slice(-8);
           sendResponse({ pro: true, nonce: "ao_" + hex });
-        });
+        }
       });
       return true;
     }

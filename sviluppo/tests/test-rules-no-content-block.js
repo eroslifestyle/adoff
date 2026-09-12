@@ -84,7 +84,7 @@ const ADS = [
 // Esecuzione dei test
 // --------------------------------------------------------------------------------
 let passed = 0;
-const total = 4;
+const total = 7;
 
 // T1: Verifica che nessuna regola di tipo "block" faccia match con l'URL del
 //     contenuto video YouTube (quello con ctier).
@@ -213,8 +213,78 @@ if (t4Fail.length === 0) {
   }
 }
 
-// Output finale
-console.log(`\nRISULTATO: ${passed}/${total} passati`);
+// ---------------------------------------------------------------------------
+// T5-T7: invarianti di contesto sul SET di regole (coerenti con l'allowlist
+// imposta al feed remoto in background.js: solo block/allow, mai redirect
+// o modifyHeaders; nessun blocco indiscriminato della navigazione).
+// Il file statico deve rispettare lo stesso principio del feed.
+// ---------------------------------------------------------------------------
+const PROIBITI = new Set(['redirect', 'modifyHeaders', 'upgradeScheme', 'removeHeaders']);
+
+// T5: nessun action.type fuori da {block, allow} in NESSUN file regole
+let t5Fail = [];
+const targets = ['app', 'app-firefox', 'app-safari'];
+for (const t of targets) {
+  const p = path.resolve(__dirname, '../..', t, 'rules/adblock-rules.json');
+  if (!fs.existsSync(p)) continue;
+  const rs = JSON.parse(fs.readFileSync(p, 'utf8'));
+  for (const rule of rs) {
+    if (PROIBITI.has(rule.action && rule.action.type)) {
+      t5Fail.push({ target: t, id: rule.id, type: rule.action.type });
+    }
+  }
+}
+if (t5Fail.length === 0) {
+  console.log('PASS T5: nessuna regola redirect/modifyHeaders/upgradeScheme sui 3 target.');
+  passed++;
+} else {
+  console.log('FAIL T5: azioni proibite trovate:');
+  for (const v of t5Fail) console.log(`  - ${v.target} id=${v.id} action=${v.type}`);
+}
+
+// T6: nessun block main_frame INDISCRIMINATO — ogni block che copre main_frame
+// deve avere una condizione ristretta (urlFilter/regexFilter non vuoti oppure
+// initiatorDomains/requestDomains): mai "tutta la navigazione".
+let t6Fail = [];
+let mainFrameCount = 0;
+for (const rule of rules) {
+  const cond = rule.condition || {};
+  if (!(cond.resourceTypes || []).includes('main_frame')) continue;
+  mainFrameCount++;
+  if (rule.action && rule.action.type === 'block') {
+    const ristretta = Boolean(
+      (cond.urlFilter && cond.urlFilter.trim()) ||
+      (cond.regexFilter && cond.regexFilter.trim()) ||
+      (Array.isArray(cond.requestDomains) && cond.requestDomains.length) ||
+      (Array.isArray(cond.initiatorDomains) && cond.initiatorDomains.length)
+    );
+    if (!ristretta) t6Fail.push({ id: rule.id });
+  }
+}
+if (t6Fail.length === 0) {
+  console.log(`PASS T6: ${mainFrameCount} regole su main_frame, nessun blocco di navigazione indiscriminato.`);
+  passed++;
+} else {
+  console.log('FAIL T6: block main_frame senza condizioni ristrette:');
+  for (const v of t6Fail) console.log(`  - id: ${v.id}`);
+}
+
+// T7: i 3 file regole sono identici (il brief li dichiara identici: verificarlo)
+const hash = (p) => require('crypto').createHash('md5').update(fs.readFileSync(p)).digest('hex');
+const base = path.resolve(__dirname, '../..');
+const hChrome = hash(base + '/app/rules/adblock-rules.json');
+const hFf = hash(base + '/app-firefox/rules/adblock-rules.json');
+const hSa = hash(base + '/app-safari/rules/adblock-rules.json');
+if (hChrome === hFf && hChrome === hSa) {
+  console.log('PASS T7: adblock-rules.json identico su app, app-firefox, app-safari.');
+  passed++;
+} else {
+  console.log(`FAIL T7: adblock-rules.json divergente (chrome=${hChrome.slice(0, 8)} ff=${hFf.slice(0, 8)} safari=${hSa.slice(0, 8)})`);
+}
+
+// Report finale conteggi
+console.log(`\nRegole totali: ${rules.length} — main_frame: ${mainFrameCount}`);
+console.log(`RISULTATO: ${passed}/${total} passati`);
 if (passed < total) {
   process.exit(1);
 }

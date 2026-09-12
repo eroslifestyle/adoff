@@ -1,15 +1,5 @@
 (function () {
   "use strict";
-  // Tier canonico del piano. Da quando AdOff e' gratuito per tutti questa
-  // funzione ritorna sempre "premium": ogni funzione e' sbloccata senza
-  // licenza e senza scadenza. La firma resta invariata perche' i chiamanti
-  // passano ancora il nome del piano, e per poter tornare indietro toccando
-  // un punto solo. Il grado di sostenitore NON si deduce da qui: usa
-  // adoffSupporterKind(). Invariante presidiato da
-  // sviluppo/tests/test-plan-tier-consistency.js.
-  function adoffPlanTier() {
-    return "premium";
-  }
 
   // EB-6: Nonce casuale per prevenire clobbering del flag di caricamento
   const LOAD_NONCE = Math.random().toString(36).slice(2, 10);
@@ -68,74 +58,13 @@
     try { return !!chrome.runtime?.id; } catch (_) { return false; }
   }
 
-  // EM-4: Verifica integrity hash dello stato licenza (FNV inline)
-  function computeIntegrity(licData) {
-    const raw = JSON.stringify(licData, licData && typeof licData === "object" ? Object.keys(licData).sort() : null);
-    let hash = 0x811c9dc5;
-    for (let i = 0; i < raw.length; i++) {
-      hash ^= raw.charCodeAt(i);
-      hash = Math.imul(hash, 0x01000193);
-    }
-    hash = ((hash >>> 0) ^ 0x5f3759df).toString(36);
-    return "ao_" + hash;
-  }
-
   // EB-7: Nonce per data-adoff-stealth — formato verificabile: "ao_" + 8 hex chars
   const STEALTH_NONCE = "ao_" + Math.floor(Math.random() * 0xFFFFFFFF).toString(16).padStart(8, "0");
 
-  // --- Trial: verifica firma ECDSA del token server (anti-tampering) ---
-  // L'autorità del trial è il server. Il gate Pro/Trial in-page si fida SOLO
-  // di un token firmato verificato con la chiave pubblica embeddata; un
-  // adoffTrialEnd gonfiato via DevTools non abilita le feature Pro.
-  const TRIAL_PUBKEY_JWK = {
-    kty: "EC", crv: "P-256",
-    x: "FnIroHHVzo3v01gENPaA2U70c58sduDD6hGS0EhCATc",
-    y: "tAzRBzVK1O8ul76s2euNrqV0L4f1qmEtvcKB_HqpfrY",
-  };
-  function trialB64uToBytes(s) {
-    s = s.replace(/-/g, "+").replace(/_/g, "/");
-    while (s.length % 4) s += "=";
-    const bin = atob(s);
-    const out = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-    return out;
-  }
-  let _trialPubKeyPromise = null;
-  function importTrialPubKey() {
-    if (!_trialPubKeyPromise) {
-      _trialPubKeyPromise = crypto.subtle.importKey(
-        "jwk", TRIAL_PUBKEY_JWK, { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]
-      );
-    }
-    return _trialPubKeyPromise;
-  }
-  async function verifyTrialToken(token, localDeviceId) {
-    if (!token || typeof token !== "string" || token.indexOf(".") < 0) return null;
-    try {
-      const [payloadB64, sigB64] = token.split(".");
-      const pubKey = await importTrialPubKey();
-      const ok = await crypto.subtle.verify(
-        { name: "ECDSA", hash: "SHA-256" }, pubKey,
-        trialB64uToBytes(sigB64), new TextEncoder().encode(payloadB64)
-      );
-      if (!ok) return null;
-      const payload = JSON.parse(new TextDecoder().decode(trialB64uToBytes(payloadB64)));
-      if (localDeviceId && payload.deviceId && payload.deviceId !== localDeviceId) return null;
-      return payload;
-    } catch (_) { return null; }
-  }
-  // Autorità = token firmato dal server, no fallback locali.
-  async function isTrialActive(result, now) {
-    const payload = result.adoffTrialToken
-      ? await verifyTrialToken(result.adoffTrialToken, result.adoffDeviceId)
-      : null;
-    if (payload) return payload.trialEnd > now;
-    return false;
-  }
-
-  // --- Controlla whitelist, stato e licenza prima di avviare ---
+  // --- Controlla whitelist e stato prima di avviare ---
+  // Nessun gate di licenza/trial/free: il blocking non dipende da account.
   if (!isExtensionValid()) return;
-  chrome.storage.local.get(["adoffEnabled", "adoffAdsBlocked", "adoffWhitelist", "adoffTrialEnd", "adoffTrialToken", "adoffTrialExpired", "adoffDeviceId", "adoffLicense", "adoffIntegrity", "adoffYtCompat", "adoffFreeExpired"], async (result) => {
+  chrome.storage.local.get(["adoffEnabled", "adoffAdsBlocked", "adoffWhitelist", "adoffYtCompat"], (result) => {
     if (chrome.runtime.lastError || !isExtensionValid()) return;
     const whitelist = result.adoffWhitelist || [];
     // EA-7: suffix matching corretto (non bidirezionale)
@@ -144,27 +73,7 @@
     // Se il dominio e' in whitelist esci subito — nessuna modifica al DOM
     if (isPaused) return;
 
-    // EM-4: Verifica integrity usando lo stesso oggetto di license-client.js
-    const lic = result.adoffLicense || {};
-    // L'integrity hash viene calcolato su licData (stesso formato di license-client.js)
-    const storedIntegrity = result.adoffIntegrity || "";
-    // Se lic ha dati validi, verifica; se e' vuoto/free, skippa il check
-    const integrityOk = !lic.valid || (storedIntegrity && computeIntegrity(lic) === storedIntegrity);
-
-    // Trial: gate basato su token firmato dal server (non falsificabile).
-    const trialOk = await isTrialActive(result, Date.now());
-
-    // Licenza free scaduta (30 giorni senza registrazione): AdOff non tocca
-    // piu' la pagina finche' l'utente non crea l'account. Lo stato lo decide
-    // background.js dal token firmato, qui si obbedisce e basta.
-    const freeExpired = result.adoffFreeExpired === true;
-
-    // Come in background.js: l'integrita' non governa piu' l'accesso.
-    const isPro =
-      adoffPlanTier(lic.type) !== "free" ||
-      adoffPlanTier(lic.plan) !== "free" ||
-      trialOk;
-    const stealthActive = enabled && !freeExpired && isPro;
+    const stealthActive = enabled;
     if (stealthActive) {
       // EB-7: usa nonce verificabile invece di "1" fisso
       document.documentElement.setAttribute("data-adoff-stealth", STEALTH_NONCE);
@@ -189,7 +98,7 @@
       try { localStorage.setItem("__adoff_pro", stealthActive ? "1" : "0"); } catch (_) { /* storage negato */ }
     }
 
-    if (enabled && !freeExpired) start();
+    if (enabled) start();
   });
 
   if (!isExtensionValid()) return;
@@ -198,9 +107,6 @@
     if (changes.adoffEnabled) {
       enabled = changes.adoffEnabled.newValue !== false;
       enabled ? start() : stop();
-    }
-    if (changes.adoffFreeExpired) {
-      changes.adoffFreeExpired.newValue === true ? stop() : (enabled && start());
     }
     // Aggiorna in tempo reale se la whitelist cambia mentre la pagina e' aperta
     if (changes.adoffWhitelist) {

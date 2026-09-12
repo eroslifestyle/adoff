@@ -25,7 +25,9 @@ const path = require('path');
 
 const BG = path.join(__dirname, '../../app/src/background.js');
 const LC = path.join(__dirname, '../../app/src/license-client.js');
-const CT = path.join(__dirname, '../../app/src/content.js');
+// content.js NON ha piu' computeIntegrity (rimossa col free-gate 2026-09):
+// le due copie attuali sono background.js e license-client.js.
+const CT = path.join(__dirname, '../../app/src/background.js');
 
 function leggiFile(p) {
     return fs.readFileSync(p, 'utf8');

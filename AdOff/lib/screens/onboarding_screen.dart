@@ -62,8 +62,8 @@ class _VpnSlotStep extends StatelessWidget {
   Widget build(BuildContext context) => _StepLayout(
     emoji: '⚠️',
     title: 'One thing to know',
-    subtitle: 'AdOff uses the VPN slot on your device.',
-    body: 'While AdOff is active, you cannot use another VPN app (like Mullvad or NordVPN) simultaneously.\n\nTip: AdOff works alongside Private DNS — see Settings for DNS-only mode.',
+    subtitle: 'Android protection: in development, not yet available.',
+    body: 'AdOff for Android does not protect anything yet — the VPN service is not included in this build.\n\nOnce released, it will use the VPN slot (one VPN app at a time, like any Android VPN). Tip: the Private DNS guide in Settings works today with any VPN app.',
     isWarning: true,
   );
 }

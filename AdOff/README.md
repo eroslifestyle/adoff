@@ -1,12 +1,12 @@
 # AdOff Android App
 
-Android app: UI e struttura del progetto presenti; la protezione VPN NON è ancora funzionante (packet forwarding non implementato) — disabilitata di default, in sviluppo.
+Android app: UI e struttura del progetto presenti; la protezione VPN NON è ancora funzionante (packet forwarding non implementato) — **rimossa dal build**: il `<service>` VpnService NON è più dichiarato nel manifest (non avviabile nemmeno via adb/intent), i permessi FOREGROUND_SERVICE sono commentati e il MethodChannel ritorna "UNAVAILABLE". Il sorgente `VpnService.kt` resta nel repo come base per lo sviluppo futuro (vedi flag `VPN_FEATURE_SHIPPABLE`).
 
 ## Status
 
 **Phase 1** ✅ — DNS guide live at adoff.app/android-dns
 **Phase 2** ✅ — Flutter scaffold (license, VPN API client, crypto keys)
-**Phase 3** 🚧 — VPN + blocking logic (IN PROGRESS — VPN disabled: packet forwarding not implemented, echo-loop risk; service guarded, never establishes)
+**Phase 3** 🚧 — VPN + blocking logic (IN PROGRESS — VPN removed from build: service not declared in manifest, packet forwarding not implemented, echo-loop risk; source kept for future work)
 **Phase 4** ⬜ — Build + test
 **Phase 5** ⬜ — Publish (F-Droid + APK)
 **Phase 6** ⬜ — Metrics + monitoring

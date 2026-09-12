@@ -39,11 +39,11 @@ resta privato, perché è la nostra protezione, non un dato dell'utente.
 
 ### Sempre gratis
 
-AdOff è gratis e resta gratis. Nessuna carta, nessun pagamento, nessun piano Pro
-a pagamento per il blocco pubblicità: i primi 30 giorni sono liberi da subito,
-poi basta un **account gratuito** (venti secondi, senza carta) per continuare a
-usarlo senza limiti. Nessun server irraggiungibile spegne mai il blocco: senza
-un token verificabile l'estensione non si disattiva da sola.
+AdOff è gratis e resta gratis. Nessun account richiesto, nessuna scadenza,
+nessun pagamento per il blocco pubblicità: installi e funziona, per sempre,
+anche senza rete. Il blocking non dipende da nessun token né licenza. Un
+eventuale account è puramente volontario (sostenere il progetto), mai
+richiesto per usare AdOff.
 
 ### Cosa c'è in questo repo
 
@@ -114,11 +114,10 @@ because that's our protection, not your data.
 
 ### Always free
 
-AdOff is free and stays free. No card, no payment, no paid Pro tier for ad
-blocking: the first 30 days are free from the start, then a **free account**
-(twenty seconds, no card) keeps it running with no limits. No unreachable
-server ever turns blocking off: without a verifiable token, the extension
-never disables itself.
+AdOff is free and stays free. No account required, no expiration, no payment
+for ad blocking: install it and it works, forever, even offline. Blocking
+never depends on any token or license. An account is purely optional
+(supporting the project), never required to use AdOff.
 
 ### What's in this repo
 

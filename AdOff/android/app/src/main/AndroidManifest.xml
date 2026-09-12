@@ -2,8 +2,10 @@
     package="app.adoff">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- ponytail: VPN rimosso dal build (forwarding non implementato) — questi permessi servivano solo al VpnService
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
@@ -27,7 +29,10 @@
             </intent-filter>
         </activity>
 
-        <!-- VpnService for ad blocking -->
+        <!-- ponytail: VpnService NON dichiarato — feature rimossa dal build finché il forwarding DNS
+             reale non è implementato e testato su device. Non riattivare senza completare VpnService.kt
+             (vedi flag VPN_FEATURE_SHIPPABLE lì dentro). Senza questa dichiarazione il servizio non è
+             avviabile nemmeno via adb/intent diretto.
         <service
             android:name=".VpnService"
             android:permission="android.permission.BIND_VPN_SERVICE"
@@ -40,6 +45,7 @@
                 android:name="android.net.VpnService.SUPPORTS_ALWAYS_ON"
                 android:value="true" />
         </service>
+        -->
 
         <meta-data
             android:name="flutterEmbedding"

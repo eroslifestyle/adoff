@@ -24,7 +24,7 @@ class SettingsScreen extends StatelessWidget {
           _SettingsTile(
             icon: Icons.dns,
             title: 'DNS-only Mode',
-            subtitle: 'Works alongside other VPNs',
+            subtitle: 'In development — not yet available',
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {},
           ),
