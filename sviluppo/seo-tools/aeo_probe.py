@@ -19,7 +19,7 @@ Backend (env AEO_BACKEND, default 'local'):
 
 Output: .state/aeo_report.{json,md}.
 Dipendenza locale: ddgs nel venv sviluppo/seo-tools/.venv (auto re-exec sotto).
-Uso: source ~/.secrets/adoff-stores.env && python3 aeo_probe.py
+Uso: eval "$(secret env adoff-stores)" && python3 aeo_probe.py
 """
 import json
 import os

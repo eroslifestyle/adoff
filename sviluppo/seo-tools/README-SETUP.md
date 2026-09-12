@@ -21,16 +21,14 @@ Auth = **service account** (nessun refresh token che scade, ideale per cron sett
 - Incolla l'**email del service account** (formato `adoff-gsc-reader@<project>.iam.gserviceaccount.com`)
 - Permesso: **Con limitazioni** (sola lettura, basta e avanza) → Aggiungi
 
-### 4. Registra il path della key
-- Sposta la JSON scaricata in un posto sicuro, es:
-  `mv ~/Downloads/<file>.json ~/.secrets/adoff-gsc-sa.json && chmod 600 ~/.secrets/adoff-gsc-sa.json`
-- Aggiungi a `~/.secrets/adoff-stores.env`:
-  `export ADOFF_GSC_SA_JSON=/home/mrxxx/.secrets/adoff-gsc-sa.json`
+### 4. Registra la key nel vault TPM
+- `secret set adoff-stores.ADOFF_GSC_SA_JSON_B64 < <(base64 -w0 <file>.json)`
+  (gsc_query.py materializza il JSON in tmpfs e lo cancella all'uscita)
 
 ## Uso
 
 ```bash
-source ~/.secrets/adoff-stores.env
+eval "$(secret env adoff-stores)"
 cd sviluppo/seo-tools
 
 python3 gsc_query.py                    # top query + top page, ultimi 28gg

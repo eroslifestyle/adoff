@@ -4,7 +4,7 @@
 
 ## Stato di partenza (2026-05-28)
 
-- `STRIPE_MODE=test`, chiavi `sk_test`/`pk_test` in `~/.secrets/adoff-stores.env`.
+- `STRIPE_MODE=test`, chiavi `sk_test`/`pk_test` nel vault TPM (`secret get adoff-stores.STRIPE_SECRET_KEY`, ecc.).
 - Webhook test esistente: `we_1TNZr1GPf5LKScOfr9Gb3R2o` → `https://api.adoff.app/stripe-webhook`.
 - Worker `adoff-license-api` LIVE su `api.adoff.app`.
 
@@ -42,7 +42,7 @@ Lo script:
 1. Rifiuta di procedere se le chiavi non iniziano per `sk_live_` / `whsec_` (anti-errore test).
 2. `wrangler secret put STRIPE_SECRET_KEY` ← `sk_live`
 3. `wrangler secret put STRIPE_WEBHOOK_SECRET` ← `whsec_live`
-4. Aggiorna `~/.secrets/adoff-stores.env` (`STRIPE_MODE=live` + nuove chiavi, backup automatico).
+4. Aggiorna il vault TPM: `bash go-live-stripe.sh` (punto 2/4) scrive `STRIPE_MODE=live` + le nuove chiavi nel namespace `adoff-stores`.
 5. `wrangler deploy` (no code change, solo per propagare; opzionale).
 6. Verifica `GET /health` + che `/stripe-webhook` risponda 401 senza firma (segno che il secret è caricato).
 

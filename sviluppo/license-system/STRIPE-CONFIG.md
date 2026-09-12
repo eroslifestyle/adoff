@@ -11,7 +11,7 @@ Ambiente: Sandbox (test mode)
 ## API Keys
 
 - Publishable: `pk_test_51TNZi9GPf5LKScOfLdBaM9MkBJ1RnO0mdcFceqx9SNC71uJVQ0p1SM3tQGWY8ZzxmsM2P4Rk8fXPdDoysRcbr3bb00FCkwrB83`
-- Secret: `<vedi ~/.secrets/adoff-stores.env>`
+- Secret: `<vedi vault TPM: secret get adoff-stores.STRIPE_SECRET_KEY>`
 
 ## Prodotti e Prezzi
 
@@ -39,7 +39,7 @@ Tutti i link reindirizzano a: `https://adoff.app/success?session_id={CHECKOUT_SE
 
 - ID: `we_1TNZr1GPf5LKScOfr9Gb3R2o`
 - URL: `https://api.adoff.app/stripe-webhook`
-- Secret: `<vedi ~/.secrets/adoff-stores.env>`
+- Secret: `<vedi vault TPM: secret get adoff-stores.STRIPE_WEBHOOK_SECRET>`
 - Eventi: checkout.session.completed, customer.subscription.deleted, charge.refunded
 
 ## Note

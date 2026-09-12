@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-ENC_KEY="${N8N_ENCRYPTION_KEY:?set N8N_ENCRYPTION_KEY in ~/.secrets/adoff-stores.env}"
+ENC_KEY="${N8N_ENCRYPTION_KEY:?set N8N_ENCRYPTION_KEY (es. secret set adoff-stores.N8N_ENCRYPTION_KEY, poi source "$(secret file adoff-stores)")}"
 PG_CONTAINER="n8n-postgres"
 PG_USER="n8n"
 PG_DB="n8n"
@@ -20,7 +20,7 @@ PG_HOST="n8n-postgres"
 PG_PORT="5432"
 PG_DB_NAME="n8n"
 PG_USER_CRED="n8n"
-PG_PASS="${N8N_PG_PASSWORD:?set N8N_PG_PASSWORD in ~/.secrets/adoff-stores.env}"
+PG_PASS="${N8N_PG_PASSWORD:?set N8N_PG_PASSWORD (es. secret set adoff-stores.N8N_PG_PASSWORD, poi source "$(secret file adoff-stores)")}"
 
 PG_CRED_JSON=$(cat <<EOF
 {"host":"$PG_HOST","port":$PG_PORT,"database":"$PG_DB_NAME","user":"$PG_USER_CRED","password":"$PG_PASS","allowUnauthorizedCerts":false,"ssl":"disable"}

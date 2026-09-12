@@ -16,7 +16,7 @@ PROJECT_ROOT="/mnt/nvme2/projects/Progetti/ChromePlugin"
 SEO_DIR="$PROJECT_ROOT/sviluppo/seo-tools"
 STATE_DIR="$SEO_DIR/.state"
 LOG_DIR="$PROJECT_ROOT/sviluppo/logs"
-SECRETS="/home/mrxxx/.secrets/adoff-stores.env"
+SECRET_BIN="/home/mrxxx/.local/bin/secret"
 TG_THREAD_SEO=44
 CLAUDE_BIN="/home/mrxxx/.local/bin/claude"
 LOG="$LOG_DIR/seo_watcher_$(date +%Y%m%d).log"
@@ -25,8 +25,8 @@ mkdir -p "$STATE_DIR" "$LOG_DIR"
 log() { echo "[$(date +%H:%M:%S)] $*" >> "$LOG"; }
 
 # shellcheck disable=SC1090
-source "$SECRETS" 2>/dev/null || exit 1
-ADMIN_TOKEN="$(grep '^export ADMIN_TOKEN=' "$SECRETS" | sed 's/export ADMIN_TOKEN=//; s/"//g')"
+set -a; source "$("$SECRET_BIN" file adoff-stores)" 2>/dev/null || exit 1; set +a
+ADMIN_TOKEN="$("$SECRET_BIN" get adoff-stores.ADMIN_TOKEN)"
 
 # Alert via POST /admin/notify del worker (che conosce gia' il gruppo admin):
 # l'id di gruppo e il token bot restano secret del worker, non duplicati qui.

@@ -10,7 +10,7 @@ PROJECT_ROOT="/home/mrxxx/adoff"
 API_BASE="https://api.adoff.app"
 
 # shellcheck disable=SC1091
-[ -f "$HOME/.secrets/adoff-stores.env" ] && source "$HOME/.secrets/adoff-stores.env"
+SECRETS_P="$(secret file adoff-stores 2>/dev/null)" && [ -n "$SECRETS_P" ] && source "$SECRETS_P"
 
 cd "$PROJECT_ROOT"
 

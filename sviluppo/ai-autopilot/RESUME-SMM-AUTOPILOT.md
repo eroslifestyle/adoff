@@ -146,4 +146,4 @@ Cost build totale: ~$0.86 Gemini Pro. Cost runtime stimato: $30-80/mese.
 - Stack n8n: `/opt/n8n/docker-compose.yml`
 - N8n editor: `http://localhost:5678` (login basic auth se configurato)
 - Secrets: `~/.secrets/gemini.env` (chmod 600)
-- Gemini key: AIzaSy...REDACTED (vedi ~/.secrets/adoff-stores.env)
+- Gemini key: nel vault TPM (`secret get adoff-stores.GEMINI_API_KEY`)

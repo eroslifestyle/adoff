@@ -31,7 +31,7 @@ PROJECT_ROOT="/mnt/nvme2/projects/Progetti/ChromePlugin"
 SEO_DIR="$PROJECT_ROOT/sviluppo/seo-tools"
 STATE_DIR="$SEO_DIR/.state"
 LOG_DIR="$PROJECT_ROOT/sviluppo/logs"
-SECRETS="/home/mrxxx/.secrets/adoff-stores.env"
+SECRET_BIN="/home/mrxxx/.local/bin/secret"
 LOCAL_LLM_SECRETS="/home/mrxxx/.claude/secrets/local-llm.env"
 TG_THREAD_SEO=44
 CLAUDE_BIN="/home/mrxxx/.local/bin/claude"
@@ -56,8 +56,8 @@ die() { log "ERRORE (fase $1): $2"; tg_send "⛔ Agente SEO — fase $1 FALLITA:
 
 # --- secrets ---
 # shellcheck disable=SC1090
-source "$SECRETS" 2>/dev/null || { log "ERRORE: secrets non trovati"; exit 1; }
-ADMIN_TOKEN="$(grep '^export ADMIN_TOKEN=' "$SECRETS" | sed 's/export ADMIN_TOKEN=//; s/"//g')"
+set -a; source "$("$SECRET_BIN" file adoff-stores)" 2>/dev/null || { log "ERRORE: vault adoff-stores non disponibile"; exit 1; }; set +a
+ADMIN_TOKEN="$("$SECRET_BIN" get adoff-stores.ADMIN_TOKEN)"
 
 # Alert via POST /admin/notify del worker (thread 44): il markup supportato da
 # mdToTelegramHtml e' **bold** / *bold* / backtick / blocchi ```.

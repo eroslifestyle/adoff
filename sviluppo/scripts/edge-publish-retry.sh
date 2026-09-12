@@ -3,7 +3,7 @@
 # Il draft package è già caricato e validato; serve solo il publish.
 # La versione è letta da app/manifest.json (single source of truth), mai hardcoded.
 set -e
-source ~/.secrets/adoff-stores.env
+source "$(secret file adoff-stores)"
 cd "/mnt/backup/Dropbox/1 Programmazione/Progetti/ChromePlugin"
 
 VERSION=$(python3 -c "import json;print(json.load(open('app/manifest.json'))['version'])")

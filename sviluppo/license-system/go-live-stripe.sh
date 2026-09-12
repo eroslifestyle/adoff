@@ -8,7 +8,6 @@
 #   bash go-live-stripe.sh
 set -euo pipefail
 
-SECRETS_ENV="${HOME}/.secrets/adoff-stores.env"
 WORKER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$WORKER_DIR"
 
@@ -35,20 +34,11 @@ echo "==> 1/4 Setto i secret del worker (adoff-license-api)"
 printf '%s' "$sk" | wrangler secret put STRIPE_SECRET_KEY
 printf '%s' "$wh" | wrangler secret put STRIPE_WEBHOOK_SECRET
 
-echo "==> 2/4 Aggiorno ${SECRETS_ENV} (backup automatico)"
-if [[ -f "$SECRETS_ENV" ]]; then
-  cp "$SECRETS_ENV" "${SECRETS_ENV}.bak.$(date +%s)"
-  # aggiorna in-place le righe note (lascia intatto il resto)
-  tmp="$(mktemp)"
-  sed -E \
-    -e 's|^export STRIPE_MODE=.*|export STRIPE_MODE="live"|' \
-    -e "s|^export STRIPE_SECRET_KEY=.*|export STRIPE_SECRET_KEY=\"$sk\"|" \
-    -e "s|^export STRIPE_WEBHOOK_SECRET=.*|export STRIPE_WEBHOOK_SECRET=\"$wh\"|" \
-    "$SECRETS_ENV" > "$tmp" && mv "$tmp" "$SECRETS_ENV"
-  chmod 600 "$SECRETS_ENV"
-else
-  echo "  (skip: $SECRETS_ENV non esiste)"
-fi
+echo "==> 2/4 Aggiorno il vault TPM (namespace adoff-stores)"
+printf '%s' "live" | secret set adoff-stores.STRIPE_MODE >/dev/null
+printf '%s' "$sk" | secret set adoff-stores.STRIPE_SECRET_KEY >/dev/null
+printf '%s' "$wh" | secret set adoff-stores.STRIPE_WEBHOOK_SECRET >/dev/null
+echo "  (STRIPE_MODE=live + chiavi aggiornate nel vault; nessuna copia su disco)"
 
 echo "==> 3/4 Deploy worker (propaga; nessuna modifica al codice)"
 wrangler deploy

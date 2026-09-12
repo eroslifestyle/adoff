@@ -43,7 +43,7 @@ python3 sviluppo/scripts/bump_asset_versions.py
 echo "── 3/3 · deploy ─────────────────────────────────────────────"
 export PATH="$HOME/.local/bin:$PATH"
 # shellcheck disable=SC1090
-source ~/.secrets/adoff-stores.env 2>/dev/null || true
+source "$(secret file adoff-stores)" 2>/dev/null || true
 export CLOUDFLARE_API_TOKEN="${CF_API_TOKEN:-${CLOUDFLARE_API_TOKEN:-}}"
 export CLOUDFLARE_ACCOUNT_ID="${CF_ACCOUNT_ID:-${CLOUDFLARE_ACCOUNT_ID:-}}"
 # Staging: dev artifacts (knowledge graph, istruzioni interne) NON devono andare

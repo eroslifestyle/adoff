@@ -7,7 +7,7 @@ set -u
 
 PROJECT_ROOT="/home/mrxxx/Dropbox/1 Programmazione/Progetti/ChromePlugin"
 ZIP="$PROJECT_ROOT/sviluppo/adoff-chrome-store.zip"
-SECRETS="$HOME/.secrets/adoff-stores.env"
+SECRETS="$(/home/mrxxx/.local/bin/secret file adoff-stores)"
 LOG="$PROJECT_ROOT/sviluppo/logs/cws-autoretry.log"
 LOCK="/tmp/cws-autoretry.lock"
 TARGET_VERSION="3.4.9"

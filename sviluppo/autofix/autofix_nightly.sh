@@ -93,7 +93,7 @@ fs.writeFileSync('$BASE/../site/autofix-status.json',JSON.stringify(status));
 console.log('autofix-status.json written: '+open+' open, '+fixed+' fixed');
 " >> "$LOG" 2>&1
   log "Deploying to CF Pages (branch main = Production)..."
-  source ~/.secrets/adoff-stores.env 2>/dev/null
+  set -a; source "$(/home/mrxxx/.local/bin/secret file adoff-stores)" 2>/dev/null; set +a
   wrangler pages deploy "$BASE/../site/" --project-name adoff-site --branch main --commit-dirty=true >> "$LOG" 2>&1
 else
   log "[5/5] SHADOW MODE - no deploy"

@@ -287,7 +287,7 @@ I file condivisi (content.js, options.js, popup.js, license-client.js, i18n.js, 
 | `app/`, `app-firefox/` o `app-safari/` | 1. Sincronizzare file condivisi tra i 3 target 2. `node sviluppo/scripts/build.js` (build TUTTI E TRE — copia automaticamente i ZIP in site/) 3. `wrangler pages deploy site/` (aggiorna ZIP download Chrome + Firefox + Safari sul sito) 4. Upload Chrome Web Store 5. Upload Firefox AMO 6. Submit Mac App Store (Safari, da Mac con Xcode — vedi sotto) 7. Edge/Opera: usano ZIP Chrome **8. Post Telegram @adoffapp** con changelog + immagine brand |
 | Sia `app/` che `site/` | Combo dei due sopra |
 
-> **REGOLA POST-TELEGRAM (REGOLA ASSOLUTA):** Ad OGNI nuova versione pubblicata → post sul canale `@adoffapp` con changelog + immagine brand. Token: vedi `~/.secrets/adoff-stores.env` (chiave TELEGRAM_BOT_TOKEN), chat_id: vedi stessa fonte (TELEGRAM_CHAT_ID). Messaggio SEMPRE in inglese. Immagine: genera card PIL 1200x628 o usa immagine brand. Mai chiedere conferma — post automatico dopo il deploy.
+> **REGOLA POST-TELEGRAM (REGOLA ASSOLUTA):** Ad OGNI nuova versione pubblicata → post sul canale `@adoffapp` con changelog + immagine brand. Token: nel vault TPM namespace `adoff-stores` (chiave TELEGRAM_BOT_TOKEN), chat_id: stessa fonte (TELEGRAM_CHAT_ID); caricarli con `source "$(secret file adoff-stores)"`. Messaggio SEMPRE in inglese. Immagine: genera card PIL 1200x628 o usa immagine brand. Mai chiedere conferma — post automatico dopo il deploy.
 
 ### Regole deploy:
 
@@ -310,7 +310,7 @@ I file condivisi (content.js, options.js, popup.js, license-client.js, i18n.js, 
 ### Chrome Web Store Upload:
 
 ```bash
-source ~/.secrets/adoff-stores.env
+source "$(secret file adoff-stores)"
 ACCESS_TOKEN=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
   -d "client_id=$CWS_CLIENT_ID" -d "client_secret=$CWS_CLIENT_SECRET" \
   -d "refresh_token=$CWS_REFRESH_TOKEN" -d "grant_type=refresh_token" \
@@ -324,14 +324,14 @@ curl -s -X PUT "https://www.googleapis.com/upload/chromewebstore/v1.1/items/$CWS
 1. Google Cloud Console → APIs & Services → OAuth consent screen → **PUBLISH APP**
 2. Generare NUOVE credenziali OAuth (Client ID/Secret) — quelle vecchie mantengono il comportamento 7-day
 3. Ottenere nuovo refresh token tramite OAuth Playground (`https://developers.google.com/oauthplayground`) con scope `https://www.googleapis.com/auth/chromewebstore`
-4. Aggiornare `~/.secrets/adoff-stores.env`: `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, `CWS_REFRESH_TOKEN`
+4. Aggiornare il vault TPM: `printf %s "$VALORE" | secret set adoff-stores.CWS_CLIENT_ID` (idem `CWS_CLIENT_SECRET`, `CWS_REFRESH_TOKEN`) — oppure rilanciare `sviluppo/scripts/cws-recover-token.sh`, che scrive direttamente nel vault
 
 ### Edge Add-ons Upload (v1.1 — ApiKey scheme):
 
 Edge usa **autenticazione diretta con ApiKey + ClientID nei header**, NON OAuth. La v1 OAuth (`oauth2/v2.0/token`) e' stata ritirata il **31 Dic 2024**.
 
 ```bash
-source ~/.secrets/adoff-stores.env
+source "$(secret file adoff-stores)"
 # 1. Upload package (returns 202 + Location header con operationID)
 curl -X POST \
   -H "Authorization: ApiKey $EDGE_API_KEY" \
@@ -414,7 +414,7 @@ xcrun altool --upload-app -f /tmp/AdOff-export/AdOff.pkg \
 ## Credentials & Publishing (Single Source of Truth)
 
 **TUTTE le credenziali** per pubblicazione e servizi sono in:
-`~/.secrets/adoff-stores.env`
+nel vault TPM (leggibile con `secret`, namespace `adoff-stores`); materializzazione temporanea: `secret file adoff-stores`
 
 Contiene:
 - **Chrome Web Store API** — OAuth client ID/secret, refresh token, extension ID (richiede consent screen "In production")
@@ -424,12 +424,12 @@ Contiene:
 - **Cloudflare** — Worker name, KV namespace ID, site project name
 - **Google Cloud** — project ID per CWS API
 
-Per caricare: `source ~/.secrets/adoff-stores.env`
+Per caricare: `source "$(secret file adoff-stores)"` (tmpfs, niente copia su disco)
 
 ### Publish Workflow (Chrome Web Store)
 
 ```bash
-source ~/.secrets/adoff-stores.env
+source "$(secret file adoff-stores)"
 # 1. Get token
 ACCESS_TOKEN=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
   -d "client_id=$CWS_CLIENT_ID" -d "client_secret=$CWS_CLIENT_SECRET" \

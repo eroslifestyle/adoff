@@ -6,7 +6,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SECRETS_FILE="$HOME/.secrets/adoff-stores.env"
+SECRETS_FILE="$(secret file adoff-stores)"
 
 # Colors
 RED='\033[0;31m'
@@ -14,9 +14,11 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# Load secrets
-if [ -f "$SECRETS_FILE" ]; then
+# Load secrets (vault TPM -> tmpfs; set -a per wrangler, che legge CLOUDFLARE_* da env)
+if [ -n "$SECRETS_FILE" ]; then
+    set -a
     source "$SECRETS_FILE"
+    set +a
 else
     echo -e "${RED}ERROR: Secrets file not found: $SECRETS_FILE${NC}"
     exit 1

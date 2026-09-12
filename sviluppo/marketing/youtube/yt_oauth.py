@@ -3,7 +3,7 @@
 Flusso loopback: avvia server locale, apre il browser, cattura il code, salva il refresh token.
 Scope: upload video + gestione canale (banner/branding/thumbnail).
 
-Uso: source ~/.secrets/adoff-stores.env && python3 yt_oauth.py
+Uso: eval "$(secret env adoff-stores)" && python3 yt_oauth.py
 Output: ~/.secrets/adoff-youtube-oauth-refresh.txt
 """
 import http.server
@@ -28,7 +28,7 @@ TOKEN_EP = "https://oauth2.googleapis.com/token"
 OUT = "/home/mrxxx/.secrets/adoff-youtube-oauth-refresh.txt"
 
 if not CLIENT_ID or not CLIENT_SECRET:
-    print("ERR: CWS_CLIENT_ID/SECRET non in env (source ~/.secrets/adoff-stores.env)")
+    print('ERR: CWS_CLIENT_ID/SECRET non in env (eval "$(secret env adoff-stores)")')
     sys.exit(1)
 
 params = urllib.parse.urlencode({

@@ -5,7 +5,7 @@ desktop esistente (CWS_CLIENT_ID/SECRET). Flusso loopback: avvia un server
 locale, l'utente autorizza nel browser, cattura il code e lo scambia.
 
 Scrive il refresh token in ~/.secrets/adoff-gsc-oauth-refresh.txt
-Uso: source ~/.secrets/adoff-stores.env && python3 oauth_setup.py
+Uso: eval "$(secret env adoff-stores)" && python3 oauth_setup.py
 """
 import http.server
 import json
@@ -25,7 +25,7 @@ TOKEN_EP = "https://oauth2.googleapis.com/token"
 OUT = "/home/mrxxx/.secrets/adoff-gsc-oauth-refresh.txt"
 
 if not CLIENT_ID or not CLIENT_SECRET:
-    print("ERR: CWS_CLIENT_ID/SECRET non in env (source ~/.secrets/adoff-stores.env)")
+    print('ERR: CWS_CLIENT_ID/SECRET non in env (eval "$(secret env adoff-stores)")')
     sys.exit(1)
 
 params = urllib.parse.urlencode({

@@ -8,14 +8,13 @@
 #
 # This script:
 #   - Validates the new credentials with a test access-token request
-#   - Updates ~/.secrets/adoff-stores.env in place
+#   - Updates the TPM vault (namespace adoff-stores) — niente segreti su disco
 #   - Tests upload to Chrome Web Store (dry-run, no publish)
 #
 # Usage: ./cws-recover-token.sh
 
 set -e
 
-SECRETS="$HOME/.secrets/adoff-stores.env"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -53,39 +52,19 @@ ACCESS_TOKEN=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(s
 echo -e "${GREEN}OK — access token obtained (length=${#ACCESS_TOKEN}).${NC}"
 
 echo ""
-echo -e "${YELLOW}[2/3] Updating $SECRETS...${NC}"
+echo -e "${YELLOW}[2/3] Updating TPM vault (adoff-stores)...${NC}"
 
-# Backup
-cp "$SECRETS" "${SECRETS}.backup-$(date +%Y%m%d-%H%M%S)"
+# Update nel vault TPM (stdin -> segreto mai su disco né in ps)
+printf %s "$NEW_CLIENT_ID"     | secret set adoff-stores.CWS_CLIENT_ID     >/dev/null
+printf %s "$NEW_CLIENT_SECRET" | secret set adoff-stores.CWS_CLIENT_SECRET >/dev/null
+printf %s "$NEW_REFRESH_TOKEN" | secret set adoff-stores.CWS_REFRESH_TOKEN >/dev/null
 
-# Update in place using sed (cross-shell quote-safe)
-python3 << EOF
-import re
-path = "$SECRETS"
-with open(path, "r", encoding="utf-8") as f:
-    content = f.read()
-
-content = re.sub(r'^export CWS_CLIENT_ID=.*$',
-                 f'export CWS_CLIENT_ID="$NEW_CLIENT_ID"',
-                 content, count=1, flags=re.MULTILINE)
-content = re.sub(r'^export CWS_CLIENT_SECRET=.*$',
-                 f'export CWS_CLIENT_SECRET="$NEW_CLIENT_SECRET"',
-                 content, count=1, flags=re.MULTILINE)
-content = re.sub(r'^export CWS_REFRESH_TOKEN=.*$',
-                 f'export CWS_REFRESH_TOKEN="$NEW_REFRESH_TOKEN"',
-                 content, count=1, flags=re.MULTILINE)
-
-with open(path, "w", encoding="utf-8") as f:
-    f.write(content)
-print("Updated.")
-EOF
-
-echo -e "${GREEN}OK — credentials saved.${NC}"
+echo -e "${GREEN}OK — credentials saved in vault.${NC}"
 
 echo ""
 echo -e "${YELLOW}[3/3] Testing CWS API access (read item info)...${NC}"
 
-source "$SECRETS"
+source "$(secret file adoff-stores)"
 INFO=$(curl -s -X GET \
     "https://www.googleapis.com/chromewebstore/v1.1/items/$CWS_EXTENSION_ID?projection=DRAFT" \
     -H "Authorization: Bearer $ACCESS_TOKEN" \

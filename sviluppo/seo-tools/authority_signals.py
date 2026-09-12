@@ -15,7 +15,7 @@ quindi DIAGNOSTICA e PROPONE: misura la presenza off-site attuale del brand e pr
 una checklist priorizzata di azioni di autorità da fare a mano (riportata su Telegram).
 
 Output: .state/authority_report.{json,md}.
-Uso: source ~/.secrets/adoff-stores.env && python3 authority_signals.py
+Uso: eval "$(secret env adoff-stores)" && python3 authority_signals.py
 """
 import json
 import os

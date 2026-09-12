@@ -108,6 +108,14 @@ def probe_health() -> tuple[str, str]:
     try:
         with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_S) as response:
             body = json.loads(response.read().decode())
+    except urllib.error.HTTPError as exc:
+        if exc.code in (401, 403):
+            # Un 401/403 NON e' un problema locale del monitor: e' la catena di
+            # monitoraggio rotta (token admin non valido) — tacere qui significa
+            # blackout (7 ore del 12/09/2026, viste solo dal dead-man switch).
+            return "down", (f"monitor non autenticato (HTTP {exc.code}): "
+                            "token admin non valido, il monitoraggio e' FERMO")
+        return "skip", f"health non interrogabile (HTTP {exc.code})"
     except Exception as exc:
         return "skip", f"health non interrogabile ({type(exc).__name__})"
 
@@ -121,7 +129,7 @@ def read_secret(namespace: str, name: str) -> str:
     """Legge una credenziale dal vault TPM. Stringa vuota se assente."""
     try:
         done = subprocess.run(
-            ["secret", "get", f"{namespace}.{name}"],
+            ["/home/mrxxx/.local/bin/secret", "get", f"{namespace}.{name}"],
             capture_output=True, text=True, timeout=20,
         )
         return done.stdout.strip() if done.returncode == 0 else ""

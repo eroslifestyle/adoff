@@ -6,7 +6,7 @@ set -u
 
 PROJECT_ROOT="/home/mrxxx/Dropbox/1 Programmazione/Progetti/ChromePlugin"
 SRC_DIR="$PROJECT_ROOT/sviluppo/build-firefox"
-SECRETS="$HOME/.secrets/adoff-stores.env"
+SECRETS="$(/home/mrxxx/.local/bin/secret file adoff-stores)"
 LOG="$PROJECT_ROOT/sviluppo/logs/amo-autoretry.log"
 LOCK="/tmp/amo-autoretry.lock"
 TARGET_VERSION="3.4.9"

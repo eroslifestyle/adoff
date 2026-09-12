@@ -34,4 +34,4 @@ Una volta che il rate limit si resetta (dopo mezzanotte UTC), verificare che:
 - admin.html: 127KB in sviluppo/license-system/ (già sync in KV)
 
 ## Token admin
-È in `~/.secrets/adoff-stores.env` come `ADMIN_TOKEN` (export ADMIN_TOKEN=...)
+È nel vault TPM namespace `adoff-stores` come `ADMIN_TOKEN` (`secret get adoff-stores.ADMIN_TOKEN`, oppure `source "$(secret file adoff-stores)"`)

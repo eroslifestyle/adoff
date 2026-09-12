@@ -7,7 +7,7 @@ Setup (vedi README-SETUP.md):
   1. Crea un service account nel progetto GCP AdOff + scarica la JSON key
   2. Abilita "Google Search Console API" nel progetto
   3. In Search Console aggiungi l'email del service account come utente (Full o Restricted)
-  4. Salva il path della JSON key in ~/.secrets/adoff-stores.env come ADOFF_GSC_SA_JSON
+  4. Salva il JSON key nel vault TPM: secret set adoff-stores.ADOFF_GSC_SA_JSON_B64 < <(base64 -w0 key.json)
 
 Uso:
   python3 gsc_query.py                      # ultimi 28 giorni, top query + top page
@@ -31,6 +31,31 @@ TOKEN_URI = "https://oauth2.googleapis.com/token"
 SCOPE = "https://www.googleapis.com/auth/webmasters.readonly"
 API = "https://searchconsole.googleapis.com/webmasters/v3/sites/{site}/searchAnalytics/query"
 SA_JSON_ENV = "ADOFF_GSC_SA_JSON"
+SA_JSON_B64_ENV = "ADOFF_GSC_SA_JSON_B64"
+SA_JSON_TMPFS = "/dev/shm/adoff-gsc-sa.json"
+
+
+def materialize_sa_json(b64):
+    """Scrive il JSON del service account in tmpfs (permane solo in RAM)."""
+    import base64
+    import atexit
+    path = SA_JSON_TMPFS
+    with open(path, "wb") as fh:
+        fh.write(base64.b64decode(b64))
+    os.chmod(path, 0o600)
+    atexit.register(shred_remove, path)
+    return path
+
+
+def shred_remove(path):
+    """Cancella il file tmpfs sovrascrivendolo (best effort)."""
+    try:
+        size = os.path.getsize(path)
+        with open(path, "wb") as fh:
+            fh.write(os.urandom(size))
+        os.remove(path)
+    except OSError:
+        pass
 OAUTH_REFRESH_ENV = "ADOFF_GSC_OAUTH_REFRESH"
 
 
@@ -39,13 +64,19 @@ def get_access_token():
     refresh = os.environ.get(OAUTH_REFRESH_ENV)
     if refresh:
         return _token_from_refresh(refresh)
+    # Service account: il vault ha il JSON in base64 (ADOFF_GSC_SA_JSON_B64);
+    # ADOFF_GSC_SA_JSON nel vault contiene un path stantio, non usarlo.
+    b64 = os.environ.get(SA_JSON_B64_ENV, "")
+    if b64:
+        sa_path = materialize_sa_json(b64)
+        return _token_from_sa(sa_path)
     sa_path = os.environ.get(SA_JSON_ENV)
     if sa_path and os.path.isfile(sa_path):
         return _token_from_sa(sa_path)
     sys.exit(
         "[ERRORE] Nessuna credenziale GSC in env.\n"
-        f"  Imposta {OAUTH_REFRESH_ENV} (consigliato) o {SA_JSON_ENV}.\n"
-        "  source ~/.secrets/adoff-stores.env"
+        f"  Imposta {OAUTH_REFRESH_ENV} (consigliato) — "
+        f"eval \"$(secret env adoff-stores)\" — oppure {SA_JSON_B64_ENV}."
     )
 
 

@@ -16,9 +16,9 @@ API_BASE="https://api.adoff.app"
 # Lo script scrive solo su stdout (mrxxx non può scrivere direttamente in /var/log).
 
 # Carica i segreti (ADMIN_TOKEN, ecc.). Graceful se assente.
-if [ -f "$HOME/.secrets/adoff-stores.env" ]; then
+if SECRETS_P="$(/home/mrxxx/.local/bin/secret file adoff-stores 2>/dev/null)"; then
   # shellcheck disable=SC1091
-  source "$HOME/.secrets/adoff-stores.env"
+  source "$SECRETS_P"
 fi
 if [ -z "${ADMIN_TOKEN:-}" ]; then
   echo "[$(date -Iseconds)] ERRORE: ADMIN_TOKEN non disponibile, esco."  exit 0

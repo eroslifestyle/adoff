@@ -19,9 +19,9 @@ set -euo pipefail
 PROJECT_ROOT="/home/mrxxx/adoff"
 API_BASE="https://api.adoff.app"
 
-if [ -f "$HOME/.secrets/adoff-stores.env" ]; then
+if SECRETS_P="$(/home/mrxxx/.local/bin/secret file adoff-stores 2>/dev/null)"; then
   # shellcheck disable=SC1091
-  source "$HOME/.secrets/adoff-stores.env"
+  source "$SECRETS_P"
 fi
 if [ -z "${ADMIN_TOKEN:-}" ]; then
   echo "[$(date -Iseconds)] ERRORE: ADMIN_TOKEN non disponibile, esco."

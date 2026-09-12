@@ -3,20 +3,23 @@
  * Reset admin account in KV
  * Legge ADMIN_TOKEN, calcola PBKDF2 hash, scrive admin:account in KV
  */
-import { readFileSync } from 'fs';
 import { execSync } from 'child_process';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 
-// Read ADMIN_TOKEN from secrets
-const secrets = readFileSync('/home/mrxxx/.secrets/adoff-stores.env', 'utf8');
-const tokenMatch = secrets.match(/ADMIN_TOKEN="([^"]+)"/);
-if (!tokenMatch) {
-  console.error('ADMIN_TOKEN not found in secrets');
+// Read ADMIN_TOKEN from TPM vault (namespace adoff-stores)
+let ADMIN_TOKEN;
+try {
+  ADMIN_TOKEN = execSync('secret get adoff-stores.ADMIN_TOKEN', { encoding: 'utf8' }).trim();
+} catch {
+  console.error('ADMIN_TOKEN non trovato nel vault (secret get adoff-stores.ADMIN_TOKEN)');
   process.exit(1);
 }
-const ADMIN_TOKEN = tokenMatch[1];
-console.log('ADMIN_TOKEN loaded:', ADMIN_TOKEN.substring(0, 8) + '...');
+if (!ADMIN_TOKEN) {
+  console.error('ADMIN_TOKEN vuoto nel vault');
+  process.exit(1);
+}
+console.log('ADMIN_TOKEN loaded from vault.');
 
 // PBKDF2 parameters (same as worker.js)
 const PBKDF2_ITERATIONS = 100000;

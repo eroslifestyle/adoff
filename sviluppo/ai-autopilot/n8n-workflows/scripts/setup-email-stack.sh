@@ -17,7 +17,7 @@ set -euo pipefail
 DOMAIN="adoff.app"
 DESTINATION="adoffsecurity@proton.me"
 ALIASES=("press" "support" "partners" "dev" "hello")
-N8N_ENCRYPTION_KEY="${N8N_ENCRYPTION_KEY:?set N8N_ENCRYPTION_KEY in ~/.secrets/adoff-stores.env}"
+N8N_ENCRYPTION_KEY="${N8N_ENCRYPTION_KEY:?set N8N_ENCRYPTION_KEY (es. secret set adoff-stores.N8N_ENCRYPTION_KEY, poi source "$(secret file adoff-stores)")}"
 
 cf_api() {
     local method="$1"; local path="$2"; local data="${3:-}"

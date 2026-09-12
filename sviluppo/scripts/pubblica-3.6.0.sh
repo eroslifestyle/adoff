@@ -22,9 +22,11 @@ log() { printf '\n\033[1m▸ %s\033[0m\n' "$*"; }
 die() { printf '\n\033[31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
 
 carica_segreti() {
-  [ -f ~/.secrets/adoff-stores.env ] || die "manca ~/.secrets/adoff-stores.env"
+  SECRETS_P="$(secret file adoff-stores)" || die "vault adoff-stores non disponibile"
   # shellcheck disable=SC1090
-  source ~/.secrets/adoff-stores.env
+  set -a
+  source "$SECRETS_P"
+  set +a
 }
 
 verifica() {
