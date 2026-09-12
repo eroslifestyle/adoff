@@ -13,6 +13,7 @@ Vector search uses nomic-embed (384-dim) to find semantically similar patterns.
 """
 
 import json
+import os
 import sqlite3
 import requests
 from typing import Dict, List, Any, Optional
@@ -281,7 +282,7 @@ def test_get_ideate_input():
     """Test RAG retrieval with sample data."""
     db_path = "/home/mrxxx/Dropbox/1 Programmazione/Progetti/ViralContentEngine/viral_engine.db"
     server_api_base = "http://127.0.0.1:4000"
-    server_api_key = "sk-bfdd4162e6e25133bc7f2b708d68b9b3ccbca46d8e51a9b8"
+    server_api_key = os.getenv("LLM_API_KEY")
 
     result = get_ideate_input(
         pillar="privacy-awareness",

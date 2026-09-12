@@ -287,7 +287,7 @@ I file condivisi (content.js, options.js, popup.js, license-client.js, i18n.js, 
 | `app/`, `app-firefox/` o `app-safari/` | 1. Sincronizzare file condivisi tra i 3 target 2. `node sviluppo/scripts/build.js` (build TUTTI E TRE — copia automaticamente i ZIP in site/) 3. `wrangler pages deploy site/` (aggiorna ZIP download Chrome + Firefox + Safari sul sito) 4. Upload Chrome Web Store 5. Upload Firefox AMO 6. Submit Mac App Store (Safari, da Mac con Xcode — vedi sotto) 7. Edge/Opera: usano ZIP Chrome **8. Post Telegram @adoffapp** con changelog + immagine brand |
 | Sia `app/` che `site/` | Combo dei due sopra |
 
-> **REGOLA POST-TELEGRAM (REGOLA ASSOLUTA):** Ad OGNI nuova versione pubblicata → post sul canale `@adoffapp` con changelog + immagine brand. Token: `magicalclaude_bot` (`8776154635:AAGzInaoVfpdVtJAuKmXx5eh5FRA-2L-1H0`), chat_id: `-1004293812042`. Messaggio SEMPRE in inglese. Immagine: genera card PIL 1200x628 o usa immagine brand. Mai chiedere conferma — post automatico dopo il deploy.
+> **REGOLA POST-TELEGRAM (REGOLA ASSOLUTA):** Ad OGNI nuova versione pubblicata → post sul canale `@adoffapp` con changelog + immagine brand. Token: vedi `~/.secrets/adoff-stores.env` (chiave TELEGRAM_BOT_TOKEN), chat_id: vedi stessa fonte (TELEGRAM_CHAT_ID). Messaggio SEMPRE in inglese. Immagine: genera card PIL 1200x628 o usa immagine brand. Mai chiedere conferma — post automatico dopo il deploy.
 
 ### Regole deploy:
 

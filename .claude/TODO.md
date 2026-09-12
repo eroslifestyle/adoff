@@ -33,12 +33,22 @@ release v1.0.0 eliminata, 3 branch remoti contaminati eliminati. Checkpoint:
 - [x] Verificato zero segreti nel working tree pubblico attuale
 
 **Aperto:**
-- [ ] Rotazione token Telegram bot (azione umana, @BotFather)
-- [ ] Rotazione chiavi Stripe live + webhook secret (azione umana, Dashboard)
-- [ ] Valutare rotazione CWS OAuth secret
-- [ ] Rimuovere token Telegram hardcoded da CLAUDE.md progetto dopo rotazione
+- [x] Audit completo gitleaks (working tree + history): trovati altri 6 segreti reali oltre a Telegram/Stripe (Google API key Gemini, HMAC webhook secret, n8n encryption key, admin token, chiave LLM sk-, password Redis) — tutti bonificati da file tracciati
+- [x] Intero progetto pubblicato su eroslifestyle/adoff come nuovo main (storia azzerata, snapshot sanificato, commit singolo) — decisione esplicita utente di rendere pubblico tutto, non solo l'open-core
+- [x] Admin token ruotato (unico segreto con rotazione sicura senza coordinamento remoto): nuovo secret su Worker `adoff-license-api` via wrangler + `~/.secrets/adoff-stores.env` aggiornato
+- [ ] **Rotazione da fare A MANO (bloccata da qui, serve accesso a leobox o dashboard terzi)**:
+  - Token Telegram bot `magicalclaude_bot` (@BotFather → Revoke) — consumato da worker + `sviluppo/anti-piracy/run-clone-monitor.sh`, aggiornare ENTRAMBI dopo la revoca
+  - Chiave Google Gemini — ruotare su Google Cloud Console, poi reimportare in n8n (leobox porta 5678, credenziale usata dai workflow `20-gemini-copywriter`/`21-gemini-email-ad-landing`)
+  - HMAC webhook secret — generare nuovo valore, aggiornare SIA il secret Worker SIA `/opt/n8n/.env` su leobox (richiede riavvio n8n), sistemi sincroni
+  - Password Redis — Docker `adoff-n8n-redis` su leobox, aggiornare `.env` compose + credenziale n8n + `docker compose up -d`
+  - Chiavi Stripe live/webhook (già solo test nel tree, ma da verificare se le live sono mai finite in chiaro altrove) — Dashboard Stripe → Roll key
+  - CWS OAuth secret — procedura già in CLAUDE.md progetto
+  - Secondo token Telegram (`sviluppo/archive/worker-telegram-deleted-20260528/`, solo in history, nessun consumatore attivo) — revoca via BotFather solo per igiene, nessun redeploy necessario
+- [ ] **NON ruotare N8N_ENCRYPTION_KEY** — decisione presa: romperebbe tutte le credenziali cifrate nel DB n8n su leobox, nessun beneficio reale (accessibile solo dalla rete interna, mai stato esposto pubblicamente in chiaro se non nella vecchia history git locale, ora mai più da pubblicare)
 
 **Do NOT:**
+- NON fare MAI `git push origin main` diretto da questo repo — main ha la storia reale con vecchi segreti nei commit passati; pubblicare = rigenerare uno snapshot orfano sanificato (vedi procedura sessione 2026-09-12) e pushare quello con --force
+- NON ruotare N8N_ENCRYPTION_KEY senza un piano di re-encryption delle credenziali n8n esistenti
 - NON considerare l'incidente chiuso finché Telegram/Stripe non sono ruotati
 - NON delegare git add/commit a un subagent
 - NON ripetere force-push su eroslifestyle/adoff senza necessità (main e production già puliti)

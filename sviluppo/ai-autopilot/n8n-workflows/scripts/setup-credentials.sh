@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-ENC_KEY="471c71315d63ab02bfe4a545d98b7438066f689033f76deaa2e68d6b5267ac67"
+ENC_KEY="${N8N_ENCRYPTION_KEY:?set N8N_ENCRYPTION_KEY in ~/.secrets/adoff-stores.env}"
 PG_CONTAINER="n8n-postgres"
 PG_USER="n8n"
 PG_DB="n8n"

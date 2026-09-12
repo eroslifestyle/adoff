@@ -11,7 +11,7 @@ Ambiente: Sandbox (test mode)
 ## API Keys
 
 - Publishable: `pk_test_51TNZi9GPf5LKScOfLdBaM9MkBJ1RnO0mdcFceqx9SNC71uJVQ0p1SM3tQGWY8ZzxmsM2P4Rk8fXPdDoysRcbr3bb00FCkwrB83`
-- Secret: `sk_test_51TNZi9GPf5LKScOfLNcGgWmGP0lUjJfhncI0aq0iwrZxGlZCYlXel4k4oWcz1BiPPOdOYdRAsMmLQppMpIgRT5ky00qa2ARcKo`
+- Secret: `<vedi ~/.secrets/adoff-stores.env>`
 
 ## Prodotti e Prezzi
 
@@ -39,7 +39,7 @@ Tutti i link reindirizzano a: `https://adoff.app/success?session_id={CHECKOUT_SE
 
 - ID: `we_1TNZr1GPf5LKScOfr9Gb3R2o`
 - URL: `https://api.adoff.app/stripe-webhook`
-- Secret: `whsec_Z6Bvn4yJTwFNtkhLlUOdIINYnIekNe5y`
+- Secret: `<vedi ~/.secrets/adoff-stores.env>`
 - Eventi: checkout.session.completed, customer.subscription.deleted, charge.refunded
 
 ## Note
