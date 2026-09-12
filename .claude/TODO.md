@@ -2,8 +2,7 @@
 
 ## Attivo
 
-- [ ] **CRITICO — ruotare segreti esposti**: token bot Telegram `magicalclaude_bot` (via @BotFather), chiavi Stripe live + webhook secret (Dashboard Stripe). Esposti pubblicamente su github.com/eroslifestyle/adoff (branch contaminati, ora eliminati) fino al 2026-09-12. Dettaglio: vault `progetti/AdOff/sessioni/adoff-repo-secrets-leak-fix-2026-09-12.md`.
-- [ ] Rimuovere il token Telegram hardcoded da questo CLAUDE.md (sezione "REGOLA POST-TELEGRAM") dopo la rotazione, sostituendolo con riferimento a `~/.secrets/adoff-stores.env`.
+- [ ] **CRITICO — rotazione manuale 7 credenziali esposte** (Telegram, Google Gemini, HMAC webhook, Redis, Stripe, CWS + secondo token Telegram morto): vedi checklist dettagliata in "Sessione 2026-09-12 (continuazione)" sotto. CLAUDE.md già bonificato (token Telegram sostituito con riferimento a `~/.secrets/adoff-stores.env`).
 - [ ] Verificare su Edge Partner Center quale delle 3 submission inviate in sessione 2026-09-12 è quella "in review" (l'ultima ha le note corrette, ma non verificato via dashboard)
 - [ ] Decidere se postare annuncio Telegram @adoffapp per 3.6.11 (Chrome+Firefox live, Edge in review, Safari bloccato — serve Mac/Xcode)
 - [ ] Correggere CLAUDE.md progetto: versione dichiarata 3.3.9 è stantia, quella reale è 3.6.11
