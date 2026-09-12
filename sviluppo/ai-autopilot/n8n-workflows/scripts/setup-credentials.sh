@@ -20,7 +20,7 @@ PG_HOST="n8n-postgres"
 PG_PORT="5432"
 PG_DB_NAME="n8n"
 PG_USER_CRED="n8n"
-PG_PASS="4UILvk1jH4KybyEg3hp9FQbQAj5L5G"
+PG_PASS="${N8N_PG_PASSWORD:?set N8N_PG_PASSWORD in ~/.secrets/adoff-stores.env}"
 
 PG_CRED_JSON=$(cat <<EOF
 {"host":"$PG_HOST","port":$PG_PORT,"database":"$PG_DB_NAME","user":"$PG_USER_CRED","password":"$PG_PASS","allowUnauthorizedCerts":false,"ssl":"disable"}
