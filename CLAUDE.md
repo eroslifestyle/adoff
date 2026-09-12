@@ -26,7 +26,7 @@ L'estensione opera su 4 livelli:
 
 ### File structure — Chrome (`app/`)
 
-- `manifest.json` — Manifest V3, AdOff v3.3.9
+- `manifest.json` — Manifest V3, AdOff v3.6.11
 - `src/stealth.js` — MAIN world: IMA SDK stub universale + ad skipper piattaforme video + anti-detection (gratis per tutti)
 - `src/content.js` — ISOLATED: whitelist check, scan DOM, hide ads, contatore ads cosmetic
 - `src/ads-hide.css` — CSS hiding universale
