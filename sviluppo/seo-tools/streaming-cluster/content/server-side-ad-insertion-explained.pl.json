@@ -1,0 +1,96 @@
+{
+  "slug": "server-side-ad-insertion-explained",
+  "lang": "pl",
+  "title": "Wstrzykiwanie reklam po stronie serwera: dlaczego blokery… | AdOff",
+  "description": "SSAI łączy reklamy w strumień wideo, więc nie ma oddzielnego żądania do zablokowania. Jak działa manipulacja manifestem i co to oznacza dla blokerów.",
+  "h1": "Wstawianie reklam po stronie serwera – wyjaśnienie: Dlaczego blokery reklam w sieci nie widzą tych reklam",
+  "answer": "Nie — wstawianie reklam po stronie serwera (SSAI) nie może zostać zablokowane przez blokujące reklamy oparte na żądaniach, ponieważ reklama jest wpleciana w ten sam strumień wideo co treść jeszcze przed opuszczeniem serwera. Twoja przeglądarka pobiera jeden ciągły manifest i jeden ciągły strumień; nie ma oddzielnego żądania reklamy, które można by przechwycić.",
+  "sections": [
+    {
+      "h2": "Co właściwie jest wstawaniem reklam po stronie serwera",
+      "body": [
+        "<p>Wstawianie reklam po stronie serwera (SSAI), znane również jako łączenie reklam, to technika, w której dostawca wideo łączy treść z reklamami w jedną strumieniową transmisję <strong>na serwerze</strong>, zanim nastąpi jej przesłanie. Urządzenie widza otrzymuje jeden ciągły strumień, który już zawiera reklamy — w przeciwieństwie do wstawiania reklam po stronie klienta (CSAI), w którym odtwarzacz najpierw ładuje treść, a następnie dokonuje osobnych żądań do serwera reklam dla każdej przerwy.</p>",
+        "<p>SSAI będzie opisane w dokumentacji technicznej jako „scalone manifesty” lub „dostawa jednego manifestu”. Jest to dominująca metoda dla transmisji na żywo oraz dla warstw subskrypcyjnych usług wideo z reklamami, ponieważ jest trudniejsza do obejścia i działa identycznie na każdym urządzeniu.</p>"
+      ]
+    },
+    {
+      "h2": "Jak działa to w manifestach HLS i DASH",
+      "body": [
+        "<p>Nowoczesne przesyłanie wideo wykorzystuje adaptacyjne formaty strumieniowania — HLS (playlisty <code>.m3u8</code>) oraz DASH (manifesty <code>.mpd</code>). Strumień jest podzielony na krótkie segmenty (zazwyczaj po kilka sekund każdy), a manifest zawiera listę tych segmentów w kolejności odtwarzania. Odtwarzacz po stronie klienta kieruje się tą listą.</p>",
+        "<p>W przypadku SSAI segmenty reklam są wstawiane bezpośrednio do listy segmentów. Manifest przekazywany do odtwarzacza jest przepisywany tak, że segment reklamy pojawia się dokładnie tam, gdzie znajdowałby się segment treści. Niektóre wdrożenia wykorzystują znaczniki nieciągłości (<code>#EXT-X-DISCONTINUITY</code> w HLS) do oznaczania zmian kodowania, jednak playlista jest tym, co odtwarzacz poprawnie odtwarza. Z punktu widzenia odtwarzacza reklama <em>jest</em> częścią programu.</p>"
+      ]
+    },
+    {
+      "h2": "Dlaczego blokady reklam oparte na żądaniach nie mają nic do przechwycenia",
+      "body": [
+        "<p>Blokator reklam oparty na rozszerzeniu działa na warstwie sieciowej: dopasowuje żądania do znanych domen reklamowych i blokuje je lub przepisuje. Ten model zakłada, że reklama pojawia się jako osobiste żądanie, z osobnego domeny, którą można odróżnić od treści. SSAI całkowicie usuwa to założenie.</p>",
+        "<p>Z reklamami „stitched” segmenty zawierające reklamę pochodzą z tej samej sieci dostarczania treści, często w ramach tej samej domeny i w tym samym manifeście co program. Zablokowanie żądania oznaczałoby zablokowanie samego filmu. Bloker reklam, który mimo to spróbuje zablokować żądanie, zazwyczaj powoduje przerwanie odtwarzania lub, w przypadku transmisji na żywo, generuje zamrożone ramki zastępcze, o których użytkownicy zgłaszają. Jest to ograniczenie strukturalne, a nie tymczasowa luka: każdy narzędzie działające poprzez filtrowanie żądań sieciowych nie potrafi odróżnić reklamy „stitched” od otaczającego ją treści.</p>"
+      ]
+    },
+    {
+      "h2": "Wstawanie po stronie klienta: model, z którym blokady reklam mogą sobie poradzić",
+      "body": [
+        "<p>Dla porównania: w przypadku wstawiania reklam po stronie klienta, odtwarzacz wideo wywołuje SDK reklamowe podczas odtwarzania, SDK pobiera pliki kreatywne z domen reklamowych, a odtwarzacz odtwarza je w wyznaczonym miejscu. Te żądania są widoczne, oddzielne i blokowalne. Neutralizacja SDK reklamowego — czym zajmuje się AdOff w przypadku SDK reklam wideo stosowanego w całej sieci — powoduje, że odtwarzacz natychmiast powraca do treści.</p>",
+        "<p>Dlatego blokery reklam nadal działają na dużych fragmentach sieci, w tym na wielu stronach, które osadzają odtwarzacze wideo z wywołaniami reklam po stronie klienta, oraz dlaczego te same blokery nie działają na platformach transmisji na żywo i usługach subskrypcyjnych, które łączą reklamy po stronie serwera.</p>"
+      ]
+    },
+    {
+      "h2": "Co byłoby potrzebne, aby usunąć wklejone reklamy?",
+      "body": [
+        "<p>Usunięcie wklejonej reklamy wymaga zrozumienia strumienia, a nie sieci: wykrywania znaczników nieciągłości oraz wzorców granic segmentów, przepisywania manifestu w celu pominięcia segmentów reklamowych oraz liczenia na to, że dostawca nie zmieni układu. Jest to rozwiązanie niestabilne z natury — każda zmiana po stronie dostawcy powoduje awarię tego obejścia, a w przypadku transmisji na żywo przepisany odtwarzacz często odstaje w tyle lub wyświetla pogorszoną wersję zastępczą.</p>",
+        "<p>Inna, sprawdzona droga wcale nie jest techniczna: dostawcy wstawiają reklamy, ponieważ subskrypcja jest wspierana przez reklamy, więc wybór planu bez reklam usuwa je z definicji. Wszystko inne to wyścig zbrojeń, który głównie pogarsza doświadczenie oglądania.</p>"
+      ]
+    },
+    {
+      "h2": "Gdzie znajduje się AdOff",
+      "body": [
+        "<p>AdOff to darmowe rozszerzenie przeglądarkowe (Chrome, Firefox, Safari, Edge, Opera), które blokuje reklamy sieciowe za pomocą statycznych reguł filtrowania, ukrywa elementy reklamowe na stronie oraz neutralizuje SDK reklam wideo po stronie klienta, zastępując je stubem, który natychmiast wznowia odtwarzanie treści. Działa wyłącznie w przeglądarkowych odtwarzaczach aplikacji, gdzie reklamy są wstawiane po stronie klienta; nie próbuje usuwać reklam z strumieni połączonych po stronie serwera oraz celowo nie ingeruje w odtwarzacze wideo subskrypcyjne, aby uniknąć ich uszkodzenia.</p>",
+        "<p>Ta szczerość jest celem tej strony: wiedza o tym, który model strony jest używany, mówi Ci, czy rozszerzenie może pomóc, zanim je zainstalujesz.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Jaka jest różnica między SSAI a CSAI?",
+      "a": "W technologii wstawiania reklam po stronie klienta (CSAI) odtwarzacz żąda reklam oddzielnie w czasie odtwarzania, więc te żądania są widoczne dla blokerów reklam. W technologii wstawiania reklam po stronie serwera (SSAI) reklamy są scalane z strumieniem wideo na serwerze przed jego dostarczeniem, więc nie istnieje osobne żądanie reklamy, które można by zablokować."
+    },
+    {
+      "q": "Czy dowolne rozszerzenie przeglądarki może blokować reklamy SSAI?",
+      "a": "Żaden rozszerzenie działające poprzez filtrowanie żądań sieciowych nie może usunąć scalonej reklamy bez uszkodzenia strumienia, ponieważ reklama i treść wideo są przesyłane razem w tym samym manifeście i tych samych segmentach. Narzędzia próbujące tego zazwyczaj powodują zamrożenie klatek, spadek jakości lub błędy odtwarzania."
+    },
+    {
+      "q": "Dlaczego transmisje na żywo używają SSAI zamiast zwykłych reklam?",
+      "a": "Transmisja na żywo wymaga, aby przerwa reklamowa była zsynchronizowana dla każdego widza oraz aby odtwarzanie przebiegało bez przerywania — co gwarantuje scalanie po stronie serwera. Rozwiązanie to działa identycznie na każdym urządzeniu, w tym na inteligentnych telewizorach, gdzie rozszerzenia przeglądarkowe nie istnieją."
+    },
+    {
+      "q": "Czy SSAI to to samo co reklama, której nie można pominąć?",
+      "a": "Nie do końca. Pomijanie reklam jest decyzją podjętą przez odtwarzacz i kontrolowaną przez metadane strumienia. W przypadku SSAI reklamy stanowią część strumienia, więc ani widz, ani rozszerzenie przeglądarkowe nie mają możliwości ich pominięcia lub usunięcia."
+    },
+    {
+      "q": "Czy AdOff działa na stronach wykorzystujących SSAI?",
+      "a": "W przypadku tych konkretnych strumieni — nie; AdOff nie twierdzi inaczej. W przypadku innych form reklam na tych samych stronach (np. reklamy displayowe) oraz w całej reszcie Twojej aktywności w sieci (reklamy displayowe, śledzenie, SDK reklam wideo po stronie klienta), AdOff blokuje i ukrywa reklamy zgodnie ze swoimi standardowymi funkcjami."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Blokowanie reklam w strumieniowaniu: co działa, a czego nie da się osiągnąć"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Jak neutralizowane są SDK do reklam wideo po stronie klienta"
+    },
+    {
+      "href": "/twitch-ad-blocker",
+      "text": "Reklamy na Twitchu: dlaczego rozszerzenia nie działają na transmisjach na żywo"
+    }
+  ],
+  "cta": {
+    "h3": "Blokuj reklamy, które da się zablokować",
+    "p": "AdOff nie może usuwać reklam „stitched” — nic uczciwe nie może. Jednak reklamy wyświetlane, śledzenie oraz reklamy wideo po stronie klienta, które pojawiają się podczas codziennego przeglądania, to inna sprawa — i AdOff radzi sobie z nimi za darmo, bez konieczności zakładania konta.",
+    "btn": "Zainstaluj AdOff — to darmowe"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

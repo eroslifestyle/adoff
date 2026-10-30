@@ -1,0 +1,632 @@
+{
+  "name": "AdOff 47 - Content Seed Refresher",
+  "description": "Daily seed refresh: diagnose tired seeds, discover source ideas (news, competitors, trending), generate fresh content seeds via Gemini Pro, filter brand/size violations, insert new seeds, mark sources used, report to Telegram. Solves Gemini audit caveat: periodic injection of new strategic concepts.",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1440
+            },
+            {
+              "field": "hours",
+              "hoursInterval": 0
+            },
+            {
+              "field": "seconds",
+              "secondsInterval": 1800
+            }
+          ],
+          "timezone": "UTC",
+          "cron": "30 3 * * *"
+        }
+      },
+      "id": "schedule-daily",
+      "name": "Schedule 03:30 UTC daily",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "path": "seed-refresh-now",
+        "httpMethod": "POST",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "webhook-manual",
+      "name": "Webhook POST /seed-refresh-now",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        450
+      ],
+      "webhookId": "f189eecb-c72e-4171-88c1-e689ba3d7eae"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as active_count FROM adoff_autopilot.content_seeds WHERE active = true;"
+      },
+      "id": "count-active-seeds",
+      "name": "Phase A: Count active seeds",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, seed, used_count, perf_score FROM adoff_autopilot.content_seeds WHERE active = true AND (used_count > 5 OR perf_score < 0.3) LIMIT 50;"
+      },
+      "id": "find-tired-seeds",
+      "name": "Phase A: Find tired seeds",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        450
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const active_result = $('Phase A: Count active seeds').item.json;\nconst active_count = active_result[0]?.active_count || 0;\nconst mode = active_count < 30 ? 'aggressive_growth' : 'maintenance';\nconst target_new_seeds = mode === 'aggressive_growth' ? 15 : 8;\n\nreturn [{\n  json: {\n    active_count: active_count,\n    mode: mode,\n    target_new_seeds: target_new_seeds,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "diagnose-phase",
+      "name": "Phase A: Diagnose mode",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        375
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.content_seeds SET active = false WHERE active = true AND (used_count > 5 OR perf_score < 0.3);"
+      },
+      "id": "deactivate-tired",
+      "name": "Phase A: Deactivate tired",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        900,
+        450
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT title, content FROM adoff_autopilot.news_events WHERE created_at > NOW() - INTERVAL '7 days' AND used = false ORDER BY created_at DESC LIMIT 20;"
+      },
+      "id": "discover-news",
+      "name": "Phase B: Fetch recent news",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT activity_text, happened_at FROM adoff_autopilot.competitor_activity WHERE created_at > NOW() - INTERVAL '14 days' ORDER BY created_at DESC LIMIT 20;"
+      },
+      "id": "discover-competitors",
+      "name": "Phase B: Fetch competitor activity",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        680,
+        600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT topic_tag, AVG(perf_score) as avg_score FROM adoff_autopilot.content_seeds WHERE active = true AND perf_score > 0 GROUP BY topic_tag ORDER BY avg_score DESC LIMIT 10;"
+      },
+      "id": "discover-top-topics",
+      "name": "Phase B: Get top topics",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        900,
+        600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT value FROM adoff_autopilot.marketing_config WHERE key = 'top_hashtags' LIMIT 1;"
+      },
+      "id": "discover-hashtags",
+      "name": "Phase B: Get trending hashtags",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1120,
+        600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aggregate Phase B discovery sources\nconst news_items = $('Phase B: Fetch recent news').item?.json || [];\nconst comp_items = $('Phase B: Fetch competitor activity').item?.json || [];\nconst topics_items = $('Phase B: Get top topics').item?.json || [];\nconst hashtags_result = $('Phase B: Get trending hashtags').item?.json || [];\n\nconst news_titles = news_items.map(n => n.title).join('; ') || 'none';\nconst comp_activities = comp_items.map(c => c.activity_text).slice(0, 5).join('; ') || 'none';\nconst top_topics = topics_items.map(t => t.topic_tag).join(', ') || 'security, privacy, browsers';\nconst hashtags_json = hashtags_result[0]?.value || '{}';\nlet hashtags_str = '';\ntry {\n  const parsed = typeof hashtags_json === 'string' ? JSON.parse(hashtags_json) : hashtags_json;\n  hashtags_str = Array.isArray(parsed) ? parsed.join(', ') : Object.keys(parsed).join(', ');\n} catch (e) {\n  hashtags_str = 'privacy, adblock, browser, security';\n}\n\nreturn [{\n  json: {\n    news_titles: news_titles,\n    competitor_activities: comp_activities,\n    top_topics: top_topics,\n    hashtags: hashtags_str,\n    sources_count: {\n      news: news_items.length,\n      competitors: comp_items.length,\n      topics: topics_items.length\n    }\n  }\n}];"
+      },
+      "id": "aggregate-sources",
+      "name": "Phase B: Aggregate sources",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build Gemini Pro prompt with strict brand/size guardrails\nconst sources = $json;\nconst target_seeds = $('Phase A: Diagnose mode').item.json.target_new_seeds || 15;\nconst hard_cap = Math.min(target_seeds, 20);\n\nconst prompt = `You are AdOff content strategist (browser ad-blocker extension). Generate ${hard_cap} BRAND-NEW content seeds based on:\n\n**Top performing topics (extend these angles):**\n${sources.top_topics}\n\n**Recent news in ad/privacy/browser space:**\n${sources.news_titles}\n\n**Competitor moves (no direct brand naming, learn from tactics):**\n${sources.competitor_activities}\n\n**Trending hashtags (inspiration only):**\n${sources.hashtags}\n\n**HARD CONSTRAINTS (VIOLATION = rejection):**\n- NEVER mention YouTube, Google, Facebook, Instagram, Amazon, TikTok, Twitch, Reddit, Twitter/X by name. Use generic terms: 'piattaforme video', 'motori ricerca', 'social media', 'e-commerce', etc.\n- NEVER mention '149 KB' or any size '149', '138', '150' variants\n- Never use hardcoded brand names in seeds\n- Voice: energica, brillante, diretta, anti-establishment\n- All in Italian language\n\n**Mix required:**\n- 30% educational (how-tos, features, technical)\n- 30% emotional (frustration with ads, data privacy concerns)\n- 20% comparative (without brand names: 'unlike competitors...')\n- 20% tactical (quick tips, workarounds)\n\n**Output format (JSON only, no markdown):**\n{\"seeds\": [{\"seed\": \"string 5-15 parole\", \"angle\": \"educational|emotional|comparative|tactical\", \"topic_tag\": \"max 20 chars\", \"estimated_engagement_score\": 0-100, \"why_now\": \"1-2 sentence justification\"}]}`;\n\nreturn [{\n  json: {\n    model: 'gemini-2.0-flash-exp',\n    prompt: prompt,\n    temperature: 0.7,\n    max_tokens: 2000,\n    hard_cap: hard_cap\n  }\n}];"
+      },
+      "id": "build-gemini-prompt",
+      "name": "Phase C: Build Gemini prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        375
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={{ $env.GEMINI_API_KEY }}",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{{\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": $json.prompt\n    }]\n  }],\n  \"generationConfig\": {\n    \"temperature\": $json.temperature,\n    \"maxOutputTokens\": $json.max_tokens\n  }\n}}}",
+        "options": {
+          "timeout": 45000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "call-gemini",
+      "name": "Phase C: Call Gemini Pro",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1780,
+        375
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract text from Gemini response\nlet text_response = '';\ntry {\n  const candidates = $json.candidates || [];\n  if (candidates.length > 0) {\n    const first_candidate = candidates[0];\n    const content = first_candidate.content || {};\n    const parts = content.parts || [];\n    if (parts.length > 0) {\n      text_response = parts[0].text || '';\n    }\n  }\n} catch (e) {\n  text_response = '';\n}\n\nlet parsed_seeds = [];\nif (text_response) {\n  try {\n    const json_match = text_response.match(/\\{[\\s\\S]*\\}/);\n    if (json_match) {\n      const obj = JSON.parse(json_match[0]);\n      parsed_seeds = obj.seeds || [];\n    }\n  } catch (e) {\n    parsed_seeds = [];\n  }\n}\n\nreturn [{\n  json: {\n    raw_response: text_response,\n    parsed_seeds_count: parsed_seeds.length,\n    seeds: parsed_seeds\n  }\n}];"
+      },
+      "id": "parse-gemini-response",
+      "name": "Phase C: Parse response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        375
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Phase D: Brand guard + dedup filter\nconst brand_pattern = /youtube|google|facebook|instagram|tiktok|amazon|twitch|reddit|twitter|x\\.com|linkedin/gi;\nconst size_pattern = /149\\s?kb|138\\s?kb|150\\s?kb|\\b149\\b|\\b138\\b|\\b150\\b/gi;\nconst seeds = $json.seeds || [];\n\nconst filtered = [];\nconst violations = [];\n\nfor (const seed_obj of seeds) {\n  const seed_text = (seed_obj.seed || '').toLowerCase();\n  const topic = (seed_obj.topic_tag || '').toLowerCase();\n  \n  let has_brand_violation = brand_pattern.test(seed_text) || brand_pattern.test(topic);\n  let has_size_violation = size_pattern.test(seed_text) || size_pattern.test(topic);\n  \n  if (has_brand_violation || has_size_violation) {\n    violations.push({\n      seed: seed_obj.seed,\n      reason: has_brand_violation ? 'brand_name_found' : (has_size_violation ? 'size_leak_found' : 'unknown'),\n      seed_text: seed_text\n    });\n  } else {\n    filtered.push(seed_obj);\n  }\n}\n\n// Dedup by lowercase + stopword removal simple comparison\nconst deduplicated = [];\nconst seen_hashes = new Set();\n\nfor (const s of filtered) {\n  const normalized = s.seed\n    .toLowerCase()\n    .replace(/[^a-z0-9\\s]/g, '')\n    .split(/\\s+/)\n    .filter(w => !['il', 'lo', 'la', 'di', 'da', 'a', 'e', 'o', 'un', 'una', 'come', 'per', 'che'].includes(w))\n    .sort()\n    .join('|');\n  \n  if (!seen_hashes.has(normalized)) {\n    seen_hashes.add(normalized);\n    deduplicated.push(s);\n  }\n}\n\nreturn [{\n  json: {\n    total_generated: seeds.length,\n    after_brand_guard: filtered.length,\n    after_dedup: deduplicated.length,\n    violations: violations,\n    final_seeds: deduplicated.slice(0, 20) // hard cap 20\n  }\n}];"
+      },
+      "id": "filter-brand-dedup",
+      "name": "Phase D: Filter & dedup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2220,
+        375
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Phase D: Insert new seeds into DB\nconst final_seeds = $json.final_seeds || [];\nconst inserts = [];\n\nfor (const s of final_seeds) {\n  inserts.push({\n    seed: s.seed,\n    angle: s.angle || 'tactical',\n    topic_tag: (s.topic_tag || 'other').substring(0, 20),\n    used_count: 0,\n    perf_score: 0.5, // neutral start\n    active: true,\n    created_at: new Date().toISOString(),\n    last_used: null,\n    estimated_score: s.estimated_engagement_score || 50\n  });\n}\n\nreturn inserts.map(insert => ({ json: insert }));"
+      },
+      "id": "prepare-inserts",
+      "name": "Phase D: Prepare inserts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        375
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "content_seeds",
+        "columns": "seed,angle,topic_tag,used_count,perf_score,active,created_at,last_used",
+        "values": "={{ $json.seed }},{{ $json.angle }},{{ $json.topic_tag }},{{ $json.used_count }},{{ $json.perf_score }},{{ $json.active }},{{ $json.created_at }},{{ $json.last_used }}"
+      },
+      "id": "insert-seeds",
+      "name": "Phase D: Insert into DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2660,
+        375
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.news_events SET used = true WHERE created_at > NOW() - INTERVAL '7 days' AND used = false;"
+      },
+      "id": "mark-news-used",
+      "name": "Phase E: Mark news used",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2880,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Phase F: Build Telegram report\nconst active_count = $('Phase A: Diagnose mode').item.json.active_count;\nconst tired_seeds = $('Phase A: Find tired seeds').item.json || [];\nconst filter_result = $('Phase D: Filter & dedup').item.json;\nconst final_count = filter_result.final_seeds?.length || 0;\n\nconst report_date = new Date().toISOString().split('T')[0];\nconst deactivated_count = tired_seeds.length;\n\n// Count angles in final seeds\nconst final_seeds = filter_result.final_seeds || [];\nconst angle_counts = {};\nfor (const s of final_seeds) {\n  const angle = s.angle || 'other';\n  angle_counts[angle] = (angle_counts[angle] || 0) + 1;\n}\n\nconst angle_summary = Object.entries(angle_counts)\n  .map(([a, c]) => `${c} ${a}`)\n  .join(', ');\n\nconst top_seed = final_seeds[0]?.seed || 'none';\n\nconst message = `Seed Refresher ${report_date}:\\n${active_count} seed attivi, ${deactivated_count} disattivati (tired/low-perf), ${final_count} nuovi generati (${angle_summary || 'mixed'}).\\nTop new: '${top_seed}'`;\n\nreturn [{\n  json: {\n    report: message,\n    stats: {\n      active_before: active_count,\n      deactivated: deactivated_count,\n      new_generated: final_count,\n      angles: angle_counts\n    }\n  }\n}];"
+      },
+      "id": "build-telegram-report",
+      "name": "Phase F: Build Telegram report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  \"chat_id\": {{ $env.TELEGRAM_CHAT_ID }},\n  \"text\": $json.report\n}}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "send-telegram",
+      "name": "Phase F: Send Telegram report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3100,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Final summary\nconst diagnose = $('Phase A: Diagnose mode').item.json;\nconst filter = $('Phase D: Filter & dedup').item.json;\nconst report = $('Phase F: Build Telegram report').item.json;\n\nreturn [{\n  json: {\n    status: 'success',\n    timestamp: new Date().toISOString(),\n    workflow_id: 'w47-content-seed-refresher',\n    phase_a: {\n      active_count: diagnose.active_count,\n      mode: diagnose.mode,\n      tired_deactivated: filter.total_generated > 0 ? 'processed' : 0\n    },\n    phase_b: {\n      sources_discovered: diagnose.sources_count || {}\n    },\n    phase_c: {\n      gemini_generated: filter.total_generated\n    },\n    phase_d: {\n      after_brand_guard: filter.after_brand_guard,\n      after_dedup: filter.after_dedup,\n      inserted: filter.final_seeds?.length || 0,\n      violations: filter.violations?.length || 0\n    },\n    phase_e: {\n      news_marked_used: 'done'\n    },\n    phase_f: {\n      telegram_sent: true,\n      report_summary: report.stats\n    }\n  }\n}];"
+      },
+      "id": "final-summary",
+      "name": "Final summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3320,
+        375
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule 03:30 UTC daily": {
+      "main": [
+        [
+          {
+            "node": "Phase A: Count active seeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook POST /seed-refresh-now": {
+      "main": [
+        [
+          {
+            "node": "Phase A: Count active seeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase A: Count active seeds": {
+      "main": [
+        [
+          {
+            "node": "Phase A: Diagnose mode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase A: Find tired seeds": {
+      "main": [
+        [
+          {
+            "node": "Phase A: Deactivate tired",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase A: Diagnose mode": {
+      "main": [
+        [
+          {
+            "node": "Phase B: Fetch recent news",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Phase A: Find tired seeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase A: Deactivate tired": {
+      "main": [
+        [
+          {
+            "node": "Phase B: Fetch competitor activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase B: Fetch recent news": {
+      "main": [
+        [
+          {
+            "node": "Phase B: Get top topics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase B: Fetch competitor activity": {
+      "main": [
+        [
+          {
+            "node": "Phase B: Get trending hashtags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase B: Get top topics": {
+      "main": [
+        [
+          {
+            "node": "Phase B: Aggregate sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase B: Get trending hashtags": {
+      "main": [
+        [
+          {
+            "node": "Phase B: Aggregate sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase B: Aggregate sources": {
+      "main": [
+        [
+          {
+            "node": "Phase C: Build Gemini prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase C: Build Gemini prompt": {
+      "main": [
+        [
+          {
+            "node": "Phase C: Call Gemini Pro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase C: Call Gemini Pro": {
+      "main": [
+        [
+          {
+            "node": "Phase C: Parse response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase C: Parse response": {
+      "main": [
+        [
+          {
+            "node": "Phase D: Filter & dedup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase D: Filter & dedup": {
+      "main": [
+        [
+          {
+            "node": "Phase D: Prepare inserts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase D: Prepare inserts": {
+      "main": [
+        [
+          {
+            "node": "Phase D: Insert into DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase D: Insert into DB": {
+      "main": [
+        [
+          {
+            "node": "Phase E: Mark news used",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Phase F: Build Telegram report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase E: Mark news used": {
+      "main": [
+        [
+          {
+            "node": "Phase F: Build Telegram report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase F: Build Telegram report": {
+      "main": [
+        [
+          {
+            "node": "Phase F: Send Telegram report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase F: Send Telegram report": {
+      "main": [
+        [
+          {
+            "node": "Final summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true
+  },
+  "active": false,
+  "id": "w47-content-seed-refresher"
+}

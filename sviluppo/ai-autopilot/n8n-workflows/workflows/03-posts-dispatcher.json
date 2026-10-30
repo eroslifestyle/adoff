@@ -1,0 +1,186 @@
+{
+  "name": "AdOff 03 - Posts Dispatcher (executor + circuit breaker)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {"interval": [{"field": "minutes", "minutesInterval": 15}]}
+      },
+      "id": "trig",
+      "name": "Every 15 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH next_post AS (SELECT pq.* FROM adoff_autopilot.posts_queue pq LEFT JOIN adoff_autopilot.accounts a ON pq.account_id = a.id WHERE pq.status='queued' AND pq.scheduled_at <= NOW() AND (pq.quality_score IS NULL OR pq.quality_score >= 6) AND (a.id IS NULL OR (a.action_count_24h < 5 AND (a.cooldown_until IS NULL OR a.cooldown_until <= NOW()))) ORDER BY pq.scheduled_at LIMIT 3) UPDATE adoff_autopilot.posts_queue SET status='posting' FROM next_post WHERE adoff_autopilot.posts_queue.id = next_post.id RETURNING adoff_autopilot.posts_queue.*;",
+        "options": {}
+      },
+      "id": "pick",
+      "name": "Pick next 3 posts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [460, 400],
+      "credentials": {"postgres": {"id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres"}}
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"version": 2},
+          "conditions": [
+            {"leftValue": "={{ $json.platform }}", "rightValue": "twitter", "operator": {"type": "string", "operation": "equals"}}
+          ]
+        }
+      },
+      "id": "sw-twitter",
+      "name": "Is Twitter?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [680, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"version": 2},
+          "conditions": [
+            {"leftValue": "={{ $json.platform }}", "rightValue": "mastodon", "operator": {"type": "string", "operation": "equals"}}
+          ]
+        }
+      },
+      "id": "sw-mastodon",
+      "name": "Is Mastodon?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"version": 2},
+          "conditions": [
+            {"leftValue": "={{ $json.platform }}", "rightValue": "reddit", "operator": {"type": "string", "operation": "equals"}}
+          ]
+        }
+      },
+      "id": "sw-reddit",
+      "name": "Is Reddit?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [680, 600]
+    },
+    {
+      "parameters": {
+        "url": "https://api.twitter.com/2/tweets",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"text\": {{ JSON.stringify($json.body.slice(0,280)) }} }",
+        "options": {"timeout": 20000, "response": {"response": {"neverError": true}}}
+      },
+      "id": "post-tw",
+      "name": "POST Twitter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://fosstodon.org/api/v1/statuses",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"status\": {{ JSON.stringify($json.body.slice(0,500)) }}, \"visibility\": \"public\" }",
+        "options": {"timeout": 20000, "response": {"response": {"neverError": true}}}
+      },
+      "id": "post-mast",
+      "name": "POST Mastodon",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "url": "=https://oauth.reddit.com/api/submit",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyContentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {"name": "api_type", "value": "json"},
+            {"name": "kind", "value": "self"},
+            {"name": "sr", "value": "={{ ($json.target_url || '').split('/r/')[1]?.split('/')[0] || 'test' }}"},
+            {"name": "title", "value": "={{ ($json.body || '').split('\\n')[0].slice(0,300) }}"},
+            {"name": "text", "value": "={{ $json.body }}"}
+          ]
+        },
+        "options": {"timeout": 30000, "response": {"response": {"neverError": true}}},
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "User-Agent", "value": "AdOffBot/1.0"}]}
+      },
+      "id": "post-reddit",
+      "name": "POST Reddit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 600]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Determine success + extract post URL from response\nconst orig = $('Pick next 3 posts').itemMatching(0)?.json || {};\nconst resp = $input.first().json;\nlet posted_url = '';\nlet success = false;\nlet error = '';\ntry {\n  if (resp.data?.id) { posted_url = 'https://twitter.com/i/status/' + resp.data.id; success = true; }\n  else if (resp.id && resp.url) { posted_url = resp.url; success = true; }\n  else if (resp.json?.data?.url) { posted_url = resp.json.data.url; success = true; }\n  else if (resp.errors) { error = JSON.stringify(resp.errors).slice(0,300); }\n  else if (resp.error) { error = String(resp.error).slice(0,300); }\n  else { error = 'unknown response'; }\n} catch(e) { error = e.message; }\nreturn [{ json: { id: orig.id, success, posted_url, error, platform: orig.platform, account_id: orig.account_id }}];"
+      },
+      "id": "result",
+      "name": "Parse result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.posts_queue SET status = CASE WHEN $2::boolean THEN 'posted' ELSE 'failed' END, posted_at = CASE WHEN $2::boolean THEN NOW() ELSE NULL END, response_url = $3, error = $4, retry_count = retry_count + CASE WHEN $2::boolean THEN 0 ELSE 1 END WHERE id = $1::bigint RETURNING id, status;",
+        "options": {"queryReplacement": "={{ $json.id }},{{ $json.success }},{{ $json.posted_url }},{{ $json.error }}"}
+      },
+      "id": "update",
+      "name": "Update queue status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1340, 400],
+      "credentials": {"postgres": {"id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres"}}
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.accounts SET action_count_24h = action_count_24h + 1, last_action_at = NOW(), cooldown_until = CASE WHEN action_count_24h + 1 >= 5 THEN NOW() + interval '12 hours' ELSE NULL END WHERE id = $1::bigint AND $2::boolean;",
+        "options": {"queryReplacement": "={{ $json.account_id || 0 }},{{ $json.success }}"}
+      },
+      "id": "rate",
+      "name": "Rate limit account",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1560, 400],
+      "credentials": {"postgres": {"id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres"}}
+    }
+  ],
+  "connections": {
+    "Every 15 min": {"main": [[{"node": "Pick next 3 posts", "type": "main", "index": 0}]]},
+    "Pick next 3 posts": {"main": [[
+      {"node": "Is Twitter?", "type": "main", "index": 0},
+      {"node": "Is Mastodon?", "type": "main", "index": 0},
+      {"node": "Is Reddit?", "type": "main", "index": 0}
+    ]]},
+    "Is Twitter?": {"main": [[{"node": "POST Twitter", "type": "main", "index": 0}], []]},
+    "Is Mastodon?": {"main": [[{"node": "POST Mastodon", "type": "main", "index": 0}], []]},
+    "Is Reddit?": {"main": [[{"node": "POST Reddit", "type": "main", "index": 0}], []]},
+    "POST Twitter": {"main": [[{"node": "Parse result", "type": "main", "index": 0}]]},
+    "POST Mastodon": {"main": [[{"node": "Parse result", "type": "main", "index": 0}]]},
+    "POST Reddit": {"main": [[{"node": "Parse result", "type": "main", "index": 0}]]},
+    "Parse result": {"main": [[{"node": "Update queue status", "type": "main", "index": 0}]]},
+    "Update queue status": {"main": [[{"node": "Rate limit account", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "saveExecutionProgress": true},
+  "tags": [{"name": "adoff"}, {"name": "dispatcher"}],
+  "active": false
+}

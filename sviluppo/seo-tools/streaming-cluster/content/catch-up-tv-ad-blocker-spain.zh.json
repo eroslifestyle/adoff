@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-spain",
+  "lang": "zh",
+  "title": "屏蔽RTVE等平台广告 | AdOff",
+  "description": "AdOff 可屏蔽 RTVE、Atresplayer、Mitele 和 laSexta 的视频广告，以及葡萄牙的 RTP、TVI 和 SIC。免费浏览器扩展程序，无需注册账户。",
+  "h1": "西班牙回看电视广告拦截器：RTVE、Atresplayer、Mitele",
+  "answer": "AdOff 可在浏览器中移除西班牙点播电视平台的前贴片和中贴片广告（多数情况下）。它会以一个立即恢复节目的占位符替换播放器请求的 Google IMA 广告 SDK，从而使 RTVE 或 Atresplayer 上的重播节目 uninterrupted（无中断）播放。对于葡萄牙服务，只要其仍采用标准播放器集成方式，同样适用此机制。",
+  "sections": [
+    {
+      "h2": "涵盖西班牙语和葡萄牙语服务",
+      "body": [
+        "<p>西班牙广播公司通过标准的 Google IMA SDK 提供视频广告，为其回看平台提供资金支持。AdOff 覆盖以下平台：</p>",
+        "<ul><li><strong>RTVE</strong>（rtve.es）</li><li><strong>Atresplayer</strong>（atresplayer.com）</li><li><strong>Mitele</strong>（mitele.es）</li><li><strong>laSexta</strong>（lasexta.com）</li></ul>",
+        "<p>邻近的葡萄牙市场也采用相同的机制进行覆盖：</p>",
+        "<ul><li><strong>RTP</strong>（rtp.pt）</li><li><strong>TVI</strong>（tvi.pt）</li><li><strong>SIC</strong>（sic.pt）</li></ul>"
+      ]
+    },
+    {
+      "h2": "按下播放按钮时会发生什么",
+      "body": [
+        "<p>通常情况下，播放器会下载 IMA SDK，并在节目开始前及播放过程中插入广告插播。当 AdOff 启用后，SDK 请求会被重定向至内置的占位模块。播放器向该模块请求播放广告，模块则返回“请求恢复内容播放”，随后播放继续进行，仿佛广告插播已结束。整个过程完全在浏览器本地完成；视频流本身并未被修改。</p>"
+      ]
+    },
+    {
+      "h2": "公共广播机构与商业集团，统一入口",
+      "body": [
+        "<p>RTVE 属于公共广播机构，Atresmedia 和 Mediaset España 则为商业机构——但它们的浏览器播放器却统一采用了相同的广告 SDK。这一共同依赖项正是为何一个扩展程序即可通过单一机制覆盖全部平台的原因。这也解释了其与订阅制流媒体服务之间的显著差异：后者将广告服务器端拼接进视频流中，因此扩展程序在设计上无法介入。</p>"
+      ]
+    },
+    {
+      "h2": "超越视频播放器的过滤功能",
+      "body": [
+        "<p>AdOff 还运行 180 条静态网络规则，用于屏蔽广告和追踪域名；此外还包含一条 CSS/DOM 视觉过滤规则，用于隐藏横幅广告和推广覆盖层。在 rtve.es 或 atresplayer.com 上，这将清除页面上的推广卡片和广告牌，使节目目录在您选择节目前即已更加整洁。</p>"
+      ]
+    },
+    {
+      "h2": "覆盖范围的边界",
+      "body": [
+        "<ul><li>若某平台采用<strong>服务器端广告插入（SSAI）</strong>，广告将被嵌入视频流中，此时占位模块将不再生效。</li><li>AdOff 仅适用于<strong>桌面端浏览器</strong>：RTVE 或 Mitele 的移动端应用及智能电视应用不在支持范围内。</li><li>部分<strong>直播与体育赛事</strong>使用不同的播放管道。</li><li>播放器更新频繁；功能覆盖由项目持续维护，而非一成不变。</li></ul>"
+      ]
+    },
+    {
+      "h2": "免费使用，无需注册，支持五款浏览器",
+      "body": [
+        "<p>AdOff 是一款 Manifest V3 扩展程序，完全免费，无需注册账户，亦无试用限制。它支持 Chrome、Firefox、Safari、Edge 和 Opera 浏览器。请从官网安装，并保持防护功能处于开启状态。</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "AdOff 是否会屏蔽 RTVE 上的广告？",
+      "a": "大多数情况下是的：当RTVE网页播放器通过Google IMA SDK加载广告时，AdOff会替换为一个占位脚本，使节目立即恢复播放。直播和体育赛事可能使用不同的传输流程，效果可能有所不同。"
+    },
+    {
+      "q": "我能否免费跳过 Atresplayer 上的广告？",
+      "a": "AdOff是一款免费的浏览器扩展程序，用于中和Atresplayer网页播放器中的广告SDK，因此前贴片和中贴片广告通常不会播放。Atresplayer Premium是另一款独立的商业产品；AdOff不会与您的账户产生任何交互。"
+    },
+    {
+      "q": "它是否也适用于葡萄牙的电视频道，例如 RTP？",
+      "a": "是的。当RTP、TVI和SIC的网页播放器调用标准广告SDK时，AdOff采用相同的机制进行处理。覆盖范围涵盖西班牙和葡萄牙市场。"
+    },
+    {
+      "q": "它是否适用于 Mitele 应用或智能电视？",
+      "a": "否。AdOff仅适用于桌面端浏览器扩展，原生移动端应用、智能电视应用及投屏会话均不在其作用范围内。"
+    },
+    {
+      "q": "我的 RTVE 或 Atresplayer 账户是否会受到影响？",
+      "a": "否。AdOff在本地运行，不登录任何账户，也不修改对广播方内容服务器的请求——仅替换广告SDK脚本本身。"
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "流媒体广告屏蔽的工作原理"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-italy",
+      "text": "意大利回看电视广告屏蔽工具"
+    },
+    {
+      "href": "/live-sports-ad-blocking",
+      "text": "直播体育赛事广告屏蔽"
+    }
+  ],
+  "cta": {
+    "h3": "无广告中断的西班牙语回看视频",
+    "p": "安装 AdOff，由其替你处理 RTVE、Atresplayer、Mitele 和 laSexta 平台上的广告 SDK。",
+    "btn": "免费安装 AdOff"
+  },
+  "report": {
+    "intro": "您的西班牙或葡萄牙平台未列于本列表？若 https://adoff.app/catch-up-tv-ad-blocker-spain 页面仍显示广告中断，请报告具体服务名称。您的反馈将指导我们下一步覆盖的平台。",
+    "btn_text": "报告缺失的服务",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

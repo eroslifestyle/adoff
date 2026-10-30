@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-italy",
+  "lang": "ko",
+  "title": "RaiPlay·Mediaset·La7 광고 차단 | AdOff",
+  "description": "AdOff는 브라우저에서 RaiPlay, Mediaset Infinity, La7, Discovery+의 동영상 광고를 차단합니다.",
+  "h1": "이탈리아 캐치업 TV용 광고 차단기: RaiPlay, Infinity, La7",
+  "answer": "AdOff는 브라우저에서 이탈리아의 캐치업 TV 플랫폼에서 대부분의 경우 선재(프리롤) 및 중간(미들롤) 광고를 제거합니다. 이 확장 프로그램은 플레이어가 요청하는 Google IMA 광고 SDK를 즉시 프로그램을 재생하는 로컬 스텁으로 대체하므로, 광고 없이 RaiPlay, Infinity, La7을 즐길 수 있습니다.",
+  "sections": [
+    {
+      "h2": "이탈리아 서비스 지원",
+      "body": [
+        "<p>이탈리아 방송사들은 무료 시청 서비스 플랫폼에서 비디오 광고를 통해 수익을 창출하며, 해당 플레이어는 브라우저 내 표준 Google IMA SDK를 사용합니다. AdOff는 다음 서비스를 지원합니다:</p>",
+        "<ul><li><strong>RaiPlay</strong> (raiplay.it, rai.it)</li><li><strong>Mediaset Infinity</strong> (mediasetinfinity.mediaset.it, mediaset.it)</li><li><strong>La7</strong> (la7.it)</li><li><strong>Discovery+</strong> (discoveryplus.com)</li></ul>"
+      ]
+    },
+    {
+      "h2": "단계별 작동 원리",
+      "body": [
+        "<p>RaiPlay 또는 Infinity 페이지가 브라우저에서 로드될 때, 일반적으로 플레이어는 Google 서버에서 IMA SDK를 다운로드하여 광고 중단 시간을 예약합니다. AdOff는 해당 요청을 확장 프로그램에 포함된 스텁(stub)으로 리디렉션합니다. 이 스텁은 SDK의 언어를 충분히 이해하여 플레이어를 만족시키며, 플레이어가 광고 재생을 요청하면 즉시 “콘텐츠 재개 요청” 응답을 반환합니다.</p>",
+        "<p>그 결과 프로그램이 중단 없이 재생됩니다. 영상이 다시 다운로드되지 않으며, 콘텐츠 스트림에는 아무런 변경이 없습니다.</p>"
+      ]
+    },
+    {
+      "h2": "이 기능이 이탈리아 공영 및 상업 방송국에서 작동하는 이유",
+      "body": [
+        "<p>Rai, Mediaset 및 Discovery는 표준 SDK를 통해 광고를 삽입하여 시청 후 시청(catch-up viewing)을 수익화합니다. 이 SDK는 브라우저 확장 프로그램이 가로채기 적합한 정확한 계층입니다. 반면 Prime Video와 같은 구독 기반 플랫폼은 광고를 서버 측에서 스트림에 직접 결합(stitch)하므로, 해당 플레이어가 정상 작동하도록 확장 프로그램에서 의도적으로 제외되었습니다. 시청 후 시청 서비스는 기술적 접근 방식이 실제로 효과를 발휘하는 분야입니다.</p>"
+      ]
+    },
+    {
+      "h2": "네트워크 필터링 및 시각적 필터링 추가",
+      "body": [
+        "<p>플레이어 외에도 AdOff는 180개의 정적 네트워크 규칙을 제공하여 광고 및 추적 도메인을 차단하며, 방송사 페이지에서 배너 및 프로모션 오버레이를 숨기는 CSS/DOM 필터도 포함하고 있습니다. RaiPlay 또는 Infinity에서는 단순히 비디오 중단이 줄어드는 것 외에도 카탈로그 주변의 프로모션 타일과 간판(billboard) 수가 줄어듭니다.</p>"
+      ]
+    },
+    {
+      "h2": "구현할 수 없는 기능",
+      "body": [
+        "<p>한계 상황을 현실적으로 고려해 주세요:</p>",
+        "<ul><li>플랫폼이 <strong>서버 측 광고 삽입(SSAI)</strong>을 채택한 경우, 광고는 비디오 스트림의 일부가 되므로 스텁이 더 이상 적용되지 않습니다.</li><li><strong>데스크톱 브라우저에서만</strong> 작동합니다: RaiPlay 스마트 TV 앱, 모바일 앱 및 캐스팅은 대상에서 제외됩니다.</li><li>일부 <strong>실시간 이벤트 및 스포츠</strong>는 다른 전달 파이프라인을 사용합니다.</li><li>플레이어는 자주 변경되며, 확장 프로그램의 지원은 지속적으로 유지되지만 고정되지 않습니다.</li></ul>"
+      ]
+    },
+    {
+      "h2": "무료 확장 프로그램, 5개 브라우저 지원, 회원가입 불필요",
+      "body": [
+        "<p>AdOff는 Manifest V3 확장 프로그램으로, 계정이나 체험 기간 없이 무료로 제공됩니다. Chrome, Firefox, Safari, Edge 및 Opera에서 실행됩니다. 웹사이트에서 설치하고 보호 기능을 활성화한 후, 평소처럼 RaiPlay, Infinity 또는 La7을 열어 사용하세요.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "AdOff는 RaiPlay에서 광고를 제거합니까?",
+      "a": "대부분의 경우 예, 라이플레이(LaiPlay) 웹 플레이어가 Google IMA SDK를 통해 광고를 로드할 때입니다. 이 확장 프로그램은 해당 SDK를 스텁(stub)으로 대체하여 프로그램을 즉시 재개합니다. 다만 라이(RAI)가 다른 삽입 기법을 실험하는 경우, 지원 범위는 달라질 수 있습니다."
+    },
+    {
+      "q": "Mediaset Infinity에서 광고를 무료로 건너뛸 수 있나요?",
+      "a": "AdOff는 인피니티(Infinity) 웹 플레이어의 광고 SDK를 무력화하는 무료 브라우저 확장 프로그램으로, 프리롤 및 미들롤 광고가 일반적으로 재생되지 않습니다. 이 확장 프로그램은 인피니티 계정에 아무런 영향을 주지 않으며, 유료 요금제도 제공하지 않습니다 — 모든 기능이 무료로 포함됩니다."
+    },
+    {
+      "q": "La7과 Discovery+는 어떤가요?",
+      "a": "두 경우 모두 동일하게 처리됩니다: IMA SDK 요청이 로컬 스텁으로 리디렉션되고, 플레이어는 광고 브레이크를 재생하는 대신 콘텐츠 재생을 계속합니다. 이는 해당 서비스의 데스크톱 브라우저 버전에 적용됩니다."
+    },
+    {
+      "q": "이것은 라이 라이선스 요금(카노네)과 관련이 있나요?",
+      "a": "아니요. AdOff는 플레이어 내부 및 페이지 상의 광고에만 영향을 줍니다. ‘카노네 디 아본amento(구독료)’ 관련 질문은 완전히 별개이며, 이 확장 프로그램과는 전혀 관련이 없습니다."
+    },
+    {
+      "q": "RaiPlay 앱이나 스마트 TV에서 작동하나요?",
+      "a": "아니요. AdOff는 데스크톱 브라우저용 확장 프로그램입니다. 모바일 앱, 스마트 TV 앱 및 스트리밍 스틱은 이 확장 프로그램의 범위를 벗어납니다."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "스트리밍 광고 차단 원리"
+    },
+    {
+      "href": "/block-video-ads",
+      "text": "동영상 광고 전체 차단"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-uk",
+      "text": "영국 캐치업 TV 광고 차단기"
+    }
+  ],
+  "cta": {
+    "h3": "RaiPlay, Infinity, La7 — 광고 없이 시청",
+    "p": "브라우저에 AdOff 설치: 스텁이 이탈리아 플레이어의 광고 SDK를 무력화합니다.",
+    "btn": "AdOff 무료 설치"
+  },
+  "report": {
+    "intro": "좋아하는 이탈리아 플랫폼이 목록에 없나요? https://adoff.app/catch-up-tv-ad-blocker-italy에서 광고가 여전히 표시된다면 누락된 서비스를 알려주세요. 사용자 제보를 바탕으로 다음에 추가할 플랫폼을 결정합니다.",
+    "btn_text": "누락된 서비스 신고",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

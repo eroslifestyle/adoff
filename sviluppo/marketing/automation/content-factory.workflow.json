@@ -1,0 +1,132 @@
+{
+  "name": "AdOff S5 - Content Factory (semi-auto, native schedulers)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "hours", "hoursInterval": 24 }] }
+      },
+      "id": "trig",
+      "name": "Daily 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "command": "cat /home/mrxxx/adoff/sviluppo/marketing/automation/hook-bank.json"
+      },
+      "id": "readbank",
+      "name": "Read hook-bank.json",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Selezione deterministica per data: rotazione pilastri, N brief/giorno × lingue.\n// Distribuzione target strategia §4: A 40% B 25% C 15% D 15% E 5%.\nconst N_PER_DAY = 5;\nconst LANGS = ['en', 'it'];\nconst bank = JSON.parse($input.first().json.stdout);\nconst day = Math.floor(Date.now() / 86400000);\nconst pool = bank.briefs.filter(b => !b.dynamic);\n// ordine pesato per pilastro, offset rotante sul giorno\nconst order = ['A','A','B','C','A','B','D','A','E','B','C'];\nconst picks = [];\nfor (let i = 0; i < N_PER_DAY; i++) {\n  const pillar = order[(day + i) % order.length];\n  const cands = pool.filter(b => b.pillar === pillar && !picks.find(p => p.id === b.id));\n  const chosen = (cands.length ? cands : pool)[(day + i) % (cands.length || pool.length)];\n  if (chosen && !picks.find(p => p.id === chosen.id)) picks.push(chosen);\n}\nconst jobs = [];\nfor (const b of picks) for (const lang of LANGS) {\n  if (!b.props[lang]) continue;\n  jobs.push({ id: b.id, pillar: b.pillar, template: b.template, lang, props: b.props[lang], hashtagSet: b.hashtagSet, hashtags: bank.hashtagSets[b.hashtagSet] || [] });\n}\nreturn jobs.map(j => ({ json: j }));"
+      },
+      "id": "select",
+      "name": "Select briefs (pillar rotation)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\":\"chat-max\",\"stream\":false,\"options\":{\"temperature\":0.6,\"num_predict\":300},\"prompt\":\"Sei il copywriter social del brand AdOff (ad blocker universale, leggerissimo, invisibile all'anti-adblock). Voce noi-brand, diretta, empatica, minimale. REGOLE FERREE: mai nominare brand/piattaforme reali (solo termini generici); mai dati personali; mai numeri non forniti; caption <=150 char; termina con la riga AI disclosure nella lingua target. Output SOLO JSON.\\n\\nBRIEF id={{ $json.id }} pilastro={{ $json.pillar }} lingua={{ $json.lang }}\\nhookLine: {{ JSON.stringify($json.props.hookLine || ($json.props.beforeCaption + ' / ' + $json.props.afterCaption)) }}\\noutroTagline: {{ $json.props.outroTagline }}\\nhashtags disponibili: {{ JSON.stringify($json.hashtags) }}\\n\\nTASK: scrivi caption (<=150 char, gancio + ' -> adoff.app'), scegli 5-6 hashtag, aggiungi aiDisclosure ('🤖 AI-assisted brand channel' se en, '🤖 Canale brand assistito da AI' se it, altrimenti traduci mantenendo 🤖). Rispondi SOLO: {\\\"caption\\\":\\\"...\\\",\\\"hashtags\\\":[\\\"#..\\\"],\\\"aiDisclosure\\\":\\\"...\\\"}\"}",
+        "options": { "timeout": 60000 }
+      },
+      "id": "llm",
+      "name": "LLM caption",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Brand-guard: scarta caption con brand vietati (allineato a CLAUDE.md pre-deploy check).\nconst BAN = /youtube|google|facebook|instagram|tiktok|amazon|reddit|twitch|outbrain/i;\nconst out = [];\nfor (const item of $input.all()) {\n  const src = item.json;\n  let parsed;\n  try { parsed = JSON.parse(src.response || src.data || src.body || '{}'); } catch { parsed = {}; }\n  const caption = (parsed.caption || '').trim();\n  if (!caption || BAN.test(caption)) {\n    // fallback brand-safe: hookLine + CTA, niente brand\n    parsed.caption = ((src.props && (src.props.hookLine || src.props.afterCaption)) || 'Zero ads, anywhere.') + ' -> adoff.app';\n    parsed.hashtags = src.hashtags || [];\n    parsed.aiDisclosure = src.lang === 'it' ? '🤖 Canale brand assistito da AI' : '🤖 AI-assisted brand channel';\n    parsed._brandguard = 'fallback';\n  }\n  const full = `${parsed.caption}\\n\\n${(parsed.hashtags||[]).join(' ')}\\n\\n${parsed.aiDisclosure}`;\n  out.push({ json: { ...src, caption: parsed.caption, hashtags: parsed.hashtags, aiDisclosure: parsed.aiDisclosure, full_text: full, brandguard: parsed._brandguard || 'ok' } });\n}\nreturn out;"
+      },
+      "id": "guard",
+      "name": "Brand-guard",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "command": "=cd /home/mrxxx/adoff/sviluppo/marketing/video-engine && node batch-render.mjs --id {{ $json.id }} --lang {{ $json.lang }}"
+      },
+      "id": "render",
+      "name": "Render (batch-render.mjs)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": { "__rl": true, "value": "public", "mode": "list" },
+        "table": { "__rl": true, "value": "posts_queue", "mode": "list" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow": "content_factory",
+            "platform": "social_native",
+            "lang": "={{ $json.lang }}",
+            "body": "={{ $json.full_text }}",
+            "quality_score": "={{ $json.brandguard === 'ok' ? 8 : 5 }}",
+            "status": "queued"
+          }
+        }
+      },
+      "id": "queue",
+      "name": "Enqueue posts_queue",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1560, 400],
+      "credentials": {
+        "postgres": { "id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres" }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aggrega il digest giornaliero per Telegram (upload manuale negli scheduler nativi).\nconst items = $input.all().map(i => i.json);\nconst lines = items.map(i => `• ${i.id} [${i.lang}] (${i.pillar}) bank/${i.id}__${i.lang}.mp4\\n  ${i.caption}`);\nconst text = `🎬 *AdOff Content Factory* — ${items.length} clip pronte (semi-auto)\\n\\n${lines.join('\\n\\n')}\\n\\n➡️ Scarica da video-engine/output/bank/ e carica su TikTok Studio / Meta Business Suite. Poi marca posted.`;\nreturn [{ json: { text } }];"
+      },
+      "id": "digest",
+      "name": "Build Telegram digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 400]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"chat_id\":\"{{ $env.TELEGRAM_CHAT_ID }}\",\"text\":{{ JSON.stringify($json.text) }},\"parse_mode\":\"Markdown\"}",
+        "options": {}
+      },
+      "id": "tg",
+      "name": "Telegram digest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 400]
+    }
+  ],
+  "connections": {
+    "Daily 07:00": { "main": [[{ "node": "Read hook-bank.json", "type": "main", "index": 0 }]] },
+    "Read hook-bank.json": { "main": [[{ "node": "Select briefs (pillar rotation)", "type": "main", "index": 0 }]] },
+    "Select briefs (pillar rotation)": { "main": [[{ "node": "LLM caption", "type": "main", "index": 0 }]] },
+    "LLM caption": { "main": [[{ "node": "Brand-guard", "type": "main", "index": 0 }]] },
+    "Brand-guard": { "main": [[{ "node": "Render (batch-render.mjs)", "type": "main", "index": 0 }]] },
+    "Render (batch-render.mjs)": { "main": [[{ "node": "Enqueue posts_queue", "type": "main", "index": 0 }]] },
+    "Enqueue posts_queue": { "main": [[{ "node": "Build Telegram digest", "type": "main", "index": 0 }]] },
+    "Build Telegram digest": { "main": [[{ "node": "Telegram digest", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "saveExecutionProgress": true },
+  "tags": ["adoff", "content-factory", "social", "S5"],
+  "active": false
+}

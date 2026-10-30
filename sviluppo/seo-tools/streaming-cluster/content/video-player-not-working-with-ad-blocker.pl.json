@@ -1,0 +1,100 @@
+{
+  "slug": "video-player-not-working-with-ad-blocker",
+  "lang": "pl",
+  "title": "Wideo nie odtwarza się przy włączonym blokerze reklam | AdOff",
+  "description": "Wideo nie działa przy włączonym blokerze reklam? Krok po kroku: wstrzymywanie na witrynie, konflikty rozszerzeń, ściany reklamowe i uszkodzone odtwarzacze.",
+  "h1": "Odtwarzacz wideo nie działa z Twoim blokerem reklam? Krok po kroku diagnoza",
+  "answer": "Gdy film nie uruchamia się przy włączonym blokerze reklam, przyczyną jest niemal zawsze jedna z trzech: ściana antyblokująca reklamy, konflikt między dwoma rozszerzeniami lub odtwarzacz, który niepoprawnie obsługuje zablokowane żądanie. Najpierw włącz ochronę przed pauzowaniem na tej jednej stronie, a następnie przejdź przez poniższą listę kontrolną.",
+  "sections": [
+    {
+      "h2": "Krok 1: wstrzymaj ochronę tylko na tej stronie",
+      "body": [
+        "<p>Pierwszym rozwiązaniem nie jest wyłączanie blokera reklam — jest jego wstrzymanie dla pojedynczej strony, która powoduje problemy. AdOff oferuje <strong>wstrzymanie dla konkretnej strony</strong> z kilkoma opcjami, dostępne z okienka popup: strona wraca do swojego pierwotnego zachowania, podczas gdy wszystkie inne strony pozostają chronione.</p>",
+        "<p>Po wstrzymaniu przeładuj stronę pełnym odświeżeniem (Ctrl+Shift+R / Cmd+Shift+R), aby skrypty odtwarzacza załadowały się na nowo. Jeśli wtedy wideo zacznie się odtwarzać, oznacza to, że odtwarzacz reagował na zablokowane żądanie — co znacznie zawęża zakres problemu.</p>"
+      ]
+    },
+    {
+      "h2": "Krok 2: sprawdź konflikty z innymi rozszerzeniami",
+      "body": [
+        "<p>Najczęstszym powodem nieprawidłowego odtwarzania jest jednoczesne działanie dwóch blokerów reklam. Każdy z nich próbuje przechwycić te same żądania, a odtwarzacz może otrzymać sprzeczne odpowiedzi. Wyłącz wszystkie inne blokery reklam, rozszerzenia chroniące prywatność oraz menedżery skryptów (na stronie <code>chrome://extensions</code> lub jej odpowiedniku) i przetestuj ponownie z aktywnym tylko jednym z nich.</p>",
+        "<p>Podczas gdy jesteś tam, sprawdź, czy rozszerzenie jest zaktualizowane: API odtwarzaczy się zmieniają, a przestarzała warstwa neutralizacji może nie wykryć tego, co obsługuje aktualna warstwa.</p>"
+      ]
+    },
+    {
+      "h2": "Krok 3: odróżnij ścianę anty-reklamową od uszkodzonego odtwarzacza",
+      "body": [
+        "<p>Nie każdy pusty odtwarzacz jest wypadkiem. Objawy różnią się:</p>",
+        "<ul><li><strong>Ściana anty-reklamowa</strong>: strona ładuje się, ale wyświetla się jasna wiadomość („wyłącz swój bloker reklam”, „proszę zezwolić na reklamy”), lub wideo nigdy się nie uruchamia, a spinner ładowania kręci się bez końca. Strona celowo odmawia odtwarzania, dopóki nie wykryje braku blokowania.</li><li><strong>Rzeczywiście uszkodzony odtwarzacz</strong>: konkretny kod błędu, czarny prostokąt, sterowanie, które nie reaguje nawet po kilku przeładowaniach, lub niepowodzenie odtwarzania na tej stronie nawet w oknie prywatnym z wyłączonymi wszystkimi rozszerzeniami — to ostatnie oznacza, że problem wcale nie jest spowodowany Twoim blokerem reklam.</li></ul>",
+        "<p>AdOff zawiera warstwę ukrycia (fałszowanie pułapek, przechwytywanie fetch/XHR), która została stworzona właśnie dla pierwszego przypadku: sprawiania, że strona wierzy, że żadne blokowanie nie jest aktywne.</p>"
+      ]
+    },
+    {
+      "h2": "Dlaczego AdOff celowo wyklucza niektóre usługi",
+      "body": [
+        "<p>Niektóre usługi strumieniowania z subskrypcją wykorzystują własnościowe potoki odtwarzania, które są tak ściśle połączone z ich kodem, że każda ingerencja może spowodować całkowite przerwanie odtwarzania. Dlatego AdOff <strong>celowo wyklucza</strong> listę takich usług: jest to udokumentowana decyzja dotycząca jakości, wpisana w kod, a nie błąd.</p>",
+        "<p>Uzgodnienie jest jasne: na tych platformach reklamy pozostają, ale wideo zawsze działa poprawnie. Jeśli bloker reklam obiecuje jednocześnie odtwarzanie bez reklam i brak awarii na każdej usłudze, zachowaj ostrożność.</p>"
+      ]
+    },
+    {
+      "h2": "Krok 4: nadal nie działa? Zgłoś to",
+      "body": [
+        "<p>Jeśli wstrzymałeś, wykluczyłeś konflikty rozszerzeń i odtwarzacz nadal nie działa tylko przy włączonym AdOff, to właśnie taki przypadek warto zgłosić. Zgłoszenia z dokładnym adresem URL strony trafiają bezpośrednio do decyzji o tym, jakie reguły i poprawki zostaną zaimplementowane jako następne — wiele poprawek z przeszłości zaczęło się od pojedynczego zgłoszenia użytkownika.</p>",
+        "<p>Użyj przycisku „Zgłoś” na tej stronie, wklej adres URL strony z problemem i opisz, co widzisz. Konto nie jest wymagane.</p>"
+      ]
+    },
+    {
+      "h2": "Szybka lista kontrolna",
+      "body": [
+        "<ol><li>Wstrzymaj AdOff na tej stronie z okienka podręcznego, a następnie wykonaj pełne przeładowanie.</li><li>Jeśli zadziała, ponownie włącz rozszerzenie i zanotuj, czy problem powróci — to pozwoli zidentyfikować źródłowe żądanie.</li><li>Wyłącz inne blokery reklam i rozszerzenia chroniące prywatność; pozostaw jedno.</li><li>Sprawdź, czy strona wyświetla jawną wiadomość przeciwko blokowaniu reklam (ścianę) czy błąd odtwarzacza (uszkodzony odtwarzacz).</li><li>Zaktualizuj rozszerzenie do najnowszej wersji.</li><li>Przetestuj w oknie prywatnym z wyłączonymi wszystkimi rozszerzeniami, aby wykluczyć problem po stronie strony.</li><li>Nadal nie działa? Zgłoś stronę pod jej dokładnym adresem URL.</li></ol>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Dlaczego moja przeglądarka wideo nie działa tylko na jednej stronie?",
+      "a": "Ponieważ odtwarzacz tej strony reaguje niekorzystnie na konkretną zablokowaną prośbę lub uruchamia kontrolę anty-reklamową, której reszta sieci nie wykonuje, wstrzymaj AdOff tylko na tej jednej stronie — funkcja wstrzymywania na stronie istnieje właśnie dla tego celu — i przeładuj stronę, aby określić, która z tych dwóch opcji ma miejsce."
+    },
+    {
+      "q": "Czy można uruchomić dwa blokery reklam jednocześnie?",
+      "a": "Nie jest to zalecane. Konkurencja między nimi polega na przechwytywaniu tych samych żądań, a odtwarzacz wideo może otrzymywać sprzeczne odpowiedzi, co często skutkuje sytuacją, w której odtwarzanie nigdy się nie rozpoczyna. Zamiast dwóch nakładających się blokerów, używaj jednego dobrze utrzymanego."
+    },
+    {
+      "q": "Jak dowiedzieć się, czy strona ma zaporę przeciwko blokowaniu reklam?",
+      "a": "Strona zazwyczaj jawnie o tym informuje lub wideo utknąć na nieskończonym kręgu ładowania bez żadnego kodu błędu. Jeśli odtwarzanie działa w oknie prywatnym z wyłączonymi rozszerzeniami, przyczyną było blokowanie; jeśli nie działa tam również, problem leży po stronie samej strony."
+    },
+    {
+      "q": "Czy wstrzymanie działania AdOff na jednej stronie wpływa na inne strony?",
+      "a": "Nie. Wstrzymywanie na stronie zmienia zachowanie tylko na tej konkretnej stronie. Na każdej innej stronie ochrona działa w pełni, a w każdej chwili możesz wznowić ochronę na wstrzymanej stronie z okna popup."
+    },
+    {
+      "q": "Dlaczego AdOff nie blokuje reklam na niektórych platformach subskrypcyjnych?",
+      "a": "Jest to celowy wybór. Ich potoki odtwarzacza są własnościowe i ściśle powiązane, a ingerencja może całkowicie zepsuć odtwarzanie wideo. AdOff wyklucza je, aby usługa działała poprawnie — reklamy pozostają, ale odtwarzacz się nie psuje."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Blokowanie reklam w strumieniowaniu: kompletny przewodnik"
+    },
+    {
+      "href": "/bypass-anti-adblock",
+      "text": "Jak omijane są ściany anty-reklamowe"
+    },
+    {
+      "href": "/adblock-detector",
+      "text": "Jak działa wykrywanie blokerów reklam"
+    }
+  ],
+  "cta": {
+    "h3": "Blokader reklam, który współpracuje z odtwarzaczami",
+    "p": "Wstrzymywanie na poziomie poszczególnych stron, celowe wykluczenia oraz warstwa niewidoczności: AdOff został zaprojektowany tak, aby blokować reklamy bez zakłócania działania wideo. Darmowy, bez konieczności tworzenia konta.",
+    "btn": "Zainstaluj AdOff za darmo"
+  },
+  "report": {
+    "intro": "Wykonano wszystkie punkty z listy kontrolnej, a odtwarzacz nadal nie działa z włączonym AdOff? Zgłoś ten przypadek, podając dokładny adres URL strony — zgłoszenia użytkowników decydują, które strony i reguły zostaną naprawione w kolejnym etapie.",
+    "btn_text": "Zgłoś tę stronę",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

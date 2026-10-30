@@ -1,0 +1,100 @@
+{
+  "slug": "video-player-not-working-with-ad-blocker",
+  "lang": "tr",
+  "title": "Video, Reklam Engelleme Etkinken Oynatılmıyor | AdOff",
+  "description": "Video, reklam engelleyiciniz etkinken başlamıyor mu? Adım adım teşhis: siteye özel durdurma, uzantı çakışmaları",
+  "h1": "Video oynatıcı, reklam engelleyicinizle çalışmıyor mu? Adım adım teşhis",
+  "answer": "Bir videonun reklam engelleyici açıkken başlamamasının nedeni neredeyse her zaman üçünden biridir: bir reklam engelleyiciye karşı koruma duvarı, iki eklenti arasındaki çakışma veya engellenen isteği yanlış işleyen bir oynatıcı. Önce o sitede duraklatma korumasını açın, ardından bu kontrol listesini aşağı doğru inerek ilerleyin.",
+  "sections": [
+    {
+      "h2": "Adım 1: korumayı yalnızca o site için durdurun",
+      "body": [
+        "<p>İlk çözüm, reklam engelleyicinizi kapatmak değil — tek sorun yaşayan site için geçici olarak devre dışı bırakmaktır. AdOff, açılır pencereden erişilebilen <strong>site bazlı geçici devre dışı bırakma</strong> özelliğine sahiptir ve birden fazla seçenek sunar; bu sayede ilgili site orijinal davranışına dönerken diğer tüm siteler korunmaya devam eder.</p>",
+        "<p>Geçici devre dışı bıraktıktan sonra, sayfayı sert yenileyin (Ctrl+Shift+R / Cmd+Shift+R), böylece oynatıcı betikleri yeniden yüklenir. Video artık başlıyorsa, oynatıcı engellenen bir isteğe tepki vermiştir — bu durum sorunu ciddi ölçüde daraltır.</p>"
+      ]
+    },
+    {
+      "h2": "Adım 2: diğer uzantılarla çakışma olup olmadığını kontrol edin",
+      "body": [
+        "<p>Aynı anda çalışan iki reklam engelleyici, oynatma sorunlarının en yaygın nedenidir. Her biri aynı istekleri engellemeye çalışır ve oynatıcı çelişkili yanıtlar alabilir. Diğer tüm reklam engelleyicileri, gizlilik uzantılarını ve betik yöneticilerini (<code>chrome://extensions</code> veya eşdeğer sayfada) devre dışı bırakın ve yalnızca bir tanesi etkinken tekrar test edin.</p>",
+        "<p>Burada, uzantının güncel olduğundan emin olun: oynatıcı API’leri değişir ve güncel olmayan engelleme katmanı, güncel versiyonun ele aldığı durumları kaçırabilir.</p>"
+      ]
+    },
+    {
+      "h2": "Adım 3: bir reklam engelleyici duvarını bozuk bir oynatıcıdan ayırt edin",
+      "body": [
+        "<p>Her boş oynatıcı bir kaza değildir. Belirtiler farklıdır:</p>",
+        "<ul><li><strong>Reklam engelleyici engel duvarı</strong>: Sayfa yüklenir ancak açık bir mesaj alırsınız (“reklam engelleyicinizi kapatın”, “lütfen reklamlara izin verin”) ya da video hiç başlamazken yükleme döngüsü sonsuza kadar devam eder. Site, engelleme algılanmadığına inanana kadar oynatmayı kasıtlı olarak reddeder.</li><li><strong>Gerçekten bozuk oynatıcı</strong>: Belirli bir hata kodu, siyah bir dikdörtgen, birkaç yenilemeden sonra bile yanıt vermeyen kontroller veya özel pencerede tüm uzantılar kapatıldığında bile o sitede oynatma başarısızlığı — sonuncusu, sorunun reklam engelleyicinizle ilgili olmadığını gösterir.</li></ul>",
+        "<p>AdOff, tam olarak ilk durum için tasarlanmış bir gizlilik katmanına (tuzak kandırma, fetch/XHR engelleme) sahiptir: sayfanın engelleme yapılmadığını düşünmesini sağlar.</p>"
+      ]
+    },
+    {
+      "h2": "AdOff’in bazı hizmetleri bilerek neden hariç tuttuğu",
+      "body": [
+        "<p>Bazı abonelikli akış hizmetleri, kodlarıyla çok sıkı bağlı özel oynatıcı hattı kullanır; bu nedenle herhangi bir müdahale oynatmayı doğrudan bozabilir. Bu yüzden AdOff, bu tür hizmetlerin bir listesini <strong>bilinçli olarak hariç tutar</strong>: bu, kodda belgelenmiş bir kalite kararıdır, bir ihmal değildir.</p>",
+        "<p>Bu durumda yapılan tercih şeffaftır: bu platformlarda reklamlar kalır ama video her zaman çalışır. Bir reklam engelleyicinin hem reklamsız oynatma hem de her hizmette sıfır bozulma garantisi sunduğunu iddia ediyorsa, şüpheyle yaklaşın.</p>"
+      ]
+    },
+    {
+      "h2": "Adım 4: hala çalışmıyor mu? Bunu bildirin",
+      "body": [
+        "<p>Geçici devre dışı bıraktıysanız, uzantı çakışmalarını hariç tuttuysanız ve oynatıcı hâlâ yalnızca AdOff açıkken başarısız oluyorsa, bu durumun raporlanması kesinlikle değerlidir. Tam URL’siyle yapılan raporlar, hangi kuralların ve çözümlerin bir sonraki sürümde ekleneceğini doğrudan belirler — geçmişte yapılan birçok çözüm tek bir kullanıcı raporundan başlamıştır.</p>",
+        "<p>Bu sayfadaki raporla butonunu kullanın, sorunlu sitenin URL’sini yapıştırın ve ne gördüğünüzü açıklayın. Bir hesap gerekmez.</p>"
+      ]
+    },
+    {
+      "h2": "Hızlı başvuru kontrol listesi",
+      "body": [
+        "<ol><li>Sayfanın açılır penceresinden AdOff’u bu site için geçici devre dışı bırakın, ardından sert yenileyin.</li><li>Çalışırsa, tekrar etkinleştirin ve tekrar bozulup bozulmadığını not edin — bu, sorunlu isteği belirler.</li><li>Diğer reklam engelleyicileri ve gizlilik uzantılarını devre dışı bırakın; yalnızca birini tutun.</li><li>Sayfanın açık bir reklam engelleyici engel duvarı (duvar) mı yoksa oynatıcı hatası (bozuk oynatıcı) mı gösterdiğini kontrol edin.</li><li>Uzantıyı en son sürüme güncelleyin.</li><li>Tüm uzantılar kapatılmışken özel pencerede test ederek sitenin tarafında bir sorun olup olmadığını hariç tutun.</li><li>Hâlâ başarısız oluyorsa? Sorunlu sitenin tam URL’siyle raporlayın.</li></ol>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Neden video oynatıcım yalnızca bir sitede başarısız oluyor?",
+      "a": "Çünkü o sitenin oynatıcısı, belirli bir engellenmiş isteğe olumsuz tepki verir veya sitenin bir reklam engelleme kontrolü çalışır, ancak webin geri kalanı böyle bir kontrol yapmaz. O tek site için AdOff’u durdurun — siteye özel durdurma özelliği tam olarak bu amaçla vardır — ve hangi durumun söz konusu olduğunu doğrulamak için sayfayı yeniden yükleyin."
+    },
+    {
+      "q": "İki reklam engelleyici aynı anda çalışabilir mi?",
+      "a": "Önerilmez. Aynı istekleri engellemek için birbirleriyle rekabet ederler ve bir video oynatıcı, çelişkili yanıtlar alabilir; bu durum genellikle oynatmanın asla başlamamasına neden olur. İkisi yerine tek bir iyi bakımlı engelleyici kullanın."
+    },
+    {
+      "q": "Bir sitenin bir reklam engelleyici engelleyici duvarı olup olmadığını nasıl anlarım?",
+      "a": "Sayfa genellikle bunu açıkça belirtir veya video, hata kodu olmadan sonsuz döngüdeki dönen simgeyle kalır. Özel pencerede tüm eklentiler kapatıldığında oynatma çalışıyorsa, engelleme nedenidir; aynı durumda oynatma yine de başarısız oluyorsa, sorun sitenin kendisindedir."
+    },
+    {
+      "q": "Bir sitede AdOff’u durdurmak diğer siteleri etkiler mi?",
+      "a": "Hayır. Siteye özel durdurma, yalnızca o belirli site üzerindeki davranışı değiştirir. Diğer tüm siteler tam koruma altındadır ve durdurulan siteyi, açılır menüden istediğiniz zaman tekrar koruma altına alabilirsiniz."
+    },
+    {
+      "q": "Neden AdOff bazı abonelik platformlarında reklamları engelleyemiyor?",
+      "a": "Bilinçli bir seçimdir. Oynatıcı hattı (pipeline) sahiplikli ve sıkı bir şekilde entegre edilmiştir; müdahale, video oynatmayı tamamen bozma riski taşır. AdOff, hizmetin çalışmasını sağlamak için bu siteleri hariç tutar — reklamlar kalır, ancak oynatıcı bozulmaz."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Akış reklam engelleme: kapsamlı rehber"
+    },
+    {
+      "href": "/bypass-anti-adblock",
+      "text": "Reklam engelleyici duvarlarının nasıl atlatıldığını keşfedin"
+    },
+    {
+      "href": "/adblock-detector",
+      "text": "Reklam engelleyici tespiti nasıl çalışır"
+    }
+  ],
+  "cta": {
+    "h3": "Oynatıcılarla uyumlu çalışan bir reklam engelleyici",
+    "p": "Site bazlı durdurma, kasıtlı hariç tutmalar ve gizlilik katmanı: AdOff, videoyu bozmadan reklamları engellemek için tasarlandı. Ücretsiz, hesap gerektirmez.",
+    "btn": "AdOff’u ücretsiz kurun"
+  },
+  "report": {
+    "intro": "Kontrol listesini takip ettiğinizde ve AdOff açıkken hâlâ bir oynatıcı sorun yaşıyorsanız? Sayfanın tam URL’sini belirterek durumu bildirin — kullanıcı raporları, hangi sitelerin ve kuralların bir sonraki düzeltmeye tabi olacağını belirler.",
+    "btn_text": "Bu siteyi bildir",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

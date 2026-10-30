@@ -1,0 +1,97 @@
+{
+  "slug": "smart-tv-ad-blocking",
+  "lang": "en",
+  "title": "Blocking Ads on Smart TVs: What Really Works | AdOff",
+  "description": "Browser extensions don't run on smart TVs. Here's what honestly works: DNS-level filtering on your home network, TV privacy settings, and where AdOff fits in.",
+  "h1": "Ad blocking on smart TVs: the honest guide",
+  "answer": "A browser extension cannot run on a smart TV or streaming device, so no extension can block ads on the television itself. What works instead is DNS-level filtering on your home network and the TV's own privacy settings — while AdOff covers the browser on your computer, not the TV.",
+  "sections": [
+    {
+      "h2": "Why an extension cannot help your TV",
+      "body": [
+        "<p>Ad blockers like AdOff are browser extensions: they live inside a browser, intercepting its requests, scripts and DOM. A smart TV app — a broadcaster app, YouTube on the television — is not a browser page. It is a native app with its own network stack, and no browser extension can touch it.</p>",
+        "<p>This is worth stating plainly because the search results are full of vague promises: <strong>there is no extension that blocks ads on the TV screen</strong>. The tools that work on a TV operate one level down, on the network.</p>"
+      ]
+    },
+    {
+      "h2": "What actually works: DNS-level filtering at home",
+      "body": [
+        "<p>Every device in your home — TV included — resolves domain names through the network's DNS. Point that DNS at a filtering resolver and the TV loses the ability to reach ad and tracking domains: those requests fail before any ad server is contacted.</p>",
+        "<p>You can set this up on the router (covers every device at once) or per-device in the TV's network settings. Tools built for this include private DNS on Android/Android TV and dedicated filtering resolvers configured on the router. We cover the Android TV variant step by step in our <a href=\"/android-dns\">DNS filtering guide</a>.</p>",
+        "<p>The honest limit: DNS filtering blocks by domain. It removes ad-telemetry and some ad-serving domains, but it cannot remove ads stitched into the video stream itself, and apps that serve ads from their own main domain will keep showing them.</p>"
+      ]
+    },
+    {
+      "h2": "The TV's own privacy settings",
+      "body": [
+        "<p>Before touching the network, check the television. Most smart TV platforms let you reduce advertising exposure from the settings menu:</p>",
+        "<ul><li>Turn off <strong>personalized advertising</strong> / reset the advertising ID.</li><li>Disable <strong>viewing data collection</strong> (ACR on some brands), which is what makes targeting valuable in the first place.</li><li>Refuse optional promotional consent during setup or later in privacy settings.</li><li>On some platforms you can also disable the sponsored rows and recommendations in the launcher interface.</li></ul>",
+        "<p>This does not remove ads, but it cuts the tracking that makes them profitable, and it often removes a share of the promotional clutter built into the interface.</p>"
+      ]
+    },
+    {
+      "h2": "Where AdOff fits in",
+      "body": [
+        "<p>AdOff is a free, account-less Manifest V3 extension for Chrome, Firefox, Safari, Edge and Opera. Its home territory is the <strong>desktop browser</strong>: blocking video ads on streaming sites you open on your computer, including 42 European broadcaster platforms whose client-side ad SDK it neutralizes with a stub that resumes content immediately.</p>",
+        "<p>If you watch catch-up TV and replays in the browser on a laptop connected to the TV via HDMI or casting, AdOff covers that session like any other browser session. But the TV's own apps remain outside its reach — use the network-level measures above for those.</p>"
+      ]
+    },
+    {
+      "h2": "Realistic expectations, platform by platform",
+      "body": [
+        "<ul><li><strong>Banner ads and tracking on the TV interface</strong>: DNS filtering removes a meaningful share; privacy settings cut the targeting.</li><li><strong>Video ads before content in free apps</strong>: only those fetched from separate ad domains are affected by DNS; the rest stay.</li><li><strong>Ads stitched into the stream (SSAI)</strong>: not removable by any home-network tool today.</li><li><strong>Browser-based streaming on your computer</strong>: fully in scope for AdOff.</li></ul>",
+        "<p>No configuration removes every ad from a smart TV. Anyone promising that is selling something.</p>"
+      ]
+    },
+    {
+      "h2": "A practical setup in three moves",
+      "body": [
+        "<ol><li>Set a filtering DNS on your router, or private DNS on the TV, following our <a href=\"/android-dns\">guide</a>.</li><li>Go through the TV's privacy menu: advertising ID off, viewing data off, promotional consent refused.</li><li>Install AdOff in the browsers of the computers you actually stream from — free, no registration — for full-strength video ad blocking where an extension genuinely works.</li></ol>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Can I install an ad blocker on my smart TV?",
+      "a": "Not as an extension: there is no browser on the TV to extend it into. The effective alternatives are DNS-level filtering on your router or the TV's network settings, plus the TV's own privacy settings."
+    },
+    {
+      "q": "Does DNS filtering remove ads from TV apps?",
+      "a": "Partially. It blocks the apps' ability to reach separate ad and tracking domains, which removes telemetry and some ad delivery. Ads served from the app's own domain or stitched into the video stream are not affected."
+    },
+    {
+      "q": "Should I change DNS on the router or on the TV?",
+      "a": "On the router if you can: it covers every device in the house at once, including guests' phones. Change it on the TV only when you cannot touch the router, for example on a managed network."
+    },
+    {
+      "q": "Does AdOff work on the TV's browser, if it has one?",
+      "a": "TV browsers are generally not compatible with browser extensions, so no. AdOff covers desktop and mobile browsers — Chrome, Firefox, Safari, Edge and Opera — where it neutralizes client-side video ads, including 42 European broadcaster platforms."
+    },
+    {
+      "q": "Can I at least stop my smart TV from tracking me?",
+      "a": "Largely yes: turn off personalized ads, reset or disable the advertising ID, refuse viewing-data collection (ACR) and decline optional promotional consent in the privacy menu. DNS filtering on top also blocks many telemetry domains."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Streaming ad blocking: the complete guide"
+    },
+    {
+      "href": "/android-dns",
+      "text": "DNS-level ad filtering on Android TV"
+    },
+    {
+      "href": "/tv-streaming-ad-blocker",
+      "text": "Ad blockers for TV and streaming devices"
+    }
+  ],
+  "cta": {
+    "h3": "Cover the browser you actually watch in",
+    "p": "AdOff blocks video ads in your desktop browser — free, no account, no registration.",
+    "btn": "Install AdOff free"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

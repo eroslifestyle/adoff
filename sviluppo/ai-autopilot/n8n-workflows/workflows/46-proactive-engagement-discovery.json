@@ -1,0 +1,514 @@
+{
+  "id": "w46-proactive-engagement-discovery",
+  "name": "46 — Proactive Engagement Discovery",
+  "description": "Scopri conversazioni esterne ove AdOff può intervenire",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Rome",
+    "saveExecutionProgress": true
+  },
+  "nodes": [
+    {
+      "id": "node-001-schedule",
+      "name": "Schedule (60 min)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        200
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 60
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-002-webhook",
+      "name": "Webhook /proactive-scan-now",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        360
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "proactive-scan-now",
+        "responseMode": "responseNode"
+      },
+      "webhookId": "proactive-scan-now-wh"
+    },
+    {
+      "id": "node-003-hmac",
+      "name": "HMAC Auth (W29)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        280
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const crypto = require('crypto');\nconst secret = process.env.WEBHOOK_HMAC_SECRET;\nconst isSchedule = $node['Schedule (60 min)'] !== undefined && $json.source === undefined;\nif (isSchedule) return [{json: {auth_ok: true, source: 'schedule'}}];\nif (!secret) return [{json: {auth_ok: false, reason: 'no_secret'}}];\nconst signature = $headers?.['x-adoff-signature'];\nif (!signature) return [{json: {auth_ok: false, reason: 'no_sig'}}];\nconst bodyRaw = $body || JSON.stringify($json);\nconst expectedHmac = crypto.createHmac('sha256', Buffer.from(secret, 'hex')).update(bodyRaw, 'utf8').digest('hex');\ntry {crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedHmac, 'hex')); return [{json: {auth_ok: true, source: 'webhook'}}];} catch (err) {return [{json: {auth_ok: false, reason: 'invalid_sig'}}];}"
+      }
+    },
+    {
+      "id": "node-004-auth-check",
+      "name": "IF auth_ok?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        280
+      ],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.auth_ok }}",
+              "operator": "equals",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-005-kill-switch",
+      "name": "Check kill_switch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        280
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const killSwitchDisabled = process.env.PROACTIVE_DISCOVERY_DISABLED === 'true';\nreturn [{ json: { kill_switch_hit: killSwitchDisabled, proceed: !killSwitchDisabled } }];"
+      }
+    },
+    {
+      "id": "node-006-kill-check",
+      "name": "IF kill_switch?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        280
+      ],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.kill_switch_hit }}",
+              "operator": "equals",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-007-reddit",
+      "name": "Phase A: Reddit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        80
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://oauth.reddit.com/r/webdev/new?limit=50",
+        "authentication": "headerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.REDDIT_OAUTH_TOKEN }}"
+            },
+            {
+              "name": "User-Agent",
+              "value": "AdOff-Proactive/1.0"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "neverError": true
+          }
+        }
+      },
+      "onError": "continueErrorHandling"
+    },
+    {
+      "id": "node-008-hn",
+      "name": "Phase A: HackerNews",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        200
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://hn.algolia.com/api/v1/search?query=adblock&numericFilters=created_at_i>{{ Math.floor(Date.now()/1000) - 86400 }}&hitsPerPage=50",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "neverError": true
+          }
+        }
+      },
+      "onError": "continueErrorHandling"
+    },
+    {
+      "id": "node-009-mastodon",
+      "name": "Phase A: Mastodon",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        320
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://mastodon.social/api/v2/search?q=adblock&type=statuses&limit=50",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "neverError": true
+          }
+        }
+      },
+      "onError": "continueErrorHandling"
+    },
+    {
+      "id": "node-010-merge",
+      "name": "Merge all sources",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        200
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const allConversations = [];\nconst now = Date.now();\nconst redditResp = $('Phase A: Reddit').json;\nif (redditResp?.data?.children) {\n  redditResp.data.children.forEach(child => {\n    const post = child.data;\n    if (post?.title) allConversations.push({platform: 'reddit', url: `https://reddit.com${post.permalink}`, title: post.title, body: (post.selftext || '').substring(0, 1000), author: post.author, score: post.score, age_hours: Math.floor((now - post.created_utc * 1000) / 3600000), created_at: new Date(post.created_utc * 1000).toISOString(), source_id: post.id});\n  });\n}\nconst hnResp = $('Phase A: HackerNews').json;\nif (hnResp?.hits) {\n  hnResp.hits.forEach(story => {\n    if (story?.title) allConversations.push({platform: 'hackernews', url: story.url || `https://news.ycombinator.com/item?id=${story.objectID}`, title: story.title, body: (story.story_text || `${story.num_comments} comments`).substring(0, 1000), author: story.author, score: story.points, age_hours: Math.floor((now - story.created_at_i * 1000) / 3600000), created_at: new Date(story.created_at_i * 1000).toISOString(), source_id: story.objectID});\n  });\n}\nconst mastodonResp = $('Phase A: Mastodon').json;\nif (mastodonResp?.statuses) {\n  mastodonResp.statuses.forEach(status => {\n    const ageHours = Math.floor((now - new Date(status.created_at).getTime()) / 3600000);\n    allConversations.push({platform: 'mastodon', url: status.url, title: status.account?.display_name, body: (status.content.replace(/<[^>]*>/g, '') || '').substring(0, 1000), author: status.account?.acct, score: status.replies_count, age_hours: ageHours, created_at: status.created_at, source_id: status.id, followers: status.account?.followers_count});\n  });\n}\nreturn allConversations.map(c => ({json: c}));"
+      }
+    },
+    {
+      "id": "node-011-brand-filter",
+      "name": "Filter brand-safety",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        200
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const conversation = $json;\nconst reasons = [];\nconst combined = (conversation.title + ' ' + conversation.body).toLowerCase();\nif (combined.includes('adoff')) reasons.push('mentions_adoff');\nconst offTopics = ['trump', 'biden', 'politics', 'religion', 'atheist', 'hate', 'nsfw'];\nfor (const kw of offTopics) if (combined.includes(kw)) {reasons.push(`off_topic_${kw}`); break;}\nif (conversation.platform === 'mastodon' && conversation.followers > 1000000) reasons.push('high_followers');\nconst positives = ['solved', 'fixed', 'love', 'works great', 'perfect', 'happy'];\nfor (const kw of positives) if (combined.includes(kw)) {reasons.push('positive_sentiment'); break;}\nif (conversation.age_hours > 48) reasons.push('too_old');\nreturn [{json: {...conversation, brand_safe: reasons.length === 0, filter_reasons: reasons}}];"
+      }
+    },
+    {
+      "id": "node-012-brand-check",
+      "name": "IF brand_safe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        200
+      ],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.brand_safe }}",
+              "operator": "equals",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-013-gemini",
+      "name": "Gemini: Score relevance",
+      "type": "n8n-nodes-base.googleGenerativeAiChat",
+      "typeVersion": 1.2,
+      "position": [
+        2400,
+        80
+      ],
+      "parameters": {
+        "model": "gemini-1.5-flash",
+        "options": {
+          "temperature": 0.7
+        },
+        "messages": [
+          {
+            "messageType": "user",
+            "content": "Analyze: Title='{{ $json.title }}' Body='{{ $json.body }}' Platform={{ $json.platform }}. Is AdOff (browser ad-blocker, privacy-focused, anti-tracking) a natural fit? Respond as JSON: {relevance_score: 0-100, intent: 'looking_for_solution'|'venting'|'comparing_tools'|'tech_question'|'off_topic'|'unsuitable', suggested_engagement_type: 'helpful_comment'|'subtle_mention'|'no_action', reasoning: '1-2 lines', draft_reply_in_user_lang: 'max 400 chars, helpful, non-pushy', risk_level: 'low'|'medium'|'high'}"
+          }
+        ]
+      },
+      "credentials": {
+        "googleGenerativeAiApi": "google_generative_ai"
+      },
+      "onError": "continueErrorHandling"
+    },
+    {
+      "id": "node-014-parse",
+      "name": "Parse Gemini",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        80
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "try {\n  const rawText = typeof $json === 'string' ? $json : $json.response || $json.content || JSON.stringify($json);\n  const jsonMatch = rawText.match(/\\{[\\s\\S]*\\}/);\n  if (!jsonMatch) throw new Error('no json found');\n  const parsed = JSON.parse(jsonMatch[0]);\n  return [{json: parsed}];\n} catch (err) {\n  return [{json: {relevance_score: 0, intent: 'parse_error', suggested_engagement_type: 'no_action', reasoning: 'parse failed', draft_reply_in_user_lang: '', risk_level: 'high'}}];\n}"
+      }
+    },
+    {
+      "id": "node-015-threshold",
+      "name": "IF relevance >= 60?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        80
+      ],
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.relevance_score }}",
+              "operator": "gte",
+              "value2": 60
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-016-insert",
+      "name": "INSERT engagement_inbox",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 4.3,
+      "position": [
+        3120,
+        80
+      ],
+      "parameters": {
+        "operation": "insert",
+        "table": "engagement_inbox",
+        "columns": "url,platform,title,body,author,age_hours,relevance_score,intent,suggested_engagement_type,reasoning,draft_reply,risk_level,status,priority,source_id",
+        "values": "{{ $json.url }}|{{ $json.platform }}|{{ $json.title }}|{{ $json.body }}|{{ $json.author }}|{{ $json.age_hours }}|{{ $json.relevance_score }}|{{ $json.intent }}|{{ $json.suggested_engagement_type }}|{{ $json.reasoning }}|{{ $json.draft_reply_in_user_lang }}|{{ $json.risk_level }}|={{ $json.relevance_score >= 80 && $json.risk_level === 'low' ? 'proactive_drafted' : 'proactive_review' }}|{{ $json.relevance_score >= 80 ? 8 : 5 }}|w46"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "{{ $env.PG_CRED_ID }}",
+          "name": "PostgreSQL"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule (60 min)": {
+      "main": [
+        [
+          {
+            "node": "HMAC Auth (W29)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook /proactive-scan-now": {
+      "main": [
+        [
+          {
+            "node": "HMAC Auth (W29)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HMAC Auth (W29)": {
+      "main": [
+        [
+          {
+            "node": "IF auth_ok?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF auth_ok?": {
+      "main": [
+        [
+          {
+            "node": "Check kill_switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Check kill_switch": {
+      "main": [
+        [
+          {
+            "node": "IF kill_switch?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF kill_switch?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Phase A: Reddit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Phase A: HackerNews",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Phase A: Mastodon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase A: Reddit": {
+      "main": [
+        [
+          {
+            "node": "Merge all sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase A: HackerNews": {
+      "main": [
+        [
+          {
+            "node": "Merge all sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Phase A: Mastodon": {
+      "main": [
+        [
+          {
+            "node": "Merge all sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge all sources": {
+      "main": [
+        [
+          {
+            "node": "Filter brand-safety",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter brand-safety": {
+      "main": [
+        [
+          {
+            "node": "IF brand_safe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF brand_safe?": {
+      "main": [
+        [
+          {
+            "node": "Gemini: Score relevance",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Gemini: Score relevance": {
+      "main": [
+        [
+          {
+            "node": "Parse Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Gemini": {
+      "main": [
+        [
+          {
+            "node": "IF relevance >= 60?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF relevance >= 60?": {
+      "main": [
+        [
+          {
+            "node": "INSERT engagement_inbox",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "INSERT engagement_inbox": {
+      "main": [
+        []
+      ]
+    }
+  }
+}

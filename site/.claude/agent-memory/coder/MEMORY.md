@@ -1,0 +1,1 @@
+- [AdOff sempre gratis — claim da correggere](project_seo_adoff_always_free.md) — il sito ripete il falso "30gg trial + account gratuito"; verità: gratis 100% senza account, per sempre

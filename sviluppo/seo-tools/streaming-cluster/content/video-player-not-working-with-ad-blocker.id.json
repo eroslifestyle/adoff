@@ -1,0 +1,100 @@
+{
+  "slug": "video-player-not-working-with-ad-blocker",
+  "lang": "id",
+  "title": "Video Tidak Berputar Saat Pemblokir Iklan Aktif | AdOff",
+  "description": "Video tidak mulai saat pemblokir iklan aktif? Diagnosis: jeda per situs, konflik ekstensi, dinding anti-pemblokir vs pemutar rusak.",
+  "h1": "Pemutar video tidak berfungsi dengan pemblokir iklan Anda? Diagnosis langkah demi langkah",
+  "answer": "Ketika sebuah video gagal diputar saat pemblokir iklan aktif, penyebabnya hampir selalu salah satu dari tiga hal berikut: dinding anti-pemblokir iklan, konflik antara dua ekstensi, atau pemutar yang tidak menangani permintaan yang diblokir dengan benar. Matikan perlindungan pada situs tersebut terlebih dahulu, lalu lanjutkan dengan memeriksa daftar berikut.",
+  "sections": [
+    {
+      "h2": "Langkah 1: jeda perlindungan hanya pada situs tersebut",
+      "body": [
+        "<p>Penanganan pertama bukan mematikan pemblokir iklan Anda — melainkan menjeda sementara untuk situs yang mengalami masalah. AdOff memiliki fitur <strong>penundaan per situs</strong> dengan beberapa opsi, yang dapat diakses dari popup: situs tersebut kembali berperilaku seperti semula, sementara semua situs lain tetap terlindungi.</p>",
+        "<p>Setelah menjeda, muat ulang halaman dengan hard refresh (Ctrl+Shift+R / Cmd+Shift+R) agar skrip pemutar dimuat ulang dari awal. Jika video kini mulai diputar, berarti pemutar bereaksi terhadap permintaan yang diblokir — yang mempersempit cakupan masalah secara signifikan.</p>"
+      ]
+    },
+    {
+      "h2": "Langkah 2: periksa konflik dengan ekstensi lain",
+      "body": [
+        "<p>Dua pemblokir iklan yang berjalan bersamaan merupakan penyebab paling umum terjadinya pemutaran yang rusak. Masing-masing mencoba menyadap permintaan yang sama, sehingga pemutar bisa menerima jawaban yang saling bertentangan. Matikan semua pemblokir iklan, ekstensi privasi, dan pengelola skrip lainnya (di <code>chrome://extensions</code> atau halaman serupa di browser Anda), lalu uji kembali dengan hanya satu ekstensi yang aktif.</p>",
+        "<p>Sementara Anda berada di sana, periksa apakah ekstensi sudah diperbarui: API pemutar sering berubah, dan lapisan netralisasi yang usang bisa melewatkan hal yang ditangani oleh versi terkini.</p>"
+      ]
+    },
+    {
+      "h2": "Langkah 3: bedakan dinding anti-iklan dengan pemutar yang rusak",
+      "body": [
+        "<p>Tidak setiap pemutar yang kosong terjadi karena kecelakaan. Gejalanya berbeda:</p>",
+        "<ul><li><strong>Dinding anti-pemblokir iklan</strong>: halaman dimuat, tetapi Anda mendapatkan pesan eksplisit (\"matikan pemblokir iklan Anda\", \"mohon izinkan iklan\"), atau video tidak pernah mulai diputar sementara spinner loading berputar tanpa henti. Situs secara sengaja menolak pemutaran hingga mendeteksi tidak adanya pemblokiran.</li><li><strong>Pemutar yang benar-benar rusak</strong>: kode kesalahan spesifik, kotak hitam, kontrol yang tidak merespons bahkan setelah beberapa kali pemuatan ulang, atau pemutaran gagal di situs tersebut bahkan di jendela privat dengan semua ekstensi dimatikan — yang terakhir ini berarti masalahnya sama sekali bukan karena pemblokir iklan Anda.</li></ul>",
+        "<p>AdOff menyertakan lapisan penyamaran (pemalsuan umpan, penyadapan fetch/XHR) yang dibangun khusus untuk kasus pertama: membuat halaman percaya bahwa tidak ada pemblokiran yang berlangsung.</p>"
+      ]
+    },
+    {
+      "h2": "Mengapa AdOff secara sengaja mengecualikan beberapa layanan",
+      "body": [
+        "<p>Beberapa layanan streaming berlangganan menggunakan jalur pemutar propietaris yang sangat terintegrasi dengan kode mereka, sehingga gangguan apa pun berisiko merusak pemutaran secara total. Karena itulah AdOff <strongsecara sengaja mengecualikan</strong> daftar layanan semacam itu: ini merupakan keputusan kualitas yang didokumentasikan dalam kode, bukan kelalaian.</p>",
+        "<p>Kompromi yang diambil jelas: di platform tersebut, iklan tetap muncul, tetapi video selalu berfungsi. Jika sebuah pemblokir iklan menjanjikan pemutaran tanpa iklan sekaligus tanpa kerusakan sama sekali di setiap layanan, bersikaplah skeptis.</p>"
+      ]
+    },
+    {
+      "h2": "Langkah 4: masih tidak berfungsi? Laporkan",
+      "body": [
+        "<p>Jika Anda telah menjeda, menyingkirkan konflik ekstensi, dan pemutar tetap gagal hanya saat AdOff aktif, maka kasus semacam inilah yang layak dilaporkan. Laporan dengan URL halaman yang tepat langsung menjadi bahan pertimbangan untuk membangun aturan dan perbaikan berikutnya — banyak perbaikan masa lalu dimulai dari satu laporan pengguna.</p>",
+        "<p>Gunakan tombol laporan di halaman ini, tempelkan URL situs yang bermasalah, dan jelaskan apa yang Anda lihat. Tidak perlu akun.</p>"
+      ]
+    },
+    {
+      "h2": "Daftar periksa cepat",
+      "body": [
+        "<ol><li>Jeda AdOff pada situs tersebut dari popup, lalu lakukan hard-reload.</li><li>Jika berhasil, aktifkan kembali dan catat apakah masalah muncul lagi — ini mengidentifikasi permintaan yang menjadi penyebabnya.</li><li>Matikan pemblokir iklan dan ekstensi privasi lainnya; biarkan hanya satu.</li><li>Periksa apakah halaman menampilkan pesan anti-pemblokir iklan eksplisit (dinding) atau kesalahan pemutar (pemutar rusak).</li><li>Perbarui ekstensi ke versi terbaru.</li><li>Uji di jendela privat dengan semua ekstensi dimatikan untuk menyingkirkan kemungkinan masalah di sisi situs.</li><li>Masih gagal? Laporkan situs tersebut dengan URL-nya yang tepat.</li></ol>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Mengapa pemutar video saya hanya gagal di satu situs?",
+      "a": "Karena pemutar di situs tersebut bereaksi buruk terhadap permintaan yang diblokir tertentu, atau situs tersebut menjalankan pemeriksaan anti-pemblokir iklan yang tidak berlaku di web lain, jeda AdOff pada situs tersebut — fitur jeda per-situs tersedia tepat untuk tujuan ini — lalu muat ulang untuk memastikan penyebabnya."
+    },
+    {
+      "q": "Apakah dua pemblokir iklan dapat berjalan secara bersamaan?",
+      "a": "Tidak direkomendasikan. Keduanya bersaing untuk menyadap permintaan yang sama, dan pemutar video bisa menerima respons yang bertentangan, yang sering menyebabkan pemutaran tidak pernah dimulai. Gunakan satu pemblokir yang terawat dengan baik, bukan dua yang saling tumpang tindih."
+    },
+    {
+      "q": "Bagaimana cara mengetahui apakah sebuah situs memiliki dinding anti-pemblokir iklan?",
+      "a": "Halaman biasanya menyatakan hal ini secara eksplisit, atau video berputar tanpa henti pada spinner tanpa kode kesalahan. Jika pemutaran berfungsi di jendela privat dengan semua ekstensi dinonaktifkan, penyebabnya adalah pemblokiran; jika tetap gagal di sana juga, masalahnya berasal dari situs itu sendiri."
+    },
+    {
+      "q": "Apakah menonaktifkan AdOff di satu situs memengaruhi situs lainnya?",
+      "a": "Tidak. Jeda per-situs hanya mengubah perilaku pada situs tersebut secara spesifik. Setiap situs lain tetap mendapat perlindungan penuh, dan Anda dapat mengaktifkan kembali perlindungan pada situs yang dijeda kapan saja dari popup."
+    },
+    {
+      "q": "Mengapa AdOff tidak memblokir iklan di beberapa platform berlangganan?",
+      "a": "Pilihan sengaja. Pipeline pemutarnya bersifat propietaris dan sangat terintegrasi, sehingga intervensi berisiko menghentikan pemutaran video sepenuhnya. AdOff mengecualikan layanan-layanan tersebut agar layanan tetap berfungsi — iklannya tetap muncul, tetapi pemutar tidak rusak."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Pemblokiran iklan streaming: panduan lengkap"
+    },
+    {
+      "href": "/bypass-anti-adblock",
+      "text": "Cara melewati dinding anti-iklan"
+    },
+    {
+      "href": "/adblock-detector",
+      "text": "Cara deteksi pemblokir iklan bekerja"
+    }
+  ],
+  "cta": {
+    "h3": "Pemblokir iklan yang ramah terhadap pemutar video",
+    "p": "Jeda per situs, pengecualian yang disengaja, dan lapisan penyamaran: AdOff dirancang untuk memblokir iklan tanpa merusak pemutaran video. Gratis, tanpa akun.",
+    "btn": "Pasang AdOff secara gratis"
+  },
+  "report": {
+    "intro": "Sudah mengikuti daftar periksa, tetapi pemutar tetap gagal saat AdOff aktif? Laporkan kasus ini dengan URL halaman yang tepat — laporan pengguna menentukan situs dan aturan mana yang akan diperbaiki selanjutnya.",
+    "btn_text": "Laporkan situs ini",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

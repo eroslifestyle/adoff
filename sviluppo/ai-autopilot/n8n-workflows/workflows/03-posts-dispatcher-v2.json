@@ -1,0 +1,1079 @@
+{
+  "name": "AdOff 03 - Posts Dispatcher v2 (Unified multi-platform)",
+  "description": "Table-driven distribution layer: channels + best-time-to-post + anti-shadow-ban jitter + circuit breaker per platform",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "schedule",
+      "name": "Every 15 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "path": "dispatch-now",
+        "httpMethod": "POST",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "webhook",
+      "name": "Webhook POST /dispatch-now",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        450
+      ],
+      "webhookId": "fc2dfbbd-9806-4d25-bfac-d3bb36361dff"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT kill_switch FROM adoff_autopilot.config WHERE id=1 LIMIT 1;"
+      },
+      "id": "check-kill-switch",
+      "name": "Check kill_switch",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json[0]?.kill_switch || false }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-kill-switch",
+      "name": "Kill switch active?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json: {status: 'killed', reason: 'kill_switch active'}}];"
+      },
+      "id": "kill-exit",
+      "name": "Exit (killed)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT pq.id, pq.platform, pq.body, pq.priority, pq.scheduled_at, pq.lang, pq.brand, pq.quality_score, pq.retry_count, COALESCE(pq.scheduled_at, NOW()) as eff_time FROM adoff_autopilot.posts_queue pq WHERE pq.status='queued' AND pq.quality_score >= 6 AND (pq.scheduled_at IS NULL OR pq.scheduled_at <= NOW()) ORDER BY pq.priority DESC, pq.scheduled_at ASC LIMIT 20;"
+      },
+      "id": "fetch-posts",
+      "name": "Query posts_queue (20)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        900,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "each",
+        "nodeProperties": [
+          "id",
+          "platform",
+          "body",
+          "priority",
+          "scheduled_at",
+          "lang",
+          "brand",
+          "quality_score",
+          "retry_count"
+        ]
+      },
+      "id": "loop-posts",
+      "name": "For each post",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT c.id, c.api_endpoint, c.oauth_token_ref, c.rate_limit_per_hour, c.active, c.posting_window, c.platform FROM adoff_autopilot.channels c WHERE c.platform = $1::text AND c.active = true LIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ $json.platform }}"
+        }
+      },
+      "id": "fetch-channel",
+      "name": "Fetch channel config",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1340,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.length === 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-no-channel",
+      "name": "Channel unavailable?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.posts_queue SET status='channel_unavailable' WHERE id=$1::bigint;",
+        "options": {
+          "queryReplacement": "={{ $('loop-posts').item.json.id }}"
+        }
+      },
+      "id": "mark-unavailable",
+      "name": "Mark channel_unavailable",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1780,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ch = $input.first().json[0];\nconst post = $('loop-posts').item.json;\nconst now = new Date();\nconst [start, end] = (ch.posting_window || '00:00-23:59').split('-').map(t => parseInt(t.replace(':','')));\nconst curr = now.getHours() * 100 + now.getMinutes();\nconst in_window = curr >= start && curr < end;\nreturn [{json: { in_window, curr_hour_minute: curr, window: ch.posting_window, platform: post.platform, post_id: post.id }}];"
+      },
+      "id": "check-posting-window",
+      "name": "Check posting_window",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.in_window }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-out-window",
+      "name": "Out of window?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const post = $('loop-posts').item.json;\nconst ch = $('fetch-channel').item.json[0];\nconst [start_str] = (ch.posting_window || '00:00-23:59').split('-');\nconst [h, m] = start_str.split(':').map(Number);\nconst now = new Date();\nconst next_slot = new Date(now);\nif (now.getHours() * 100 + now.getMinutes() >= h * 100 + m) {\n  next_slot.setDate(next_slot.getDate() + 1);\n}\nnext_slot.setHours(h, m, 0, 0);\nconst scheduled_ts = Math.floor(next_slot.getTime() / 1000);\nreturn [{json: { post_id: post.id, scheduled_at_ts: scheduled_ts, action: 'requeue_next_window' }}];"
+      },
+      "id": "calc-next-window",
+      "name": "Calculate next_window slot",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.posts_queue SET scheduled_at = to_timestamp($2::bigint) WHERE id=$1::bigint;",
+        "options": {
+          "queryReplacement": "={{ $json.post_id }},{{ $json.scheduled_at_ts }}"
+        }
+      },
+      "id": "requeue-next-window",
+      "name": "Requeue for next window",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2420,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as cnt FROM adoff_autopilot.social_published WHERE platform = $1::text AND published_at > NOW() - INTERVAL '1 hour';",
+        "options": {
+          "queryReplacement": "={{ $('loop-posts').item.json.platform }}"
+        }
+      },
+      "id": "check-rate-limit",
+      "name": "Check rate_limit (1h)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2200,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ parseInt($json[0]?.cnt || 0) >= $('fetch-channel').item.json[0].rate_limit_per_hour }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-rate-limited",
+      "name": "Rate limit exceeded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2420,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.posts_queue SET scheduled_at = NOW() + INTERVAL '60 minutes' WHERE id=$1::bigint;",
+        "options": {
+          "queryReplacement": "={{ $('loop-posts').item.json.id }}"
+        }
+      },
+      "id": "requeue-rate-limit",
+      "name": "Requeue +60min",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2640,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const post = $('loop-posts').item.json;\nconst ch = $('fetch-channel').item.json[0];\nconst plt = post.platform.toLowerCase();\nconst body = post.body || '';\nconst token_ref = ch.oauth_token_ref || '';\n\nlet api_config = { endpoint: '', method: 'POST', headers: {}, body_obj: {} };\n\nswitch(plt) {\n  case 'twitter':\n    api_config.endpoint = 'https://api.twitter.com/2/tweets';\n    api_config.headers = { 'Authorization': `Bearer ${token_ref}`, 'Content-Type': 'application/json' };\n    api_config.body_obj = { text: body.slice(0, 280) };\n    break;\n  case 'mastodon':\n    api_config.endpoint = (ch.api_endpoint || 'https://fosstodon.org') + '/api/v1/statuses';\n    api_config.headers = { 'Authorization': `Bearer ${token_ref}`, 'Content-Type': 'application/json' };\n    api_config.body_obj = { status: body.slice(0, 500), visibility: 'public' };\n    break;\n  case 'reddit':\n    api_config.endpoint = 'https://oauth.reddit.com/api/submit';\n    api_config.headers = { 'Authorization': `Bearer ${token_ref}`, 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'AdOffBot/1.0' };\n    api_config.body_form = { api_type: 'json', kind: 'self', sr: (post.body || '').match(/\\/r\\/([\\w-]+)/)?.[1] || 'test', title: body.split('\\\\n')[0].slice(0, 300), text: body };\n    api_config.use_form = true;\n    break;\n  case 'instagram':\n    api_config.endpoint = `https://graph.facebook.com/v18.0/${ch.api_endpoint || 'IG_ID'}/media`;\n    api_config.headers = { 'Content-Type': 'application/json' };\n    api_config.body_obj = { image_url: 'PLACEHOLDER', caption: body.slice(0, 2200) };\n    api_config.placeholder = true;\n    break;\n  case 'facebook':\n    api_config.endpoint = `https://graph.facebook.com/v18.0/${ch.api_endpoint || 'PAGE_ID'}/feed`;\n    api_config.headers = { 'Content-Type': 'application/json' };\n    api_config.body_obj = { message: body.slice(0, 63206), access_token: token_ref };\n    break;\n  case 'tiktok':\n    api_config.endpoint = 'https://open.tiktokapis.com/v2/post/publish/inbox/video/init/';\n    api_config.headers = { 'Authorization': `Bearer ${token_ref}`, 'Content-Type': 'application/json' };\n    api_config.body_obj = { source_info: { source: 'PULL_FROM_URL', video_url: 'PLACEHOLDER' }, post_info: { desc: body.slice(0, 2200) } };\n    api_config.placeholder = true;\n    break;\n  case 'linkedin':\n    api_config.endpoint = 'https://api.linkedin.com/v2/ugcPosts';\n    api_config.headers = { 'Authorization': `Bearer ${token_ref}`, 'Content-Type': 'application/json', 'LinkedIn-Version': '202304' };\n    api_config.body_obj = { author: 'PLACEHOLDER_URN', lifecycleState: 'PUBLISHED', specificContent: { 'com.linkedin.ugc.UGCPost': { content: { media: [], title: { text: body.slice(0, 200) }, description: { text: body.slice(0, 3000) } } } }, visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' } };\n    api_config.placeholder = true;\n    break;\n  case 'bluesky':\n    api_config.endpoint = 'https://bsky.social/xrpc/com.atproto.repo.createRecord';\n    api_config.headers = { 'Authorization': `Bearer ${token_ref}`, 'Content-Type': 'application/json' };\n    api_config.body_obj = { repo: process.env.BLUESKY_DID || 'DID_NOT_SET', collection: 'app.bsky.feed.post', record: { text: body.slice(0, 300), createdAt: new Date().toISOString() } };\n    api_config.placeholder = true;\n    break;\n  default:\n    api_config.endpoint = 'https://api.example.com/unknown';\n    api_config.error = `Unknown platform: ${plt}`;\n}\n\nreturn [{json: { api_config, post_id: post.id, platform: plt, has_token: !!token_ref, placeholder: api_config.placeholder || false }}];"
+      },
+      "id": "build-platform-body",
+      "name": "Build platform-specific body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2840,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.api_config.error }}",
+              "rightValue": null,
+              "operator": {
+                "type": "string",
+                "operation": "notExists"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-api-config-ok",
+      "name": "API config valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3060,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.api_config.endpoint }}",
+        "method": "POST",
+        "headers": "={{ JSON.stringify($json.api_config.headers) }}",
+        "sendBody": true,
+        "specifyBody": "={{ $json.api_config.use_form ? 'form' : 'json' }}",
+        "jsonBody": "={{ !$json.api_config.use_form ? JSON.stringify($json.api_config.body_obj) : '{}' }}",
+        "bodyParameters": "={{ $json.api_config.use_form ? Object.entries($json.api_config.body_form || {}).map(([k,v]) => ({name:k,value:v})) : [] }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "post-http",
+      "name": "POST to social API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3280,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json || {};\nconst post = $('loop-posts').item.json;\nconst api = $('build-platform-body').item.json.api_config;\nlet success = false, post_id = '', error = '';\n\ntry {\n  if (!resp.error && !resp.errors) {\n    if (resp.data?.id) post_id = resp.data.id;\n    else if (resp.id) post_id = resp.id;\n    else if (resp.json?.data?.id) post_id = resp.json.data.id;\n    success = !!post_id;\n  } else {\n    error = (resp.error || resp.errors?.[0]?.message || JSON.stringify(resp)).slice(0, 300);\n  }\n} catch(e) {\n  error = e.message;\n}\n\nreturn [{json: { post_id: post.id, platform: post.platform, success, platform_post_id: post_id, error, response_status: resp.status || 'unknown' }}];"
+      },
+      "id": "parse-response",
+      "name": "Parse API response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as fail_count FROM adoff_autopilot.publish_log WHERE platform=$1::text AND success=false AND created_at > NOW() - INTERVAL '10 minutes' ORDER BY created_at DESC LIMIT 3;",
+        "options": {
+          "queryReplacement": "={{ $json.platform }}"
+        }
+      },
+      "id": "check-circuit-breaker",
+      "name": "Check circuit breaker (3 fails/10min)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3720,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.publish_log (post_id, platform, success, error) VALUES ($1::bigint, $2::text, $3::boolean, $4::text);",
+        "options": {
+          "queryReplacement": "={{ $json.post_id }},{{ $json.platform }},{{ $json.success }},{{ $json.error }}"
+        }
+      },
+      "id": "log-publish",
+      "name": "Log publish attempt",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3940,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ parseInt($json[0]?.fail_count || 0) >= 3 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-circuit-break",
+      "name": "Circuit breaker triggered?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4160,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.channels SET active=false, circuit_breaker_until = NOW() + INTERVAL '1 hour' WHERE platform=$1::text;",
+        "options": {
+          "queryReplacement": "={{ $('parse-response').item.json.platform }}"
+        }
+      },
+      "id": "disable-channel-1h",
+      "name": "Disable channel 1h",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4380,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "if-success",
+      "name": "Published successfully?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4380,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.social_published (post_id, platform, platform_post_id, brand, lang, published_at) VALUES ($1::bigint, $2::text, $3::text, $4::text, $5::text, NOW()) RETURNING id;",
+        "options": {
+          "queryReplacement": "={{ $json.post_id }},{{ $json.platform }},{{ $json.platform_post_id }},{{ $('loop-posts').item.json.brand }},{{ $('loop-posts').item.json.lang }}"
+        }
+      },
+      "id": "insert_published",
+      "name": "INSERT social_published",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4600,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.posts_queue SET status='published', published_at=NOW(), retry_count=0 WHERE id=$1::bigint;",
+        "options": {
+          "queryReplacement": "={{ $json.post_id }}"
+        }
+      },
+      "id": "mark_published",
+      "name": "Mark posts_queue published",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4820,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.posts_queue SET status='failed', retry_count=retry_count+1, error=$2::text WHERE id=$1::bigint AND retry_count < 3;",
+        "options": {
+          "queryReplacement": "={{ $json.post_id }},{{ $json.error }}"
+        }
+      },
+      "id": "mark_failed",
+      "name": "Mark posts_queue failed (<3 retries)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4600,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.posts_queue SET scheduled_at = NOW() + (INTERVAL '1 minute' * CASE WHEN retry_count=1 THEN 5 WHEN retry_count=2 THEN 30 ELSE 120 END) WHERE id=$1::bigint AND retry_count < 3;",
+        "options": {
+          "queryReplacement": "={{ $json.post_id }}"
+        }
+      },
+      "id": "set_backoff",
+      "name": "Set exponential backoff",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4820,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.floor(Math.random() * 150) + 30 }}",
+        "unit": "seconds"
+      },
+      "id": "anti_shadow_ban",
+      "name": "Anti-shadow-ban jitter (30-180s)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5040,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json: {status: 'workflow_complete', posts_processed: $('loop-posts').item.json?.id || 0, total_queue: 'see social_published'}}];"
+      },
+      "id": "workflow_summary",
+      "name": "Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5260,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Every 15 min": {
+      "main": [
+        [
+          {
+            "node": "Check kill_switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook POST /dispatch-now": {
+      "main": [
+        [
+          {
+            "node": "Check kill_switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check kill_switch": {
+      "main": [
+        [
+          {
+            "node": "Kill switch active?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kill switch active?": {
+      "main": [
+        [
+          {
+            "node": "Exit (killed)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Query posts_queue (20)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query posts_queue (20)": {
+      "main": [
+        [
+          {
+            "node": "For each post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "For each post": {
+      "main": [
+        [
+          {
+            "node": "Fetch channel config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch channel config": {
+      "main": [
+        [
+          {
+            "node": "Channel unavailable?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Channel unavailable?": {
+      "main": [
+        [
+          {
+            "node": "Check posting_window",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark channel_unavailable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark channel_unavailable": {
+      "main": [
+        [
+          {
+            "node": "For each post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check posting_window": {
+      "main": [
+        [
+          {
+            "node": "Out of window?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Out of window?": {
+      "main": [
+        [
+          {
+            "node": "Check rate_limit (1h)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Calculate next_window slot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate next_window slot": {
+      "main": [
+        [
+          {
+            "node": "Requeue for next window",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Requeue for next window": {
+      "main": [
+        [
+          {
+            "node": "For each post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check rate_limit (1h)": {
+      "main": [
+        [
+          {
+            "node": "Rate limit exceeded?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate limit exceeded?": {
+      "main": [
+        [
+          {
+            "node": "Build platform-specific body",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Requeue +60min",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Requeue +60min": {
+      "main": [
+        [
+          {
+            "node": "For each post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build platform-specific body": {
+      "main": [
+        [
+          {
+            "node": "API config valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API config valid?": {
+      "main": [
+        [
+          {
+            "node": "POST to social API",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark posts_queue failed (<3 retries)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST to social API": {
+      "main": [
+        [
+          {
+            "node": "Parse API response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse API response": {
+      "main": [
+        [
+          {
+            "node": "Check circuit breaker (3 fails/10min)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check circuit breaker (3 fails/10min)": {
+      "main": [
+        [
+          {
+            "node": "Log publish attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log publish attempt": {
+      "main": [
+        [
+          {
+            "node": "Circuit breaker triggered?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Circuit breaker triggered?": {
+      "main": [
+        [
+          {
+            "node": "Published successfully?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Disable channel 1h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Disable channel 1h": {
+      "main": [
+        [
+          {
+            "node": "Published successfully?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Published successfully?": {
+      "main": [
+        [
+          {
+            "node": "INSERT social_published",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark posts_queue failed (<3 retries)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "INSERT social_published": {
+      "main": [
+        [
+          {
+            "node": "Mark posts_queue published",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark posts_queue published": {
+      "main": [
+        [
+          {
+            "node": "Anti-shadow-ban jitter (30-180s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark posts_queue failed (<3 retries)": {
+      "main": [
+        [
+          {
+            "node": "Set exponential backoff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set exponential backoff": {
+      "main": [
+        [
+          {
+            "node": "For each post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anti-shadow-ban jitter (30-180s)": {
+      "main": [
+        [
+          {
+            "node": "Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true
+  },
+  "active": false,
+  "id": "w03-posts-dispatcher-v2"
+}

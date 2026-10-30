@@ -1,0 +1,100 @@
+{
+  "slug": "video-player-not-working-with-ad-blocker",
+  "lang": "fr",
+  "title": "Vidéo non lue avec le bloqueur de publicités activé | AdOff",
+  "description": "La vidéo ne démarre pas avec votre bloqueur activé ? Diagnostic étape par étape : désactiver temporairement par site, vérifier les conflits entre extensions",
+  "h1": "Lecteur vidéo ne fonctionnant pas avec votre bloqueur de publicités ? Un diagnostic étape par étape",
+  "answer": "Lorsqu’une vidéo refuse de se lancer avec un bloqueur de publicités activé, la cause est presque toujours l’une des trois suivantes : un mur anti-bloqueur, un conflit entre deux extensions ou un lecteur qui mal gère une requête bloquée. Désactivez d’abord la protection sur ce site spécifique, puis consultez cette liste de vérification.",
+  "sections": [
+    {
+      "h2": "Étape 1 : mettre en pause la protection uniquement sur ce site",
+      "body": [
+        "<p>La première solution n’est pas de désactiver votre bloqueur de publicités — c’est de le mettre en pause uniquement pour le site qui pose problème. AdOff propose une <strong>mise en pause par site</strong>, avec plusieurs options accessibles depuis la fenêtre contextuelle : le site retrouve son comportement initial, tandis que tous les autres sites restent protégés.</p>",
+        "<p>Après la mise en pause, rechargez la page avec un rechargement forcé (Ctrl+Maj+R / Cmd+Maj+R) afin que les scripts du lecteur soient chargés à neuf. Si la vidéo démarre à ce moment, cela signifie que le lecteur réagissait à une requête bloquée — ce qui permet de cerner nettement le problème.</p>"
+      ]
+    },
+    {
+      "h2": "Étape 2 : vérifier les conflits avec d’autres extensions",
+      "body": [
+        "<p>Deux bloqueurs de publicités actifs simultanément constituent la cause la plus fréquente de lecture défaillante. Chacun tente d’intercepter les mêmes requêtes, et le lecteur peut recevoir des réponses contradictoires. Désactivez tous les autres bloqueurs de publicités, extensions de confidentialité et gestionnaires de scripts (via <code>chrome://extensions</code> ou la page équivalente) et testez à nouveau avec une seule extension active.</p>",
+        "<p>Pendant que vous y êtes, vérifiez que l’extension est à jour : les API des lecteurs évoluent, et une couche de neutralisation obsolète peut manquer ce qu’une version plus récente gère.</p>"
+      ]
+    },
+    {
+      "h2": "Étape 3 : distinguer un mur anti-publicité d’un lecteur défectueux",
+      "body": [
+        "<p>Tous les lecteurs vides ne sont pas le fruit du hasard. Les symptômes varient :</p>",
+        "<ul><li><strong>Mur anti-bloqueur de publicités</strong> : la page se charge, mais un message explicite apparaît (« désactivez votre bloqueur de publicités », « veuillez autoriser les publicités »), ou la vidéo ne démarre jamais tandis qu’un spinner de chargement tourne indéfiniment. Le site refuse délibérément de lire la vidéo tant qu’il détecte la présence d’un bloqueur.</li><li><strong>Lecteur réellement défectueux</strong> : un code d’erreur spécifique, un rectangle noir, des contrôles qui ne répondent même pas après plusieurs rechargements, ou une lecture qui échoue sur ce site même dans une fenêtre de navigation privée avec toutes les extensions désactivées — ce dernier cas signifie que le problème n’a rien à voir avec votre bloqueur de publicités.</li></ul>",
+        "<p>AdOff intègre une couche furtive (imitation de pièges, interception des appels fetch/XHR) conçue précisément pour le premier cas : faire croire à la page qu’aucun blocage n’est en cours.</p>"
+      ]
+    },
+    {
+      "h2": "Pourquoi AdOff exclut délibérément certains services",
+      "body": [
+        "<p>Certains services de streaming par abonnement utilisent des pipelines de lecteurs propriétaires, étroitement couplés à leur propre code, de sorte que toute interférence risque de faire tomber la lecture. C’est pourquoi AdOff <strong>exclut délibérément</strong> une liste de ces services : il s’agit d’une décision de qualité documentée, intégrée dans le code, et non d’une omission.</p>",
+        "<p>Le compromis est honnête : sur ces plateformes, les publicités restent visibles, mais la vidéo fonctionne toujours. Si un bloqueur de publicités promet à la fois une lecture sans publicité et aucune panne sur tous les services, soyez sceptique.</p>"
+      ]
+    },
+    {
+      "h2": "Étape 4 : toujours pas fonctionnel ? Signalez-le",
+      "body": [
+        "<p>Si vous avez mis AdOff en pause, écarté les conflits d’extensions, et que le lecteur échoue toujours uniquement avec AdOff activé, il s’agit exactement du type de cas méritant d’être signalé. Les rapports contenant l’URL exacte de la page alimentent directement la liste des règles et des correctifs à développer par la suite — de nombreux correctifs passés ont commencé par un seul rapport utilisateur.</p>",
+        "<p>Utilisez le bouton de signalement sur cette page, collez l’URL du site présentant le problème, et décrivez ce que vous observez. Aucun compte n’est requis.</p>"
+      ]
+    },
+    {
+      "h2": "Liste de vérification rapide",
+      "body": [
+        "<ol><li>Mettez AdOff en pause sur ce site depuis la fenêtre contextuelle, puis rechargez la page en forçant l’actualisation.</li><li>Si cela fonctionne, réactivez AdOff et notez si la panne réapparaît — cela permet d’identifier la requête en cause.</li><li>Désactivez les autres bloqueurs de publicités et extensions de confidentialité ; gardez-en une seule.</li><li>Vérifiez si la page affiche un message anti-bloqueur explicite (mur) ou une erreur du lecteur (lecteur défectueux).</li><li>Mettez l’extension à jour vers la dernière version.</li><li>Testez dans une fenêtre de navigation privée avec toutes les extensions désactivées afin d’éliminer un problème côté site.</li><li>Le problème persiste ? Signalez le site avec son URL exacte.</li></ol>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Pourquoi mon lecteur vidéo échoue-t-il uniquement sur un seul site ?",
+      "a": "Parce que le lecteur de ce site réagit mal à une requête spécifique bloquée, ou qu’il effectue une vérification anti-blocage publicitaire, ce qui n’est pas le cas du reste du web. Désactivez AdOff sur ce site uniquement — la désactivation par site existe précisément pour cela — puis recharger la page afin de déterminer laquelle des deux situations s’applique."
+    },
+    {
+      "q": "Deux bloqueurs de publicités peuvent-ils fonctionner simultanément ?",
+      "a": "Il n’est pas recommandé. Elles entrent en concurrence pour intercepter les mêmes requêtes, et un lecteur vidéo peut recevoir des réponses contradictoires, ce qui entraîne souvent une lecture qui ne démarre jamais. Utilisez plutôt un seul bloqueur bien maintenu, plutôt que deux qui se chevauchent."
+    },
+    {
+      "q": "Comment savoir si un site dispose d’un mur anti-bloqueur de publicités ?",
+      "a": "La page l’indique généralement explicitement, ou bien la vidéo reste bloquée sur un spinner infini sans code d’erreur. Si la lecture fonctionne dans une fenêtre de navigation privée avec toutes les extensions désactivées, le blocage était la cause du problème ; si elle échoue également dans ce cas, le problème provient du site lui-même."
+    },
+    {
+      "q": "La mise en pause d’AdOff sur un site affecte-t-elle les autres sites ?",
+      "a": "Non. La désactivation par site modifie le comportement uniquement sur ce site spécifique. Tous les autres sites conservent une protection complète, et vous pouvez réactiver la protection sur le site désactivé à tout moment via le menu contextuel."
+    },
+    {
+      "q": "Pourquoi AdOff ne bloque-t-il pas les publicités sur certaines plateformes payantes ?",
+      "a": "Choix délibéré. Leurs pipelines de lecteurs sont propriétaires et étroitement intégrés, et toute intervention risque de faire tomber la lecture vidéo complètement. AdOff les exclut donc afin que le service fonctionne — les publicités restent présentes, mais le lecteur ne tombe pas en panne."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Blocage des publicités en streaming : le guide complet"
+    },
+    {
+      "href": "/bypass-anti-adblock",
+      "text": "Comment les murs anti-blocage de publicités sont contournés"
+    },
+    {
+      "href": "/adblock-detector",
+      "text": "Comment la détection des bloqueurs de publicités fonctionne"
+    }
+  ],
+  "cta": {
+    "h3": "Un bloqueur de publicités compatible avec les lecteurs vidéo",
+    "p": "Pause par site, exclusions délibérées et couche de discrétion : AdOff est conçu pour bloquer les publicités sans perturber la lecture vidéo. Gratuit, sans compte requis.",
+    "btn": "Installer AdOff gratuitement"
+  },
+  "report": {
+    "intro": "Vous avez suivi la liste de vérification et le lecteur vidéo ne fonctionne toujours pas avec AdOff activé ? Signalez le problème en indiquant l’URL exacte de la page — les signalements des utilisateurs déterminent quels sites et quelles règles nous corrigeons en priorité.",
+    "btn_text": "Signaler ce site",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

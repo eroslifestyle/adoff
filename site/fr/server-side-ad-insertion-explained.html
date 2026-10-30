@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Explication serveur des pubs : pourquoi les bloqueurs</title>
+  <meta name="description" content="Le SSAI intègre les pubs directement dans le flux vidéo, sans requête distincte à bloquer. Découvrez comment la manipulation de manifeste fonctionne et" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <link rel="canonical" href="https://adoff.app/fr/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/ar/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/de/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/es/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/fr/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/hi/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/id/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="it" href="https://adoff.app/it/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/pl/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/pt/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/ru/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/tr/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/server-side-ad-insertion-explained" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Explication serveur des pubs : pourquoi les bloqueurs" />
+  <meta property="og:description" content="Le SSAI intègre les pubs directement dans le flux vidéo, sans requête distincte à bloquer. Découvrez comment la manipulation de manifeste fonctionne et" />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/fr/server-side-ad-insertion-explained" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Explication serveur des pubs : pourquoi les bloqueurs" />
+  <meta name="twitter:description" content="Le SSAI intègre les pubs directement dans le flux vidéo, sans requête distincte à bloquer. Découvrez comment la manipulation de manifeste fonctionne et" />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+<link rel="icon" href="/assets/icon128.png" type="image/png" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta name="theme-color" content="#0a0a1a" />
+
+<link rel="preload" id="adoff-font" href="/assets/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin /><style id="adoff-critical">@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:optional;src:url("/assets/fonts/InterVariable.woff2") format("woff2-variations")}@font-face{font-family:"Inter";font-style:italic;font-weight:100 900;font-display:optional;src:url("/assets/fonts/InterVariable-Italic.woff2") format("woff2-variations")}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--deep-space:     #0a0a1a;--midnight-blue:  #12122a;--shield-purple:  #7c5cfc;--shield-purple-light: #b8a9ff;--shield-purple-dark:  #4c3ad4;--soft-purple:    #b8a9ff;--pure-white:     #ffffff;--steel-gray:     #8a8aaa;--success-green:  #4ade80;--alert-red:      #f43f5e;--bg:           var(--deep-space);--surface:      var(--midnight-blue);--surface-2:    #1a1a36;--surface-warm: #15152e;--text:         #e2e2f0;--text-muted:   var(--steel-gray);--text-dim:     #80809a;--accent:       var(--shield-purple);--accent-btn:   #7252f8;--accent-light: var(--shield-purple-light);--accent-dim:   var(--shield-purple-dark);--accent-soft:  rgba(124, 92, 252, 0.12);--accent-line:  rgba(124, 92, 252, 0.34);--success:      var(--success-green);--success-bg:   rgba(74, 222, 128, 0.10);--danger:       var(--alert-red);--danger-bg:    rgba(244, 63, 94, 0.08);--border:        rgba(124, 92, 252, 0.18);--border-strong: rgba(124, 92, 252, 0.48);--border-subtle: rgba(255, 255, 255, 0.06);--radius-sm:  8px;--radius:     12px;--radius-lg:  18px;--radius-pill: 999px;--ease:       cubic-bezier(0.2, 0.8, 0.2, 1);--t-fast:     150ms var(--ease);--t:          220ms var(--ease);--t-slow:     420ms var(--ease);--container:        min(64rem, 92vw);--container-wide:   min(72rem, 94vw);--primary:        var(--accent);--primary-light:  var(--accent-light);--primary-dark:   var(--accent-dim);--card:           var(--surface);--card-hover:     var(--surface-2);--error:          var(--danger);--warning:        var(--accent);--shadow:         0 1px 0 var(--border-strong);--shadow-glow:    0 0 40px rgba(124, 92, 252, 0.18);--shadow-card:    0 4px 24px rgba(0, 0, 0, 0.4);--transition:     var(--t)}html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}body{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:17px;line-height:1.65;overflow-x:hidden}a{color:var(--accent-light);text-decoration:none;transition:color var(--t)}a:hover{color:var(--pure-white)}strong{color:var(--text);font-weight:700}h1,h2{font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;font-weight:800;line-height:1.1;letter-spacing:-0.025em;color:var(--text)}h1{font-size:clamp(2.4rem,5.5vw,4.2rem)}h2{font-size:clamp(1.7rem,3.8vw,2.8rem)}h1 em,h2 em,.hero__headline em{font-style:italic;color:var(--accent);font-weight:800}.container,.container--wide{margin:0 auto;padding:0 24px}.container{max-width:var(--container)}.container--wide{max-width:var(--container-wide)}section{padding:clamp(72px,9vw,116px) 0}.wordmark{display:inline-flex;align-items:baseline;font-family:"Inter",sans-serif;font-weight:800;letter-spacing:-0.04em;line-height:1;color:var(--pure-white)}.wordmark__off{color:var(--accent)}.wordmark__dot{color:var(--accent)}.wordmark--hero{font-size:clamp(2.8rem,7vw,5rem);margin-bottom:24px;display:flex;width:fit-content}.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 26px;border-radius:var(--radius);font-family:"Inter",sans-serif;font-size:0.98rem;font-weight:600;letter-spacing:-0.005em;text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform var(--t),background var(--t),color var(--t),border-color var(--t),box-shadow var(--t);white-space:normal;text-align:center;line-height:1.3;font-variant-numeric:tabular-nums}.btn--primary{background:var(--accent-btn);color:var(--pure-white);border-color:var(--accent-btn);box-shadow:0 0 0 0 var(--accent-line)}.btn--primary:hover{background:var(--accent-light);color:var(--deep-space);border-color:var(--accent-light);transform:translateY(-1px);box-shadow:0 0 0 4px var(--accent-soft);text-decoration:none}.btn--primary:active{transform:translateY(0)}.btn--outline{background:transparent;color:var(--text);border:1px solid var(--border-strong)}.btn--outline:hover{border-color:var(--accent);color:var(--accent-light);background:transparent;text-decoration:none}.btn--ghost{background:transparent;color:var(--text-muted);border-color:transparent;padding:12px 14px}.btn--ghost:hover{color:var(--accent-light);text-decoration:none}.btn--lg{padding:18px 34px;font-size:1.05rem}.btn--xl{padding:18px 34px;font-size:1.05rem;border-radius:var(--radius)}.nav__inner{max-width:var(--container-wide);margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}.nav__logo{display:flex;align-items:center;gap:10px;color:var(--pure-white);text-decoration:none}.nav__logo:hover{color:var(--accent-light)}.nav__logo img{width:28px;height:28px;border-radius:6px;object-fit:contain}.nav__links{display:flex;align-items:center;gap:28px;list-style:none}.nav__links a{color:var(--text-muted);font-size:0.92rem;font-weight:500;text-decoration:none;transition:color var(--t)}.nav__links a:hover{color:var(--pure-white)}.hero{padding:clamp(72px,11vw,140px) 0 clamp(48px,7vw,80px);position:relative;overflow:hidden}.hero::before{content:'';position:absolute;top:-160px;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(ellipse at center,rgba(124,92,252,0.10) 0%,transparent 65%);pointer-events:none;z-index:0}.hero>.container{position:relative;z-index:1}.hero__media{position:relative;margin:clamp(36px,6vw,64px) auto 0;max-width:700px}.hero__shots{display:flex;align-items:center;justify-content:center;gap:20px}.hero__shots-main,.hero__shots-pop{height:auto;border-radius:12px;border:1px solid var(--border);box-shadow:0 18px 44px rgba(0,0,0,0.5)}.hero__shots-main{width:60%}.hero__shots-pop{width:27%;border-color:var(--border-strong)}@media (max-width:620px){.hero__shots{flex-direction:column;align-items:center;gap:16px}.hero__shots-main,.hero__shots-pop{width:100%;max-width:380px}}.hero__eyebrow{font-family:"Inter",sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-light);margin-bottom:22px;display:inline-flex;align-items:center;gap:10px}.hero__eyebrow-dot{width:7px;height:7px;border-radius:50%;background:var(--success);flex-shrink:0;box-shadow:0 0 12px rgba(74,222,128,0.6)}.hero__headline,.hero__title{font-family:"Inter",sans-serif;font-size:clamp(2.5rem,6vw,4.4rem);font-weight:800;line-height:1.05;letter-spacing:-0.03em;margin-bottom:28px;color:var(--text);background:none;-webkit-text-fill-color:currentColor;background-clip:unset;-webkit-background-clip:unset;max-width:22ch}.hero__headline em{font-style:italic;color:var(--accent);-webkit-text-fill-color:var(--accent)}.hero__tagline{font-family:"Inter",sans-serif;font-style:italic;font-size:clamp(1.3rem,2.8vw,1.7rem);font-weight:600;color:var(--accent-light);margin:0 0 18px;letter-spacing:-0.01em}.hero__sub{font-size:clamp(1.05rem,2vw,1.2rem);color:var(--text-muted);max-width:56ch;margin:0 0 36px;line-height:1.65}.hero__sub strong{color:var(--text);font-weight:600}.hero__cta-group{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:32px}.hero__trust-strip{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;color:var(--text-dim);font-size:0.86rem}.hero__trust-strip span{display:inline-flex;align-items:center;gap:6px}.hero__trust-strip .dot-sep{color:var(--border-strong)}.hero__note{margin-top:14px;font-size:0.85rem;color:var(--text-dim)}.social-proof__divider{width:1px;height:36px;background:var(--border-subtle);flex-shrink:0}@media (max-width:640px){.social-proof__divider{display:none}}.stealth__arrow{font-family:"Inter",sans-serif;align-self:center;font-size:1.8rem;color:var(--accent);padding:0 6px}.plan-card .btn{width:100%;justify-content:center;text-align:center;margin-top:auto;min-height:44px;font-size:0.94rem}.reveal{opacity:1;transform:none}.reveal-delay-1{transition-delay:0.06s}.reveal-delay-2{transition-delay:0.12s}.reveal-delay-3{transition-delay:0.18s}.reveal-delay-4{transition-delay:0.24s}@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}*,*::before,*::after{animation-duration:0.001ms!important;transition-duration:0.001ms!important}}@media (max-width:980px){.stealth__arrow{display:none}}@media (max-width:768px){body{font-size:16px}section{padding:60px 0}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}.wordmark--hero{font-size:clamp(2.2rem,11vw,3.6rem)}}@media (max-width:480px){.hero__cta-group{flex-direction:column}.btn--lg,.btn--xl{width:100%}}:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}a:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.skip-link{position:absolute;left:-9999px;top:0;z-index:1000;padding:12px 20px;background:var(--accent);color:var(--pure-white);border-radius:0 0 var(--radius) 0;font-weight:600}.skip-link:focus{left:0}body,body h1,body h2,body h3,body h4,body h5,body h6,body p,body span,body div,body section,body article,body blockquote,body figcaption,body ul,body ol,body li,body label,body small,body .article-page,body .article-page h1,body .article-page h2,body .article-page h3,body .article-page p,body .article-page li,body .legal-page,body .legal-page p,body .legal-page h2,body .tech-card,body .tech-card p,body .step-list,body .step-list li,body .cta-box,body .cta-box p{text-align:center}html[dir="rtl"] body,html[dir="rtl"] body *{text-align:center}html[dir="rtl"] table,html[dir="rtl"] table *,html[dir="rtl"] .compare__table,html[dir="rtl"] .compare__table *,html[dir="rtl"] .plan-features,html[dir="rtl"] .plan-features *,html[dir="rtl"] pre,html[dir="rtl"] code{text-align:right}body *:not(table):not(tr):not(td):not(th):not(thead):not(tbody):not(tfoot):not(pre):not(code):not(.plan-features):not(.plan-features *):not(.guarantee__list):not(.guarantee__list *):not(.compare__table):not(.compare__table *):not(.faq-item__panel):not(.faq-item__panel *):not(input):not(textarea):not(select):not(.ticket-form):not(.ticket-form *):not(form):not(form *):not(.ba-col__list):not(.ba-col__list *){text-align:center!important}html[dir="rtl"] body *:not(table):not(tr):not(td):not(th):not(pre):not(code):not(.plan-features *):not(.compare__table *){text-align:center!important}body .section-title,body .section-label,body .section-sub,body .hero__headline,body .hero__sub,body .hero__tagline,body .hero__eyebrow,body .hero__note,body .guarantee__title,body .guarantee__sub,body .problem__twist h3,body .problem__twist p,body .solution__reveal,body .final-cta__headline,body .platforms__footnote,body .stealth__how h2,body .stealth__callout,body .platforms-card__title,body .platforms-card__cat,body .platforms-card__brands,body .platforms-card__note,body .feature-card__title,body .feature-card__desc,body .feature-card__benefit,body .pain-card__title,body .pain-card__desc,body .pain-card__number,body .trust-card__title,body .trust-card__desc,body .testi-card__name,body .testi-card__role,body .testi-card__quote,body .plan-name,body .plan-note,body .plan-features,body .step__title,body .step__desc,body .how-step__title,body .how-step__desc,body .compare-badge-wrap,body .compare-badge,body article.article-page>*,body .legal-page>*{margin-left:auto!important;margin-right:auto!important}body article.article-page p,body article.article-page h1,body article.article-page h2,body article.article-page h3,body article.article-page ul,body article.article-page ol{max-width:70ch;margin-left:auto!important;margin-right:auto!important}body .solution__points,body .solution__points li,body .solution__points li *,body .ba-col__list,body .ba-col__list li,body .ba-col__list li *,body ul li:has(>.g-check),body ul li:has(>svg),body ul li:has(>.check),body .feature-card__benefit,body .feature-card__benefit *,body .stealth-tech__list,body .stealth-tech__list li,body .stealth-tech__list li *,body .compare__row,body .compare__row *,body .compare__cell,body ul[class*="__list"],body ul[class*="__list"] li,body ul[class*="__list"] li *,body ol[class*="__list"],body ol[class*="__list"] li,body ol[class*="__list"] li *{text-align:left!important;margin-left:0!important;margin-right:0!important}body .solution__points,body .ba-col__list,body .stealth-tech__list,body ul[class*="__list"]{display:inline-block;text-align:left!important;margin-left:auto!important;margin-right:auto!important}body .btn,body a.btn,body button.btn,body .wordmark,body .wordmark--inline,body .wordmark-tagline,body .solution__brand,body .hero__cta-group,body .hero__cta-group>*,body .cta-group,body .cta-group>*,body .final-cta,body .final-cta>*,body .install-cta,body .install-cta>*{margin-left:auto!important;margin-right:auto!important}body .hero__cta-group,body .cta-group{display:flex!important;justify-content:center!important;flex-wrap:wrap!important;gap:12px}body .solution__brand,body p:has(>.wordmark),body div:has(>a.btn:only-child){text-align:center!important;display:block}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.001ms!important;transition-duration:0.001ms!important}}@media (max-width:768px){body{font-size:16px}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}}table th{font-variant-numeric:tabular-nums lining-nums}thead th{padding:16px 20px;text-align:left;font-family:"Inter",sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);white-space:nowrap}thead th:first-child{color:var(--pure-white)}@media (max-width:768px){body{font-size:16px}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}thead{display:none}}table *{text-align:left}img{max-width:100%;display:block}h1,h2,h3{font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;font-weight:800;line-height:1.1;letter-spacing:-0.025em;color:var(--text)}h3{font-weight:700;font-size:clamp(1.05rem,2vw,1.25rem);letter-spacing:-0.005em}.step{text-align:left;padding:0}code{text-align:left}</style><link rel="preload" href="/style.css?v=be9cdea8" as="style" onload="this.onload=null;this.rel='stylesheet'" /><noscript><link rel="stylesheet" href="/style.css?v=be9cdea8" /></noscript>
+<style>
+    .article-page { max-width: 780px; margin: 0 auto; padding: 84px 24px 100px; }
+    .article-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--text); margin-bottom: 16px; line-height: 1.2; }
+    .article-page h2 { font-size: 1.5rem; color: var(--text); margin: 44px 0 14px; }
+    .article-page h3 { font-size: 1.15rem; color: var(--text); margin: 28px 0 10px; }
+    .article-page p { color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
+    .article-page strong { color: var(--text); }
+    .article-page code { background:#1f1f3a; padding:2px 6px; border-radius:5px; color:#c9b8ff; font-size:0.92em; }
+    .answer-box { background:#12122a; border:1px solid rgba(124,92,252,0.25); border-radius:8px; padding:24px; margin:0 0 36px; }
+    .answer-box p { margin:0; color:var(--text); font-size:1.05rem; }
+    .cta-section { background:linear-gradient(135deg,rgba(124,92,252,.14),rgba(124,92,252,.03)); border:1px solid #2a2a4a; border-radius:16px; padding:32px; text-align:center; margin-top:48px; }
+    .cta-section h3 { color: var(--text); margin:0 0 8px; }
+    .cta-section p { margin:0 0 20px; color: var(--text-muted); }
+    .cta-section .btn { display:inline-block; padding:14px 28px; background:#fff; color:var(--text); font-weight:700; border-radius:12px; text-decoration:none; }
+  </style>
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Insertion publicitaire côté serveur expliquée : pourquoi les bloqueurs publicitaires réseau ne peuvent pas détecter ces publicités",
+  "description": "Le SSAI intègre les pubs directement dans le flux vidéo, sans requête distincte à bloquer. Découvrez comment la manipulation de manifeste fonctionne et son impact…",
+  "image": "https://adoff.app/assets/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "AdOff"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "AdOff"
+  },
+  "datePublished": "2026-09-20",
+  "dateModified": "2026-09-20",
+  "inLanguage": "fr"
+}
+  </script>
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Quelle est la différence entre SSAI et CSAI ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Dans l’insertion client-side des publicités (CSAI), le lecteur demande les publicités séparément au moment de la lecture, de sorte que ces demandes sont visibles des bloqueurs de publicités. Dans l’insertion server-side des publicités (SSAI), les publicités sont intégrées au flux vidéo côté serveur avant la diffusion, de sorte qu’aucune demande de publicité distincte n’existe à bloquer."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Un extension de navigateur peut-elle bloquer les publicités SSAI ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Aucune extension fonctionnant par filtrage des requêtes réseau ne peut supprimer une publicité intégrée sans rompre le flux, car la publicité et le contenu circulent ensemble dans le même manifeste et les mêmes segments. Les outils qui tentent cela provoquent généralement des images figées, des baisses de qualité ou des erreurs de lecture."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Pourquoi les flux en direct utilisent-ils le SSAI plutôt que des publicités classiques ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Le streaming en direct exige que la pause publicitaire reste synchronisée pour chaque spectateur et que la lecture se déroule sans interruption, ce que garantit l’intégration server-side. Elle fonctionne également de manière identique sur tous les appareils, y compris les téléviseurs intelligents où les extensions n’existent pas."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Le SSAI est-il identique à une publicité qu’on ne peut pas ignorer ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Pas exactement. Le saut est une décision du lecteur contrôlée par les métadonnées du flux. En SSAI, les publicités font partie intégrante du flux, de sorte que ni le spectateur ni une extension de navigateur ne dispose d’un point de contrôle permettant de les sauter ou de les supprimer."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "AdOff fonctionne-t-il sur les sites utilisant le SSAI ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sur ces flux spécifiques, non — et AdOff ne prétend pas le contraire. Sur les publicités non vidéo des mêmes sites, ainsi que dans l’ensemble de votre navigation (bannières publicitaires, suivi, SDK de publicités vidéo client-side), AdOff bloque et masque les publicités comme d’habitude."
+      }
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "AdOff",
+      "item": "https://adoff.app/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Explication serveur des pubs : pourquoi les bloqueurs échouent | AdOff",
+      "item": "https://adoff.app/fr/server-side-ad-insertion-explained"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <main>
+    <article class="article-page">
+      <h1>Insertion publicitaire côté serveur expliquée : pourquoi les bloqueurs publicitaires réseau ne peuvent pas détecter ces publicités</h1>
+      <div class="answer-box"><p>Non — l’insertion publicitaire côté serveur (SSAI) ne peut pas être bloquée par les bloqueurs publicitaires basés sur les requêtes, car la publicité est intégrée dans le même flux vidéo que le contenu, avant même qu’il ne quitte le serveur. Votre navigateur télécharge un seul manifeste continu et un seul flux continu ; il n’existe aucune requête publicitaire distincte à intercepter.</p></div>
+      <h2>Ce qu’est réellement l’insertion publicitaire côté serveur</h2>
+      <p><p>L’insertion publicitaire côté serveur (SSAI), également appelée « stitching » publicitaire, est une technique dans laquelle le fournisseur de vidéo fusionne la publicité et le contenu en un seul flux vidéo <strong>côté serveur</strong>, avant la diffusion. L’appareil du spectateur reçoit un flux continu déjà intégrant les publicités — contrairement à l’insertion publicitaire côté client (CSAI), dans laquelle le lecteur charge le contenu, puis émet des demandes séparées vers un serveur publicitaire pour chaque interruption.</p></p>
+      <p><p>Vous verrez la SSAI décrite dans les documents techniques comme des « manifestes assemblés » ou comme une « livraison à manifeste unique ». C’est l’approche dominante pour le streaming en direct et pour les offres gratuites des services vidéo à abonnement, car elle est plus difficile à contourner et se comporte de manière identique sur chaque appareil.</p></p>
+      <h2>Son fonctionnement dans les manifestes HLS et DASH</h2>
+      <p><p>La diffusion vidéo moderne utilise des formats de streaming adaptatif — HLS (listes <code>.m3u8</code>) et DASH (manifestes <code>.mpd</code>). Le flux est divisé en segments courts (généralement de quelques secondes chacun), et le manifeste répertorie ces segments dans l’ordre de lecture. Un lecteur côté client suit cette liste.</p></p>
+      <p><p>Avec SSAI, les segments publicitaires sont insérés directement dans cette liste de segments. Le manifest transmis à votre lecteur est réécrit de sorte qu’un segment publicitaire apparaît exactement à l’emplacement où un segment de contenu aurait dû se trouver. Certaines implémentations utilisent des marqueurs de discontinuité (<code>#EXT-X-DISCONTINUITY</code> dans HLS) pour signaler des changements d’encodage, mais c’est bien la liste elle-même que le lecteur lit légitimement. Du point de vue du lecteur, la publicité <em>fait partie</em> du programme.</p></p>
+      <h2>Pourquoi les bloqueurs publicitaires basés sur des requêtes n’ont rien à intercepter</h2>
+      <p><p>Un bloqueur de publicités basé sur une extension fonctionne au niveau réseau : il identifie les demandes vers des domaines publicitaires connus et les bloque ou les réécrit. Ce modèle suppose que la publicité arrive sous la forme d’une demande distincte, provenant d’un domaine distinct, qu’il est possible de distinguer du contenu. L’SSAI supprime entièrement cette hypothèse.</p></p>
+      <p><p>Avec les publicités « stitched », les segments contenant la publicité proviennent du même réseau de distribution de contenu, souvent sous le même domaine, et intégrés dans le même manifeste que la vidéo. Bloquer la requête reviendrait à bloquer la vidéo elle-même. Un bloqueur de publicités qui tente malgré tout de le faire interrompt généralement la lecture ou, sur les flux en direct, génère les images figées en remplacement que les utilisateurs signalent. Il s’agit d’une limitation structurelle, et non d’un écart temporaire : tout outil fonctionnant par filtrage des requêtes réseau ne peut pas distinguer une publicité « stitched » du contenu qui l’entoure.</p></p>
+      <h2>L’insertion côté client : le modèle que les bloqueurs publicitaires peuvent gérer</h2>
+      <p><p>Pour comparaison : dans l’insertion de publicités côté client, le lecteur vidéo appelle un SDK publicitaire pendant la lecture, le SDK récupère les fichiers créatifs auprès de domaines publicitaires, et le lecteur les affiche dans une zone dédiée. Ces requêtes sont visibles, distinctes et bloquables. Neutraliser le SDK publicitaire — ce que fait AdOff avec le SDK de publicité vidéo utilisé sur l’ensemble du Web — fait en sorte que le lecteur revienne directement au contenu.</p></p>
+      <p><p>C’est pourquoi les bloqueurs de publicités restent efficaces sur une grande partie du Web, y compris sur de nombreux sites intégrant des lecteurs vidéo avec des appels publicitaires côté client, et pourquoi les mêmes bloqueurs échouent sur les plateformes de streaming en direct et les services d’abonnement qui intègrent les publicités côté serveur.</p></p>
+      <h2>Ce qu’il faudrait pour supprimer les publicités intégrées (« stitched ads »)</h2>
+      <p><p>Supprimer une publicité intégrée nécessite de comprendre le flux, et non le réseau : détecter les marqueurs de discontinuité et les motifs de bordure de segments, réécrire le manifeste pour supprimer les segments publicitaires, et espérer que le fournisseur ne modifie pas la structure. Ce procédé est intrinsèquement fragile — toute modification côté fournisseur rompt la solution de contournement, et sur les flux en direct, le lecteur réécrit tombe souvent en retard ou affiche un substitut dégradé.</p></p>
+      <p><p>L’autre solution, fiable, n’est pas technique du tout : les fournisseurs intègrent des publicités car le forfait souscrit est publicitaire ; choisir un abonnement sans publicité les supprime donc par conception. Tout le reste constitue une course aux armements qui dégrade principalement l’expérience de visionnage.</p></p>
+      <h2>La position d’AdOff</h2>
+      <p><p>AdOff est une extension de navigateur gratuite (Chrome, Firefox, Safari, Edge, Opera) qui bloque les publicités réseau à l’aide de règles de filtrage statiques, masque les éléments publicitaires dans la page et neutralise le SDK de publicité vidéo côté client en le remplaçant par un stub qui reprend immédiatement la lecture du contenu. Elle fonctionne uniquement sur les lecteurs web des applications, là où les publicités sont intégrées côté client ; elle ne prétend pas supprimer les publicités des flux intégrés côté serveur, et elle ne perturbe délibérément pas les lecteurs vidéo abonnés afin d’éviter de les dégrader.</p></p>
+      <p><p>Cette honnêteté est précisément l’objectif de cette page : connaître le modèle utilisé par un site vous permet de savoir si une extension peut vous aider, avant même de l’installer.</p></p>
+      <h2>Questions fréquentes</h2>
+      <h3>Quelle est la différence entre SSAI et CSAI ?</h3>
+      <p>Dans l’insertion client-side des publicités (CSAI), le lecteur demande les publicités séparément au moment de la lecture, de sorte que ces demandes sont visibles des bloqueurs de publicités. Dans l’insertion server-side des publicités (SSAI), les publicités sont intégrées au flux vidéo côté serveur avant la diffusion, de sorte qu’aucune demande de publicité distincte n’existe à bloquer.</p>
+      <h3>Un extension de navigateur peut-elle bloquer les publicités SSAI ?</h3>
+      <p>Aucune extension fonctionnant par filtrage des requêtes réseau ne peut supprimer une publicité intégrée sans rompre le flux, car la publicité et le contenu circulent ensemble dans le même manifeste et les mêmes segments. Les outils qui tentent cela provoquent généralement des images figées, des baisses de qualité ou des erreurs de lecture.</p>
+      <h3>Pourquoi les flux en direct utilisent-ils le SSAI plutôt que des publicités classiques ?</h3>
+      <p>Le streaming en direct exige que la pause publicitaire reste synchronisée pour chaque spectateur et que la lecture se déroule sans interruption, ce que garantit l’intégration server-side. Elle fonctionne également de manière identique sur tous les appareils, y compris les téléviseurs intelligents où les extensions n’existent pas.</p>
+      <h3>Le SSAI est-il identique à une publicité qu’on ne peut pas ignorer ?</h3>
+      <p>Pas exactement. Le saut est une décision du lecteur contrôlée par les métadonnées du flux. En SSAI, les publicités font partie intégrante du flux, de sorte que ni le spectateur ni une extension de navigateur ne dispose d’un point de contrôle permettant de les sauter ou de les supprimer.</p>
+      <h3>AdOff fonctionne-t-il sur les sites utilisant le SSAI ?</h3>
+      <p>Sur ces flux spécifiques, non — et AdOff ne prétend pas le contraire. Sur les publicités non vidéo des mêmes sites, ainsi que dans l’ensemble de votre navigation (bannières publicitaires, suivi, SDK de publicités vidéo client-side), AdOff bloque et masque les publicités comme d’habitude.</p>
+      <p>Pour en savoir plus : <a href="/streaming-ad-blocking">Blocage des publicités en streaming : ce qui fonctionne et ce qui ne fonctionne pas</a>, <a href="/ima-sdk-ad-blocking-explained">Comment les SDK de publicités vidéo côté client sont neutralisés</a>, <a href="/twitch-ad-blocker">Publicités Twitch : pourquoi les extensions échouent sur les flux en direct</a>.</p>
+      <div class="cta-section">
+        <h3>Bloquer les publicités qu’il est possible de bloquer</h3>
+        <p>AdOff ne peut pas supprimer les publicités intégrées (« stitched ads ») — aucune solution honnête n’y parvient. En revanche, les publicités d’affichage, le suivi et les publicités vidéo côté client que vous rencontrez lors de votre navigation quotidienne, AdOff les supprime gratuitement, sans nécessiter de compte.</p>
+        <a href="/install.html" class="btn">Installez AdOff — c’est gratuit</a>
+      </div>
+    </article>
+  </main>
+<script src="/adoff-i18n.js?v=9c17e196" defer></script>
+  <script src="/adoff-nav.js?v=aa5d5c66"></script>
+  <script src="/adoff-footer.js?v=06c40593"></script>
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

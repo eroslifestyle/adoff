@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>AdOff Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a1a;--card:#12122a;--border:#2a2a4a;
+  --accent:#7c5cfc;--success:#4ade80;--danger:#f43f5e;--warn:#fbbf24;
+  --text:#e0e0f0;--muted:#6a6a8a;--input:#1a1a36;--sidebar:220px
+}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+
+/* ── LOGIN ── */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at top,#12122a 0%,var(--bg) 70%)}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px;width:400px;max-width:95vw}
+.login-logo{text-align:center;font-size:26px;font-weight:800;margin-bottom:6px}
+.login-logo span{color:var(--accent)}
+.login-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:28px}
+.login-box input{width:100%;background:var(--input);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--text);font-size:14px;outline:none;margin-bottom:12px;transition:border-color .2s}
+.login-box input:focus{border-color:var(--accent)}
+.err{color:var(--danger);font-size:12px;margin-bottom:12px;display:none}
+.err.show{display:block}
+.ok-msg{color:var(--success);font-size:12px;margin-bottom:12px;display:none}
+.ok-msg.show{display:block}
+.link{color:var(--accent);font-size:12px;cursor:pointer;margin-top:8px;display:inline-block}
+.link:hover{text-decoration:underline}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#6a4de0}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:rgba(244,63,94,.15);color:var(--danger);border:1px solid rgba(244,63,94,.3)}
+.btn-danger:hover{background:rgba(244,63,94,.25)}
+.btn-success{background:rgba(74,222,128,.15);color:var(--success);border:1px solid rgba(74,222,128,.3)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-full{width:100%;justify-content:center}
+.btn-icon{padding:6px 10px;font-size:16px;background:transparent;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--muted);transition:all .15s}
+.btn-icon:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── LAYOUT ── */
+.app{display:none}
+.app.show{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar);background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .25s}
+.sidebar-logo{padding:20px 20px 16px;font-size:20px;font-weight:800;border-bottom:1px solid var(--border)}
+.sidebar-logo span{color:var(--accent)}
+.sidebar-nav{flex:1;padding:12px 8px;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:500;transition:all .15s;margin-bottom:2px;user-select:none}
+.nav-item:hover{background:rgba(124,92,252,.1);color:var(--text)}
+.nav-item.active{background:rgba(124,92,252,.2);color:var(--accent)}
+.nav-icon{font-size:18px;width:24px;text-align:center}
+.sidebar-footer{padding:16px;border-top:1px solid var(--border)}
+.admin-badge{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.admin-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.admin-name{font-size:13px;font-weight:600}
+.admin-role{font-size:11px;color:var(--muted)}
+.main{margin-left:var(--sidebar);flex:1;min-height:100vh}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:16px;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.page{padding:24px 28px;display:none}
+.page.active{display:block}
+
+/* ── CARDS / STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden}
+.stat-card::before{content:"";position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 12px 0 60px;opacity:.06;background:var(--accent)}
+.stat-val{font-size:30px;font-weight:800;color:var(--accent);line-height:1}
+.stat-val.green{color:var(--success)}
+.stat-val.red{color:var(--danger)}
+.stat-val.gold{color:var(--warn)}
+.stat-label{font-size:11px;color:var(--muted);margin-top:6px;text-transform:uppercase;letter-spacing:.5px}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+.card-title{font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#0e0e26;padding:11px 16px;text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 16px;border-bottom:1px solid rgba(42,42,74,.5);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(124,92,252,.04)}
+.mono{font-family:monospace;font-size:12px;color:var(--accent)}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-active{background:rgba(74,222,128,.12);color:var(--success);border:1px solid rgba(74,222,128,.2)}
+.badge-expired{background:rgba(251,191,36,.12);color:var(--warn);border:1px solid rgba(251,191,36,.2)}
+.badge-revoked{background:rgba(244,63,94,.12);color:var(--danger);border:1px solid rgba(244,63,94,.2)}
+.badge-monthly{background:rgba(124,92,252,.12);color:var(--accent);border:1px solid rgba(124,92,252,.2)}
+.badge-annual{background:rgba(74,222,128,.12);color:var(--success);border:1px solid rgba(74,222,128,.2)}
+.badge-lifetime{background:rgba(251,191,36,.12);color:var(--warn);border:1px solid rgba(251,191,36,.2)}
+.badge-open{background:rgba(251,191,36,.12);color:var(--warn);border:1px solid rgba(251,191,36,.2)}
+.badge-closed{background:rgba(74,222,128,.12);color:var(--success);border:1px solid rgba(74,222,128,.2)}
+
+/* ── FORM ── */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.field label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select,.field textarea{background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;transition:border-color .2s;width:100%}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:80px;font-family:inherit}
+.field select option{background:var(--card)}
+.form-row{display:flex;gap:14px;flex-wrap:wrap}
+.form-row .field{flex:1;min-width:140px}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.toolbar input{background:var(--input);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text);font-size:13px;outline:none;min-width:240px;transition:border-color .2s}
+.toolbar input:focus{border-color:var(--accent)}
+.toolbar select{background:var(--input);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--text);font-size:13px;outline:none;cursor:pointer}
+.spacer{flex:1}
+
+/* ── LOADING ── */
+.loader{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+.loader-lg{width:40px;height:40px;border-width:3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-center{display:flex;align-items:center;justify-content:center;padding:60px;flex-direction:column;gap:16px;color:var(--muted)}
+
+/* ── TOAST ── */
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:13px;font-weight:500;min-width:260px;animation:toastIn .25s ease;display:flex;align-items:center;gap:10px}
+.toast.success{border-color:rgba(74,222,128,.4)}
+.toast.error{border-color:rgba(244,63,94,.4)}
+.toast-icon{font-size:16px}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:520px;max-width:95vw;max-height:85vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;padding:4px}
+.modal-close:hover{color:var(--text)}
+
+/* ── CHART ── */
+.chart-wrap{position:relative;height:200px}
+.chart-wrap-lg{height:260px}
+
+/* ── PROGRESS BAR ── */
+.progress{background:var(--input);border-radius:20px;height:6px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:20px;background:var(--accent);transition:width .4s}
+
+/* ── EXPAND ROW ── */
+.detail-row{display:none;background:rgba(124,92,252,.04)}
+.detail-row.show{display:table-row}
+.detail-cell{padding:16px 24px!important}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.detail-item{background:var(--input);border-radius:8px;padding:10px 14px}
+.detail-item .dk{font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px}
+.detail-item .dv{font-size:13px;font-weight:600}
+.inline-edit{background:var(--input);border:1px solid var(--border);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;outline:none;width:100%}
+.inline-edit:focus{border-color:var(--accent)}
+
+/* ── TICKET ── */
+.ticket-reply{background:var(--input);border-radius:8px;padding:12px 14px;margin-top:8px}
+.ticket-reply.admin{background:rgba(124,92,252,.1);border-left:3px solid var(--accent)}
+.reply-meta{font-size:11px;color:var(--muted);margin-bottom:4px}
+.reply-text{font-size:13px;line-height:1.6}
+
+/* ── COUNTRY BAR ── */
+.country-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(42,42,74,.4)}
+.country-row:last-child{border-bottom:none}
+.country-bar{flex:1;max-width:180px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:none}
+  .main{margin-left:0}
+  .row-2,.row-3{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .topbar{padding:12px 16px}
+  .page{padding:16px}
+  .mobile-menu-btn{display:flex!important}
+}
+.mobile-menu-btn{display:none;background:none;border:none;color:var(--text);cursor:pointer;font-size:22px;padding:4px}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+.overlay.show{display:block}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+
+/* ── DIVIDER ── */
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+.section-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <!-- Main login form -->
+  <div class="login-box" id="loginBox">
+    <div class="login-logo">Ad<span>Off</span></div>
+    <div class="login-sub">Admin Dashboard</div>
+    <div class="err" id="loginErr"></div>
+    <input type="text" id="loginUser" placeholder="Username" autocomplete="username">
+    <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password">
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Accedi</button>
+    <div style="text-align:center;margin-top:12px">
+      <span class="link" onclick="showPanel('forgot')">Password dimenticata?</span>
+    </div>
+  </div>
+
+  <!-- Forgot password -->
+  <div class="login-box" id="forgotBox" style="display:none">
+    <div class="login-logo">Ad<span>Off</span></div>
+    <div class="login-sub">Recupero Password</div>
+    <div class="err" id="forgotErr"></div>
+    <div class="ok-msg" id="forgotOk"></div>
+    <input type="email" id="forgotEmail" placeholder="Email admin">
+    <button class="btn btn-primary btn-full" onclick="doForgot()">Invia link reset</button>
+    <div style="text-align:center;margin-top:12px">
+      <span class="link" onclick="showPanel('login')">← Torna al login</span>
+    </div>
+  </div>
+
+  <!-- Reset password -->
+  <div class="login-box" id="resetBox" style="display:none">
+    <div class="login-logo">Ad<span>Off</span></div>
+    <div class="login-sub">Nuova Password</div>
+    <div class="err" id="resetErr"></div>
+    <div class="ok-msg" id="resetOk"></div>
+    <input type="password" id="resetPass" placeholder="Nuova password">
+    <input type="password" id="resetPass2" placeholder="Conferma password">
+    <button class="btn btn-primary btn-full" onclick="doReset()">Imposta password</button>
+  </div>
+</div>
+
+<!-- OVERLAY (mobile) -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- DASHBOARD -->
+<div class="app" id="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">Ad<span>Off</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-page="dashboard" onclick="navTo('dashboard')">
+        <span class="nav-icon">⊞</span><span>Dashboard</span>
+      </div>
+      <div class="nav-item" data-page="licenses" onclick="navTo('licenses')">
+        <span class="nav-icon">🔑</span><span>Licenze</span>
+      </div>
+      <div class="nav-item" data-page="finance" onclick="navTo('finance')">
+        <span class="nav-icon">💰</span><span>Finanza</span>
+      </div>
+      <div class="nav-item" data-page="analytics" onclick="navTo('analytics')">
+        <span class="nav-icon">📊</span><span>Analytics</span>
+      </div>
+      <div class="nav-item" data-page="support" onclick="navTo('support')">
+        <span class="nav-icon">💬</span><span>Supporto</span>
+      </div>
+      <div class="nav-item" data-page="settings" onclick="navTo('settings')">
+        <span class="nav-icon">⚙</span><span>Impostazioni</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="admin-badge">
+        <div class="admin-avatar">A</div>
+        <div>
+          <div class="admin-name" id="adminName">Admin</div>
+          <div class="admin-role">Administrator</div>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm btn-full" onclick="doLogout()">Esci</button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+          <div class="status-dot"></div><span>Worker online</span>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="refreshCurrentPage()">↻ Aggiorna</button>
+      </div>
+    </div>
+
+    <!-- PAGE: DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid" id="dash-stats">
+        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+      </div>
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Revenue ultimi 7 giorni</div>
+          <div class="chart-wrap"><canvas id="dashRevenueChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Distribuzione piani</div>
+          <div class="chart-wrap"><canvas id="dashPlanChart"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Installazioni recenti</div>
+        <div id="recentInstalls"><div class="loading-center"><div class="loader"></div></div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: LICENZE -->
+    <div class="page" id="page-licenses">
+      <div class="toolbar">
+        <input type="text" id="licSearch" placeholder="🔍  Cerca per email o key..." oninput="filterLicenses()">
+        <select id="licPlan" onchange="filterLicenses()">
+          <option value="">Tutti i piani</option>
+          <option value="monthly">Mensile</option>
+          <option value="annual">Annuale</option>
+          <option value="lifetime">Lifetime</option>
+        </select>
+        <select id="licStatus" onchange="filterLicenses()">
+          <option value="">Tutti gli stati</option>
+          <option value="active">Attive</option>
+          <option value="expired">Scadute</option>
+          <option value="revoked">Revocate</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn btn-primary" onclick="toggleNewLicForm()">＋ Nuova Licenza</button>
+      </div>
+
+      <!-- New license form -->
+      <div class="card" id="newLicForm" style="display:none;margin-bottom:16px">
+        <div class="card-title">Genera nuova licenza</div>
+        <div class="form-row">
+          <div class="field">
+            <label>Piano</label>
+            <select id="nlPlan">
+              <option value="monthly">Mensile</option>
+              <option value="annual">Annuale</option>
+              <option value="lifetime">Lifetime</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Mesi validità</label>
+            <input type="number" id="nlMonths" value="1" min="1" max="120" placeholder="1">
+          </div>
+          <div class="field">
+            <label>Email (opzionale)</label>
+            <input type="email" id="nlEmail" placeholder="utente@email.com">
+          </div>
+          <div class="field">
+            <label>Max dispositivi</label>
+            <input type="number" id="nlDevices" value="3" min="1" max="10">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="generateKey()">Genera Key</button>
+          <button class="btn btn-outline" onclick="toggleNewLicForm()">Annulla</button>
+          <div id="newKeyResult" style="display:none;flex:1;background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px 14px;align-items:center;gap:10px">
+            <span class="mono" id="newKeyText" style="flex:1;word-break:break-all"></span>
+            <button class="btn-icon" title="Copia" onclick="copyKey(document.getElementById('newKeyText').textContent)">⎘</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bulk action bar -->
+      <div id="bulkBar" style="display:none;background:rgba(124,92,252,.1);border:1px solid var(--accent);border-radius:10px;padding:12px 20px;margin-bottom:14px;align-items:center;justify-content:space-between">
+        <span style="font-size:13px;color:var(--accent);font-weight:600"><span id="bulkCount">0</span> selezionate</span>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm btn-outline" onclick="bulkAction('revoke')">Revoca selezionate</button>
+          <button class="btn btn-sm btn-danger" onclick="bulkAction('delete')">Elimina selezionate</button>
+          <button class="btn btn-sm btn-outline" onclick="clearSelection()">Deseleziona</button>
+        </div>
+      </div>
+
+      <div id="licTableWrap">
+        <div class="loading-center"><div class="loader"></div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: FINANZA -->
+    <div class="page" id="page-finance">
+      <div class="stats-grid" id="fin-stats">
+        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+      </div>
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Revenue ultimi 30 giorni</div>
+          <div class="chart-wrap chart-wrap-lg"><canvas id="finRevenueChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Revenue per piano</div>
+          <div class="chart-wrap"><canvas id="finPlanChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div class="stats-grid" id="ana-stats">
+        <div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>
+      </div>
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Installazioni ultimi 7 giorni</div>
+          <div class="chart-wrap"><canvas id="anaInstallChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Top Paesi</div>
+          <div id="topCountries"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Download per browser</div>
+          <div id="browserStats"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Log installazioni recenti</div>
+          <div id="installLog"><div class="loading-center"><div class="loader"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: SUPPORTO -->
+    <div class="page" id="page-support">
+      <div class="toolbar">
+        <select id="ticketFilter" onchange="loadTickets()">
+          <option value="">Tutti i ticket</option>
+          <option value="open">Aperti</option>
+          <option value="closed">Chiusi</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn btn-outline btn-sm" onclick="loadTickets()">↻ Ricarica</button>
+      </div>
+      <div id="ticketTableWrap">
+        <div class="loading-center"><div class="loader"></div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: IMPOSTAZIONI -->
+    <div class="page" id="page-settings">
+      <div class="row-2">
+        <div class="card">
+          <div class="card-title">Cambia password</div>
+          <div class="field">
+            <label>Password attuale</label>
+            <input type="password" id="settCurrPass" placeholder="Password corrente">
+          </div>
+          <div class="field">
+            <label>Nuova password</label>
+            <input type="password" id="settNewPass" placeholder="Min. 8 caratteri">
+          </div>
+          <div class="field">
+            <label>Conferma password</label>
+            <input type="password" id="settNewPass2" placeholder="Ripeti la nuova password">
+          </div>
+          <div class="err" id="settPassErr"></div>
+          <div class="ok-msg" id="settPassOk"></div>
+          <button class="btn btn-primary" onclick="changePassword()">Aggiorna password</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Email di recupero</div>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Usata per il reset password tramite link email.</p>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" id="settEmail" placeholder="admin@tuamail.com">
+          </div>
+          <div class="err" id="settEmailErr"></div>
+          <div class="ok-msg" id="settEmailOk"></div>
+          <button class="btn btn-primary" onclick="saveRecoveryEmail()">Salva email</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Info API</div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="dk">Endpoint</div>
+            <div class="dv mono" id="apiEndpoint" style="font-size:12px">–</div>
+          </div>
+          <div class="detail-item">
+            <div class="dk">Versione</div>
+            <div class="dv">AdOff Worker</div>
+          </div>
+          <div class="detail-item">
+            <div class="dk">Autenticazione</div>
+            <div class="dv">Session Token</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Edit License Modal -->
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <div class="modal-title">
+      Modifica Licenza
+      <button class="modal-close" onclick="closeModal('editModal')">×</button>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Piano</label>
+        <select id="editPlan">
+          <option value="monthly">Mensile</option>
+          <option value="annual">Annuale</option>
+          <option value="lifetime">Lifetime</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Max dispositivi</label>
+        <input type="number" id="editDevices" min="1" max="10">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="editEmail">
+      </div>
+      <div class="field">
+        <label>Scadenza (YYYY-MM-DD)</label>
+        <input type="date" id="editExpires">
+      </div>
+    </div>
+    <input type="hidden" id="editKey">
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-primary" onclick="saveLicense()">Salva modifiche</button>
+      <button class="btn btn-outline" onclick="closeModal('editModal')">Annulla</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ticket Detail Modal -->
+<div class="modal-bg" id="ticketModal">
+  <div class="modal" style="width:640px">
+    <div class="modal-title">
+      <span id="ticketModalTitle">Ticket</span>
+      <button class="modal-close" onclick="closeModal('ticketModal')">×</button>
+    </div>
+    <div id="ticketDetail"><div class="loading-center"><div class="loader"></div></div></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+"use strict";
+
+const API = "";
+let token = sessionStorage.getItem("adoff_admin_token") || "";
+let currentPage = "dashboard";
+let licData = [];
+const charts = {};
+
+// ── API HELPER ──────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const h = { "Content-Type": "application/json", ...(opts.headers || {}) };
+  if (token) h["X-Admin-Token"] = token;
+  try {
+    const r = await fetch(API + path, { ...opts, headers: h });
+    const data = await r.json();
+    if (r.status === 401) { doLogout(); return { ok: false, error: "Sessione scaduta" }; }
+    return data;
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+// ── TOAST ───────────────────────────────────────────────────
+function toast(msg, type = "success") {
+  const wrap = document.getElementById("toast-container");
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${type === "success" ? "✓" : "✕"}</span><span>${msg}</span>`;
+  wrap.appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transform = "translateY(8px)"; el.style.transition = ".3s"; setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+// ── AUTH ─────────────────────────────────────────────────────
+function showPanel(name) {
+  document.getElementById("loginBox").style.display = name === "login" ? "" : "none";
+  document.getElementById("forgotBox").style.display = name === "forgot" ? "" : "none";
+  document.getElementById("resetBox").style.display = name === "reset" ? "" : "none";
+}
+
+async function doLogin() {
+  const u = document.getElementById("loginUser").value.trim();
+  const p = document.getElementById("loginPass").value;
+  const err = document.getElementById("loginErr");
+  err.className = "err";
+  if (!u || !p) { err.textContent = "Inserisci username e password"; err.className = "err show"; return; }
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = "Accesso...";
+  const d = await api("/admin/login", { method: "POST", body: JSON.stringify({ username: u, password: p }) });
+  btn.disabled = false; btn.textContent = "Accedi";
+  if (!d.ok) { err.textContent = d.error || "Credenziali non valide"; err.className = "err show"; return; }
+  token = d.token;
+  sessionStorage.setItem("adoff_admin_token", token);
+  document.getElementById("adminName").textContent = d.username || "Admin";
+  startApp();
+}
+
+async function doForgot() {
+  const email = document.getElementById("forgotEmail").value.trim();
+  const err = document.getElementById("forgotErr");
+  const ok = document.getElementById("forgotOk");
+  err.className = "err"; ok.className = "ok-msg";
+  if (!email) { err.textContent = "Inserisci l'email"; err.className = "err show"; return; }
+  const btn = event.target; btn.disabled = true;
+  const d = await api("/admin/reset-password", { method: "POST", body: JSON.stringify({ email }) });
+  btn.disabled = false;
+  if (!d.ok) { err.textContent = d.error || "Errore"; err.className = "err show"; return; }
+  ok.textContent = "Email inviata! Controlla la tua casella."; ok.className = "ok-msg show";
+}
+
+async function doReset() {
+  const resetToken = new URLSearchParams(location.search).get("reset");
+  const p1 = document.getElementById("resetPass").value;
+  const p2 = document.getElementById("resetPass2").value;
+  const err = document.getElementById("resetErr");
+  const ok = document.getElementById("resetOk");
+  err.className = "err"; ok.className = "ok-msg";
+  if (p1.length < 8) { err.textContent = "Minimo 8 caratteri"; err.className = "err show"; return; }
+  if (p1 !== p2) { err.textContent = "Le password non coincidono"; err.className = "err show"; return; }
+  const btn = event.target; btn.disabled = true;
+  const d = await api("/admin/reset-confirm", { method: "POST", body: JSON.stringify({ token: resetToken, newPassword: p1 }) });
+  btn.disabled = false;
+  if (!d.ok) { err.textContent = d.error || "Errore"; err.className = "err show"; return; }
+  ok.textContent = "Password aggiornata! Reindirizzamento..."; ok.className = "ok-msg show";
+  setTimeout(() => { history.replaceState({}, "", "/admin"); showPanel("login"); }, 2000);
+}
+
+function doLogout() {
+  token = ""; sessionStorage.removeItem("adoff_admin_token");
+  document.getElementById("app").className = "app";
+  document.getElementById("loginWrap").style.display = "";
+  showPanel("login");
+}
+
+// ── APP START ────────────────────────────────────────────────
+function startApp() {
+  document.getElementById("loginWrap").style.display = "none";
+  document.getElementById("app").className = "app show";
+  document.getElementById("apiEndpoint").textContent = location.origin || "same-origin";
+  navTo("dashboard");
+}
+
+function init() {
+  const resetToken = new URLSearchParams(location.search).get("reset");
+  if (resetToken) { showPanel("reset"); return; }
+  if (token) {
+    document.getElementById("loginWrap").style.display = "none";
+    document.getElementById("app").className = "app show";
+    document.getElementById("apiEndpoint").textContent = location.origin || "same-origin";
+    navTo("dashboard");
+  }
+  // Enter key on login
+  document.getElementById("loginPass").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+  document.getElementById("loginUser").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("loginPass").focus(); });
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────
+const PAGE_TITLES = { dashboard:"Dashboard", licenses:"Licenze", finance:"Finanza", analytics:"Analytics", support:"Supporto", settings:"Impostazioni" };
+
+function navTo(page) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+  document.getElementById(`page-${page}`).classList.add("active");
+  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add("active");
+  document.getElementById("topbarTitle").textContent = PAGE_TITLES[page] || page;
+  currentPage = page;
+  closeSidebar();
+  loadPage(page);
+}
+
+function refreshCurrentPage() { loadPage(currentPage, true); }
+
+function loadPage(page, force = false) {
+  if (page === "dashboard") loadDashboard(force);
+  else if (page === "licenses") loadLicenses(force);
+  else if (page === "finance") loadFinance(force);
+  else if (page === "analytics") loadAnalytics(force);
+  else if (page === "support") loadTickets(force);
+}
+
+// ── SIDEBAR (MOBILE) ─────────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById("sidebar").classList.toggle("open");
+  document.getElementById("overlay").classList.toggle("show");
+}
+function closeSidebar() {
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("overlay").classList.remove("show");
+}
+
+// ── MODAL ────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add("show"); }
+function closeModal(id) { document.getElementById(id).classList.remove("show"); }
+
+// ── CHART DEFAULTS ───────────────────────────────────────────
+Chart.defaults.color = "#6a6a8a";
+Chart.defaults.borderColor = "#2a2a4a";
+Chart.defaults.font.family = "system-ui,-apple-system,sans-serif";
+Chart.defaults.font.size = 11;
+
+function mkChart(id, type, labels, datasets, opts = {}) {
+  if (charts[id]) charts[id].destroy();
+  const ctx = document.getElementById(id)?.getContext("2d");
+  if (!ctx) return;
+  charts[id] = new Chart(ctx, {
+    type,
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: opts.legend ?? false, labels: { color: "#9a9ab0", boxWidth: 12, padding: 16 } } },
+      scales: type === "doughnut" ? {} : {
+        x: { grid: { color: "#1e1e3a" }, ticks: { color: "#6a6a8a" } },
+        y: { grid: { color: "#1e1e3a" }, ticks: { color: "#6a6a8a" } }
+      },
+      ...opts
+    }
+  });
+}
+
+// ── FLAG ─────────────────────────────────────────────────────
+function flag(code) {
+  if (!code || code.length !== 2) return "🌍";
+  try { return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)); }
+  catch { return "🌍"; }
+}
+
+// ── TIME ─────────────────────────────────────────────────────
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return `${s}s fa`;
+  if (s < 3600) return `${Math.floor(s/60)}m fa`;
+  if (s < 86400) return `${Math.floor(s/3600)}h fa`;
+  return `${Math.floor(s/86400)}g fa`;
+}
+
+function fmtDate(ts) {
+  if (!ts) return "–";
+  return new Date(ts * 1000).toLocaleDateString("it-IT", { day:"2-digit", month:"short", year:"numeric" });
+}
+
+function fmtMoney(cents) {
+  return (cents / 100).toFixed(2) + " €";
+}
+
+// ── COPY ─────────────────────────────────────────────────────
+function copyKey(text) {
+  navigator.clipboard?.writeText(text).then(() => toast("Key copiata!")).catch(() => toast("Errore copia", "error"));
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────
+let dashLoaded = false;
+
+async function loadDashboard(force = false) {
+  if (dashLoaded && !force) return;
+  dashLoaded = false;
+  const [stats, rev, ana] = await Promise.all([
+    api("/admin/stats"),
+    api("/admin/revenue"),
+    api("/admin/analytics")
+  ]);
+
+  if (!stats.ok) { toast("Errore caricamento stats", "error"); return; }
+
+  // Stat cards
+  const lic = stats.licenses || {};
+  const sales = stats.sales || {};
+  const devs = stats.devices || {};
+  const revData = rev.revenue || {};
+  const anaData = ana.installs || {};
+  const dlData = ana.downloads || {};
+
+  document.getElementById("dash-stats").innerHTML = `
+    ${sc("Licenze Totali", lic.total ?? 0, "")}
+    ${sc("Attive", lic.active ?? 0, "green")}
+    ${sc("Lifetime", lic.lifetime ?? 0, "gold")}
+    ${sc("Scadute", lic.expired ?? 0, "red")}
+    ${sc("Dispositivi", devs.total ?? 0, "")}
+    ${sc("Vendute totali", sales.totalSold ?? 0, "")}
+    ${sc("Installazioni", anaData.total ?? 0, "")}
+    ${sc("Download totali", dlData.total ?? 0, "")}
+  `;
+
+  // Revenue chart (last 7 of last 30 days)
+  const last30 = revData.last30days || [];
+  const last7 = last30.slice(-7);
+  const rlabels = last7.map(d => d.date?.slice(5) || "");
+  const rvals = last7.map(d => (d.amount || 0) / 100);
+  mkChart("dashRevenueChart", "bar", rlabels, [{
+    data: rvals, backgroundColor: "rgba(124,92,252,.7)", borderRadius: 6, borderSkipped: false
+  }]);
+
+  // Plan distribution chart
+  const plans = stats.plans || {};
+  const planKeys = Object.keys(plans);
+  const planVals = planKeys.map(k => plans[k]);
+  const planColors = { monthly: "#7c5cfc", annual: "#4ade80", lifetime: "#fbbf24", unknown: "#6a6a8a" };
+  mkChart("dashPlanChart", "doughnut", planKeys.map(k => k.charAt(0).toUpperCase() + k.slice(1)), [{
+    data: planVals,
+    backgroundColor: planKeys.map(k => planColors[k] || "#6a6a8a"),
+    borderWidth: 0
+  }], { legend: true });
+
+  // Recent installs
+  const log = anaData.recentLog || [];
+  const instWrap = document.getElementById("recentInstalls");
+  if (!log.length) {
+    instWrap.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>Nessuna installazione registrata</p></div>`;
+  } else {
+    instWrap.innerHTML = `<div class="table-wrap"><table>
+      <thead><tr><th>Paese</th><th>Città</th><th>Browser</th><th>Sorgente</th><th>Quando</th></tr></thead>
+      <tbody>${log.slice(0,10).map(e => `<tr>
+        <td>${flag(e.country)} ${e.country || "?"}</td>
+        <td>${e.city || "–"}</td>
+        <td>${browserBadge(e.browser)}</td>
+        <td><span style="color:var(--muted)">${e.source || "–"}</span></td>
+        <td style="color:var(--muted)">${timeAgo(e.ts)}</td>
+      </tr>`).join("")}</tbody>
+    </table></div>`;
+  }
+
+  dashLoaded = true;
+}
+
+function sc(label, value, cls) {
+  return `<div class="stat-card"><div class="stat-val ${cls}">${value.toLocaleString()}</div><div class="stat-label">${label}</div></div>`;
+}
+
+function browserBadge(b) {
+  const icons = { chrome:"🌐", firefox:"🦊", edge:"🔷", opera:"🔴", other:"❔", unknown:"❔" };
+  return `<span style="font-size:13px">${icons[b] || "❔"} ${b || "?"}</span>`;
+}
+
+// ── LICENSES ─────────────────────────────────────────────────
+let licLoaded = false;
+
+async function loadLicenses(force = false) {
+  if (licLoaded && !force) return;
+  document.getElementById("licTableWrap").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  const plan = document.getElementById("licPlan").value;
+  const status = document.getElementById("licStatus").value;
+  let url = "/admin/licenses?limit=100";
+  if (plan) url += `&plan=${plan}`;
+  if (status) url += `&status=${status}`;
+  const d = await api(url);
+  if (!d.ok) { toast("Errore caricamento licenze", "error"); return; }
+  licData = d.licenses || [];
+  renderLicTable(licData);
+  licLoaded = true;
+}
+
+function filterLicenses() {
+  const search = document.getElementById("licSearch").value.toLowerCase();
+  const plan = document.getElementById("licPlan").value;
+  const status = document.getElementById("licStatus").value;
+  let filtered = licData;
+  if (search) filtered = filtered.filter(l => (l.email || "").toLowerCase().includes(search) || (l.key || l.raw || "").toLowerCase().includes(search));
+  if (plan) filtered = filtered.filter(l => l.plan === plan);
+  if (status) filtered = filtered.filter(l => l.status === status);
+  renderLicTable(filtered);
+}
+
+function renderLicTable(data) {
+  if (!data.length) {
+    document.getElementById("licTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">🔑</div><p>Nessuna licenza trovata</p></div>`;
+    updateBulkBar();
+    return;
+  }
+  document.getElementById("licTableWrap").innerHTML = `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th style="width:36px"><input type="checkbox" style="accent-color:var(--accent);cursor:pointer" onchange="toggleSelectAll(this)"></th>
+        <th>Key</th><th>Email</th><th>Piano</th><th>Scadenza</th>
+        <th>Dispositivi</th><th>Stato</th><th>Azioni</th>
+      </tr></thead>
+      <tbody id="licTbody">
+        ${data.map((l, i) => licRow(l, i)).join("")}
+      </tbody>
+    </table></div>`;
+  updateBulkBar();
+}
+
+function licRow(l, i) {
+  const key = l.key || l.raw || "–";
+  const keyShort = key.length > 24 ? key.slice(0, 24) + "…" : key;
+  const checked = selectedKeys.has(key) ? "checked" : "";
+  return `
+    <tr id="licRow_${i}">
+      <td><input type="checkbox" ${checked} style="accent-color:var(--accent);cursor:pointer" onchange="toggleSelect('${key}')"></td>
+      <td><span class="mono" title="${key}">${keyShort}</span></td>
+      <td>${l.email || '<span style="color:var(--muted)">–</span>'}</td>
+      <td><span class="badge badge-${l.plan}">${l.plan}</span></td>
+      <td>${l.expiresHuman || "–"}</td>
+      <td>
+        <span style="font-size:13px">${l.devices}/${l.maxDevices}</span>
+        <div class="progress" style="width:60px"><div class="progress-fill" style="width:${Math.round(l.devices/Math.max(l.maxDevices,1)*100)}%"></div></div>
+      </td>
+      <td><span class="badge badge-${l.status}">${l.status}</span></td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn-icon" title="Copia key" onclick="copyKey('${key}')">📋</button>
+          <button class="btn-icon" title="Modifica" onclick="openEditModal(${i})">✏️</button>
+          ${l.status !== "revoked" ? `<button class="btn-icon" title="Revoca" style="color:var(--danger)" onclick="revokeLic('${key}', ${i})">⏸</button>` : ""}
+          <button class="btn-icon" title="Elimina definitivamente" style="color:var(--danger)" onclick="deleteLic('${key}')">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+}
+
+function openEditModal(i) {
+  const l = licData[i];
+  if (!l) return;
+  document.getElementById("editKey").value = l.key || l.raw;
+  document.getElementById("editPlan").value = l.plan;
+  document.getElementById("editEmail").value = l.email || "";
+  document.getElementById("editDevices").value = l.maxDevices || 3;
+  document.getElementById("editExpires").value = l.expiresHuman === "LIFETIME" ? "" : (l.expiresHuman || "");
+  openModal("editModal");
+}
+
+async function saveLicense() {
+  const key = document.getElementById("editKey").value;
+  const plan = document.getElementById("editPlan").value;
+  const email = document.getElementById("editEmail").value;
+  const deviceLimit = parseInt(document.getElementById("editDevices").value);
+  const expiresStr = document.getElementById("editExpires").value;
+  const expires = expiresStr ? Math.floor(new Date(expiresStr).getTime() / 1000) : null;
+  const body = { key, plan, email, deviceLimit };
+  if (expires) body.expires = expires;
+  const btn = event.target; btn.disabled = true; btn.textContent = "Salvando...";
+  const d = await api("/admin/license-update", { method: "POST", body: JSON.stringify(body) });
+  btn.disabled = false; btn.textContent = "Salva modifiche";
+  if (!d.ok) { toast(d.error || "Errore salvataggio", "error"); return; }
+  toast("Licenza aggiornata");
+  closeModal("editModal");
+  licLoaded = false;
+  loadLicenses(true);
+}
+
+async function revokeLic(key, i) {
+  if (!confirm("Revocare questa licenza? L'azione è irreversibile.")) return;
+  const d = await api("/revoke", { method: "POST", body: JSON.stringify({ key }) });
+  if (!d.ok) { toast(d.error || "Errore revoca", "error"); return; }
+  toast("Licenza revocata");
+  licData[i].status = "revoked";
+  filterLicenses();
+}
+
+function toggleNewLicForm() {
+  const f = document.getElementById("newLicForm");
+  f.style.display = f.style.display === "none" ? "" : "none";
+}
+
+async function generateKey() {
+  const plan = document.getElementById("nlPlan").value;
+  const months = parseInt(document.getElementById("nlMonths").value) || 1;
+  const email = document.getElementById("nlEmail").value;
+  const deviceLimit = parseInt(document.getElementById("nlDevices").value) || 3;
+  const btn = event.target; btn.disabled = true; btn.textContent = "Generando...";
+  const body = { plan, months, deviceLimit };
+  if (email) body.email = email;
+  const d = await api("/admin/generate-key", { method: "POST", body: JSON.stringify(body) });
+  btn.disabled = false; btn.textContent = "Genera Key";
+  if (!d.ok) { toast(d.error || "Errore generazione", "error"); return; }
+  const keyEl = document.getElementById("newKeyText");
+  const resEl = document.getElementById("newKeyResult");
+  keyEl.textContent = d.key;
+  resEl.style.display = "flex";
+  toast("Key generata!");
+  licLoaded = false;
+  setTimeout(() => { loadLicenses(true); }, 800);
+}
+
+// ── SELECTION & BULK ─────────────────────────────────────────
+const selectedKeys = new Set();
+
+function updateBulkBar() {
+  const bar = document.getElementById("bulkBar");
+  document.getElementById("bulkCount").textContent = selectedKeys.size;
+  bar.style.display = selectedKeys.size > 0 ? "flex" : "none";
+}
+
+function toggleSelect(key) {
+  if (selectedKeys.has(key)) selectedKeys.delete(key); else selectedKeys.add(key);
+  updateBulkBar();
+}
+
+function toggleSelectAll(cb) {
+  const filtered = licData;
+  if (cb.checked) {
+    filtered.forEach(l => { const k = l.key || l.raw || ""; if (k) selectedKeys.add(k); });
+  } else {
+    selectedKeys.clear();
+  }
+  filterLicenses();
+  updateBulkBar();
+}
+
+function clearSelection() {
+  selectedKeys.clear();
+  filterLicenses();
+  updateBulkBar();
+}
+
+async function bulkAction(action) {
+  if (!selectedKeys.size) return;
+  const keys = [...selectedKeys];
+  const label = action === "delete" ? "ELIMINARE DEFINITIVAMENTE" : "REVOCARE";
+  if (!confirm(`${label} ${keys.length} licenze?`)) return;
+  if (action === "delete" && !confirm("Conferma: le licenze verranno cancellate per sempre.")) return;
+
+  const endpoint = action === "delete" ? "/admin/delete-license" : "/revoke";
+  let ok = 0, fail = 0;
+  for (const key of keys) {
+    const d = await api(endpoint, { method: "POST", body: JSON.stringify({ key }) });
+    if (d.ok) ok++; else fail++;
+  }
+  selectedKeys.clear();
+  updateBulkBar();
+  toast(`${ok} ${action === "delete" ? "eliminate" : "revocate"}${fail ? ", " + fail + " errori" : ""}`);
+  licLoaded = false;
+  loadLicenses(true);
+}
+
+async function deleteLic(key) {
+  if (!confirm("ELIMINARE DEFINITIVAMENTE questa licenza?\nL'azione e' irreversibile!")) return;
+  const d = await api("/admin/delete-license", { method: "POST", body: JSON.stringify({ key }) });
+  if (!d.ok) { toast(d.error || "Errore eliminazione", "error"); return; }
+  toast("Licenza eliminata definitivamente");
+  licLoaded = false;
+  loadLicenses(true);
+}
+
+// ── FINANCE ──────────────────────────────────────────────────
+let finLoaded = false;
+
+async function loadFinance(force = false) {
+  if (finLoaded && !force) return;
+  document.getElementById("fin-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>`;
+  const d = await api("/admin/revenue");
+  if (!d.ok) { toast("Errore caricamento dati finanziari", "error"); return; }
+  const rev = d.revenue || {};
+  const byPlan = rev.byPlan || {};
+
+  // Revenue today (last item in last30)
+  const last30 = rev.last30days || [];
+  const todayRev = last30.length ? last30[last30.length - 1] : { amount: 0, count: 0 };
+  const totalRevCents = last30.reduce((s, x) => s + (x.amount || 0), 0);
+  const mrr = rev.mrr || 0;
+
+  document.getElementById("fin-stats").innerHTML = `
+    ${sc("MRR", fmtMoney(mrr), "")}
+    ${sc("Revenue 30gg", fmtMoney(totalRevCents), "green")}
+    ${sc("Revenue oggi", fmtMoney(todayRev.amount || 0), "gold")}
+    ${sc("Vendite oggi", todayRev.count || 0, "")}
+  `;
+
+  // Revenue chart
+  const labels = last30.map(d => d.date?.slice(5) || "");
+  const vals = last30.map(d => (d.amount || 0) / 100);
+  mkChart("finRevenueChart", "line", labels, [{
+    data: vals, borderColor: "#7c5cfc", backgroundColor: "rgba(124,92,252,.15)",
+    fill: true, tension: 0.4, pointRadius: 2, pointHoverRadius: 5
+  }]);
+
+  // Plan breakdown chart
+  const pKeys = Object.keys(byPlan);
+  const pVals = pKeys.map(k => byPlan[k] / 100);
+  const planColors2 = { monthly: "#7c5cfc", annual: "#4ade80", lifetime: "#fbbf24" };
+  mkChart("finPlanChart", "doughnut",
+    pKeys.map(k => k.charAt(0).toUpperCase() + k.slice(1)),
+    [{ data: pVals, backgroundColor: pKeys.map(k => planColors2[k] || "#6a6a8a"), borderWidth: 0 }],
+    { legend: true }
+  );
+
+  finLoaded = true;
+}
+
+// ── ANALYTICS ────────────────────────────────────────────────
+let anaLoaded = false;
+
+async function loadAnalytics(force = false) {
+  if (anaLoaded && !force) return;
+  document.getElementById("ana-stats").innerHTML = `<div class="loading-center" style="grid-column:1/-1"><div class="loader"></div></div>`;
+  const d = await api("/admin/analytics");
+  if (!d.ok) { toast("Errore caricamento analytics", "error"); return; }
+  const inst = d.installs || {};
+  const dl = d.downloads || {};
+
+  document.getElementById("ana-stats").innerHTML = `
+    ${sc("Installazioni totali", inst.total ?? 0, "")}
+    ${sc("Oggi", inst.today ?? 0, "green")}
+    ${sc("Download totali", dl.total ?? 0, "")}
+    ${sc("Download oggi", dl.today ?? 0, "gold")}
+  `;
+
+  // Installs chart
+  const i7 = inst.last7days || [];
+  mkChart("anaInstallChart", "bar",
+    i7.map(x => x.date?.slice(5) || ""),
+    [{ data: i7.map(x => x.count), backgroundColor: "rgba(74,222,128,.7)", borderRadius: 5, borderSkipped: false }]
+  );
+
+  // Top countries
+  const countries = (inst.byCountry || []).slice(0, 10);
+  const maxCnt = countries[0]?.count || 1;
+  document.getElementById("topCountries").innerHTML = countries.length
+    ? countries.map(c => `
+        <div class="country-row">
+          <span style="font-size:18px">${flag(c.country)}</span>
+          <span style="width:32px;color:var(--muted);font-size:12px">${c.country}</span>
+          <div class="country-bar progress"><div class="progress-fill" style="width:${Math.round(c.count/maxCnt*100)}%"></div></div>
+          <span style="font-size:13px;font-weight:600;min-width:32px;text-align:right">${c.count}</span>
+        </div>`).join("")
+    : `<div class="empty"><div class="empty-icon">🌍</div><p>Nessun dato geografico</p></div>`;
+
+  // Browser downloads
+  const bData = dl.byBrowser || {};
+  const bNames = ["chrome", "firefox", "edge", "opera", "other"];
+  const bIcons = { chrome:"🌐", firefox:"🦊", edge:"🔷", opera:"🔴", other:"❔" };
+  const bMax = Math.max(1, ...bNames.map(b => bData[b] || 0));
+  document.getElementById("browserStats").innerHTML = bNames.map(b => `
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span>${bIcons[b]} ${b.charAt(0).toUpperCase()+b.slice(1)}</span>
+        <span style="font-weight:600">${bData[b] || 0}</span>
+      </div>
+      <div class="progress"><div class="progress-fill" style="width:${Math.round((bData[b]||0)/bMax*100)}%"></div></div>
+    </div>`).join("");
+
+  // Install log
+  const log = (inst.recentLog || []).slice(0, 20);
+  document.getElementById("installLog").innerHTML = log.length
+    ? `<div class="table-wrap"><table>
+        <thead><tr><th>Quando</th><th>Paese</th><th>Città</th><th>Browser</th></tr></thead>
+        <tbody>${log.map(e => `<tr>
+          <td style="color:var(--muted)">${timeAgo(e.ts)}</td>
+          <td>${flag(e.country)} ${e.country||"?"}</td>
+          <td>${e.city||"–"}</td>
+          <td>${browserBadge(e.browser)}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>`
+    : `<div class="empty"><div class="empty-icon">📭</div><p>Nessun log</p></div>`;
+
+  anaLoaded = true;
+}
+
+// ── SUPPORT ──────────────────────────────────────────────────
+let ticketsLoaded = false;
+
+async function loadTickets(force = false) {
+  if (ticketsLoaded && !force && force !== undefined) return;
+  document.getElementById("ticketTableWrap").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  const filter = document.getElementById("ticketFilter")?.value || "";
+  let url = "/tickets";
+  if (filter) url += `?status=${filter}`;
+  const d = await api(url);
+  if (!d.ok) { toast("Errore caricamento ticket", "error"); return; }
+  const tickets = d.tickets || [];
+  ticketsLoaded = true;
+  if (!tickets.length) {
+    document.getElementById("ticketTableWrap").innerHTML = `<div class="empty"><div class="empty-icon">💬</div><p>Nessun ticket</p></div>`;
+    return;
+  }
+  document.getElementById("ticketTableWrap").innerHTML = `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>ID</th><th>Oggetto</th><th>Email</th><th>Categoria</th><th>Stato</th><th>Data</th><th>Azioni</th>
+      </tr></thead>
+      <tbody>
+        ${tickets.map(t => `<tr>
+          <td><span class="mono">${t.id || "–"}</span></td>
+          <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.subject || "–"}</td>
+          <td style="color:var(--muted)">${t.email || "–"}</td>
+          <td><span style="color:var(--muted)">${t.category || "–"}</span></td>
+          <td><span class="badge badge-${t.status === "open" ? "open" : "closed"}">${t.status || "–"}</span></td>
+          <td style="color:var(--muted)">${t.createdAt ? new Date(t.createdAt).toLocaleDateString("it-IT") : "–"}</td>
+          <td>
+            <button class="btn btn-sm btn-outline" onclick="openTicket('${t.id}')">Apri</button>
+          </td>
+        </tr>`).join("")}
+      </tbody>
+    </table></div>`;
+}
+
+async function openTicket(id) {
+  document.getElementById("ticketModalTitle").textContent = `Ticket ${id}`;
+  document.getElementById("ticketDetail").innerHTML = `<div class="loading-center"><div class="loader"></div></div>`;
+  openModal("ticketModal");
+  const d = await api(`/ticket/${id}`);
+  if (!d.ok) { document.getElementById("ticketDetail").innerHTML = `<p style="color:var(--danger)">Errore: ${d.error}</p>`; return; }
+  const t = d.ticket || d;
+  const replies = t.replies || [];
+  document.getElementById("ticketDetail").innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <div>
+          <span class="badge badge-${t.status === "open" ? "open" : "closed"}">${t.status}</span>
+          <span style="margin-left:10px;color:var(--muted);font-size:12px">${t.email || ""}</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          ${t.status === "open"
+            ? `<button class="btn btn-sm btn-success" onclick="updateTicketStatus('${id}','closed')">Chiudi ticket</button>`
+            : `<button class="btn btn-sm btn-outline" onclick="updateTicketStatus('${id}','open')">Riapri ticket</button>`}
+        </div>
+      </div>
+      <div class="ticket-reply">
+        <div class="reply-meta">${t.email || "Anonimo"} — ${t.createdAt ? new Date(t.createdAt).toLocaleString("it-IT") : ""}</div>
+        <div class="reply-text">${escHtml(t.description || t.body || t.message || "")}</div>
+      </div>
+      ${replies.map(r => `
+        <div class="ticket-reply ${r.by === "admin" ? "admin" : ""}">
+          <div class="reply-meta">${r.by === "admin" ? "Admin" : t.email || "Utente"} — ${r.at ? new Date(r.at).toLocaleString("it-IT") : ""}</div>
+          <div class="reply-text">${escHtml(r.text || "")}</div>
+        </div>`).join("")}
+    </div>
+    <hr class="divider">
+    <div class="section-title">Rispondi</div>
+    <div class="field">
+      <textarea id="ticketReply" placeholder="Scrivi una risposta..."></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="sendTicketReply('${id}')">Invia risposta</button>
+  `;
+}
+
+async function updateTicketStatus(id, status) {
+  const d = await api(`/ticket/${id}`, { method: "POST", body: JSON.stringify({ status }) });
+  if (!d.ok) { toast(d.error || "Errore", "error"); return; }
+  toast(`Ticket ${status === "closed" ? "chiuso" : "riaperto"}`);
+  openTicket(id);
+  ticketsLoaded = false;
+  loadTickets(true);
+}
+
+async function sendTicketReply(id) {
+  const reply = document.getElementById("ticketReply").value.trim();
+  if (!reply) { toast("Scrivi una risposta prima di inviare", "error"); return; }
+  const btn = event.target; btn.disabled = true; btn.textContent = "Inviando...";
+  const d = await api(`/ticket/${id}`, { method: "POST", body: JSON.stringify({ reply }) });
+  btn.disabled = false; btn.textContent = "Invia risposta";
+  if (!d.ok) { toast(d.error || "Errore invio", "error"); return; }
+  toast("Risposta inviata");
+  openTicket(id);
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────
+async function changePassword() {
+  const curr = document.getElementById("settCurrPass").value;
+  const np = document.getElementById("settNewPass").value;
+  const np2 = document.getElementById("settNewPass2").value;
+  const err = document.getElementById("settPassErr");
+  const ok = document.getElementById("settPassOk");
+  err.className = "err"; ok.className = "ok-msg";
+  if (np.length < 8) { err.textContent = "La nuova password deve avere almeno 8 caratteri"; err.className = "err show"; return; }
+  if (np !== np2) { err.textContent = "Le password non coincidono"; err.className = "err show"; return; }
+  const btn = event.target; btn.disabled = true;
+  const d = await api("/admin/change-password", {
+    method: "POST",
+    body: JSON.stringify({ currentPassword: curr, newPassword: np })
+  });
+  btn.disabled = false;
+  if (!d.ok) { err.textContent = d.error || "Errore"; err.className = "err show"; return; }
+  ok.textContent = "Password aggiornata con successo!"; ok.className = "ok-msg show";
+  document.getElementById("settCurrPass").value = "";
+  document.getElementById("settNewPass").value = "";
+  document.getElementById("settNewPass2").value = "";
+}
+
+async function saveRecoveryEmail() {
+  const email = document.getElementById("settEmail").value.trim();
+  const err = document.getElementById("settEmailErr");
+  const ok = document.getElementById("settEmailOk");
+  err.className = "err"; ok.className = "ok-msg";
+  if (!email) { err.textContent = "Inserisci un'email valida"; err.className = "err show"; return; }
+  const btn = event.target; btn.disabled = true;
+  const d = await api("/admin/change-password", {
+    method: "POST",
+    body: JSON.stringify({ email })
+  });
+  btn.disabled = false;
+  if (!d.ok) { err.textContent = d.error || "Errore"; err.className = "err show"; return; }
+  ok.textContent = "Email salvata!"; ok.className = "ok-msg show";
+}
+
+// ── UTILS ────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ── BOOT ─────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>

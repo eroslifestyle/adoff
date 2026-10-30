@@ -1,0 +1,196 @@
+{
+  "id": "w28-config-loader",
+  "name": "AdOff 28 - Config Loader (centralized marketing config)",
+  "description": "Sub-workflow that provides centralized access to brand blacklist, forbidden phrases, language names, platform caps, brand voice, and synonyms. Queries Postgres adoff_autopilot.marketing_config table. Called by W20/21/22/23/15 to avoid hardcoded values.",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "9b3f1a01-2800-4001-9001-000000000001",
+      "name": "Trigger (Manual / Sub-workflow)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "marketing-config",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "9b3f1a01-2800-4001-9001-000000000002",
+      "name": "Webhook GET /marketing-config",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "webhookId": "adoff-marketing-config-webhook",
+      "position": [
+        200,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "keys",
+              "value": "all"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9b3f1a01-2800-4001-9001-000000000003",
+      "name": "Set default params",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        380,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT key, value FROM adoff_autopilot.marketing_config WHERE ($1::text[] IS NULL OR key = ANY($1::text[])) ORDER BY key",
+        "queryParams": "={{ ($env.NODE_EXEC_QUERY_params?.key === 'all' || !$env.NODE_EXEC_QUERY_params?.key) ? null : (Array.isArray($env.NODE_EXEC_QUERY_params.key) ? $env.NODE_EXEC_QUERY_params.key : [$env.NODE_EXEC_QUERY_params.key]) }}",
+        "nodeCredentialType": "postgres",
+        "credentialsName": "adoff-pg-autopilot-credential-1234",
+        "returnAll": true
+      },
+      "id": "9b3f1a01-2800-4001-9001-000000000004",
+      "name": "Load config from DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2,
+      "position": [
+        580,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform DB rows (array) into consolidated config object\n// Each row: { key, value } where value is JSONB stored as JSON string\n\nconst rows = $input.all();\nconst config = {};\n\nrows.forEach(row => {\n  const key = row.json.key;\n  const value = row.json.value;\n  // If value is JSON string, parse it; else use as-is\n  config[key] = typeof value === 'string' ? JSON.parse(value) : value;\n});\n\nreturn [{\n  json: {\n    ok: true,\n    timestamp: new Date().toISOString(),\n    cached_from_db: true,\n    data: config\n  }\n}];"
+      },
+      "id": "9b3f1a01-2800-4001-9001-000000000004b",
+      "name": "Transform DB rows to config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        750,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respond": "text",
+        "value": "={{ JSON.stringify($json.data, null, 2) }}"
+      },
+      "id": "9b3f1a01-2800-4001-9001-000000000005",
+      "name": "Respond to webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "cache_timestamp",
+              "value": "={{ new Date().toISOString() }}"
+            },
+            {
+              "name": "rows_from_db",
+              "value": "={{ $input.all().length }}"
+            },
+            {
+              "name": "source",
+              "value": "postgres:adoff_autopilot.marketing_config"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9b3f1a01-2800-4001-9001-000000000006",
+      "name": "Return full config (sub-workflow output)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Trigger (Manual / Sub-workflow)": {
+      "main": [
+        [
+          {
+            "node": "Return full config (sub-workflow output)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook GET /marketing-config": {
+      "main": [
+        [
+          {
+            "node": "Set default params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set default params": {
+      "main": [
+        [
+          {
+            "node": "Load config from DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load config from DB": {
+      "main": [
+        [
+          {
+            "node": "Transform DB rows to config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform DB rows to config": {
+      "main": [
+        [
+          {
+            "node": "Respond to webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Return full config (sub-workflow output)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

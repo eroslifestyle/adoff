@@ -1,0 +1,97 @@
+{
+  "slug": "preroll-midroll-postroll-explained",
+  "lang": "tr",
+  "title": "Ön-Önemli, Orta-Önemli, Son-Önemli Reklamlar Açıklaması | AdOff",
+  "description": "Her video reklam yerleştirilmesi açıklanıyor: öncül, orta, sonlu, bumper’lar, katmanlar ve eşlik eden reklamlar — her birinin nasıl verildiği ve engellenmesinin ne…",
+  "h1": "Ön sarma, orta sarma, son sarma: Her video reklam yerleştirilmesi açıklanıyor",
+  "answer": "Ön-ön reklamlar video başlamadan önce, orta-ön reklamlar video sırasında araya girer, son-ön reklamlar video bittikten sonra oynatılır. Engellenmesi daha kolay olan yerler, Google IMA gibi istemci tarafı SDK’ları aracılığıyla sunulur; AdOff, bunları anında devam ettirme eklentisiyle engellerken, sunucu tarafında birleştirilen reklamlar herhangi bir tarayıcı uzantısı için erişilemez kalır.",
+  "sections": [
+    {
+      "h2": "Ön-çalma: videodan önce gösterilen reklam",
+      "body": [
+        "<p><strong>Ön rolledan</strong> istenen içerik başlamadan önce oynatılır. Video reklamcılığında en değerli yerleştirme türüdür, çünkü izleyicinin niyetinin en yüksek olduğu tam anlıkta kaçırılamaz dikkat sağlar — ancak aynı zamanda izleyiciler için en sinir bozucu olanıdır, çünkü tıkladıkları videoyu geciktirir.</p>",
+        "<p>Genellikle istemci tarafında çalışır: oynatıcı, IMA SDK’sını başlatır, bir VAST reklamı ister ve bunu video yüzeyinin üzerine bindirir. Tüm işlem sayfa içinde gerçekleştiğinden, kolayca engellenebilir. AdOff’ın stub’ı, SDK’nın başlatma isteğine hemen içerik devam ettirme olayı ile yanıt verir; böylece önceden yüklenen reklam basitçe atlanır ve oynatma başlar.</p>"
+      ]
+    },
+    {
+      "h2": "Orta-çalma: videonun içinde araya eklenen reklamlar",
+      "body": [
+        "<p><strong>Orta aralıklar</strong>, içerik belirlenmiş noktalarda kesilerek bir TV reklam aralığı gibi davranır. Oyuncular, aralıkların hangi noktalarda olacağını bir VMAP belgesinde tanımlar veya platform, reklam yanıtı içinde bunları kendi kendine belirler. Orta aralıklar, videonun en ilgi çekici anında kesilmesi nedeniyle en çok hayal kırıklığına yol açar.</p>",
+        "<p>İstemci tarafındaki orta aralıklar, öncelikli aralıklarla aynı SDK yolundan geçer ve aynı şekilde etkisiz hale getirilir: oynatıcı bir reklam aralığının başlamasını istediğinde, stub, aralık başlamadan önce bittiğini bildirir. Ana video platformunda AdOff, sayfanın okumasından önce oynatıcı yanıtından reklam zamanlamasını da kaldırır ve kaçan herhangi bir şeyi hızlı ilerletir.</p>"
+      ]
+    },
+    {
+      "h2": "Son-çalma: video bittikten sonra gösterilen reklam",
+      "body": [
+        "<p><strong>Post-roll</strong>, içerik bittikten sonra oynatılır. İzleyiciler bunu en çok kabul eder — çoğu zaten izlemeyi durdurmuştur — ancak reklamverenler yine de bunun için ödeme yapar, bu nedenle oynatıcılar bunu aynı istemci tarafı işlem hattından geçirir.</p>",
+        "<p>Aynı teslimat, aynı zayıflık: Reklam isteği istemci tarafı SDK’sından geçerse, stub’ın anında yeniden başlatılması sayesinde video, takip eden bir reklam olmadan düzgün bir şekilde biter.</p>"
+      ]
+    },
+    {
+      "h2": "Bumper’lar, kaplamalar ve eşlik reklamları",
+      "body": [
+        "<p>Her yerleştirme, videonun yüzeyini saniyeler boyunca tek başına sahiplenebilir değil:</p>",
+        "<ul><li><strong>Bumpers</strong>, çok kısa (yaklaşık 6 saniye) ve atlanamayan reklamlardır; genellikle önceden oynatılan (pre-roll) olarak gösterilir. Aynı SDK ile teslim edilir ve aynı şekilde engellenir.</li><li><strong>Overlays</strong>, oynatılan bir videonun alt kısmında duraklatmadan görünen afişlerdir. Basit DOM elemanları olduklarından, kozmetik filtreleme katmanı (CSS kuralları ve bir içerik betiği) bunları her sitede gizler.</li><li><strong>Companion ads</strong>, video reklamı oynarken oynatıcıyan yanında gösterilen görsel afişlerdir. Aynı şekilde sıradan sayfa elemanlarıdır ve kozmetik filtreleme ile gizlenirler.</li><li><strong>In-feed ads</strong>, bir listedeki önerilen içerikler gibi görünen video reklamlardır. Bunlar da kozmetik filtreleme ve genel seçicilerle aynı şekilde yakalanır.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Bir yerin engellenmesinin zor veya imkânsız olmasının nedeni nedir",
+      "body": [
+        "<p>Bölüm çizgisi, <strong>reklamın oluşturulduğu yerdir</strong>. Reklam, tarayıcınızda JavaScript ile getirilip işlendiğinde — bu durum, IMA gibi bir SDK aracılığıyla iletilen her şey için geçerlidir — bir uzantı, bu reklamı engelleyebilir, değiştirebilir veya gizleyebilir.</p>",
+        "<p>Eğer reklam, teslimat öncesinde sunucu tarafında video akışına eklenirse (<a href=\"/server-side-ad-insertion-explained\">SSAI</a>), reklamın pikselleri, programın piksellerinden ayırt edilemez hale gelir. Bu durumda, hiçbir tarayıcı uzantısı bunları daha sonra birbirinden ayıramaz; bu yüzden SSAI kullanan premium abonelik hizmetleri, oynatmanın bozulma riski nedeniyle AdOff tarafından bilinçli olarak dokunulmaz bırakılır.</p>"
+      ]
+    },
+    {
+      "h2": "AdOff, katmanları yerlere nasıl eşler",
+      "body": [
+        "<p>Her yerleştirme, kendisi için tasarlanan katmana düşer:</p>",
+        "<ul><li>SDK ile teslim edilen öncelikli/orta/son aralıklar ve arka plan sesleri → IMA engelleme (sayfa içi stub veya 42 Avrupa yayınımcı etki alanındaki ağ yönlendirmesi).</li><li>Katmanlar, eşlik eden reklamlar, akış içi reklamlar → estetik filtreleme (CSS + içerik betiği).</li><li>Reklam ağı istekleri → 180 statik ağ kuralı (gerçek reklamlar rozette sayılır, izleme engellenir ancak sayılmaz).</li><li>Reklam engelleyici engelleme duvarları → gizlilik katmanı, tuzak sahteciliği ve fetch/XHR engelleme ile.</li></ul>",
+        "<p>Tümü, bir hesap gerektirmeden, Chrome, Firefox, Safari, Edge ve Opera için tek bir eklentiyle ücretsiz olarak gönderilir.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Hangi video reklamları engellenmesi en zordur?",
+      "a": "Sunucu tarafında akışa eklenen reklamlar (SSAI), tarayıcı uzantısı tarafından içeriğinden ayrılmaları neredeyse imkânsızdır, çünkü bu reklamlar videonun kendisinin bir parçası olarak gelir. SDK’lar aracılığıyla sunulan istemci tarafı reklamlar ise engellenmesi çok daha kolaydır."
+    },
+    {
+      "q": "Orta rol (mid-roll) reklamları, ön rol (pre-roll) reklamlardan farklı şekilde engellenir mi?",
+      "a": "Aynı dağıtım yolunu paylaştıklarında değil. İkisi de genellikle aynı istemci tarafı SDK’sı üzerinden iletilir; bu nedenle reklam aralığı isteklerine hemen devam etme olayı ile yanıt veren bir “stub”, öncül ve orta aralıksı reklamları aynı şekilde ortadan kaldırır."
+    },
+    {
+      "q": "Bumper reklam nedir?",
+      "a": "Bumper, genellikle altı saniyelik, atlanamayan çok kısa bir video reklamdır ve genellikle içeriğin öncesinde gösterilir. Daha uzun reklamlarla aynı SDK üzerinden dağıtıldığından, aynı mekanizma tarafından engellenir."
+    },
+    {
+      "q": "Üst üste bindirme (overlay) ve eşlik eden (companion) reklamlar nasıl kaldırılır?",
+      "a": "Sıradan sayfa öğeleridir, video kareleri değildir. Kosmetik filtreleme — CSS kuralları ve DOM’u tarayan bir içerik betiği — bunları gizlerken, ağ düzeyindeki kurallar reklam isteklerini engeller."
+    },
+    {
+      "q": "Reklam engelleyiciler, engellenen her isteği bir reklam olarak sayar mı?",
+      "a": "AdOff, gerçek reklamları izleyicilerden ayırt eder: analitik araçlar ve izleyiciler de engellenir, ancak rozet ve açılır pencere sayaçları yalnızca gerçek reklamları sayar; bu nedenle sayılar, aslında atladığınız reklamları yansıtır."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Akış reklam engelleme: tam rehber"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "IMA SDK reklam engelleme nasıl çalışır"
+    },
+    {
+      "href": "/server-side-ad-insertion-explained",
+      "text": "Sunucu tarafı reklam ekleme (SSAI) açıklaması"
+    }
+  ],
+  "cta": {
+    "h3": "Her yerleştirme için tek bir uzantı",
+    "p": "Ön rölanlar, orta rölanlar, katmanlar ve banner’lar — AdOff, her birini doğru katmanla ücretsiz şekilde ele alır.",
+    "btn": "AdOff’u ücretsiz kurun"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

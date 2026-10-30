@@ -1,0 +1,101 @@
+{
+  "slug": "live-sports-ad-blocking",
+  "lang": "id",
+  "title": "Memblokir Iklan di Siaran Langsung Olahraga | AdOff",
+  "description": "Mengapa olahraga langsung jadi kasus pemblokiran iklan tersulit, apa yang bisa dan tidak bisa dilakukan ekstensi browser, serta stasiun mana yang dicakup AdOff.",
+  "h1": "Pemblokiran iklan pada siaran langsung olahraga: apa yang benar-benar efektif",
+  "answer": "Olahraga langsung adalah tempat paling sulit untuk memblokir iklan: siaran langsung sering menggunakan penyisipan iklan di sisi server yang tidak dapat dihapus oleh ekstensi browser apa pun. Tempat di mana ekstensi browser berhasil adalah pada siaran on-demand dan catch-up dari penyiar yang memuat iklan di sisi klien—dan inilah yang dinetralkan oleh AdOff.",
+  "sections": [
+    {
+      "h2": "Mengapa siaran langsung adalah kasus yang paling sulit",
+      "body": [
+        "<p>Siaran olahraga langsung adalah permata mahkota iklan video, dan oleh karena itu dibela secara ketat. Siaran langsung yang benar-benar *live* tidak dapat menerima *client-side ad SDK* yang melakukan perjalanan bolak-balik ke *ad server* sebelum setiap jeda iklan: keterlambatan tersebut akan menyebabkan ketidakselarasan bagi penonton. Oleh karena itu, banyak layanan siaran langsung menerapkan <a href=\"/server-side-ad-insertion-explained\">penyisipan iklan di sisi server (SSAI)</a>, di mana iklan komersial dijahit ke dalam aliran video sebelum sampai ke perangkat Anda.",
+        "<p>Ketika hal itu terjadi, pixel iklan menjadi bagian dari video itu sendiri. Ekstensi browser — ekstensi apa pun, bukan hanya AdOff — tidak dapat memisahkannya setelah fakta tersebut terjadi. Mengklaim sebaliknya akan merupakan tindakan yang tidak jujur.</p>"
+      ]
+    },
+    {
+      "h2": "Apa yang dapat dilakukan secara realistis oleh ekstensi browser pada acara langsung",
+      "body": [
+        "<p>Ekstensi beroperasi di dalam browser, di halaman. Mereka dapat menyadap JavaScript, memblokir permintaan jaringan, menyembunyikan elemen DOM, serta mengganti skrip. Kumpulan alat ini sangat efektif melawan iklan <strong>di sisi klien</strong> — di mana SDK di halaman meminta dan menampilkan iklan — namun tidak berguna terhadap iklan yang sudah terintegrasi ke dalam aliran video.</p>",
+        "<p>Jadi harapan yang jujur adalah: hasil yang kuat di mana penyiar masih menggunakan pengiriman sisi klien, dan tidak ada efek di mana feed-nya disampaikan dari sisi server. Kombinasi ini bervariasi tergantung layanan, acara, bahkan wilayah, yang mengapa pertandingan yang sama bisa tanpa iklan di satu platform namun tidak di platform lain.</p>"
+      ]
+    },
+    {
+      "h2": "Di mana AdOff berfungsi: siaran ulang dan siaran on-demand",
+      "body": [
+        "<p>Banyak hal yang disebut orang sebagai “menonton olahraga secara daring” sebenarnya bukan siaran langsung: melainkan tayangan ulang, cuplikan penting, atau penayangan lengkap pertandingan di platform penyiar nasional. Aliran on-demand inilah merupakan contoh klasik penggunaan SDK iklan sisi klien, karena penundaan tidak lagi menjadi masalah.</p>",
+        "<p>AdOff mencakup 42 domain penyiar Eropa — termasuk RaiPlay, Mediaset Infinity, La7, discovery+, BBC iPlayer, ITVX, ZDF, ARD, France.tv, TF1, RTVE, dan lainnya — dengan mengalihkan skrip SDK iklan ke stub yang memberi tahu pemutar untuk segera melanjutkan konten. Putaran ulang dimulai, tanpa mengambil iklan pra-permainan atau iklan di tengah permainan.</p>"
+      ]
+    },
+    {
+      "h2": "Dua mekanisme yang melakukan pekerjaan tersebut",
+      "body": [
+        "<p>Pada situs penyiar tersebut, netralisasi berjalan melalui dua saluran yang menargetkan SDK yang sama: sebuah stub di dalam halaman yang menggantikan <code>window.google.ima</code> sebelum pemutar diinisialisasi, serta aturan declarativeNetRequest yang mengalihkan file skrip SDK ke stub yang disertakan dalam ekstensi. Dengan cara apa pun, ketika pemutar meminta menjalankan jeda iklan, ia diberi tahu bahwa jeda iklan tersebut sudah selesai.</p>",
+        "<p>Aturan tingkat jaringan memblokir 180 pola permintaan ke jaringan iklan di setiap situs; penyaringan kosmetik menyembunyikan spanduk dan lapisan atas di sekitar pemutar; serta lapisan siluman bekerja melawan pemeriksaan anti-pemblokiran iklan yang diterapkan beberapa platform sebelum pemutaran.</p>"
+      ]
+    },
+    {
+      "h2": "Apa yang tidak akan berfungsi — dan mengapa kami mengatakan demikian",
+      "body": [
+        "<p>Berterus terang tentang batasan:</p>",
+        "<ul><li><strong>Penyisipan iklan di sisi server</strong>: tidak dapat diatasi oleh ekstensi browser apa pun. Iklan masuk di dalam aliran.</li><li><strong>Aplikasi TV bawaan</strong>: ekstensi hanya berjalan di browser, bukan di aplikasi TV pintar atau set-top box.</li><li><strong>Layanan langganan premium</strong> dengan pipeline khusus: AdOff sengaja mengecualikannya agar pemutar mereka tetap berfungsi.</li></ul>",
+        "<p>Tidak ada pemblokir iklan, di platform apa pun, yang mampu menghapus setiap iklan dari setiap siaran langsung. Jika suatu produk menjanjikan hal tersebut, anggap itu sebagai tanda bahaya.</p>"
+      ]
+    },
+    {
+      "h2": "Pengaturan praktis untuk hari pertandingan",
+      "body": [
+        "<p>Jika Anda menonton tayangan ulang dan highlight di situs penyiar, pasang AdOff di browser desktop Anda (Chrome, Firefox, Safari, Edge, atau Opera) dan aktifkan perlindungan—layanan ini gratis dan tidak memerlukan akun. Jika pemutar tertentu tidak bisa diputar, gunakan fitur jeda per-situs alih-alih menonaktifkan semuanya, lalu muat ulang.</p>",
+        "<p>Untuk siaran langsung yang benar-benar *live* pada layanan yang menggunakan SSAI, solusi realistis berada di luar browser: penyaringan DNS tingkat jaringan dapat menghapus beberapa domain pelacakan iklan di seluruh jaringan rumah Anda — lihat panduan kami tentang <a href=\"/android-dns\">penyaringan tingkat DNS</a> — meskipun hal ini tidak akan menghilangkan iklan yang disisipkan langsung ke dalam siaran tersebut.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Apakah pemblokir iklan dapat menghapus iklan dari siaran langsung pertandingan sepak bola?",
+      "a": "Sering tidak. Siaran langsung asli umumnya memanfaatkan penyisipan iklan di sisi server, di mana iklan disatukan ke dalam video sebelum dikirimkan—proses yang tidak dapat dibatalkan oleh ekstensi browser apa pun. Jika platform tetap memuat iklan melalui SDK di sisi klien, ekstensi seperti AdOff dapat menonaktifkannya."
+    },
+    {
+      "q": "Apakah AdOff berfungsi pada layanan tonton ulang stasiun penyiaran nasional?",
+      "a": "Ya. AdOff mencakup 42 domain penyiar Eropa—termasuk RaiPlay, Mediaset Infinity, BBC iPlayer, ITVX, ZDF, dan France.tv—dengan mengganti SDK iklan menggunakan *stub* yang langsung melanjutkan konten, sehingga pemutaran ulang dimulai tanpa iklan *pre-roll* atau *mid-roll*."
+    },
+    {
+      "q": "Mengapa beberapa platform olahraga mendeteksi pemblokir iklan saya?",
+      "a": "Beberapa platform menjalankan skrip anti-pemblokir iklan sebelum mengizinkan pemutaran. AdOff menyertakan lapisan penyamaran—penipuan *bait* dan intersepsi *fetch/XHR*—yang dirancang untuk menghindari pemeriksaan tersebut, meskipun tidak ada penghindaran yang bertahan selamanya karena platform terus memperbarui deteksi mereka."
+    },
+    {
+      "q": "Apakah ada cara untuk memblokir iklan SSAI di jaringan saya?",
+      "a": "Bukan iklan itu sendiri: iklan merupakan bagian dari aliran video. Penyaringan tingkat DNS pada router Anda dapat memblokir domain pelacakan iklan untuk semua perangkat di rumah, tetapi tidak dapat memisahkan segmen iklan yang disatukan dari segmen konten."
+    },
+    {
+      "q": "Mengapa AdOff tidak memengaruhi layanan streaming berbayar?",
+      "a": "Pilihan sengaja: layanan-layanan tersebut menggunakan *pipeline* pemutar yang bersifat propieter, dan memaksa perubahan di dalamnya berisiko merusak pemutaran secara total. Dengan mengecualikannya, video tetap dapat diputar dengan baik, yang lebih penting daripada klaim bebas iklan yang tidak dapat diandalkan."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Pemblokiran iklan streaming: panduan lengkap"
+    },
+    {
+      "href": "/server-side-ad-insertion-explained",
+      "text": "Penjelasan tentang penyisipan iklan di sisi server (SSAI)"
+    },
+    {
+      "href": "/tv-streaming-ad-blocker",
+      "text": "Pemblokir iklan untuk TV dan perangkat streaming"
+    }
+  ],
+  "cta": {
+    "h3": "Tonton tayangan ulang tanpa jeda iklan",
+    "p": "AdOff menetralkan iklan video di sisi klien di 42 platform penyiar Eropa. Gratis, tanpa akun.",
+    "btn": "Pasang AdOff secara gratis"
+  },
+  "report": {
+    "intro": "Sudah mencoba AdOff pada acara langsung atau penyiar tertentu, tetapi ada yang tidak berfungsi? Laporkan kasus ini dengan URL halaman yang tepat: laporan seperti yours-lah yang menentukan aturan dan perbaikan apa yang akan kami rilis selanjutnya.",
+    "btn_text": "Laporkan situs ini",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

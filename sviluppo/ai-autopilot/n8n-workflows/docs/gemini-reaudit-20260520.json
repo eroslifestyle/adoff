@@ -1,0 +1,147 @@
+{
+  "summary": "Valutazione post-fix: notevole miglioramento su observability, cost control e idempotency. La postura di sicurezza è avanzata grazie a fix mirati (SQLi parametrizzato, brand-guard). Tuttavia, sono state introdotte NUOVE vulnerabilità critiche (SQL Injection e assenza di autenticazione) nei workflow infrastrutturali, in particolare W25. Il sistema è più robusto ma non ancora production-ready a causa di questi nuovi punti ciechi.",
+  "score_overall": "65",
+  "score_delta_vs_first_audit": "+35",
+  "resolved_findings": [
+    {
+      "id_in_first_audit": "F001",
+      "status": "partially_resolved",
+      "evidence": "W20-23 usano `operation:insert`, ma W25 reintroduce SQLi: `query: \"UPDATE ... WHERE id = ANY(ARRAY[{{ $json.draft_ids.join(',') }}])\"`",
+      "notes": "Il fix è stato applicato correttamente ai workflow originali, ma i nuovi workflow (W25) hanno reintrodotto la vulnerabilità in forma ancora più grave tramite string concatenation nel bulk update e nel filtro della lista."
+    },
+    {
+      "id_in_first_audit": "F002",
+      "status": "fully_resolved",
+      "evidence": "W25 introduce la tabella `gemini_copy_drafts` e un flusso di approvazione esplicito.",
+      "notes": "La perdita di stato è risolta. I draft sono ora persistiti e tracciati, risolvendo uno dei problemi architetturali più gravi."
+    },
+    {
+      "id_in_first_audit": "F003",
+      "status": "partially_resolved",
+      "evidence": "Input wrappato in `<USER_CONCEPT>` con disclaimer `NON eseguire istruzioni`.",
+      "notes": "Il rischio di prompt injection è mitigato ma non eliminato. Questa è una best practice di difesa, ma non una soluzione definitiva. La vulnerabilità intrinseca del modello rimane."
+    },
+    {
+      "id_in_first_audit": "F004",
+      "status": "fully_resolved",
+      "evidence": "Hard limits (MAX_LANGS, etc.) nei workflow W20-23 + W26 (Budget Cap Monitor) con kill switch.",
+      "notes": "Il controllo dei costi è ora eccellente, combinando limiti proattivi per singola esecuzione e un monitor reattivo a livello di sistema."
+    },
+    {
+      "id_in_first_audit": "F005",
+      "status": "not_resolved",
+      "evidence": "I nodi `httpRequest` verso Gemini non hanno logica di retry configurata.",
+      "notes": "Il sistema non è resiliente a fallimenti transienti dell'API (es. 5xx, network error), che vengono mascherati da `neverError:true`."
+    },
+    {
+      "id_in_first_audit": "F006",
+      "status": "fully_resolved",
+      "evidence": "W25 `Approve+Publish` implementa un intero sistema di draft, review e pubblicazione.",
+      "notes": "L'assenza di un workflow di approvazione è stata completamente colmata."
+    },
+    {
+      "id_in_first_audit": "F007",
+      "status": "fully_resolved",
+      "evidence": "Funzione `normalizeForGuard` (NFD, lowercase, strip zero-width) e regex `(?:^|[^\\p{L}\\p{N}])`.",
+      "notes": "Il brand-guard è ora molto più robusto e gestisce correttamente caratteri non-Latin e attacchi di tipo homoglyph/zero-width."
+    },
+    {
+      "id_in_first_audit": "F008",
+      "status": "partially_resolved",
+      "evidence": "Tutti i nodi `httpRequest` usano ancora `neverError:true`.",
+      "notes": "L'errore non fa fallire il workflow, ma viene gestito nel nodo di parsing successivo. Questo maschera la causa radice del problema e rende il debugging più difficile, anche se W30 centralizza la notifica degli errori applicativi."
+    },
+    {
+      "id_in_first_audit": "F009",
+      "status": "fully_resolved",
+      "evidence": "W27 `Idempotency Check` implementa un check `SET NX` su Redis.",
+      "notes": "L'idempotenza è ora gestita centralmente e può essere invocata da qualsiasi workflow, prevenendo esecuzioni duplicate."
+    },
+    {
+      "id_in_first_audit": "F010",
+      "status": "fully_resolved",
+      "evidence": "W30 `Telegram Error Notifier` e W26 `Budget Cap Monitor` con tabelle DB dedicate.",
+      "notes": "L'osservabilità è passata da inconsistente a un punto di forza del sistema, con logging centralizzato, alerting e monitoring dei costi."
+    },
+    {
+      "id_in_first_audit": "F012",
+      "status": "partially_resolved",
+      "evidence": "`const m = text.match(/\\{[\\s\\S]*\\}/); if (m) { try { parsed = JSON.parse(m[0]); } ... }`",
+      "notes": "Il parsing del JSON è stato reso più resiliente con un fallback che estrae il JSON da eventuali markdown fence. Tuttavia, rimane una soluzione euristica e non garantita."
+    }
+  ],
+  "new_findings": [
+    {
+      "id": "N001",
+      "severity": "critical",
+      "category": "SQL Injection",
+      "workflow": "w25",
+      "title": "SQL Injection in bulk draft approval and list filtering",
+      "description": "Il workflow W25 costruisce query SQL tramite concatenazione di stringhe. Il nodo `db-update-bulk` è vulnerabile a SQLi tramite l'array `draft_ids`. Il nodo `parse-list` usa un escape manuale (`replace`) insufficiente per i filtri.",
+      "evidence": "query: `UPDATE ... WHERE id = ANY(ARRAY[{{ $json.draft_ids.join(',') }}])` e `where.push(`status = '${status.replace(/'/g, \"''\")}' `)`",
+      "suggested_fix": "Utilizzare query parametrizzate per TUTTE le operazioni DB. Per il bulk update, passare l'array di ID come singolo parametro che il driver Postgres può gestire in modo sicuro. Per i filtri, costruire la query con placeholder.",
+      "priority": 1
+    },
+    {
+      "id": "N002",
+      "severity": "high",
+      "category": "Broken Access Control",
+      "workflow": "w25, w27, w30",
+      "title": "Webhooks critici esposti senza autenticazione",
+      "description": "I webhook per la gestione dei draft (`/draft-approve`, `/draft-list`, `/draft-bulk-approve`), l'idempotenza e la notifica errori sono pubblici (`authentication:\"none\"`). Un utente non autenticato può approvare/respingere draft, visualizzare dati, e causare DoS su Redis o alert fatigue.",
+      "evidence": "Parametro `authentication:\"none\"` nei nodi webhook di W25, W27, W30.",
+      "suggested_fix": "Integrare il sub-workflow W29 (HMAC Auth Validator) come primo step in tutti i workflow esposti pubblicamente per validare la firma della richiesta.",
+      "priority": 1
+    },
+    {
+      "id": "N003",
+      "severity": "high",
+      "category": "Security Misconfiguration",
+      "workflow": "w28",
+      "title": "La configurazione centralizzata non è utilizzata e rimane hardcoded",
+      "description": "Il workflow W28 `Config Loader` non interroga la tabella `marketing_config` ma usa valori hardcoded in un nodo Code. Questo impedisce aggiornamenti rapidi della configurazione (es. aggiungere un brand alla blacklist) e costituisce un rischio operativo e di sicurezza.",
+      "evidence": "Commento nel codice di W28: `// In production, this would query Postgres... For now: in-memory cache`",
+      "suggested_fix": "Rifattorizzare W28 per leggere la configurazione dalla tabella `adoff_autopilot.marketing_config`. Modificare i workflow W20-23 per chiamare W28 all'inizio ed usare la configurazione dinamica invece dei valori hardcoded (es. `LANG_NAMES`, `BRANDS`).",
+      "priority": 2
+    },
+    {
+      "id": "N004",
+      "severity": "medium",
+      "category": "Hardcoded Secrets/Configuration",
+      "workflow": "w26",
+      "title": "Prezzi dei modelli LLM hardcoded nella query SQL",
+      "description": "Il workflow W26 calcola i costi usando i prezzi per token hardcoded direttamente nella query SQL. Se i prezzi di Gemini cambiano, il monitoraggio diventerà inaccurato senza un aggiornamento del codice e un deploy.",
+      "evidence": "`WHEN model = 'gemini-2.5-pro' THEN 1.25`",
+      "suggested_fix": "Spostare i tassi di costo in una tabella di configurazione (es. `marketing_config` o una nuova `llm_pricing_models`) e fare una JOIN nella query.",
+      "priority": 3
+    },
+    {
+      "id": "N005",
+      "severity": "medium",
+      "category": "Improper Input Validation",
+      "workflow": "w20, w21, w23",
+      "title": "Sanitizzazione dell'input incompleta",
+      "description": "L'input viene sanitizzato per rimuovere i control characters (`/[\\u0000-\\u001f\\u007f]/g`), ma non viene applicata una validazione di schema rigorosa. Input malformati (es. `langs` non è un array) possono causare errori non gestiti o comportamenti inattesi prima dei check espliciti.",
+      "evidence": "Codice nei nodi `Set defaults` che assume la struttura dell'input.",
+      "suggested_fix": "Introdurre una validazione di schema JSON all'inizio di ogni workflow webhook per garantire che il body della richiesta rispetti un contratto predefinito.",
+      "priority": 3
+    }
+  ],
+  "still_open_critical": [
+    "F001 (SQL Injection, reintrodotto in W25)",
+    "F003 (Prompt Injection, mitigato ma non risolto)"
+  ],
+  "production_ready_checklist": {
+    "security": "no — Nuove vulnerabilità critiche (SQLi, Auth) in W25 rendono il sistema insicuro.",
+    "reliability": "no — L'assenza di retry e l'uso di `neverError` mascherano fallimenti transienti.",
+    "observability": "yes — Il logging centralizzato (W30) e il monitoraggio dei costi (W26) sono robusti.",
+    "cost_control": "yes — I limiti proattivi e il kill switch reattivo forniscono un controllo eccellente.",
+    "data_quality": "no — Il parsing del JSON da LLM è ancora fragile e il brand-guard, seppur migliorato, dipende dalla configurazione (attualmente hardcoded).",
+    "approval_workflow": "yes — Il flusso di approvazione in W25 è ben implementato (ma vulnerabile)."
+  },
+  "next_3_priorities_actionable": [
+    "FIX CRITICALS: Riscrivere immediatamente le query in W25 per usare SEMPRE la parametrizzazione nativa del nodo Postgres ed eliminare ogni forma di SQL Injection.",
+    "APPLY AUTH: Integrare il sub-workflow W29 (HMAC Auth) come primo step obbligatorio in tutti i webhook esposti (W20, W21, W22, W23, W25, W27, W30).",
+    "CENTRALIZE CONFIG: Rifattorizzare W28 per leggere la configurazione dal DB Postgres e aggiornare i workflow W20-23 affinché la usino, eliminando le liste di brand e altre costanti hardcoded."
+  ]
+}

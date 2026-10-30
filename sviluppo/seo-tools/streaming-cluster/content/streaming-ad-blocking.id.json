@@ -1,0 +1,123 @@
+{
+  "slug": "streaming-ad-blocking",
+  "lang": "id",
+  "title": "Pemblokiran Iklan Streaming: Yang Efektif di Tahun 2026 | AdOff",
+  "description": "Panduan jujur blokir iklan di platform video/streaming: jenis yang bisa dihapus, yang tidak, dan ekspektasi di tiap platform.",
+  "h1": "Pemblokiran Iklan Streaming: Apa yang Benar-Benar Efektif di Tahun 2026",
+  "answer": "Pemblokiran iklan streaming bekerja dengan menghapus iklan sebelum mencapai pemutar video: aturan jaringan memblokir permintaan iklan, dan sebuah *stub* menggantikan *SDK* iklan video sehingga pemutar segera melanjutkan konten. Cara ini berfungsi pada kasus di mana iklan diminta secara terpisah, seperti YouTube dan layanan *catch-up TV* di Eropa. Namun, cara ini tidak berfungsi pada kasus di mana iklan disatukan secara langsung ke dalam aliran konten, seperti pada SSAI.",
+  "sections": [
+    {
+      "h2": "Mengapa iklan video lebih sulit diblokir dibanding iklan banner",
+      "body": [
+        "<p>Iklan banner hidup di halaman. Mereka merupakan permintaan HTTP terpisah ke jaringan iklan yang diketahui, sehingga daftar aturan jaringan dapat menghentikannya sebelum dimuat. Iklan video berbeda: mereka merupakan bagian dari pengalaman menonton, dijadwalkan oleh pemutar itu sendiri, dan sering kali dikirim melalui infrastruktur yang sama dengan konten. Sebuah pemblokir yang hanya mampu menyembunyikan elemen dari halaman akan melewatkan sebagian besar iklan video tersebut.</p>",
+        "<p>Inilah mengapa banyak pemblokir iklan menyembunyikan banner di mana-mana namun tetap menampilkan preroll di situs video. Pemblokiran iklan streaming yang efektif harus bekerja pada lapisan penjadwalan, bukan hanya pada lapisan tampilan.</p>"
+      ]
+    },
+    {
+      "h2": "Empat jenis iklan video",
+      "body": [
+        "<p>Iklan video menggunakan kosakata yang kecil, dan mengetahui kosakata tersebut memberi tahu Anda apa yang dapat dan tidak dapat dilakukan oleh pemblokir:</p>",
+        "<ul><li><strong>Pre-roll</strong>: diputar sebelum video dimulai. Paling mudah diintercept karena merupakan permintaan terpisah dan dapat diprediksi.</li><li><strong>Mid-roll</strong>: disisipkan selama pemutaran. Penjadwalannya ditentukan di sisi server untuk setiap penonton, sehingga lebih sulit diprediksi dan dilewati.</li><li><strong>Post-roll</strong>: setelah video berakhir. Jarang terlihat karena sebagian besar penonton keluar terlebih dahulu.</li><li><strong>Iklan Feed</strong>: unit asli di dalam feed yang bergulir, seperti iklan di antara video vertikal pendek. Iklan ini merupakan elemen halaman, bukan iklan pemutar.</li></ul>",
+        "<p>Kami menjelaskan taksonomi prarol / tengahrol / pascarol secara mendalam di <a href=\"/preroll-midroll-postroll-explained\">prarol, tengahrol, dan pascarol dijelaskan</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Lokasi penyampaian iklan menentukan apakah iklan tersebut dapat diblokir",
+      "body": [
+        "<p>Perbedaan teknis paling penting adalah <strong>pengiriman iklan di sisi klien versus di sisi server</strong>. Dengan iklan di sisi klien, pemutar melakukan permintaan terpisah ke server iklan: iklan tiba sebagai segmen video terpisah atau panggilan SDK, dan pemblokir dapat menyadap permintaan tersebut. Dengan penyisipan iklan di sisi server (SSAI), iklan disatukan ke dalam aliran video yang sama dengan konten sebelum dikirimkan kepada Anda. Tidak ada permintaan terpisah yang dapat diblokir.</p>",
+        "<p>SSAI adalah alasan mengapa platform siar langsung dan tier langganan yang didukung iklan sangat tahan terhadap pemblokir. Kami menjelaskan mekanismenya di <a href=\"/server-side-ad-insertion-explained\">penjelasan server-side ad insertion</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Bagaimana pemblokir empat lapis mendekati iklan video",
+      "body": [
+        "<p>AdOff adalah ekstensi gratis untuk Chrome, Firefox, Safari, Edge, dan Opera (tanpa akun, tanpa masa percobaan) yang dibangun atas empat lapisan:</p>",
+        "<ol><li><strong>Pemblokiran jaringan</strong>: 180 aturan deklaratif declarativeNetRequest statis menghentikan permintaan iklan dan pelacakan sebelum dimulai.</li><li><strong>Filtrasi kosmetik</strong>: Pemindaian CSS dan DOM menyembunyikan elemen iklan yang tidak terdeteksi oleh lapisan jaringan.</li><li><strong>Netralisasi iklan video</strong>: sebuah stub menggantikan SDK IMA video ad milik Google. Saat pemutar meminta SDK untuk memulai jeda iklan, stub langsung merespons “lanjutkan konten” — tanpa iklan, pemutar tetap utuh. Fitur ini bekerja melalui dua saluran: penggantian di dalam halaman dan pengalihan jaringan pada skrip SDK itu sendiri ke stub.</li><li><strong>Pelindung anti-deteksi secara diam-diam</strong>: umpan dan pemalsuan variabel sehingga skrip anti-pemblokir iklan melihat lingkungan yang normal.</li></ol>",
+        "<p>Detail teknis setiap lapisan tersedia di <a href=\"/how-it-works\">cara kerja AdOff</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Cakupan platform: tabel yang jujur",
+      "body": [
+        "<p>Tidak semua platform dapat dicakup, dan kami lebih suka mengatakannya sejak awal. Cakupan sepenuhnya bergantung pada cara masing-masing platform menyajikan iklannya. Tabel ini mencerminkan apa yang sebenarnya dilakukan ekstensi ini saat ini:</p>",
+        "<table><tr><th>Platform</th><th>Jenis Iklan</th><th>Apa yang dapat dilakukan AdOff</th></tr><tr><td>YouTube</td><td>Iklan pra-putar, iklan tengah-putar, iklan feed, overlay</td><td>Cakupan end-to-end khusus: penjadwalan iklan dihapus dari respons pemutar, percepatan pemutaran 16x untuk sisa jeda yang tersisa, aturan jaringan, dan selektor kosmetik.</td></tr><tr><td>TV catch-up Eropa dan penyiar (42 domain)</td><td>IMA SDK video ads</td><td>Cakupan nyata melalui netralisasi IMA: SDK iklan diganti, sehingga pemutar melanjutkan konten tanpa jeda iklan.</td></tr><tr><td>Platform siaran langsung dengan SSAI (misalnya Twitch, Kick)</td><td>Iklan video yang di-stitch di sisi server</td><td>Tidak dapat diblokir: iklan di-stitch ke dalam stream video yang sama dengan konten, bukan permintaan terpisah.</td></tr><tr><td>Beberapa layanan langganan yang didukung iklan</td><td>Iklan yang di-stitch di sisi server atau iklan proprietary</td><td>Sengaja dikecualikan untuk menghindari kerusakan pada pemutarnya; pengiriman iklan tidak dapat di-intercept.</td></tr><tr><td>Feed sosial dan video pendek</td><td>Iklan feed native</td><td>Hanya aturan anti-pelacakan; tidak ada netralisasi iklan video khusus.</td></tr></table>",
+        "<p>Laman berbasis platform: <a href=\"/youtube-ad-blocker\">Pemblokir iklan YouTube</a>, <a href=\"/twitch-ad-blocker\">Twitch</a>, <a href=\"/prime-video-ad-blocker\">Prime Video</a>, <a href=\"/spotify-ad-blocker\">Spotify</a>, <a href=\"/disney-plus-ad-blocker\">Disney+</a>, dan layanan tonton ulang TV untuk <a href=\"/catch-up-tv-ad-blocker-uk\">Inggris</a>, <a href=\"/catch-up-tv-ad-blocker-italy\">Italia</a>, <a href=\"/catch-up-tv-ad-blocker-germany\">Jerman</a>, <a href=\"/catch-up-tv-ad-blocker-france\">Prancis</a>, dan <a href=\"/catch-up-tv-ad-blocker-spain\">Spanyol</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Mengapa jalur YouTube berbeda",
+      "body": [
+        "<p>YouTube adalah satu-satunya platform yang memiliki pipeline end-to-end khusus di AdOff. Ini harus dilakukan: YouTube tidak menggunakan IMA SDK standar, sehingga stub generik tidak akan pernah dipicu. Sebaliknya, ekstensi ini menghapus jadwal iklan dari respons pemutar sebelum pemutar membacanya, menghubungkan panggilan API pemutar yang meminta jeda iklan, menerapkan aturan jaringan ke endpoint iklan, serta menyembunyikan elemen iklan sisa dengan selektor kosmetik.</p>",
+        "<p>Ketika istirahat tetap terlewatkan, pemutaran dipercepat melewatinya tanpa menunggu tombol lewati ditekan. Detailnya ada di <a href=\"/youtube-ad-blocker\">Pemblokir Iklan YouTube</a> dan <a href=\"/skip-youtube-ads-automatically\">Penglewat Iklan Otomatis</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Shorts, dinding, dan perlombaan senjata anti-pemblokiran iklan",
+      "body": [
+        "<p>Tiga situasi berulang memerlukan perhatian khusus. Iklan dalam umpan video vertikal pendek (shorts) merupakan unit gulir natif, bukan iklan pemutar, sehingga ditangani melalui penyaringan kosmetik dengan batasan yang jujur — lihat <a href=\"/block-youtube-shorts-ads\">memblokir iklan shorts</a>. Dinding anti-pemblokir iklan yang mengunci pemutaran hingga Anda menonaktifkan pemblokir iklan Anda merupakan masalah terpisah, yang dibahas dalam <a href=\"/youtube-anti-adblock-wall\">dinding anti-pemblokir iklan</a> dan <a href=\"/bypass-anti-adblock\">membypass deteksi</a>.</p>",
+        "<p>Dan ketika pemblokir iklan tampaknya berhenti berfungsi, penyebabnya hampir selalu perubahan di sisi platform, bukan sesuatu yang Anda lakukan. Langkah-langkah pemecahan masalah tersedia di <a href=\"/youtube-ad-blocker-not-working\">pemblokir iklan tidak berfungsi</a> dan <a href=\"/video-player-not-working-with-ad-blocker\">masalah pemutar</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Lokasi yang tidak dapat dijangkau oleh pemblokir iklan streaming",
+      "body": [
+        "<p>Berbicara jujur tentang keterbatasan: penyisipan iklan di sisi server tidak dapat diblokir oleh ekstensi apa pun, karena iklan berada di dalam aliran video. Aplikasi asli di ponsel berada di luar jangkauan ekstensi browser — opsi realistis di perangkat seluler dijelaskan dalam <a href=\"/youtube-ads-on-phone\">iklan di ponsel Anda</a> dan <a href=\"/android-dns\">DNS tingkat jaringan di Android</a>. TV pintar menjalankan aplikasi mereka sendiri sepenuhnya di luar browser, seperti dibahas dalam <a href=\"/smart-tv-ad-blocking\">pemblokiran iklan pada TV pintar</a>. Selain itu, tidak ada ekstensi yang dapat menjanjikan hasil permanen: platform sering mengubah cara pengiriman iklannya, dan cakupan pemblokiran mengikuti perubahan tersebut.</p>"
+      ]
+    },
+    {
+      "h2": "Memilih pemblokir iklan streaming pada tahun 2026",
+      "body": [
+        "<p>Ketika membandingkan pemblokir untuk video, pertanyaan-pertanyaan yang penting adalah: apakah ia bekerja pada lapisan penjadwalan atau hanya menyembunyikan elemen? Apakah ia memiliki solusi untuk SDK iklan video? Apakah ia menangani deteksi anti-pemblokir iklan? Apakah ia jujur mengenai SSAI? Perbandingan kami mengenai <a href=\"/best-ad-blocker-for-streaming-2026\">pemblokir iklan terbaik untuk streaming pada 2026</a> dan perbandingan umum <a href=\"/best-ad-blocker-2026\">2026</a> menerapkan kriteria tersebut.</p>",
+        "<p>AdOff gratis, tidak memerlukan akun, dan berfungsi di Chrome, Firefox, Safari, Edge, dan Opera.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Apakah pemblokir iklan dapat menghapus iklan dari platform streaming?",
+      "a": "Ya, di tempat iklan disampaikan di sisi klien. Ketika pemutar meminta iklan melalui panggilan terpisah ke SDK iklan, pemblokir dapat menyadap atau mengganti panggilan tersebut. Namun, jika iklan disatukan langsung ke dalam aliran video (penyisipan iklan di sisi server/SSAI), ekstensi browser tidak dapat menghapusnya."
+    },
+    {
+      "q": "Apakah AdOff memblokir iklan di Prime Video?",
+      "a": "Tidak, dan hal ini dilakukan secara sengaja. Prime Video menggunakan penyampaian iklan di sisi server yang bersifat proprietary, serta mengganggu pemutarnya akan menyebabkan pemutaran berhenti. Oleh karena itu, ekstensi ini secara sengaja mengecualikan platform tersebut demi mencegah kerusakan pada pemutar."
+    },
+    {
+      "q": "Mengapa pemblokir iklan tidak dapat memblokir iklan di Twitch?",
+      "a": "Twitch menyisipkan iklan ke dalam aliran video di sisi server sebelum mengirimkannya, teknik yang disebut SSAI. Segmen iklan dan segmen konten tiba dalam aliran yang sama, sehingga tidak ada permintaan iklan terpisah yang dapat diblokir."
+    },
+    {
+      "q": "Apakah pemblokir iklan berfungsi di TV pintar?",
+      "a": "Umumnya tidak. Aplikasi TV pintar berjalan di luar browser apa pun, sehingga ekstensi browser tidak dapat mengaksesnya. Pendekatan tingkat jaringan (seperti penyaringan DNS pada router) dapat mengurangi pelacakan, tetapi iklan dalam aliran video tetap ada."
+    },
+    {
+      "q": "Apakah AdOff gratis?",
+      "a": "Ya. AdOff sepenuhnya gratis, tanpa akun, tanpa masa percobaan, dan tanpa batasan fitur, tersedia di Chrome, Firefox, Safari, Edge, dan Opera."
+    },
+    {
+      "q": "Apakah pemblokiran tetap berfungsi jika platform mengalami perubahan?",
+      "a": "Platform sering mengubah cara penyampaian iklannya, sehingga cakupan dapat berubah seiring waktu. Tidak ada pemblokir yang dapat menjamin hasil permanen; yang penting adalah pemblokir tersebut diperbarui secara responsif. Dengan demikian, gap (kekosongan) sesekali dapat terjadi setelah perubahan besar pada platform."
+    }
+  ],
+  "related": [
+    {
+      "href": "/youtube-ad-blocker",
+      "text": "Pemblokir iklan YouTube: cara kerjanya pada tahun 2026"
+    },
+    {
+      "href": "/preroll-midroll-postroll-explained",
+      "text": "Penjelasan iklan pra-siaran (pre-roll), di tengah (mid-roll), dan pasca-siaran (post-roll)"
+    },
+    {
+      "href": "/best-ad-blocker-for-streaming-2026",
+      "text": "Pemblokir iklan terbaik untuk streaming di tahun 2026"
+    }
+  ],
+  "cta": {
+    "h3": "Tonton tanpa jeda iklan",
+    "p": "AdOff gratis, tidak memerlukan akun, dan berfungsi di Chrome, Firefox, Safari, Edge, dan Opera.",
+    "btn": "Pasang AdOff secara gratis"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

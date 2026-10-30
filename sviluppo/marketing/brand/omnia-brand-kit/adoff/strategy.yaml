@@ -1,0 +1,86 @@
+brand: adoff
+updated: 2026-05-25
+audience_primaria:
+  chi: "Cliente finale che guarda TANTO streaming (heavy-streamer consumer)"
+  non: ["privacy-nerd", "sviluppatori"]   # privacy/tech vanno SOLO su canali forum/tech
+  insight: "È stanco delle pub che interrompono i video; spesso paga gli abbonamenti e si becca lo stesso la pubblicità."
+
+# ─────────────────────────────────────────────
+messaging:
+  comunicare_priorita:
+    - "Stop pub su TUTTI gli streaming (messaggio n.1)"
+    - "Invisibile / non viene rilevato (gli altri vengono sgamati, la pub torna; AdOff no)"
+    - "Streaming fluido e veloce (esperienza premium, niente attese)"
+  funzionalita_supporto:
+    - "Blocca pre-roll e mid-roll dei video (non solo banner)"
+    - "Funziona su tutti i browser (Chrome, Firefox, Safari, Edge, Opera)"
+    - "Gratis da scaricare e attivare"
+  non_comunicare_in_ad:
+    - "Trial '30 giorni Pro / senza carta' (MAI nelle ad)"
+    - "Nomi competitor (uBlock/AdBlock Plus/Ghostery -> 'altri ad blocker')"
+    - "Nomi/loghi piattaforme reali (YouTube/Netflix... -> 'piattaforme di streaming') — vale anche per le immagini AI"
+    - "Tecnicismi nerd (MV3, declarativeNetRequest, IMA stub, '130+ network') nelle ad consumer"
+  leve_emotive:   # ruotare
+    - "Le pub interrompono sul più bello"
+    - "Paghi l'abbonamento E ti vedi le pub"
+    - "Tempo perso a guardare pubblicità"
+    - "Relax: guardare in pace ciò che ami"
+
+# ─────────────────────────────────────────────
+pillar:
+  - { id: 1, nome: "Stop-pub streaming",  uso: "awareness/hook", canali: [ig, tiktok, fb, shorts] }
+  - { id: 2, nome: "Stealth / invisibile", uso: "consideration", canali: [ig, tiktok, fb, shorts] }
+  - { id: 3, nome: "Fluidità / esperienza", uso: "consideration/convert", canali: [ig, tiktok, fb, shorts] }
+  - { id: 4, nome: "Multi-browser & gratis", uso: "convert", canali: [ig, fb, shorts] }
+  - { id: 5, nome: "Community / leve emotive", uso: "engage", canali: [ig, tiktok, story] }
+  - { id: 6, nome: "Privacy/tech (SOLO forum)", uso: "autorità", canali: [reddit, hn, indiehackers, quora, habr, v2ex] }
+
+tono:   # 4 registri, mappati per contesto
+  ironico_leggero: "default consumer (IG/TikTok awareness/convert)"
+  empatico_educativo: "caroselli/educare"
+  meme_aggressivo: "TikTok/community, venerdì"
+  serio_tech: "LinkedIn + forum/tech"
+
+# ─────────────────────────────────────────────
+modello_giornaliero:   # 3 visual + story, copre i 4 obiettivi
+  - { slot: P1, obiettivo: awareness,  format: reel,            tono: ironico/meme,      orari: { ig: "18:00", tiktok: "17:00" } }
+  - { slot: P2, obiettivo: educare,    format: "carosello|foto", tono: empatico/serio,    orari: { fb: "12:00", ig: "12:00" } }
+  - { slot: P3, obiettivo: convertire, format: "reel(demo)+cta", tono: ironico/diretto,   orari: { ig: "20:00", tiktok: "21:00" } }
+  - { slot: STORY, obiettivo: engage,  format: "poll|demo|cta", tono: leggero,           orari: { ig: "in giornata" } }
+struttura_settimana: "rotazione libera dei pillar; venerdì = leggero/meme fisso"
+
+# ─────────────────────────────────────────────
+cta:
+  primaria: "Scaricalo e attivalo gratuitamente — adoff.app"
+  secondarie:
+    awareness: "Segui per altri trucchi"
+    educare: "Salva per dopo"
+    engage: "Commenta la tua esperienza"
+    reach: "Condividi a chi odia le pub"
+
+# ─────────────────────────────────────────────
+operating_model:
+  auto_100:   # nessuna approvazione
+    - "Produzione contenuti (concept→copy→immagini→voce→montaggio)"
+    - "Pubblicazione social visual (IG/TikTok/FB/Shorts via OAuth)"
+    - "Post testo/microblog (Twitter/Mastodon/Bluesky)"
+    - "Listening + report"
+  approvazione_umana:
+    fase_pilota: "approvi i primi contenuti"
+    poi: "auto quando ti fidi, con revisione in BATCH SETTIMANALE"
+  forum:
+    quora: auto
+    reddit_hn: "solo umano (rischio ban/reputazione)"
+    altri: "AI fa bozze -> tu pubblichi"
+    commenti: "semplici=auto, complessi=umano"
+
+# ─────────────────────────────────────────────
+produzione:
+  visual_source: "Mix AI (FLUX :4091) + UI reale estensione (screenshot/screen-recording)"
+  multilingua: "1 master visual FLUX language-agnostic; per lingua si rigenerano SOLO testo overlay + voiceover (edge-tts) + caption/karaoke"
+  lingue_visual: [it, en, es, pt, fr, de]
+  reel_format_ruotati: [before_after, hook_problema_soluzione, demo_reale, mito_vs_realta]
+  audio_reel: { voiceover: "edge-tts it-IT-DiegoNeural", karaoke: "sempre (faster-whisper)", tiktok: "trend audio" }
+brand_guard:
+  - "mai trial nelle ad · mai competitor · mai loghi/piattaforme reali · safe-zone 9:16 (testo/soggetto < y1480)"
+riferimenti: ["brand.yaml", "rubriche.yaml", "forum-playbook.md", "calendar/adoff.yaml", "visual-kit/"]

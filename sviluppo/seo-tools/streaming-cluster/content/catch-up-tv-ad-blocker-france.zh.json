@@ -1,0 +1,96 @@
+{
+  "slug": "catch-up-tv-ad-blocker-france",
+  "lang": "zh",
+  "title": "屏蔽 france.tv、TF1、6play、myCANAL… | AdOff",
+  "description": "AdOff 可在浏览器中屏蔽 france.tv、TF1、6play、M6、Arte 和 myCANAL 上的视频广告。免费的 Manifest V3 扩展程序，无需注册账户，支持五种浏览器。",
+  "h1": "法国回看电视广告拦截器：france.tv、TF1、6play",
+  "answer": "AdOff 可在浏览器中移除法国回看电视平台的前贴片和中插广告（多数情况下）。它会以本地占位符替代播放器请求的 Google IMA 广告 SDK，从而立即恢复播放，避免播放广告片段。该功能适用于桌面端网页播放器，前提是平台采用标准 SDK 集成方式。",
+  "sections": [
+    {
+      "h2": "涵盖法国服务",
+      "body": [
+        "<p>法国广播公司通过标准 Google IMA SDK 在浏览器播放器中投放视频广告，为其回看平台提供资金支持。AdOff 覆盖：</p>",
+        "<ul><li><strong>france.tv</strong>（france.tv）</li><li><strong>TF1</strong>（tf1.fr）</li><li><strong>6play</strong>（6play.fr）</li><li><strong>M6</strong>（m6.fr）</li><li><strong>Arte</strong>（arte.tv）</li><li><strong>myCANAL</strong>（mycanal.fr）</li></ul>"
+      ]
+    },
+    {
+      "h2": "以玩家为中心的方法，而非“打地鼠”式应对",
+      "body": [
+        "<p>AdOff 并非逐一应对各广播公司的广告格式，而是直击其共用组件：广告 SDK。该扩展程序会将 SDK 脚本的请求重定向至其内置的占位脚本。该占位脚本可维持播放器状态机的正常运行——它会确认广告请求并立即发出恢复内容播放的信号，从而确保节目继续播放，广告插播从未真正发生。</p>",
+        "<p>一种机制，应用于标准 SDK 出现的任何位置，使得在六种不同的法国平台上维持覆盖成为可能。</p>"
+      ]
+    },
+    {
+      "h2": "回放 vs 实时直播 vs Canal+ 订阅等级",
+      "body": [
+        "<p>TF1 或 6play 上的回看直播流是免费的，因为其嵌入了广告，而广告屏蔽功能正是在此处生效。直播频道及部分体育赛事使用不同的传输管道，因此效果各不相同。myCANAL 还提供付费订阅服务，采用服务器端广告插入方式：此类直播流会将广告直接拼接到视频内容中，而本扩展程序则刻意保持不干预，以确保播放器正常运行。</p>"
+      ]
+    },
+    {
+      "h2": "围绕播放器的页面级过滤",
+      "body": [
+        "<p>除视频层外，AdOff 还针对广告和跟踪域名应用了 180 条静态网络规则，并启用 CSS/DOM 美化过滤器。在 france.tv 或 TF1 页面上，这会移除界面中的促销横幅和覆盖框，使页面在您开始回放前就已更轻量。</p>"
+      ]
+    },
+    {
+      "h2": "明确说明的限制",
+      "body": [
+        "<ul><li><strong>SSAI</strong>：一旦广告通过服务器端拼接（SSAI）方式嵌入视频流，该占位符即不再适用。</li><li><strong>仅限桌面浏览器</strong>：TF1 或 6play 的移动端应用及智能电视应用不在覆盖范围内。</li><li>部分<strong>直播与体育赛事</strong>采用不同的传输方式。</li><li>电视台会频繁更新播放器；本扩展将持续保持对各类播放器的支持，且不会长期失效。</li></ul>"
+      ]
+    },
+    {
+      "h2": "免费，无需账户，支持五种浏览器",
+      "body": [
+        "<p>AdOff 是一款符合 Manifest V3 标准的浏览器扩展，完全免费，无需注册，也无试用期。支持 Chrome、Firefox、Safari、Edge 和 Opera。安装后，保持开关开启，照常打开您的回放平台即可。</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "AdOff 是否能移除 TF1 回看中的广告？",
+      "a": "在大多数情况下是的：TF1 网页播放器通过 Google IMA SDK 加载广告，而 AdOff 会将该 SDK 替换为一个占位符，从而立即恢复节目播放。在 TF1 使用其他插入方式的情况下，覆盖效果可能有所不同。"
+    },
+    {
+      "q": "我能否免费观看无广告的6play？",
+      "a": "AdOff 是一款免费的浏览器扩展程序，可中和 6play 网页播放器中的广告 SDK，从而避免插播广告。6play Max 是另一款独立的付费产品；AdOff 不会影响您的账户，且自身并无付费版本。"
+    },
+    {
+      "q": "那 myCANAL 呢？",
+      "a": "myCANAL 在其浏览器播放器使用标准 IMA SDK 时受支持。由于 Canal 的订阅流采用服务器端广告插入，为确保播放器正常运行，此类流被明确排除在外。"
+    },
+    {
+      "q": "它是否适用于 FranceTV 应用或智能电视？",
+      "a": "不。AdOff 仅适用于桌面浏览器。移动应用、智能电视应用及流媒体棒均不在其覆盖范围内。"
+    },
+    {
+      "q": "Arte 也包含在内吗？",
+      "a": "是的，artef.tv 属于受覆盖范围内的网站。当 Arte 网页播放器请求标准广告 SDK 时，同样会启用占位符机制，在大多数情况下可恢复播放内容而无需中断。"
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "流媒体广告屏蔽的工作原理"
+    },
+    {
+      "href": "/block-video-ads",
+      "text": "阻止视频广告"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-germany",
+      "text": "德国回看电视广告拦截器"
+    }
+  ],
+  "cta": {
+    "h3": "重播法语内容，无广告中断",
+    "p": "在您的浏览器中安装 AdOff，让该插件中和 france.tv、TF1 和 6play 上的广告 SDK。",
+    "btn": "免费安装 AdOff"
+  },
+  "report": {
+    "intro": "该页面缺少一个法国平台？如果广告仍然出现在 https://adoff.app/catch-up-tv-ad-blocker-france 页面上，请告知我们具体是哪个服务。用户反馈将决定我们下一步添加哪些广播公司。",
+    "btn_text": "报告缺失的服务",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

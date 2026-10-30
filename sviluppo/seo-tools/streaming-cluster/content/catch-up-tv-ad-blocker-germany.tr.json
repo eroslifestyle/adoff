@@ -1,0 +1,96 @@
+{
+  "slug": "catch-up-tv-ad-blocker-germany",
+  "lang": "tr",
+  "title": "ZDF Mediathek, ARD, RTL, Joyn’te Reklamları Engelle | AdOff",
+  "description": "AdOff, Almanca catch-up oynatıcılarda (ZDF, ARD Mediathek, RTL+, Joyn, ServusTV, ORF) video reklamları engeller. Ücretsiz, hesap gerektirmez.",
+  "h1": "Alman Catch-Up TV’leri için Reklam Engelleyici: ZDF, ARD, RTL, Joyn",
+  "answer": "AdOff, tarayıcıda Almanca diliyle çalışan catch-up TV platformlarında ön-ve orta-rol reklamları, çoğu durumda kaldırır. Bu, oynatıcıların yüklediği Google IMA reklam SDK’sını, oynatmayı anında devam ettiren bir stub ile değiştirerek ZDF, ARD veya Joyn’ın reklamsız çalışmasını sağlar. Kapsam, SDK’ya bağlıdır: Bu hizmetler standart oynatıcı entegrasyonunu kullandığı sürece geçerlidir.",
+  "sections": [
+    {
+      "h2": "Almanca dilinde sunulan hizmetler kapsanır",
+      "body": [
+        "<p>Almanca konuşulan pazarın kamu ve ticari yayıcıları, mediateklerini standart Google IMA SDK ile sunulan video reklamlarla gelir kazanmak amacıyla kullanır. AdOff şunları kapsar:</p>",
+        "<ul><li><strong>ZDF</strong> (zdf.de)</li><li><strong>ARD ve ARD Mediathek</strong> (ard.de, ardmediathek.de)</li><li><strong>RTL ve RTL+</strong> (rtl.de, rtlplus.de)</li><li><strong>Joyn</strong> (joyn.de)</li><li><strong>ServusTV</strong> (servustv.com)</li><li><strong>ORF</strong> (orf.at) — Avusturya, aynı Almanca konuşulan pazarın bir parçasıdır</li></ul>"
+      ]
+    },
+    {
+      "h2": "Stub, reklam aralığını nasıl ele alır",
+      "body": [
+        "<p>Alman mediatek oynatıcıları genellikle öncelikli (pre-roll) ve orta noktadaki (mid-roll) reklamları planlamak için IMA SDK’yı entegre eder. AdOff, SDK betik isteğini yerel olarak paketlenmiş bir stub’a yönlendirir. Oynatıcı, stub’dan bir reklam aralığının başlamasını istediğinde, stub hemen bir içerik devam ettirme sinyali döndürür ve oynatma aralıksız devam eder.</p>",
+        "<p>Video akışı asla değiştirilmez — sadece reklam orkestrasyon katmanı, tarayıcınızın içinde yerel olarak değiştirilir.</p>"
+      ]
+    },
+    {
+      "h2": "Kamu yayıncıları, özel yayıncılar, aynı mekanizma",
+      "body": [
+        "<p>Bir tarayıcı uzantısının hem kamu mediateklerini (ZDF, ARD) hem de ticari oynatıcıları (RTL+, Joyn, ServusTV) etkilemesi tuhaf görülebilir. Bunun nedeni, tarayıcı oynatıcıları için tümünün aynı reklam SDK’sını kullanmalarıdır. Standart SDK’nın kullanıldığı her yerde aynı nötrleştirme uygulanır. Bu, abonelikli akış servislerinden farklıdır; burada reklamlar sunucu tarafında birleştirilir ve uzantı tarafından bilinçli olarak dışlanır.</p>"
+      ]
+    },
+    {
+      "h2": "AdOff’in bu sitelerde başka neleri filtrelediği",
+      "body": [
+        "<p>Oynatıcının etrafında, uzantı reklam ve izleme etki alanlarına karşı 180 statik ağ kuralı çalıştırır ve ayrıca afişleri ve tanıtım katmanlarını gizleyen bir kozmetik CSS/DOM filtresi uygular. Joyn veya RTL sayfalarında bu, yalnızca video kesintilerini değil, arayüzden promosyon kutularını ve afişleri de ortadan kaldırır.</p>"
+      ]
+    },
+    {
+      "h2": "Dürüst sınırlar",
+      "body": [
+        "<ul><li>Bir yayıcı <strong>sunucu tarafında reklam ekleme (SSAI)</strong> sistemine geçerse, reklam doğrudan akışa eklenir ve stub etkisiz kalır.</li><li>Sadece masaüstü tarayıcı — <strong>yerel uygulamalar ve akıllı televizyonlar</strong> kapsam dışındadır.</li><li>Bazı <strong>canlı yayınlar ve spor</strong> farklı sistemleri kullanır.</li><li>Oynatıcılar sık sık değişir; kapsama alanı bir kez belirlenip sabitlenmez, zaman içinde sürdürülmeye devam edilir.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Ücretsiz, kayıt gerektirmez, beş tarayıcı",
+      "body": [
+        "<p>AdOff, hesap gerektirmeyen ve deneme süresi olmayan ücretsiz bir Manifest V3 uzantısıdır. Chrome, Firefox, Safari, Edge ve Opera’da çalışır. Kurun, korumayı açık bırakın ve mediatekinizi normal şekilde açın.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "ZDF Mediathek’teki reklamları kaldırıyor mu?",
+      "a": "Çoğunlukla evet: ZDF web oynatıcısı reklamları Google IMA SDK aracılığıyla yüklediğinde, AdOff hemen programın devam etmesini sağlayan bir stub ile değiştirir. Kapsam, SDK’ya uyar; ZDF ekleme teknolojisini değiştirirse sonuçlar farklı olabilir."
+    },
+    {
+      "q": "Joyn’deki reklamları ücretsiz olarak atlayabilir miyim?",
+      "a": "AdOff, Joyn web oynatıcısındaki IMA reklam SDK’sını etkisiz hale getiren ücretsiz bir tarayıcı uzantısıdır; bu nedenle reklamlar genellikle oynatılmaz. Joyn’un ücretli abonelikleri ayrı bir ticari üründür; AdOff hesabınızla etkileşime girmez."
+    },
+    {
+      "q": "Avusturya’daki ORF ve ServusTV’de çalışır mı?",
+      "a": "Evet, her ikisi de kapsanan Almanca dil grubunun parçasıdır. Tarayıcı oynatıcıları standart reklam SDK’sını talep ettiğinde aynı mekanizma uygulanır."
+    },
+    {
+      "q": "AdOff, ARD/ZDF Rundfunkbeitrag’ı değiştirir mi?",
+      "a": "Hayır. Uzantı yalnızca oynatıcıdaki ve sayfadaki reklamları etkiler. Rundfunkbeitrag, yasal bir katkıdır ve tarayıcı reklam engelleme ile tamamen ilişkisizdir."
+    },
+    {
+      "q": "ZDF veya Joyn akıllı TV uygulaması hakkında ne düşünüyorsunuz?",
+      "a": "AdOff yalnızca masaüstü tarayıcılarda çalışır. Akıllı TV uygulamaları, mobil uygulamalar ve akış çubukları (streaming stick) bu kapsamın dışındadır."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Akış reklam engelleme nasıl çalışır"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "IMA SDK reklam engelleme açıklaması"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-france",
+      "text": "Fransız geri izleme TV reklam engelleyici"
+    }
+  ],
+  "cta": {
+    "h3": "Almanca reklamsız mediatek",
+    "p": "AdOff’u yükleyin ve ZDF, ARD, RTL+ ve Joyn’deki reklam SDK’sını stub’ın yönetmesine izin verin.",
+    "btn": "AdOff’u ücretsiz yükleyin"
+  },
+  "report": {
+    "intro": "Burada Almanya veya Avusturya platformu eksik mi? https://adoff.app/catch-up-tv-ad-blocker-germany adresinde hala kesintiler oluyorsa, hizmeti bildirin. Bildirimler, bir sonraki hangi yayincıyı kapsayacağımızı belirler.",
+    "btn_text": "Eksik bir hizmeti bildirin",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

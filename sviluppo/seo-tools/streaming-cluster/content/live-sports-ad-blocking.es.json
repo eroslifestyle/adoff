@@ -1,0 +1,101 @@
+{
+  "slug": "live-sports-ad-blocking",
+  "lang": "es",
+  "title": "Bloqueo de anuncios en transmisiones en vivo de deportes | AdOff",
+  "description": "Por qué los deportes en vivo son lo más difícil para bloquear anuncios, qué puede y no puede hacer una extensión, y qué cadenas cubre AdOff.",
+  "h1": "Bloqueo de anuncios en deportes en vivo: qué funciona realmente",
+  "answer": "El deporte en directo es el lugar más difícil para bloquear anuncios: las transmisiones en vivo suelen utilizar inserción de anuncios del lado del servidor, algo que ninguna extensión de navegador puede eliminar. Donde sí funciona una extensión de navegador es en las transmisiones bajo demanda y de recuperación de los emisores, que cargan los anuncios del lado del cliente, y es precisamente eso lo que neutraliza AdOff.",
+  "sections": [
+    {
+      "h2": "Por qué el contenido en vivo es el caso más difícil",
+      "body": [
+        "<p>El deporte en directo es la joya de la corona de la publicidad en video, y se defiende en consecuencia. Una transmisión verdaderamente en directo no puede tolerar que un SDK de publicidad del lado del cliente realice viajes de ida y vuelta a un servidor de anuncios antes de cada interrupción: el retraso desincronizaría a los espectadores. Por ello, muchos servicios en directo adoptan <a href=\"/server-side-ad-insertion-explained\">la inserción de anuncios del lado del servidor (SSAI)</a>, en la que el anuncio comercial se integra en la transmisión de video antes de que este llegue jamás a su dispositivo.</p>",
+        "<p>Cuando eso sucede, los píxeles del anuncio forman parte del video en sí. Una extensión de navegador —cualquiera, no solo AdOff— no tiene forma de separarlos una vez que ya ha ocurrido. Afirmar lo contrario sería deshonesto.</p>"
+      ]
+    },
+    {
+      "h2": "Lo que realmente puede hacer una extensión de navegador en eventos en vivo",
+      "body": [
+        "<p>Las extensiones operan en el navegador, en la página. Pueden interceptar JavaScript, bloquear peticiones de red, ocultar elementos del DOM y sustituir scripts. Ese conjunto de herramientas es decisivo contra la publicidad <strong>del lado del cliente</strong> —donde un SDK en la página solicita y muestra los anuncios—, pero inútil contra los anuncios ya integrados en la transmisión de video.</p>",
+        "<p>Por lo tanto, la expectativa honesta es: resultados sólidos donde el emisor aún utilice la entrega del lado del cliente, y sin efecto donde la transmisión sea del lado del servidor. Esta combinación varía según el servicio, el evento e incluso la región, razón por la cual el mismo partido puede ser libre de anuncios en una plataforma y no en otra.</p>"
+      ]
+    },
+    {
+      "h2": "Dónde sí funciona AdOff: en emisiones de repetición y bajo demanda",
+      "body": [
+        "<p>Gran parte de lo que la gente denomina «ver deportes en línea» no es la transmisión en vivo: es la repetición, el resumen o la recuperación completa del partido en la plataforma de un emisor nacional. Estas transmisiones bajo demanda son el ejemplo clásico para SDKs de publicidad del lado del cliente, ya que el retraso ya no importa.</p>",
+        "<p>AdOff cubre 42 dominios de emisoras europeas —incluyendo RaiPlay, Mediaset Infinity, La7, discovery+, BBC iPlayer, ITVX, ZDF, ARD, France.tv, TF1, RTVE y otros— redirigiendo el script del SDK de publicidad hacia un stub que indica al reproductor que reanude el contenido inmediatamente. La reproducción comienza, sin anuncios previos ni anuncios intermedios.</p>"
+      ]
+    },
+    {
+      "h2": "Los dos mecanismos que realizan el trabajo",
+      "body": [
+        "<p>En esos sitios de radiodifusores, la neutralización se lleva a cabo mediante dos canales que apuntan al mismo SDK: un stub incrustado en la página que reemplaza <code>window.google.ima</code> antes de que se inicialice el reproductor, y reglas de declarativeNetRequest que redirigen el archivo de script del SDK hacia el stub incluido en la extensión. De cualquier forma, cuando el reproductor solicita ejecutar un bloque publicitario, se le informa que dicho bloque ya ha finalizado.</p>",
+        "<p>Las reglas a nivel de red bloquean 180 patrones de solicitudes de redes publicitarias en cada sitio; el filtrado cosmético oculta banners y superposiciones alrededor del reproductor; y la capa sigilosa actúa contra las comprobaciones anti-bloqueo de anuncios que algunas plataformas ejecutan antes de la reproducción.</p>"
+      ]
+    },
+    {
+      "h2": "Qué no funcionará — y por qué lo decimos",
+      "body": [
+        "<p>Ser transparente sobre los límites:</p>",
+        "<ul><li><strong>Inserción de anuncios del lado del servidor</strong>: no es abordable mediante ninguna extensión de navegador. Los anuncios llegan dentro del flujo de transmisión.</li><li><strong>Aplicaciones nativas de TV</strong>: una extensión solo se ejecuta en un navegador, no en la aplicación de TV inteligente ni en la caja de decodificación.</li><li><strong>Servicios de suscripción premium</strong> con pipelines propietarios: AdOff los excluye deliberadamente para que sus reproductores sigan funcionando.</li></ul>",
+        "<p>Ningún bloqueador de anuncios, en ninguna plataforma, elimina todos los anuncios de todos los eventos en vivo. Si un producto promete eso, tómelo como una señal de alerta.</p>"
+      ]
+    },
+    {
+      "h2": "Configuración práctica para el día del partido",
+      "body": [
+        "<p>Si ves repeticiones y resúmenes en los sitios de emisoras, instala AdOff en tu navegador de escritorio (Chrome, Firefox, Safari, Edge u Opera) y mantén la protección activa: es gratuito y no requiere cuenta. Si un reproductor específico no se inicia, usa la pausa por sitio en lugar de desactivar todo, luego recarga la página.</p>",
+        "<p>Para transmisiones en vivo genuinas en servicios que utilizan SSAI, las alternativas realistas están fuera del navegador: el filtrado de DNS a nivel de red puede eliminar algunos dominios de seguimiento de anuncios en toda su red doméstica — consulte nuestra guía sobre <a href=\"/android-dns\">filtrado a nivel de DNS</a> — aunque no eliminará los anuncios integrados directamente en la transmisión.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "¿Puede un bloqueador de anuncios eliminar los anuncios de un partido de fútbol en vivo?",
+      "a": "A menudo, no. Los canales en vivo auténticos suelen utilizar la inserción de anuncios del lado del servidor, en la que los anuncios se integran en el video antes de su entrega, lo que ninguna extensión de navegador puede deshacer. Cuando la plataforma sigue cargando anuncios mediante un SDK del lado del cliente, una extensión como AdOff puede neutralizarlos."
+    },
+    {
+      "q": "¿Funciona AdOff en los servicios de repetición de cadenas nacionales?",
+      "a": "Sí. AdOff cubre 42 dominios de emisoras europeas —incluidos RaiPlay, Mediaset Infinity, BBC iPlayer, ITVX, ZDF y France.tv— al sustituir el SDK publicitario por un «stub» que reanuda inmediatamente la reproducción del contenido, de modo que las reproducciones repetidas comienzan sin anuncios de apertura ni de mitad de programa."
+    },
+    {
+      "q": "¿Por qué algunas plataformas deportivas detectan mi bloqueador de anuncios?",
+      "a": "Algunas plataformas ejecutan scripts anti-bloqueo de anuncios antes de permitir la reproducción. AdOff incluye una capa de sigilo —mediante suplantación de señuelos e interceptación de fetch/XHR— diseñada para evadir estas comprobaciones, aunque ninguna evasión dura para siempre, ya que las plataformas siguen actualizando sus métodos de detección."
+    },
+    {
+      "q": "¿Existe alguna forma de bloquear los anuncios SSAI en mi red?",
+      "a": "No los anuncios en sí: forman parte del flujo de video. El filtrado a nivel de DNS en su router puede bloquear dominios de seguimiento publicitario para todos los dispositivos en el hogar, pero no puede separar los segmentos de anuncios integrados de los segmentos de contenido."
+    },
+    {
+      "q": "¿Por qué AdOff no afecta a los servicios de streaming de pago?",
+      "a": "Elección deliberada: esos servicios utilizan pipelines de reproductores propietarios, y forzar cambios en ellos arriesga romper por completo la reproducción. Excluirlos garantiza que el video funcione, lo que es más importante que una promesa de ausencia de anuncios poco fiable."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Bloqueo de anuncios en streaming: la guía completa"
+    },
+    {
+      "href": "/server-side-ad-insertion-explained",
+      "text": "Explicación de la inserción de anuncios del lado del servidor (SSAI)"
+    },
+    {
+      "href": "/tv-streaming-ad-blocker",
+      "text": "Bloqueadores de anuncios para TV y dispositivos de streaming"
+    }
+  ],
+  "cta": {
+    "h3": "Ver reproducciones sin los intervalos de anuncios",
+    "p": "AdOff neutraliza los anuncios de video del lado del cliente en 42 plataformas de emisoras europeas. Gratis, sin cuenta.",
+    "btn": "Instalar AdOff gratis"
+  },
+  "report": {
+    "intro": "¿Probaron AdOff en un evento en vivo o en una emisora específica y algo no funcionó? Informen el caso con la URL exacta de la página: los informes como el suyo deciden qué reglas y correcciones implementamos a continuación.",
+    "btn_text": "Informar este sitio",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

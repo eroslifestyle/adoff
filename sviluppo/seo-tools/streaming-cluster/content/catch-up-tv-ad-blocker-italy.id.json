@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-italy",
+  "lang": "id",
+  "title": "Blokir Iklan di RaiPlay, Mediaset Infinity, La7 | AdOff",
+  "description": "AdOff menonaktifkan iklan video di RaiPlay, Mediaset Infinity, La7, dan Discovery+ di browser. Gratis, tanpa akun, untuk Chrome, Firefox, Safari, dan Edge.",
+  "h1": "Pemblokir Iklan untuk TV Catch-Up Italia: RaiPlay, Infinity, La7",
+  "answer": "AdOff menghapus iklan pra-sesi dan iklan tengah sesi dari platform catch-up TV Italia di browser, dalam sebagian besar kasus. Alat ini mengganti Google IMA ad SDK yang diminta oleh pemutar dengan stub lokal yang langsung melanjutkan program, sehingga Anda dapat menonton RaiPlay, Infinity, atau La7 tanpa gangguan.",
+  "sections": [
+    {
+      "h2": "Layanan Italia yang tercakup",
+      "body": [
+        "<p>Penyiar Italia memonetisasi platform catch-up gratis mereka dengan iklan video, dan pemutar mereka mengandalkan Google IMA SDK standar di browser. AdOff mencakup:</p>",
+        "<ul><li><strong>RaiPlay</strong> (raiplay.it, rai.it)</li><li><strong>Mediaset Infinity</strong> (mediasetinfinity.mediaset.it, mediaset.it)</li><li><strong>La7</strong> (la7.it)</li><li><strong>Discovery+</strong> (discoveryplus.com)</li></ul>"
+      ]
+    },
+    {
+      "h2": "Mekanisme, langkah demi langkah",
+      "body": [
+        "<p>Ketika halaman RaiPlay atau Infinity dimuat di browser Anda, pemutar biasanya mengunduh IMA SDK dari server Google untuk menjadwalkan jeda iklan. AdOff mengalihkan permintaan tersebut ke sebuah *stub* yang disertakan dalam ekstensi. *Stub* ini cukup memahami bahasa SDK untuk membuat pemutar tetap berjalan, dan ketika pemutar meminta memutar iklan, ia langsung menjawab “permintaan lanjut konten diterima”.</p>",
+        "<p>Kemudian program diputar tanpa jeda iklan. Tidak ada video yang diunduh ulang dan tidak ada perubahan apa pun pada aliran konten.</p>"
+      ]
+    },
+    {
+      "h2": "Mengapa ini bekerja pada penyiar publik dan komersial Italia",
+      "body": [
+        "<p>Rai, Mediaset, dan Discovery memonetisasi tontonan catch-up melalui penyisipan iklan menggunakan SDK standar—inilah lapisan yang tepat dapat diintercept oleh ekstensi browser. Platform berlangganan seperti Prime Video justru menyuntikkan iklan ke dalam aliran secara di sisi server (*server-side*), dan fitur-fitur tersebut sengaja tidak disertakan dalam ekstensi agar pemutarnya tetap berfungsi. TV catch-up adalah segmen di mana pendekatan teknis ini benar-benar efektif.</p>"
+      ]
+    },
+    {
+      "h2": "Penyaringan jaringan dan kosmetik tambahan",
+      "body": [
+        "<p>Di luar pemutar, AdOff dilengkapi 180 aturan jaringan statis untuk memblokir domain iklan dan pelacakan, serta filter CSS/DOM yang menyembunyikan banner dan *overlay* promosi di halaman penyiar. Di RaiPlay atau Infinity, ini berarti lebih sedikit *promo tile* dan papan iklan di sekitar katalog—bukan hanya lebih sedikit gangguan video.</p>"
+      ]
+    },
+    {
+      "h2": "Apa yang tidak dapat dilakukan",
+      "body": [
+        "<p>Bersikap realistislah terhadap batasan-batasannya:</p>",
+        "<ul><li>Jika platform menggunakan <strong>penyisipan iklan di sisi server (SSAI)</strong>, iklan menjadi bagian dari aliran video dan *stub* tidak lagi berlaku.</li><li>Ekstensi hanya berfungsi di <strong>browser desktop</strong>: aplikasi RaiPlay untuk TV pintar, aplikasi seluler, dan fitur *casting* berada di luar cakupan.</li><li>Beberapa <strong>acara langsung dan olahraga</strong> menggunakan jalur pengiriman yang berbeda.</li><li>Pemutar sering diperbarui; cakupan terus diperbarui secara aktif, tetapi tidak pernah dibekukan.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Ekstensi gratis, lima browser, tanpa pendaftaran",
+      "body": [
+        "<p>AdOff adalah ekstensi Manifest V3, gratis tanpa akun atau masa percobaan. Ekstensi ini berjalan di Chrome, Firefox, Safari, Edge, dan Opera. Pasang dari situs, aktifkan perlindungan, lalu buka RaiPlay, Infinity, atau La7 seperti biasa.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Apakah AdOff menghapus iklan dari RaiPlay?",
+      "a": "Dalam sebagian besar kasus, ya, ketika pemutar web RaiPlay memuat iklannya melalui Google IMA SDK. Ekstensi ini menggantikan SDK tersebut dengan stub yang langsung melanjutkan program. Namun, cakupannya bisa bervariasi di tempat-tempat di mana Rai menguji teknik penyisipan lainnya."
+    },
+    {
+      "q": "Apakah saya bisa melewati iklan di Mediaset Infinity secara gratis?",
+      "a": "AdOff adalah ekstensi browser gratis yang menonaktifkan SDK iklan pada pemutar web Infinity, sehingga pre-roll dan mid-roll biasanya tidak diputar. Ekstensi ini tidak mengubah akun Infinity Anda dan tidak menawarkan versi berbayar — semua fitur disertakan secara gratis."
+    },
+    {
+      "q": "Bagaimana dengan La7 dan Discovery+?",
+      "a": "Keduanya ditangani dengan cara yang sama: permintaan IMA SDK dialihkan ke stub lokal, dan pemutar melanjutkan konten alih-alih menayangkan jeda iklan. Hal ini berlaku untuk versi browser desktop dari layanan tersebut."
+    },
+    {
+      "q": "Apakah ini berkaitan dengan biaya lisensi TV (canone)?",
+      "a": "Tidak. AdOff hanya memengaruhi iklan di dalam pemutar dan di halaman web. Pertanyaan mengenai canone di abbonamento sepenuhnya terpisah dan tidak berkaitan dengan ekstensi ini."
+    },
+    {
+      "q": "Apakah ini berfungsi di aplikasi RaiPlay atau TV pintar?",
+      "a": "Tidak. AdOff adalah ekstensi browser yang hanya berlaku untuk browser desktop. Aplikasi mobile, aplikasi TV pintar, dan perangkat streaming stick berada di luar jangkauannya."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Cara kerja pemblokiran iklan streaming"
+    },
+    {
+      "href": "/block-video-ads",
+      "text": "Memblokir iklan video secara umum"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-uk",
+      "text": "Pemblokir iklan TV catch-up Inggris Raya"
+    }
+  ],
+  "cta": {
+    "h3": "RaiPlay, Infinity, La7 tanpa gangguan iklan",
+    "p": "Pasang AdOff di browser: stub ini menonaktifkan SDK iklan dari pemutar lokal Italia.",
+    "btn": "Pasang AdOff secara gratis"
+  },
+  "report": {
+    "intro": "Platform Italia favorit Anda tidak terdaftar dalam daftar ini? Jika iklan tetap muncul di https://adoff.app/catch-up-tv-ad-blocker-italy, laporkan layanan mana yang belum terdaftar. Laporan pengguna menjadi acuan bagi kami untuk menambahkan platform berikutnya.",
+    "btn_text": "Laporkan layanan yang belum terdaftar",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

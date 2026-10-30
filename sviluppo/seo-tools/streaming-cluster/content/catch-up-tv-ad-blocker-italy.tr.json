@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-italy",
+  "lang": "tr",
+  "title": "RaiPlay, Mediaset Infinity ve La7’de Reklamları Engelle | AdOff",
+  "description": "AdOff, RaiPlay, Mediaset Infinity, La7 ve Discovery+’da video reklamlarını engeller; ücretsiz, hesap gerektirmez; Chrome, Firefox, Safari ve Edge’de çalışır.",
+  "h1": "İtalyan Catch-Up TV için Reklam Engelleyici: RaiPlay, Infinity, La7",
+  "answer": "AdOff, tarayıcıda İtalyan catch-up TV platformlarında ön-ve orta-rol reklamları, çoğu durumda kaldırır. Oynatıcıların talep ettiği Google IMA reklam SDK’sını, programı anında devam ettiren yerel bir stub ile değiştirir; böylece reklamsız olarak RaiPlay, Infinity veya La7 izleyebilirsiniz.",
+  "sections": [
+    {
+      "h2": "İtalyan hizmetlerine kapsama alanı",
+      "body": [
+        "<p>İtalyan yayın şirketleri, ücretsiz geri izleme platformlarını video reklamlarla gelir kazanmak için kullanır ve oynatıcıları tarayıcıda standart Google IMA SDK’sını kullanır. AdOff şunları kapsar:</p>",
+        "<ul><li><strong>RaiPlay</strong> (raiplay.it, rai.it)</li><li><strong>Mediaset Infinity</strong> (mediasetinfinity.mediaset.it, mediaset.it)</li><li><strong>La7</strong> (la7.it)</li><li><strong>Discovery+</strong> (discoveryplus.com)</li></ul>"
+      ]
+    },
+    {
+      "h2": "Mekanizma, adım adım",
+      "body": [
+        "<p>RaiPlay veya Infinity sayfası tarayıcınızda yüklendiğinde, oynatıcı normalde reklam aralarını planlamak için Google sunucularından IMA SDK’sını indirir. AdOff, bu isteği eklentiyle birlikte gelen bir stub’a yönlendirir. Stub, SDK’nın dilinin yeterince bir kısmını anlayarak oynatıcıyı tatmin eder ve oynatıcı bir reklamı başlatmak istediğinde hemen “içerik devam ettirme istendi” cevabını verir.</p>",
+        "<p>Böylece program aralıksız oynatılır. Video yeniden indirilmez ve içerik akışıyla ilgili hiçbir şey değişmez.</p>"
+      ]
+    },
+    {
+      "h2": "Neden bu çözüm İtalyan kamu ve özel yayincılık kuruluşlarında işe yarar",
+      "body": [
+        "<p>Rai, Mediaset ve Discovery, geri izleme izlemeyi standart bir SDK aracılığıyla eklenen reklamlarla gelir kazanmak için kullanır; bu da tam olarak bir tarayıcı eklentisinin engelleyebileceği katmandır. Prime Video gibi abonelik tabanlı platformlar ise reklamları sunucu tarafında akışa entegre eder ve bu tür oynatıcıların çalışmaya devam etmesi için eklenti bunları bilerek hariç tutar. Geri izleme TV’si, teknik yaklaşımın gerçek bir etki yarattığı alandır.</p>"
+      ]
+    },
+    {
+      "h2": "Ağ ve estetik filtreleme ek katmanı",
+      "body": [
+        "<p>Oynatıcıdan başka, AdOff reklam ve izleme alan adlarına ait 180 statik ağ kuralı ve yayıncının sayfalarındaki banner’ları ve tanıtım katmanlarını gizleyen bir CSS/DOM filtresi de içerir. RaiPlay veya Infinity’de bu, yalnızca video kesintilerinin azalmasının ötesine geçerek katalog etrafındaki daha az promosyon kutusu ve afiş anlamına gelir.</p>"
+      ]
+    },
+    {
+      "h2": "Yapamadıkları",
+      "body": [
+        "<p>Sınırları gerçekçi bir şekilde değerlendirelim:</p>",
+        "<ul><li>Bir platform <strong>sunucu tarafında reklam ekleme (SSAI)</strong> benimsemişse, reklam video akışının bir parçası haline gelir ve stub artık uygulanmaz.</li><li>Sadece <strong>masaüstü tarayıcısında</strong> çalışır: RaiPlay akıllı TV uygulamaları, mobil uygulamalar ve casting kapsama alanı dışındadır.</li><li>Bazı <strong>canlı etkinlikler ve spor</strong> farklı dağıtım hatlarını kullanır.</li><li>Oynatıcılar sık sık değişir; kapsama alanı aktif olarak güncellenir ancak sabitlenmez.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Ücretsiz uzantı, beş tarayıcı, sıfır kayıt",
+      "body": [
+        "<p>AdOff, Manifest V3 tabanlı bir eklentidir, ücretsizdir ve herhangi bir hesap veya deneme süresi gerektirmez. Chrome, Firefox, Safari, Edge ve Opera’da çalışır. Siteden yükleyin, korumayı açık tutun ve RaiPlay, Infinity veya La7’yi normalde yaptığınız gibi açın.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "AdOff, RaiPlay'deki reklamları kaldırıyor mu?",
+      "a": "Çoğu durumda evet, RaiPlay web oynatıcısı reklamlarını Google IMA SDK’sı aracılığıyla yüklediğinde. Eklenti, bu SDK’yı hemen programın oynatılmasını sağlayan bir yordam (stub) ile değiştirir. Rai, diğer ekleme tekniklerini denediği durumlarda, kapsama alanı değişebilir."
+    },
+    {
+      "q": "Mediaset Infinity'deki reklamları ücretsiz olarak atlayabilir miyim?",
+      "a": "AdOff, Infinity web oynatıcısındaki reklam SDK’sını etkisiz hale getiren ücretsiz bir tarayıcı eklentisidir; bu nedenle genellikle önceden yüklenmiş (pre-roll) ve orta bölümlerdeki (mid-roll) reklamlar oynatılmaz. Eklenti Infinity hesabınızı etkilemez ve ücretli bir sürüm sunmaz — tüm özellikler ücretsiz olarak dahil edilmiştir."
+    },
+    {
+      "q": "La7 ve Discovery+ durumunda ne durumda?",
+      "a": "Her ikisi de aynı şekilde ele alınır: IMA SDK isteği, yerel bir yordama yönlendirilir ve oynatıcı, aralık (break) çalıştırmak yerine içeriğin oynatılmasını sürdürür. Bu, hizmetlerin masaüstü tarayıcı sürümleri için geçerlidir."
+    },
+    {
+      "q": "Bu durum, TV vergisi (canone) ile ilgili midir?",
+      "a": "Hayır. AdOff yalnızca oynatıcıda ve sayfada yer alan reklamları etkiler. “Canone di abbonamento” (abonelik kanonu) ile ilgili sorular tamamen ayrıdır ve bu eklentiyle hiçbir ilişkisi yoktur."
+    },
+    {
+      "q": "Bu, RaiPlay uygulamasında veya akıllı TV’de çalışır mı?",
+      "a": "Hayır. AdOff, masaüstü tarayıcılar için bir tarayıcı eklentisidir. Mobil uygulamalar, akıllı TV uygulamaları ve akış çubukları (streaming sticks) eklentinin erişim alanı dışındadır."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Akış reklam engelleme nasıl çalışır"
+    },
+    {
+      "href": "/block-video-ads",
+      "text": "Genel olarak video reklamları engelleme"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-uk",
+      "text": "İngiltere catch-up TV reklam engelleyici"
+    }
+  ],
+  "cta": {
+    "h3": "RaiPlay, Infinity, La7 — reklamsız izleme",
+    "p": "AdOff’u tarayıcınıza yükleyin: stub, İtalyan oynatıcıların reklam SDK’sını etkisizleştirir.",
+    "btn": "AdOff’u ücretsiz yükleyin"
+  },
+  "report": {
+    "intro": "Sevdiğiniz İtalyan platformu listede değil mi? Reklamlar hâlâ https://adoff.app/catch-up-tv-ad-blocker-italy adresinde görünüyor ise eksik olan hizmeti bildirin. Kullanıcı bildirimleri, hangi platformları bir sonraki ekleyeceğimizi belirlememize yardımcı olur.",
+    "btn_text": "Eksik bir hizmeti bildirin",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

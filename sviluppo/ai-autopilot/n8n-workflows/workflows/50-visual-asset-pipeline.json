@@ -1,0 +1,685 @@
+{
+  "id": "ADOFF50VISUALPIPELINE1",
+  "name": "AdOff 50 - Visual Asset Pipeline",
+  "description": "Automatic visual asset generation (image/video) for approved social media drafts. Bridges gemini_copy_drafts → media_queue → posts_queue.",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "visual-asset-create",
+        "responseMode": "responseNode",
+        "httpMethod": "POST",
+        "options": {}
+      },
+      "id": "webhook-create",
+      "name": "Webhook /visual-asset-create",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "adoff-visual-asset-create-001"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 10
+            }
+          ]
+        }
+      },
+      "id": "schedule-pickup",
+      "name": "Schedule Trigger (every 10 min)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        250,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst secret = process.env.WEBHOOK_HMAC_SECRET;\nif (!secret) return [{ json: { ok: false, reason: 'WEBHOOK_HMAC_SECRET not configured' } }];\nconst signature = $input.first().json.$headers?.['x-adoff-signature'];\nif (!signature) return [{ json: { ok: false, reason: 'missing_signature_header' } }];\nconst bodyRaw = $input.first().json.$body;\nif (!bodyRaw) return [{ json: { ok: false, reason: 'empty_body' } }];\nconst expectedHmac = crypto.createHmac('sha256', Buffer.from(secret, 'hex')).update(bodyRaw, 'utf8').digest('hex');\ntry { crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expectedHmac, 'hex')); return [{ json: { ok: true, payload: JSON.parse(bodyRaw), timestamp: new Date().toISOString() } }]; } catch (err) { return [{ json: { ok: false, reason: 'invalid_signature', timestamp: new Date().toISOString() } }]; }"
+      },
+      "id": "validate-hmac",
+      "name": "Validate HMAC (webhook only)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.ok }}",
+              "value2": true,
+              "operation": "equal"
+            }
+          ]
+        }
+      },
+      "id": "check-hmac",
+      "name": "HMAC Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: $json.reason } }}",
+        "responseCode": 401
+      },
+      "id": "reject-hmac",
+      "name": "Reject (401)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        850,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "query": "SELECT id, body, platform, lang, concept, asset_type FROM adoff_autopilot.gemini_copy_drafts WHERE status='approved' AND asset_type='caption_social' AND NOT EXISTS (SELECT 1 FROM adoff_autopilot.media_queue m WHERE m.draft_id=adoff_autopilot.gemini_copy_drafts.id) LIMIT 10;",
+        "operation": "executeQuery"
+      },
+      "id": "fetch-approved",
+      "name": "Fetch approved drafts (schedule)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        450,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const isWebhook = $json.payload !== undefined;\nif (isWebhook) {\n  const p = $json.payload;\n  return [{ json: { draft_id: p.draft_id, asset_type: p.asset_type || 'caption_social', platform: p.platform, lang: p.lang, concept: p.concept, caption_preview: p.caption_preview || '', source: 'webhook' } }];\n} else {\n  return $json.map(row => ({ json: { draft_id: row.id, asset_type: row.asset_type || 'caption_social', platform: row.platform, lang: row.lang, concept: row.concept, caption_preview: row.body || '', source: 'schedule' } }));\n}"
+      },
+      "id": "normalize-input",
+      "name": "Normalize input (webhook vs schedule)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        850,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.platform }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "tiktok",
+              "output": 0
+            },
+            {
+              "value2": "instagram",
+              "output": 1
+            },
+            {
+              "value2": "facebook",
+              "output": 2
+            },
+            {
+              "value2": "twitter",
+              "output": 3
+            },
+            {
+              "value2": "linkedin",
+              "output": 4
+            }
+          ]
+        }
+      },
+      "id": "route-platform",
+      "name": "Route by platform",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8792/build/cyber-purge",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ lang: $json.lang, concept: $json.concept, force: false, no_logo_variant: true }) }}",
+        "options": {
+          "timeout": 1500000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "build-tiktok-video",
+      "name": "Build TikTok video (cyber-purge)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1250,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_HOST || 'http://localhost:5678' }}/webhook/image-gen",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ prompt: `AdOff brand-safe lifestyle image, concept: ${$json.concept}, no brand names, no UI mockup, photographic style, vibrant, language: ${$json.lang}`, negative_prompt: 'text, logo, watermark, artificial, low quality', width: 1080, height: 1350, steps: 4, cfg_scale: 1.0, requested_by: 'w50-visual-pipeline', platform: 'instagram' }) }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "build-instagram-image",
+      "name": "Build Instagram image (1080x1350)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1250,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_HOST || 'http://localhost:5678' }}/webhook/image-gen",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ prompt: `AdOff brand-safe promotional image, concept: ${$json.concept}, no brand names, no UI mockup, photographic style, vibrant, language: ${$json.lang}`, negative_prompt: 'text, logo, watermark, artificial, low quality', width: 1200, height: 630, steps: 4, cfg_scale: 1.0, requested_by: 'w50-visual-pipeline', platform: 'facebook' }) }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "build-facebook-image",
+      "name": "Build Facebook image (1200x630)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1250,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_HOST || 'http://localhost:5678' }}/webhook/image-gen",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ prompt: `AdOff brand-safe image for Twitter/X, concept: ${$json.concept}, no brand names, no UI mockup, photographic style, language: ${$json.lang}`, negative_prompt: 'text, logo, watermark, artificial, low quality', width: 1200, height: 675, steps: 4, cfg_scale: 1.0, requested_by: 'w50-visual-pipeline', platform: 'twitter' }) }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "build-twitter-image",
+      "name": "Build Twitter image (1200x675)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1250,
+        650
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_HOST || 'http://localhost:5678' }}/webhook/image-gen",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ prompt: `AdOff professional corporate image for LinkedIn, concept: ${$json.concept}, no brand names, no UI mockup, professional style, clean design, language: ${$json.lang}`, negative_prompt: 'text, logo, watermark, casual, low quality', width: 1200, height: 627, steps: 4, cfg_scale: 1.0, requested_by: 'w50-visual-pipeline', platform: 'linkedin' }) }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "build-linkedin-image",
+      "name": "Build LinkedIn image (1200x627)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1250,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nif (!resp || !resp.ok) return [{ json: { media_type: 'video', media_path: null, error: resp?.error || 'cyber-purge build failed', status: 'failed' } }];\nconst videoPath = resp.output?.video || resp.video_path || 'unknown';\nreturn [{ json: { media_type: 'video', media_path: videoPath, dimensions: '1920x1080', status: 'generated', error: null } }];"
+      },
+      "id": "parse-tiktok",
+      "name": "Parse TikTok response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1450,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nif (!resp || !resp.job_id) return [{ json: { media_type: 'image', media_path: null, job_id: null, error: 'image-gen enqueue failed', status: 'pending' } }];\nreturn [{ json: { media_type: 'image', media_path: null, job_id: resp.job_id, dimensions: '1080x1350', status: 'pending', error: null } }];"
+      },
+      "id": "parse-instagram",
+      "name": "Parse Instagram response (job_id)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1450,
+        350
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nif (!resp || !resp.job_id) return [{ json: { media_type: 'image', media_path: null, job_id: null, error: 'image-gen enqueue failed', status: 'pending' } }];\nreturn [{ json: { media_type: 'image', media_path: null, job_id: resp.job_id, dimensions: '1200x630', status: 'pending', error: null } }];"
+      },
+      "id": "parse-facebook",
+      "name": "Parse Facebook response (job_id)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1450,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nif (!resp || !resp.job_id) return [{ json: { media_type: 'image', media_path: null, job_id: null, error: 'image-gen enqueue failed', status: 'pending' } }];\nreturn [{ json: { media_type: 'image', media_path: null, job_id: resp.job_id, dimensions: '1200x675', status: 'pending', error: null } }];"
+      },
+      "id": "parse-twitter",
+      "name": "Parse Twitter response (job_id)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1450,
+        650
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nif (!resp || !resp.job_id) return [{ json: { media_type: 'image', media_path: null, job_id: null, error: 'image-gen enqueue failed', status: 'pending' } }];\nreturn [{ json: { media_type: 'image', media_path: null, job_id: resp.job_id, dimensions: '1200x627', status: 'pending', error: null } }];"
+      },
+      "id": "parse-linkedin",
+      "name": "Parse LinkedIn response (job_id)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1450,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const original = $('normalize-input').first().json;\nconst media = $input.first().json;\nreturn [{ json: { draft_id: original.draft_id, platform: original.platform, lang: original.lang, concept: original.concept, asset_type: original.asset_type, media_type: media.media_type, media_path: media.media_path, job_id: media.job_id, dimensions: media.dimensions, status: media.status, error: media.error, prompt_used: media.prompt_used, source: original.source } }];"
+      },
+      "id": "merge-context",
+      "name": "Merge context (draft + media)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1650,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "query": "INSERT INTO adoff_autopilot.media_queue (draft_id, platform, media_type, media_path, job_id, prompt_used, dimensions, status, error, retry_count, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 0, NOW()) ON CONFLICT (draft_id, platform) DO UPDATE SET status=EXCLUDED.status, media_path=COALESCE(EXCLUDED.media_path, media_queue.media_path), job_id=COALESCE(EXCLUDED.job_id, media_queue.job_id), updated_at=NOW() RETURNING id, draft_id, status;",
+        "operation": "executeQuery",
+        "options": {
+          "queryReplacement": "={{ $json.draft_id }},={{ $json.platform }},={{ $json.media_type }},={{ $json.media_path }},={{ $json.job_id }},={{ $json.prompt_used }},={{ $json.dimensions }},={{ $json.status }},={{ $json.error }}"
+        }
+      },
+      "id": "insert-media-queue",
+      "name": "INSERT media_queue",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1850,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "query": "UPDATE adoff_autopilot.posts_queue SET media_path=$1, updated_at=NOW() WHERE source_draft_id=$2 AND media_path IS NULL;",
+        "operation": "executeQuery",
+        "options": {
+          "queryReplacement": "={{ $json.media_path }},={{ $json.draft_id }}"
+        }
+      },
+      "id": "update-posts-queue",
+      "name": "UPDATE posts_queue (media_path)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2050,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "n8n-postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, media_id: $json.id, draft_id: $json.draft_id, status: $json.status, message: 'Visual asset queued for generation' } }}"
+      },
+      "id": "respond-webhook-ok",
+      "name": "Respond (200)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        850,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook /visual-asset-create": {
+      "main": [
+        [
+          {
+            "node": "Validate HMAC (webhook only)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate HMAC (webhook only)": {
+      "main": [
+        [
+          {
+            "node": "HMAC Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HMAC Valid?": {
+      "main": [
+        [
+          {
+            "node": "Normalize input (webhook vs schedule)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject (401)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger (every 10 min)": {
+      "main": [
+        [
+          {
+            "node": "Fetch approved drafts (schedule)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch approved drafts (schedule)": {
+      "main": [
+        [
+          {
+            "node": "Normalize input (webhook vs schedule)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize input (webhook vs schedule)": {
+      "main": [
+        [
+          {
+            "node": "Route by platform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by platform": {
+      "main": [
+        [
+          {
+            "node": "Build TikTok video (cyber-purge)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Instagram image (1080x1350)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Facebook image (1200x630)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Twitter image (1200x675)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build LinkedIn image (1200x627)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build TikTok video (cyber-purge)": {
+      "main": [
+        [
+          {
+            "node": "Parse TikTok response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Instagram image (1080x1350)": {
+      "main": [
+        [
+          {
+            "node": "Parse Instagram response (job_id)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Facebook image (1200x630)": {
+      "main": [
+        [
+          {
+            "node": "Parse Facebook response (job_id)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Twitter image (1200x675)": {
+      "main": [
+        [
+          {
+            "node": "Parse Twitter response (job_id)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build LinkedIn image (1200x627)": {
+      "main": [
+        [
+          {
+            "node": "Parse LinkedIn response (job_id)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse TikTok response": {
+      "main": [
+        [
+          {
+            "node": "Merge context (draft + media)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Instagram response (job_id)": {
+      "main": [
+        [
+          {
+            "node": "Merge context (draft + media)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Facebook response (job_id)": {
+      "main": [
+        [
+          {
+            "node": "Merge context (draft + media)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Twitter response (job_id)": {
+      "main": [
+        [
+          {
+            "node": "Merge context (draft + media)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse LinkedIn response (job_id)": {
+      "main": [
+        [
+          {
+            "node": "Merge context (draft + media)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge context (draft + media)": {
+      "main": [
+        [
+          {
+            "node": "INSERT media_queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "INSERT media_queue": {
+      "main": [
+        [
+          {
+            "node": "UPDATE posts_queue (media_path)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UPDATE posts_queue (media_path)": {
+      "main": [
+        [
+          {
+            "node": "Respond (200)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

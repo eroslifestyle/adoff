@@ -1,0 +1,96 @@
+{
+  "slug": "catch-up-tv-ad-blocker-germany",
+  "lang": "zh",
+  "title": "屏蔽ZDF、ARD、RTL、Joyn广告 | AdOff",
+  "description": "AdOff 可屏蔽德语语言回看平台中的视频广告：包括 ZDF、ARD Mediathek、RTL+、Joyn、ServusTV 和 ORF。免费浏览器扩展程序，无需注册账户。",
+  "h1": "适用于德国回看电视的广告拦截器：ZDF、ARD、RTL、Joyn",
+  "answer": "AdOff 可在浏览器中移除德语点播电视平台的前贴片和中插广告（多数情况下）。它会将播放器加载的 Google IMA 广告 SDK 替换为一个占位符，从而立即恢复播放，使 ZDF、ARD 或 Joyn 等平台在无广告中断的情况下正常运行。覆盖范围取决于 SDK：只要这些服务仍使用标准播放器集成方式，该功能即可生效。",
+  "sections": [
+    {
+      "h2": "涵盖德语服务",
+      "body": [
+        "<p>德语区的公共及商业广播机构通过标准的 Google IMA SDK 在其媒体库（Mediathek）中插入视频广告。AdOff 可屏蔽以下平台的广告：</p>",
+        "<ul><li><strong>ZDF</strong>（zdf.de）</li><li><strong>ARD 及 ARD Mediathek</strong>（ard.de、ardmediathek.de）</li><li><strong>RTL 及 RTL+</strong>（rtl.de、rtlplus.de）</li><li><strong>Joyn</strong>（joyn.de）</li><li><strong>ServusTV</strong>（servustv.com）</li><li><strong>ORF</strong>（orf.at）——奥地利，同属德语市场</li></ul>"
+      ]
+    },
+    {
+      "h2": "该占位符如何处理广告插播",
+      "body": [
+        "<p>德语区媒体库播放器通常集成 IMA SDK 以安排片头及插播广告。AdOff 将 SDK 脚本请求重定向至内置的占位脚本；当播放器要求该脚本开始广告时段时，脚本立即返回“恢复内容播放”信号，从而跳过广告时段，直接继续播放。</p>",
+        "<p>视频流本身从未被修改——仅在浏览器本地替换广告编排层。</p>"
+      ]
+    },
+    {
+      "h2": "公共广播公司、私营广播公司，采用相同机制",
+      "body": [
+        "<p>尽管广告屏蔽扩展似乎仅影响公共媒体库（ZDF、ARD），却也能作用于商业平台（RTL+、Joyn、ServusTV），这看似奇怪。原因在于所有平台的网页播放器均采用同一套标准广告 SDK；只要使用该标准 SDK，即可应用相同的屏蔽机制。这也是为何回看电视（Catch-up TV）与订阅制流媒体服务表现不同：后者广告为服务端拼接（server-side stitching），扩展刻意不介入。</p>"
+      ]
+    },
+    {
+      "h2": "AdOff 在这些网站上还过滤哪些内容",
+      "body": [
+        "<p>除播放器外，该扩展还对广告及追踪域名执行 180 条静态网络规则，并通过 CSS/DOM 美化过滤器隐藏横幅广告与推广覆盖层。在 Joyn 或 RTL 页面上，这不仅能消除视频广告中断，还能移除界面中的推广信息框与广告牌。</p>"
+      ]
+    },
+    {
+      "h2": "诚实的限制",
+      "body": [
+        "<ul><li>若广播机构切换至<strong>服务端广告插入（SSAI）</strong>，广告将直接拼接到视频流中，占位脚本将失效。</li><li>仅限<strong>桌面端浏览器</strong>——原生 App 与智能电视不受支持。</li><li>部分<strong>直播与体育赛事</strong>使用不同播放管道。</li><li>播放器频繁更新；覆盖范围随时间持续维护，而非一次性固定。</li></ul>"
+      ]
+    },
+    {
+      "h2": "免费、无需注册、支持五款浏览器",
+      "body": [
+        "<p>AdOff 是一款免费的 Manifest V3 扩展，无需注册账户，亦无试用期。支持 Chrome、Firefox、Safari、Edge 及 Opera 浏览器。安装后开启保护，即可照常访问媒体库。</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "它能从 ZDF Mediathek 中移除广告吗？",
+      "a": "在大多数情况下是的：当ZDF网页播放器通过Google IMA SDK加载广告时，AdOff会替换为一个占位符，使节目立即恢复播放。覆盖范围取决于SDK本身——若ZDF更改了广告插入技术，则效果可能有所不同。"
+    },
+    {
+      "q": "我能否免费在 Joyn 上跳过广告？",
+      "a": "AdOff是一款免费的浏览器扩展程序，用于屏蔽Joyn网页播放器中的IMA广告SDK，从而阻止广告通常的播放。Joyn的付费订阅属于独立的商业产品；AdOff不会与您的账户产生任何交互。"
+    },
+    {
+      "q": "它是否适用于奥地利的 ORF 和 ServusTV？",
+      "a": "是的，两者均属于涵盖的德语内容平台。当它们的网页播放器调用标准广告SDK时，采用的是相同的机制。"
+    },
+    {
+      "q": "AdOff 能替代 ARD/ZDF 广播费（Rundfunkbeitrag）吗？",
+      "a": "否。该扩展程序仅影响播放器内及页面上的广告内容。广播许可费（Rundfunkbeitrag）是一项法定义务，与浏览器广告屏蔽完全无关。"
+    },
+    {
+      "q": "ZDF 或 Joyn 的智能电视应用呢？",
+      "a": "AdOff仅适用于桌面端浏览器。智能电视应用、移动端应用及流媒体棒均不在其作用范围内。"
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "流媒体广告屏蔽的工作原理"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "IMA SDK 广告屏蔽详解"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-france",
+      "text": "法国回看电视广告屏蔽工具"
+    }
+  ],
+  "cta": {
+    "h3": "无广告中断的媒体库",
+    "p": "安装 AdOff，由占位符（stub）接管 ZDF、ARD、RTL+ 和 Joyn 上的广告 SDK。",
+    "btn": "免费安装 AdOff"
+  },
+  "report": {
+    "intro": "此处是否缺少德国或奥地利平台？若在 https://adoff.app/catch-up-tv-ad-blocker-germany 上仍出现广告中断，请反馈该服务。反馈将帮助我们确定下一阶段覆盖的广播机构。",
+    "btn_text": "反馈缺失的服务",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

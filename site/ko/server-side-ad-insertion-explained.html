@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>서버 측 광고 삽입이란? 왜 차단기가 작동하지 않는가 | AdOff</title>
+  <meta name="description" content="SSAI는 광고를 비디오 스트림 자체에 끼워넣으므로, 차단할 별도의 광고 요청이 없습니다. 매니페스트 조작의 작동 방식과 광고 차단기에게 이는 무엇을 의미하는지 살펴보겠습니다." />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <link rel="canonical" href="https://adoff.app/ko/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/ar/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/de/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/es/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/fr/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/hi/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/id/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="it" href="https://adoff.app/it/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/pl/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/pt/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/ru/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/tr/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/server-side-ad-insertion-explained" />
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/server-side-ad-insertion-explained" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="서버 측 광고 삽입이란? 왜 차단기가 작동하지 않는가 | AdOff" />
+  <meta property="og:description" content="SSAI는 광고를 비디오 스트림 자체에 끼워넣으므로, 차단할 별도의 광고 요청이 없습니다. 매니페스트 조작의 작동 방식과 광고 차단기에게 이는 무엇을 의미하는지 살펴보겠습니다." />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/ko/server-side-ad-insertion-explained" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="서버 측 광고 삽입이란? 왜 차단기가 작동하지 않는가 | AdOff" />
+  <meta name="twitter:description" content="SSAI는 광고를 비디오 스트림 자체에 끼워넣으므로, 차단할 별도의 광고 요청이 없습니다. 매니페스트 조작의 작동 방식과 광고 차단기에게 이는 무엇을 의미하는지 살펴보겠습니다." />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+<link rel="icon" href="/assets/icon128.png" type="image/png" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta name="theme-color" content="#0a0a1a" />
+
+<link rel="preload" id="adoff-font" href="/assets/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin /><style id="adoff-critical">@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:optional;src:url("/assets/fonts/InterVariable.woff2") format("woff2-variations")}@font-face{font-family:"Inter";font-style:italic;font-weight:100 900;font-display:optional;src:url("/assets/fonts/InterVariable-Italic.woff2") format("woff2-variations")}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--deep-space:     #0a0a1a;--midnight-blue:  #12122a;--shield-purple:  #7c5cfc;--shield-purple-light: #b8a9ff;--shield-purple-dark:  #4c3ad4;--soft-purple:    #b8a9ff;--pure-white:     #ffffff;--steel-gray:     #8a8aaa;--success-green:  #4ade80;--alert-red:      #f43f5e;--bg:           var(--deep-space);--surface:      var(--midnight-blue);--surface-2:    #1a1a36;--surface-warm: #15152e;--text:         #e2e2f0;--text-muted:   var(--steel-gray);--text-dim:     #80809a;--accent:       var(--shield-purple);--accent-btn:   #7252f8;--accent-light: var(--shield-purple-light);--accent-dim:   var(--shield-purple-dark);--accent-soft:  rgba(124, 92, 252, 0.12);--accent-line:  rgba(124, 92, 252, 0.34);--success:      var(--success-green);--success-bg:   rgba(74, 222, 128, 0.10);--danger:       var(--alert-red);--danger-bg:    rgba(244, 63, 94, 0.08);--border:        rgba(124, 92, 252, 0.18);--border-strong: rgba(124, 92, 252, 0.48);--border-subtle: rgba(255, 255, 255, 0.06);--radius-sm:  8px;--radius:     12px;--radius-lg:  18px;--radius-pill: 999px;--ease:       cubic-bezier(0.2, 0.8, 0.2, 1);--t-fast:     150ms var(--ease);--t:          220ms var(--ease);--t-slow:     420ms var(--ease);--container:        min(64rem, 92vw);--container-wide:   min(72rem, 94vw);--primary:        var(--accent);--primary-light:  var(--accent-light);--primary-dark:   var(--accent-dim);--card:           var(--surface);--card-hover:     var(--surface-2);--error:          var(--danger);--warning:        var(--accent);--shadow:         0 1px 0 var(--border-strong);--shadow-glow:    0 0 40px rgba(124, 92, 252, 0.18);--shadow-card:    0 4px 24px rgba(0, 0, 0, 0.4);--transition:     var(--t)}html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}body{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:17px;line-height:1.65;overflow-x:hidden}a{color:var(--accent-light);text-decoration:none;transition:color var(--t)}a:hover{color:var(--pure-white)}strong{color:var(--text);font-weight:700}h1,h2{font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;font-weight:800;line-height:1.1;letter-spacing:-0.025em;color:var(--text)}h1{font-size:clamp(2.4rem,5.5vw,4.2rem)}h2{font-size:clamp(1.7rem,3.8vw,2.8rem)}h1 em,h2 em,.hero__headline em{font-style:italic;color:var(--accent);font-weight:800}.container,.container--wide{margin:0 auto;padding:0 24px}.container{max-width:var(--container)}.container--wide{max-width:var(--container-wide)}section{padding:clamp(72px,9vw,116px) 0}.wordmark{display:inline-flex;align-items:baseline;font-family:"Inter",sans-serif;font-weight:800;letter-spacing:-0.04em;line-height:1;color:var(--pure-white)}.wordmark__off{color:var(--accent)}.wordmark__dot{color:var(--accent)}.wordmark--hero{font-size:clamp(2.8rem,7vw,5rem);margin-bottom:24px;display:flex;width:fit-content}.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 26px;border-radius:var(--radius);font-family:"Inter",sans-serif;font-size:0.98rem;font-weight:600;letter-spacing:-0.005em;text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform var(--t),background var(--t),color var(--t),border-color var(--t),box-shadow var(--t);white-space:normal;text-align:center;line-height:1.3;font-variant-numeric:tabular-nums}.btn--primary{background:var(--accent-btn);color:var(--pure-white);border-color:var(--accent-btn);box-shadow:0 0 0 0 var(--accent-line)}.btn--primary:hover{background:var(--accent-light);color:var(--deep-space);border-color:var(--accent-light);transform:translateY(-1px);box-shadow:0 0 0 4px var(--accent-soft);text-decoration:none}.btn--primary:active{transform:translateY(0)}.btn--outline{background:transparent;color:var(--text);border:1px solid var(--border-strong)}.btn--outline:hover{border-color:var(--accent);color:var(--accent-light);background:transparent;text-decoration:none}.btn--ghost{background:transparent;color:var(--text-muted);border-color:transparent;padding:12px 14px}.btn--ghost:hover{color:var(--accent-light);text-decoration:none}.btn--lg{padding:18px 34px;font-size:1.05rem}.btn--xl{padding:18px 34px;font-size:1.05rem;border-radius:var(--radius)}.nav__inner{max-width:var(--container-wide);margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}.nav__logo{display:flex;align-items:center;gap:10px;color:var(--pure-white);text-decoration:none}.nav__logo:hover{color:var(--accent-light)}.nav__logo img{width:28px;height:28px;border-radius:6px;object-fit:contain}.nav__links{display:flex;align-items:center;gap:28px;list-style:none}.nav__links a{color:var(--text-muted);font-size:0.92rem;font-weight:500;text-decoration:none;transition:color var(--t)}.nav__links a:hover{color:var(--pure-white)}.hero{padding:clamp(72px,11vw,140px) 0 clamp(48px,7vw,80px);position:relative;overflow:hidden}.hero::before{content:'';position:absolute;top:-160px;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(ellipse at center,rgba(124,92,252,0.10) 0%,transparent 65%);pointer-events:none;z-index:0}.hero>.container{position:relative;z-index:1}.hero__media{position:relative;margin:clamp(36px,6vw,64px) auto 0;max-width:700px}.hero__shots{display:flex;align-items:center;justify-content:center;gap:20px}.hero__shots-main,.hero__shots-pop{height:auto;border-radius:12px;border:1px solid var(--border);box-shadow:0 18px 44px rgba(0,0,0,0.5)}.hero__shots-main{width:60%}.hero__shots-pop{width:27%;border-color:var(--border-strong)}@media (max-width:620px){.hero__shots{flex-direction:column;align-items:center;gap:16px}.hero__shots-main,.hero__shots-pop{width:100%;max-width:380px}}.hero__eyebrow{font-family:"Inter",sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-light);margin-bottom:22px;display:inline-flex;align-items:center;gap:10px}.hero__eyebrow-dot{width:7px;height:7px;border-radius:50%;background:var(--success);flex-shrink:0;box-shadow:0 0 12px rgba(74,222,128,0.6)}.hero__headline,.hero__title{font-family:"Inter",sans-serif;font-size:clamp(2.5rem,6vw,4.4rem);font-weight:800;line-height:1.05;letter-spacing:-0.03em;margin-bottom:28px;color:var(--text);background:none;-webkit-text-fill-color:currentColor;background-clip:unset;-webkit-background-clip:unset;max-width:22ch}.hero__headline em{font-style:italic;color:var(--accent);-webkit-text-fill-color:var(--accent)}.hero__tagline{font-family:"Inter",sans-serif;font-style:italic;font-size:clamp(1.3rem,2.8vw,1.7rem);font-weight:600;color:var(--accent-light);margin:0 0 18px;letter-spacing:-0.01em}.hero__sub{font-size:clamp(1.05rem,2vw,1.2rem);color:var(--text-muted);max-width:56ch;margin:0 0 36px;line-height:1.65}.hero__sub strong{color:var(--text);font-weight:600}.hero__cta-group{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:32px}.hero__trust-strip{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;color:var(--text-dim);font-size:0.86rem}.hero__trust-strip span{display:inline-flex;align-items:center;gap:6px}.hero__trust-strip .dot-sep{color:var(--border-strong)}.hero__note{margin-top:14px;font-size:0.85rem;color:var(--text-dim)}.social-proof__divider{width:1px;height:36px;background:var(--border-subtle);flex-shrink:0}@media (max-width:640px){.social-proof__divider{display:none}}.stealth__arrow{font-family:"Inter",sans-serif;align-self:center;font-size:1.8rem;color:var(--accent);padding:0 6px}.plan-card .btn{width:100%;justify-content:center;text-align:center;margin-top:auto;min-height:44px;font-size:0.94rem}.reveal{opacity:1;transform:none}.reveal-delay-1{transition-delay:0.06s}.reveal-delay-2{transition-delay:0.12s}.reveal-delay-3{transition-delay:0.18s}.reveal-delay-4{transition-delay:0.24s}@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}*,*::before,*::after{animation-duration:0.001ms!important;transition-duration:0.001ms!important}}@media (max-width:980px){.stealth__arrow{display:none}}@media (max-width:768px){body{font-size:16px}section{padding:60px 0}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}.wordmark--hero{font-size:clamp(2.2rem,11vw,3.6rem)}}@media (max-width:480px){.hero__cta-group{flex-direction:column}.btn--lg,.btn--xl{width:100%}}:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}a:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.skip-link{position:absolute;left:-9999px;top:0;z-index:1000;padding:12px 20px;background:var(--accent);color:var(--pure-white);border-radius:0 0 var(--radius) 0;font-weight:600}.skip-link:focus{left:0}body,body h1,body h2,body h3,body h4,body h5,body h6,body p,body span,body div,body section,body article,body blockquote,body figcaption,body ul,body ol,body li,body label,body small,body .article-page,body .article-page h1,body .article-page h2,body .article-page h3,body .article-page p,body .article-page li,body .legal-page,body .legal-page p,body .legal-page h2,body .tech-card,body .tech-card p,body .step-list,body .step-list li,body .cta-box,body .cta-box p{text-align:center}html[dir="rtl"] body,html[dir="rtl"] body *{text-align:center}html[dir="rtl"] table,html[dir="rtl"] table *,html[dir="rtl"] .compare__table,html[dir="rtl"] .compare__table *,html[dir="rtl"] .plan-features,html[dir="rtl"] .plan-features *,html[dir="rtl"] pre,html[dir="rtl"] code{text-align:right}body *:not(table):not(tr):not(td):not(th):not(thead):not(tbody):not(tfoot):not(pre):not(code):not(.plan-features):not(.plan-features *):not(.guarantee__list):not(.guarantee__list *):not(.compare__table):not(.compare__table *):not(.faq-item__panel):not(.faq-item__panel *):not(input):not(textarea):not(select):not(.ticket-form):not(.ticket-form *):not(form):not(form *):not(.ba-col__list):not(.ba-col__list *){text-align:center!important}html[dir="rtl"] body *:not(table):not(tr):not(td):not(th):not(pre):not(code):not(.plan-features *):not(.compare__table *){text-align:center!important}body .section-title,body .section-label,body .section-sub,body .hero__headline,body .hero__sub,body .hero__tagline,body .hero__eyebrow,body .hero__note,body .guarantee__title,body .guarantee__sub,body .problem__twist h3,body .problem__twist p,body .solution__reveal,body .final-cta__headline,body .platforms__footnote,body .stealth__how h2,body .stealth__callout,body .platforms-card__title,body .platforms-card__cat,body .platforms-card__brands,body .platforms-card__note,body .feature-card__title,body .feature-card__desc,body .feature-card__benefit,body .pain-card__title,body .pain-card__desc,body .pain-card__number,body .trust-card__title,body .trust-card__desc,body .testi-card__name,body .testi-card__role,body .testi-card__quote,body .plan-name,body .plan-note,body .plan-features,body .step__title,body .step__desc,body .how-step__title,body .how-step__desc,body .compare-badge-wrap,body .compare-badge,body article.article-page>*,body .legal-page>*{margin-left:auto!important;margin-right:auto!important}body article.article-page p,body article.article-page h1,body article.article-page h2,body article.article-page h3,body article.article-page ul,body article.article-page ol{max-width:70ch;margin-left:auto!important;margin-right:auto!important}body .solution__points,body .solution__points li,body .solution__points li *,body .ba-col__list,body .ba-col__list li,body .ba-col__list li *,body ul li:has(>.g-check),body ul li:has(>svg),body ul li:has(>.check),body .feature-card__benefit,body .feature-card__benefit *,body .stealth-tech__list,body .stealth-tech__list li,body .stealth-tech__list li *,body .compare__row,body .compare__row *,body .compare__cell,body ul[class*="__list"],body ul[class*="__list"] li,body ul[class*="__list"] li *,body ol[class*="__list"],body ol[class*="__list"] li,body ol[class*="__list"] li *{text-align:left!important;margin-left:0!important;margin-right:0!important}body .solution__points,body .ba-col__list,body .stealth-tech__list,body ul[class*="__list"]{display:inline-block;text-align:left!important;margin-left:auto!important;margin-right:auto!important}body .btn,body a.btn,body button.btn,body .wordmark,body .wordmark--inline,body .wordmark-tagline,body .solution__brand,body .hero__cta-group,body .hero__cta-group>*,body .cta-group,body .cta-group>*,body .final-cta,body .final-cta>*,body .install-cta,body .install-cta>*{margin-left:auto!important;margin-right:auto!important}body .hero__cta-group,body .cta-group{display:flex!important;justify-content:center!important;flex-wrap:wrap!important;gap:12px}body .solution__brand,body p:has(>.wordmark),body div:has(>a.btn:only-child){text-align:center!important;display:block}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.001ms!important;transition-duration:0.001ms!important}}@media (max-width:768px){body{font-size:16px}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}}table th{font-variant-numeric:tabular-nums lining-nums}thead th{padding:16px 20px;text-align:left;font-family:"Inter",sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);white-space:nowrap}thead th:first-child{color:var(--pure-white)}@media (max-width:768px){body{font-size:16px}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}thead{display:none}}table *{text-align:left}img{max-width:100%;display:block}h1,h2,h3{font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;font-weight:800;line-height:1.1;letter-spacing:-0.025em;color:var(--text)}h3{font-weight:700;font-size:clamp(1.05rem,2vw,1.25rem);letter-spacing:-0.005em}.step{text-align:left;padding:0}code{text-align:left}</style><link rel="preload" href="/style.css?v=be9cdea8" as="style" onload="this.onload=null;this.rel='stylesheet'" /><noscript><link rel="stylesheet" href="/style.css?v=be9cdea8" /></noscript>
+<style>
+    .article-page { max-width: 780px; margin: 0 auto; padding: 84px 24px 100px; }
+    .article-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--text); margin-bottom: 16px; line-height: 1.2; }
+    .article-page h2 { font-size: 1.5rem; color: var(--text); margin: 44px 0 14px; }
+    .article-page h3 { font-size: 1.15rem; color: var(--text); margin: 28px 0 10px; }
+    .article-page p { color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
+    .article-page strong { color: var(--text); }
+    .article-page code { background:#1f1f3a; padding:2px 6px; border-radius:5px; color:#c9b8ff; font-size:0.92em; }
+    .answer-box { background:#12122a; border:1px solid rgba(124,92,252,0.25); border-radius:8px; padding:24px; margin:0 0 36px; }
+    .answer-box p { margin:0; color:var(--text); font-size:1.05rem; }
+    .cta-section { background:linear-gradient(135deg,rgba(124,92,252,.14),rgba(124,92,252,.03)); border:1px solid #2a2a4a; border-radius:16px; padding:32px; text-align:center; margin-top:48px; }
+    .cta-section h3 { color: var(--text); margin:0 0 8px; }
+    .cta-section p { margin:0 0 20px; color: var(--text-muted); }
+    .cta-section .btn { display:inline-block; padding:14px 28px; background:#fff; color:var(--text); font-weight:700; border-radius:12px; text-decoration:none; }
+  </style>
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "서버 측 광고 삽입이란? — 네트워크 광고 차단 프로그램이 이러한 광고를 감지할 수 없는 이유",
+  "description": "SSAI는 광고를 비디오 스트림 자체에 끼워넣으므로, 차단할 별도의 광고 요청이 없습니다. 매니페스트 조작의 작동 방식과 광고 차단기에게 이는 무엇을 의미하는지 살펴보겠습니다.",
+  "image": "https://adoff.app/assets/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "AdOff"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "AdOff"
+  },
+  "datePublished": "2026-09-20",
+  "dateModified": "2026-09-20",
+  "inLanguage": "ko"
+}
+  </script>
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "SSAI와 CSAI의 차이점은 무엇인가요?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "클라이언트 측 광고 삽입(CSAI)에서는 재생 시점에 플레이어가 광고를 별도로 요청하므로, 이러한 요청은 광고 차단 프로그램에 의해 감지됩니다. 반면, 서버 측 광고 삽입(SSAI)에서는 서버에서 영상 스트림에 광고를 병합한 후 전달하므로, 차단할 수 있는 별도의 광고 요청이 존재하지 않습니다."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "어떤 브라우저 확장 프로그램도 SSAI 광고를 차단할 수 있나요?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "네트워크 요청을 필터링하여 작동하는 확장 프로그램은 스트림을 손상시키지 않고서는 스티칭된 광고를 제거할 수 없습니다. 광고와 콘텐츠는 동일한 매니페스트 및 동일한 세그먼트 내에서 함께 전송되기 때문입니다. 이와 같은 시도를 하는 도구는 일반적으로 프레임 정지, 품질 저하 또는 재생 오류를 유발합니다."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "라이브 스트리밍은 왜 일반 광고 대신 SSAI를 사용하나요?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "실시간 스트리밍에서는 모든 시청자에게 광고 브레이크를 정확히 동기화하고 재생을 중단 없이 유지해야 하며, 이는 서버 측 병합을 통해 보장됩니다. 또한 스마트 TV 등 확장 프로그램이 존재하지 않는 기기에서도 동일하게 작동합니다."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "SSAI는 건너뛸 수 없는 광고와 동일한 것인가요?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "정확하지 않습니다. 건너뛰기는 스트림 메타데이터에 의해 제어되는 플레이어의 결정 사항입니다. SSAI에서는 광고가 스트림의 일부로 포함되므로, 시청자나 브라우저 확장 프로그램 모두 광고를 건너뛰거나 제거할 수 있는 제어 포인트가 없습니다."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "AdOff는 SSAI를 사용하는 사이트에서 작동하나요?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "해당 특정 스트림에서는 아닙니다—또한 AdOff는 이를 주장하지 않습니다. 동일한 사이트의 영상 외 광고 및 사용자의 나머지 브라우징 환경(디스플레이 광고, 추적, 클라이언트 측 영상 광고 SDK)에서는 AdOff가 평소처럼 광고를 차단하고 숨깁니다."
+      }
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "AdOff",
+      "item": "https://adoff.app/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "서버 측 광고 삽입이란? 왜 차단기가 작동하지 않는가 | AdOff",
+      "item": "https://adoff.app/ko/server-side-ad-insertion-explained"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <main>
+    <article class="article-page">
+      <h1>서버 측 광고 삽입이란? — 네트워크 광고 차단 프로그램이 이러한 광고를 감지할 수 없는 이유</h1>
+      <div class="answer-box"><p>아니요 — 서버 측 광고 삽입(SSAI)은 요청 기반 광고 차단기로 차단할 수 없습니다. 광고는 콘텐츠와 동일한 비디오 스트림에 서버 측에서 이미 결합된 상태로 전송되며, 클라이언트로 전달되기 전에 완성되기 때문입니다. 브라우저는 하나의 연속된 매니페스트와 하나의 연속된 스트림만 다운로드하며, 별도의 광고 요청이 존재하지 않아 가로챌 수 있는 기회가 없습니다.</p></div>
+      <h2>서버 측 광고 삽입이 실제로 무엇인가</h2>
+      <p><p>서버 측 광고 삽입(Server-side ad insertion, SSAI), 즉 광고 스티칭(ad stitching)은 영상 제공자가 광고와 콘텐츠를 <strong>서버 측에서</strong> 하나의 영상 스트림으로 병합한 후 전달하는 기술입니다. 시청자의 장치는 이미 광고가 포함된 하나의 연속된 스트림을 수신합니다. 이는 클라이언트 측 광고 삽입(Client-side ad insertion, CSAI)과 대조되는데, CSAI에서는 플레이어가 콘텐츠를 로드한 후 각 광고 시간대마다 별도로 광고 서버에 요청을 보내는 방식입니다.</p></p>
+      <p><p>기술 문서에서 SSAI는 "스티치드 매니페스트(stitched manifests)" 또는 "싱글 매니페스트 전달(single-manifest delivery)"로 설명됩니다. 이 방식은 회피하기 어려우며 모든 기기에서 동일하게 작동하기 때문에, 라이브 스트리밍과 구독 영상 서비스의 광고 지원 요금제에서 주요 방식으로 채택됩니다.</p></p>
+      <h2>HLS 및 DASH 매니페스트에서의 작동 방식</h2>
+      <p><p>현대적인 비디오 전송은 적응형 스트리밍 형식 — HLS(<code>.m3u8</code> 플레이리스트) 및 DASH(<code>.mpd</code> 매니페스트)를 사용합니다. 스트림은 짧은 세그먼트(보통 각几 초)로 분할되며, 매니페스트는 재생 순서에 따라 세그먼트를 나열합니다. 클라이언트 측 플레이어는 해당 목록을 따릅니다.</p></p>
+      <p><p>SSAI에서는 광고 세그먼트가 직접 해당 세그먼트 목록에 삽입됩니다. 재생기에 전달되는 매니페스트는 재작성되어, 콘텐츠 세그먼트가 위치할 곳에 광고 세그먼트가 정확히 나타나도록 합니다. 일부 구현에서는 인코딩 변경을 알리기 위해 불연속성 마커(<code>#EXT-X-DISCONTINUITY</code> in HLS)를 사용하지만, 재생기가 실제로 재생하는 것은 바로 이 플레이리스트입니다. 재생기의 관점에서 볼 때, 광고는 프로그램의 일부 <em>그 자체</em>입니다.</p></p>
+      <h2>요청 기반 광고 차단 프로그램이 가로채는 것이 불가능한 이유</h2>
+      <p><p>확장 기반 광고 차단기는 네트워크 계층에서 작동합니다: 알려진 광고 도메인에 대한 요청을 일치시켜 차단하거나 재작성합니다. 이 모델은 광고가 콘텐츠와 구분 가능한 별도 도메인에서 별도 요청으로 도착한다고 가정합니다. 그러나 SSAI는 이 가정을 완전히 제거합니다.</p></p>
+      <p><p>스티치드 광고의 경우, 광고를 담고 있는 세그먼트가 동일한 콘텐츠 전달 네트워크(CDN)에서 제공되며, 종종 동일한 도메인 내에서 방송 프로그램과 동일한 매니페스트 내에 포함됩니다. 따라서 요청을 차단한다는 것은 동영상 자체를 차단하는 것을 의미합니다. 이에 불구하고 강제로 차단을 시도하는 광고 차단기의 경우, 재생을 중단시키거나, 라이브 스트림에서는 사용자가 보고하는 정지된 플레이스홀더 프레임을 생성하게 됩니다. 이는 일시적인 결함이 아니라 구조적 한계입니다. 네트워크 요청을 필터링하는 방식으로 작동하는 어떤 도구도, 스티치드 광고와 그 주변의 콘텐츠를 구분할 수 없습니다.</p></p>
+      <h2>클라이언트 측 삽입: 광고 차단 프로그램이 처리할 수 있는 모델</h2>
+      <p><p>대조적으로, 클라이언트 측 광고 삽입에서는 영상 재생 중 플레이어가 광고 SDK를 호출하고, SDK가 광고 도메인에서 크리에이티브 파일을 가져온 후, 플레이어가 해당 광고를 슬롯에 재생합니다. 이때 발생하는 요청은 보이며, 별도로 존재하며, 차단 가능합니다. AdOff는 웹 전반에서 사용되는 영상 광고 SDK를 무력화함으로써(즉, 광고 SDK를 무력화함으로써), 플레이어가 곧바로 콘텐츠로 돌아갑니다.</p></p>
+      <p><p>이것이 광고 차단기가 여전히 웹의 상당 부분, 특히 클라이언트 측 광고 호출을 포함한 비디오 플레이어를 임베드한 많은 사이트에서 작동하는 이유이며, 동시에 동일한 차단기가 서버 측 결합을 사용하는 라이브 스트리밍 플랫폼 및 구독 서비스에서는 작동하지 않는 이유입니다.</p></p>
+      <h2>스티칭된 광고를 제거하려면 무엇이 필요한가</h2>
+      <p><p> stitched 광고를 제거하려면 네트워크가 아니라 스트림을 이해해야 합니다. 즉, 불연속성 마커와 세그먼트 경계 패턴을 감지하고, 매니페스트를 재작성하여 광고 세그먼트를 제거한 뒤, 제공자가 레이아웃을 변경하지 않기를 바라는 방식입니다. 이는 본질적으로 취약하며, 제공자 측에서 어떤 변경이 가해지면 이 우회 방식이 무너지고, 실시간 스트림에서는 재작성된 플레이어가 종종 뒤처지거나 저품질의 대체 플레이스홀더를 표시하게 됩니다.</p></p>
+      <p><p>다른 한 가지, 신뢰할 수 있는 방법은 전혀 기술적이지 않습니다. 즉, 제공업체가 광고를 삽입하는 이유는 구독 요금제가 광고 지원형이기 때문이며, 광고가 없는 요금제를 선택하면 설계상 광고가 자동으로 제거됩니다. 그 외의 모든 방법은 주로 시청 경험을 저하시키는 무기 경쟁에 불과합니다.</p></p>
+      <h2>AdOff의 위치</h2>
+      <p><p>AdOff는 Chrome, Firefox, Safari, Edge, Opera 브라우저에서 사용 가능한 무료 브라우저 확장 프로그램으로, 정적 필터링 규칙을 통해 네트워크 광고를 차단하고, 페이지 내 광고 요소를 숨기며, 클라이언트 측 비디오 광고 SDK를 즉시 콘텐츠 재생을 재개하는 스텁으로 대체하여 무력화합니다. 이 확장 프로그램은 앱의 웹 플레이어에서만 작동하며, 이 경우 광고는 클라이언트 측에 포함됩니다. 서버 측 스티칭 스트림에서 광고를 제거하려는 목적으로 개발되지 않았으며, 구독 기반 비디오 플레이어의 기능을 손상시키지 않기 위해 의도적으로 해당 플레이어에는 개입하지 않습니다.</p></p>
+      <p><p>그 정직함이 바로 이 페이지의 핵심입니다: 사이트가 어떤 모델을 사용하는지 알면, 확장 프로그램을 설치하기 전에 그 확장 프로그램이 도움이 될지 여부를 판단할 수 있습니다.</p></p>
+      <h2>자주 묻는 질문</h2>
+      <h3>SSAI와 CSAI의 차이점은 무엇인가요?</h3>
+      <p>클라이언트 측 광고 삽입(CSAI)에서는 재생 시점에 플레이어가 광고를 별도로 요청하므로, 이러한 요청은 광고 차단 프로그램에 의해 감지됩니다. 반면, 서버 측 광고 삽입(SSAI)에서는 서버에서 영상 스트림에 광고를 병합한 후 전달하므로, 차단할 수 있는 별도의 광고 요청이 존재하지 않습니다.</p>
+      <h3>어떤 브라우저 확장 프로그램도 SSAI 광고를 차단할 수 있나요?</h3>
+      <p>네트워크 요청을 필터링하여 작동하는 확장 프로그램은 스트림을 손상시키지 않고서는 스티칭된 광고를 제거할 수 없습니다. 광고와 콘텐츠는 동일한 매니페스트 및 동일한 세그먼트 내에서 함께 전송되기 때문입니다. 이와 같은 시도를 하는 도구는 일반적으로 프레임 정지, 품질 저하 또는 재생 오류를 유발합니다.</p>
+      <h3>라이브 스트리밍은 왜 일반 광고 대신 SSAI를 사용하나요?</h3>
+      <p>실시간 스트리밍에서는 모든 시청자에게 광고 브레이크를 정확히 동기화하고 재생을 중단 없이 유지해야 하며, 이는 서버 측 병합을 통해 보장됩니다. 또한 스마트 TV 등 확장 프로그램이 존재하지 않는 기기에서도 동일하게 작동합니다.</p>
+      <h3>SSAI는 건너뛸 수 없는 광고와 동일한 것인가요?</h3>
+      <p>정확하지 않습니다. 건너뛰기는 스트림 메타데이터에 의해 제어되는 플레이어의 결정 사항입니다. SSAI에서는 광고가 스트림의 일부로 포함되므로, 시청자나 브라우저 확장 프로그램 모두 광고를 건너뛰거나 제거할 수 있는 제어 포인트가 없습니다.</p>
+      <h3>AdOff는 SSAI를 사용하는 사이트에서 작동하나요?</h3>
+      <p>해당 특정 스트림에서는 아닙니다—또한 AdOff는 이를 주장하지 않습니다. 동일한 사이트의 영상 외 광고 및 사용자의 나머지 브라우징 환경(디스플레이 광고, 추적, 클라이언트 측 영상 광고 SDK)에서는 AdOff가 평소처럼 광고를 차단하고 숨깁니다.</p>
+      <p>관련 글: <a href="/streaming-ad-blocking">스트리밍 광고 차단: 효과적인 방법과 불가능한 경우</a>, <a href="/ima-sdk-ad-blocking-explained">클라이언트 측 비디오 광고 SDK가 어떻게 무력화되는지</a>, <a href="/twitch-ad-blocker">트위치 광고: 라이브 스트림에서 확장 프로그램이 실패하는 이유</a>.</p>
+      <div class="cta-section">
+        <h3>차단할 수 있는 광고는 차단하세요</h3>
+        <p>AdOff는 스티칭(stitched) 광고를 제거할 수 없습니다 — 정직한 방법으로는 아무것도 할 수 없습니다. 그러나 일상적인 웹 서핑 중에 나타나는 디스플레이 광고, 추적 광고 및 클라이언트 측 비디오 광고는 다른 이야기입니다. AdOff는 계정 없이 무료로 이들을 처리합니다.</p>
+        <a href="/install.html" class="btn">AdOff 설치하기 — 무료입니다</a>
+      </div>
+    </article>
+  </main>
+<script src="/adoff-i18n.js?v=9c17e196" defer></script>
+  <script src="/adoff-nav.js?v=aa5d5c66"></script>
+  <script src="/adoff-footer.js?v=06c40593"></script>
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

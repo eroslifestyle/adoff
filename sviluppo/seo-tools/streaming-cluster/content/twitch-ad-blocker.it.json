@@ -1,0 +1,83 @@
+{
+  "slug": "twitch-ad-blocker",
+  "lang": "it",
+  "title": "Blocca annunci Twitch: perché non esiste nulla che funzioni | AdOff",
+  "description": "Gli annunci Twitch sono cuciti nel flusso live stesso: nessuna estensione può toglierli senza rompere il video. Cosa succede davvero, perché, e le opzioni reali.",
+  "h1": "Bloccare gli annunci su Twitch: perché nessuna estensione lo fa davvero",
+  "answer": "No — gli annunci di questa piattaforma di live streaming non si possono bloccare in modo affidabile da un'estensione, perché vengono inseriti lato server direttamente nel flusso video live. Non esiste una richiesta pubblicitaria separata da intercettare: i bloccanti che ci provano causano la nota schermata viola o cali di qualità.",
+  "sections": [
+    {
+      "h2": "Come gli annunci finiscono dentro un live",
+      "body": [
+        "<p>Quando lo streamer avvia una pausa pubblicitaria a metà trasmissione, l'annuncio viene cucito direttamente nella diretta sul lato server. Il player di ogni spettatore riceve un flusso che contiene già l'annuncio, consegnato come normali segmenti video della stessa trasmissione. È lo stesso modello di inserzione lato server usato in tutto il live streaming, e esiste perché gli annunci live devono restare sincronizzati per migliaia di spettatori contemporanei.</p>",
+        "<p>Dal punto di vista del browser non c'è alcuna richiesta pubblicitaria da intercettare: i segmenti dell'annuncio e quelli del gioco passano dalla stessa connessione, nella stessa playlist. È questo il motivo strutturale per cui un'estensione non può semplicemente \"bloccarli\".</p>"
+      ]
+    },
+    {
+      "h2": "Perché le estensioni blocca-annunci falliscono qui",
+      "body": [
+        "<p>I bloccanti basati su richieste — compresi quelli bravissimi sui siti di notizie, sui motori di ricerca e sui portali video con annunci client-side — riconoscono i domini pubblicitari noti e tagliano quelle richieste. Qui non c'è nulla da riconoscere. Quelli onesti non fanno nulla; quelli aggressivi manomettono il player, e da lì iniziano i problemi.</p>",
+        "<p>La schermata viola è il sintomo classico: al player viene negato il segmento dell'annuncio che doveva riprodurre, non ha nulla da mostrare e si congela su un placeholder mentre la diretta va avanti. Altri tentativi passano a un flusso a qualità più bassa in corrispondenza dell'annuncio o desincronizzano la chat dal video. In ogni caso l'estensione sta combattendo contro il flusso stesso, non contro un ad server — ed è per questo che i workaround si rompono ogni pochi mesi e peggiorano il video per tutto il resto del tempo.</p>"
+      ]
+    },
+    {
+      "h2": "La schermata viola e i placeholder, spiegati",
+      "body": [
+        "<p>Il live non perdona: la trasmissione non si mette in pausa mentre il player capisce cosa fare. Quando uno strumento sopprime un segmento pubblicitario a metà flusso, il player deve o saltare avanti (perdendo la posizione live) o non mostrare nulla (il frame viola/placeholder). Per molti spettatori entrambe le cose sono peggio di un annuncio, ed è per questo che persino le estensioni più popolari hanno una storia di lamentele, ritorni indietro e tentativi abbandonati proprio su questa piattaforma.</p>"
+      ]
+    },
+    {
+      "h2": "Cosa rimuove davvero gli annunci",
+      "body": [
+        "<p>L'unico metodo che funziona per costruzione è quello della piattaforma stessa: abbonarsi a un singolo canale rimuove gli annunci su quel canale e sostiene direttamente lo streamer. Al di fuori di questo, le leve realistiche sono minori: guardare su dispositivi dove il carico pubblicitario differisce, o accettare che oggi nessuna estensione possa togliere con pulizia un annuncio cucito in un live.</p>",
+        "<p>Diffida dei client modificati o di strumenti non ufficiali che promettono la diretta senza annunci. Oltre a violare le regole della piattaforma, sono binari non verificati che girano con le tue credenziali d'account: il rischio di sospensione è reale e non puoi verificare cos'altro facciano.</p>"
+      ]
+    },
+    {
+      "h2": "Cosa fa e non fa AdOff su questa piattaforma",
+      "body": [
+        "<p>AdOff non finge di togliere gli annunci nel flusso delle piattaforme live e non inietta nulla che rompa o degradi la diretta. È una scelta deliberata: ogni workaround che ci prova finisce per peggiorare la riproduzione, e non vogliamo distribuire quello.</p>",
+        "<p>Cosa copre AdOff, sempre, anche mentre guardi un live: pubblicità display, richieste di tracciamento e analytics, e gli SDK pubblicitari video client-side su tutto il resto del web. È un'estensione gratuita per Chrome, Firefox, Safari, Edge e Opera, senza account.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Esiste un blocca-annunci che funzioni su Twitch nel 2026?",
+      "a": "Nessuna estensione può togliere con pulizia gli annunci di questa piattaforma, perché sono cuciti nel flusso live lato server. Gli strumenti che ci provano causano schermate viola, cali di qualità o desincronizzazione e vanno riparati di continuo. L'unica rimozione pulita è l'abbonamento al canale, il meccanismo ufficiale."
+    },
+    {
+      "q": "Perché vedo una schermata viola al posto dell'annuncio?",
+      "a": "È un bloccante che sopprime il segmento pubblicitario a metà flusso: il player non ha nulla da mostrare mentre la diretta continua, quindi si congela su un placeholder. È il sintomo di un'estensione che combatte contro il flusso, non un bug del browser."
+    },
+    {
+      "q": "AdOff blocca gli annunci su Twitch?",
+      "a": "No, e non dichiara il contrario. Gli annunci nel flusso delle piattaforme live sono lato server e non si possono togliere senza rompere la riproduzione. AdOff blocca invece banner, tracciamento e annunci video client-side nel resto della navigazione, comprese le pagine attorno al player."
+    },
+    {
+      "q": "L'abbonamento al canale toglie gli annunci?",
+      "a": "Sì — abbonarsi a un canale specifico rimuove gli annunci su quel canale e sostiene lo streamer. È l'unico meccanismo che rimuove gli annunci dei live in modo pulito, perché agisce a livello di account invece di combattere contro il flusso."
+    },
+    {
+      "q": "I client modificati per la diretta senza annunci sono sicuri?",
+      "a": "Li sconsigliamo. Sono build non verificate che gestiscono le tue credenziali di accesso, violano i termini della piattaforma e il finale realistico include la sospensione dell'account. Una diretta senza annunci non vale il tuo account."
+    }
+  ],
+  "related": [
+    { "href": "/it/streaming-ad-blocking", "text": "Blocco annunci nello streaming: il quadro completo" },
+    { "href": "/it/server-side-ad-insertion-explained", "text": "SSAI: perché gli annunci cuciti non si bloccano" },
+    { "href": "/it/live-sports-ad-blocking", "text": "Sport in streaming live e pubblicità" }
+  ],
+  "cta": {
+    "h3": "Non te lo fingiamo — ma il resto della navigazione è coperto",
+    "p": "AdOff non rompe la tua diretta per fingere di aver tolto un annuncio. Ma banner, tracker e annunci video client-side ovunque altrove? Quelli li blocca gratis, senza account.",
+    "btn": "Installa AdOff gratis"
+  },
+  "report": {
+    "intro": "Se capiti su un sito dove gli annunci passano chiaramente — questa piattaforma inclusa — puoi segnalarlo con l'URL esatto della pagina. Le segnalazioni degli utenti guidano direttamente le prossime regole di blocco che pubblichiamo.",
+    "btn_text": "Segnala un sito dove le pubblicità passano",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

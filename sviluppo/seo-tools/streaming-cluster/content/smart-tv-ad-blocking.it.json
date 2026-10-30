@@ -1,0 +1,97 @@
+{
+  "slug": "smart-tv-ad-blocking",
+  "lang": "it",
+  "title": "Togliere le pubblicità dalla smart TV | AdOff",
+  "description": "Le estensioni non girano sulle smart TV. Ecco cosa funziona davvero: filtro DNS sulla rete di casa, impostazioni privacy del televisore e dove collocare AdOff.",
+  "h1": "Ad blocking sulle smart TV: la guida onesta",
+  "answer": "Un'estensione per browser non può girare su una smart TV né su un dispositivo di streaming, quindi nessuna estensione blocca le pubblicità sul televisore. Ciò che funziona è il filtro DNS sulla rete di casa e le impostazioni privacy della TV, mentre AdOff copre il browser del computer, non il televisore.",
+  "sections": [
+    {
+      "h2": "Perché un'estensione non può aiutare la TV",
+      "body": [
+        "<p>Gli ad blocker come AdOff sono estensioni per browser: vivono dentro un browser e intercettano le sue richieste, i suoi script e il suo DOM. L'app di una smart TV — l'app di un broadcaster, YouTube sul televisore — non è una pagina di browser: è un'app nativa con il suo stack di rete, e nessuna estensione può toccarla.</p>",
+        "<p>Vale la pena dirlo senza giri di parole, perché i risultati di ricerca sono pieni di promesse vaghe: <strong>non esiste un'estensione che blocchi gli annunci sullo schermo della TV</strong>. Gli strumenti che funzionano sulla TV operano un livello più sotto, sulla rete.</p>"
+      ]
+    },
+    {
+      "h2": "Cosa funziona davvero: il filtro DNS in casa",
+      "body": [
+        "<p>Ogni dispositivo di casa — TV inclusa — risolve i nomi di dominio attraverso il DNS della rete. Punta quel DNS verso un resolver con filtro e la TV perde la capacità di raggiungere i domini pubblicitari e di tracciamento: le richieste falliscono prima ancora che un ad server sia contattato.</p>",
+        "<p>Lo puoi configurare sul router (copre tutti i dispositivi in una volta) o sul singolo dispositivo nelle impostazioni di rete della TV. Strumenti nati per questo includono il DNS privato su Android/Android TV e resolver con filtro dedicati da impostare sul router. La variante Android TV la copriamo passo passo nella nostra <a href=\"/android-dns\">guida al filtro DNS</a>.</p>",
+        "<p>Il limite onesto: il filtro DNS blocca per dominio. Elimina i domini di telemetria pubblicitaria e alcuni domini di consegna, ma non può rimuovere gli annunci cuciti nel flusso video, e le app che servono annunci dal loro dominio principale continueranno a mostrarli.</p>"
+      ]
+    },
+    {
+      "h2": "Le impostazioni privacy del televisore",
+      "body": [
+        "<p>Prima di toccare la rete, guarda il televisore. Quasi tutte le piattaforme smart permettono di ridurre l'esposizione pubblicitaria dal menu delle impostazioni:</p>",
+        "<ul><li>Disattiva la <strong>pubblicità personalizzata</strong> / azzera l'ID pubblicitario.</li><li>Disattiva la <strong>raccolta dei dati di visione</strong> (ACR su alcuni marchi), che è ciò che rende il targeting prezioso in partenza.</li><li>Rifiuta i consensi promozionali facoltativi durante la configurazione o dopo, nelle impostazioni privacy.</li><li>Su alcune piattaforme puoi anche disattivare le righe sponsorizzate e i consigli nell'interfaccia principale.</li></ul>",
+        "<p>Non rimuove gli annunci, ma taglia il tracciamento che li rende redditizi, e spesso elimina una parte del materiale promozionale costruito nell'interfaccia.</p>"
+      ]
+    },
+    {
+      "h2": "Dove collocare AdOff",
+      "body": [
+        "<p>AdOff è un'estensione Manifest V3 gratuita e senza account per Chrome, Firefox, Safari, Edge e Opera. Il suo territorio è il <strong>browser desktop</strong>: bloccare gli annunci video sui siti di streaming che apri al computer, incluse 42 piattaforme di broadcaster europei il cui SDK pubblicitario client-side neutralizza con uno stub che riprende subito il contenuto.</p>",
+        "<p>Se guardi TV on-demand e replay nel browser di un portatile collegato alla TV via HDMI o in cast, AdOff copre quella sessione come qualsiasi altra sessione di browser. Ma le app della TV restano fuori dalla sua portata: per quelle servono le misure a livello di rete viste sopra.</p>"
+      ]
+    },
+    {
+      "h2": "Aspettative realistiche, piattaforma per piattaforma",
+      "body": [
+        "<ul><li><strong>Banner e tracciamento nell'interfaccia della TV</strong>: il filtro DNS ne elimina una quota significativa; le impostazioni privacy tagliano il targeting.</li><li><strong>Annunci video prima del contenuto nelle app gratuite</strong>: solo quelli scaricati da domini pubblicitari separati sono toccati dal DNS; gli altri restano.</li><li><strong>Annunci cuciti nel flusso (SSAI)</strong>: non rimovibili oggi da alcuno strumento di rete domestica.</li><li><strong>Streaming nel browser del computer</strong>: pienamente nel perimetro di AdOff.</li></ul>",
+        "<p>Nessuna configurazione rimuove ogni annuncio da una smart TV. Chi lo promette sta vendendo qualcosa.</p>"
+      ]
+    },
+    {
+      "h2": "Un setup pratico in tre mosse",
+      "body": [
+        "<ol><li>Imposta un DNS con filtro sul router, o il DNS privato sulla TV, seguendo la nostra <a href=\"/android-dns\">guida</a>.</li><li>Passa in rassegna il menu privacy della TV: ID pubblicitario off, dati di visione off, consensi promozionali rifiutati.</li><li>Installa AdOff nei browser dei computer da cui guardi davvero — gratis, senza registrazione — per il blocco video completo dove un'estensione funziona davvero.</li></ol>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Posso installare un ad blocker sulla mia smart TV?",
+      "a": "Non come estensione: sulla TV non c'è un browser da estendere. Le alternative efficaci sono il filtro DNS sul router o nelle impostazioni di rete della TV, più le impostazioni privacy del televisore stesso."
+    },
+    {
+      "q": "Il filtro DNS toglie gli annunci dalle app della TV?",
+      "a": "In parte. Blocca la capacità delle app di raggiungere domini pubblicitari e di tracciamento separati, eliminando telemetria e una parte della consegna. Gli annunci serviti dal dominio stesso dell'app o cuciti nel flusso video non sono toccati."
+    },
+    {
+      "q": "Meglio cambiare DNS sul router o sulla TV?",
+      "a": "Sul router, se puoi: copre tutti i dispositivi di casa in una volta, compresi i telefoni degli ospiti. Cambialo sulla TV solo quando non puoi toccare il router, per esempio su una rete gestita."
+    },
+    {
+      "q": "AdOff funziona sul browser della TV, se c'è?",
+      "a": "In genere no: i browser delle TV non sono compatibili con le estensioni. AdOff copre i browser desktop e mobile — Chrome, Firefox, Safari, Edge e Opera — dove neutralizza gli annunci video client-side, incluse 42 piattaforme di broadcaster europei."
+    },
+    {
+      "q": "Posso almeno impedire alla mia smart TV di tracciarmi?",
+      "a": "In buona parte sì: disattiva la pubblicità personalizzata, azzera o disattiva l'ID pubblicitario, rifiuta la raccolta dei dati di visione (ACR) e i consensi promozionali facoltativi nel menu privacy. Il filtro DNS sopra blocca inoltre molti domini di telemetria."
+    }
+  ],
+  "related": [
+    {
+      "href": "/it/streaming-ad-blocking",
+      "text": "Blocco delle pubblicità nello streaming: la guida completa"
+    },
+    {
+      "href": "/android-dns",
+      "text": "Filtro annunci via DNS su Android TV"
+    },
+    {
+      "href": "/it/tv-streaming-ad-blocker",
+      "text": "Ad blocker per TV e dispositivi di streaming"
+    }
+  ],
+  "cta": {
+    "h3": "Copri il browser in cui guardi davvero",
+    "p": "AdOff blocca gli annunci video nel browser del desktop — gratis, senza account, senza registrazione.",
+    "btn": "Installa AdOff gratis"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

@@ -1,0 +1,93 @@
+{
+  "slug": "youtube-anti-adblock-wall",
+  "lang": "es",
+  "title": "Muro antipublicidad en YouTube: por qué ocurre | AdOff",
+  "description": "¿Por qué el reproductor bloquea la reproducción o advierte «bloqueador de anuncios detectado»? Cómo funciona esta comprobación y qué dispara el aviso.",
+  "h1": "La pared contra el bloqueo de anuncios: Cuando el reproductor dice «Detección de bloqueo de anuncios»",
+  "answer": "Una pared contra bloqueadores de anuncios es una comprobación que el sitio ejecuta para detectar el filtrado de anuncios: engaña a la extensión con peticiones falsas de anuncios y variables, y bloquea la reproducción si las respuestas parecen incorrectas. Un bloqueador sigiloso suplanta la trampa para que el filtrado parezca una navegación normal. Las paredes de terceros están cubiertas; la principal plataforma de video utiliza bloqueo en doble capa en su lugar.",
+  "sections": [
+    {
+      "h2": "¿Qué es exactamente un muro anti-bloqueo de anuncios?",
+      "body": [
+        "<p>Es una capa de detección que algunos sitios ejecutan junto con sus anuncios. El sitio ya no puede saber directamente si una extensión está instalada, por lo que en su lugar busca los <em>efectos</em> del filtrado: solicitudes de anuncios que nunca llegan, funciones del reproductor que devuelven valores inesperados y elementos DOM que desaparecen. Cuando bastantes señales parecen sospechosas, el sitio bloquea el video, lo retrasa o muestra un aviso «detección de bloqueador de anuncios» pidiéndole que desactive la extensión.</p>"
+      ]
+    },
+    {
+      "h2": "Cómo funciona realmente la detección",
+      "body": [
+        "<p>La detección suele basarse en tres tipos de pruebas:</p>",
+        "<ul><li><strong>Solicitudes de cebo</strong>: la página solicita un recurso de anuncio conocido. Un usuario sin bloqueador lo carga; un usuario bloqueado nunca lo hace. El silencio equivale a sospecha.</li><li><strong>Comprobaciones de variables y funciones</strong>: la página inspecciona objetos JavaScript que normalmente definen los scripts de anuncios. Si faltan o están alterados, probablemente el filtrado esté activo.</li><li><strong>Comprobaciones de tiempos y coherencia</strong>: si las respuestas parecen estadísticamente normales en comparación con el tráfico habitual.</li></ul>",
+        "<p>Ninguna prueba individual es concluyente para el sitio, por lo que las barreras combinan señales antes de actuar.</p>"
+      ]
+    },
+    {
+      "h2": "Por qué los muros se han vuelto más estrictos en los últimos años",
+      "body": [
+        "<p>Los ingresos por publicidad son el negocio principal de la plataforma, por lo que permitir que una gran parte de la visualización sea sin anuncios de forma indefinida no está en su interés. El resultado es un ciclo recurrente: los bloqueadores encuentran una forma de eludirlo, la detección se intensifica, los bloqueadores se adaptan nuevamente. Espere que las barreras sigan evolucionando, y que aparezcan en muchos sitios más allá de la gran plataforma de video, ya que los scripts antibloqueo se venden como servicio.</p>"
+      ]
+    },
+    {
+      "h2": "El enfoque sigiloso: responder correctamente a la trampa",
+      "body": [
+        "<p>Un bloqueador sigiloso no solo se oculta: finge. AdOff suplanta los elementos de cebo: simula respuestas plausibles a las sondas relacionadas con anuncios e intercepta las llamadas fetch y XHR para que lo que observa la página parezca una navegación normal. El objetivo es que las pruebas de detección pasen incluso mientras el filtrado está totalmente activo.</p>",
+        "<p>Una precisión importante: en la principal plataforma de video, la anulación sigilosa de AdOff no se aplica deliberadamente: ese dominio está en la lista de exclusiones, y el bloqueo allí se basa en los mecanismos de doble capa. La capa sigilosa se dirige a sitios de terceros que ejecutan barreras antibloqueo.</p>"
+      ]
+    },
+    {
+      "h2": "Qué hacer cuando aún te encuentras con un muro",
+      "body": [
+        "<ol><li>Actualice la extensión: las barreras y las evasiones cambian juntas, y una versión desactualizada es la causa más común.</li><li>Recargue la página con fuerza para eliminar los scripts de detección almacenados en caché.</li><li>Verifique que el sitio no esté en pausa ni en lista blanca.</li><li>Si la barrera persiste tras la actualización, podría tratarse de un cambio reciente en la detección; espere unos días con actualizaciones de la extensión antes de desactivar el filtrado permanentemente.</li></ol>"
+      ]
+    },
+    {
+      "h2": "Los límites honestos",
+      "body": [
+        "<p>El modo sigiloso mejora las probabilidades, pero no hace imposibles las barreras. Una actualización decidida de detección puede detectar cualquier extensión durante un tiempo. Lo que ofrece un bloqueador bien mantenido es una adaptación rápida: las barreras que le bloquean hoy suelen resolverse en la próxima actualización. Si un sitio sigue detectando su bloqueador incluso con la última versión, esa es la realidad del juego del gato y el ratón, no un error en su configuración.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "¿Por qué YouTube dice «bloqueador de anuncios detectado» cuando uso un bloqueador de anuncios?",
+      "a": "El sitio realiza comprobaciones para detectar los efectos secundarios del filtrado: solicitudes de anuncios que nunca llegan y objetos JavaScript que normalmente definen los scripts de anuncios. Cuando estas señales se acumulan, bloquea la reproducción o muestra una advertencia hasta que deshabilites la extensión."
+    },
+    {
+      "q": "¿Cómo evita la detección un bloqueador de anuncios sigiloso?",
+      "a": "Simula la cebo: genera respuestas plausibles ante las sondas relacionadas con anuncios e intercepta las llamadas de red para que la página observe cómo se ve una navegación normal. AdOff aplica esta técnica en sitios de terceros; en la plataforma principal de videos, en cambio, se basa en su bloqueo de doble capa."
+    },
+    {
+      "q": "¿Es posible eludir todas las barreras anti-bloqueador de anuncios?",
+      "a": "No. La detección y la evasión evolucionan juntas, por lo que cualquier extensión puede detectarse temporalmente tras una actualización de detección. Un bloqueador bien mantenido suele adaptarse en cuestión de días. Expectativa realista: los muros funcionan a veces, y las actualizaciones cierran la brecha."
+    },
+    {
+      "q": "¿Afecta mi seguridad desactivar mi bloqueador de anuncios cuando se me advierte?",
+      "a": "Deshabilitar el filtrado te expone nuevamente a los anuncios y a los rastreadores que los acompañan. Si necesitas superar un muro en un sitio de confianza, una pausa limitada a ese sitio único es más segura que deshabilitar la protección globalmente."
+    },
+    {
+      "q": "¿Existen barreras anti-bloqueador de anuncios también en otros sitios web?",
+      "a": "Sí. Los scripts anti-bloqueo de anuncios se venden como servicio y aparecen en sitios de noticias, blogs y plataformas de streaming, incluso más allá de la gran plataforma de videos. Un bloqueador sigiloso resulta útil en todos ellos."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Bloqueo de anuncios en streaming: la guía completa"
+    },
+    {
+      "href": "/bypass-anti-adblock",
+      "text": "Cómo saltarse los muros anti-bloqueo de anuncios"
+    },
+    {
+      "href": "/undetectable-ad-blocker",
+      "text": "Qué hace que un bloqueador de anuncios sea difícil de detectar"
+    }
+  ],
+  "cta": {
+    "h3": "Filtrar anuncios sin activar las alarmas",
+    "p": "AdOff combina bloqueo en dos capas con detección anti-detección sigilosa en muros de terceros. Gratis para todos, sin necesidad de cuenta.",
+    "btn": "Instalar AdOff"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

@@ -1,0 +1,94 @@
+{
+  "slug": "block-youtube-shorts-ads",
+  "lang": "it",
+  "title": "Come bloccare le pubblicità negli Shorts (2026) | AdOff",
+  "description": "Gli annunci negli Shorts sono unità del feed, non annunci del player. Perché servono i filtri cosmetici, come funzionano e quali sono i limiti onesti.",
+  "h1": "Bloccare le pubblicità negli Shorts: annunci del feed, non del video",
+  "answer": "Le pubblicità negli Shorts sono unità native del feed, inserite tra un video verticale e l'altro mentre scorri: non sono pre-roll nel player. Sono elementi della pagina, non interruzioni pianificate dal player, quindi vengono gestite dal filtro cosmetico: regole CSS e DOM che nascondono i contenitori pubblicitari. La copertura è reale ma segue i formati attuali.",
+  "sections": [
+    {
+      "h2": "Gli annunci negli Shorts sono una specie diversa dagli annunci video",
+      "body": [
+        "<p>Quando un pre-roll parte prima di un video normale, il player lo richiede, lo riproduce e poi riprende il tuo video. Negli Shorts la meccanica è diversa: mentre scorri il feed, alcune voci di quel feed sono semplicemente annunci. Sembrano Shorts, scorrono come Shorts, e fanno parte della stessa risposta del feed — non sono un intervallo pubblicitario separato pianificato dal player.</p>",
+        "<p>Questa distinzione decide l'intera strategia di blocco. Gli strumenti a livello di player (rimozione della pianificazione, accelerazione della riproduzione) qui non hanno nulla su cui agire, perché nessun intervallo viene mai pianificato.</p>"
+      ]
+    },
+    {
+      "h2": "Perché il filtro cosmetico è lo strumento giusto per gli annunci del feed",
+      "body": [
+        "<p>Un annuncio del feed è un elemento della pagina con una struttura prevedibile: contenitori, etichette tipo il marker \"sponsorizzato\", componenti di rendering unici delle unità pubblicitarie. Il filtro cosmetico riconosce queste strutture con selettori CSS e regole sul DOM, e nasconde i contenitori pubblicitari prima o mentre vengono renderizzati, così che l'annuncio non diventi mai visibile nel tuo scorrimento.</p>",
+        "<p>AdOff applica selettori cosmetici dedicati alle pagine in formato breve della piattaforma video, sopra i selettori generici che girano su ogni sito. Gli stessi selettori sono applicati due volte: come CSS iniettato e nello strato di scansione del DOM, così un elemento nascosto in un modo viene rimosso anche nell'altro. Dettagli in <a href=\"/it/how-it-works\">come funziona AdOff</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Cosa può e non può fare il filtro cosmetico nel feed",
+      "body": [
+        "<p>Cosa può fare: nascondere le unità pubblicitarie la cui struttura corrisponde ai selettori, e rimuovere le etichette sponsorizzate e i riquadri sovrapposti che le accompagnano. Su un formato stabile è affidabile ed economico — niente attese, niente conteggi, l'annuncio semplicemente non appare mai nel flusso.</p>",
+        "<p>Cosa non può fare: coprire con certezza formati che non esistono ancora. Se la piattaforma cambia la struttura di un'unità del feed, i selettori smettono di corrispondere finché non vengono aggiornati. È un limite onesto di ogni approccio cosmetico, e vale per <a href=\"/it/youtube-ad-blocker-not-working\">qualsiasi ad blocker</a>, non per uno solo.</p>"
+      ]
+    },
+    {
+      "h2": "Perché il solo blocco a livello di rete non copre gli Shorts",
+      "body": [
+        "<p>Bloccare le reti pubblicitarie a livello DNS o di rete (vedi <a href=\"/android-dns\">blocco DNS su Android</a>) ferma le richieste verso gli ad server noti. Ma gli annunci del feed sulla piattaforma video spesso viaggiano sugli stessi domini e nelle stesse richieste del feed di contenuti, quindi un filtro di rete che li eliminasse romperebbe l'intero feed. Per questo il lavoro pratico avviene nel browser, a livello di DOM, dove unità pubblicitarie e contenuti si distinguono per struttura.</p>"
+      ]
+    },
+    {
+      "h2": "Come bloccare gli annunci degli Shorts in pratica",
+      "body": [
+        "<p>La configurazione è la stessa del resto della piattaforma video: installa un'estensione che includa i selettori cosmetici per i formati brevi, tieni la protezione attiva e lascia lavorare i livelli CSS e DOM — niente da configurare video per video. AdOff lo copre gratuitamente su Chrome, Firefox, Safari, Edge e Opera, senza account.</p>",
+        "<p>Se noti un'unità pubblicitaria che sfugge, di solito significa che il formato è cambiato; la correzione arriva con l'aggiornamento dei selettori. Il contesto completo per quella situazione è in <a href=\"/it/youtube-ad-blocker-not-working\">cosa fare quando l'ad blocker smette di funzionare</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Dove stanno gli annunci degli Shorts nel quadro generale",
+      "body": [
+        "<p>Gli annunci del feed sono uno dei quattro tipi di annuncio sulla piattaforma; gli altri vivono dentro il player. Una configurazione completa ha bisogno di entrambe le storie: blocco a livello di pianificazione per pre-roll e mid-roll, filtro cosmetico per le unità del feed e gli overlay. La visione d'insieme di come i livelli si combinano — e dove sta ogni piattaforma — è in <a href=\"/it/streaming-ad-blocking\">bloccare le pubblicità in streaming</a>, e il dettaglio specifico in <a href=\"/it/youtube-ad-blocker\">la guida all'ad blocker per YouTube</a>.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Le pubblicità negli Shorts sono uguali agli annunci video normali?",
+      "a": "No. Gli annunci negli Shorts sono unità native del feed inserite tra i video verticali mentre scorri. Gli annunci video normali sono interruzioni pianificate dentro il player. Consegna diversa significa tecnica di blocco diversa."
+    },
+    {
+      "q": "Come vengono bloccati gli annunci degli Shorts, allora?",
+      "a": "Con il filtro cosmetico: regole CSS e DOM che riconoscono la struttura dei contenitori pubblicitari nel feed e li nascondono prima del rendering. Lo strato di pianificazione video non ha nulla su cui agire, perché in un feed non viene pianificato nessun intervallo."
+    },
+    {
+      "q": "Tutti gli annunci degli Shorts possono essere nascosti?",
+      "a": "La maggior parte dei formati attuali, sì, ma senza promesse: se la piattaforma introduce una nuova struttura di annuncio nel feed, i selettori smettono di corrispondere finché non vengono aggiornati. La copertura cosmetica segue i formati esistenti."
+    },
+    {
+      "q": "Perché il blocco DNS non rimuove gli annunci degli Shorts?",
+      "a": "Perché gli annunci del feed viaggiano spesso sugli stessi domini del feed di contenuti. Un filtro di rete che bloccasse quelle richieste romperebbe l'intero feed. Solo il filtraggio nel browser può separare le due cose per struttura della pagina."
+    },
+    {
+      "q": "AdOff blocca gli annunci degli Shorts ed è gratuito?",
+      "a": "AdOff applica i selettori cosmetici per i formati brevi come parte della sua protezione gratuita su Chrome, Firefox, Safari, Edge e Opera, senza account. Come per tutto il filtro cosmetico, la copertura segue i formati pubblicitari attuali invece di promettere un risultato fisso."
+    }
+  ],
+  "related": [
+    {
+      "href": "/it/streaming-ad-blocking",
+      "text": "Bloccare le pubblicità in streaming: cosa funziona nel 2026"
+    },
+    {
+      "href": "/it/youtube-ad-blocker",
+      "text": "Ad blocker per YouTube: come funziona nel 2026"
+    },
+    {
+      "href": "/it/youtube-midroll-ads-explained",
+      "text": "Annunci mid-roll su YouTube spiegati"
+    }
+  ],
+  "cta": {
+    "h3": "Scorri il feed, salta gli annunci",
+    "p": "AdOff filtra gli annunci del feed nei video brevi, gratis. Senza account, su Chrome, Firefox, Safari, Edge e Opera.",
+    "btn": "Installa AdOff gratis"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

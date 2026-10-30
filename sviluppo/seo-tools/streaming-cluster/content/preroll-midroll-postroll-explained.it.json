@@ -1,0 +1,88 @@
+{
+  "slug": "preroll-midroll-postroll-explained",
+  "lang": "it",
+  "title": "Annunci pre-roll, mid-roll e post-roll spiegati | AdOff",
+  "description": "Tutte le posizioni degli annunci video: pre-roll, mid-roll, post-roll, bumper, overlay e companion — come vengono consegnati e quanto sono difficili da bloccare.",
+  "h1": "Pre-roll, mid-roll, post-roll: tutte le posizioni degli annunci video",
+  "answer": "I pre-roll partono prima del video, i mid-roll lo interrompono, i post-roll arrivano dopo. Le posizioni più facili da bloccare passano da SDK client-side come l'IMA di Google, che AdOff neutralizza con uno stub a ripresa immediata; gli annunci cuciti lato server restano invece fuori portata per qualsiasi estensione.",
+  "sections": [
+    {
+      "h2": "Pre-roll: l'annuncio prima del video",
+      "body": [
+        "<p>Il <strong>pre-roll</strong> viene riprodotto prima che inizi il contenuto richiesto. È la posizione più preziosa della pubblicità video perché cattura l'attenzione senza possibilità di salto nell'istante di massima intenzione — ed è la più fastidiosa per chi guarda, perché ritarda il video su cui ha appena cliccato.</p>",
+        "<p>Di norma è consegnato client-side: il player inizializza l'IMA SDK, richiede un annuncio VAST e lo sovrappone alla superficie del video. Poiché tutta la transazione avviene nella pagina, è altamente bloccabile. Lo stub di AdOff risponde alla richiesta di avvio dell'SDK con l'evento di ripresa immediata del contenuto: il pre-roll viene semplicemente saltato e la riproduzione parte.</p>"
+      ]
+    },
+    {
+      "h2": "Mid-roll: gli annunci dentro il video",
+      "body": [
+        "<p>Il <strong>mid-roll</strong> interrompe il contenuto in punti pianificati, imitando una interruzione pubblicitaria televisiva. I player descrivono i punti di interruzione in un documento VMAP, oppure la piattaforma li pianifica nella risposta degli annunci. I mid-roll sono i più frustranti perché tagliano il video nel momento più interessante.</p>",
+        "<p>I mid-roll client-side percorrono la stessa via dell'SDK dei pre-roll e vengono neutralizzati allo stesso modo: quando il player chiede di avviare l'interruzione, lo stub risponde che l'interruzione è finita prima ancora di cominciare. Sulla piattaforma video principale AdOff in più rimuove la pianificazione degli annunci dalla risposta del player prima che la pagina la legga, e fa andare avanti veloce ciò che sfugge.</p>"
+      ]
+    },
+    {
+      "h2": "Post-roll: l'annuncio dopo la fine del video",
+      "body": [
+        "<p>Il <strong>post-roll</strong> parte quando il contenuto è finito. È il più tollerato — la maggior parte degli spettatori ha già smesso di guardare — ma gli inserzionisti pagano comunque, quindi i player lo gestiscono con la stessa pipeline client-side.</p>",
+        "<p>Stessa consegna, stessa debolezza: se la richiesta dell'annuncio passa da un SDK client-side, la ripresa immediata dello stub fa sì che il video si concluda pulito, senza annuncio finale.</p>"
+      ]
+    },
+    {
+      "h2": "Bumper, overlay e companion",
+      "body": [
+        "<p>Non ogni posizione occupa la superficie del video per diversi secondi:</p>",
+        "<ul><li><strong>Bumper</strong>: annunci brevissimi (circa 6 secondi) non saltabili, spesso usati come pre-roll. Consegnati dallo stesso SDK, neutralizzati allo stesso modo.</li><li><strong>Overlay</strong>: banner che appaiono sulla parte bassa di un video in riproduzione, senza metterlo in pausa. Sono normali elementi DOM, quindi il filtro cosmetico (regole CSS più content script) li nasconde su ogni sito.</li><li><strong>Companion</strong>: banner display mostrati accanto al player mentre gira l'annuncio video. Anch'essi elementi ordinari della pagina e nascosti dal filtro cosmetico.</li><li><strong>Annunci nel feed</strong>: annunci video travestiti da contenuti consigliati in un elenco. Il filtro cosmetico e i selettori generici li intercettano allo stesso modo.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Cosa rende una posizione difficile o impossibile da bloccare",
+      "body": [
+        "<p>La linea di demarcazione è <strong>dove l'annuncio viene assemblato</strong>. Se l'annuncio viene scaricato e disegnato da JavaScript nel tuo browser — come tutto ciò che passa da un SDK come IMA — un'estensione può intercettarlo, sostituirlo o nasconderlo.</p>",
+        "<p>Se invece l'annuncio è cucito nel flusso video dal server prima della consegna (<a href=\"/it/server-side-ad-insertion-explained\">SSAI</a>), i pixel della pubblicità sono indistinguibili dai pixel della trasmissione. Nessuna estensione può separarli dopo; per questo AdOff lascia deliberatamente in pace i servizi in abbonamento che usano SSAI, invece di rischiare di rompere la riproduzione.</p>"
+      ]
+    },
+    {
+      "h2": "Come AdOff abbina gli strati alle posizioni",
+      "body": [
+        "<p>Ogni posizione cade nello strato pensato per lei:</p>",
+        "<ul><li>Pre/mid/post-roll e bumper via SDK → neutralizzazione IMA (stub in-pagina o redirect di rete su 42 domini di broadcaster europei).</li><li>Overlay, companion, annunci nel feed → filtro cosmetico (CSS + content script).</li><li>Richieste verso network pubblicitari → 180 regole di rete statiche (gli annunci veri sono contati nel badge, il tracciamento è bloccato ma non contato).</li><li>Muri anti-adblock → strato stealth con spoofing delle esche e intercettazione fetch/XHR.</li></ul>",
+        "<p>Tutto incluso gratis in un'unica estensione per Chrome, Firefox, Safari, Edge e Opera, senza account.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Quali annunci video sono più difficili da bloccare?",
+      "a": "Gli annunci cuciti nel flusso dal server (SSAI) sono di fatto impossibili da separare dal contenuto per un'estensione, perché arrivano come parte del video stesso. Gli annunci client-side consegnati tramite SDK sono molto più accessibili alla neutralizzazione."
+    },
+    {
+      "q": "I mid-roll vengono bloccati in modo diverso dai pre-roll?",
+      "a": "No, quando condividono la stessa via di consegna. Entrambi passano di norma dallo stesso SDK client-side, quindi uno stub che risponde alle richieste di interruzione con la ripresa immediata elimina pre-roll e mid-roll insieme."
+    },
+    {
+      "q": "Che cos'è un annuncio bumper?",
+      "a": "Un bumper è un annuncio video brevissimo e non saltabile, di solito intorno ai sei secondi, tipicamente mostrato prima del contenuto. Poiché viene consegnato dallo stesso SDK degli annunci più lunghi, viene neutralizzato dallo stesso meccanismo."
+    },
+    {
+      "q": "Come vengono rimossi overlay e companion?",
+      "a": "Sono elementi ordinari della pagina, non fotogrammi del video. Il filtro cosmetico — regole CSS più uno script che scansiona il DOM — li nasconde, mentre le regole di rete bloccano le loro richieste verso i network."
+    },
+    {
+      "q": "Gli ad blocker contano ogni richiesta bloccata come annuncio?",
+      "a": "AdOff distingue la pubblicità vera dal tracciamento: anche analytics e tracker vengono bloccati, ma i contatori del badge e del popup includono soltanto gli annunci reali, così i numeri riflettono ciò che hai davvero saltato."
+    }
+  ],
+  "related": [
+    {"href": "/it/streaming-ad-blocking", "text": "Blocco delle pubblicità nello streaming: la guida completa"},
+    {"href": "/it/ima-sdk-ad-blocking-explained", "text": "Come funziona il blocco dell'IMA SDK"},
+    {"href": "/it/server-side-ad-insertion-explained", "text": "L'inserimento annunci lato server (SSAI) spiegato"}
+  ],
+  "cta": {
+    "h3": "Ogni posizione, un'unica estensione",
+    "p": "Pre-roll, mid-roll, overlay e banner: AdOff gestisce ciascuno con lo strato giusto, gratis per tutti.",
+    "btn": "Installa AdOff gratis"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

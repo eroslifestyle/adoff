@@ -1,0 +1,121 @@
+{
+  "name": "AdOff 96 - Media Agent (multimodal brand-aware)",
+  "active": true,
+  "nodes": [
+    {
+      "id": "wh-media",
+      "name": "Webhook media-gen",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 300],
+      "parameters": {
+        "path": "media-gen",
+        "responseMode": "responseNode",
+        "httpMethod": "POST",
+        "options": {}
+      },
+      "typeVersion": 2,
+      "webhookId": "adoff-media-gen-001"
+    },
+    {
+      "id": "validate",
+      "name": "Validate brief",
+      "type": "n8n-nodes-base.code",
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "const b = $input.first().json.body || $input.first().json;\nconst valid_fmt = ['photo','carousel','reel','story','video'];\nconst fmt = (b.format_type || 'photo').toLowerCase();\nif (!valid_fmt.includes(fmt)) {\n  return [{ json: { _error: 'invalid format_type, use: ' + valid_fmt.join(',') } }];\n}\nif (!b.topic && !b.copy_text) {\n  return [{ json: { _error: 'topic or copy_text required' } }];\n}\nreturn [{ json: {\n  brand: b.brand || 'adoff',\n  platform: (b.platform || 'twitter').toLowerCase(),\n  format_type: fmt,\n  topic: b.topic || '',\n  copy_text: b.copy_text || '',\n  slides: b.slides || (fmt === 'carousel' ? 5 : 1),\n  duration_sec: b.duration_sec || (fmt === 'reel' || fmt === 'story' ? 12 : (fmt === 'video' ? 20 : null)),\n  requested_by: b.requested_by || 'media-agent'\n}}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "enqueue",
+      "name": "Enqueue media job",
+      "type": "n8n-nodes-base.postgres",
+      "position": [680, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.media_queue (brand, platform, format_type, topic, copy_text, slides, duration_sec, requested_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING job_id, status, created_at;",
+        "options": {
+          "queryReplacement": "={{ [$json.brand, $json.platform, $json.format_type, $json.topic, $json.copy_text, $json.slides, $json.duration_sec, $json.requested_by] }}"
+        }
+      },
+      "credentials": {
+        "postgres": { "id": "adoff-pg-autopilot-credential-1234", "name": "n8n-postgres" }
+      },
+      "typeVersion": 2.5
+    },
+    {
+      "id": "resp",
+      "name": "Respond job_id",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [900, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ job_id: $json.job_id, status: $json.status, poll_url: '/webhook/media-status?job_id=' + $json.job_id }) }}",
+        "options": {}
+      },
+      "typeVersion": 1.1
+    },
+    {
+      "id": "wh-status",
+      "name": "Webhook media-status",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 540],
+      "parameters": {
+        "path": "media-status",
+        "responseMode": "responseNode",
+        "httpMethod": "GET",
+        "options": {}
+      },
+      "typeVersion": 2,
+      "webhookId": "adoff-media-status-001"
+    },
+    {
+      "id": "lookup",
+      "name": "Lookup media",
+      "type": "n8n-nodes-base.postgres",
+      "position": [460, 540],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT job_id, brand, platform, format_type, status, output_path, file_size, width, height, gen_seconds, error, created_at, completed_at FROM adoff_autopilot.media_queue WHERE job_id = $1::uuid LIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ [$json.query.job_id] }}"
+        }
+      },
+      "credentials": {
+        "postgres": { "id": "adoff-pg-autopilot-credential-1234", "name": "n8n-postgres" }
+      },
+      "typeVersion": 2.5
+    },
+    {
+      "id": "fmt-status",
+      "name": "Format media status",
+      "type": "n8n-nodes-base.code",
+      "position": [680, 540],
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nif (!r || !r.job_id) return [{ json: { status: 'not_found' } }];\nreturn [{ json: {\n  job_id: r.job_id,\n  brand: r.brand,\n  platform: r.platform,\n  format_type: r.format_type,\n  status: r.status,\n  ready: r.status === 'done',\n  output_path: r.output_path || null,\n  width: r.width, height: r.height,\n  file_size: r.file_size,\n  gen_seconds: r.gen_seconds,\n  error: r.error || null,\n  completed_at: r.completed_at\n}}];"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "resp-status",
+      "name": "Respond media status",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [900, 540],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "typeVersion": 1.1
+    }
+  ],
+  "connections": {
+    "Webhook media-gen": { "main": [[{ "node": "Validate brief", "type": "main", "index": 0 }]] },
+    "Validate brief": { "main": [[{ "node": "Enqueue media job", "type": "main", "index": 0 }]] },
+    "Enqueue media job": { "main": [[{ "node": "Respond job_id", "type": "main", "index": 0 }]] },
+    "Webhook media-status": { "main": [[{ "node": "Lookup media", "type": "main", "index": 0 }]] },
+    "Lookup media": { "main": [[{ "node": "Format media status", "type": "main", "index": 0 }]] },
+    "Format media status": { "main": [[{ "node": "Respond media status", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

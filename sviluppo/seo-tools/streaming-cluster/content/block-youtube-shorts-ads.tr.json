@@ -1,0 +1,94 @@
+{
+  "slug": "block-youtube-shorts-ads",
+  "lang": "tr",
+  "title": "YouTube Shorts Reklamlarını Nasıl Engellersiniz (2026) | AdOff",
+  "description": "Shorts reklamları oynatıcı değil akış birimleridir; ön sarmalardan farkları, kosmetik filtrelemenin neden doğru araç olduğu ve dürüst sınırları nelerdir.",
+  "h1": "YouTube Shorts’te Reklamları Engelleme: Video Reklamları Değil, Akış Reklamları",
+  "answer": "YouTube Shorts’taki reklamlar, dikey videolar arasında kaydırırken eklenen yerel akış birimleridir ve oynatıcı içinde önceden planlanmış öne geçişler değildir. Bunlar, sayfa öğeleridir ve zamanlanmış oynatıcı araları değil, bu nedenle kozmetik filtreleme ile işlenirler: CSS ve DOM kuralları, reklam kapsayıcılarını gizler. Kapsama alanı gerçek ancak formatlar değiştiğinde sınırları vardır.",
+  "sections": [
+    {
+      "h2": "Shorts reklamları, video reklamlardan farklı bir türdür.",
+      "body": [
+        "<p>Ön gösterim, normal bir videodan önce oynatıldığında, oynatıcı onu talep eder, oynatır ve ardından videonuzu yeniden başlatır. Shorts’lar farklı çalışır: akışı kaydırırken, bu akıştaki bazı içerikler basitçe reklamlardır. Shorts gibi görünürler, Shorts gibi kayarlar ve aynı akış yanıtının bir parçasıdırlar — oynatıcı tarafından zamanlanan ayrı bir reklam aralığı değillerdir.</p>",
+        "<p>Bu ayrım, tüm engelleme stratejisini belirler. Oyuncu düzeyindeki araçlar (zamanlama kaldırma, oynatma hızlandırma) burada ne yapacakları yoktur, çünkü asla bir aralık zamanlanmaz.</p>"
+      ]
+    },
+    {
+      "h2": "Neden kozmetik filtreleme, akış reklamları için doğru araçtır",
+      "body": [
+        "<p>Bir besleme reklamı, öngörülebilir bir yapıya sahip bir sayfa öğesidir: kapsayıcılar, \"sponsored\" (desteklenen) gibi etiketler ve reklam birimlerine özgü render edici bileşenler. Estetik filtreleme, bu yapıları CSS seçicileri ve DOM kurallarıyla eşleştirerek reklam kapsayıcılarını, görünür hale gelmeden önce veya sırasında gizleyerek çalışır, böylece besleme öğesi asla görünür olmaz.</p>",
+        "<p>AdOff, video platformının kısa formatlı sayfaları için özel kozmetik seçiciler uygular; bunun yanı sıra her sitede çalışan genel reklam seçicilerini de kullanır. Aynı seçiciler iki kez uygulanır: enjekte edilen CSS olarak ve DOM tarama katmanında, böylece bir yöntemle gizlenen bir öğe diğer yöntemle de kaldırılır. Detaylar için <a href=\"/how-it-works\">AdOff’in nasıl çalıştığı</a> sayfasına bakın.</p>"
+      ]
+    },
+    {
+      "h2": "Kosmetik filtrelemenin besleme akışında yapabileceği ve yapamayacağı şeyler",
+      "body": [
+        "<p>Ne yapabilir: Seçicilerle eşleşen yapıdaki reklam birimlerini gizleyebilir ve bunlarla birlikte gelen sponsorlu etiketleri ve üst katman döşeme elemanlarını kaldırabilir. Sabit bir formatta bu, güvenilir ve ucuz bir çözümdür — bekleme yok, geri sayım yok; reklam, kaydırma akışınızda asla görünmez.</p>",
+        "<p>Yapamayacağı şey: Henüz piyasaya sürülmemiş formatların kapsamasını garantilemek. Platform, bir besleme reklam biriminin yapısını değiştirirse, seçiciler güncellenene kadar eşleşmeyi durdurur. Bu, her kozmetik yaklaşımın açıkça sınırlamasıdır ve sadece birine değil, <a href=\"/youtube-ad-blocker-not-working\">her reklam engelleyiciye</a> uygulanır.</p>"
+      ]
+    },
+    {
+      "h2": "Nedensel olarak, yalnızca ağ düzeyinde engelleme Shorts’ları kapsayamaz",
+      "body": [
+        "<p>Reklam ağlarını DNS veya ağ düzeyinde engellemek (bkz. <a href=\"/android-dns\">Android’de DNS tabanlı engelleme</a>), bilinen reklam sunucularına yapılan istekleri durdurur. Ancak video platformundaki akış reklamları, içerik akışının kendisiyle aynı etki alanlarını ve isteklerini kullandığı için, bunları kaldıran bir ağ filtresi tüm akışı bozar. Bu nedenle pratik çalışma, tarayıcı düzeyinde, DOM düzeyinde yapılır; burada reklam birimleri ve içerik birimleri yapısal olarak birbirinden ayırt edilebilir.</p>"
+      ]
+    },
+    {
+      "h2": "Shorts reklamlarını pratikte nasıl engellersiniz",
+      "body": [
+        "<p>Kurulum, video platformunun geri kalanı için aynıdır: kısa formda kozmetik seçicileri içeren bir tarayıcı eklentisi yükleyin, korumayı etkin tutun ve CSS ile DOM katmanlarının işini yapmasına izin verin — video başına hiçbir yapılandırma gerekmez. AdOff, Chrome, Firefox, Safari, Edge ve Opera’da hesap gerektirmeden bunu ücretsiz olarak sağlar.</p>",
+        "<p>Eğer bir reklam birimi kaçak çıkıyorsa, genellikle format değişmiştir demektir; düzeltme, seçici güncellemesiyle birlikte gelir. Bu durumun tam bağlamı için <a href=\"/youtube-ad-blocker-not-working\">reklam engelleyici çalışmayı durdurduğunda ne yapılmalı</a> sayfasına bakın.</p>"
+      ]
+    },
+    {
+      "h2": "Kısa videolar (Shorts) reklamları, daha büyük engelleme stratejisine nasıl uyuyor",
+      "body": [
+        "<p>İlan akışları, platformdaki dört ilan türünden biridir; diğerleri oynatıcı içinde yer alır. Tam bir kurulum, öncelikli ve orta aralıklar için zamanlama katmanı engellemeyi, akış birimleri ve katmanlar için estetik filtrelemeyi gerektirir. Bu katmanların nasıl birleştiğinin ve her platformun durumunun genel görünümü <a href=\"/streaming-ad-blocking\">akış ilan engelleme açıklaması</a> sayfasında, platforma özel detaylar ise <a href=\"/youtube-ad-blocker\">YouTube ilan engelleyici kılavuzunda</a> yer alır.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "YouTube Shorts’taki reklamlar, normal video reklamlarıyla aynı mı?",
+      "a": "Hayır. Kısa videolar (Shorts) reklamları, dikey videolar arasında kaydırırken eklenen yerel akış birimleridir. Normal video reklamları ise oynatıcı içinde zamanlanmış aralıklardır. Farklı teslimat yöntemleri, farklı engelleme tekniklerini gerektirir."
+    },
+    {
+      "q": "Peki Shorts reklamları nasıl engelleniyor?",
+      "a": "Kozmetik filtreleme yoluyla: Akıştaki reklam konteynerlerinin yapısını tanımlayan CSS ve DOM kuralları, bunların görünmesinden önce gizlenmesini sağlar. Video reklam zamanlama katmanı, akışta hiçbir reklam aralığı planlanmadığı için işlem yapacak bir şey bulamaz."
+    },
+    {
+      "q": "Tüm Shorts reklamları gizlenebilir mi?",
+      "a": "Çoğu mevcut format, evet; ancak bu, bir taahhütle birlikte değil: Eğer platform yeni bir akış reklamı yapısı sunarsa, seçiciler güncellenene kadar eşleşmeyi durdurur. Görsel kapsama, mevcut formatlara göre sağlanır."
+    },
+    {
+      "q": "Neden DNS düzeyindeki reklam engelleme, Shorts reklamlarını kaldırmaz?",
+      "a": "Çünkü feed reklamları genellikle içerik akışının kendisiyle aynı etki alanları üzerinden iletilir. Bu istekleri engelleyen bir ağ filtresi, tüm akışı bozar. Yalnızca tarayıcı içi filtreleme, sayfa yapısına göre ikisini birbirinden ayırabilir."
+    },
+    {
+      "q": "AdOff, Shorts reklamlarını engeller mi ve ücretsiz mi?",
+      "a": "AdOff, Chrome, Firefox, Safari, Edge ve Opera tarayıcılarında hesap gerektirmeyen ücretsiz koruma kapsamında kısa formatlı estetik seçicileri uygular. Tüm estetik filtreleme yöntemlerinde olduğu gibi, kapsama alanı sabit bir sonuç garantilemez; bunun yerine mevcut reklam formatlarını takip eder."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Akış reklam engelleme: 2026 yılında çalışan yöntemler"
+    },
+    {
+      "href": "/youtube-ad-blocker",
+      "text": "YouTube reklam engelleyici: 2026 yılında nasıl çalışır"
+    },
+    {
+      "href": "/youtube-midroll-ads-explained",
+      "text": "YouTube orta-rol reklamları açıklaması"
+    }
+  ],
+  "cta": {
+    "h3": "Akışı kaydırın, reklamları atlayın",
+    "p": "AdOff, kısa formatlı videolardaki reklamları ücretsiz filtreler. Hesap gerektirmez, Chrome, Firefox, Safari, Edge ve Opera’da çalışır.",
+    "btn": "AdOff’i ücretsiz kurun"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

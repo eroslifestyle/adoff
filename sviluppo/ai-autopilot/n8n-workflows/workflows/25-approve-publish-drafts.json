@@ -1,0 +1,1117 @@
+{
+  "name": "AdOff 25 - Intelligent Approval Gate (Gemini + LLM Scoring)",
+  "description": "Auto-approval gate con Gemini Flash scoring per draft caption_social/ad_copy/landing_section/email_drip. Schedule 10min scansione auto-approve (score>=threshold), 30min dispatch approvati -> posts_queue. Webhooks manuali per override umano. Metric: daily auto_approve_rate tracker.",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "draft-approve",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-approve",
+      "name": "Webhook /draft-approve",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        200
+      ],
+      "webhookId": "34d5b385-a057-401d-ab27-af7917da1ccc"
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "draft-list",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-list",
+      "name": "Webhook /draft-list",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "webhookId": "d979b766-bde9-41cd-84c4-0607bb180b8a"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "draft-bulk-approve",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-bulk",
+      "name": "Webhook /draft-bulk-approve",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        600
+      ],
+      "webhookId": "552ffbbf-43b3-4f02-a06b-a578fa05366c"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "id": "schedule-30min",
+      "name": "Schedule every 30 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 10
+            }
+          ]
+        }
+      },
+      "id": "schedule-10min-autoapprove",
+      "name": "Schedule every 10 min (auto-approve loop)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, workflow, asset_type, platform, lang, body, created_at FROM adoff_autopilot.gemini_copy_drafts WHERE status = 'draft' AND brand_guard_ok = true AND approval_score IS NULL AND asset_type IN ('caption_social', 'ad_copy', 'landing_section', 'email_drip') ORDER BY created_at ASC LIMIT 20"
+      },
+      "id": "db-fetch-draft-autoapprove",
+      "name": "DB fetch draft (auto-approve candidates)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        1000
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "adoff-pg-autopilot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Load auto_approve_threshold from env (default 90)\nreturn [{ json: { threshold: parseInt(process.env.ADOFF_AUTO_APPROVE_THRESHOLD || '90') } }];"
+      },
+      "id": "get-threshold",
+      "name": "Get auto_approve_threshold",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop each draft and prepare LLM scoring request\nconst threshold = $json.threshold;\nconst drafts = $input.all()[0]?.json || [];\n\nif (!Array.isArray(drafts) || drafts.length === 0) {\n  return [{ json: { message: 'No auto-approve candidates found', drafts_count: 0 } }];\n}\n\nconst out = [];\nfor (const draft of drafts) {\n  const assetLabel = {\n    'caption_social': 'Caption per social media',\n    'ad_copy': 'Ad copy commerciale',\n    'landing_section': 'Sezione landing page',\n    'email_drip': 'Email drip campaign'\n  }[draft.asset_type] || draft.asset_type;\n  \n  out.push({\n    json: {\n      draft_id: draft.id,\n      workflow: draft.workflow,\n      asset_type: draft.asset_type,\n      platform: draft.platform,\n      lang: draft.lang,\n      body: draft.body,\n      created_at: draft.created_at,\n      asset_label: assetLabel,\n      threshold: threshold\n    }\n  });\n}\n\nreturn out;"
+      },
+      "id": "prepare-llm-requests",
+      "name": "Prepare LLM scoring requests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"contents\":[{\"parts\":[{\"text\":\"Sei un Senior Marketing Reviewer esperto di AdOff (estensione browser anti-pubblicità). Valuta questo contenuto su 5 dimensioni (scala 0-20 ognuna): brand_alignment (rispetto policy AdOff, nessun brand famoso citato, no prezzi), tone (energico/brillante come Ava voiceover), clarity (chiaro al target), engagement_potential (probabilità reazioni positive), risk (rischio legale/etico - alto score = alto rischio). Tipo asset: {{ $json.asset_label }} (lingua: {{ $json.lang }}). Contenuto:\\n{{ $json.body }}\\n\\nRispondi SOLO con un JSON valido (niente testo): {\\\"brand_alignment\\\":0-20,\\\"tone\\\":0-20,\\\"clarity\\\":0-20,\\\"engagement_potential\\\":0-20,\\\"risk\\\":0-20,\\\"total_score\\\":0-100,\\\"reasoning\\\":\\\"1-2 righe\\\",\\\"escalate_reason\\\":null,\\\"recommendation\\\":\\\"auto_approve|needs_human|reject\\\"}\"}]}",
+        "options": {}
+      },
+      "id": "llm-score-draft",
+      "name": "Gemini Flash - Score draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        1000
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PLACEHOLDER_GEMINI_CREDENTIAL",
+          "name": "adoff-gemini-credential-2026"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Gemini response and extract JSON score\n// Response format: { \"candidates\": [{ \"content\": { \"parts\": [{ \"text\": \"...json...\" }] } }] }\n\nconst resp = $json;\nlet scoreJson = null;\n\ntry {\n  const candidates = resp.candidates || [];\n  if (candidates.length > 0 && candidates[0].content?.parts?.[0]?.text) {\n    const text = candidates[0].content.parts[0].text;\n    // Extract JSON from text (may have surrounding text)\n    const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n    if (jsonMatch) {\n      scoreJson = JSON.parse(jsonMatch[0]);\n    }\n  }\n} catch (err) {\n  // Parse error, fallback to neutral score\n  scoreJson = { total_score: 50, recommendation: 'needs_human', reasoning: 'LLM parse error', escalate_reason: 'gemini_response_parse_failed' };\n}\n\nif (!scoreJson) {\n  scoreJson = { total_score: 50, recommendation: 'needs_human', reasoning: 'No valid score', escalate_reason: 'gemini_empty_response' };\n}\n\n// Merge with input\nreturn [{ json: { ...($input.first().json), score: scoreJson } }];"
+      },
+      "id": "parse-llm-score",
+      "name": "Parse LLM score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Decision branch: auto_approve vs needs_review vs reject\n// Inputs: draft_id, threshold, score.total_score, score.recommendation\n\nconst draft_id = $json.draft_id;\nconst score = $json.score.total_score;\nconst threshold = $json.threshold;\nconst recommendation = $json.score.recommendation;\nconst reasoning = $json.score.reasoning;\nconst escalate_reason = $json.score.escalate_reason;\n\nlet decision = 'needs_review';\nlet newStatus = 'needs_review';\n\nif (score >= threshold && recommendation === 'auto_approve') {\n  decision = 'auto_approve';\n  newStatus = 'approved';\n} else if (score < 70 || recommendation === 'reject') {\n  decision = 'reject';\n  newStatus = 'rejected';\n}\n\nreturn [{ json: { draft_id, score, threshold, decision, newStatus, reasoning, escalate_reason, recommendation } }];"
+      },
+      "id": "decide-approve-or-human",
+      "name": "Decide: auto_approve / needs_review / reject",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.gemini_copy_drafts SET status = $1::text, auto_approved = $2::boolean, approval_score = $3::int, approved_at = NOW(), approved_by = 'gemini-flash-auto', brand_guard_reason = $4::text WHERE id = $5::bigint",
+        "options": {
+          "queryReplacement": "=[[$json.newStatus, $json.decision === 'auto_approve', $json.score, $json.reasoning, $json.draft_id]]"
+        }
+      },
+      "id": "db-update-autoapprove",
+      "name": "DB update draft (auto-approve decision)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1780,
+        900
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "adoff-pg-autopilot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Alert Telegram if needs_review (score 70-89) or escalate reason\nconst decision = $json.decision;\nconst score = $json.score;\nconst reasoning = $json.reasoning;\nconst escalate_reason = $json.escalate_reason;\n\nif (decision === 'needs_review' && !escalate_reason) {\n  return [{ json: { send_alert: true, text: `⚠️ Draft #{{ $json.draft_id }} needs human review\\nScore: {{ $json.score }}/100\\nReason: {{ $json.reasoning }}` } }];\n}\nif (escalate_reason) {\n  return [{ json: { send_alert: true, text: `🚨 Draft #{{ $json.draft_id }} escalation: {{ escalate_reason }}\\nScore: {{ $json.score }}` } }];\n}\n\nreturn [{ json: { send_alert: false } }];"
+      },
+      "id": "check-telegram-alert",
+      "name": "Check if send Telegram alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1780,
+        1100
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"chat_id\":\"{{ $env.TELEGRAM_CHAT_ID }}\",\"text\":{{ JSON.stringify($json.text) }},\"parse_mode\":\"Markdown\"}",
+        "options": {}
+      },
+      "id": "send-alert-autoapprove",
+      "name": "Send Telegram alert (auto-approve)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        1100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Throttle 2s between LLM requests to stay under Gemini rate limits\nawait new Promise(resolve => setTimeout(resolve, 2000));\nreturn [{ json: $json }];"
+      },
+      "id": "throttle-2sec",
+      "name": "Throttle 2sec (rate limit)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        1100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Daily auto_approve_rate metric\n// SELECT COUNT(*) as count FROM gemini_copy_drafts WHERE auto_approved=true AND approved_at > NOW() - INTERVAL '1 day'\nconst today_auto_approves = $input.first().json?.today_auto_approves || 0;\nconst rate = today_auto_approves;\n\nif (rate < 50 && rate > 0) {\n  return [{ json: { metric: 'auto_approve_rate', value: rate, alert: true, text: `⚠️ Auto-approve degraded today: only {{ rate }} approvals. Check LLM quality.` } }];\n}\n\nreturn [{ json: { metric: 'auto_approve_rate', value: rate, alert: false } }];"
+      },
+      "id": "metric-autoapprove-daily",
+      "name": "Metric: daily auto_approve_rate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2220,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse /draft-approve: { draft_id, approver, action ('approve'|'reject') }\nconst body = $json.body || {};\nconst draft_id = body.draft_id;\nconst approver = body.approver || 'web-approver';\nconst action = body.action || 'approve';\n\nif (!draft_id) {\n  return [{ json: { ok: false, error: 'Missing draft_id' }, statusCode: 400 }];\n}\n\nconst newStatus = action === 'reject' ? 'rejected' : 'approved';\n\nreturn [{ json: { draft_id, approver, action: newStatus } }];"
+      },
+      "id": "parse-approve",
+      "name": "Parse approve request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse /draft-list: ?workflow=W20&asset_type=caption&lang=it&status=draft\n// Restituisce parametri di filtro (NOT SQL concatenato)\nconst query = $json.query || {};\nconst workflow = query.workflow || null;\nconst asset_type = query.asset_type || null;\nconst lang = query.lang || null;\nconst status = query.status || 'draft';\nconst limit = Math.min(parseInt(query.limit || '20'), 100);\nconst offset = Math.max(parseInt(query.offset || '0'), 0);\n\nreturn [{ json: { workflow, asset_type, lang, status, limit, offset } }];"
+      },
+      "id": "parse-list",
+      "name": "Parse list request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse /draft-bulk-approve: { draft_ids: [1,2,3], approver }\nconst body = $json.body || {};\nconst draft_ids = body.draft_ids || [];\nconst approver = body.approver || 'bulk-approver';\n\nif (!Array.isArray(draft_ids) || draft_ids.length === 0) {\n  return [{ json: { ok: false, error: 'Missing or empty draft_ids' }, statusCode: 400 }];\n}\n\nreturn [{ json: { draft_ids, approver, count: draft_ids.length } }];"
+      },
+      "id": "parse-bulk",
+      "name": "Parse bulk-approve request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.gemini_copy_drafts SET status = $1::text, approved_at = NOW(), approved_by = $2::text WHERE id = $3::bigint",
+        "options": {
+          "queryReplacement": "=[[$json.action, $json.approver, $json.draft_id]]"
+        }
+      },
+      "id": "db-update-single",
+      "name": "DB update single draft",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        680,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "adoff-pg-autopilot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, workflow, asset_type, platform, lang, status, body, created_at FROM adoff_autopilot.gemini_copy_drafts WHERE ($1::text IS NULL OR status = $1::text) AND ($2::text IS NULL OR workflow = $2::text) AND ($3::text IS NULL OR asset_type = $3::text) AND ($4::text IS NULL OR lang = $4::text) ORDER BY created_at DESC LIMIT $5::int OFFSET $6::int",
+        "options": {
+          "queryReplacement": "=[[$json.status, $json.workflow, $json.asset_type, $json.lang, $json.limit, $json.offset]]"
+        }
+      },
+      "id": "db-list-drafts",
+      "name": "DB fetch drafts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        680,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "adoff-pg-autopilot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as total FROM adoff_autopilot.gemini_copy_drafts WHERE ($1::text IS NULL OR status = $1::text) AND ($2::text IS NULL OR workflow = $2::text) AND ($3::text IS NULL OR asset_type = $3::text) AND ($4::text IS NULL OR lang = $4::text)",
+        "options": {
+          "queryReplacement": "=[[$json.status, $json.workflow, $json.asset_type, $json.lang]]"
+        }
+      },
+      "id": "db-count-drafts",
+      "name": "DB count total",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        900,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "adoff-pg-autopilot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE adoff_autopilot.gemini_copy_drafts SET status = 'approved', approved_at = NOW(), approved_by = $1::text WHERE id = ANY($2::bigint[])",
+        "options": {
+          "queryReplacement": "=[[$json.approver, $json.draft_ids]]"
+        }
+      },
+      "id": "db-update-bulk",
+      "name": "DB update bulk drafts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        680,
+        600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "adoff-pg-autopilot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, workflow, asset_type, platform, lang, body, status FROM adoff_autopilot.gemini_copy_drafts WHERE status = 'approved' AND published_at IS NULL ORDER BY approved_at ASC LIMIT 50",
+        "options": {}
+      },
+      "id": "db-fetch-approved",
+      "name": "DB fetch approved (unpublished)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        800
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER_PG_CREDENTIAL",
+          "name": "adoff-pg-autopilot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Distribuisci approved drafts per asset_type\nconst items = $input.all();\nconst byType = {};\n\nfor (const it of items) {\n  const d = it.json;\n  const type = d.asset_type || 'unknown';\n  if (!byType[type]) byType[type] = [];\n  byType[type].push(d);\n}\n\nconst out = [];\nfor (const [type, drafts] of Object.entries(byType)) {\n  out.push({ json: { asset_type: type, drafts, count: drafts.length } });\n}\n\nreturn out;"
+      },
+      "id": "group-by-type",
+      "name": "Group by asset_type",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Distribuisci caption_social -> posts_queue (webhook call)\nconst group = $json;\nif (group.asset_type !== 'caption_social') {\n  return [{ json: null }];\n}\n\nconst out = [];\nfor (const draft of group.drafts) {\n  out.push({\n    json: {\n      workflow: 'w25-publish',\n      asset_type: 'caption_social',\n      platform: draft.platform || 'instagram',\n      lang: draft.lang || 'it',\n      body: draft.body,\n      draft_id: draft.id,\n      source_workflow: draft.workflow\n    }\n  });\n}\n\nreturn out;"
+      },
+      "id": "route-caption",
+      "name": "Route caption -> posts_queue",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Distribuisci altri asset_type -> Telegram notify\nconst group = $json;\nconst typeLabel = {\n  'email_drip': '📧 Email drip',\n  'ad_copy': '📢 Ad copy',\n  'landing_section': '🏠 Landing section',\n  'marketing_plan': '📋 Marketing plan',\n  'seo_brief': '🔍 SEO brief'\n}[group.asset_type] || group.asset_type;\n\nconst draftList = group.drafts\n  .map((d, i) => `  ${i+1}. [ID ${d.id}] ${d.lang} — ${d.workflow}`)\n  .join('\\n');\n\nconst text = `🎯 *${typeLabel}* — ${group.count} draft approved\\n\\n${draftList}\\n\\n⚠️ Copia manualmente nel rispettivo sistema.`;\n\nreturn [{ json: { text, asset_type: group.asset_type } }];"
+      },
+      "id": "format-notify",
+      "name": "Format Telegram notify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        850
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"chat_id\":\"{{ $env.TELEGRAM_CHAT_ID }}\",\"text\":{{ JSON.stringify($json.text) }},\"parse_mode\":\"Markdown\"}",
+        "options": {}
+      },
+      "id": "send-tg-notify",
+      "name": "Send Telegram notify",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        850
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:5678/webhook/social-enqueue",
+        "sendBody": true,
+        "specifyBody": "json",
+        "method": "POST",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "push-posts-queue",
+      "name": "POST to posts_queue (W14)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, draft_id: $json.draft_id, status: $json.action, message: 'Draft ' + $json.action + ' successfully' } }}"
+      },
+      "id": "resp-approve",
+      "name": "Response /draft-approve",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, items: $json, total: $input.first().json.total, filters: $input.first().json.filters } }}"
+      },
+      "id": "resp-list",
+      "name": "Response /draft-list",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, count: $json.count, message: $json.count + ' draft(s) approved successfully' } }}"
+      },
+      "id": "resp-bulk",
+      "name": "Response /draft-bulk-approve",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        900,
+        600
+      ]
+    },
+    {
+      "id": "webhook-approve-hmac-check",
+      "name": "HMAC-webhook-approve",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// HMAC-SHA256 Webhook Authentication (inline)\n// Validates X-AdOff-Signature header against raw body\n// Returns ok:true + extracted payload, or blocks with 401\n\nconst crypto = require('crypto');\nconst secret = process.env.WEBHOOK_HMAC_SECRET;\n\nif (!secret) {\n  throw new Error('WEBHOOK_HMAC_SECRET not configured');\n}\n\n// Extract signature from headers\nconst signature = $json.$headers?.['x-adoff-signature'] || $json.headers?.['x-adoff-signature'];\nconst body = $json.$body || $json.body || JSON.stringify($json);\n\n// In DEV_MODE (env), skip check\nif (process.env.DEV_MODE === 'true') {\n  return [{ json: { ...($json.body || $json), __hmac_skipped: true } }];\n}\n\nif (!signature) {\n  return [{ json: { __hmac_error: 'missing_signature_header', statusCode: 401 } }];\n}\n\n// Calculate expected HMAC\nlet bodyForHmac = body;\nif (typeof body === 'object') {\n  bodyForHmac = JSON.stringify(body);\n}\n\nconst expectedHmac = crypto\n  .createHmac('sha256', Buffer.from(secret, 'hex'))\n  .update(bodyForHmac, 'utf8')\n  .digest('hex');\n\n// Timing-safe comparison\ntry {\n  crypto.timingSafeEqual(\n    Buffer.from(signature, 'hex'),\n    Buffer.from(expectedHmac, 'hex')\n  );\n  // Valid signature: continue with payload\n  return [{ json: { ...($json.body || $json), __hmac_validated: true } }];\n} catch (err) {\n  return [{ json: { __hmac_error: 'invalid_signature', statusCode: 401 } }];\n}"
+      }
+    },
+    {
+      "id": "webhook-approve-hmac-if",
+      "name": "HMAC-Valid-webhook-approve",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-hmac-ok",
+              "operator": {
+                "type": "is_empty",
+                "operation": "isEmpty"
+              },
+              "leftValue": "={{$node[\"HMAC-webhook-approve\"].json.__hmac_error}}",
+              "rightValue": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "webhook-approve-hmac-error",
+      "name": "HMAC-Error-webhook-approve",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        720,
+        450
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, reason: \"unauthorized\" } }}",
+        "responseCode": 401
+      }
+    },
+    {
+      "id": "webhook-list-hmac-check",
+      "name": "HMAC-webhook-list",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// HMAC-SHA256 Webhook Authentication (inline)\n// Validates X-AdOff-Signature header against raw body\n// Returns ok:true + extracted payload, or blocks with 401\n\nconst crypto = require('crypto');\nconst secret = process.env.WEBHOOK_HMAC_SECRET;\n\nif (!secret) {\n  throw new Error('WEBHOOK_HMAC_SECRET not configured');\n}\n\n// Extract signature from headers\nconst signature = $json.$headers?.['x-adoff-signature'] || $json.headers?.['x-adoff-signature'];\nconst body = $json.$body || $json.body || JSON.stringify($json);\n\n// In DEV_MODE (env), skip check\nif (process.env.DEV_MODE === 'true') {\n  return [{ json: { ...($json.body || $json), __hmac_skipped: true } }];\n}\n\nif (!signature) {\n  return [{ json: { __hmac_error: 'missing_signature_header', statusCode: 401 } }];\n}\n\n// Calculate expected HMAC\nlet bodyForHmac = body;\nif (typeof body === 'object') {\n  bodyForHmac = JSON.stringify(body);\n}\n\nconst expectedHmac = crypto\n  .createHmac('sha256', Buffer.from(secret, 'hex'))\n  .update(bodyForHmac, 'utf8')\n  .digest('hex');\n\n// Timing-safe comparison\ntry {\n  crypto.timingSafeEqual(\n    Buffer.from(signature, 'hex'),\n    Buffer.from(expectedHmac, 'hex')\n  );\n  // Valid signature: continue with payload\n  return [{ json: { ...($json.body || $json), __hmac_validated: true } }];\n} catch (err) {\n  return [{ json: { __hmac_error: 'invalid_signature', statusCode: 401 } }];\n}"
+      }
+    },
+    {
+      "id": "webhook-list-hmac-if",
+      "name": "HMAC-Valid-webhook-list",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-hmac-ok",
+              "operator": {
+                "type": "is_empty",
+                "operation": "isEmpty"
+              },
+              "leftValue": "={{$node[\"HMAC-webhook-list\"].json.__hmac_error}}",
+              "rightValue": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "webhook-list-hmac-error",
+      "name": "HMAC-Error-webhook-list",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        720,
+        450
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, reason: \"unauthorized\" } }}",
+        "responseCode": 401
+      }
+    },
+    {
+      "id": "webhook-bulk-hmac-check",
+      "name": "HMAC-webhook-bulk",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "// HMAC-SHA256 Webhook Authentication (inline)\n// Validates X-AdOff-Signature header against raw body\n// Returns ok:true + extracted payload, or blocks with 401\n\nconst crypto = require('crypto');\nconst secret = process.env.WEBHOOK_HMAC_SECRET;\n\nif (!secret) {\n  throw new Error('WEBHOOK_HMAC_SECRET not configured');\n}\n\n// Extract signature from headers\nconst signature = $json.$headers?.['x-adoff-signature'] || $json.headers?.['x-adoff-signature'];\nconst body = $json.$body || $json.body || JSON.stringify($json);\n\n// In DEV_MODE (env), skip check\nif (process.env.DEV_MODE === 'true') {\n  return [{ json: { ...($json.body || $json), __hmac_skipped: true } }];\n}\n\nif (!signature) {\n  return [{ json: { __hmac_error: 'missing_signature_header', statusCode: 401 } }];\n}\n\n// Calculate expected HMAC\nlet bodyForHmac = body;\nif (typeof body === 'object') {\n  bodyForHmac = JSON.stringify(body);\n}\n\nconst expectedHmac = crypto\n  .createHmac('sha256', Buffer.from(secret, 'hex'))\n  .update(bodyForHmac, 'utf8')\n  .digest('hex');\n\n// Timing-safe comparison\ntry {\n  crypto.timingSafeEqual(\n    Buffer.from(signature, 'hex'),\n    Buffer.from(expectedHmac, 'hex')\n  );\n  // Valid signature: continue with payload\n  return [{ json: { ...($json.body || $json), __hmac_validated: true } }];\n} catch (err) {\n  return [{ json: { __hmac_error: 'invalid_signature', statusCode: 401 } }];\n}"
+      }
+    },
+    {
+      "id": "webhook-bulk-hmac-if",
+      "name": "HMAC-Valid-webhook-bulk",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-hmac-ok",
+              "operator": {
+                "type": "is_empty",
+                "operation": "isEmpty"
+              },
+              "leftValue": "={{$node[\"HMAC-webhook-bulk\"].json.__hmac_error}}",
+              "rightValue": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "webhook-bulk-hmac-error",
+      "name": "HMAC-Error-webhook-bulk",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        720,
+        450
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, reason: \"unauthorized\" } }}",
+        "responseCode": 401
+      }
+    }
+  ],
+  "connections": {
+    "Webhook /draft-approve": {
+      "main": [
+        [
+          {
+            "node": "HMAC-webhook-approve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook /draft-list": {
+      "main": [
+        [
+          {
+            "node": "HMAC-webhook-list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook /draft-bulk-approve": {
+      "main": [
+        [
+          {
+            "node": "HMAC-webhook-bulk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule every 30 min": {
+      "main": [
+        [
+          {
+            "node": "DB fetch approved (unpublished)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse approve request": {
+      "main": [
+        [
+          {
+            "node": "DB update single draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse list request": {
+      "main": [
+        [
+          {
+            "node": "DB fetch drafts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse bulk-approve request": {
+      "main": [
+        [
+          {
+            "node": "DB update bulk drafts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB update single draft": {
+      "main": [
+        [
+          {
+            "node": "Response /draft-approve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB fetch drafts": {
+      "main": [
+        [
+          {
+            "node": "DB count total",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB count total": {
+      "main": [
+        [
+          {
+            "node": "Response /draft-list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB update bulk drafts": {
+      "main": [
+        [
+          {
+            "node": "Response /draft-bulk-approve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB fetch approved (unpublished)": {
+      "main": [
+        [
+          {
+            "node": "Group by asset_type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group by asset_type": {
+      "main": [
+        [
+          {
+            "node": "Route caption -> posts_queue",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Format Telegram notify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route caption -> posts_queue": {
+      "main": [
+        [
+          {
+            "node": "POST to posts_queue (W14)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Telegram notify": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram notify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HMAC-webhook-approve": {
+      "main": [
+        [
+          {
+            "node": "HMAC-Valid-webhook-approve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HMAC-Valid-webhook-approve": {
+      "main": [
+        [
+          {
+            "node": "Parse approve request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HMAC-Error-webhook-approve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HMAC-Error-webhook-approve": {
+      "main": [
+        []
+      ]
+    },
+    "HMAC-webhook-list": {
+      "main": [
+        [
+          {
+            "node": "HMAC-Valid-webhook-list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HMAC-Valid-webhook-list": {
+      "main": [
+        [
+          {
+            "node": "Parse list request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HMAC-Error-webhook-list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HMAC-Error-webhook-list": {
+      "main": [
+        []
+      ]
+    },
+    "HMAC-webhook-bulk": {
+      "main": [
+        [
+          {
+            "node": "HMAC-Valid-webhook-bulk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HMAC-Valid-webhook-bulk": {
+      "main": [
+        [
+          {
+            "node": "Parse bulk-approve request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HMAC-Error-webhook-bulk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HMAC-Error-webhook-bulk": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule every 10 min (auto-approve loop)": {
+      "main": [
+        [
+          {
+            "node": "DB fetch draft (auto-approve candidates)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB fetch draft (auto-approve candidates)": {
+      "main": [
+        [
+          {
+            "node": "Get auto_approve_threshold",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get auto_approve_threshold": {
+      "main": [
+        [
+          {
+            "node": "Prepare LLM scoring requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare LLM scoring requests": {
+      "main": [
+        [
+          {
+            "node": "Gemini Flash - Score draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Flash - Score draft": {
+      "main": [
+        [
+          {
+            "node": "Parse LLM score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse LLM score": {
+      "main": [
+        [
+          {
+            "node": "Throttle 2sec (rate limit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Throttle 2sec (rate limit)": {
+      "main": [
+        [
+          {
+            "node": "Decide: auto_approve / needs_review / reject",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decide: auto_approve / needs_review / reject": {
+      "main": [
+        [
+          {
+            "node": "DB update draft (auto-approve decision)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check if send Telegram alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB update draft (auto-approve decision)": {
+      "main": [
+        []
+      ]
+    },
+    "Check if send Telegram alert": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram alert (auto-approve)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Telegram alert (auto-approve)": {
+      "main": [
+        []
+      ]
+    },
+    "Metric: daily auto_approve_rate": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true
+  },
+  "active": false,
+  "id": "w25-approve-publish"
+}

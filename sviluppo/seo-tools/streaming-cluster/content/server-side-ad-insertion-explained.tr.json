@@ -1,0 +1,96 @@
+{
+  "slug": "server-side-ad-insertion-explained",
+  "lang": "tr",
+  "title": "Sunucu Tarafı Reklam Ekleme: Neden Engelleme Araçları… | AdOff",
+  "description": "SSAI, reklamları video akışına doğrudan ekler; bu nedenle engellenecek ayrı bir reklam isteği yoktur.",
+  "h1": "Sunucu Tarafı Reklam Ekleme Nedir: Neden Ağ Reklam Engelleme Araçları Bu Reklamları Göremez",
+  "answer": "Hayır — sunucu tarafında reklam ekleme (SSAI), istek tabanlı reklam engelleyicilerle engellenemez, çünkü reklam, içerikle aynı video akışına sunucudan ayrılmadan önce eklenir. Tarayıcınız, ayrı bir reklam istemi engellenebilecek bir durum olmaksızın, tek bir sürekli manifest ve tek bir sürekli akış indirir.",
+  "sections": [
+    {
+      "h2": "Sunucu tarafı reklam ekleme nedir aslında",
+      "body": [
+        "<p>Sunucu tarafı reklam ekleme (SSAI), aynı zamanda reklam dikişleme olarak da bilinir; bu, video sağlayıcısının reklamları ve içeriği <strong>sunucu tarafında</strong> birleştirerek tek bir video akışı oluşturduğu ve bu akışı izleyiciye ilettiği bir tekniktir. İzleyicinin cihazı, zaten reklamları içeren sürekli bir akışı alır — bunun aksine, istemci tarafı reklam ekleme (CSAI) yönteminde, oynatıcı önce içeriği yükler ve ardından her aralık için ayrı ayrı bir reklam sunucusuna istekte bulunur.</p>",
+        "<p>SSAI, teknik belgelerde “dikişli manifestolar” veya “tek manifestolu teslimat” olarak tanımlanacaktır. Canlı yayınlar ve abonelikli video hizmetlerinin reklam destekli katmanları için baskın yaklaşımdır, çünkü bypass edilmesi daha zordur ve her cihazda aynı şekilde davranır.</p>"
+      ]
+    },
+    {
+      "h2": "HLS ve DASH manifestlerinde nasıl çalışır",
+      "body": [
+        "<p>Modern video teslimatı, uyumlu akış formatlarını — HLS (<code>.m3u8</code> oynatma listeleri) ve DASH (<code>.mpd</code> manifesteleri) — kullanır. Akış, kısa segmentlere (genellikle her biri birkaç saniye) bölünür ve manifeste, oynatma sırasına göre segmentleri listeler. İstemci tarafındaki oynatıcı bu listeyi takip eder.</p>",
+        "<p>SSAI ile, reklam segmentleri doğrudan o segment listesine eklenir. Oynatıcınıza verilen manifest, bir içerik segmentinin yerine tam olarak reklam segmentinin görüneceği şekilde yeniden yazılır. Bazı uygulamalar, kodlama değişikliklerini belirtmek için kesinti işaretleyicilerini (<code>#EXT-X-DISCONTINUITY</code> HLS’de) kullanır, ancak oynatıcının legítim olarak oynattığı şey bu oynatma listesidir. Oynatıcı açısından bakıldığında, reklam <em>programın bir parçasıdır</em>.</p>"
+      ]
+    },
+    {
+      "h2": "İsteğe dayalı reklam engelleyicilerin ne engelleyebileceğinin olmaması",
+      "body": [
+        "<p>Uzantı tabanlı bir reklam engelleyici, ağ katmanında çalışır: bilinen reklam alan adlarına yönelik istekleri eşleştirir ve bunları engeller veya yeniden yazar. Bu model, reklamın içeriğin ayrı bir isteği olarak, ayrı bir alandan gelip içerikten ayırt edilebileceğini varsayar. SSAI, bu varsayımı tamamen ortadan kaldırır.</p>",
+        "<p>İğnelenmiş reklamlarda, reklamı taşıyan segmentler, genellikle aynı etki alanı altında, programın aynı manifest dosyası içinde yer alan aynı içerik dağıtım ağından gelir. Bu isteği engellemek, videonun kendisini engellemek anlamına gelir. Buna rağmen bunu yapmaya çalışan bir reklam engelleyici, genellikle oynatmayı bozar veya Canlı akışlarda kullanıcıların bildirdiği donmuş yer tutucu karelerle sonuçlanır. Bu, geçici bir eksiklik değil, yapısal bir sınırdır: ağ isteklerini filtreleyerek çalışan herhangi bir araç, bir iğnelenmiş reklamı etrafındaki içerikten ayırt edemez.</p>"
+      ]
+    },
+    {
+      "h2": "İstemci tarafı ekleme: reklam engelleyicilerin başa çıkabildiği model",
+      "body": [
+        "<p>Karşılaştırma için: istemci tarafında reklam ekleme yönteminde, video oynatıcı, oynatma sırasında bir reklam SDK’sına çağrı yapar; SDK, reklam dosyalarını reklam verenlerin alan adlarından çeker ve oynatıcı, bunları bir slot içinde oynatır. Bu istekler görünür, ayrı ve engellenebilir durumdadır. AdOff, web genelinde kullanılan video reklam SDK’sını nötrleştirerek (yani bu SDK’yı etkisiz hale getirerek), oynatıcının içeriğe doğrudan geri dönmesini sağlar.</p>",
+        "<p>Bu, reklam engelleyicilerin hâlâ web’in büyük bölümlerinde, özellikle istemci tarafında reklam çağrıları yapan video oynatıcıları gömmüş birçok sitede işe yaramasının ve aynı engelleyicilerin sunucu tarafında birleştirme yapan Canlı Yayın platformlarında ve abonelik hizmetlerinde neden işe yaramadığının nedenidir.</p>"
+      ]
+    },
+    {
+      "h2": "Dikişli reklamları kaldırmak için ne gerekir",
+      "body": [
+        "<p>İğnelenmiş bir reklamı kaldırmak, ağ değil, akışın anlaşılmasını gerektirir: kesinti işaretlerini ve segment-sınır desenlerini algılamak, reklam segmentlerini çıkarmak için manifest dosyasını yeniden yazmak ve sağlayıcının düzenini değiştirmeyeceğini ummak. Doğası gereği savunmasızdır — sağlayıcı tarafında herhangi bir değişiklik, bu geçici çözümü bozar ve Canlı akışlarda yeniden yazılan oynatıcı genellikle geride kalır veya bozuk bir yer tutucu gösterir.</p>",
+        "<p>Diğer, güvenilir yol tamamen teknik değildir: sağlayıcılar, abonelik tieri reklam destekli olduğu için reklamları ekler; bu nedenle reklamsız bir plan seçmek, onları tasarım gereği ortadan kaldırır. Geriye kalan her şey, izleme deneyimini çoğunlukla bozan bir silah yarışıdır.</p>"
+      ]
+    },
+    {
+      "h2": "AdOff’in konumu",
+      "body": [
+        "<p>AdOff, statik filtreleme kurallarıyla ağ reklamlarını engelleyen, sayfadaki reklam unsurlarını gizleyen ve istemci tarafı video reklam SDK’sını, içeriği hemen devam ettiren bir stub ile değiştirerek etkisiz hale getiren ücretsiz bir tarayıcı eklentisidir (Chrome, Firefox, Safari, Edge, Opera). Sadece uygulamaların web oynatıcılarında, reklamların istemci tarafında olduğu durumlarda çalışır; sunucu tarafında birleştirilmiş akışlardan reklamları kaldırmayı amaçlamaz ve bu akışları bozmamak için kasıtlı olarak abonelik video oynatıcılarını etkilemez.</p>",
+        "<p>Bu sayfanın amacı, bir web sitesinin hangi modeli kullandığını bilmek; bir uzantıyı kurmadan önce o uzantının size yardımcı olup olamayacağını öğrenmektir.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "SSAI ve CSAI arasındaki fark nedir?",
+      "a": "İstemci tarafı reklam ekleme (CSAI) yönteminde, oynatıcı oynatma zamanında reklamları ayrı olarak ister; bu nedenle bu istekler reklam engelleyiciler tarafından görülebilir. Sunucu tarafı reklam ekleme (SSAI) yönteminde ise reklamlar, teslimat öncesinde sunucuda video akışına birleştirilir; bu nedenle engellenecek ayrı bir reklam isteği mevcut değildir."
+    },
+    {
+      "q": "Herhangi bir tarayıcı eklentisi SSAI reklamlarını engelleyebilir mi?",
+      "a": "Ağ isteklerini filtreleyerek çalışan hiçbir uzantı, akışı bozmadan eklenmiş bir reklamı kaldıramaz, çünkü reklam ve içerik aynı manifest ve aynı segmentlerde birlikte iletilir. Bunu deneyen araçlar genellikle donmuş kareler, kalite düşüşleri veya oynatma hatalarına neden olur."
+    },
+    {
+      "q": "Canlı yayınlar neden normal reklamlar yerine SSAI kullanır?",
+      "a": "Canlı yayında, her izleyici için reklam aralığının senkronize kalması ve oynatmanın kesintisiz devam etmesi gerekir; bu durum sunucu tarafı birleştirme ile garanti altına alınır. Ayrıca bu yöntem, uzantıların bulunmadığı akıllı TV’ler dahil her cihazda aynı şekilde çalışır."
+    },
+    {
+      "q": "SSAI, atlanamayan bir reklamla aynı mıdır?",
+      "a": "Tam olarak hayır. Atlama, akış meta verileri tarafından kontrol edilen bir oynatıcı kararıdır. SSAI ile reklamlar akışın bir parçası haline geldiğinden, hem izleyici hem de tarayıcı uzantısı, bunları atlamak veya kaldırmak için bir kontrol noktasına sahip olmaz."
+    },
+    {
+      "q": "AdOff, SSAI kullanan sitelerde çalışır mı?",
+      "a": "Bu özel akışlarda hayır — ve AdOff böyle bir iddia da bulunmaz. Aynı sitelerin video olmayan reklamlarında ve tarayıcınızın geri kalanında (görsel reklamlar, izleyici takibi, istemci tarafı video reklam SDK’ları), AdOff reklamları normal şekilde engeller ve gizler."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Akış içi reklam engelleme: ne işe yarar ve ne işe yaramaz"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "İstemci tarafı video reklam SDK’larının nasıl etkisizleştirildiği"
+    },
+    {
+      "href": "/twitch-ad-blocker",
+      "text": "Twitch reklamları: neden eklentiler Canlı Yayın’da başarısız olur"
+    }
+  ],
+  "cta": {
+    "h3": "Engellenebilen reklamları engelleyin",
+    "p": "AdOff, eklenen (stitched) reklamları kaldıramaz — dürüst bir çözüm bunu yapamaz. Ancak günlük tarayıcınızda karşılaştığınız ekran reklamları, izleyici izleme ve istemci tarafı video reklamları farklı bir durumdur ve AdOff bunları ücretsiz, hesap gerektirmeden engeller.",
+    "btn": "AdOff’u yükleyin — ücretsizdir"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

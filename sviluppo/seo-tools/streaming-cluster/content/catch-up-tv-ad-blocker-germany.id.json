@@ -1,0 +1,96 @@
+{
+  "slug": "catch-up-tv-ad-blocker-germany",
+  "lang": "id",
+  "title": "Blokir Iklan di ZDF Mediathek, ARD, RTL, Joyn | AdOff",
+  "description": "AdOff menonaktifkan iklan video di pemutar *catch-up* berbahasa Jerman: ZDF, ARD Mediathek, RTL+, Joyn, ServusTV, dan ORF. Ekstensi browser gratis, tanpa perlu akun.",
+  "h1": "Pemblokir Iklan untuk TV Catch-Up Jerman: ZDF, ARD, RTL, Joyn",
+  "answer": "AdOff menghapus iklan pra-putar dan iklan tengah-putar dari platform catch-up TV berbahasa Jerman di browser, dalam sebagian besar kasus. Alat ini menggantikan Google IMA ad SDK yang dimuat oleh pemutar dengan stub yang langsung melanjutkan pemutaran, sehingga ZDF, ARD, atau Joyn berjalan tanpa jeda iklan. Cakupannya mengikuti SDK: alat ini berlaku selama layanan-layanan tersebut tetap menggunakan integrasi pemutar standar.",
+  "sections": [
+    {
+      "h2": "Layanan berbahasa Jerman yang dicakup",
+      "body": [
+        "<p>Stasiun penyiaran publik dan komersial di pasar berbahasa Jerman memonetisasi mediatheks mereka dengan iklan video yang disajikan melalui Google IMA SDK standar. AdOff mencakup:</p>",
+        "<ul><li><strong>ZDF</strong> (zdf.de)</li><li><strong>ARD dan ARD Mediathek</strong> (ard.de, ardmediathek.de)</li><li><strong>RTL dan RTL+</strong> (rtl.de, rtlplus.de)</li><li><strong>Joyn</strong> (joyn.de)</li><li><strong>ServusTV</strong> (servustv.com)</li><li><strong>ORF</strong> (orf.at) — Austria, bagian dari pasar bahasa Jerman yang sama</li></ul>"
+      ]
+    },
+    {
+      "h2": "Cara stub menangani jeda iklan",
+      "body": [
+        "<p>Pemutar mediathek Jerman biasanya mengintegrasikan IMA SDK untuk menjadwalkan pre-roll dan mid-roll. AdOff mengalihkan permintaan skrip SDK ke stub yang disertakan. Ketika pemutar meminta stub untuk memulai jeda iklan, stub segera membalas dengan sinyal lanjut konten, dan pemutaran dilanjutkan tanpa jeda tersebut.</p>",
+        "<p>Stream video tidak pernah diubah — hanya lapisan orkestrasi iklan yang diganti, secara lokal, di dalam browser Anda.</p>"
+      ]
+    },
+    {
+      "h2": "Stasiun penyiaran publik, stasiun penyiaran swasta, mekanisme yang sama",
+      "body": [
+        "<p>Mungkin terasa aneh bahwa sebuah ekstensi browser dapat memengaruhi baik mediatheks publik (ZDF, ARD) maupun pemutar komersial (RTL+, Joyn, ServusTV). Alasannya adalah semua pemain tersebut menggunakan SDK iklan yang sama untuk pemutar browser mereka. Di mana pun SDK standar digunakan, netralisasi yang sama berlaku. Inilah sebabnya mengapa layanan catch-up TV berperilaku berbeda dari streaming berlangganan, di mana iklan disisipkan di sisi server dan sengaja dikeluarkan dari cakupan ekstensi.</p>"
+      ]
+    },
+    {
+      "h2": "Apa lagi yang difilter oleh AdOff di situs-situs ini",
+      "body": [
+        "<p>Di sekitar pemutar, ekstensi menjalankan 180 aturan jaringan statis terhadap domain iklan dan pelacakan, serta filter kosmetik CSS/DOM yang menyembunyikan banner dan overlay promosi. Di halaman Joyn atau RTL, ini menghilangkan kotak promosi dan billboard dari antarmuka, bukan hanya gangguan video.</p>"
+      ]
+    },
+    {
+      "h2": "Batasan yang jujur",
+      "body": [
+        "<ul><li>Jika penyiar beralih ke <strong>penyisipan iklan di sisi server (SSAI)</strong>, iklan disisipkan langsung ke dalam stream, sehingga stub tidak berpengaruh.</li><li>Hanya untuk browser desktop — <strong>aplikasi native dan TV pintar</strong> berada di luar jangkauan.</li><li>Beberapa <strong>siaran langsung dan olahraga</strong> menggunakan jalur berbeda.</li><li>Pemutar sering berubah; cakupan dipertahankan seiring waktu, bukan ditetapkan sekali dan untuk selamanya.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Gratis, tanpa pendaftaran, lima browser",
+      "body": [
+        "<p>AdOff adalah ekstensi Manifest V3 gratis tanpa akun dan tanpa masa percobaan. Ekstensi ini berjalan di Chrome, Firefox, Safari, Edge, dan Opera. Pasang, aktifkan perlindungan, lalu buka mediatheks Anda seperti biasa.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Apakah extension ini menghapus iklan dari ZDF Mediathek?",
+      "a": "Dalam kebanyakan kasus, ya: ketika pemutar web ZDF memuat iklan melalui Google IMA SDK, AdOff menggantinya dengan stub yang langsung melanjutkan program. Cakupannya mengikuti SDK — jika ZDF mengubah teknologi penyisipan, hasilnya bisa berbeda."
+    },
+    {
+      "q": "Apakah saya bisa melewati iklan di Joyn secara gratis?",
+      "a": "AdOff adalah ekstensi browser gratis yang menonaktifkan SDK iklan IMA di pemutar web Joyn, sehingga iklan biasanya tidak diputar. Langganan berbayar Joyn merupakan produk komersial terpisah; AdOff tidak berinteraksi dengan akun Anda."
+    },
+    {
+      "q": "Apakah extension ini berfungsi di ORF dan ServusTV di Austria?",
+      "a": "Ya, keduanya termasuk dalam kelompok bahasa Jerman yang tercakup. Mekanisme yang sama berlaku ketika pemutar browser mereka meminta SDK iklan standar."
+    },
+    {
+      "q": "Apakah AdOff menggantikan iuran Rundfunkbeitrag ARD/ZDF?",
+      "a": "Tidak. Ekstensi ini hanya memengaruhi iklan di dalam pemutar dan di halaman web. Rundfunkbeitrag adalah kontribusi wajib berdasarkan hukum dan sama sekali tidak terkait dengan pemblokiran iklan browser."
+    },
+    {
+      "q": "Bagaimana dengan aplikasi TV pintar ZDF atau Joyn?",
+      "a": "AdOff hanya berfungsi di browser desktop. Aplikasi TV pintar, aplikasi seluler, dan stick streaming berada di luar cakupannya."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Cara kerja pemblokiran iklan streaming"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Penjelasan pemblokiran iklan pada IMA SDK"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-france",
+      "text": "Pemblokir iklan untuk layanan catch-up TV Prancis"
+    }
+  ],
+  "cta": {
+    "h3": "Mediathek tanpa gangguan iklan",
+    "p": "Pasang AdOff dan biarkan stub menangani SDK iklan di ZDF, ARD, RTL+, dan Joyn.",
+    "btn": "Pasang AdOff secara gratis"
+  },
+  "report": {
+    "intro": "Apakah platform Jerman atau Austria belum terdaftar di sini? Jika gangguan tetap muncul di https://adoff.app/catch-up-tv-ad-blocker-germany, laporkan layanan tersebut. Laporan akan menjadi panduan bagi kami untuk menentukan stasiun penyiaran mana yang akan kami dukung selanjutnya.",
+    "btn_text": "Laporkan layanan yang belum tersedia",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

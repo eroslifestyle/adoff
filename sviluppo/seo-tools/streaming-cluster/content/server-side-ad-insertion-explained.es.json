@@ -1,0 +1,96 @@
+{
+  "slug": "server-side-ad-insertion-explained",
+  "lang": "es",
+  "title": "Inserción de anuncios del servidor: por qué los bloqueadores… | AdOff",
+  "description": "SSAI integra anuncios directamente en la transmisión, sin solicitudes independientes que bloquear: los bloqueadores de red no pueden verlos.",
+  "h1": "Inserción de anuncios del lado del servidor explicada: por qué los bloqueadores de anuncios de red no pueden ver estos anuncios",
+  "answer": "No: la inserción de anuncios del lado del servidor (SSAI) no puede bloquearse mediante bloqueadores de anuncios basados en solicitudes, ya que el anuncio se integra en la misma transmisión de video que el contenido antes de salir del servidor. Su navegador descarga un único manifiesto continuo y una única transmisión continua; no existe ninguna solicitud de anuncio independiente que pueda interceptarse.",
+  "sections": [
+    {
+      "h2": "Qué es realmente la inserción de anuncios del lado del servidor",
+      "body": [
+        "<p>La inserción de anuncios del lado del servidor (SSAI), también conocida como «stitching» de anuncios, es una técnica en la que el proveedor de video fusiona los anuncios y el contenido en un único flujo de video <strong>en el servidor</strong>, antes de la entrega. El dispositivo del espectador recibe un único flujo continuo que ya contiene los anuncios, a diferencia de la inserción de anuncios del lado del cliente (CSAI), en la que el reproductor carga el contenido y luego realiza solicitudes independientes a un servidor de anuncios para cada interrupción.</p>",
+        "<p>Verá que la SSAI se describe en documentos técnicos como «manifiestos unidos» o «entrega con un solo manifiesto». Es el enfoque dominante para la transmisión en vivo y para las versiones con publicidad de los servicios de video bajo suscripción, ya que es más difícil de eludir y se comporta de forma idéntica en todos los dispositivos.</p>"
+      ]
+    },
+    {
+      "h2": "Cómo funciona en los manifiestos HLS y DASH",
+      "body": [
+        "<p>La entrega moderna de video utiliza formatos de streaming adaptativo: HLS (listas <code>.m3u8</code>) y DASH (manifiestos <code>.mpd</code>). El flujo se divide en segmentos cortos (normalmente de unos pocos segundos cada uno), y el manifiesto enumera los segmentos en orden de reproducción. Un reproductor del lado del cliente sigue esa lista.</p>",
+        "<p>Con la SSAI, los segmentos de anuncios se insertan directamente en esa lista de segmentos. El manifiesto entregado a su reproductor se reescribe para que un segmento publicitario aparezca exactamente donde debería estar un segmento de contenido. Algunas implementaciones utilizan marcadores de discontinuidad (<code>#EXT-X-DISCONTINUITY</code> en HLS) para indicar cambios en la codificación, pero es la propia lista la que el reproductor reproduce legítimamente. Desde el punto de vista del reproductor, el anuncio <em>es</em> parte del programa.</p>"
+      ]
+    },
+    {
+      "h2": "Por qué los bloqueadores de anuncios basados en solicitudes no tienen nada que interceptar",
+      "body": [
+        "<p>Un bloqueador de anuncios basado en una extensión opera en la capa de red: coincide con solicitudes a dominios publicitarios conocidos y las bloquea o reescribe. Este modelo asume que el anuncio llega como una solicitud independiente, desde un dominio distinto, que se puede diferenciar claramente del contenido. La SSAI elimina por completo esa suposición.</p>",
+        "<p>Con los anuncios unidos, los segmentos que transportan la publicidad provienen de la misma red de entrega de contenido, a menudo bajo el mismo dominio, dentro del mismo manifiesto que el programa. Bloquear la solicitud significaría bloquear el propio video. Un bloqueador de anuncios que lo intente, por lo general interrumpe la reproducción o, en transmisiones en vivo, produce los fotogramas congelados que los usuarios reportan. Se trata de una limitación estructural, no de una brecha temporal: cualquier herramienta que funcione filtrando solicitudes de red no puede distinguir un anuncio unido del contenido circundante.</p>"
+      ]
+    },
+    {
+      "h2": "Inserción del lado del cliente: el modelo que los bloqueadores de anuncios pueden manejar",
+      "body": [
+        "<p>Para contrastar: en la inserción de anuncios del lado del cliente, el reproductor de video llama a un SDK de anuncios durante la reproducción, el SDK obtiene los archivos creativos de dominios publicitarios y el reproductor los reproduce en un espacio asignado. Esas solicitudes son visibles, independientes y bloqueables. Neutralizar el SDK de anuncios —lo que hace AdOff con el SDK de publicidad de video utilizado en toda la web— hace que el reproductor vuelva inmediatamente al contenido.</p>",
+        "<p>Por eso los bloqueadores de anuncios siguen funcionando en gran parte de la web, incluidos muchos sitios que incrustan reproductores de video con llamadas de anuncios del lado del cliente, y por qué los mismos bloqueadores fallan en plataformas de transmisión en vivo y servicios de suscripción que usan unión del lado del servidor.</p>"
+      ]
+    },
+    {
+      "h2": "Qué se necesitaría para eliminar los anuncios integrados",
+      "body": [
+        "<p>Eliminar un anuncio unido requiere comprender el flujo, no la red: detectar marcadores de discontinuidad y patrones de límites de segmentos, reescribir el manifiesto para eliminar los segmentos publicitarios y esperar que el proveedor no cambie la estructura. Es frágil por naturaleza: cualquier cambio del lado del proveedor rompe la solución alternativa, y en transmisiones en vivo, el reproductor reescrito suele quedarse atrás o mostrar un marcador de posición degradado.</p>",
+        "<p>La otra vía, fiable, no es técnica en absoluto: los proveedores unen anuncios porque la versión de suscripción está respaldada por publicidad, por lo que elegir un plan sin publicidad los elimina por diseño. Todo lo demás es una carrera armamentista que, en su mayor parte, degrada la experiencia de visualización.</p>"
+      ]
+    },
+    {
+      "h2": "Dónde se encuentra AdOff",
+      "body": [
+        "<p>AdOff es una extensión gratuita para navegador (Chrome, Firefox, Safari, Edge, Opera) que bloquea la publicidad de red mediante reglas de filtrado estático, oculta los elementos publicitarios en la página y neutraliza el SDK de anuncios de video del lado del cliente reemplazándolo por un «stub» que reanuda inmediatamente el contenido. Funciona únicamente en los reproductores web de aplicaciones donde los anuncios son del lado del cliente; no pretende eliminar anuncios de flujos unidos del lado del servidor y, deliberadamente, no interfiere con los reproductores de video de suscripción para evitar romperlos.</p>",
+        "<p>Esta honestidad es el propósito de esta página: saber qué modelo utiliza un sitio le permite saber si una extensión puede ayudarle antes de instalarla."
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "¿Cuál es la diferencia entre SSAI y CSAI?",
+      "a": "En la inserción de anuncios del lado del cliente (CSAI), el reproductor solicita los anuncios por separado en el momento de la reproducción, por lo que dichas solicitudes son visibles para los bloqueadores de anuncios. En la inserción de anuncios del lado del servidor (SSAI), los anuncios se fusionan en la transmisión de video en el servidor antes de su entrega, por lo que no existe ninguna solicitud de anuncio independiente que pueda bloquearse."
+    },
+    {
+      "q": "¿Puede alguna extensión de navegador bloquear anuncios de SSAI?",
+      "a": "Ninguna extensión que funcione filtrando solicitudes de red puede eliminar un anuncio integrado sin romper la transmisión, ya que el anuncio y el contenido viajan juntos en el mismo manifiesto y en los mismos segmentos. Las herramientas que lo intentan suelen causar fotogramas congelados, caídas en la calidad o errores de reproducción."
+    },
+    {
+      "q": "¿Por qué las transmisiones en vivo utilizan SSAI en lugar de anuncios normales?",
+      "a": "La transmisión en vivo requiere que el intervalo de anuncios permanezca sincronizado para cada espectador y que la reproducción no se interrumpa, lo cual garantiza la integración del lado del servidor. Además, funciona de forma idéntica en todos los dispositivos, incluidas las televisiones inteligentes, donde no existen extensiones."
+    },
+    {
+      "q": "¿Es SSAI lo mismo que un anuncio que no se puede omitir?",
+      "a": "No exactamente. Saltar el anuncio es una decisión del reproductor, controlada por los metadatos de la transmisión. Con SSAI, los anuncios forman parte de la transmisión, por lo que ni el espectador ni una extensión de navegador tienen un punto de control para saltarlos o eliminarlos."
+    },
+    {
+      "q": "¿Funciona AdOff en sitios que utilizan SSAI?",
+      "a": "En esas transmisiones específicas, no — y AdOff no afirma lo contrario. En la publicidad no relacionada con video de los mismos sitios, así como en el resto de su navegación (anuncios display, rastreo, SDK de anuncios de video del lado del cliente), AdOff bloquea y oculta los anuncios como de costumbre."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Bloqueo de anuncios en streaming: qué funciona y qué no"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Cómo se neutralizan los SDK de anuncios de video del lado del cliente"
+    },
+    {
+      "href": "/twitch-ad-blocker",
+      "text": "Anuncios de Twitch: por qué las extensiones fallan en transmisiones en vivo"
+    }
+  ],
+  "cta": {
+    "h3": "Bloquea los anuncios que se pueden bloquear",
+    "p": "AdOff no puede eliminar los anuncios integrados (stitched ads); nada honesto puede hacerlo. Sin embargo, los anuncios de visualización, el seguimiento y los anuncios de video del lado del cliente en tu navegación cotidiana son otra historia, y AdOff los gestiona gratuitamente, sin necesidad de cuenta.",
+    "btn": "Instala AdOff: es gratuito"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

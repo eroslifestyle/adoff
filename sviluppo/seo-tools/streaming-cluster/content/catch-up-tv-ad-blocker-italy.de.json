@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-italy",
+  "lang": "de",
+  "title": "Werbung auf RaiPlay, Mediaset Infinity und La7 blockieren | AdOff",
+  "description": "AdOff blockiert Video-Werbeanzeigen auf RaiPlay, Mediaset Infinity, La7 und Discovery+ im Browser – kostenlos, ohne Registrierung, für Chrome, Firefox, Safari und…",
+  "h1": "Werbeblocker für italienische Catch-Up-TV-Dienste: RaiPlay, Infinity, La7",
+  "answer": "AdOff entfernt Pre-Roll- und Mid-Roll-Werbeunterbrechungen von italienischen Catch-up-TV-Plattformen im Browser – in den meisten Fällen. Es ersetzt das von den Playern angeforderte Google IMA Ad SDK durch einen lokalen Stub, der das Programm sofort fortsetzt, sodass Sie RaiPlay, Infinity oder La7 unterbrechungsfrei ansehen können.",
+  "sections": [
+    {
+      "h2": "Italienische Dienste abgedeckt",
+      "body": [
+        "<p>Italienische Rundfunkanbieter monetarisieren ihre kostenlosen On-Demand-Plattformen durch Video-Werbung, und ihre Player nutzen dabei standardmäßig das Google IMA SDK im Browser. AdOff deckt Folgendes ab:</p>",
+        "<ul><li><strong>RaiPlay</strong> (raiplay.it, rai.it)</li><li><strong>Mediaset Infinity</strong> (mediasetinfinity.mediaset.it, mediaset.it)</li><li><strong>La7</strong> (la7.it)</li><li><strong>Discovery+</strong> (discoveryplus.com)</li></ul>"
+      ]
+    },
+    {
+      "h2": "Der Mechanismus Schritt für Schritt",
+      "body": [
+        "<p>Wenn eine Seite von RaiPlay oder Infinity in Ihrem Browser geladen wird, lädt der Player normalerweise das IMA SDK von Googles Servern herunter, um Werbeunterbrechungen zu planen. AdOff leitet diese Anfrage auf einen Stub um, der in der Erweiterung enthalten ist. Dieser Stub spricht genug der Sprache des SDK, um den Player zufriedenzustellen, und sobald der Player um das Starten einer Werbung bittet, antwortet er sofort mit „Inhalt – Fortsetzung angefordert“.</p>",
+        "<p>Anschließend läuft das Programm ohne Unterbrechung. Es wird kein Video neu heruntergeladen, und nichts an der Content-Streaming-Quelle ändert sich.</p>"
+      ]
+    },
+    {
+      "h2": "Warum dies bei italienischen öffentlichen und kommerziellen Rundfunkanbietern funktioniert",
+      "body": [
+        "<p>Rai, Mediaset und Discovery monetarisieren On-Demand-Angebote durch Werbung, die über ein standardmäßiges SDK eingefügt wird – genau diese Ebene kann eine Browser-Erweiterung abfangen. Abonnementplattformen wie Prime Video hingegen fügen Werbung serverseitig direkt in den Stream ein, und diese werden bewusst von der Erweiterung ausgenommen, damit ihre Player weiterhin funktionieren. Der Bereich des On-Demand-Fernsehens ist derjenige, bei dem der technische Ansatz echte Wirkung entfaltet.</p>"
+      ]
+    },
+    {
+      "h2": "Netzwerk- und kosmetische Filterung als Ergänzung",
+      "body": [
+        "<p>Über den Player hinaus liefert AdOff 180 statische Netzwerkregeln, die Werbe- und Tracking-Domains blockieren, sowie einen CSS/DOM-Filter, der Banner und Werbe-Overlays auf den Seiten der Rundfunkanbieter ausblendet. Auf RaiPlay oder Infinity bedeutet dies weniger Werbeplakate und Werbe-Kacheln rund um das Programmangebot – nicht nur weniger Video-Unterbrechungen.</p>"
+      ]
+    },
+    {
+      "h2": "Was es nicht kann",
+      "body": [
+        "<p>Seien Sie realistisch hinsichtlich der Grenzfälle:</p>",
+        "<ul><li>Falls eine Plattform <strong>serverseitige Werbeeinfügung (SSAI)</strong> verwendet, wird die Werbung Teil des Video-Streams, und der Stub greift nicht mehr.</li><li>Es funktioniert <strong>nur im Desktop-Browser</strong>: RaiPlay-Smart-TV-Apps, Mobile-Apps und Casting sind nicht vorgesehen.</li><li>Einige <strong>Live-Veranstaltungen und Sportübertragungen</strong> nutzen unterschiedliche Übertragungspfade.</li><li>Player werden häufig aktualisiert; die Abdeckung wird aktiv gepflegt, bleibt aber niemals statisch.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Kostenlose Erweiterung, fünf Browser, keine Anmeldung erforderlich",
+      "body": [
+        "<p>AdOff ist eine Manifest-V3-Erweiterung, kostenlos und ohne Konto oder Testphase. Sie läuft auf Chrome, Firefox, Safari, Edge und Opera. Installieren Sie sie von der Website, lassen Sie den Schutz aktiviert, und öffnen Sie RaiPlay, Infinity oder La7 wie gewohnt."
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Entfernt AdOff Werbung von RaiPlay?",
+      "a": "In den meisten Fällen ja, wenn der RaiPlay-Web-Player seine Werbung über das Google IMA SDK lädt. Die Erweiterung ersetzt dieses SDK durch eine Stubsolution, die das Programm sofort fortsetzt. Wo Rai mit anderen Einfügemethoden experimentiert, kann die Abdeckung variieren."
+    },
+    {
+      "q": "Kann ich die Werbung bei Mediaset Infinity kostenlos überspringen?",
+      "a": "AdOff ist eine kostenlose Browser-Erweiterung, die das Werbe-SDK im Infinity-Web-Player neutralisiert, sodass Pre-Rolls und Mid-Rolls in der Regel nicht abgespielt werden. Sie greift nicht auf Ihr Infinity-Konto zu und bietet keine kostenpflichtige Version – alle Funktionen sind enthalten."
+    },
+    {
+      "q": "Wie sieht es mit La7 und Discovery+ aus?",
+      "a": "Beide werden auf dieselbe Weise abgedeckt: Die IMA-SDK-Anfrage wird auf einen lokalen Stub umgeleitet, und der Player setzt den Inhalt fort, anstatt die Werbepause abzuspielen. Dies gilt für die Desktop-Browser-Versionen der Dienste."
+    },
+    {
+      "q": "Beinhaltet dies die Rundfunkgebühr (Canone)?",
+      "a": "Nein. AdOff betrifft ausschließlich Werbung innerhalb des Players und auf der Seite. Fragen zum „canone di abbonamento“ sind vollständig separat und mit dieser Erweiterung nicht verbunden."
+    },
+    {
+      "q": "Funktioniert es in der RaiPlay-App oder auf Smart TVs?",
+      "a": "Nein. AdOff ist eine Browser-Erweiterung für Desktop-Browser. Mobile Apps, Smart-TV-Apps und Streaming-Sticks liegen außerhalb ihres Wirkungsbereichs."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Wie das Blockieren von Streaming-Werbeanzeigen funktioniert"
+    },
+    {
+      "href": "/block-video-ads",
+      "text": "Blockieren von Video-Werbeanzeigen im Allgemeinen"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-uk",
+      "text": "UK-Catch-up-TV-Werbeblocker"
+    }
+  ],
+  "cta": {
+    "h3": "RaiPlay, Infinity, La7 – werbefrei",
+    "p": "Installieren Sie AdOff im Browser: Der Stub deaktiviert das Werbe-SDK der italienischen Player.",
+    "btn": "AdOff kostenlos installieren"
+  },
+  "report": {
+    "intro": "Ihre bevorzugte italienische Plattform fehlt in der Liste? Falls Werbeanzeigen weiterhin auf https://adoff.app/catch-up-tv-ad-blocker-italy erscheinen, melden Sie bitte, welcher Dienst fehlt. Nutzerberichte bestimmen, welche Plattformen wir als Nächstes hinzufügen.",
+    "btn_text": "Fehlenden Dienst melden",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

@@ -1,0 +1,94 @@
+{
+  "slug": "block-youtube-shorts-ads",
+  "lang": "de",
+  "title": "Wie man YouTube Shorts-Werbeanzeigen blockiert (2026) | AdOff",
+  "description": "Shorts-Werbeblöcke sind Feed-Elemente, keine Player-Werbeanzeigen – wie sie sich von Pre-Rolls unterscheiden, warum kosmetisches Filtern das richtige Werkzeug ist…",
+  "h1": "Anzeigen in YouTube Shorts blockieren: Feed-Anzeigen, nicht Video-Anzeigen",
+  "answer": "Anzeigen in YouTube Shorts sind native Feed-Elemente, die zwischen vertikalen Videos eingefügt werden, während Sie scrollen, nicht Pre-Rolls innerhalb des Players. Es handelt sich um Seiten-Elemente, nicht um zeitlich gesteuerte Player-Pausen, daher werden sie durch kosmetische Filterung behandelt: CSS- und DOM-Regeln, die die Anzeigencontainer ausblenden. Die Abdeckung ist real, hat aber Grenzen, wenn sich die Formate ändern.",
+  "sections": [
+    {
+      "h2": "Shorts-Werbeanzeigen sind eine andere Art von Werbeanzeigen als Video-Werbeanzeigen",
+      "body": [
+        "<p>Wenn ein Pre-Roll-Vor dem normalen Video abgespielt wird, fordert der Player ihn an, spielt ihn ab und setzt dann Ihr Video fort. Shorts funktionieren anders: Während Sie durch den Feed wischen, sind einige Elemente in diesem Feed schlicht Werbung. Sie sehen aus wie Shorts, scrollen wie Shorts und sind Teil derselben Feed-Antwort – es handelt sich nicht um eine separate Werbeunterbrechung, die der Player plant.</p>",
+        "<p>Diese Unterscheidung entscheidet über die gesamte Sperrstrategie. Werkzeuge auf Spieler-Ebene (z. B. Planung der Entfernung, Wiedergabe-Beschleunigung) haben hier nichts, worauf sie reagieren könnten, da niemals ein Unterbruch geplant wird.</p>"
+      ]
+    },
+    {
+      "h2": "Warum kosmetisches Filtern das richtige Werkzeug für Feed-Anzeigen ist",
+      "body": [
+        "<p>Ein Feed-Anzeige ist ein Seitenelement mit einer vorhersehbaren Struktur: Containern, Labels wie einem „gesponsert“-Marker und Renderer-Komponenten, die spezifisch für Anzeigeneinheiten sind. Die kosmetische Filterung funktioniert, indem diese Strukturen mit CSS-Selektoren und DOM-Regeln abgeglichen und die Anzeige-Container ausgeblendet werden – entweder vor oder während ihrer Darstellung –, sodass das Feed-Element niemals sichtbar wird.</p>",
+        "<p>AdOff wendet spezielle kosmetische Selektoren für die Kurzformseiten der Videoplattform an, zusätzlich zu seinen allgemeinen Werbe-Selektoren, die auf jeder Website ausgeführt werden. Die gleichen Selektoren werden zweimal erzwungen: als eingefügter CSS-Code und in der DOM-Scan-Ebene, sodass ein Element, das auf die eine Weise ausgeblendet wird, auch auf die andere Weise entfernt wird. Details finden Sie unter <a href=\"/how-it-works\">wie AdOff funktioniert</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Was kosmetisches Filtern im Feed können und nicht können",
+      "body": [
+        "<p>Was es kann: Werbeeinheiten ausblenden, deren Struktur mit den Selektoren übereinstimmt, sowie die gesponserten Kennzeichnungen und Overlay-Kacheln entfernen, die mit diesen einhergehen. Bei einem stabilen Format ist dies zuverlässig und kostengünstig – kein Warten, keine Countdowns; die Werbung erscheint einfach nie in Ihrem Swipe-Stream.</p>",
+        "<p>Was es nicht kann: die Abdeckung von Formaten garantieren, die noch nicht veröffentlicht wurden. Wenn die Plattform die Struktur eines Feed-Anzeigen-Elements ändert, stimmen die Selektoren nicht mehr überein, bis sie aktualisiert werden. Dies ist eine ehrliche Einschränkung jedes kosmetischen Ansatzes und betrifft <a href=\"/youtube-ad-blocker-not-working\">jeden Ad-Blocker</a>, nicht nur einen einzigen.</p>"
+      ]
+    },
+    {
+      "h2": "Warum das Blockieren auf Netzwerkebene allein Shorts nicht abdeckt",
+      "body": [
+        "<p>Das Blockieren von Werbenetzwerken auf DNS- oder Netzwerkebene (siehe <a href=\"/android-dns\">DNS-basiertes Blockieren unter Android</a>) stoppt Anfragen an bekannte Werbeserver. Feed-Werbeanzeigen auf der Video-Plattform werden jedoch oft über dieselben Domains und Anfragen wie der eigentliche Feed-Inhalt ausgeliefert, sodass eine Netzwerkfilterung, die diese entfernen würde, den gesamten Feed zerstören würde. Deshalb erfolgt die praktische Arbeit im Browser auf DOM-Ebene, wo Werbeeinheiten und InhaltsEinheiten anhand ihrer Struktur unterschieden werden können.</p>"
+      ]
+    },
+    {
+      "h2": "Wie man Shorts-Werbeanzeigen in der Praxis blockiert",
+      "body": [
+        "<p>Die Einrichtung ist identisch mit der des Rests der Video-Plattform: Installieren Sie eine Browser-Erweiterung, die kurze, kosmetische Selektoren enthält, lassen Sie den Schutz aktiviert und überlassen Sie die Arbeit den CSS- und DOM-Ebenen – für jedes Video ist keine Konfiguration erforderlich. AdOff bietet dies kostenlos für Chrome, Firefox, Safari, Edge und Opera an, ohne dass ein Konto erforderlich ist.</p>",
+        "<p>Falls Ihnen eine Werbeeinheit durchschlüpft, liegt das meist daran, dass sich das Format geändert hat; die Behebung erfolgt mit der Aktualisierung des Selektors. Den vollständigen Kontext zu diesem Szenario finden Sie unter <a href=\"/youtube-ad-blocker-not-working\">was Sie tun können, wenn der Werbeblocker nicht mehr funktioniert</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Wie Shorts-Werbeanzeigen in das größere Blockierungs-Szenario passen",
+      "body": [
+        "<p>Feed-Anzeigen sind eine von vier Anzeigentypen auf der Plattform; die anderen befinden sich innerhalb des Players. Eine vollständige Einrichtung erfordert beide Schichten: Scheduling-Layer-Blockierung für Pre-Rolls und Mid-Rolls sowie kosmetische Filterung für Feed-Einheiten und Overlays. Eine übergreifende Darstellung, wie diese Schichten zusammenwirken – und an welcher Stelle jede Plattform steht – finden Sie in <a href=\"/streaming-ad-blocking\">Streaming-Ad-Blocking erklärt</a>, während die plattformspezifischen Details im <a href=\"/youtube-ad-blocker\">YouTube-Ad-Blocker-Leitfaden</a> beschrieben sind.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Sind Werbeanzeigen in YouTube Shorts dieselben wie normale Video-Werbeanzeigen?",
+      "a": "Nein. Shorts-Anzeigen sind native Feed-Elemente, die beim Scrollen zwischen vertikalen Videos eingefügt werden. Normale Videoanzeigen sind geplante Pausen innerhalb des Players. Eine unterschiedliche Auslieferung bedeutet eine unterschiedliche Blockiermethode."
+    },
+    {
+      "q": "Wie werden Shorts-Werbeanzeigen dann blockiert?",
+      "a": "Durch kosmetische Filterung: CSS- und DOM-Regeln, die die Struktur von Werbecontainern im Feed erkennen und diese vor dem Rendern ausblenden. Die Ebene für die Steuerung von Video-Werbeblöcken hat nichts, worauf sie reagieren kann, da im Feed kein Werbeblock geplant ist."
+    },
+    {
+      "q": "Können alle Shorts-Anzeigen ausgeblendet werden?",
+      "a": "Die meisten aktuellen Formate, ja, aber nicht mit einer Garantie: Sobald die Plattform eine neue Feed-Anzeigenstruktur einführt, stimmen die Selektoren nicht mehr überein, bis sie aktualisiert werden. Die kosmetische Abdeckung folgt den vorhandenen Formaten."
+    },
+    {
+      "q": "Warum entfernt die Werbeblockierung auf DNS-Ebene keine Shorts-Werbeanzeigen?",
+      "a": "Da Feed-Anzeigen in der Regel über dieselben Domains wie der eigentliche Feed-Inhalt ausgeliefert werden, würde ein Netzwerkfilter, der diese Anfragen blockiert, den gesamten Feed zerstören. Nur die Filterung direkt im Browser kann dies durch die Trennung nach Seitenstruktur ermöglichen."
+    },
+    {
+      "q": "Blockiert AdOff Shorts-Werbung und ist es kostenlos?",
+      "a": "AdOff wendet kurze, kosmetische Selektoren als Teil seines kostenlosen Schutzes auf Chrome, Firefox, Safari, Edge und Opera an, ohne dass ein Konto erforderlich ist. Wie bei allen kosmetischen Filtern orientiert sich die Abdeckung an den aktuellen Werbeformaten, anstatt ein festes Ergebnis zu versprechen."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Streaming-Werbung blockieren: Was 2026 funktioniert"
+    },
+    {
+      "href": "/youtube-ad-blocker",
+      "text": "YouTube-Werbeblocker: So funktioniert er 2026"
+    },
+    {
+      "href": "/youtube-midroll-ads-explained",
+      "text": "YouTube-Mid-Roll-Werbeanzeigen erklärt"
+    }
+  ],
+  "cta": {
+    "h3": "Blättern Sie durch den Feed, überspringen Sie die Anzeigen",
+    "p": "AdOff filtert Werbevideos in Kurzformvideos kostenlos. Kein Konto erforderlich, funktioniert auf Chrome, Firefox, Safari, Edge und Opera.",
+    "btn": "AdOff kostenlos installieren"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

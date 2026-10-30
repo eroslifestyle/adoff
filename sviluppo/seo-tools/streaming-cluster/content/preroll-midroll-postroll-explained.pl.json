@@ -1,0 +1,97 @@
+{
+  "slug": "preroll-midroll-postroll-explained",
+  "lang": "pl",
+  "title": "Pre-roll, Mid-roll, Post-roll – wyjaśnienie | AdOff",
+  "description": "Każde umiejscowienie reklamy wideo wyjaśnione: pre-roll, mid-roll, post-roll, bumpery, nakładki i towarzyszące — jak są dostarczane i jak trudno je zablokować.",
+  "h1": "Pre-roll, mid-roll, post-roll: wyjaśnienie wszystkich miejsc umieszczania reklam w filmach",
+  "answer": "Reklamy pre-roll odtwarzane są przed filmem, mid-roll przerywają jego przebieg, a post-roll pojawiają się po zakończeniu. Łatwiejsze do zablokowania umiejscowienia reklam są dostarczane za pomocą SDK po stronie klienta, takich jak Google IMA; AdOff blokuje je dzięki wstawce natychmiastowego wznowienia, podczas gdy reklamy scalane po stronie serwera pozostają niedostępne dla każdej rozszerzenia przeglądarki.",
+  "sections": [
+    {
+      "h2": "Pre-roll: reklama przed filmem",
+      "body": [
+        "<p><strong>Pre-roll</strong> wyświetla się przed rozpoczęciem żądanego materiału. Jest to najbardziej wartościowa pozycja w reklamach wideo, ponieważ zapewnia niepomijalną uwagę w momencie, gdy zainteresowanie osiąga szczyt — jednocześnie jest najbardziej irytującą dla widzów, ponieważ opóźnia odtwarzanie filmu, na który kliknęli.</p>",
+        "<p>Zwykle jest ona realizowana po stronie klienta: odtwarzacz inicjalizuje SDK IMA, żąda reklamy VAST i nakłada ją na powierzchnię wideo. Ponieważ cała transakcja zachodzi na stronie, jest ona bardzo łatwo blokowalna. Szkielet AdOff odpowiada na żądanie uruchomienia SDK natychmiastowym zdarzeniem wznawiania treści, dzięki czemu pre-roll jest po prostu pomijany, a odtwarzanie zaczyna się od razu.</p>"
+      ]
+    },
+    {
+      "h2": "Mid-roll: reklamy wstawiane w trakcie filmu",
+      "body": [
+        "<p><strong>Mid-roll</strong> przerywa treść w zaplanowanych momentach, symulując przerwę reklamową w telewizji. Gracze określają punkty przerwy w dokumencie VMAP, a platforma może je harmonizować w odpowiedzi reklamowej. Mid-rolle generują najwięcej frustracji, ponieważ przerywają film w najbardziej interesującym momencie.</p>",
+        "<p>Mid-rolle po stronie klienta przechodzą przez tę samą ścieżkę SDK, co pre-rolle, i są neutralizowane w ten sam sposób: gdy odtwarzacz żąda rozpoczęcia przerwy reklamowej, stub odpowiada, że przerwa się już zakończyła, zanim w ogóle się rozpoczęła. Na głównym platformie wideo AdOff dodatkowo usuwa harmonogram reklam z odpowiedzi odtwarzacza przed jej odczytaniem przez stronę oraz przyspiesza do przodu wszystko, co się przedarło.</p>"
+      ]
+    },
+    {
+      "h2": "Post-roll: reklama po zakończeniu filmu",
+      "body": [
+        "<p><strong>Post-roll</strong> uruchamia się po zakończeniu treści. Widzowie tolerują go najlepiej — większość z nich zakończyła już oglądanie — jednak reklamodawcy nadal za niego płacą, dlatego odtwarzacze przepuszczają go przez ten sam, postronny mechanizm przetwarzania.</p>",
+        "<p>Ta sama dostawa, ten sam błąd: jeśli żądanie reklamy przechodzi przez SDK po stronie klienta, natychmiastowe wznowienie przez stub powoduje, że film kończy się płynnie, bez następującej po nim reklamy.</p>"
+      ]
+    },
+    {
+      "h2": "Bumpery, nakładki oraz reklamy towarzyszące",
+      "body": [
+        "<p>Nie każde umieszczenie posiada powierzchnię wideo przez kilka sekund:</p>",
+        "<ul><li><strong>Bumpery</strong> to bardzo krótkie (około 6 sekund) reklamy nieskippable, często wyświetlane jako pre-rolls. Dostarczane za pomocą tego samego SDK, neutralizowane w ten sam sposób.</li><li><strong>Nakładki</strong> to banery pojawiające się w dolnej części odtwarzanego wideo bez jego wstrzymywania. Są to zwykłe elementy DOM, dlatego warstwa filtrowania kosmetycznego (reguły CSS oraz skrypt zawartości) ukrywa je na każdej stronie.</li><li><strong>Reklamy towarzyszące</strong> to banery wyświetlane obok odtwarzacza w trakcie odtwarzania reklamy wideo. Również są to zwykłe elementy strony i są ukrywane przez filtrowanie kosmetyczne.</li><li><strong>Reklamy w strumieniu</strong> to reklamy wideo maskujące się pod elementy zalecane na liście. Wykrywane są w ten sam sposób dzięki filtrowaniu kosmetycznemu oraz ogólnym selektorom.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Co sprawia, że umiejscowienie jest trudne lub niemożliwe do zablokowania",
+      "body": [
+        "<p>Linia podziału to <strong>miejsce, w którym reklama jest tworzona</strong>. Jeśli reklama jest pobierana i renderowana przez JavaScript w Twojej przeglądarce — co dotyczy wszystkiego dostarczanego przez SDK, taki jak IMA — rozszerzenie może ją przechwycić, zastąpić lub ukryć.</p>",
+        "<p>Jeśli natomiast reklama jest „szycia” do strumienia wideo po stronie serwera przed jej dostarczeniem (<a href=\"/server-side-ad-insertion-explained\">SSAI</a>), piksele reklamy są nieodróżnialne od pikseli programu. Żadne rozszerzenie przeglądarki nie może ich po tym rozdzielić — dlatego usługi subskrypcyjne wykorzystujące SSAI są celowo pomijane przez AdOff, aby uniknąć ryzyka przerwania odtwarzania.</p>"
+      ]
+    },
+    {
+      "h2": "Jak AdOff mapuje warstwy na umiejscowienia",
+      "body": [
+        "<p>Każde umieszczenie trafia na warstwę przeznaczoną dla niego:</p>",
+        "<ul><li>Wstępy/mid-rolls/post-rolls i „bumpery” dostarczane przez SDK → neutralizacja IMA (lokalny stub w stronie lub przekierowanie sieciowe na 42 domenach europejskich nadawców).</li><li>Nakładki, kompaniony, reklamy w feedzie → filtrowanie kosmetyczne (CSS + skrypt zawartości).</li><li>Żądania do sieci reklamowych → 180 statycznych reguł sieciowych (rzeczywiste reklamy liczone w odznace, śledzenie blokowane, ale nie liczone).</li><li>Ściany anty-reklamowe → warstwa ukrycia z podszywaniem pod pułapki i przechwytywaniem fetch/XHR.</li></ul>",
+        "<p>Wszystko to dostarczane jest za darmo w jednym rozszerzeniu dla Chrome, Firefox, Safari, Edge i Opery, bez konieczności tworzenia konta.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Które reklamy wideo są najtrudniejsze do zablokowania?",
+      "a": "Reklamy wstrzykiwane na serwerze (SSAI) są praktycznie niemożliwe do oddzielenia od treści przez rozszerzenie przeglądarki, ponieważ pojawiają się jako część samego filmu. Reklamy po stronie klienta dostarczane za pomocą SDK są znacznie łatwiejsze do zneutralizowania."
+    },
+    {
+      "q": "Czy reklamy w połowie filmu (mid-roll) są blokowane inaczej niż reklamy na początku (pre-roll)?",
+      "a": "Nie, jeśli przechodzą przez tę samą ścieżkę dostarczania. Zazwyczaj obie przechodzą przez ten sam SDK po stronie klienta, więc „stub” odpowiadający na żądania przerwania reklamy natychmiastowym zdarzeniem wznowienia usuwa zarówno pre-rolle, jak i mid-rolle."
+    },
+    {
+      "q": "Co to jest reklama „bumper”?",
+      "a": "Bumper to bardzo krótki, nieskippable reklamowy filmik, zazwyczaj trwający około sześciu sekund, zwykle pokazywany przed treścią. Ponieważ jest dostarczany za pomocą tego samego SDK co dłuższe reklamy, jest neutralizowany przez ten sam mechanizm."
+    },
+    {
+      "q": "Jak usuwane są reklamy nakładkowe (overlay) i reklamy towarzyszące (companion)?",
+      "a": "Są to zwykłe elementy strony, a nie klatki wideo. Filtrowanie kosmetyczne — reguły CSS oraz skrypt zawartości skanujący DOM — ukrywa je, podczas gdy reguły na poziomie sieci blokują ich żądania reklamowe."
+    },
+    {
+      "q": "Czy blokery reklam zliczają każdy zablokowany żądanie jako reklamę?",
+      "a": "AdOff oddziela prawdziwą reklamę od śledzenia: analityka i śledzące elementy są również blokowane, jednak badge i liczniki w okienku popup zawierają jedynie rzeczywiste reklamy, więc liczby odzwierciedlają to, co rzeczywiście pominąłeś."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Blokowanie reklam w strumieniach: kompletny przewodnik"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Jak działa blokowanie reklam w IMA SDK"
+    },
+    {
+      "href": "/server-side-ad-insertion-explained",
+      "text": "Wyjaśnienie wstawiania reklam po stronie serwera (SSAI)"
+    }
+  ],
+  "cta": {
+    "h3": "Każde miejsce reklamowe — jedno rozszerzenie",
+    "p": "Pre-rolle, mid-rolle, nakładki i banery — AdOff obsługuje każdy z nich odpowiednim warstwą, bezpłatnie dla wszystkich.",
+    "btn": "Zainstaluj AdOff za darmo"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

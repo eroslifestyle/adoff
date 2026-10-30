@@ -1,0 +1,93 @@
+{
+  "slug": "youtube-anti-adblock-wall",
+  "lang": "tr",
+  "title": "YouTube’da Reklam Engelleyici Duvarı: Neden Olur? | AdOff",
+  "description": "Oynatıcının oynatmayı engellemesi veya “adblock algılandı” uyarısı vermesinin nedeni, anti-adblock algılama sisteminin nasıl çalışması ve gizli engelleyicinin bu…",
+  "h1": "Anti-Adblock Duvarı: Oyuncu “Adblock Algılandı” dediğinde",
+  "answer": "Bir anti-reklam engelleyici duvarı, sitenin reklam filtrelemeyi algılamak için çalıştırdığı bir kontroludur: uzantıyı sahte reklam istekleri ve değişkenlerle tuzağa düşürür ve cevaplar yanlış görünüyorsa oynatmayı engeller. Bir gizli engelleyici, tuzakları sahteleyerek filtrelemenin sıradan bir tarayıcı kullanma gibi görünmesini sağlar. Üçüncü taraf duvarlar da kapsanır; ana video platformu ise çift katmanlı engelleme kullanır.",
+  "sections": [
+    {
+      "h2": "Tam olarak bir reklam engelleyici engel duvarı nedir?",
+      "body": [
+        "<p>Bazı siteler, reklamlarının yanında bir algılama katmanı çalıştırır. Site artık doğrudan bir eklentinin yüklü olup olmadığını bilemez; bu nedenle filtrelemenin <em>etkilerine</em> bakar: asla ulaşmayan reklam istekleri, beklenmeyen değerler döndüren oynatıcı işlevleri, kaybolan DOM öğeleri gibi. Yeterince şüpheli sinyal göründüğünde, site videoyu engeller, geciktirir veya eklentiyi devre dışı bırakmanızı isteyen bir “reklam engelleyici algılandı” uyarısı gösterir.</p>"
+      ]
+    },
+    {
+      "h2": "Algılama nasıl aslında çalışır",
+      "body": [
+        "<p>Algılama genellikle üç tür teste dayanır:</p>",
+        "<ul><li><strong>Tuzak istekleri</strong> — sayfa, bilinen bir reklam kaynağı için istekte bulunur. Engelleyici olmayan bir kullanıcı bunu yükler; engellenen kullanıcı ise asla yüklemez. Sessizlik, şüpheli bir durum olarak değerlendirilir.</li><li><strong>Değişken ve işlev kontrolleri</strong> — sayfa, reklam betiklerinin normalde tanımladığı JavaScript nesnelerini inceler. Bunlar eksikse veya değiştirilmişse, filtreleme muhtemelen etkindir.</li><li><strong>Zamanlama ve tutarlılık kontrolleri</strong> — yanıtların sıradan trafiğe kıyasla istatistiksel olarak normal görünüp görünmediği kontrol edilir.</li></ul>",
+        "<p>Site için tek bir test kesin kanıt değildir; bu nedenle duvarlar harekete geçmeden önce sinyalleri birleştirir.</p>"
+      ]
+    },
+    {
+      "h2": "Son yıllarda duvarların neden daha sert hale geldi",
+      "body": [
+        "<p>Reklam geliri, platformun temel iş modelidir; dolayısıyla büyük bir oranın reklamsız izlemeye izin verilmesi uzun vadeli olarak onların çıkarına uygun değildir. Sonuç olarak sürekli bir döngü oluşur: engelleyiciler bir kaçış yolu bulur, algılama güçlenir, engelleyiciler tekrar uyar. Duvarların gelişmeye devam etmesini ve büyük video platformunun ötesinde birçok siteye de yayılmasını bekleyin; çünkü anti-reklam engelleyici betikler bir hizmet olarak satılır.</p>"
+      ]
+    },
+    {
+      "h2": "Gizli yaklaşım: tuzakları doğru şekilde cevaplamak",
+      "body": [
+        "<p>Gizli mod engelleyici sadece saklanmaz; kandırır. AdOff, tuzak öğeleri taklit eder: reklamla ilgili sorgulamalara inandırıcı yanıtlar üretir ve sayfanın gözlemlediği şeyin sıradan bir gezinti gibi görünmesi için fetch ve XHR çağrılarını engeller. Amaç, filtreleme tamamen etkinken algılama testlerinin geçmesini sağlamaktır.</p>",
+        "<p>Önemli bir nokta: ana video platformunda AdOff’in gizli mod geçersiz kılması kasıtlı olarak uygulanmaz — bu etki alanı hariç tutma listesindedir ve orada engelleme, çift katmanlı mekanizmalarla yapılır. Gizli mod katmanı, anti-reklam engelleyici duvarları çalıştıran üçüncü taraf siteleri hedef alır.</p>"
+      ]
+    },
+    {
+      "h2": "Hâlâ bir duvara çarpmanız durumunda ne yapmalısınız",
+      "body": [
+        "<ol><li>Eklentiyi güncelleyin — duvarlar ve kaçış yöntemleri birlikte değişir; güncel olmayan bir sürüm en yaygın sorun nedenidir.</li><li>Önbelleklenmiş algılama betiklerini silmek için sayfayı sert yeniden yükleyin.</li><li>Sitenin duraklatılmadığı veya beyaz liste eklenmediğinden emin olun.</li><li>Güncellemeden sonra duvar hâlâ devam ediyorsa, yeni bir algılama değişikliği olabilir; filtrelemeyi kalıcı olarak devre dışı bırakmak yerine eklentiyi birkaç gün boyunca güncel tutun.</li></ol>"
+      ]
+    },
+    {
+      "h2": "Dürüst sınırlar",
+      "body": [
+        "<p>Gizlilik, şansı artırır; ancak duvarları imkânsız kılmaz. Kararlı bir algılama güncellemesi, herhangi bir eklentiyi bir süre boyunca yakalayabilir. İyi bir şekilde bakılan bir engelleyicinin sunduğu şey, hızlı uyum sağlamasıdır: bugün sizi engelleyen duvarlar genellikle bir sonraki güncellemede ele alınır. Bir site, en son sürümde bile hâlâ engelleyicinizi algılıyorsa, bu kedi-fare oyununun gerçekidir — kurulumunuzdaki bir hata değildir."
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Neden YouTube, reklam engelleyici kullandığımda 'reklam engelleyici algılandı' uyarısı veriyor?",
+      "a": "Site, filtrelemenin yan etkilerini kontrol eder: asla ulaşmayan reklam istekleri ve reklam betiklerinin normalde tanımladığı JavaScript nesneleri. Bu sinyaller biriktiğinde, oynatmayı engeller veya uzantıyı devre dışı bırakana kadar bir uyarı gösterir."
+    },
+    {
+      "q": "Gizli reklam engelleyici, algılandıktan nasıl kaçınıyor?",
+      "a": "Tuzakları kandırır: reklamla ilgili sorgulamalara inandırıcı yanıtlar taklit eder ve ağ çağrılarını engelleyerek sayfanın sıradan bir tarama sırasında ne gibi davranışlar sergilediğini gözlemler. AdOff, bu yöntemi üçüncü taraf sitelerde uygular; ana video platformunda ise bunun yerine çift katmanlı engelleme yöntemini kullanır."
+    },
+    {
+      "q": "Her reklam engelleyici engelini aşılmak mümkün mü?",
+      "a": "Hayır. Algılama ve kaçınma birlikte gelişir, bu nedenle herhangi bir uzantı, bir algılama güncellemesinden sonra geçici olarak yakalanabilir. Bakımlı bir engelleyici genellikle birkaç gün içinde buna uyum sağlar. Gerçekçi beklenti: duvarlar bazen işe yarar, güncellemelerle boşluk kapanır."
+    },
+    {
+      "q": "Uyarı aldığım zaman reklam engelleyicimi devre dışı bırakmak güvenlikimi etkiler mi?",
+      "a": "Filtrelemenin devre dışı bırakılması, reklamlara ve onlarla birlikte gelen izleyicilere tekrar maruz kalmanızı sağlar. Güvenilir bir sitede bir engeli aşmanız gerekiyorsa, korumayı global olarak devre dışı bırakmaktan daha güvenli olan, o tek site için sınırlı bir duraklatma yapmanızdır."
+    },
+    {
+      "q": "Reklam engelleyici engellemek için kullanılan duvarlar diğer sitelerde de var mı?",
+      "a": "Evet. Reklam engelleyici tespitini aşma betikleri bir hizmet olarak satılır ve büyük video platformunun ötesinde haber sitelerinde, bloglarda ve akış sitelerinde de bulunur. Gizli çalışan bir engelleyici, bunların tümünde faydalıdır."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Akış reklam engelleyicisi: tam rehber"
+    },
+    {
+      "href": "/bypass-anti-adblock",
+      "text": "Reklam engelleyici engelleyicilerini (anti-adblock duvarları) nasıl atlatırız?"
+    },
+    {
+      "href": "/undetectable-ad-blocker",
+      "text": "Reklam engelleyicinin tespit edilmesini zorlaştıran faktörler nelerdir?"
+    }
+  ],
+  "cta": {
+    "h3": "Reklamları alarmı tetiklemeden filtreleyin",
+    "p": "AdOff, üçüncü taraf duvarlarda gizli tespit engellemesi ile çift katmanlı engelleme kombinasyonunu birleştirir. Herkes için ücretsiz, hesap gerektirmez.",
+    "btn": "AdOff’ı yükleyin"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

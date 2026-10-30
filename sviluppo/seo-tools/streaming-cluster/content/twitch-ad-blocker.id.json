@@ -1,0 +1,92 @@
+{
+  "slug": "twitch-ad-blocker",
+  "lang": "id",
+  "title": "Twitch Ad Blocker: Mengapa Tidak Ada yang Berhasil (2026) | AdOff",
+  "description": "Twitch menyisipkan iklan langsung ke siaran—tidak ada ekstensi yang bisa menghapusnya tanpa merusak pemutaran.",
+  "h1": "Twitch Ad Blocker: Mengapa Tidak Ada Ekstensi yang Bisa Secara Jujur Menghilangkan Iklan Ini",
+  "answer": "Tidak — iklan Twitch tidak dapat diblokir secara andal oleh ekstensi browser, karena Twitch memasukkannya langsung ke dalam aliran video siaran langsung, di sisi server. Tidak ada permintaan iklan terpisah yang dapat ditangkap; pemblokir yang mencoba biasanya justru menyebabkan layar ungu yang terkenal atau penurunan kualitas siaran.",
+  "sections": [
+    {
+      "h2": "Cara iklan masuk ke siaran Twitch",
+      "body": [
+        "<p>Ketika seorang streamer menjalankan jeda iklan di tengah siaran, iklan tersebut disatukan secara langsung ke dalam siaran langsung di sisi server. Pemutar setiap penonton menerima siaran yang sudah mencakup iklan, disampaikan sebagai segmen video biasa dari siaran yang sama. Ini adalah model penyisipan iklan di sisi server yang digunakan secara umum dalam siaran langsung, dan model ini ada karena iklan dalam siaran langsung harus tetap sinkron bagi ribuan penonton yang menonton secara bersamaan.</p>",
+        "<p>Dari sudut pandang browser, tidak ada permintaan iklan yang bisa ditangkap: segmen iklan dan segmen permainan melewati koneksi yang sama, dalam daftar putar yang sama. Inilah alasan struktural mengapa ekstensi tidak bisa hanya “memblokir” segmen-segmen tersebut.</p>"
+      ]
+    },
+    {
+      "h2": "Mengapa ekstensi pemblokir iklan gagal di Twitch",
+      "body": [
+        "<p>Blocker berbasis permintaan — termasuk yang baik, yang bekerja dengan baik di situs berita, mesin pencari, dan portal video dengan iklan sisi klien — mencocokkan domain iklan yang diketahui dan memutus permintaan tersebut. Di Twitch tidak ada yang bisa dicocokkan. Yang jujur tidak melakukan apa-apa; yang agresif justru memanipulasi pemutar, dan di situlah masalah bermula.</p>",
+        "<p>Layar ungu adalah gejala klasik: pemutar ditolak memutar segmen iklan yang seharusnya ditayangkan, tidak memiliki konten yang bisa dirender, dan membeku pada placeholder sementara siaran langsung terus berjalan. Upaya lainnya beralih ke stream dengan kualitas lebih rendah di sekitar iklan atau memisahkan obrolan dari siaran. Dalam setiap kasus, ekstensi ini bertarung melawan stream itu sendiri, bukan terhadap server iklan — inilah sebabnya solusi sementara tersebut rusak setiap beberapa bulan sekali dan merusak kualitas stream di sisa waktu.</p>"
+      ]
+    },
+    {
+      "h2": "Penjelasan masalah layar ungu dan placeholder",
+      "body": [
+        "<p>Video langsung tidak memberi toleransi: siaran tidak berhenti sejenak sementara pemutar memutuskan langkah selanjutnya. Ketika sebuah alat menekan segmen iklan di tengah siaran, pemutar harus either melompat ke depan (kehilangan posisi siaran langsung) atau menampilkan kosong (bingkai placeholder/ungu). Keduanya jauh lebih buruk daripada menonton iklan bagi banyak penonton, sehingga bahkan ekstensi pemblokir paling populer pun memiliki riwayat keluhan, penarikan kembali, dan upaya yang ditinggalkan khususnya di Twitch.</p>"
+      ]
+    },
+    {
+      "h2": "Apa yang benar-benar menghilangkan iklan di Twitch",
+      "body": [
+        "<p>Satu-satunya metode yang berfungsi secara desain adalah milik platform itu sendiri: berlangganan saluran individu menghilangkan iklan pada saluran tersebut, sekaligus mendukung langsung siaranstreamer. Di luar itu, opsi realistis Anda hanya bersifat sepele: menonton di perangkat yang beban iklannya berbeda, atau sekadar menerima bahwa hingga kini, ekstensi mana pun tidak mampu menghapus iklan langsung yang disatukan secara bersih.</p>",
+        "<p>Hati-hati terhadap klien yang telah dimodifikasi atau alat tidak resmi yang menjanjikan Twitch tanpa iklan. Selain melanggar aturan platform, mereka merupakan biner yang tidak terverifikasi dan berjalan dengan kredensial akun Anda — risiko pembekuan akun sangat nyata, dan Anda tidak dapat memeriksa tindakan lain yang mereka lakukan.</p>"
+      ]
+    },
+    {
+      "h2": "Apa yang dilakukan dan tidak dilakukan AdOff di Twitch",
+      "body": [
+        "<p>AdOff tidak berpura-pura dapat menghapus iklan dalam aliran (in-stream ads) pada platform langsung, dan tidak menyuntikkan (inject) apa pun yang dapat merusak atau menurunkan kualitas siaran. Pilihan ini disengaja: setiap solusi sementara yang mencoba melakukannya justru merusak pemutaran, dan kami tidak akan merilisnya.</p>",
+        "<p>Apa yang dilindungi oleh AdOff, termasuk di mana pun Anda menonton siaran langsung: iklan tampilan, permintaan pelacakan dan analitik, serta SDK iklan video sisi klien di seluruh web. Ini adalah ekstensi gratis untuk Chrome, Firefox, Safari, Edge, dan Opera, tanpa memerlukan akun.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Apakah ada pemblokir iklan yang berfungsi di Twitch pada tahun 2026?",
+      "a": "Tidak ada ekstensi yang bisa menghapus iklan Twitch secara bersih, karena iklan tersebut disatukan ke dalam siaran langsung di sisi server. Alat yang mencoba melakukannya menyebabkan layar berwarna ungu, penurunan kualitas, atau ketidakselarasan, serta memerlukan perbaikan terus-menerus seiring perubahan platform. Satu-satunya cara penghapusan iklan yang bersih adalah melalui langganan saluran, yang merupakan mekanisme milik platform itu sendiri."
+    },
+    {
+      "q": "Mengapa saya mendapatkan layar ungu alih-alih iklan?",
+      "a": "Itu adalah pemblokir iklan yang menekan segmen iklan di tengah siaran: pemutar tidak memiliki konten yang ditampilkan selama siaran langsung berlanjut, sehingga layar membeku pada placeholder. Ini adalah gejala ekstensi yang berupaya melawan siaran, bukan bug pada browser Anda."
+    },
+    {
+      "q": "Apakah AdOff memblokir iklan di Twitch?",
+      "a": "Tidak, dan kami tidak mengklaim bahwa hal itu mampu melakukannya. Iklan dalam-siaran pada platform langsung bersifat server-side dan tidak dapat dihapus tanpa mengganggu pemutaran. AdOff justru memblokir iklan tampilan, pelacakan, serta iklan video sisi-klien di seluruh aktivitas penjelajahan Anda lainnya, termasuk di halaman-halaman sekitar Twitch."
+    },
+    {
+      "q": "Apakah langganan saluran menghilangkan iklan?",
+      "a": "Ya — berlangganan ke saluran tertentu menghapus iklan di saluran tersebut sekaligus mendukung streamer tersebut. Ini adalah satu-satunya mekanisme yang mampu menghapus iklan siaran langsung yang disatukan secara bersih, karena mekanisme ini bekerja pada level akun, bukan melawan siaran itu sendiri."
+    },
+    {
+      "q": "Apakah klien yang dimodifikasi untuk Twitch tanpa iklan aman?",
+      "a": "Kami menyarankan agar Anda menghindarinya. Mereka adalah versi yang tidak terverifikasi dan menangani kredensial login Anda, melanggar ketentuan platform, serta risiko nyatanya mencakup penangguhan akun. Siaran tanpa iklan tidak sepadan dengan risiko kehilangan akun Anda."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Pemblokiran iklan streaming: gambaran lengkapnya"
+    },
+    {
+      "href": "/server-side-ad-insertion-explained",
+      "text": "SSAI: mengapa iklan yang disatukan tidak bisa diblokir"
+    },
+    {
+      "href": "/live-sports-ad-blocking",
+      "text": "Streaming olahraga langsung dan iklannya"
+    }
+  ],
+  "cta": {
+    "h3": "Kami tidak akan berpura-pura — tetapi aktivitas browsing Anda yang lain tetap terlindungi",
+    "p": "AdOff tidak akan memutus stream Twitch Anda hanya untuk seolah-olah telah menghapus iklan. Namun, iklan tampilan, pelacak, dan iklan video sisi klien di tempat lain? Semua itu diblokir secara gratis, tanpa perlu akun.",
+    "btn": "Pasang AdOff secara gratis"
+  },
+  "report": {
+    "intro": "Jika Anda mendarat di situs yang jelas-jelas masih menampilkan iklan — termasuk platform ini — Anda dapat melaporkannya dengan URL halaman yang tepat. Laporan pengguna secara langsung membentuk aturan pemblokiran mana yang akan kami rilis selanjutnya.",
+    "btn_text": "Laporkan situs yang masih menampilkan iklan",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

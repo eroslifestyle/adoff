@@ -1,0 +1,17 @@
+[Unit]
+Description=AdOff cloudflared named tunnel (social.adoff.app -> admin UI :8790)
+After=network-online.target adoff-admin-ui.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mrxxx
+EnvironmentFile=/home/mrxxx/adoff/sviluppo/ai-autopilot/n8n-workflows/.secrets/cf-tunnel.env
+ExecStart=/usr/local/bin/cloudflared tunnel --no-autoupdate run
+Restart=always
+RestartSec=8
+StandardOutput=append:/var/log/cloudflared-adoff-admin.log
+StandardError=append:/var/log/cloudflared-adoff-admin.log
+
+[Install]
+WantedBy=multi-user.target

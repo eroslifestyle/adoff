@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-italy",
+  "lang": "zh",
+  "title": "屏蔽 RaiPlay、Mediaset… | AdOff",
+  "description": "AdOff 可屏蔽 RaiPlay、Mediaset Infinity、La7 和 Discovery+ 的视频广告，免费无注册，支持 Chrome/Firefox/Safari/Edge。",
+  "h1": "意大利回看电视广告拦截器：RaiPlay、Infinity、La7",
+  "answer": "AdOff 可在浏览器中移除意大利回看电视平台的前贴片和中插广告（多数情况下）。它将播放器请求的 Google IMA 广告 SDK 替换为本地占位符，从而立即恢复节目播放，让您可 uninterrupted 地观看 RaiPlay、Infinity 或 La7。",
+  "sections": [
+    {
+      "h2": "涵盖意大利服务",
+      "body": [
+        "<p>意大利广播公司通过视频广告为其免费回看平台变现，其播放器依赖浏览器中的标准 Google IMA SDK。AdOff 支持以下平台：</p>",
+        "<ul><li><strong>RaiPlay</strong>（raiplay.it、rai.it）</li><li><strong>Mediaset Infinity</strong>（mediasetinfinity.mediaset.it、mediaset.it）</li><li><strong>La7</strong>（la7.it）</li><li><strong>Discovery+</strong>（discoveryplus.com）</li></ul>"
+      ]
+    },
+    {
+      "h2": "机制详解，分步说明",
+      "body": [
+        "<p>当 RaiPlay 或 Infinity 页面在浏览器中加载时，播放器通常会从 Google 服务器下载 IMA SDK 以安排广告插播时段。AdOff 将该请求重定向至扩展程序内置的一个占位模块。该模块能足够“听懂”SDK 的语言，从而让播放器保持正常运行；一旦播放器请求开始播放广告，它会立即返回“请求恢复内容播放”。</p>",
+        "<p>随后节目便直接播放，跳过广告时段。无需重新下载视频，内容流本身也未发生任何变化。</p>"
+      ]
+    },
+    {
+      "h2": "为何此方案适用于意大利公共及商业广播机构",
+      "body": [
+        "<p>Rai、Mediaset 和 Discovery 通过标准 SDK 插入广告来实现回看内容的变现，而该 SDK 层正是浏览器扩展可拦截的关键环节。相比之下，Prime Video 等订阅平台则采用服务器端广告插入（SSAI）方式，将广告直接拼接到视频流中，因此本扩展刻意不处理此类平台，以确保其播放器持续正常工作。回看电视（Catch-up TV）正是该技术方案真正见效的核心场景。</p>"
+      ]
+    },
+    {
+      "h2": "叠加网络与视觉过滤功能",
+      "body": [
+        "<p>除播放器外，AdOff 还内置 180 条静态网络规则，用于屏蔽广告与追踪域名；另含 CSS/DOM 过滤器，可隐藏广播公司页面上的横幅广告及推广覆盖层。在 RaiPlay 或 Infinity 页面上，这意味着不仅视频插播减少，页面目录区域的推广卡片和广告牌等也相应减少。</p>"
+      ]
+    },
+    {
+      "h2": "无法实现的功能",
+      "body": [
+        "<p>请理性看待其局限性：</p>",
+        "<ul><li>若平台采用<strong>服务器端广告插入（SSAI）</strong>，广告将被嵌入视频流本身，此时占位模块将不再生效。</li><li>本扩展仅适用于<strong>桌面端浏览器</strong>：RaiPlay 智能电视应用、移动端应用及投屏功能均不在支持范围内。</li><li>部分<strong>直播赛事与体育节目</strong>使用不同的传输流程。</li><li>播放器更新频繁；本扩展持续维护更新，但功能覆盖范围不会长期固定不变。</li></ul>"
+      ]
+    },
+    {
+      "h2": "免费扩展程序，支持五款浏览器，无需注册",
+      "body": [
+        "<p>AdOff 是一款基于 Manifest V3 的扩展程序，完全免费，无需注册账户或试用期。它支持 Chrome、Firefox、Safari、Edge 和 Opera 浏览器。您可从官网安装，开启保护功能后，像往常一样打开 RaiPlay、Infinity 或 La7 即可使用。"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "AdOff 能否移除 RaiPlay 的广告？",
+      "a": "大多数情况下是的，当 RaiPlay 网页播放器通过 Google IMA SDK 加载广告时，该扩展会将该 SDK 替换为一个立即恢复节目的占位符；而在 Rai 尝试使用其他插入技术的场景下，覆盖效果可能有所不同。"
+    },
+    {
+      "q": "我能否免费跳过 Mediaset Infinity 上的广告？",
+      "a": "AdOff 是一款免费的浏览器扩展，用于屏蔽 Infinity 网页播放器中的广告 SDK，因此通常不会播放贴片广告和插播广告。它不会影响您的 Infinity 账户，也无付费版本——所有功能均免费提供。"
+    },
+    {
+      "q": "La7 和 Discovery+ 呢？",
+      "a": "两者均采用相同方式处理：将 IMA SDK 请求重定向至本地占位符，使播放器恢复内容播放而非播放广告时段。此方法适用于上述服务的桌面端浏览器版本。"
+    },
+    {
+      "q": "这是否涉及意大利的电视执照费（canone）？",
+      "a": "否。AdOff 仅影响播放器内及页面上的广告，与“订阅费”（canone di abbonamento）相关的问题完全无关，且不受本扩展影响。"
+    },
+    {
+      "q": "它是否适用于 RaiPlay 应用或智能电视？",
+      "a": "否。AdOff 仅为桌面端浏览器设计的扩展程序，无法作用于移动应用、智能电视应用或流媒体棒设备。"
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "流媒体广告屏蔽的工作原理"
+    },
+    {
+      "href": "/block-video-ads",
+      "text": "屏蔽各类视频广告"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-uk",
+      "text": "英国回看电视广告屏蔽工具"
+    }
+  ],
+  "cta": {
+    "h3": "RaiPlay、Infinity、La7——无广告干扰",
+    "p": "在浏览器中安装 AdOff：该插件可中和意大利视频播放器中的广告 SDK。",
+    "btn": "免费安装 AdOff"
+  },
+  "report": {
+    "intro": "您喜爱的意大利平台未在列表中？若在 https://adoff.app/catch-up-tv-ad-blocker-italy 上仍出现广告，请反馈缺失的服务名称。用户反馈将指导我们下一步添加哪些平台。",
+    "btn_text": "反馈缺失的服务",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

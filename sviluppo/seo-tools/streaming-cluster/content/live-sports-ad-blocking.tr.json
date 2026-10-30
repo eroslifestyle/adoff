@@ -1,0 +1,101 @@
+{
+  "slug": "live-sports-ad-blocking",
+  "lang": "tr",
+  "title": "Canlı Spaylar Akışlarında Reklamları Engelleme | AdOff",
+  "description": "Canlı spor neden en zor reklam engelleme durumudur, bir tarayıcı uzantısının yapabildikleri ve yapamadıkları, ve AdOff’in aslında hangi yayıcıları kapsadığı.",
+  "h1": "Canlı sporlarda reklam engelleme: Ne gerçekten işe yarar",
+  "answer": "Canlı spor, reklamları engellemenin en zor olduğu yerdir: gerçek canlı yayınlar, genellikle sunucu tarafında eklenen reklamları kullanır ve bu tür reklamları hiçbir tarayıcı uzantısı kaldıramaz. Tarayıcı uzantısının işe yaradığı yer, yayıncıların isteğe bağlı ve geriye dönük yayınlarında, reklamları istemci tarafında yüklediği durumlardır — ve tam da bu durumda AdOff etkisini ortaya çıkarır.",
+  "sections": [
+    {
+      "h2": "Neden Canlı Yayın En Zor Durumdur",
+      "body": [
+        "<p>Canlı spor, video reklamcılığın taşınmaz hazinesidir ve buna göre korunur. Gerçekten canlı bir yayında, her ara öncesi reklam sunucusuna istemci tarafı reklam SDK’sının döngü yapması kabul edilemez: bu gecikme, izleyicilerin senkronizasyonunu bozar. Bu nedenle birçok canlı hizmet, <a href=\"/server-side-ad-insertion-explained\">sunucu tarafı reklam ekleme (SSAI)</a> yöntemini benimser; bu yöntemde, reklam, cihazınıza ulaşmadan önce video akışına eklenir.</p>",
+        "<p>Bu durum gerçekleştiğinde, reklamın pikselleri videonun kendisinin bir parçası olur. Bir tarayıcı uzantısı — AdOff’e özel olmaksızın, herhangi bir uzantı — bu durumdan sonra bunları ayırmak için hiçbir yola sahip değildir. Bunu iddia etmek, dürüstlükten uzak bir davranış olur.</p>"
+      ]
+    },
+    {
+      "h2": "Tarayıcı uzantısının canlı etkinliklerde gerçekçi olarak ne yapabileceği",
+      "body": [
+        "<p>Eklentiler tarayıcıda, sayfada çalışır. JavaScript’i engelleyebilir, ağ isteklerini bloklar, DOM elementlerini gizleyebilir ve betikleri değiştirir. Bu araç seti, <strong>istemci tarafında</strong> reklamlara karşı kararlıdır — burada sayfadaki bir SDK, reklamları isteyip gösterir — ancak videostreame zaten gömülü olan reklamlara karşı işe yaramaz.",
+        "<p>Yani gerçekçi beklenti şudur: Yayıncinin hala istemci tarafında (client-side) dağıtım kullandığı durumlarda güçlü sonuçlar alınır; akış sunucu tarafında (server-side) yapılmışsa ise hiçbir etki olmaz. Bu karışım, hizmete, etkinliğe ve hatta bölgeye göre değişir; bu nedenle aynı maç, bir platformda reklamsızken başka bir platformda değildir.</p>"
+      ]
+    },
+    {
+      "h2": "AdOff’in çalıştığı yerler: Geri Al (Catch-up) ve İsteğe Bağlı Yayınlar",
+      "body": [
+        "<p>İnsanların “sporu çevrimiçi izleme” olarak adlandırdıklarının çoğu, canlı yayını değil: tekrar, özet veya ulusal yayıcı platformundaki tam maç izleme içeriğidir. Bu istemci tarafı reklam SDK’ları için klasik bir durumdur, çünkü gecikme artık önemli değildir.</p>",
+        "<p>AdOff, 42 Avrupa yayın kuruluşunun etki alanını kapsar — bunlara RaiPlay, Mediaset Infinity, La7, discovery+, BBC iPlayer, ITVX, ZDF, ARD, France.tv, TF1, RTVE ve diğerleri dahildir — ve reklam SDK’sının betiğini, oynatıcıya içeriği hemen devam ettirmesini söyleyen bir stub’a yönlendirerek bunu yapar. Yeniden oynatma başlar, ön rolled ya da orta rolled reklam çekilmez.</p>"
+      ]
+    },
+    {
+      "h2": "İşi yapan iki mekanizma",
+      "body": [
+        "<p>Bu yayınlayıcı sitelerde, nötrleştirme, aynı SDK’yı hedefleyen iki kanal aracılığıyla gerçekleşir: oynatıcı başlatılmadan önce <code>window.google.ima</code>’yı geçersiz kılan sayfa içi bir stub ve SDK’nın betik dosyasını uzantıya eklenmiş stub ile yeniden yönlendiren declarativeNetRequest kuralları. Her iki yolla da, oynatıcı bir reklam aralığı çalıştırmak istediğinde, aralığın zaten bittiği bildirilir.</p>",
+        "<p>Ağ düzeyindeki kurallar, her sitede 180 reklam ağı istek desenini engeller; kozmetik filtreleme, oynatıcı etrafındaki banner’ları ve katmanları gizler; ve gizlilik katmanı, bazı platformların oynatmadan önce uyguladığı anti-reklam engelleme kontrollerine karşı çalışır.</p>"
+      ]
+    },
+    {
+      "h2": "Çalışmayacak olanlar — ve bunu neden söylüyoruz",
+      "body": [
+        "<p>Sınırlar konusunda açık ve net olmak:</p>",
+        "<ul><li><strong>Sunucu tarafı reklam ekleme</strong>: Herhangi bir tarayıcı uzantısı tarafından ele alınamaz. Reklamlar akışın içinde gelir.</li><li><strong>Yerel TV uygulamaları</strong>: Bir uzantı yalnızca bir tarayıcıda çalışır, akıllı TV veya set-top kutusu uygulamasında çalışmaz.</li><li><strong>Özel altyapılı premium abonelik hizmetleri</strong>: AdOff, bu hizmetlerin oynatıcılarının düzgün çalışmasını sağlamak amacıyla bunları bilerek hariç tutar.</li></ul>",
+        "<p>Hiçbir reklam engelleyici, herhangi bir platformda, her canlı etkinlikten her reklamı kaldırmaz. Bir ürün bunu vaat ediyorsa, bunu bir kırmızı bayrak olarak değerlendirin.</p>"
+      ]
+    },
+    {
+      "h2": "Maç günü için pratik ayar",
+      "body": [
+        "<p>Yayıncı sitelerde tekrar izlemeleri ve özetleri izliyorsanız, AdOff'u masaüstü tarayıcınızda (Chrome, Firefox, Safari, Edge veya Opera) kurun ve korumayı açık tutun — bu ücretsizdir ve herhangi bir hesap gerektirmez. Belirli bir oynatıcı başlamıyorsa, her şeyi kapatmak yerine siteye özel durdurma seçeneğini kullanın, ardından sayfayı yeniden yükleyin.</p>",
+        "<p>SSAI kullanan hizmetlerde gerçekten canlı akışlar için gerçekçi alternatifler tarayıcı dışındadır: ağ düzeyinde DNS filtreleme, ev ağınızda bazı reklam izleme etki alanlarını kaldırabilir — bu konuda <a href=\"/android-dns\">DNS düzeyinde filtreleme</a> rehberimize bakın — ancak akışa kendi içine dikilmiş reklamları kesmez.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Bir reklam engelleyici, canlı bir futbol maçından reklamları kaldırabilir mi?",
+      "a": "Sıkça hayır. Gerçek canlı akışlar, reklamların dağıtımdan önce videoya eklenmesini sağlayan sunucu tarafı reklam ekleme yöntemini sıkça kullanır; bu durumda hiçbir tarayıcı uzantısı bunu geri alamaz. Ancak platform hâlâ istemci tarafı SDK aracılığıyla reklamları yükliyorsa, AdOff gibi bir uzantı bu reklamları etkisiz hâle getirebilir."
+    },
+    {
+      "q": "AdOff, ulusal yayinci catch-up hizmetlerinde çalışır mı?",
+      "a": "Evet. AdOff, 42 Avrupa yayın kuruluşunun etki alanı kapsar — bunlara RaiPlay, Mediaset Infinity, BBC iPlayer, ITVX, ZDF ve France.tv dahildir — ve reklam SDK’sını, içeriğin hemen devam etmesini sağlayan bir stub ile değiştirerek, tekrar oynatmaların öncül veya orta bölüm reklamları olmadan başlamasını sağlar."
+    },
+    {
+      "q": "Neden bazı spor platformları reklam engelleyicimi algılar?",
+      "a": "Bazı platformlar, oynatmayı başlatmadan önce anti-reklam engelleme (anti-adblock) betiklerini çalıştırır. AdOff, bu kontrolleri atlamayı amaçlayan bir gizlilik katmanı içerir — bu katman, tuzak yemi sahteleştirme ve fetch/XHR aracılığıyla istek engelleme yöntemlerini kullanır; ancak platformlar tespit sistemlerini sürekli güncellediği için bu kaçış yöntemlerinin süresi sınırlıdır."
+    },
+    {
+      "q": "Ağım üzerinden SSAI reklamlarını engellemenin bir yolu var mı?",
+      "a": "Reklamların kendileri değil: bunlar video akışının bir parçasıdır. Evdeki routerınız üzerinden DNS düzeyinde reklam izleme etki alanlarını engelleyebilirsiniz, ancak bu yöntem, eklenen reklam bölümlerini içerik bölümlerinden ayıramaz."
+    },
+    {
+      "q": "AdOff neden ücretli akış hizmetlerini etkilemiyor?",
+      "a": "Bir karar sonucu: bu hizmetler özel oyuncu hattı (player pipeline) kullanır ve bunlara müdahale etmek, oynatmanın tamamen bozulmasına neden olabilir. Bu nedenle bu platformları dışarıda bırakmak, güvenilir bir reklamsızlık iddiasından daha önemli olan, videoların düzgün çalışmasını sağlar."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Akış reklam engelleme: tam rehber"
+    },
+    {
+      "href": "/server-side-ad-insertion-explained",
+      "text": "Sunucu tarafı reklam ekleme (SSAI) açıklaması"
+    },
+    {
+      "href": "/tv-streaming-ad-blocker",
+      "text": "TV ve akış cihazları için reklam engelleyiciler"
+    }
+  ],
+  "cta": {
+    "h3": "Reklam araları olmadan tekrar izle",
+    "p": "AdOff, 42 Avrupa yayın kuruluşu platformunda istemci tarafı video reklamlarını etkisiz hale getirir. Ücretsizdir, hesap gerektirmez.",
+    "btn": "AdOff’u ücretsiz kur"
+  },
+  "report": {
+    "intro": "Canlı bir etkinlikte veya belirli bir yayın kuruluşunda AdOff’u denediniz ve bir şeyler düzgün çalışmadı mı? Sayfanın tam URL’siyle birlikte durumu bildirin: sizin gibi raporlar, bir sonraki sürümde hangi kuralları ve düzeltmeleri uygulayacağımızı belirler.",
+    "btn_text": "Bu siteyi bildir",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

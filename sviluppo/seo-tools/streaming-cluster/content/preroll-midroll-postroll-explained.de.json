@@ -1,0 +1,97 @@
+{
+  "slug": "preroll-midroll-postroll-explained",
+  "lang": "de",
+  "title": "Pre-roll-, Mid-roll- und Post-roll-Werbeanzeigen erklärt | AdOff",
+  "description": "Jede Video-Werbeanzeige-Platzierung erklärt: Pre-, Mid-, Post-Roll, Bumper, Overlays & Companions – Auslieferung und Blockierbarkeit.",
+  "h1": "Pre-roll, Mid-roll, Post-roll: Jede Video-Werbeplatzierung erklärt",
+  "answer": "Pre-Roll-Werbevideos laufen vor dem Video, Mid-Roll-Werbevideos unterbrechen es, Post-Roll-Werbevideos folgen ihm. Die leichter zu blockierenden Platzierungen werden über clientseitige SDKs wie Google IMA ausgeliefert; AdOff blockiert diese mithilfe eines Sofort-Wiedergabestubs, während serverseitig eingefügte Werbevideos für jede Browser-Erweiterung unerreichbar bleiben.",
+  "sections": [
+    {
+      "h2": "Pre-roll: die Werbung vor dem Video",
+      "body": [
+        "<p>Das <strong>Pre-Roll</strong>-Werbefilmchen wird abgespielt, bevor der angeforderte Inhalt beginnt. Es ist die wertvollste Platzierung in der Video-Werbung, da es unauslassbare Aufmerksamkeit zum exakten Zeitpunkt des höchsten Interesses bietet – zugleich aber auch die lästigste für Zuschauer, da sie den gewünschten Video-Start verzögert.</p>",
+        "<p>Es wird üblicherweise clientseitig ausgeliefert: Der Player initialisiert das IMA-SDK, fordert eine VAST-Anzeige an und überlagert diese auf der Video-Oberfläche. Da der gesamte Vorgang im Browser stattfindet, ist er stark blockierbar. AdOffs Stub antwortet auf die Startanfrage des SDK mit einer sofortigen Fortsetzungs-Ereignis-Meldung, sodass das Pre-Roll einfach übersprungen wird und die Wiedergabe sofort beginnt.</p>"
+      ]
+    },
+    {
+      "h2": "Mid-roll: Werbung, die innerhalb des Videos eingefügt wird",
+      "body": [
+        "<p>Das <strong>Mid-Roll</strong> unterbricht den Inhalt zu vordefinierten Zeitpunkten und simuliert damit einen Fernseh-Werbeblock. Die Player beschreiben diese Unterbrechungspunkte in einem VMAP-Dokument oder die Plattform plant sie in der Werbeanwort ein. Mid-Rolls erzeugen die größte Frustration, da sie den Film gerade zu seinem spannendsten Moment unterbrechen.</p>",
+        "<p>Clientseitige Mid-Rolls durchlaufen denselben SDK-Pfad wie Pre-Rolls und werden genauso neutralisiert: Sobald der Player um Start eines Werbeblocks bittet, antwortet der Stub, dass der Block bereits beendet ist, bevor er begonnen hat. Auf der Haupt-Videoplattform entfernt AdOff zusätzlich die Werbeplanung aus der Player-Antwort, bevor die Seite diese liest, und überspringt automatisch alles, was dennoch durchschlüpft.</p>"
+      ]
+    },
+    {
+      "h2": "Post-roll: die Werbung nach dem Ende des Videos",
+      "body": [
+        "<p>Das <strong>Post-Roll</strong> läuft nach Abschluss des Inhalts. Zuschauer tolerieren es am besten – die meisten haben bereits aufgehört zuzusehen – doch Werbetreibende zahlen dafür weiterhin, weshalb Player es über denselben clientseitigen Pfad abspielen.</p>",
+        "<p>Dieselbe Auslieferung, dieselbe Schwäche: Sobald die Anzeige über ein clientseitiges SDK angefordert wird, bedeutet die sofortige Fortsetzung durch den Stub, dass das Video sauber ohne nachgelagerte Werbung endet.</p>"
+      ]
+    },
+    {
+      "h2": "Bumpers, Overlays und Begleitwerbung",
+      "body": [
+        "<p>Nicht jede Platzierung behält die Video-Oberfläche für mehrere Sekunden lang für sich:</p>",
+        "<ul><li><strong>Bumpers</strong> sind sehr kurze (ca. 6 Sekunden) unauslassbare Werbespots, oft als Pre-Rolls eingesetzt. Sie werden über denselben SDK- Weg ausgeliefert und genauso neutralisiert.</li><li><strong>Overlays</strong> sind Banner, die im unteren Bereich eines laufenden Videos erscheinen, ohne die Wiedergabe zu unterbrechen. Sie bestehen aus einfachen DOM-Elementen, weshalb die kosmetische Filterungsebene (CSS-Regeln plus Content-Script) sie auf jeder Seite ausblendet.</li><li><strong>Companion Ads</strong> sind Display-Banner, die neben dem Player angezeigt werden, während die Video-Werbung läuft. Auch sie sind gewöhnliche Seitenelemente und werden durch kosmetische Filterung ausgeblendet.</li><li><strong>In-feed Ads</strong> sind Video-Werbespots, die sich als empfohlene Inhalte in einer Liste tarnen. Auch diese werden durch kosmetische Filterung und generische Selektoren erfasst und ausgeblendet.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Was eine Platzierung schwer oder unmöglich blockierbar macht",
+      "body": [
+        "<p>Die entscheidende Unterscheidungslinie ist <strong>der Ort, an dem die Anzeige zusammengestellt wird</strong>. Sobald die Anzeige per JavaScript im Browser abgerufen und dargestellt wird – was für alles gilt, was über ein SDK wie IMA ausgeliefert wird – kann eine Erweiterung sie abfangen, ersetzen oder ausblenden.</p>",
+        "<p>Wenn die Anzeige stattdessen bereits serverseitig vor der Auslieferung in den Video-Stream eingefügt wird (<a href=\"/server-side-ad-insertion-explained\">SSAI</a>), sind die Pixel der Werbung nicht mehr von den Pixeln des eigentlichen Programms zu unterscheiden. Keine Browser-Erweiterung kann sie danach noch trennen – daher lässt AdOff Premium-Abonnementdienste, die SSAI nutzen, bewusst unangetastet, um eine fehlerhafte Wiedergabe zu vermeiden.</p>"
+      ]
+    },
+    {
+      "h2": "Wie AdOff Ebenen auf Platzierungen abbildet",
+      "body": [
+        "<p>Jede Platzierung fällt in die Zuständigkeit der dafür vorgesehenen Ebene:</p>",
+        "<ul><li>SDK-ausgelieferte Pre-/Mid-/Post-Rolls und Bumpers → IMA-Neutralisierung (in-page Stub oder Netzwerkumleitung auf 42 europäischen Rundfunkdomänen).</li><li>Overlays, Companion Ads, In-feed Ads → kosmetische Filterung (CSS + Content Script).</li><li>Anzeigen-Netzwerk-Anfragen → 180 statische Netzwerkregeln (echte Anzeigen werden im Badge gezählt, Tracking wird blockiert, aber nicht gezählt).</li><li>Anti-Adblock-Walls → Stealth-Ebene mit Bait-Spoofing und Fetch/XHR-Interception.</li></ul>",
+        "<p>Alles davon ist kostenlos in einer einzigen Erweiterung für Chrome, Firefox, Safari, Edge und Opera erhältlich – ohne Kontoerstellung."
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Welche Video-Werbeanzeigen sind am schwierigsten zu blockieren?",
+      "a": "Anzeigen, die serverseitig in den Stream eingefügt werden (SSAI), lassen sich praktisch nicht von einer Browser-Erweiterung von den Inhalten trennen, da sie als Teil des Videos selbst übertragen werden. Client-seitig über SDKs ausgelieferte Anzeigen hingegen sind viel einfacher zu neutralisieren."
+    },
+    {
+      "q": "Werden Mid-Roll-Werbeanzeigen anders blockiert als Pre-Roll-Werbeanzeigen?",
+      "a": "Nicht, wenn sie denselben Übertragungsweg nutzen. Beide durchlaufen typischerweise dasselbe client-seitige SDK, sodass ein Stub, der auf Anzeige-Pausen-Anfragen mit einer sofortigen Fortsetzungs-Ereignis reagiert, sowohl Pre-Rolls als auch Mid-Rolls entfernt."
+    },
+    {
+      "q": "Was ist eine Bumper-Werbeanzeige?",
+      "a": "Ein „Bumper“ ist eine sehr kurze, nicht überspringbare Video-Anzeige, üblicherweise etwa sechs Sekunden lang, die normalerweise vor dem eigentlichen Inhalt eingeblendet wird. Da sie über dasselbe SDK wie längere Anzeigen ausgeliefert wird, wird sie durch denselben Mechanismus neutralisiert."
+    },
+    {
+      "q": "Wie werden Overlay- und Companion-Werbeanzeigen entfernt?",
+      "a": "Es handelt sich um gewöhnliche Seitenelemente, nicht um Video-Frames. Die kosmetische Filterung – bestehend aus CSS-Regeln sowie einem Content-Skript, das den DOM durchsucht – verbirgt sie, während netzwerkebene Regeln deren Anzeigenanfragen blockieren."
+    },
+    {
+      "q": "Werden von Werbeblockern alle blockierten Anfragen als Werbeanzeige gezählt?",
+      "a": "AdOff trennt echte Werbung von Tracking: Analysen und Tracker werden ebenfalls blockiert, doch das Badge und die Popup-Zähler zeigen ausschließlich echte Anzeigen an, sodass die Zahlen tatsächlich widerspiegeln, was Sie übersprungen haben."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Streaming-Ad-Blocking: Der vollständige Leitfaden"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Wie das IMA SDK-Ad-Blocking funktioniert"
+    },
+    {
+      "href": "/server-side-ad-insertion-explained",
+      "text": "Serverseitige Werbeeinfügung (SSAI) erklärt"
+    }
+  ],
+  "cta": {
+    "h3": "Jede Platzierung, eine Erweiterung",
+    "p": "Pre-Rolls, Mid-Rolls, Overlays und Banner – AdOff behandelt jede mit der richtigen Schicht, kostenlos für alle.",
+    "btn": "AdOff kostenlos installieren"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

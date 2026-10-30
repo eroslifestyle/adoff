@@ -1,0 +1,92 @@
+{
+  "slug": "live-sports-ad-blocking",
+  "lang": "en",
+  "title": "Blocking Ads on Live Sports Streams | AdOff",
+  "description": "Why live sport is the hardest ad-blocking case, what a browser extension can and cannot do, and which broadcasters AdOff actually covers.",
+  "h1": "Ad blocking on live sports: what actually works",
+  "answer": "Live sport is the hardest place to block ads: true live feeds often use server-side ad insertion that no browser extension can remove. Where a browser extension does work is on on-demand and catch-up broadcasts from broadcasters that load ads client-side — and that is exactly what AdOff neutralizes.",
+  "sections": [
+    {
+      "h2": "Why live is the hardest case",
+      "body": [
+        "<p>Live sport is the crown jewel of video advertising, and it is defended accordingly. A genuinely live broadcast cannot tolerate a client-side ad SDK making round trips to an ad server before each break: the delay would desynchronize viewers. So many live services adopt <a href=\"/server-side-ad-insertion-explained\">server-side ad insertion (SSAI)</a>, where the commercial is stitched into the video stream before it ever reaches your device.</p>",
+        "<p>When that happens, the ad's pixels are part of the video itself. A browser extension — any extension, not just AdOff — has no way to separate them after the fact. Claiming otherwise would be dishonest.</p>"
+      ]
+    },
+    {
+      "h2": "What a browser extension can realistically do on live events",
+      "body": [
+        "<p>Extensions operate in the browser, on the page. They can intercept JavaScript, block network requests, hide DOM elements and substitute scripts. That toolkit is decisive against <strong>client-side</strong> advertising — where an SDK in the page requests and renders ads — and useless against ads already baked into the video stream.</p>",
+        "<p>So the honest expectation is: strong results where the broadcaster still uses client-side delivery, and no effect where the feed is server-side. The mix varies by service, event and even region, which is why the same match may be ad-free on one platform and not on another.</p>"
+      ]
+    },
+    {
+      "h2": "Where AdOff does work: catch-up and on-demand broadcasts",
+      "body": [
+        "<p>Much of what people call \"watching sport online\" is not the live feed: it is the replay, the highlight, the full-match catch-up on a national broadcaster's platform. These on-demand streams are the classic case for client-side ad SDKs, because delay no longer matters.</p>",
+        "<p>AdOff covers 42 European broadcaster domains — including RaiPlay, Mediaset Infinity, La7, discovery+, BBC iPlayer, ITVX, ZDF, ARD, France.tv, TF1, RTVE and others — by redirecting the advertising SDK's script to a stub that tells the player to resume content immediately. The replay starts, no pre-roll or mid-roll is fetched.</p>"
+      ]
+    },
+    {
+      "h2": "The two mechanisms doing the work",
+      "body": [
+        "<p>On those broadcaster sites, the neutralization runs through two channels targeting the same SDK: an in-page stub that supersedes <code>window.google.ima</code> before the player initializes, and declarativeNetRequest rules that redirect the SDK's script file to the stub bundled in the extension. Either way, when the player asks to run an ad break, it is told the break is already over.</p>",
+        "<p>Network-level rules block 180 ad-network request patterns on every site; cosmetic filtering hides banners and overlays around the player; and the stealth layer works against anti-adblock checks that some platforms run before playback.</p>"
+      ]
+    },
+    {
+      "h2": "What will not work — and why we say so",
+      "body": [
+        "<p>Being upfront about the limits:</p>",
+        "<ul><li><strong>Server-side ad insertion</strong>: not addressable by any browser extension. Ads arrive inside the stream.</li><li><strong>Native TV apps</strong>: an extension only runs in a browser, not in the smart TV or set-top box app.</li><li><strong>Premium subscription services</strong> with proprietary pipelines: AdOff deliberately excludes them so their players keep working.</li></ul>",
+        "<p>No ad blocker, on any platform, removes every ad from every live event. If a product promises that, treat it as a red flag.</p>"
+      ]
+    },
+    {
+      "h2": "Practical setup for match day",
+      "body": [
+        "<p>If you watch replays and highlights on broadcaster sites, install AdOff in your desktop browser (Chrome, Firefox, Safari, Edge or Opera) and keep protection on — it is free and needs no account. If a specific player refuses to start, use the per-site pause instead of disabling everything, then reload.</p>",
+        "<p>For genuinely live streams on services using SSAI, the realistic alternatives are outside the browser: network-level DNS filtering can remove some ad-tracking domains across your home network — see our guide to <a href=\"/android-dns\">DNS-level filtering</a> — though it will not cut ads stitched into the stream itself.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Can an ad blocker remove ads from a live football match?",
+      "a": "Often not. Genuine live feeds frequently use server-side ad insertion, where ads are stitched into the video before delivery, which no browser extension can undo. Where the platform still loads ads through a client-side SDK, an extension like AdOff can neutralize them."
+    },
+    {
+      "q": "Does AdOff work on national broadcaster catch-up services?",
+      "a": "Yes. AdOff covers 42 European broadcaster domains — including RaiPlay, Mediaset Infinity, BBC iPlayer, ITVX, ZDF and France.tv — by replacing the advertising SDK with a stub that resumes content immediately, so replays start without pre-roll or mid-roll ads."
+    },
+    {
+      "q": "Why do some sports platforms detect my ad blocker?",
+      "a": "Some platforms run anti-adblock scripts before allowing playback. AdOff includes a stealth layer — bait spoofing and fetch/XHR interception — designed to evade these checks, though no evasion lasts forever as platforms keep updating their detection."
+    },
+    {
+      "q": "Is there any way to block SSAI ads on my network?",
+      "a": "Not the ads themselves: they are part of the video stream. DNS-level filtering on your router can block ad-tracking domains for all devices at home, but it cannot separate stitched ad segments from content segments."
+    },
+    {
+      "q": "Why does AdOff not touch paid streaming services?",
+      "a": "Deliberate choice: those services use proprietary player pipelines, and forcing changes into them risks breaking playback entirely. Excluding them keeps their video working, which matters more than an unreliable ad-free claim."
+    }
+  ],
+  "related": [
+    {"href": "/streaming-ad-blocking", "text": "Streaming ad blocking: the complete guide"},
+    {"href": "/server-side-ad-insertion-explained", "text": "Server-side ad insertion (SSAI) explained"},
+    {"href": "/tv-streaming-ad-blocker", "text": "Ad blockers for TV and streaming devices"}
+  ],
+  "cta": {
+    "h3": "Watch replays without the ad breaks",
+    "p": "AdOff neutralizes client-side video ads on 42 European broadcaster platforms. Free, no account.",
+    "btn": "Install AdOff free"
+  },
+  "report": {
+    "intro": "Tried AdOff on a live event or a specific broadcaster and something did not work? Report the case with the exact URL of the page: reports like yours decide which rules and fixes we ship next.",
+    "btn_text": "Report this site",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

@@ -1,0 +1,96 @@
+{
+  "slug": "catch-up-tv-ad-blocker-france",
+  "lang": "pt",
+  "title": "Bloqueie anúncios no france.tv, TF1, 6play e myCANAL | AdOff",
+  "description": "AdOff bloqueia anúncios em vídeo no france.tv, TF1, 6play, M6, Arte e myCANAL no navegador. Extensão gratuita, Manifest V3, sem conta, compatível com 5 navegadores.",
+  "h1": "Bloqueador de anúncios para TV de reprise francesa: france.tv, TF1, 6play",
+  "answer": "O AdOff remove os anúncios pré-roll e mid-roll das plataformas francesas de TV sob demanda no navegador, na maioria dos casos. Ele substitui um stub local pelo SDK de anúncios Google IMA solicitado por esses players, permitindo que a reprodução retome imediatamente em vez de exibir o intervalo publicitário. Funciona em players da web para desktop enquanto a plataforma utilizar a integração padrão do SDK.",
+  "sections": [
+    {
+      "h2": "Serviços franceses cobertos",
+      "body": [
+        "<p>As emissoras francesas financiam suas plataformas de replay com anúncios de vídeo entregues por meio do SDK padrão Google IMA em players de navegador. O AdOff cobre:</p>",
+        "<ul><li><strong>france.tv</strong> (france.tv)</li><li><strong>TF1</strong> (tf1.fr)</li><li><strong>6play</strong> (6play.fr)</li><li><strong>M6</strong> (m6.fr)</li><li><strong>Arte</strong> (arte.tv)</li><li><strong>myCANAL</strong> (mycanal.fr)</li></ul>"
+      ]
+    },
+    {
+      "h2": "Uma abordagem centrada no jogador, não uma abordagem do tipo “caça-níqueis”",
+      "body": [
+        "<p>Em vez de seguir cada formato de anúncio de cada emissora individualmente, o AdOff ataca o componente compartilhado: o SDK de anúncios. A extensão redireciona a solicitação do script do SDK para um stub que ela mesma fornece. Esse stub mantém a máquina de estados do player satisfeita — ele reconhece a solicitação de anúncio e imediatamente sinaliza a retomada do conteúdo —, de modo que o programa continua e a pausa nunca se materializa.</p>",
+        "<p>Um mecanismo, aplicado sempre que o SDK padrão aparece, é o que torna viável manter cobertura em seis plataformas francesas diferentes.</p>"
+      ]
+    },
+    {
+      "h2": "Replay versus ao vivo versus planos de assinatura do Canal",
+      "body": [
+        "<p>As transmissões de reprise no TF1 ou no 6play são gratuitas porque incluem propagandas, e é aí que a neutralização tem efeito. Canais ao vivo e alguns esportes utilizam pipelines diferentes, cujos resultados variam. O myCANAL também oferece planos pagos com inserção no servidor: nesses fluxos, as propagandas são integradas diretamente ao vídeo, e a extensão deliberadamente se mantém de fora para que o player continue funcionando.</p>"
+      ]
+    },
+    {
+      "h2": "Filtragem por página em torno do player",
+      "body": [
+        "<p>Além da camada de vídeo, o AdOff aplica 180 regras de rede estáticas contra domínios de anúncios e rastreamento e aplica um filtro cosmético CSS/DOM. Nas páginas da france.tv ou da TF1, isso remove banners promocionais e caixas de sobreposição da interface, tornando a página mais leve mesmo antes de você iniciar a reprodução.</p>"
+      ]
+    },
+    {
+      "h2": "Limites declarados claramente",
+      "body": [
+        "<ul><li><strong>SSAI</strong>: uma vez que os anúncios são integrados no servidor à transmissão, o stub não se aplica mais.</li><li><strong>Apenas navegador desktop</strong>: os aplicativos móveis da TF1 ou 6play e os aplicativos para TV inteligente estão fora do escopo.</li><li>Algumas <strong>transmissões ao vivo e esportes</strong> utilizam entrega diferente.</li><li>As emissoras atualizam os players com frequência; a cobertura é mantida ao longo do tempo, nunca congelada.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Grátis, sem necessidade de conta, cinco navegadores",
+      "body": [
+        "<p>AdOff é uma extensão Manifest V3 que não custa nada, não exige cadastro e não possui período de teste. É compatível com Chrome, Firefox, Safari, Edge e Opera. Instale, mantenha a chave ativada e abra sua plataforma de replay como de costume.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "O AdOff remove os anúncios na replay do TF1?",
+      "a": "Na maioria dos casos, sim: o player web da TF1 carrega seus anúncios por meio do Google IMA SDK, e o AdOff substitui esse SDK por um *stub* que retoma imediatamente o programa. Quando a TF1 utiliza outras técnicas de inserção, a cobertura pode variar."
+    },
+    {
+      "q": "Posso assistir ao 6play sem anúncios gratuitamente?",
+      "a": "AdOff é uma extensão gratuita para navegador que neutraliza o SDK de anúncios no reprodutor web do 6play, impedindo assim que os intervalos publicitários sejam exibidos. O 6play Max é um produto separado e pago; o AdOff não altera sua conta e não possui versão paga."
+    },
+    {
+      "q": "E quanto ao myCANAL?",
+      "a": "myCANAL é coberto onde seu player de navegador utiliza o SDK IMA padrão. As transmissões por assinatura do Canal com inserção de anúncios no lado do servidor são deliberadamente excluídas para que o player continue funcionando corretamente."
+    },
+    {
+      "q": "Ele funciona no aplicativo da FranceTV ou em uma TV inteligente?",
+      "a": "Não. O AdOff atua apenas em navegadores desktop. Aplicativos móveis, aplicativos de TV inteligente e dispositivos de streaming estão fora do seu alcance."
+    },
+    {
+      "q": "A Arte também é coberta?",
+      "a": "Sim, o arte.tv faz parte do grupo abrangido. O mesmo mecanismo de “stub” aplica-se quando o player web da Arte solicita o SDK de anúncios padrão, na maioria dos casos retomando o conteúdo sem a interrupção."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Como o bloqueio de anúncios em streaming funciona"
+    },
+    {
+      "href": "/block-video-ads",
+      "text": "Bloqueando anúncios de vídeo em geral"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-germany",
+      "text": "Bloqueador de anúncios para TV de retransmissão alemã"
+    }
+  ],
+  "cta": {
+    "h3": "Reproduzir em francês sem cortes de publicidade",
+    "p": "Instale o AdOff no seu navegador e deixe o stub neutralizar o SDK de anúncios no france.tv, TF1 e 6play.",
+    "btn": "Instale o AdOff gratuitamente"
+  },
+  "report": {
+    "intro": "Uma plataforma francesa ausente nesta página? Se os anúncios ainda aparecerem em https://adoff.app/catch-up-tv-ad-blocker-france, informe-nos qual serviço. Os relatórios decidem quais emissoras adicionaremos em seguida.",
+    "btn_text": "Relatar um serviço ausente",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

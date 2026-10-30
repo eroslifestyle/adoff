@@ -1,0 +1,105 @@
+{
+  "slug": "ima-sdk-ad-blocking-explained",
+  "lang": "id",
+  "title": "Penjelasan Pemblokiran Iklan IMA SDK oleh AdOff",
+  "description": "Bagaimana IMA SDK Google memuat iklan video, siklus permintaan iklan di dalam pemutar, dan bagaimana stub yang menjawab 'resume content' menetralkannya.",
+  "h1": "Pemblokiran Iklan IMA SDK, dijelaskan",
+  "answer": "Google IMA SDK adalah pustaka yang digunakan pemutar video untuk meminta dan memutar iklan. Memblokirnya pada tingkat jaringan akan merusak fungsi pemutar, sehingga AdOff menggantinya dengan stub yang menanggapi setiap permintaan iklan dengan event “lanjutkan konten” secara langsung: pemutar tetap berfungsi, namun iklan tidak pernah dimuat.",
+  "sections": [
+    {
+      "h2": "Apa itu IMA SDK sebenarnya",
+      "body": [
+        "<p><strong>Interactive Media Ads (IMA) SDK</strong> adalah pustaka sisi klien milik Google untuk iklan video. Situs web yang ingin menghasilkan pendapatan dari video biasanya tidak membangun pemutar iklannya sendiri: situs tersebut memuat <code>imasdk.googleapis.com/js/sdkloader/ima3.js</code> (atau varian dinamis <code>ima3_dai.js</code>), menginisialisasi <code>AdDisplayContainer</code>, dan menyerahkan URL tag iklan ke SDK. SDK kemudian mengambil respons VAST, menampilkan iklan di dalam pemutar, melacak tayangan dan persentase penonton (quartiles), serta akhirnya mengembalikan kendali ke konten milik penerbit.</p>",
+        "<p>Karena merupakan satu skrip bersama yang disajikan dari satu domain, IMA SDK merupakan titik kritis paling banyak dimanfaatkan dalam periklanan video web: nonaktifkan sekali saja, dan semua pemain yang dibangun di atasnya berhenti menayangkan iklan.</p>"
+      ]
+    },
+    {
+      "h2": "Siklus hidup permintaan iklan",
+      "body": [
+        "<p>Ketika penonton menekan tombol putar, pemutar biasanya menjalankan urutan ini:</p>",
+        "<ol><li>Halaman memuat <code>ima3.js</code> dari server Google.</li><li>Pemutar membuat pengambil iklan dan meminta iklan dengan tag iklan yang mengarah ke server iklan.</li><li>SDK mengambil iklan (biasanya dokumen VAST/VMAP melalui DoubleClick), menguraikannya, dan merender media iklan ke dalam wadah di atas video.</li><li>Piksel pelacakan diaktifkan; pemutar menunggu.</li><li>Ketika iklan selesai (atau mengalami kesalahan), SDK mengirimkan <code>CONTENT_RESUME_REQUESTED</code>, dan pemutar melanjutkan video asli.</li></ol>",
+        "<p>Acara terakhir inilah kuncinya: pemain ditulis untuk menunggu acara tersebut. Siapa pun yang mengendalikan SDK mengendalikan kapan konten dilanjutkan.</p>"
+      ]
+    },
+    {
+      "h2": "Mengapa hanya memblokir SDK menyebabkan pemutar berhenti berfungsi",
+      "body": [
+        "<p>Metode kasar adalah memblokir <code>imasdk.googleapis.com</code> pada level jaringan dan menganggapnya selesai. Masalahnya: banyak pemutar menganggap SDK yang gagal atau tidak tersedia sebagai kesalahan fatal, sehingga menolak memutar video sama sekali, menampilkan spinner pemuatan atau dinding “deteksi pemblokir iklan” alih-alih konten.</p>",
+        "<p>Inilah mengapa pemblokir tingkat jaringan klasik lemah terhadap iklan video: mereka dapat menghentikan permintaan iklan, tetapi tidak dapat menjawab pertanyaan pemutar “apakah saya bisa melanjutkan sekarang?”. Hanya sesuatu yang mewakili SDK yang dapat melakukannya.</p>"
+      ]
+    },
+    {
+      "h2": "Netralisasi melalui substitusi: pendekatan stub",
+      "body": [
+        "<p>AdOff mengambil pendekatan berbeda: alih-alih memblokir SDK, ia <strong>menggantinya</strong>. Sebuah stub yang meniru API publik IMA SDK dimasukkan, sehingga pemutar tetap “melihat” SDK yang berfungsi—yaitu SDK yang berperilaku seolah setiap jeda iklan kosong.</p>",
+        "<p>Ketika pemutar memanggil <code>adsManager.start()</code>, stub segera memancarkan <code>CONTENT_RESUME_REQUESTED</code>. Pemutar langsung melanjutkan konten. Tidak ada iklan yang diambil, tidak ada iklan yang dirender, dan pemutar tidak pernah memasuki keadaan error karena tidak pernah menyadari adanya sesuatu yang hilang.</p>"
+      ]
+    },
+    {
+      "h2": "Dua saluran pengiriman untuk stub yang sama",
+      "body": [
+        "<p>AdOff mengirimkan stub yang sama melalui dua saluran, karena situs yang berbeda memuat SDK dengan cara yang berbeda:</p>",
+        "<ul><li><strong>Injeksi di halaman.</strong> Pada situs yang tidak diecualikan, skrip main-world menentukan <code>window.google.ima</code> sebelum pemutar diinisialisasi, sehingga SDK yang dibundel atau dimuat secara eksternal digantikan oleh stub.</li><li><strong>Pengalihan jaringan.</strong> Untuk sejumlah 42 domain penyiar Eropa, aturan declarativeNetRequest mengalihkan permintaan ke <code>ima3.js</code> dan <code>ima3_dai.js</code> ke file stub yang dibundel di dalam ekstensi. Halaman memuat apa yang dikira sebagai SDK Google, tetapi sebenarnya memuat SDK AdOff.</li></ul>",
+        "<p>Kedua saluran mengarah pada hasil yang sama: pemain mendapatkan SDK yang responsif, dan penonton mendapatkan konten.</p>"
+      ]
+    },
+    {
+      "h2": "Di mana pendekatan ini mencakup dan tidak mencakup",
+      "body": [
+        "<p>Stub ini menonaktifkan iklan berbasis IMA di sisi klien. Stub ini tidak memengaruhi <a href=\"/server-side-ad-insertion-explained\">penyisipan iklan di sisi server (SSAI)</a>, di mana iklan disatukan langsung ke dalam aliran video sebelum pengiriman—tidak ada panggilan SDK yang dapat diintercept. Layanan langganan premium yang menggunakan jalur iklan milik mereka sendiri secara sengaja dikecualikan agar pemutar mereka tetap berfungsi.</p>",
+        "<p>Platform video utama juga mendapat jalur khusus di atasnya: penjadwalan iklan dihapus dari respons pemutar sebelum halaman membacanya, dan apa pun yang lolos akan di-<i>fast-forward</i>.</p>"
+      ]
+    },
+    {
+      "h2": "Mengapa ini penting bagi masa depan pemblokiran iklan",
+      "body": [
+        "<p>Platform iklan terus mengalihkan bobot ke SDK sisi klien justru karena pemblokir yang sederhana kesulitan menghadapinya. Pendekatan yang memenuhi pemutar alih-alih menghentikannya bersifat tangguh: tidak bergantung pada pencantuman semua URL iklan, melainkan hanya pada kontrak milik SDK itu sendiri yang menyatakan bahwa konten harus dilanjutkan.</p>",
+        "<p>AdOff adalah ekstensi Manifest V3 gratis tanpa akun untuk Chrome, Firefox, Safari, Edge, dan Opera, serta lapisan netralisasi video-nya disertakan untuk semua pengguna.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Apakah memblokir IMA SDK sama dengan menggantinya?",
+      "a": "Tidak. Memblokirnya pada level jaringan sering kali mencegah video diputar, karena pemutar menunggu sinyal dari SDK bahwa konten dapat dilanjutkan kembali. Menggantinya dengan stub membuat pemutar tetap berfungsi sepenuhnya sambil memastikan tidak ada iklan yang pernah diminta."
+    },
+    {
+      "q": "Apa yang terjadi ketika stub menerima permintaan iklan?",
+      "a": "Stub ini mengekspos permukaan API yang sama yang diharapkan oleh pemutar. Ketika diminta memulai iklan, ia segera memicu event resume-konten, sehingga pemutaran berlanjut tanpa ada iklan yang diambil atau ditampilkan."
+    },
+    {
+      "q": "Apakah stub IMA berfungsi melawan penyisipan iklan di sisi server?",
+      "a": "Tidak. Dengan SSAI, iklan dijahit ke dalam aliran video di sisi server sebelum pengiriman, sehingga tidak ada panggilan SDK di sisi klien yang dapat diintercept. Penyisipan di sisi server memerlukan langkah penanggulangan yang berbeda dan berada di luar jangkauan yang dapat ditangani oleh ekstensi browser."
+    },
+    {
+      "q": "Browser mana saja yang dapat menjalankan ekstensi semacam ini?",
+      "a": "AdOff dibangun berbasis Manifest V3 dan berfungsi di Chrome, Firefox, Safari, Edge, dan Opera. Lapisan penetrasi IMA disertakan dalam versi gratis, tanpa memerlukan akun atau pendaftaran."
+    },
+    {
+      "q": "Apakah sebuah situs dapat mendeteksi bahwa SDK telah diganti?",
+      "a": "Itulah tujuan dari lapisan penyamaran: pemalsuan umpan dan intercept fetch/XHR membuat lingkungan tampak biasa bagi skrip anti-pemblokir iklan. Tidak ada metode yang bersifat permanen, karena platform sering mengubah pendeteksiannya."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Pemblokiran iklan streaming: panduan lengkap"
+    },
+    {
+      "href": "/preroll-midroll-postroll-explained",
+      "text": "Pre-roll, mid-roll, post-roll: penjelasan format iklan video"
+    },
+    {
+      "href": "/how-it-works",
+      "text": "Cara kerja AdOff, lapis demi lapis"
+    }
+  ],
+  "cta": {
+    "h3": "Lihat langsung saat berfungsi pada pemutar asli",
+    "p": "AdOff menggantikan SDK iklan dengan stub yang langsung melanjutkan pemutaran, gratis untuk semua orang, tanpa perlu akun.",
+    "btn": "Pasang AdOff secara gratis"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

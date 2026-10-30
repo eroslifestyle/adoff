@@ -1,0 +1,100 @@
+{
+  "slug": "video-player-not-working-with-ad-blocker",
+  "lang": "de",
+  "title": "Video wird nicht abgespielt, wenn Werbeblocker aktiviert ist | AdOff",
+  "description": "Video startet nicht bei aktivem Werbeblocker? Diagnose: Seite-für-Seite deaktivieren, Erweiterungskonflikte prüfen, Anti-Werbeblocker-Sperren vs.",
+  "h1": "Video-Player funktioniert nicht mit Ihrem Werbeblocker? Eine Schritt-für-Schritt-Diagnose",
+  "answer": "Wenn ein Video mit aktivem Werbeblocker nicht startet, liegt die Ursache fast immer an einer der drei folgenden Möglichkeiten: einer Anti-Werbeblocker-Sperre, einem Konflikt zwischen zwei Erweiterungen oder einem Player, der eine blockierte Anfrage falsch verarbeitet. Deaktivieren Sie den Schutz zunächst für diese eine Seite und arbeiten Sie dann diese Checkliste ab.",
+  "sections": [
+    {
+      "h2": "Schritt 1: Schutz auf dieser Seite nur vorübergehend deaktivieren",
+      "body": [
+        "<p>Die erste Lösung besteht nicht darin, Ihren Werbeblocker zu deaktivieren – sondern darin, ihn für die einzelne Seite, die Probleme verursacht, zu pausieren. AdOff verfügt über eine <strong>seitenweise Pausierung</strong> mit mehreren Optionen, die über das Popup erreichbar ist: Die Seite kehrt zu ihrem ursprünglichen Verhalten zurück, während alle anderen Seiten weiterhin geschützt bleiben.</p>",
+        "<p>Nach dem Pausieren laden Sie die Seite mit einem Hard-Refresh (Strg+Umschalt+R / Cmd+Umschalt+R) neu, damit die Player-Skripte frisch geladen werden. Wenn der Video-Player nun startet, reagierte er auf eine blockierte Anfrage – was das Problem erheblich eingrenzt.</p>"
+      ]
+    },
+    {
+      "h2": "Schritt 2: Auf Konflikte mit anderen Erweiterungen prüfen",
+      "body": [
+        "<p>Zwei gleichzeitig aktive Werbeblocker sind die häufigste Ursache für defekte Wiedergabe. Jeder versucht, dieselben Anfragen abzufangen, wodurch der Player widersprüchliche Antworten erhalten kann. Deaktivieren Sie alle anderen Werbeblocker, Datenschutz-Erweiterungen und Skript-Manager (in <code>chrome://extensions</code> oder der entsprechenden Seite) und testen Sie erneut mit nur einer aktiven Erweiterung.</p>",
+        "<p>Prüfen Sie währenddessen auch, ob die Erweiterung auf dem neuesten Stand ist: Player-APIs ändern sich, und eine veraltete Neutralisierungsschicht kann das, was eine aktuelle Version abdeckt, möglicherweise übersehen.</p>"
+      ]
+    },
+    {
+      "h2": "Schritt 3: Eine Anti-Adblock-Wand von einem defekten Player unterscheiden",
+      "body": [
+        "<p>Nicht jeder leere Player ist ein Zufallsereignis. Die Symptome unterscheiden sich:</p>",
+        "<ul><li><strong>Anti-Werbeblocker-Sperre</strong>: Die Seite lädt, aber Sie erhalten eine explizite Nachricht („deaktivieren Sie Ihren Werbeblocker“, „bitte zulassen Sie Werbeanzeigen“), oder das Video startet nicht, während ein Ladekreis unendlich weiterläuft. Die Seite verweigert bewusst die Wiedergabe, solange sie Blockierung erkennt.</li><li><strong>Echt defekter Player</strong>: Ein spezifischer Fehlercode, ein schwarzes Rechteck, Steuerungselemente, die selbst nach mehreren Neuladungen nicht reagieren, oder Wiedergabefehler auf dieser Seite selbst in einem privaten Fenster mit allen Erweiterungen deaktiviert – Letzteres bedeutet, dass das Problem nicht Ihr Werbeblocker ist.</li></ul>",
+        "<p>AdOff enthält eine Stealth-Schicht (Bait-Spoofing, Fetch/XHR-Abfangen), die speziell für den ersten Fall entwickelt wurde: Sie täuscht der Seite vor, es erfolge keine Blockierung.</p>"
+      ]
+    },
+    {
+      "h2": "Warum AdOff bestimmte Dienste bewusst ausschließt",
+      "body": [
+        "<p>Einige Abonnement-Streaming-Dienste nutzen proprietäre Player-Pipelines, die so eng mit ihrem Code verknüpft sind, dass jede Einwirkung die Wiedergabe sofort unterbrechen kann. Deshalb <strong>schließt AdOff bewusst</strong> eine Liste solcher Dienste aus: Dies ist eine dokumentierte Qualitätsentscheidung im Code, kein unbeabsichtigtes Fehlverhalten.</p>",
+        "<p>Das Kompromiss ist ehrlich: Auf diesen Plattformen bleiben die Werbeanzeigen erhalten, aber das Video funktioniert immer. Wenn ein Werbeblocker sowohl werbefreie Wiedergabe als auch Null-Fehler auf jedem Dienst verspricht, sollten Sie skeptisch sein.</p>"
+      ]
+    },
+    {
+      "h2": "Schritt 4: Funktioniert es immer noch nicht? Melden Sie es",
+      "body": [
+        "<p>Wenn Sie pausiert haben, Konflikte mit anderen Erweiterungen ausgeschlossen haben und der Player dennoch nur mit aktivem AdOff fehlschlägt, handelt es sich genau um den Typ Fall, der gemeldet werden sollte. Meldungen mit der exakten Seiten-URL fließen direkt in die Entwicklung der nächsten Regeln und Fehlerbehebungen ein – viele frühere Fehlerbehebungen begannen als einzelne Nutzerberichte.</p>",
+        "<p>Nutzen Sie den Meldungsbutton auf dieser Seite, fügen Sie die URL der betroffenen Seite ein und beschreiben Sie, was Sie beobachten. Für die Meldung ist kein Konto erforderlich.</p>"
+      ]
+    },
+    {
+      "h2": "Kurzübersicht als Checkliste",
+      "body": [
+        "<ol><li>Pausieren Sie AdOff auf dieser Seite über das Popup und führen Sie dann einen Hard-Refresh durch.</li><li>Wenn es funktioniert, aktivieren Sie es wieder und notieren Sie, ob erneut ein Ausfall auftritt – so identifizieren Sie die verursachende Anfrage.</li><li>Deaktivieren Sie andere Werbeblocker und Datenschutz-Erweiterungen; behalten Sie eine.</li><li>Prüfen Sie, ob die Seite eine explizite Anti-Werbeblocker-Nachricht (Sperre) oder einen Player-Fehler (defekter Player) anzeigt.</li><li>Aktualisieren Sie die Erweiterung auf die neueste Version.</li><li>Testen Sie in einem privaten Fenster mit allen Erweiterungen deaktiviert, um ein seitenseitiges Problem auszuschließen.</li><li>Immer noch fehlgeschlagen? Melden Sie die Seite mit ihrer exakten URL.</li></ol>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Warum funktioniert mein Video-Player auf einer einzigen Website nicht?",
+      "a": "Da der Player dieser Seite negativ auf eine bestimmte blockierte Anfrage reagiert oder eine Anti-Adblock-Prüfung durchführt, während der Rest des Webs dies nicht tut, pausieren Sie AdOff für diese eine Seite – die pro-Seiten-Pause existiert genau zu diesem Zweck – und laden Sie neu, um festzustellen, welcher der beiden Fälle vorliegt."
+    },
+    {
+      "q": "Können zwei Werbeblocker gleichzeitig ausgeführt werden?",
+      "a": "Dies wird nicht empfohlen. Sie konkurrieren darum, dieselben Anfragen abzufangen, und ein Video-Player kann widersprüchliche Antworten erhalten, was häufig dazu führt, dass die Wiedergabe nie startet. Verwenden Sie stattdessen einen gut gewarteten Blocker anstelle von zwei sich überschneidenden."
+    },
+    {
+      "q": "Wie erkenne ich, ob eine Website eine Anti-Werbeblocker-Sperre („Anti-Adblock-Wall“) hat?",
+      "a": "Die Seite gibt dies gewöhnlich ausdrücklich an, oder das Video bleibt auf einem endlosen Ladekreis stehen, ohne Fehlercode. Wenn die Wiedergabe in einem privaten Fenster mit allen Erweiterungen deaktiviert funktioniert, lag die Ursache im Blocken; funktioniert sie dort ebenfalls nicht, liegt ein Problem bei der Seite selbst vor."
+    },
+    {
+      "q": "Beeinträchtigt das Temporäre Deaktivieren von AdOff auf einer Website andere Websites?",
+      "a": "Nein. Die pro-Seiten-Pause ändert das Verhalten ausschließlich auf dieser spezifischen Seite. Alle anderen Seiten behalten den vollen Schutz, und Sie können den Schutz auf der pausierten Seite jederzeit über das Popup wieder aktivieren."
+    },
+    {
+      "q": "Warum blockiert AdOff auf einigen Abonnement-Plattformen keine Werbung?",
+      "a": "Dies ist eine bewusste Entscheidung. Ihre Player-Pipelines sind proprietär und eng miteinander verknüpft, und eine Beeinträchtigung könnte die Video-Wiedergabe vollständig unterbrechen. AdOff schließt sie daher aus, damit der Dienst funktioniert – die Werbung bleibt erhalten, aber der Player bricht nicht zusammen."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Streaming-Werbung blockieren: Der umfassende Leitfaden"
+    },
+    {
+      "href": "/bypass-anti-adblock",
+      "text": "Wie Anti-Adblock-Wände umgangen werden"
+    },
+    {
+      "href": "/adblock-detector",
+      "text": "Wie Adblock-Erkennung funktioniert"
+    }
+  ],
+  "cta": {
+    "h3": "Ein Adblocker, der gut mit Playern harmoniert",
+    "p": "Pro Seiten-Pause, gezielte Ausschlüsse und eine unauffällige Schicht: AdOff wurde entwickelt, um Werbung zu blockieren, ohne Videos zu unterbrechen. Kostenlos, ohne Konto.",
+    "btn": "AdOff kostenlos installieren"
+  },
+  "report": {
+    "intro": "Die Checkliste befolgt, und der Player funktioniert trotz aktivem AdOff immer noch nicht? Melden Sie den Fall mit der genauen URL der Seite – Nutzerberichte entscheiden darüber, welche Seiten und Regeln wir als Nächstes beheben.",
+    "btn_text": "Diese Seite melden",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

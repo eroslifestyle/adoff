@@ -1,0 +1,94 @@
+{
+  "slug": "block-youtube-shorts-ads",
+  "lang": "fr",
+  "title": "Comment bloquer les publicités YouTube Shorts (2026) | AdOff",
+  "description": "Les Shorts sont des flux, pas des pubs dans le lecteur : différence avec les pré-rolls, pourquoi le filtrage cosmétique convient, et ses limites honnêtes.",
+  "h1": "Bloquer les publicités dans les YouTube Shorts : bloquer les publicités dans le flux, pas dans les vidéos",
+  "answer": "Les publicités dans les YouTube Shorts sont des unités intégrées au flux natif, insérées entre les vidéos verticales au fur et à mesure de votre défilement, et non des pré-rolls intégrés dans le lecteur. Ce sont des éléments de page, pas des interruptions planifiées du lecteur ; elles sont donc gérées par le filtrage cosmétique : des règles CSS et DOM masquant les conteneurs publicitaires. La couverture est réelle, mais comporte des limites en cas de modification des formats.",
+  "sections": [
+    {
+      "h2": "Les publicités Shorts constituent une espèce différente des publicités vidéo.",
+      "body": [
+        "<p>Lorsqu’une publicité pré-roll est diffusée avant une vidéo normale, le lecteur la demande, la lit, puis reprend la vidéo. Les Shorts fonctionnent différemment : à mesure que vous faites défiler le fil d’actualité, certains éléments de ce fil sont simplement des publicités. Ils ressemblent à des Shorts, se défilent comme des Shorts, et font partie de la même réponse de fil d’actualité — ce ne sont pas une interruption publicitaire distincte que le lecteur planifie.</p>",
+        "<p>Cette distinction détermine l’ensemble de la stratégie de blocage. Les outils au niveau du lecteur (suppression planifiée, accélération de la lecture) n’ont rien à faire ici, car aucune interruption n’est jamais planifiée.</p>"
+      ]
+    },
+    {
+      "h2": "Pourquoi le filtrage cosmétique est le bon outil pour les publicités dans les flux",
+      "body": [
+        "<p>Une publicité dans un flux est un élément de page à structure prévisible : conteneurs, libellés tels qu’un marqueur « sponsorisé », et composants de rendu spécifiques aux unités publicitaires. Le filtrage cosmétique fonctionne en associant ces structures à des sélecteurs CSS et à des règles DOM, puis en masquant les conteneurs publicitaires avant ou au moment de leur rendu, afin que l’élément du flux ne devienne jamais visible.</p>",
+        "<p>AdOff utilise des sélecteurs cosmétiques dédiés pour les pages courtes de la plateforme vidéo, en plus de ses sélecteurs publicitaires génériques qui s’appliquent à chaque site. Les mêmes sélecteurs sont appliqués deux fois : en tant que CSS injecté et dans la couche d’analyse du DOM, de sorte qu’un élément masqué d’une manière est également supprimé par l’autre. Détails dans <a href=\"/how-it-works\">comment AdOff fonctionne</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Ce que le filtrage esthétique peut et ne peut pas faire dans le fil d’actualité",
+      "body": [
+        "<p>Ce qu’il peut faire : masquer les unités publicitaires dont la structure correspond aux sélecteurs, ainsi que supprimer les libellés « sponsorisé » et les tuiles superposées qui les accompagnent. Sur un format stable, cela est fiable et économique — pas d’attente, pas de compte à rebours : la publicité n’apparaît tout simplement jamais dans votre flux de défilement.</p>",
+        "<p>Ce qu’il ne peut pas faire : garantir la couverture des formats qui n’ont pas encore été déployés. Si la plateforme modifie la structure d’une unité publicitaire, les sélecteurs cessent de correspondre jusqu’à ce qu’ils soient mis à jour. Il s’agit d’une limitation honnête de chaque approche cosmétique, et elle s’applique à <a href=\"/youtube-ad-blocker-not-working\">chaque bloqueur de publicités</a>, pas seulement à un seul.</p>"
+      ]
+    },
+    {
+      "h2": "Pourquoi le blocage au niveau réseau seul ne couvre pas les Shorts",
+      "body": [
+        "<p>Bloquer les réseaux publicitaires au niveau DNS ou réseau (voir <a href=\"/android-dns\">le blocage basé sur le DNS sur Android</a>) arrête les requêtes vers les serveurs publicitaires connus. Toutefois, les publicités intégrées dans le flux de la plateforme vidéo sont souvent diffusées via les mêmes domaines et les mêmes requêtes que le flux de contenu lui-même ; ainsi, un filtre réseau les supprimant dégraderait l’ensemble du flux. C’est pourquoi le travail concret s’effectue dans le navigateur, au niveau du DOM, où les unités publicitaires et les unités de contenu peuvent être distinguées selon leur structure."
+      ]
+    },
+    {
+      "h2": "Comment bloquer les publicités Shorts en pratique",
+      "body": [
+        "<p>La configuration est identique à celle du reste de la plateforme vidéo : installez une extension de navigateur comprenant des sélecteurs CSS courts et spécifiques, activez la protection, et laissez les couches CSS et DOM faire le travail — aucune configuration n’est nécessaire par vidéo. AdOff propose cette solution gratuitement sur Chrome, Firefox, Safari, Edge et Opera, sans nécessiter de compte.</p>",
+        "<p>Si vous remarquez qu’une unité publicitaire passe à travers, cela signifie généralement que le format a changé ; la correction arrive avec la mise à jour du sélecteur. Le contexte complet de cette situation se trouve dans <a href=\"/youtube-ad-blocker-not-working\">que faire lorsque le bloqueur de publicités ne fonctionne plus</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Comment les publicités Shorts s’intègrent dans la grande stratégie de blocage",
+      "body": [
+        "<p>Les publicités dans le flux constituent l’un des quatre types de publicités disponibles sur la plateforme ; les autres se trouvent à l’intérieur du lecteur. Une configuration complète nécessite les deux éléments suivants : le blocage au niveau de la couche de planification pour les pré-rolls et les mid-rolls, ainsi que le filtrage cosmétique pour les unités du flux et les superpositions. Une vue d’ensemble de la manière dont ces couches s’articulent — ainsi que la position de chaque plateforme — est présentée dans <a href=\"/streaming-ad-blocking\">le guide « Blocage des publicités en streaming expliqué »</a>, tandis que les détails spécifiques à chaque plateforme figurent dans <a href=\"/youtube-ad-blocker\">le guide du bloqueur de publicités YouTube</a>.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Les publicités dans les YouTube Shorts sont-elles identiques aux publicités vidéo classiques ?",
+      "a": "Non. Les publicités Shorts sont des unités natives insérées dans le flux entre les vidéos verticales pendant que vous faites défiler. Les publicités vidéo classiques sont des interruptions programmées à l’intérieur du lecteur. Une diffusion différente implique une technique de blocage différente."
+    },
+    {
+      "q": "Comment les publicités Shorts sont-elles bloquées, alors ?",
+      "a": "Par le biais du filtrage cosmétique : règles CSS et DOM qui reconnaissent la structure des conteneurs publicitaires dans le flux et les masquent avant leur rendu. La couche de programmation des publicités vidéo n’a rien à faire, car aucune interruption publicitaire n’est programmée dans le flux."
+    },
+    {
+      "q": "Tous les Shorts publicitaires peuvent-ils être masqués ?",
+      "a": "La plupart des formats actuels, oui, mais sans aucune garantie : si la plateforme introduit une nouvelle structure d’annonces dans le flux, les sélecteurs cessent de correspondre jusqu’à ce qu’ils soient mis à jour. La couverture cosmétique suit uniquement les formats existants."
+    },
+    {
+      "q": "Pourquoi le blocage publicitaire au niveau DNS ne supprime-t-il pas les publicités Shorts ?",
+      "a": "Parce que les publicités de flux sont généralement livrées via les mêmes domaines que le flux de contenu lui-même. Un filtre réseau bloquant ces requêtes interromprait l’ensemble du flux. Seul le filtrage intégré au navigateur permet de distinguer les deux en se basant sur la structure de la page."
+    },
+    {
+      "q": "AdOff bloque-t-il les publicités des Shorts et est-il gratuit ?",
+      "a": "AdOff applique des sélecteurs cosmétiques courts dans le cadre de sa protection gratuite sur Chrome, Firefox, Safari, Edge et Opera, sans nécessiter de compte. Comme pour tout filtrage cosmétique, la couverture s’adapte aux formats publicitaires actuels plutôt que de garantir un résultat fixe."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Blocage des publicités en streaming : ce qui fonctionne en 2026"
+    },
+    {
+      "href": "/youtube-ad-blocker",
+      "text": "Bloqueur de publicités YouTube : comment ça marche en 2026"
+    },
+    {
+      "href": "/youtube-midroll-ads-explained",
+      "text": "Explication des publicités mid-roll YouTube"
+    }
+  ],
+  "cta": {
+    "h3": "Parcourez le fil, passez les publicités",
+    "p": "AdOff filtre les publicités dans les flux de vidéos courtes, gratuitement. Aucun compte requis, fonctionne sur Chrome, Firefox, Safari, Edge et Opera.",
+    "btn": "Installez AdOff gratuitement"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

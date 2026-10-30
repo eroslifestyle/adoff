@@ -1,0 +1,97 @@
+{
+  "slug": "preroll-midroll-postroll-explained",
+  "lang": "id",
+  "title": "Iklan Pra-putar, Tengah-putar, dan Pasca-putar Dijelaskan | AdOff",
+  "description": "Penjelasan lengkap setiap penempatan iklan video: pre-roll, mid-roll, post-roll, bumper, overlay, dan companion—cara penyampaiannya dan tingkat kesulitan diblokir.",
+  "h1": "Pre-roll, mid-roll, post-roll: penjelasan lengkap setiap penempatan iklan video",
+  "answer": "Iklan pra-putar (pre-roll) diputar sebelum video, iklan tengah-putar (mid-roll) mengganggu tayangannya, dan iklan pasca-putar (post-roll) muncul setelahnya. Penempatan iklan yang lebih mudah diblokir umumnya disalurkan melalui SDK sisi klien seperti Google IMA; AdOff menonaktifkannya dengan stub lanjut tonton instan, sementara iklan yang disatukan di sisi server tetap tidak dapat diakses oleh ekstensi browser apa pun.",
+  "sections": [
+    {
+      "h2": "Pre-roll: iklan sebelum video",
+      "body": [
+        "<p><strong>Pre-roll</strong> diputar sebelum konten yang diminta dimulai. Ini adalah penempatan paling bernilai dalam iklan video karena menarik perhatian tanpa bisa dilewati pada momen ketika niat pemirsa mencapai puncaknya — namun juga yang paling menjengkelkan bagi pemirsa, karena menunda video yang mereka klik.</p>",
+        "<p>Umumnya disampaikan di sisi klien: pemutar menginisialisasi SDK IMA, meminta iklan VAST, dan menampilkannya di atas permukaan video. Karena seluruh transaksi berlangsung di halaman, penempatan ini sangat mudah diblokir. Stub AdOff menanggapi permintaan mulai dari SDK dengan event lanjut konten secara instan, sehingga pre-roll hanya dilewati dan pemutaran dimulai.</p>"
+      ]
+    },
+    {
+      "h2": "Mid-roll: iklan yang disisipkan di dalam video",
+      "body": [
+        "<p><strong>Mid-roll</strong> mengganggu konten pada titik-titik yang telah dijadwalkan, meniru jeda iklan di televisi. Pemutar menjelaskan titik-titik jeda tersebut dalam dokumen VMAP atau platform menjadwalkannya dalam respons iklan. Mid-roll menghasilkan kekesalan paling besar karena memotong video pada momen paling menarik.</p>",
+        "<p>Mid-roll di sisi klien melewati jalur SDK yang sama dengan pre-roll dan dinetralkan dengan cara yang sama: ketika pemutar meminta memulai jeda iklan, stub menanggapi bahwa jeda tersebut telah berakhir sebelum dimulai. Di platform video utama, AdOff juga menghapus penjadwalan iklan dari respons pemutar sebelum halaman membacanya, serta melewati (fast-forward) apa pun yang lolos.</p>"
+      ]
+    },
+    {
+      "h2": "Post-roll: iklan setelah video berakhir",
+      "body": [
+        "<p><strong>Post-roll</strong> diputar setelah konten selesai. Pemirsa paling menerimanya — kebanyakan sudah berhenti menonton — namun pengiklan tetap membayarnya, sehingga pemutar menjalankannya melalui jalur sisi klien yang sama.</p>",
+        "<p>Penyampaian sama, kelemahan sama: jika permintaan iklan melewati SDK di sisi klien, resume instan dari stub berarti video berakhir dengan bersih tanpa iklan setelahnya.</p>"
+      ]
+    },
+    {
+      "h2": "Bumper, overlay, dan iklan pendamping",
+      "body": [
+        "<p>Tidak semua penempatan menguasai permukaan video selama beberapa detik secara terus-menerus:</p>",
+        "<ul><li><strong>Bumper</strong> adalah iklan sangat singkat (sekitar 6 detik) yang tidak bisa dilewati, sering diputar sebagai pre-roll. Disampaikan melalui SDK yang sama, dinetralkan dengan cara yang sama.</li><li><strong>Overlay</strong> adalah spanduk yang muncul di bagian bawah video yang sedang diputar tanpa menghentikannya. Ini adalah elemen DOM biasa, sehingga lapisan penyaringan kosmetik (aturan CSS plus skrip konten) menyembunyikannya di setiap situs.</li><li><strong>Iklan pendamping</strong> adalah spanduk tampilan yang ditampilkan di samping pemutar saat iklan video berjalan. Ini juga merupakan elemen halaman biasa dan disembunyikan oleh penyaringan kosmetik.</li><li><strong>Iklan dalam umpan</strong> adalah iklan video yang menyamar sebagai item yang direkomendasikan dalam daftar. Penyaringan kosmetik dan selektor umum menangkapnya dengan cara yang sama.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Apa yang membuat suatu penempatan iklan sulit atau mustahil diblokir",
+      "body": [
+        "<p>Garis pemisahnya adalah <strong>di mana iklan dirangkai</strong>. Jika iklan diambil dan dirender oleh JavaScript di browser Anda — yang berlaku untuk semua yang disampaikan melalui SDK seperti IMA — ekstensi dapat menyadap, mengganti, atau menyembunyikannya.</p>",
+        "<p>Jika sebaliknya iklan dijahit ke dalam aliran video di server sebelum pengiriman (<a href=\"/server-side-ad-insertion-explained\">SSAI</a>), piksel iklan komersial tidak dapat dibedakan dari piksel siarannya. Tidak ada ekstensi browser yang dapat memisahkannya setelahnya; inilah mengapa layanan langganan premium yang menggunakan SSAI sengaja dibiarkan sendiri oleh AdOff daripada berisiko merusak pemutaran.</p>"
+      ]
+    },
+    {
+      "h2": "Cara AdOff memetakan lapisan ke penempatan iklan",
+      "body": [
+        "<p>Setiap penempatan jatuh ke lapisan yang dirancang untuknya:</p>",
+        "<ul><li>Pre/mid/post-roll dan bumper yang disampaikan melalui SDK → netralisasi IMA (stub di halaman atau pengalihan jaringan pada domain 180 penyiar Eropa).</li><li>Overlay, iklan pendamping, iklan dalam umpan → penyaringan kosmetik (CSS + skrip konten).</li><li>Permintaan jaringan iklan → 180 aturan jaringan statis (iklan asli dihitung dalam badge, pelacakan diblokir namun tidak dihitung).</li><li>Dinding anti-iklan → lapisan penyamaran dengan spoofing umpan dan penyadapan fetch/XHR.</li></ul>",
+        "<p>Semua ini disediakan secara gratis dalam satu ekstensi untuk Chrome, Firefox, Safari, Edge, dan Opera, tanpa akun yang diperlukan.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Iklan video mana yang paling sulit diblokir?",
+      "a": "Iklan yang disisipkan ke dalam aliran di sisi server (SSAI) pada dasarnya tidak mungkin dipisahkan oleh ekstensi browser dari konten, karena iklan tersebut tiba sebagai bagian dari video itu sendiri. Sebaliknya, iklan sisi klien yang dikirimkan melalui SDK jauh lebih mudah dinetralkan."
+    },
+    {
+      "q": "Apakah iklan mid-roll diblokir secara berbeda dibandingkan iklan pre-roll?",
+      "a": "Tidak, selama keduanya menggunakan jalur pengiriman yang sama. Keduanya biasanya melewati SDK sisi klien yang sama, sehingga sebuah *stub* yang merespons permintaan jeda iklan dengan event *resume* instan dapat menetralkan baik iklan pra-putaran (*pre-rolls*) maupun iklan tengah-putaran (*mid-rolls*)."
+    },
+    {
+      "q": "Apa itu iklan bumper?",
+      "a": "Bumper adalah iklan video yang sangat singkat dan tidak dapat dilewati, biasanya berdurasi sekitar enam detik, dan umumnya ditampilkan sebelum konten utama. Karena disampaikan melalui SDK yang sama dengan iklan berdurasi lebih panjang, bumper juga dinetralkan oleh mekanisme yang sama."
+    },
+    {
+      "q": "Bagaimana iklan overlay dan iklan pendamping dihapus?",
+      "a": "Iklan tersebut merupakan elemen halaman biasa, bukan frame video. Penyaringan kosmetik—menggunakan aturan CSS serta *content script* yang memindai DOM—menyembunyikannya, sementara aturan tingkat jaringan memblokir permintaan iklannya."
+    },
+    {
+      "q": "Apakah pemblokir iklan menghitung setiap permintaan yang diblokir sebagai iklan?",
+      "a": "AdOff memisahkan iklan sebenarnya dari pelacakan: analitik dan pelacak juga diblokir, tetapi indikator dan penghitung di *badge* serta *popup* hanya mencakup iklan sungguhan, sehingga angka tersebut mencerminkan jumlah iklan yang benar-benar Anda lewati."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Pemblokiran iklan streaming: panduan lengkap"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Cara pemblokiran iklan IMA SDK bekerja"
+    },
+    {
+      "href": "/server-side-ad-insertion-explained",
+      "text": "Penjelasan tentang penyisipan iklan di sisi server (SSAI)"
+    }
+  ],
+  "cta": {
+    "h3": "Setiap penempatan, satu ekstensi",
+    "p": "Pre-roll, mid-roll, overlay, dan banner — AdOff menanganinya dengan lapisan yang tepat, gratis untuk semua orang.",
+    "btn": "Pasang AdOff secara gratis"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

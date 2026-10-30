@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-spain",
+  "lang": "pt",
+  "title": "Bloqueie anúncios na RTVE, Atresplayer, Mitele e laSexta | AdOff",
+  "description": "AdOff bloqueia anúncios em vídeo no RTVE, Atresplayer, Mitele, laSexta, RTP, TVI e SIC. Extensão gratuita, sem necessidade de conta.",
+  "h1": "Bloqueador de anúncios para TV de recuperação em espanhol: RTVE, Atresplayer, Mitele",
+  "answer": "O AdOff remove os anúncios pré-roll e mid-roll das plataformas de TV de reprise em espanhol no navegador, na maioria dos casos. Ele substitui o SDK de anúncios Google IMA solicitado pelos seus players por um *stub* que imediatamente retoma o programa, de modo que as reprises na RTVE ou no Atresplayer ocorram sem interrupções. O mesmo se aplica aos serviços portugueses enquanto mantiverem a integração padrão do player.",
+  "sections": [
+    {
+      "h2": "Serviços em espanhol e português cobertos",
+      "body": [
+        "<p>As emissoras espanholas financiam suas plataformas de replay com anúncios em vídeo servidos por meio do SDK padrão Google IMA. O AdOff cobre:</p>",
+        "<ul><li><strong>RTVE</strong> (rtve.es)</li><li><strong>Atresplayer</strong> (atresplayer.com)</li><li><strong>Mitele</strong> (mitele.es)</li><li><strong>laSexta</strong> (lasexta.com)</li></ul>",
+        "<p>O mercado vizinho de Portugal é coberto pelo mesmo mecanismo:</p>",
+        "<ul><li><strong>RTP</strong> (rtp.pt)</li><li><strong>TVI</strong> (tvi.pt)</li><li><strong>SIC</strong> (sic.pt)</li></ul>"
+      ]
+    },
+    {
+      "h2": "O que acontece quando você clica em reproduzir",
+      "body": [
+        "<p>Normalmente, o player baixa o SDK IMA e exibe um intervalo publicitário antes e durante o programa. Com o AdOff ativo, a solicitação ao SDK é redirecionada para um *stub* incluído no próprio extensão. O player pede ao *stub* que inicie o anúncio, e o *stub* responde “reinício do conteúdo solicitado”, permitindo que a reprodução continue como se o intervalo já tivesse terminado. Tudo ocorre localmente no navegador; o próprio fluxo de vídeo não é modificado.</p>"
+      ]
+    },
+    {
+      "h2": "Emissoras públicas e grupos comerciais, mesmo ponto de entrada",
+      "body": [
+        "<p>RTVE é pública, enquanto Atresmedia e Mediaset España são comerciais — no entanto, seus players no navegador utilizam o mesmo SDK de publicidade. Essa dependência compartilhada é o motivo pelo qual uma única extensão consegue cobrir todas elas com um único mecanismo. Isso também explica a diferença em relação às plataformas de *streaming* por assinatura, nas quais os anúncios são integrados ao fluxo no lado do servidor, e a extensão, por design, não atua.</p>"
+      ]
+    },
+    {
+      "h2": "Filtragem além do player de vídeo",
+      "body": [
+        "<p>O AdOff também executa 180 regras de rede estáticas que bloqueiam domínios de anúncios e rastreamento, além de um filtro cosmético baseado em CSS/DOM que oculta banners e sobreposições promocionais. Em rtve.es ou atresplayer.com, isso remove os blocos promocionais e painéis da página, deixando o catálogo mais limpo antes mesmo que você escolha um programa.</p>"
+      ]
+    },
+    {
+      "h2": "Onde a cobertura termina",
+      "body": [
+        "<ul><li>Se uma plataforma adotar <strong>inserção de anúncios no servidor (SSAI)</strong>, o anúncio passa a fazer parte do próprio fluxo, e o *stub* já não se aplica.</li><li>O AdOff funciona <strong>apenas no navegador desktop</strong>: aplicativos da RTVE ou Mitele para dispositivos móveis e TV inteligente estão fora do escopo.</li><li>Algumas <strong>transmissões ao vivo e esportes</strong> utilizam pipelines diferentes.</li><li>Os players mudam com frequência; a cobertura é mantida pelo projeto, e não é fixa para sempre.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Grátis, sem necessidade de cadastro, cinco navegadores",
+      "body": [
+        "<p>O AdOff é uma extensão Manifest V3, totalmente gratuita, sem necessidade de conta ou período de teste. Funciona no Chrome, Firefox, Safari, Edge e Opera. Instale-a no site oficial e mantenha a proteção ativada.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "O AdOff bloqueia anúncios na RTVE?",
+      "a": "Na maioria dos casos, sim: quando o reprodutor web da RTVE carrega publicidade por meio do SDK Google IMA, o AdOff substitui por um “stub” que retoma o programa imediatamente. Transmissões ao vivo e esportes podem utilizar pipelines diferentes, cujos resultados variam."
+    },
+    {
+      "q": "Posso pular os anúncios no Atresplayer gratuitamente?",
+      "a": "AdOff é uma extensão gratuita para navegador que neutraliza o SDK de publicidade no reprodutor web do Atresplayer, de modo que os pré-rolls e mid-rolls normalmente não são reproduzidos. O Atresplayer Premium é um produto comercial separado; o AdOff não interage com sua conta."
+    },
+    {
+      "q": "Ele também funciona em canais portugueses como a RTP?",
+      "a": "Sim. RTP, TVI e SIC são cobertas pelo mesmo mecanismo quando seus reprodutores web solicitam o SDK padrão de publicidade. A lista de cobertura inclui tanto o mercado espanhol quanto o português."
+    },
+    {
+      "q": "Ele funciona no aplicativo Mitele ou em uma TV inteligente?",
+      "a": "Não. AdOff é apenas uma extensão para navegador em desktop. Aplicativos nativos para dispositivos móveis, aplicativos para TV inteligente e sessões de transmissão (casting) estão fora de seu alcance."
+    },
+    {
+      "q": "Algo sobre minha conta da RTVE ou Atresplayer é afetado?",
+      "a": "Não. AdOff é executado localmente, não acessa nenhuma conta e não modifica as requisições aos servidores de conteúdo da emissora — apenas o script do SDK de publicidade é substituído."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Como funciona o bloqueio de anúncios em streaming"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-italy",
+      "text": "Bloqueador de anúncios de programas de TV em reprise na Itália"
+    },
+    {
+      "href": "/live-sports-ad-blocking",
+      "text": "Bloqueio de anúncios em esportes ao vivo"
+    }
+  ],
+  "cta": {
+    "h3": "Replay em espanhol sem interrupções de publicidade",
+    "p": "Instale o AdOff e deixe o stub gerenciar o SDK de anúncios no RTVE, Atresplayer, Mitele e laSexta.",
+    "btn": "Instale o AdOff gratuitamente"
+  },
+  "report": {
+    "intro": "Uma plataforma espanhola ou portuguesa ausente nesta lista? Se ainda houver interrupções em https://adoff.app/catch-up-tv-ad-blocker-spain, informe qual serviço. Os relatórios orientam as próximas plataformas que abordaremos.",
+    "btn_text": "Relatar um serviço ausente",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

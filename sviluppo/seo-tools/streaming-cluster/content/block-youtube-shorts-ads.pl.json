@@ -1,0 +1,94 @@
+{
+  "slug": "block-youtube-shorts-ads",
+  "lang": "pl",
+  "title": "Jak blokować reklamy w YouTube Shorts (2026) | AdOff",
+  "description": "Reklamy Shorts to jednostki w kanale, a nie w odtwarzaczu. Jak się różnią od reklam wstępnego odtwarzania, dlaczego filtrowanie kosmetyczne jest odpowiednie oraz…",
+  "h1": "Blokuje reklamy w YouTube Shorts: reklamy w kanale, a nie w filmach",
+  "answer": "Reklamy w YouTube Shorts to jednostki natywnego feedu wstawiane między pionowymi filmami podczas przewijania, a nie reklamy pre-roll wewnątrz odtwarzacza. Są to elementy strony, a nie zaplanowane przerwy w odtwarzaniu, dlatego są obsługiwane przez filtrowanie kosmetyczne: reguły CSS i DOM ukrywające kontenery reklam. Zakres działania jest rzeczywisty, ale ma ograniczenia, gdy zmieniają się formaty.",
+  "sections": [
+    {
+      "h2": "Reklamy Shorts to inny gatunek niż reklamy w formie wideo",
+      "body": [
+        "<p>Gdy odtwarzany jest pre-roll przed normalnym filmem, odtwarzacz żąda go, odtwarza go, a następnie wznawia Twój film. Shorts działają inaczej: podczas przewijania kanału niektóre elementy tego kanału to po prostu reklamy. Wyglądają jak Shorts, przewijają się jak Shorts i są częścią tej samej odpowiedzi kanału — nie są oddzielnym blokiem reklam, który odtwarzacz harmonizuje.</p>",
+        "<p>Ta różnica decyduje o całej strategii blokowania. Narzędzia na poziomie gracza (usunięcie harmonogramu, przyspieszenie odtwarzania) nie mają tutaj nic do działania, ponieważ żadna przerwa nigdy nie jest zaplanowana.</p>"
+      ]
+    },
+    {
+      "h2": "Dlaczego filtrowanie kosmetyczne to odpowiednie narzędzie do reklam w kanale",
+      "body": [
+        "<p>Reklama w kanale to element strony o przewidywalnej strukturze: kontenery, etykiety, np. oznaczenie „sponsoringowane”, oraz komponenty renderujące unikalne dla jednostek reklamowych. Filtrowanie kosmetyczne polega na dopasowaniu tych struktur za pomocą selektorów CSS i reguł DOM oraz ukryciu kontenerów reklam przed ich renderowaniem lub w trakcie renderowania, dzięki czemu element w kanale nigdy nie staje się widoczny.</p>",
+        "<p>AdOff stosuje dedykowane selektory kosmetyczne dla krótkich stron wideo, oprócz ogólnych selektorów reklamowych działających na każdej stronie. Te same selektory są stosowane dwukrotnie: jako wstrzyknięte style CSS oraz w warstwie skanowania DOM, dzięki czemu element ukryty w jeden sposób jest również usuwany w drugi. Szczegóły w <a href=\"/how-it-works\">jak działa AdOff</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Co może i czego nie może zrobić filtrowanie kosmetyczne w kanale",
+      "body": [
+        "<p>Co potrafi: ukrywać jednostki reklamowe, których struktura pasuje do wybranych selektorów, oraz usuwać etykiety „sponsoring” i nakładki typu overlay, które towarzyszą tym reklamom. W przypadku stabilnego formatu rozwiązanie jest niezawodne i tanie — nie trzeba czekać, nie ma odliczania, reklama po prostu nigdy nie pojawia się w Twoim strumieniu przewijania.</p>",
+        "<p>Co nie może zrobić: gwarantować zakrycia formatów, które nie zostały jeszcze wdrożone. Jeśli platforma zmieni strukturę jednostki reklamy w formacie feed, selektory przestaną pasować, dopóki nie zostaną zaktualizowane. Jest to uczciwe ograniczenie każdej metody kosmetycznej i dotyczy <a href=\"/youtube-ad-blocker-not-working\">każdego blokera reklam</a>, a nie tylko jednego.</p>"
+      ]
+    },
+    {
+      "h2": "Dlaczego blokowanie na poziomie sieci sam w sobie nie obejmuje Shorts",
+      "body": [
+        "<p>Blokowanie sieci reklamowych na poziomie DNS lub sieci (patrz <a href=\"/android-dns\">blokowanie oparte na DNS w systemie Android</a>) zatrzymuje żądania do znanych serwerów reklamowych. Jednak reklamy w kanale na platformie wideo są często dostarczane za pomocą tych samych domen i żądań co sam kanał treści, więc filtr sieciowy, który je usunął, spowodowałby uszkodzenie całego kanału. Dlatego praktyczna praca odbywa się w przeglądarce, na poziomie DOM, gdzie jednostki reklamowe i jednostki treści można odróżnić według struktury.</p>"
+      ]
+    },
+    {
+      "h2": "Jak praktycznie blokować reklamy w Shortach",
+      "body": [
+        "<p>Ustawienie jest takie samo jak w przypadku pozostałych platform wideo: zainstaluj rozszerzenie przeglądarkowe zawierające krótkie selektory kosmetyczne, pozostaw włączoną ochronę i pozwól warstwom CSS i DOM wykonać pracę — nic nie trzeba konfigurować dla poszczególnych filmów. AdOff oferuje to za darmo w przeglądarkach Chrome, Firefox, Safari, Edge i Opera, bez konieczności tworzenia konta.</p>",
+        "<p>Jeśli zauważysz, że jednostka reklamowa przechodzi, zwykle oznacza to, że zmienił się jej format; rozwiązanie pojawia się wraz z aktualizacją selektora. Pełny kontekst tej sytuacji znajdziesz w artykule <a href=\"/youtube-ad-blocker-not-working\">co zrobić, gdy bloker reklam przestaje działać</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Jak reklamy Shorts pasują do większego obrazu blokowania",
+      "body": [
+        "<p>Reklamy w kanale to jeden z czterech typów reklam dostępnych na platformie; pozostałe znajdują się wewnątrz odtwarzacza. Pełna konfiguracja wymaga zastosowania obu rozwiązań: blokowania na poziomie harmonogramu dla reklam przed i w trakcie odtwarzania oraz filtrowania kosmetycznego dla jednostek w kanale oraz nakładek. Ogólny obraz sposobu połączenia tych warstw oraz miejsce każdej z platform w tym układzie znajdziesz w artykule <a href=\"/streaming-ad-blocking\">blokowanie reklam w streamingu – wyjaśnione</a>, a szczegóły dotyczące konkretnych platform – w przewodniku <a href=\"/youtube-ad-blocker\">bloker reklam na YouTube</a>.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Czy reklamy w YouTube Shorts są takie same jak w normalnych filmach?",
+      "a": "Nie. Reklamy Shorts to jednostki w formacie native feed, wstawiane między pionowe filmy podczas przewijania. Zwykłe reklamy wideo to zaplanowane przerwy w odtwarzaczu. Różne metody dostarczania oznaczają różne techniki blokowania."
+    },
+    {
+      "q": "Jak są blokowane reklamy Shorts?",
+      "a": "Poprzez filtrowanie kosmetyczne: reguły CSS i DOM, które rozpoznają strukturę kontenerów reklam w kanale i ukrywają je przed ich renderowaniem. Warstwa harmonogramowania reklam wideo nie ma niczego, na czym mogłaby działać, ponieważ w kanale nie jest zaplanowana żadna przerwa reklamowa."
+    },
+    {
+      "q": "Czy wszystkie reklamy Shorts można ukryć?",
+      "a": "Najczęściej obecnie używane formaty — tak, ale bez żadnego gwarancji: jeśli platforma wprowadzi nową strukturę reklamy w kanale, selektory przestaną pasować, dopóki nie zostaną zaktualizowane. Zakres kosmetyczny ogranicza się do istniejących formatów."
+    },
+    {
+      "q": "Dlaczego blokowanie reklam na poziomie DNS nie usuwa reklam w Shorts?",
+      "a": "Ponieważ reklamy w kanale są zazwyczaj dostarczane przez te same domeny, co sam kanał treści. Filtr sieciowy blokujący te żądania spowodowałby uszkodzenie całego kanału. Tylko filtrowanie w przeglądarce może rozdzielić je na podstawie strony strony."
+    },
+    {
+      "q": "Czy AdOff blokuje reklamy w Shortach i czy jest darmowy?",
+      "a": "AdOff stosuje krótkie selektory kosmetyczne w ramach darmowej ochrony w przeglądarkach Chrome, Firefox, Safari, Edge i Opera, bez konieczności tworzenia konta. Jak w przypadku wszystkich metod filtrowania kosmetycznego, zakres działania zależy od aktualnych formatów reklam, a nie gwarantuje stały efekt."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Blokowanie reklam w strumieniach: co działa w 2026 roku"
+    },
+    {
+      "href": "/youtube-ad-blocker",
+      "text": "Blokator reklam YouTube: jak działa w 2026 roku"
+    },
+    {
+      "href": "/youtube-midroll-ads-explained",
+      "text": "Mid-roll reklamy na YouTube – wyjaśnienie"
+    }
+  ],
+  "cta": {
+    "h3": "Przewijaj kanał, pomijaj reklamy",
+    "p": "AdOff blokuje reklamy w krótkich filmach wideo za darmo. Nie wymaga konta, działa w Chrome, Firefox, Safari, Edge i Opera.",
+    "btn": "Zainstaluj AdOff za darmo"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

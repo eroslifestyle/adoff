@@ -1,0 +1,94 @@
+{
+  "slug": "block-youtube-shorts-ads",
+  "lang": "pt",
+  "title": "Como Bloquear Anúncios do YouTube Shorts (2026) | AdOff",
+  "description": "Anúncios em Shorts são unidades de feed, não no player. Por que o filtro cosmético é adequado e quais seus limites honestos.",
+  "h1": "Bloqueando anúncios nos Shorts do YouTube: anúncios no feed, não nos vídeos",
+  "answer": "Anúncios em Shorts do YouTube são unidades nativas do feed inseridas entre vídeos verticais à medida que você rola, não pré-rolls dentro do player. São elementos da página, não pausas programadas no player, portanto são tratados por filtragem cosmética: regras de CSS e DOM que ocultam os contêineres de anúncios. A cobertura é real, mas tem limites quando os formatos mudam.",
+  "sections": [
+    {
+      "h2": "Anúncios de Shorts são uma espécie diferente dos anúncios em vídeo",
+      "body": [
+        "<p>Quando um pré-roll é reproduzido antes de um vídeo normal, o player o solicita, o reproduz e, em seguida, retoma seu vídeo. Os Shorts funcionam de forma diferente: à medida que você desliza pelo feed, alguns dos itens nesse feed são simplesmente anúncios. Eles parecem Shorts, rodam como Shorts e fazem parte da mesma resposta do feed — não são uma pausa de anúncios separada que o player agenda.</p>",
+        "<p>Essa distinção decide toda a estratégia de bloqueio. As ferramentas no nível do jogador (remoção agendada, aceleração da reprodução) não têm nada com que atuar aqui, pois nenhuma pausa é jamais agendada.</p>"
+      ]
+    },
+    {
+      "h2": "Por que o filtro cosmético é a ferramenta certa para anúncios no feed",
+      "body": [
+        "<p>Um anúncio em feed é um elemento de página com uma estrutura previsível: contêineres, rótulos como um marcador de patrocínio e componentes de renderização exclusivos das unidades de anúncios. O filtro cosmético funciona por meio da correspondência dessas estruturas com seletores CSS e regras DOM, ocultando os contêineres de anúncios antes ou à medida que eles são renderizados, para que o item do feed nunca se torne visível.</p>",
+        "<p>O AdOff aplica seletores cosméticos dedicados para as páginas de formato curto da plataforma de vídeo, além de seus seletores de anúncios genéricos que são executados em todos os sites. Os mesmos seletores são aplicados duas vezes: como CSS injetado e na camada de varredura do DOM, de modo que um elemento ocultado de uma forma também seja removido pela outra. Detalhes em <a href=\"/how-it-works\">como o AdOff funciona</a>.</p>"
+      ]
+    },
+    {
+      "h2": "O que o filtro cosmético pode e não pode fazer no feed",
+      "body": [
+        "<p>O que ele pode fazer: ocultar unidades de anúncio cuja estrutura corresponda aos seletores e remover os rótulos patrocinados e os blocos sobrepostos que acompanham essas unidades. Em formatos estáveis, isso é confiável e econômico — sem espera, sem contagem regressiva; o anúncio simplesmente nunca aparece em seu fluxo de deslize.</p>",
+        "<p>O que não pode fazer: garantir a cobertura de formatos que ainda não foram lançados. Se a plataforma alterar a estrutura de uma unidade de anúncio em feed, os seletores deixam de funcionar até que sejam atualizados. Essa é uma limitação honesta de todas as abordagens cosméticas e se aplica a <a href=\"/youtube-ad-blocker-not-working\">todos os bloqueadores de anúncios</a>, não apenas a um.</p>"
+      ]
+    },
+    {
+      "h2": "Por que o bloqueio apenas no nível de rede não cobre os Shorts",
+      "body": [
+        "<p>Bloquear redes de anúncios no nível de DNS ou de rede (consulte <a href=\"/android-dns\">bloqueio baseado em DNS no Android</a>) interrompe as requisições para servidores de anúncios conhecidos. No entanto, os anúncios de feed na plataforma de vídeo geralmente são entregues por meio dos mesmos domínios e requisições que o próprio feed de conteúdo; portanto, um filtro de rede que os removesse quebraria todo o feed. É por isso que o trabalho prático ocorre no navegador, no nível do DOM, onde unidades de anúncios e unidades de conteúdo podem ser distinguidas por sua estrutura.</p>"
+      ]
+    },
+    {
+      "h2": "Como bloquear anúncios do Shorts na prática",
+      "body": [
+        "<p>A configuração é a mesma da plataforma de vídeos em geral: instale uma extensão para navegador que inclua seletores cosméticos curtos, mantenha a proteção ativada e deixe as camadas CSS e DOM fazerem o trabalho — nada a configurar por vídeo. O AdOff faz isso gratuitamente no Chrome, Firefox, Safari, Edge e Opera, sem necessidade de conta.</p>",
+        "<p>Se você notar um anúncio passando despercebido, geralmente isso significa que o formato mudou; a correção chega com a atualização do seletor. O contexto completo para essa situação está em <a href=\"/youtube-ad-blocker-not-working\">o que fazer quando o bloqueador de anúncios para de funcionar</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Como os anúncios do Shorts se encaixam no quadro geral de bloqueio",
+      "body": [
+        "<p>Os anúncios no feed são um dos quatro tipos de anúncios disponíveis na plataforma; os demais ficam dentro do player. Uma configuração completa exige ambas as camadas: bloqueio na camada de agendamento para pré-rolls e mid-rolls, e filtragem cosmética para unidades do feed e sobreposições. Uma visão geral de como essas camadas se combinam — e onde cada plataforma se encaixa — está em <a href=\"/streaming-ad-blocking\">bloqueio de anúncios em streaming explicado</a>, e os detalhes específicos por plataforma estão no <a href=\"/youtube-ad-blocker\">guia do bloqueador de anúncios do YouTube</a>.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Os anúncios nos YouTube Shorts são iguais aos anúncios normais de vídeo?",
+      "a": "Não. Os anúncios de Shorts são unidades nativas do feed inseridas entre vídeos verticais enquanto você rola. Os anúncios de vídeo normais são pausas programadas dentro do player. Uma entrega diferente significa uma técnica de bloqueio diferente."
+    },
+    {
+      "q": "Como os anúncios dos Shorts são bloqueados, então?",
+      "a": "Por meio de filtragem cosmética: regras CSS e DOM que reconhecem a estrutura dos contêineres de anúncios no feed e os ocultam antes que sejam renderizados. A camada de agendamento de anúncios em vídeo não tem nada para atuar, pois nenhum intervalo de anúncio é agendado em um feed."
+    },
+    {
+      "q": "Todos os anúncios de Shorts podem ser ocultados?",
+      "a": "A maioria dos formatos atuais, sim, mas sem uma promessa associada: se a plataforma lançar uma nova estrutura de anúncios no feed, os seletores deixam de funcionar até que sejam atualizados. A cobertura cosmética segue os formatos existentes."
+    },
+    {
+      "q": "Por que o bloqueio de anúncios no nível de DNS não remove os anúncios do Shorts?",
+      "a": "Porque os anúncios do feed são normalmente entregues pelos mesmos domínios que o próprio feed de conteúdo. Um filtro de rede que bloqueasse essas requisições quebraria todo o feed. Apenas o filtro no navegador consegue separar os dois com base na estrutura da página."
+    },
+    {
+      "q": "O AdOff bloqueia os anúncios do Shorts e é gratuito?",
+      "a": "O AdOff aplica seletores cosméticos de curta forma como parte de sua proteção gratuita no Chrome, Firefox, Safari, Edge e Opera, sem exigir conta. Assim como em todos os filtros cosméticos, a cobertura acompanha os formatos de anúncios atuais, em vez de garantir um resultado fixo."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Bloqueio de anúncios em streaming: o que funciona em 2026"
+    },
+    {
+      "href": "/youtube-ad-blocker",
+      "text": "Bloqueador de anúncios do YouTube: como funciona em 2026"
+    },
+    {
+      "href": "/youtube-midroll-ads-explained",
+      "text": "Anúncios mid-roll do YouTube explicados"
+    }
+  ],
+  "cta": {
+    "h3": "Role a feed, pule os anúncios",
+    "p": "O AdOff filtra anúncios em feeds de vídeos curtos gratuitamente. Sem necessidade de conta, funciona no Chrome, Firefox, Safari, Edge e Opera.",
+    "btn": "Instale o AdOff gratuitamente"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

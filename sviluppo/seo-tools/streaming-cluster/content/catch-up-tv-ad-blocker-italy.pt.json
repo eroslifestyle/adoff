@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-italy",
+  "lang": "pt",
+  "title": "Bloqueie anúncios no RaiPlay, Mediaset Infinity e La7 | AdOff",
+  "description": "AdOff neutraliza anúncios de vídeo no RaiPlay, Mediaset Infinity, La7 e Discovery+ no navegador. Extensão gratuita, sem conta, para Chrome, Firefox e Safari.",
+  "h1": "Bloqueador de anúncios para TV de retorno italiano: RaiPlay, Infinity, La7",
+  "answer": "AdOff remove os anúncios pré-roll e mid-roll das plataformas italianas de TV sob demanda no navegador, na maioria dos casos. Ele substitui o SDK de anúncios Google IMA solicitado por esses players por um stub local que retoma imediatamente o programa, permitindo que você assista à RaiPlay, Infinity ou La7 sem interrupções.",
+  "sections": [
+    {
+      "h2": "Serviços italianos cobertos",
+      "body": [
+        "<p>As emissoras italianas monetizam suas plataformas gratuitas de replay com anúncios em vídeo, e seus players utilizam o SDK padrão Google IMA no navegador. O AdOff cobre:</p>",
+        "<ul><li><strong>RaiPlay</strong> (raiplay.it, rai.it)</li><li><strong>Mediaset Infinity</strong> (mediasetinfinity.mediaset.it, mediaset.it)</li><li><strong>La7</strong> (la7.it)</li><li><strong>Discovery+</strong> (discoveryplus.com)</li></ul>"
+      ]
+    },
+    {
+      "h2": "O mecanismo, passo a passo",
+      "body": [
+        "<p>Quando uma página do RaiPlay ou Infinity carrega no seu navegador, o player normalmente baixa o SDK IMA dos servidores do Google para agendar os intervalos publicitários. O AdOff redireciona essa requisição para um *stub* incluído na extensão. Esse *stub* entende o suficiente da linguagem do SDK para manter o player satisfeito, e quando o player solicita o início de um anúncio, ele responde imediatamente com “content resume requested”.</p>",
+        "<p>O programa então é reproduzido sem o intervalo. Nenhum vídeo é baixado novamente e nada na transmissão do conteúdo é alterado.</p>"
+      ]
+    },
+    {
+      "h2": "Por que isso funciona em emissoras públicas e comerciais italianas",
+      "body": [
+        "<p>Rai, Mediaset e Discovery monetizam o replay com anúncios inseridos por meio de um SDK padrão, que é exatamente a camada que uma extensão de navegador pode interceptar. Plataformas de assinatura, como o Prime Video, em vez disso, integram os anúncios ao fluxo no lado do servidor, e essas são deliberadamente deixadas de fora da extensão para que seus players continuem funcionando. A TV de replay é o segmento em que essa abordagem técnica realmente faz sentido.</p>"
+      ]
+    },
+    {
+      "h2": "Filtragem de rede e cosmética adicionada",
+      "body": [
+        "<p>Além do player, o AdOff inclui 180 regras de rede estáticas que bloqueiam domínios de anúncios e rastreamento, além de um filtro CSS/DOM que oculta banners e sobreposições promocionais nas páginas das emissoras. No RaiPlay ou Infinity, isso significa menos blocos promocionais e outdoors ao redor do catálogo — não apenas menos interrupções no vídeo.</p>"
+      ]
+    },
+    {
+      "h2": "O que não é capaz de fazer",
+      "body": [
+        "<p>Seja realista quanto às limitações:</p>",
+        "<ul><li>Se uma plataforma adotar <strong>inserção de anúncios no servidor (SSAI)</strong>, o anúncio passa a fazer parte do fluxo de vídeo e o *stub* não se aplica mais.</li><li>Funciona apenas no <strong>navegador desktop</strong>: aplicativos da RaiPlay para TV inteligente, aplicativos móveis e *casting* estão fora do escopo.</li><li>Alguns <strong>eventos ao vivo e esportes</strong> utilizam pipelines de entrega diferentes.</li><li>Players são atualizados com frequência; a cobertura é mantida ativamente, mas nunca é congelada.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Extensão gratuita, cinco navegadores, sem necessidade de cadastro",
+      "body": [
+        "<p>O AdOff é uma extensão Manifest V3, gratuita, sem necessidade de cadastro ou período de teste. Funciona no Chrome, Firefox, Safari, Edge e Opera. Instale-a diretamente pelo site, mantenha a proteção ativada e abra o RaiPlay, Infinity ou La7 como faria normalmente.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "O AdOff remove os anúncios do RaiPlay?",
+      "a": "Na maioria dos casos, sim — quando o reprodutor web do RaiPlay carrega seus anúncios por meio do SDK da Google IMA. A extensão substitui esse SDK por um “stub” que retoma imediatamente o programa. Quando a Rai experimenta outras técnicas de inserção, a cobertura pode variar."
+    },
+    {
+      "q": "Posso pular os anúncios no Mediaset Infinity gratuitamente?",
+      "a": "AdOff é uma extensão gratuita para navegador que neutraliza o SDK de publicidade no reprodutor web Infinity, de modo que os pré-rolls e mid-rolls normalmente não são reproduzidos. Ela não altera sua conta Infinity e não oferece versão paga — todos os recursos estão incluídos."
+    },
+    {
+      "q": "E quanto ao La7 e ao Discovery+?",
+      "a": "Ambos são abordados da mesma forma: a solicitação ao SDK IMA é redirecionada para um “stub” local e o reprodutor retoma o conteúdo em vez de exibir o intervalo publicitário. Isso se aplica às versões para navegador de desktop dos serviços."
+    },
+    {
+      "q": "Isso envolve a taxa de licença da RAI (canone)?",
+      "a": "Não. AdOff afeta apenas a publicidade dentro do reprodutor e na página. Questões relacionadas ao “canone di abbonamento” são totalmente distintas e não têm relação com esta extensão."
+    },
+    {
+      "q": "Funciona no aplicativo do RaiPlay ou na TV inteligente?",
+      "a": "Não. AdOff é uma extensão para navegadores de desktop. Aplicativos móveis, aplicativos para TV inteligente e dispositivos de streaming estão fora do seu alcance."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Como funciona o bloqueio de anúncios em streaming"
+    },
+    {
+      "href": "/block-video-ads",
+      "text": "Bloqueio geral de anúncios em vídeos"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-uk",
+      "text": "Bloqueador de anúncios para programas de TV de retorno (catch-up TV) no Reino Unido"
+    }
+  ],
+  "cta": {
+    "h3": "RaiPlay, Infinity, La7 sem interrupções publicitárias",
+    "p": "Instale o AdOff no navegador: o stub neutraliza o SDK publicitário dos players italianos.",
+    "btn": "Instale o AdOff gratuitamente"
+  },
+  "report": {
+    "intro": "Sua plataforma italiana favorita não está na lista? Se os anúncios ainda aparecerem em https://adoff.app/catch-up-tv-ad-blocker-italy, informe qual serviço está faltando. Os relatos dos usuários orientam quais plataformas adicionaremos em seguida.",
+    "btn_text": "Relatar um serviço ausente",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

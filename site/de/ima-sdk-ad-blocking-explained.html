@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Erklärung der IMA SDK-Werbungsblokierung | AdOff</title>
+  <meta name="description" content="Wie Google IMA SDK Werbung lädt, der Anzeigenanfrage-zyklus im Player und wie ein „Inhalt fortsetzen“-Stub dies neutralisiert." />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <link rel="canonical" href="https://adoff.app/de/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/ar/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/de/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/es/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/fr/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/hi/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/id/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="it" href="https://adoff.app/it/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/pl/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/pt/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/ru/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/tr/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/ima-sdk-ad-blocking-explained" />
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/ima-sdk-ad-blocking-explained" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Erklärung der IMA SDK-Werbungsblokierung | AdOff" />
+  <meta property="og:description" content="Wie Google IMA SDK Werbung lädt, der Anzeigenanfrage-zyklus im Player und wie ein „Inhalt fortsetzen“-Stub dies neutralisiert." />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/de/ima-sdk-ad-blocking-explained" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Erklärung der IMA SDK-Werbungsblokierung | AdOff" />
+  <meta name="twitter:description" content="Wie Google IMA SDK Werbung lädt, der Anzeigenanfrage-zyklus im Player und wie ein „Inhalt fortsetzen“-Stub dies neutralisiert." />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+<link rel="icon" href="/assets/icon128.png" type="image/png" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta name="theme-color" content="#0a0a1a" />
+
+<link rel="preload" id="adoff-font" href="/assets/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin /><style id="adoff-critical">@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:optional;src:url("/assets/fonts/InterVariable.woff2") format("woff2-variations")}@font-face{font-family:"Inter";font-style:italic;font-weight:100 900;font-display:optional;src:url("/assets/fonts/InterVariable-Italic.woff2") format("woff2-variations")}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--deep-space:     #0a0a1a;--midnight-blue:  #12122a;--shield-purple:  #7c5cfc;--shield-purple-light: #b8a9ff;--shield-purple-dark:  #4c3ad4;--soft-purple:    #b8a9ff;--pure-white:     #ffffff;--steel-gray:     #8a8aaa;--success-green:  #4ade80;--alert-red:      #f43f5e;--bg:           var(--deep-space);--surface:      var(--midnight-blue);--surface-2:    #1a1a36;--surface-warm: #15152e;--text:         #e2e2f0;--text-muted:   var(--steel-gray);--text-dim:     #80809a;--accent:       var(--shield-purple);--accent-btn:   #7252f8;--accent-light: var(--shield-purple-light);--accent-dim:   var(--shield-purple-dark);--accent-soft:  rgba(124, 92, 252, 0.12);--accent-line:  rgba(124, 92, 252, 0.34);--success:      var(--success-green);--success-bg:   rgba(74, 222, 128, 0.10);--danger:       var(--alert-red);--danger-bg:    rgba(244, 63, 94, 0.08);--border:        rgba(124, 92, 252, 0.18);--border-strong: rgba(124, 92, 252, 0.48);--border-subtle: rgba(255, 255, 255, 0.06);--radius-sm:  8px;--radius:     12px;--radius-lg:  18px;--radius-pill: 999px;--ease:       cubic-bezier(0.2, 0.8, 0.2, 1);--t-fast:     150ms var(--ease);--t:          220ms var(--ease);--t-slow:     420ms var(--ease);--container:        min(64rem, 92vw);--container-wide:   min(72rem, 94vw);--primary:        var(--accent);--primary-light:  var(--accent-light);--primary-dark:   var(--accent-dim);--card:           var(--surface);--card-hover:     var(--surface-2);--error:          var(--danger);--warning:        var(--accent);--shadow:         0 1px 0 var(--border-strong);--shadow-glow:    0 0 40px rgba(124, 92, 252, 0.18);--shadow-card:    0 4px 24px rgba(0, 0, 0, 0.4);--transition:     var(--t)}html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}body{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:17px;line-height:1.65;overflow-x:hidden}a{color:var(--accent-light);text-decoration:none;transition:color var(--t)}a:hover{color:var(--pure-white)}strong{color:var(--text);font-weight:700}h1,h2{font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;font-weight:800;line-height:1.1;letter-spacing:-0.025em;color:var(--text)}h1{font-size:clamp(2.4rem,5.5vw,4.2rem)}h2{font-size:clamp(1.7rem,3.8vw,2.8rem)}h1 em,h2 em,.hero__headline em{font-style:italic;color:var(--accent);font-weight:800}.container,.container--wide{margin:0 auto;padding:0 24px}.container{max-width:var(--container)}.container--wide{max-width:var(--container-wide)}section{padding:clamp(72px,9vw,116px) 0}.wordmark{display:inline-flex;align-items:baseline;font-family:"Inter",sans-serif;font-weight:800;letter-spacing:-0.04em;line-height:1;color:var(--pure-white)}.wordmark__off{color:var(--accent)}.wordmark__dot{color:var(--accent)}.wordmark--hero{font-size:clamp(2.8rem,7vw,5rem);margin-bottom:24px;display:flex;width:fit-content}.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 26px;border-radius:var(--radius);font-family:"Inter",sans-serif;font-size:0.98rem;font-weight:600;letter-spacing:-0.005em;text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform var(--t),background var(--t),color var(--t),border-color var(--t),box-shadow var(--t);white-space:normal;text-align:center;line-height:1.3;font-variant-numeric:tabular-nums}.btn--primary{background:var(--accent-btn);color:var(--pure-white);border-color:var(--accent-btn);box-shadow:0 0 0 0 var(--accent-line)}.btn--primary:hover{background:var(--accent-light);color:var(--deep-space);border-color:var(--accent-light);transform:translateY(-1px);box-shadow:0 0 0 4px var(--accent-soft);text-decoration:none}.btn--primary:active{transform:translateY(0)}.btn--outline{background:transparent;color:var(--text);border:1px solid var(--border-strong)}.btn--outline:hover{border-color:var(--accent);color:var(--accent-light);background:transparent;text-decoration:none}.btn--ghost{background:transparent;color:var(--text-muted);border-color:transparent;padding:12px 14px}.btn--ghost:hover{color:var(--accent-light);text-decoration:none}.btn--lg{padding:18px 34px;font-size:1.05rem}.btn--xl{padding:18px 34px;font-size:1.05rem;border-radius:var(--radius)}.nav__inner{max-width:var(--container-wide);margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}.nav__logo{display:flex;align-items:center;gap:10px;color:var(--pure-white);text-decoration:none}.nav__logo:hover{color:var(--accent-light)}.nav__logo img{width:28px;height:28px;border-radius:6px;object-fit:contain}.nav__links{display:flex;align-items:center;gap:28px;list-style:none}.nav__links a{color:var(--text-muted);font-size:0.92rem;font-weight:500;text-decoration:none;transition:color var(--t)}.nav__links a:hover{color:var(--pure-white)}.hero{padding:clamp(72px,11vw,140px) 0 clamp(48px,7vw,80px);position:relative;overflow:hidden}.hero::before{content:'';position:absolute;top:-160px;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(ellipse at center,rgba(124,92,252,0.10) 0%,transparent 65%);pointer-events:none;z-index:0}.hero>.container{position:relative;z-index:1}.hero__media{position:relative;margin:clamp(36px,6vw,64px) auto 0;max-width:700px}.hero__shots{display:flex;align-items:center;justify-content:center;gap:20px}.hero__shots-main,.hero__shots-pop{height:auto;border-radius:12px;border:1px solid var(--border);box-shadow:0 18px 44px rgba(0,0,0,0.5)}.hero__shots-main{width:60%}.hero__shots-pop{width:27%;border-color:var(--border-strong)}@media (max-width:620px){.hero__shots{flex-direction:column;align-items:center;gap:16px}.hero__shots-main,.hero__shots-pop{width:100%;max-width:380px}}.hero__eyebrow{font-family:"Inter",sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-light);margin-bottom:22px;display:inline-flex;align-items:center;gap:10px}.hero__eyebrow-dot{width:7px;height:7px;border-radius:50%;background:var(--success);flex-shrink:0;box-shadow:0 0 12px rgba(74,222,128,0.6)}.hero__headline,.hero__title{font-family:"Inter",sans-serif;font-size:clamp(2.5rem,6vw,4.4rem);font-weight:800;line-height:1.05;letter-spacing:-0.03em;margin-bottom:28px;color:var(--text);background:none;-webkit-text-fill-color:currentColor;background-clip:unset;-webkit-background-clip:unset;max-width:22ch}.hero__headline em{font-style:italic;color:var(--accent);-webkit-text-fill-color:var(--accent)}.hero__tagline{font-family:"Inter",sans-serif;font-style:italic;font-size:clamp(1.3rem,2.8vw,1.7rem);font-weight:600;color:var(--accent-light);margin:0 0 18px;letter-spacing:-0.01em}.hero__sub{font-size:clamp(1.05rem,2vw,1.2rem);color:var(--text-muted);max-width:56ch;margin:0 0 36px;line-height:1.65}.hero__sub strong{color:var(--text);font-weight:600}.hero__cta-group{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:32px}.hero__trust-strip{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;color:var(--text-dim);font-size:0.86rem}.hero__trust-strip span{display:inline-flex;align-items:center;gap:6px}.hero__trust-strip .dot-sep{color:var(--border-strong)}.hero__note{margin-top:14px;font-size:0.85rem;color:var(--text-dim)}.social-proof__divider{width:1px;height:36px;background:var(--border-subtle);flex-shrink:0}@media (max-width:640px){.social-proof__divider{display:none}}.stealth__arrow{font-family:"Inter",sans-serif;align-self:center;font-size:1.8rem;color:var(--accent);padding:0 6px}.plan-card .btn{width:100%;justify-content:center;text-align:center;margin-top:auto;min-height:44px;font-size:0.94rem}.reveal{opacity:1;transform:none}.reveal-delay-1{transition-delay:0.06s}.reveal-delay-2{transition-delay:0.12s}.reveal-delay-3{transition-delay:0.18s}.reveal-delay-4{transition-delay:0.24s}@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}*,*::before,*::after{animation-duration:0.001ms!important;transition-duration:0.001ms!important}}@media (max-width:980px){.stealth__arrow{display:none}}@media (max-width:768px){body{font-size:16px}section{padding:60px 0}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}.wordmark--hero{font-size:clamp(2.2rem,11vw,3.6rem)}}@media (max-width:480px){.hero__cta-group{flex-direction:column}.btn--lg,.btn--xl{width:100%}}:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}a:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.skip-link{position:absolute;left:-9999px;top:0;z-index:1000;padding:12px 20px;background:var(--accent);color:var(--pure-white);border-radius:0 0 var(--radius) 0;font-weight:600}.skip-link:focus{left:0}body,body h1,body h2,body h3,body h4,body h5,body h6,body p,body span,body div,body section,body article,body blockquote,body figcaption,body ul,body ol,body li,body label,body small,body .article-page,body .article-page h1,body .article-page h2,body .article-page h3,body .article-page p,body .article-page li,body .legal-page,body .legal-page p,body .legal-page h2,body .tech-card,body .tech-card p,body .step-list,body .step-list li,body .cta-box,body .cta-box p{text-align:center}html[dir="rtl"] body,html[dir="rtl"] body *{text-align:center}html[dir="rtl"] table,html[dir="rtl"] table *,html[dir="rtl"] .compare__table,html[dir="rtl"] .compare__table *,html[dir="rtl"] .plan-features,html[dir="rtl"] .plan-features *,html[dir="rtl"] pre,html[dir="rtl"] code{text-align:right}body *:not(table):not(tr):not(td):not(th):not(thead):not(tbody):not(tfoot):not(pre):not(code):not(.plan-features):not(.plan-features *):not(.guarantee__list):not(.guarantee__list *):not(.compare__table):not(.compare__table *):not(.faq-item__panel):not(.faq-item__panel *):not(input):not(textarea):not(select):not(.ticket-form):not(.ticket-form *):not(form):not(form *):not(.ba-col__list):not(.ba-col__list *){text-align:center!important}html[dir="rtl"] body *:not(table):not(tr):not(td):not(th):not(pre):not(code):not(.plan-features *):not(.compare__table *){text-align:center!important}body .section-title,body .section-label,body .section-sub,body .hero__headline,body .hero__sub,body .hero__tagline,body .hero__eyebrow,body .hero__note,body .guarantee__title,body .guarantee__sub,body .problem__twist h3,body .problem__twist p,body .solution__reveal,body .final-cta__headline,body .platforms__footnote,body .stealth__how h2,body .stealth__callout,body .platforms-card__title,body .platforms-card__cat,body .platforms-card__brands,body .platforms-card__note,body .feature-card__title,body .feature-card__desc,body .feature-card__benefit,body .pain-card__title,body .pain-card__desc,body .pain-card__number,body .trust-card__title,body .trust-card__desc,body .testi-card__name,body .testi-card__role,body .testi-card__quote,body .plan-name,body .plan-note,body .plan-features,body .step__title,body .step__desc,body .how-step__title,body .how-step__desc,body .compare-badge-wrap,body .compare-badge,body article.article-page>*,body .legal-page>*{margin-left:auto!important;margin-right:auto!important}body article.article-page p,body article.article-page h1,body article.article-page h2,body article.article-page h3,body article.article-page ul,body article.article-page ol{max-width:70ch;margin-left:auto!important;margin-right:auto!important}body .solution__points,body .solution__points li,body .solution__points li *,body .ba-col__list,body .ba-col__list li,body .ba-col__list li *,body ul li:has(>.g-check),body ul li:has(>svg),body ul li:has(>.check),body .feature-card__benefit,body .feature-card__benefit *,body .stealth-tech__list,body .stealth-tech__list li,body .stealth-tech__list li *,body .compare__row,body .compare__row *,body .compare__cell,body ul[class*="__list"],body ul[class*="__list"] li,body ul[class*="__list"] li *,body ol[class*="__list"],body ol[class*="__list"] li,body ol[class*="__list"] li *{text-align:left!important;margin-left:0!important;margin-right:0!important}body .solution__points,body .ba-col__list,body .stealth-tech__list,body ul[class*="__list"]{display:inline-block;text-align:left!important;margin-left:auto!important;margin-right:auto!important}body .btn,body a.btn,body button.btn,body .wordmark,body .wordmark--inline,body .wordmark-tagline,body .solution__brand,body .hero__cta-group,body .hero__cta-group>*,body .cta-group,body .cta-group>*,body .final-cta,body .final-cta>*,body .install-cta,body .install-cta>*{margin-left:auto!important;margin-right:auto!important}body .hero__cta-group,body .cta-group{display:flex!important;justify-content:center!important;flex-wrap:wrap!important;gap:12px}body .solution__brand,body p:has(>.wordmark),body div:has(>a.btn:only-child){text-align:center!important;display:block}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.001ms!important;transition-duration:0.001ms!important}}@media (max-width:768px){body{font-size:16px}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}}table th{font-variant-numeric:tabular-nums lining-nums}thead th{padding:16px 20px;text-align:left;font-family:"Inter",sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);white-space:nowrap}thead th:first-child{color:var(--pure-white)}@media (max-width:768px){body{font-size:16px}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}thead{display:none}}table *{text-align:left}img{max-width:100%;display:block}h1,h2,h3{font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;font-weight:800;line-height:1.1;letter-spacing:-0.025em;color:var(--text)}h3{font-weight:700;font-size:clamp(1.05rem,2vw,1.25rem);letter-spacing:-0.005em}.step{text-align:left;padding:0}code{text-align:left}</style><link rel="preload" href="/style.css?v=be9cdea8" as="style" onload="this.onload=null;this.rel='stylesheet'" /><noscript><link rel="stylesheet" href="/style.css?v=be9cdea8" /></noscript>
+<style>
+    .article-page { max-width: 780px; margin: 0 auto; padding: 84px 24px 100px; }
+    .article-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--text); margin-bottom: 16px; line-height: 1.2; }
+    .article-page h2 { font-size: 1.5rem; color: var(--text); margin: 44px 0 14px; }
+    .article-page h3 { font-size: 1.15rem; color: var(--text); margin: 28px 0 10px; }
+    .article-page p { color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
+    .article-page strong { color: var(--text); }
+    .article-page code { background:#1f1f3a; padding:2px 6px; border-radius:5px; color:#c9b8ff; font-size:0.92em; }
+    .answer-box { background:#12122a; border:1px solid rgba(124,92,252,0.25); border-radius:8px; padding:24px; margin:0 0 36px; }
+    .answer-box p { margin:0; color:var(--text); font-size:1.05rem; }
+    .cta-section { background:linear-gradient(135deg,rgba(124,92,252,.14),rgba(124,92,252,.03)); border:1px solid #2a2a4a; border-radius:16px; padding:32px; text-align:center; margin-top:48px; }
+    .cta-section h3 { color: var(--text); margin:0 0 8px; }
+    .cta-section p { margin:0 0 20px; color: var(--text-muted); }
+    .cta-section .btn { display:inline-block; padding:14px 28px; background:#fff; color:var(--text); font-weight:700; border-radius:12px; text-decoration:none; }
+  </style>
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "IMA SDK-Anzeigeblockierung, erklärt",
+  "description": "Wie Google IMA SDK Werbung lädt, der Anzeigenanfrage-zyklus im Player und wie ein „Inhalt fortsetzen“-Stub dies neutralisiert.",
+  "image": "https://adoff.app/assets/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "AdOff"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "AdOff"
+  },
+  "datePublished": "2026-09-20",
+  "dateModified": "2026-09-20",
+  "inLanguage": "de"
+}
+  </script>
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Ist das Blockieren des IMA SDK dasselbe wie dessen Ersetzung?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Nein. Das Blockieren auf Netzwerkebene verhindert oft die Wiedergabe des Videos, da die Player darauf warten, dass das SDK signalisiert, dass die Wiedergabe fortgesetzt werden kann. Durch die Ersetzung durch einen Stub bleibt der Player voll funktionsfähig, während sichergestellt ist, dass niemals Werbung angefordert wird."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Was geschieht, wenn der Stub eine Anzeigeanfrage erhält?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Der Stub bietet dieselbe API-Oberfläche, die die Player erwarten. Bei Aufforderung zur Werbung wird sofort das Content-Resume-Ereignis ausgelöst, sodass die Wiedergabe ohne Abruf oder Darstellung einer Werbung fortgesetzt wird."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Funktioniert ein IMA-Stub auch gegen Server-Side-Ad-Insertion?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Nein. Bei SSAI (Server-Side Ad Insertion) werden die Werbeinhalte bereits serverseitig in den Videostream eingefügt, bevor dieser ausgeliefert wird; daher gibt es keinen clientseitigen SDK-Aufruf, den abfangen könnte. Die serverseitige Einblendung erfordert andere Gegenmaßnahmen und liegt außerhalb des Wirkungsbereichs einer Browser-Erweiterung."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Welche Browser können diese Art von Erweiterung ausführen?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "AdOff basiert auf Manifest V3 und funktioniert auf Chrome, Firefox, Safari, Edge und Opera. Die IMA-Neutralisierungsschicht ist in der kostenlosen Version enthalten, ohne dass ein Konto oder eine Registrierung erforderlich ist."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Kann eine Website erkennen, dass das SDK ersetzt wurde?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Das ist genau der Zweck der Stealth-Schicht: Spoofing von Lockvorgängen sowie Fetch/XHR-Abfangung lassen die Umgebung für Anti-Adblock-Skripte gewöhnlich erscheinen. Keine Methode ist dauerhaft wirksam, da Plattformen ihre Erkennungsmechanismen häufig ändern."
+      }
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "AdOff",
+      "item": "https://adoff.app/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Erklärung der IMA SDK-Werbungsblokierung | AdOff",
+      "item": "https://adoff.app/de/ima-sdk-ad-blocking-explained"
+    }
+  ]
+}
+  </script>
+</head>
+<body>
+  <main>
+    <article class="article-page">
+      <h1>IMA SDK-Anzeigeblockierung, erklärt</h1>
+      <div class="answer-box"><p>Das Google IMA SDK ist die Bibliothek, die Videoplayer zum Anfordern und Abspielen von Werbung verwenden. Wenn es auf Netzwerkebene blockiert wird, funktionieren die Player nicht mehr. AdOff ersetzt es daher durch einen Stub, der jede Werbeanfrage sofort mit einem „Inhalt fortsetzen“-Ereignis beantwortet: Der Player funktioniert, die Werbung wird jedoch niemals geladen.</p></div>
+      <h2>Was die IMA-SDK tatsächlich ist</h2>
+      <p><p>Das <strong>Interactive Media Ads (IMA) SDK</strong> ist Googles clientseitige Bibliothek für Video-Werbung. Eine Website, die ein Video monetarisieren möchte, erstellt normalerweise nicht ihren eigenen Werbe-Player: Sie lädt stattdessen <code>imasdk.googleapis.com/js/sdkloader/ima3.js</code> (oder die dynamische Variante <code>ima3_dai.js</code>), initialisiert einen <code>AdDisplayContainer</code> und übergibt dem SDK eine Ad-Tag-URL. Anschließend ruft das SDK eine VAST-Antwort ab, rendert die Werbung innerhalb des Players, verfolgt Impressionen und Quartile und gibt schließlich die Steuerung wieder an den Inhaltsherausgeber zurück.</p></p>
+      <p><p>Weil es sich um ein gemeinsames Skript handelt, das von einer einzigen Domain aus bereitgestellt wird, stellt das IMA SDK den entscheidenden Engpass im Web-Video-Werbebereich dar: Sobald man es neutralisiert, stoppt jeder darauf basierende Player die Auslieferung von Werbung.</p></p>
+      <h2>Der Lebenszyklus einer Anzeigenanfrage</h2>
+      <p><p>Wenn ein Zuschauer auf „Wiedergabe“ klickt, führt der Player in der Regel folgende Sequenz aus:</p></p>
+      <p><ol><li>Die Seite lädt <code>ima3.js</code> von Googles Servern.</li><li>Der Player erstellt einen Anzeigen-Loader und fordert Anzeigen mit einem Anzeigetag an, der auf einen Anzeigeserver verweist.</li><li>Das SDK ruft die Anzeige ab (in der Regel ein VAST-/VMAP-Dokument über DoubleClick), parst sie und rendert das Anzeigemedium in einem Container über dem Video.</li><li>Tracking-Pixel werden ausgelöst; der Player wartet.</li><li>Sobald die Anzeige beendet ist (oder ein Fehler auftritt), löst das SDK <code>CONTENT_RESUME_REQUESTED</code> aus, und der Player setzt das eigentliche Video fort.</li></ol></p>
+      <p><p>Das letzte Ereignis ist entscheidend: Der Spieler ist so programmiert, dass er auf dieses wartet. Wer die SDK kontrolliert, kontrolliert auch, wann der Inhalt fortgesetzt wird.</p></p>
+      <h2>Warum das bloße Blockieren der SDK die Player zerstört</h2>
+      <p><p>Der grobe Ansatz besteht darin, <code>imasdk.googleapis.com</code> auf Netzwerkebene zu blockieren und damit abzuschließen. Das Problem: Viele Player interpretieren ein fehlgeschlagenes oder fehlendes SDK als schwerwiegenden Fehler und verweigern den Start des Videos vollständig, wodurch stattdessen ein Lade-Spinner oder eine „Adblock erkannt“-Sperrmaske angezeigt wird.</p></p>
+      <p><p>Darum sind klassische Blocker auf Netzwerkebene gegen Videoanzeigen schwach: Sie können die Anzeigenanfrage blockieren, aber nicht die Frage des Players beantworten: „Kann ich jetzt fortsetzen?“. Nur etwas, das stellvertretend für das SDK agiert, kann das.</p></p>
+      <h2>Neutralisierung durch Substitution: Der Stub-Ansatz</h2>
+      <p><p>AdOff wählt einen anderen Weg: Anstatt das SDK zu blockieren, ersetzt es dieses <strong>direkt</strong>. Ein Stub, der die öffentliche API des IMA SDK nachbildet, wird eingefügt, sodass der Player weiterhin ein funktionierendes SDK „sieht“ – eines, das so tut, als wären alle Werbeunterbrechungen leer.</p></p>
+      <p><p>Wenn der Player <code>adsManager.start()</code> aufruft, sendet der Stub sofort <code>CONTENT_RESUME_REQUESTED</code>. Der Player setzt den Inhalt sofort fort. Es wird kein Werbevideo abgerufen, kein Werbevideo wiedergegeben, und der Player gelangt niemals in einen Fehlerzustand, da er nichts Fehlendes bemerkt.</p></p>
+      <h2>Zwei Übertragungskanäle für denselben Stub</h2>
+      <p><p>AdOff sendet denselben Stub über zwei Kanäle, da verschiedene Websites das SDK unterschiedlich laden:</p></p>
+      <p><ul><li><strong>In-Page-Injektion.</strong> Auf Seiten, die nicht ausgeschlossen sind, definiert ein Skript im Hauptkontext <code>window.google.ima</code>, bevor der Player initialisiert wird, sodass das eingebettete oder extern geladene SDK durch den Stub ersetzt wird.</li><li><strong>Netzwerkumleitung.</strong> Für eine Gruppe von 42 europäischen Rundfunkanbieter-Domains leiten Regeln von declarativeNetRequest die Anfrage nach <code>ima3.js</code> und <code>ima3_dai.js</code> auf die im Erweiterungspaket enthaltene Stub-Datei um. Die Seite lädt, was sie für das Google-SDK hält, erhält aber stattdessen das von AdOff.</li></ul></p>
+      <p><p>Beide Kanäle führen zum gleichen Ergebnis: Der Spieler erhält ein reaktionsfähiges SDK, der Zuschauer erhält Inhalte.</p></p>
+      <h2>Wo dieser Ansatz greift – und wo nicht</h2>
+      <p><p>Der Stub neutralisiert clientseitige, IMA-basierte Werbung. Er hat keinen Einfluss auf <a href="/server-side-ad-insertion-explained">serverseitige Werbeeinblendung (SSAI)</a>, bei der Werbung bereits vor der Auslieferung direkt in den Video-Stream eingefügt wird – es findet hierfür kein SDK-Aufruf statt. Premium-Abonnementservices, die eigene Werbe-Pipelines nutzen, sind bewusst ausgeschlossen, damit ihre Player weiterhin funktionieren.</p></p>
+      <p><p>Die Haupt-Videoplattform erhält zudem eine eigene Pipeline: Die Werbeplanung wird aus der Antwort des Players entfernt, bevor die Seite sie liest, und alles, was dennoch durchschlüpft, wird vorgespult.</p></p>
+      <h2>Warum dies für die Zukunft des Werbeblockings relevant ist</h2>
+      <p><p>Werbeplattformen verlagern das Gewicht zunehmend auf clientseitige SDKs, precisely weil naive Blocker damit Schwierigkeiten haben. Ein Ansatz, der den Spieler beantwortet, anstatt ihn zu verhungern, ist robust: Er hängt nicht davon ab, jede Werbe-URL aufzulisten, sondern nur davon, dass der SDK-eigene Vertrag vorsieht, dass der Inhalt fortgesetzt werden muss.</p></p>
+      <p><p>AdOff ist eine kostenlose, kontofreie Manifest V3-Erweiterung für Chrome, Firefox, Safari, Edge und Opera, und ihre Video-Neutralisierungsschicht ist für alle enthalten.</p></p>
+      <h2>Häufige Fragen</h2>
+      <h3>Ist das Blockieren des IMA SDK dasselbe wie dessen Ersetzung?</h3>
+      <p>Nein. Das Blockieren auf Netzwerkebene verhindert oft die Wiedergabe des Videos, da die Player darauf warten, dass das SDK signalisiert, dass die Wiedergabe fortgesetzt werden kann. Durch die Ersetzung durch einen Stub bleibt der Player voll funktionsfähig, während sichergestellt ist, dass niemals Werbung angefordert wird.</p>
+      <h3>Was geschieht, wenn der Stub eine Anzeigeanfrage erhält?</h3>
+      <p>Der Stub bietet dieselbe API-Oberfläche, die die Player erwarten. Bei Aufforderung zur Werbung wird sofort das Content-Resume-Ereignis ausgelöst, sodass die Wiedergabe ohne Abruf oder Darstellung einer Werbung fortgesetzt wird.</p>
+      <h3>Funktioniert ein IMA-Stub auch gegen Server-Side-Ad-Insertion?</h3>
+      <p>Nein. Bei SSAI (Server-Side Ad Insertion) werden die Werbeinhalte bereits serverseitig in den Videostream eingefügt, bevor dieser ausgeliefert wird; daher gibt es keinen clientseitigen SDK-Aufruf, den abfangen könnte. Die serverseitige Einblendung erfordert andere Gegenmaßnahmen und liegt außerhalb des Wirkungsbereichs einer Browser-Erweiterung.</p>
+      <h3>Welche Browser können diese Art von Erweiterung ausführen?</h3>
+      <p>AdOff basiert auf Manifest V3 und funktioniert auf Chrome, Firefox, Safari, Edge und Opera. Die IMA-Neutralisierungsschicht ist in der kostenlosen Version enthalten, ohne dass ein Konto oder eine Registrierung erforderlich ist.</p>
+      <h3>Kann eine Website erkennen, dass das SDK ersetzt wurde?</h3>
+      <p>Das ist genau der Zweck der Stealth-Schicht: Spoofing von Lockvorgängen sowie Fetch/XHR-Abfangung lassen die Umgebung für Anti-Adblock-Skripte gewöhnlich erscheinen. Keine Methode ist dauerhaft wirksam, da Plattformen ihre Erkennungsmechanismen häufig ändern.</p>
+      <p>Mehr dazu: <a href="/streaming-ad-blocking">Streaming-Werbung blockieren: Der vollständige Leitfaden</a>, <a href="/preroll-midroll-postroll-explained">Pre-roll, Mid-roll, Post-roll: Erklärung der Video-Werbeformate</a>, <a href="/how-it-works">Wie AdOff funktioniert – Schritt für Schritt</a>.</p>
+      <div class="cta-section">
+        <h3>Sehen Sie es in Aktion bei echten Playern</h3>
+        <p>AdOff ersetzt das Werbe-SDK durch einen Sofort-Wiedergabestub – kostenlos für alle, ohne Konto erforderlich.</p>
+        <a href="/install.html" class="btn">AdOff kostenlos installieren</a>
+      </div>
+    </article>
+  </main>
+<script src="/adoff-i18n.js?v=9c17e196" defer></script>
+  <script src="/adoff-nav.js?v=aa5d5c66"></script>
+  <script src="/adoff-footer.js?v=06c40593"></script>
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

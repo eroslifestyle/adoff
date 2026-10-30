@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-spain",
+  "lang": "tr",
+  "title": "RTVE, Atresplayer, Mitele ve laSexta’da Reklamları Engelle | AdOff",
+  "description": "AdOff, RTVE, Atresplayer, Mitele, laSexta, RTP, TVI ve SIC’teki video reklamlarını engeller; ücretsiz, hesap gerektirmez.",
+  "h1": "İspanyol Catch-Up TV için Reklam Engelleyici: RTVE, Atresplayer, Mitele",
+  "answer": "AdOff, tarayıcıda İspanyol catch-up TV platformlarında ön-ve orta-rol reklamları çoğu durumda kaldırır. Oynatıcıların talep ettiği Google IMA reklam SDK’sını, programın hemen devam etmesini sağlayan bir stub ile değiştirir; bu sayede RTVE veya Atresplayer’deki tekrar izlemeler kesintisiz çalışır. Aynı şey, standart oynatıcı entegrasyonunu korudukları sürece Portekiz hizmetleri için de geçerlidir.",
+  "sections": [
+    {
+      "h2": "İspanyolca ve Portekizce hizmetler kapsandı",
+      "body": [
+        "<p>İspanyol yayıncılar, kendi geri izleme platformlarını standart Google IMA SDK aracılığıyla sunulan video reklamlarla finanse eder. AdOff şunları engeller:</p>",
+        "<ul><li><strong>RTVE</strong> (rtve.es)</li><li><strong>Atresplayer</strong> (atresplayer.com)</li><li><strong>Mitele</strong> (mitele.es)</li><li><strong>laSexta</strong> (lasexta.com)</li></ul>",
+        "<p>Komşu Portekiz pazarı aynı mekanizma ile kapsanır:</p>",
+        "<ul><li><strong>RTP</strong> (rtp.pt)</li><li><strong>TVI</strong> (tvi.pt)</li><li><strong>SIC</strong> (sic.pt)</li></ul>"
+      ]
+    },
+    {
+      "h2": "Oynat'a bastığınızda ne olur",
+      "body": [
+        "<p>Genellikle oynatıcı, IMA SDK’yı indirir ve programdan önce ve sırasında bir reklam aralığı çalıştırır. AdOff etkinken, SDK isteği bir paketlenmiş stub’a yönlendirilir. Oynatıcı, stub’dan reklamı başlatmasını ister; stub “içerik devam ettirme istendi” cevabını verir ve aralık zaten bitmiş gibi oynatma devam eder. Her şey tarayıcıda yerel olarak gerçekleşir; video akışı kendisi değiştirilmez.</p>"
+      ]
+    },
+    {
+      "h2": "Kamu yayıncısı ve ticari gruplar, aynı giriş noktası",
+      "body": [
+        "<p>RTVE kamu kurumudur, Atresmedia ve Mediaset España ise ticari kurumlardır — ancak tarayıcı oynatıcıları aynı reklam SDK’sını kullanır. Bu ortak bağımlılık, tek bir eklentinin tümünü aynı mekanizma ile kapsamasının nedenidir. Ayrıca, abonelikli akış hizmetlerinde reklamlar sunucu tarafında akışa eklenmesi ve eklentinin tasarım gereği dışarıda kalması arasındaki farkı da açıklar.</p>"
+      ]
+    },
+    {
+      "h2": "Video oynatıcıdan öteye geçme filtreleme",
+      "body": [
+        "<p>AdOff ayrıca reklam ve izleme alan adlarını engelleyen 180 statik ağ kuralı ve afişleri ve tanıtım katmanlarını gizleyen bir kozmetik CSS/DOM filtresi de çalıştırır. rtve.es veya atresplayer.com’da bu, katalogu seçmeden önce sayfadan promosyon karelerini ve afişleri temizler.</p>"
+      ]
+    },
+    {
+      "h2": "Kapsamın sonlandığı yer",
+      "body": [
+        "<ul><li>Bir platform <strong>sunucu tarafında reklam ekleme (SSAI)</strong> benimsemişse, reklam akışın bir parçası olur ve stub artık uygulanmaz.</li><li>AdOff yalnızca <strong>masaüstü tarayıcısında</strong> çalışır: RTVE veya Mitele mobil ve akıllı TV uygulamaları kapsam dışındadır.</li><li>Bazı <strong>canlı yayınlar ve spor</strong> farklı sistemler kullanır.</li><li>Oynatıcılar sık sık değişir; kapsama alanı proje tarafından sürdürülmektedir, kalıcı değildir.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Ücretsiz, kayıt gerektirmez, beş tarayıcı",
+      "body": [
+        "<p>AdOff, Manifest V3 eklentisidir, tamamen ücretsizdir, hesap gerektirmez ve deneme süresi yoktur. Chrome, Firefox, Safari, Edge ve Opera’da çalışır. Resmi siteden yükleyin ve koruma özelliğini açık tutun.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "AdOff, RTVE'deki reklamları engelliyor mu?",
+      "a": "Çoğu durumda evet: RTVE web oynatıcısı Google IMA SDK aracılığıyla reklamları yüklediğinde, AdOff programın hemen devam etmesini sağlayan bir stub ile değiştirir. Canlı yayınlar ve spor, farklı akışlar kullanabilir ve bu durumda sonuçlar değişebilir."
+    },
+    {
+      "q": "Atresplayer'daki reklamları ücretsiz olarak atlayabilir miyim?",
+      "a": "AdOff, Atresplayer web oynatıcısındaki reklam SDK’sını etkisiz hale getiren ücretsiz bir tarayıcı eklentisidir; bu nedenle genellikle önceden yüklenen (pre-roll) ve orta bölümlerdeki (mid-roll) reklamlar oynatılmaz. Atresplayer Premium, ayrı bir ticari bir üründür; AdOff, hesabınızla etkileşime girmez."
+    },
+    {
+      "q": "Ayrıca RTP gibi Portekiz kanallarında da çalışıyor mu?",
+      "a": "Evet. RTP, TVI ve SIC, tarayıcı oynatıcıları standart reklam SDK’sını istediğinde aynı mekanizma tarafından kapsanır. Kapsama listesi hem İspanyol hem de Portekiz pazarlarını içerir."
+    },
+    {
+      "q": "Mitele uygulamasında veya akıllı TV’de çalışıyor mu?",
+      "a": "Hayır. AdOff yalnızca masaüstü tarayıcı eklentisidir. Yerel mobil uygulamalar, akıllı TV uygulamaları ve casting oturumları onun erişim alanı dışındadır."
+    },
+    {
+      "q": "RTVE veya Atresplayer hesabım hakkında herhangi bir şey etkileniyor mu?",
+      "a": "Hayır. AdOff yerel olarak çalışır, hiçbir şeye giriş yapmaz ve yayncının içerik sunucularına yönelik istekleri değiştirmez — yalnızca reklam SDK betiği değiştirilir."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Akış reklam engelleme nasıl çalışır"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-italy",
+      "text": "İtalyan catch-up TV reklam engelleyici"
+    },
+    {
+      "href": "/live-sports-ad-blocking",
+      "text": "Canlı spor reklam engelleyici"
+    }
+  ],
+  "cta": {
+    "h3": "İspanyolca tekrar oynat, reklam kesintileri olmadan",
+    "p": "AdOff’u yükleyin ve RTVE, Atresplayer, Mitele ve laSexta’da reklam SDK’sını stub’in ele almasına izin verin.",
+    "btn": "AdOff’u ücretsiz yükleyin"
+  },
+  "report": {
+    "intro": "Bu listede eksik bir İspanyolca veya Portekizce platform mu var? Hâlâ https://adoff.app/catch-up-tv-ad-blocker-spain adresinde kesintiler görünüyorsa, hangi hizmetin eksik olduğunu bildirin. Bildirimler, gelecek hangi platformları kapsayacağımızı belirlememize yardımcı olur.",
+    "btn_text": "Eksik bir hizmeti bildirin",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

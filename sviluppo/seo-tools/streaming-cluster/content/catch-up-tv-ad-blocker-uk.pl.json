@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-uk",
+  "lang": "pl",
+  "title": "Blokator reklam Catch-Up TV dla usług w Wielkiej Brytanii | AdOff",
+  "description": "Usuń reklamy wideo na BBC iPlayer, ITVX, Channel 4, 5 i innych. AdOff — darmowe rozszerzenie neutralizujące SDK reklam w catch-up.",
+  "h1": "Blokador reklam Catch-Up TV dla usług nadawców brytyjskich",
+  "answer": "AdOff usuwa reklamy pre-roll i mid-roll z usług catch-up TV w Wielkiej Brytanii w przeglądarce, w większości przypadków. Zastępuje SDK reklam Google IMA, które ładują te odtwarzacze, lekkim szkicem, który natychmiast wznowia odtwarzanie, dzięki czemu program jest odtwarzany bez przerw reklamowych. Zakres działania obejmuje odtwarzacze przeglądarkowe na komputerach stacjonarnych, o ile usługa korzysta ze standardowego SDK.",
+  "sections": [
+    {
+      "h2": "Jakie usługi w Wielkiej Brytanii są objęte",
+      "body": [
+        "<p>Wielkiej Brytanii nadawcy prowadzą darmowe platformy catch-up finansowane przez reklamy. Gdy te platformy ładują się w przeglądarce komputerowej i żądają SDK Google IMA, AdOff przechwytuje to żądanie i zamiast niego udostępnia lokalny szkielet (stub). Usługi objęte obecnie:</p>",
+        "<ul><li><strong>BBC iPlayer</strong> (bbc.co.uk, bbc.com)</li><li><strong>ITV i ITVX</strong> (itv.com, itvx.com)</li><li><strong>Channel 4</strong> (channel4.com)</li><li><strong>Channel 5</strong> (channel5.com)</li><li><strong>My5</strong> (my5.tv)</li><li><strong>Pluto TV</strong> oraz <strong>Tubi</strong>, dostępne również na rynku brytyjskim</li></ul>"
+      ]
+    },
+    {
+      "h2": "Jak działa w aplikacji do odtwarzania programów z opóźnieniem",
+      "body": [
+        "<p>Największość platform catch-up w Wielkiej Brytanii integruje SDK Google IMA w celu harmonogramowania reklam przed filmem (pre-rolls) oraz w trakcie (mid-rolls). AdOff przekierowuje żądanie skryptu SDK do szkieletu dołączonego do rozszerzenia. Gdy platforma wywołuje ten szkielet w celu rozpoczęcia przerwy reklamowej, szkielet natychmiast odpowiada „żądanie wznowienia treści”: platforma uznaje, że przerwa się zakończyła, i kontynuuje odtwarzanie programu.</p>",
+        "<p>Ma to miejsce lokalnie w Twojej przeglądarce. Nic nie jest pobierane dwukrotnie, a sam strumień wideo pozostaje niezmieniony — tylko warstwa koordynacji reklam jest neutralizowana.</p>"
+      ]
+    },
+    {
+      "h2": "Dlaczego telewizja z opóźnieniem różni się od streamingu subskrypcyjnego",
+      "body": [
+        "<p>Platformy catch-up nadawców są darmowe do oglądania, ponieważ zawierają reklamy. Dzięki temu ich łańcuch reklamowy jest standaryzowany: opierają się na tym samym SDK, którego używają tysiące stron internetowych. Z kolei platformy subskrypcyjne wstrzykują reklamy po stronie serwera, co sprawia, że rozszerzenie przeglądarkowe nie ma do nich dostępu. Dlatego właśnie telewizja catch-up stanowi segment, w którym neutralizacja reklam w przeglądarce działa rzeczywiście skutecznie.</p>"
+      ]
+    },
+    {
+      "h2": "Co jeszcze robi AdOff poza odtwarzaczem wideo",
+      "body": [
+        "<p>Rozszerzenie zawiera również 180 statycznych reguł blokowania sieciowego, które blokują żądania do domen reklamowych i śledzących, oraz kosmetyczny filtr CSS/DOM, który ukrywa banery reklamowe, pola nakładane (overlay) oraz promocyjne kafelki na stronach nadawców. Efektem jest czystsza strona iPlayer, ITVX lub Channel 4 już przed naciśnięciem przycisku odtwarzania.</p>"
+      ]
+    },
+    {
+      "h2": "Ograniczenia, o których warto wiedzieć",
+      "body": [
+        "<p>Zasięg działania jest rzeczywisty, ale warunkowy:</p>",
+        "<ul><li>Jeśli nadawca przejdzie na <strong>wbudowane wstrzykiwanie reklam po stronie serwera (SSAI)</strong>, reklama zostaje wpleciona bezpośrednio w strumień wideo, a szkielet SDK nie ma wtedy żadnego wpływu.</li><li>AdOff działa <strong>tylko w przeglądarce komputerowej</strong> — nie w aplikacjach natywnych, telewizorach inteligentnych ani dekoderach.</li><li>Niektóre <strong>transmisje na żywo oraz wydarzenia sportowe</strong> wykorzystują inne metody dostarczania treści.</li><li>Nadawcy często aktualizują swoje platformy, dlatego zasięg działania jest utrzymywany w czasie, a nie zapewniany na stałe.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Darmowe, bez konieczności tworzenia konta, działa w pięciu przeglądarkach",
+      "body": [
+        "<p>AdOff to rozszerzenie zgodne z Manifest V3, całkowicie darmowe, bez konieczności rejestracji i bez okresu próbnego. Działa na Chrome, Firefox, Safari, Edge i Operze. Zainstaluj je, pozostaw włączoną ochronę i otwórz swoją usługę catch-up zgodnie z zwyczajem.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Czy to działa na BBC iPlayer?",
+      "a": "W większości przypadków tak — gdy iPlayer wyświetla reklamy za pomocą SDK Google IMA w przeglądarce. AdOff zastępuje to SDK stubem, który natychmiast wznowia program. BBC iPlayer ma stosunkowo mało przerw reklamowych w porównaniu z ITVX, więc praktyczna różnica zależy od konkretnego programu."
+    },
+    {
+      "q": "Czy mogę usuwać reklamy na ITVX bez opłacania wersji Premium?",
+      "a": "AdOff neutralizuje SDK reklamowe w przeglądarce ITVX, więc w większości przypadków reklamy wstępnego i środkowego nie są odtwarzane. ITVX Premium to osobny produkt komercyjny z dodatkowymi kanałami i przesyłaniem strumieniowym bez reklam; AdOff w żaden sposób nie łączy się z Twoim kontem."
+    },
+    {
+      "q": "Czy to działa w aplikacji mobilnej ITVX lub iPlayer?",
+      "a": "Nie. AdOff to rozszerzenie przeglądarkowe i działa wyłącznie na stronach wczytywanych w przeglądarce na komputerze stacjonarnym. Natywne aplikacje mobilne, aplikacje telewizorów inteligentnych oraz sesje Cast są poza jego zasięgiem."
+    },
+    {
+      "q": "Czy moje konto catch-up zostanie zablokowane?",
+      "a": "AdOff działa lokalnie i nie modyfikuje żądań do serwerów treści nadawcy — jedynie skrypt SDK reklamowego jest zastępowany. Nie loguje się do niczego, jednak żaden narzędzie nie może zagwarantować zachowania platformy stron trzecich, dlatego używaj go na własną odpowiedzialność."
+    },
+    {
+      "q": "Czy AdOff jest płatne?",
+      "a": "Nie. Rozszerzenie jest całkowicie darmowe, bez konieczności tworzenia konta, bez okresu próbnego i bez płatnych wersji. Wszystkie funkcje, w tym neutralizacja reklam wideo na platformach catch-up, są dostępne od momentu instalacji."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Jak działa blokowanie reklam w strumieniowaniu"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Blokowanie reklam w IMA SDK – wyjaśnienie"
+    },
+    {
+      "href": "/tv-streaming-ad-blocker",
+      "text": "Przegląd blokera reklam dla telewizji strumieniowej"
+    }
+  ],
+  "cta": {
+    "h3": "Oglądaj brytyjskie serwisy catch-up bez przerw reklamowych",
+    "p": "Zainstaluj AdOff w przeglądarce i pozwól, aby „stub” obsługiwał SDK reklamowe na iPlayer, ITVX i innych platformach.",
+    "btn": "Zainstaluj AdOff za darmo"
+  },
+  "report": {
+    "intro": "Czy brakuje jakiejś brytyjskiej usługi catch-up na tej liście? Jeśli Twoja ulubiona platforma wciąż wyświetla przerwy reklamowe na https://adoff.app/catch-up-tv-ad-blocker-uk, napisz nam, której. Twoje zgłoszenia decydują, które usługi obsłużymy w kolejnym etapie.",
+    "btn_text": "Zgłoś brakującą brytyjską usługę",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

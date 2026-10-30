@@ -1,0 +1,94 @@
+{
+  "slug": "block-youtube-shorts-ads",
+  "lang": "id",
+  "title": "Cara Memblokir Iklan YouTube Shorts (2026) | AdOff",
+  "description": "Iklan Shorts adalah umpan, bukan pemutar: bedanya dari pra-putar, kenapa penyaringan kosmetik pas, dan batasan jujur.",
+  "h1": "Memblokir Iklan di YouTube Shorts: Iklan di Feed, Bukan di Video",
+  "answer": "Iklan di YouTube Shorts adalah unit feed asli yang disisipkan di antara video vertikal saat Anda menggulir, bukan iklan pra-putar di dalam pemutar. Mereka adalah elemen halaman, bukan jeda pemutar yang dijadwalkan, sehingga ditangani oleh penyaringan kosmetik: aturan CSS dan DOM yang menyembunyikan wadah iklan. Cakupannya nyata, tetapi memiliki batasan ketika format berubah.",
+  "sections": [
+    {
+      "h2": "Iklan Shorts adalah spesies yang berbeda dari iklan video.",
+      "body": [
+        "<p>Ketika pre-roll diputar sebelum video biasa, pemutar memintanya, memutarnya, lalu melanjutkan video Anda. Shorts bekerja berbeda: saat Anda menggeser melalui feed, beberapa item dalam feed tersebut hanyalah iklan. Tampilannya seperti Shorts, bergulir seperti Shorts, dan termasuk dalam respons feed yang sama — bukan jeda iklan terpisah yang dijadwalkan oleh pemutar.</p>",
+        "<p>Perbedaan ini menentukan seluruh strategi pemblokiran. Alat berbasis pemain (penghapusan penjadwalan, percepatan pemutaran) tidak memiliki apa pun yang bisa dijalankan di sini, karena tidak pernah ada jeda yang dijadwalkan.</p>"
+      ]
+    },
+    {
+      "h2": "Mengapa penyaringan kosmetik adalah alat yang tepat untuk iklan di feed",
+      "body": [
+        "<p>Iklan umpan adalah elemen halaman dengan struktur yang dapat diprediksi: wadah, label seperti penanda \"disponsori\", dan komponen renderer yang unik untuk unit iklan. Penyaringan kosmetik bekerja dengan mencocokkan struktur-struktur tersebut menggunakan selektor CSS dan aturan DOM, lalu menyembunyikan wadah iklan sebelum atau saat dirender, sehingga item umpan tidak pernah terlihat.</p>",
+        "<p>AdOff menerapkan selektor khusus kosmetik untuk halaman berformat pendek platform video, di atas selektor iklan generik yang berjalan di setiap situs. Selektor yang sama diberlakukan dua kali: sebagai CSS yang disuntikkan dan di lapisan pemindaian DOM, sehingga elemen yang disembunyikan dengan cara satu juga dihapus dengan cara lainnya. Detailnya tersedia di <a href=\"/how-it-works\">cara kerja AdOff</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Apa yang bisa dan tidak bisa dilakukan oleh penyaringan kosmetik di umpan",
+      "body": [
+        "<p>Apa yang bisa dilakukannya: menyembunyikan unit iklan yang strukturnya cocok dengan selektor, serta menghapus label “dipromosikan” dan ubin overlay yang menyertainya. Pada format yang stabil, ini andal dan hemat biaya—tanpa menunggu, tanpa hitung mundur, iklan sama sekali tidak muncul di aliran geser Anda.</p>",
+        "<p>Apa yang tidak bisa dilakukan: menjamin cakupan format yang belum dirilis. Jika platform mengubah struktur unit iklan umpan, selektor berhenti cocok hingga diperbarui. Ini adalah keterbatasan jujur dari setiap pendekatan kosmetik, dan berlaku untuk <a href=\"/youtube-ad-blocker-not-working\">setiap pemblokir iklan</a>, bukan hanya satu.</p>"
+      ]
+    },
+    {
+      "h2": "Mengapa pemblokiran pada tingkat jaringan saja tidak mencakup Shorts",
+      "body": [
+        "<p>Memblokir jaringan iklan pada level DNS atau jaringan (lihat <a href=\"/android-dns\">pemblokiran berbasis DNS pada Android</a>) menghentikan permintaan ke server iklan yang diketahui. Namun, iklan dalam umpan di platform video sering kali dikirim melalui domain dan permintaan yang sama dengan umpan konten itu sendiri, sehingga filter jaringan yang menghapusnya akan merusak seluruh umpan. Karena itulah, pekerjaan praktis dilakukan di browser, pada level DOM, di mana unit iklan dan unit konten dapat dibedakan berdasarkan strukturnya.</p>"
+      ]
+    },
+    {
+      "h2": "Cara memblokir iklan Shorts secara praktis",
+      "body": [
+        "<p>Pengaturannya sama seperti untuk platform video lainnya: pasang ekstensi browser yang mencakup selektor kosmetik berformat pendek, aktifkan perlindungan, dan biarkan lapisan CSS dan DOM mengerjakan tugasnya—tidak perlu mengatur apa pun per video. AdOff menyediakan layanan ini secara gratis di Chrome, Firefox, Safari, Edge, dan Opera, tanpa memerlukan akun.</p>",
+        "<p>Jika Anda melihat unit iklan lolos, biasanya berarti formatnya berubah; perbaikannya datang bersama pembaruan selektor. Konteks lengkap untuk situasi ini ada di <a href=\"/youtube-ad-blocker-not-working\">apa yang harus dilakukan saat pemblokir iklan berhenti berfungsi</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Bagaimana iklan Shorts masuk ke dalam gambaran besar tentang pemblokiran",
+      "body": [
+        "<p>Iklan feed adalah salah satu dari empat jenis iklan di platform ini; jenis lainnya berada di dalam pemutar. Penyiapan lengkap memerlukan kedua lapisan ini: pemblokiran pada lapisan penjadwalan untuk pre-roll dan mid-roll, serta penyaringan kosmetik untuk unit feed dan overlay. Gambaran menyeluruh tentang bagaimana lapisan-lapisan ini bergabung—dan posisi masing-masing platform—tersedia di <a href=\"/streaming-ad-blocking\">penjelasan pemblokiran iklan streaming</a>, sedangkan detail spesifik berdasarkan posisi tersedia di <a href=\"/youtube-ad-blocker\">panduan pemblokir iklan YouTube</a>.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Apakah iklan di YouTube Shorts sama dengan iklan video biasa?",
+      "a": "Tidak. Iklan Shorts adalah unit feed asli yang disisipkan di antara video vertikal saat Anda menggulir. Iklan video biasa adalah jeda yang dijadwalkan di dalam pemutar. Pengiriman yang berbeda berarti teknik pemblokiran yang berbeda."
+    },
+    {
+      "q": "Bagaimana iklan Shorts diblokir, lalu?",
+      "a": "Melalui penyaringan kosmetik: aturan CSS dan DOM yang mengenali struktur wadah iklan dalam umpan dan menyembunyikannya sebelum ditampilkan. Lapisan penjadwalan iklan video tidak memiliki apa pun yang dapat dijalankan, karena tidak ada jeda iklan yang dijadwalkan dalam umpan."
+    },
+    {
+      "q": "Apakah semua iklan Shorts dapat disembunyikan?",
+      "a": "Sebagian besar format saat ini, ya, tetapi tidak disertai janji: jika platform merilis struktur iklan umpan baru, selektor tidak akan cocok lagi hingga diperbarui. Cakupan kosmetik mengikuti format yang ada."
+    },
+    {
+      "q": "Mengapa pemblokiran iklan di level DNS tidak menghapus iklan Shorts?",
+      "a": "Karena iklan umpan biasanya dikirim melalui domain yang sama dengan umpan konten itu sendiri. Sebuah filter jaringan yang memblokir permintaan tersebut akan merusak seluruh umpan. Hanya penyaringan di dalam browser yang dapat memisahkan keduanya berdasarkan struktur halaman."
+    },
+    {
+      "q": "Apakah AdOff memblokir iklan Shorts dan apakah gratis?",
+      "a": "AdOff menerapkan selektor kosmetik bentuk pendek sebagai bagian dari perlindungan gratisnya di Chrome, Firefox, Safari, Edge, dan Opera, tanpa memerlukan akun. Seperti halnya filtering kosmetik lainnya, cakupannya mengikuti format iklan terkini, bukan menjanjikan hasil tetap."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Pemblokiran iklan streaming: apa yang berfungsi di tahun 2026"
+    },
+    {
+      "href": "/youtube-ad-blocker",
+      "text": "Pemblokir Iklan YouTube: Cara Kerjanya di Tahun 2026"
+    },
+    {
+      "href": "/youtube-midroll-ads-explained",
+      "text": "Iklan mid-roll YouTube dijelaskan"
+    }
+  ],
+  "cta": {
+    "h3": "Gulirkan feed, lewati iklan",
+    "p": "AdOff menyaring iklan feed pada video format pendek secara gratis. Tanpa akun, berfungsi di Chrome, Firefox, Safari, Edge, dan Opera.",
+    "btn": "Pasang AdOff gratis"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-uk",
+  "lang": "es",
+  "title": "Bloqueador de anuncios para Catch-Up TV en el Reino Unido | AdOff",
+  "description": "Elimina anuncios en BBC iPlayer, ITVX, Channel 4, Channel 5 y más. AdOff neutraliza el SDK publicitario en reproductores de contenidos a la carta.",
+  "h1": "Bloqueador de anuncios para servicios de TV a la carta en el Reino Unido",
+  "answer": "AdOff elimina los anuncios de pre-roll y mid-roll de los servicios de TV a la carta del Reino Unido en el navegador, en la mayoría de los casos. Reemplaza el SDK de anuncios de Google IMA que cargan dichos reproductores por un stub ligero que reanuda la reproducción inmediatamente, de modo que el programa se reproduce sin interrupciones publicitarias. La cobertura se aplica a los reproductores web de escritorio mientras el servicio utilice el SDK estándar.",
+  "sections": [
+    {
+      "h2": "Qué servicios del Reino Unido están cubiertos",
+      "body": [
+        "<p>Las emisoras del Reino Unido ofrecen plataformas gratuitas de reproducción diferida financiadas por publicidad. Cuando estos servicios se cargan en un navegador de escritorio y solicitan el SDK de Google IMA, AdOff intercepta la solicitud y sirve un «stub» local en su lugar. Los servicios cubiertos actualmente:</p>",
+        "<ul><li><strong>BBC iPlayer</strong> (bbc.co.uk, bbc.com)</li><li><strong>ITV y ITVX</strong> (itv.com, itvx.com)</li><li><strong>Channel 4</strong> (channel4.com)</li><li><strong>Channel 5</strong> (channel5.com)</li><li><strong>My5</strong> (my5.tv)</li><li><strong>Pluto TV</strong> y <strong>Tubi</strong>, ambos disponibles en el mercado del Reino Unido</li></ul>"
+      ]
+    },
+    {
+      "h2": "Cómo funciona en un reproductor de contenido a la carta",
+      "body": [
+        "<p>La mayoría de los reproductores de reproducción diferida del Reino Unido integran el SDK de Google IMA para programar anuncios antes del contenido (pre-rolls) y durante el contenido (mid-rolls). AdOff redirige la solicitud del script del SDK hacia un «stub» incluido con la extensión. Cuando el reproductor llama al «stub» para iniciar un bloque publicitario, este responde inmediatamente con «solicitud de reanudación del contenido»: el reproductor cree que el bloque ha terminado y continúa con la emisión.</p>",
+        "<p>Esto ocurre localmente en su navegador. No se descarga nada dos veces y la transmisión de vídeo en sí no se modifica: únicamente se neutraliza la capa de orquestación de anuncios.</p>"
+      ]
+    },
+    {
+      "h2": "Por qué la televisión a la carta es distinta de la transmisión por suscripción",
+      "body": [
+        "<p>Las plataformas de reproducción diferida de las emisoras son gratuitas porque incluyen publicidad. Esto hace que su cadena de publicidad sea estandarizada: dependen del mismo SDK que miles de sitios web utilizan. En cambio, las plataformas de suscripción integran los anuncios en la transmisión de vídeo del lado del servidor, algo que una extensión de navegador no puede modificar. Por tanto, la televisión de reproducción diferida es el segmento donde la neutralización de anuncios dentro del navegador funciona realmente.</p>"
+      ]
+    },
+    {
+      "h2": "Qué hace AdOff además de en el reproductor de vídeo",
+      "body": [
+        "<p>La extensión también incluye 180 reglas estáticas de red que bloquean solicitudes a dominios publicitarios y de seguimiento, además de un filtro cosmético CSS/DOM que oculta pancartas publicitarias, cajas superpuestas y bloques promocionales en las páginas propias de las emisoras. El resultado es una página de iPlayer, ITVX o Channel 4 más limpia incluso antes de pulsar reproducir.</p>"
+      ]
+    },
+    {
+      "h2": "Limitaciones que debes conocer",
+      "body": [
+        "<p>La cobertura es real, pero condicional:</p>",
+        "<ul><li>Si una emisora pasa a utilizar la <strong>inserción de anuncios del lado del servidor (SSAI)</strong>, el anuncio se integra directamente en la transmisión de vídeo y el «stub» del SDK no tiene efecto.</li><li>AdOff funciona únicamente en <strong>navegadores de escritorio</strong>, no en aplicaciones nativas, televisores inteligentes ni cajas de satélite.</li><li>Algunas <strong>emisiones en directo y eventos deportivos</strong> utilizan canalizaciones de entrega diferentes.</li><li>Las emisoras actualizan frecuentemente sus reproductores, por lo que la cobertura se mantiene en el tiempo más que garantizarse de forma permanente.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Gratis, sin cuenta, funciona en cinco navegadores",
+      "body": [
+        "<p>AdOff es una extensión Manifest V3, totalmente gratuita, sin necesidad de registro ni período de prueba. Funciona en Chrome, Firefox, Safari, Edge y Opera. Instálala, mantén la protección activada y abre tu servicio de reproducción diferida como habitualmente.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona esto en BBC iPlayer?",
+      "a": "En la mayoría de los casos, sí: cuando iPlayer reproduce anuncios mediante el SDK de Google IMA en el navegador, AdOff sustituye dicho SDK por un «stub» que reanuda inmediatamente el programa. BBC iPlayer tiene relativamente pocas pausas publicitarias en comparación con ITVX, por lo que la diferencia práctica varía según el programa."
+    },
+    {
+      "q": "¿Puedo eliminar los anuncios en ITVX sin pagar por Premium?",
+      "a": "AdOff neutraliza el SDK publicitario en el reproductor web de ITVX, por lo que, en la mayoría de los casos, los anuncios previos (pre-rolls) y los anuncios intermedios (mid-rolls) no se reproducen. ITVX Premium es un producto comercial independiente que incluye canales adicionales y transmisión sin anuncios; AdOff no interactúa en absoluto con su cuenta."
+    },
+    {
+      "q": "¿Funciona en la aplicación móvil de ITVX o iPlayer?",
+      "a": "No. AdOff es una extensión para navegador y solo actúa en páginas cargadas en un navegador de escritorio. Las aplicaciones móviles nativas, las aplicaciones para televisores inteligentes y las sesiones de transmisión (cast) están fuera de su alcance."
+    },
+    {
+      "q": "¿Se marcará mi cuenta de catch-up?",
+      "a": "AdOff se ejecuta localmente y no modifica las peticiones a los servidores de contenido del emisor: únicamente se sustituye el script del SDK publicitario. No inicia sesión en ningún lugar, pero ninguna herramienta puede garantizar el comportamiento de una plataforma de terceros, por lo que debe usarla bajo su propio criterio y responsabilidad."
+    },
+    {
+      "q": "¿AdOff tiene algún coste?",
+      "a": "No. La extensión es totalmente gratuita, sin necesidad de cuenta, sin período de prueba y sin versión de pago. Todas las funciones, incluida la neutralización de anuncios en plataformas de replay, están disponibles desde la instalación."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Cómo funciona el bloqueo de anuncios en streaming"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Explicación del bloqueo de anuncios en IMA SDK"
+    },
+    {
+      "href": "/tv-streaming-ad-blocker",
+      "text": "Resumen del bloqueador de anuncios para streaming en TV"
+    }
+  ],
+  "cta": {
+    "h3": "Mira la televisión de recuperación del Reino Unido sin interrupciones publicitarias",
+    "p": "Instala AdOff en tu navegador y deja que el stub gestione el SDK de anuncios en iPlayer, ITVX y el resto.",
+    "btn": "Instala AdOff gratis"
+  },
+  "report": {
+    "intro": "¿Falta algún servicio británico de recuperación en esta lista? Si tu plataforma favorita sigue mostrando interrupciones publicitarias en https://adoff.app/catch-up-tv-ad-blocker-uk, dinos cuál. Los informes como el tuyo determinan qué servicios cubriremos a continuación.",
+    "btn_text": "Informar de un servicio británico ausente",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

@@ -1,0 +1,725 @@
+{
+  "id": "w49-multi-format-content",
+  "name": "49 — Multi-Format Content Factory (Thread/Carousel/Reel/Short Script)",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Rome",
+    "saveExecutionProgress": true,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all"
+  },
+  "nodes": [
+    {
+      "id": "node-001-webhook-trigger",
+      "name": "Webhook /multi-format-create",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "multi-format-create",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "multi-format-create-wh"
+    },
+    {
+      "id": "node-002-schedule-trigger",
+      "name": "Schedule (every 6h)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        500
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-003-schedule-fetch-seeds",
+      "name": "Fetch top-performing seeds (schedule)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        480,
+        500
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, concept, primary_lang FROM content_seeds WHERE perf_score > 0.7 ORDER BY perf_score DESC LIMIT 3"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot Postgres"
+        }
+      }
+    },
+    {
+      "id": "node-004-schedule-build-payloads",
+      "name": "Build webhook payloads from seeds",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        500
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const seeds = $input.all();\nconst outputs = [];\nfor (const seed of seeds) {\n  const { id, concept, primary_lang } = seed.json;\n  const formats = ['thread', 'carousel', 'reel_script', 'short_script'];\n  const cycleNum = Math.floor(Date.now() / (6 * 3600000)) % 4;\n  const selectedFormat = formats[cycleNum];\n  outputs.push({\n    json: {\n      concept,\n      formats: [selectedFormat],\n      langs: [primary_lang || 'it'],\n      platforms: selectedFormat === 'thread' ? ['twitter'] : (selectedFormat === 'carousel' ? ['instagram', 'linkedin'] : (selectedFormat === 'reel_script' ? ['tiktok', 'instagram'] : ['youtube'])),\n      source_seed_id: id\n    }\n  });\n}\nreturn outputs;"
+      }
+    },
+    {
+      "id": "node-005-hmac-validation",
+      "name": "HMAC-Validate webhook",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const crypto = require('crypto');\nconst secret = process.env.WEBHOOK_HMAC_SECRET;\n\nif (!secret) {\n  return [{ json: { __hmac_error: 'WEBHOOK_HMAC_SECRET not configured', statusCode: 500 } }];\n}\n\nconst signature = $json.$headers?.['x-adoff-signature'];\nconst body = $json.$body || JSON.stringify($json);\n\nif (process.env.DEV_MODE === 'true') {\n  return [{ json: { ...($json.body || $json), __hmac_skipped: true } }];\n}\n\nif (!signature) {\n  return [{ json: { __hmac_error: 'missing_signature_header', statusCode: 401 } }];\n}\n\nlet bodyForHmac = body;\nif (typeof body === 'object') {\n  bodyForHmac = JSON.stringify(body);\n}\n\nconst expectedHmac = crypto\n  .createHmac('sha256', Buffer.from(secret, 'hex'))\n  .update(bodyForHmac, 'utf8')\n  .digest('hex');\n\ntry {\n  crypto.timingSafeEqual(\n    Buffer.from(signature, 'hex'),\n    Buffer.from(expectedHmac, 'hex')\n  );\n  return [{ json: { ...($json.body || $json), __hmac_validated: true } }];\n} catch (err) {\n  return [{ json: { __hmac_error: 'invalid_signature', statusCode: 401 } }];\n}"
+      }
+    },
+    {
+      "id": "node-006-hmac-check",
+      "name": "IF HMAC valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-hmac-ok",
+              "operator": {
+                "type": "is_empty",
+                "operation": "isEmpty"
+              },
+              "leftValue": "={{$node[\"HMAC-Validate webhook\"].json.__hmac_error}}",
+              "rightValue": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-007-set-defaults",
+      "name": "Set defaults + cost guard",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const input = items[0]?.json?.body || items[0]?.json || {};\nconst MAX_FORMATS = 4, MAX_LANGS = 12, MAX_PLATFORMS = 5, MAX_CONCEPT_LEN = 1500;\n\nconst concept0 = String(input.concept || 'AdOff blocca la pubblicità invasiva').slice(0, MAX_CONCEPT_LEN);\nconst concept = concept0.replace(/[\\u0000-\\u001f\\u007f]/g, '');\n\nlet formats = Array.isArray(input.formats) ? input.formats : ['thread'];\nlet langs = Array.isArray(input.langs) ? input.langs : ['it', 'en'];\nlet platforms = Array.isArray(input.platforms) ? input.platforms : ['twitter', 'instagram'];\n\nformats = formats.slice(0, MAX_FORMATS).filter(f => /^[a-z_]{4,20}$/.test(f));\nlangs = langs.slice(0, MAX_LANGS).filter(l => /^[a-z]{2,5}$/i.test(l));\nplatforms = platforms.slice(0, MAX_PLATFORMS).filter(p => /^[a-z0-9_-]{2,30}$/.test(p));\n\nif (formats.length === 0) formats = ['thread'];\nif (langs.length === 0) langs = ['it'];\nif (platforms.length === 0) platforms = ['twitter'];\n\nconst tone = String(input.tone || 'energica, brillante, diretta').slice(0, 300);\nconst source_seed_id = input.source_seed_id ? String(input.source_seed_id).slice(0, 100) : null;\n\nconst out = [];\nfor (const format of formats) {\n  for (const lang of langs) {\n    for (const platform of platforms) {\n      const validCombos = {\n        'thread': ['twitter'],\n        'carousel': ['instagram', 'linkedin', 'facebook'],\n        'reel_script': ['tiktok', 'instagram', 'reels'],\n        'short_script': ['youtube', 'youtube-shorts']\n      };\n      const validPlatforms = validCombos[format] || [platform];\n      if (!validPlatforms.includes(platform)) continue;\n      \n      out.push({\n        json: {\n          concept,\n          format,\n          lang,\n          platform,\n          tone,\n          source_seed_id\n        }\n      });\n    }\n  }\n}\n\nif (out.length === 0) {\n  return [{ json: { error: 'no_valid_format_lang_platform_combos' } }];\n}\n\nreturn out;"
+      }
+    },
+    {
+      "id": "node-008-split-batches",
+      "name": "Throttle (1 req/s)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "node-009-format-thread-prompt",
+      "name": "Format: Thread prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        150
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const { concept, format, lang, platform, tone } = $json;\nif (format !== 'thread') return [{ json: $json }];\n\nconst LANG_NAMES = { it: 'italiano', en: 'English', de: 'Deutsch', fr: 'français', es: 'español', pt: 'português' };\nconst langName = LANG_NAMES[lang] || lang;\n\nconst prompt = `Sei copywriter brand AdOff. Crea un THREAD TWITTER in ${langName} su: ${concept}\\n\\nVINCOLI ASSOLUTI:\\n1. MAI nominare brand famosi (YouTube, Google, Facebook, Instagram, TikTok, Twitter/X, Amazon, Reddit, Twitch, GitHub, LinkedIn). Usa sinonimi.\\n2. MAI scrivere \\\"149 KB\\\" o varianti.\\n3. Voice: ${tone}. Frasi brevi, ritmo alto.\\n4. 3-8 tweet collegati. Hook (tweet 1) deve catturare in 3 secondi. Body: ogni tweet 1 punto preciso. Conclusion: CTA soft per AdOff.\\n5. Max 280 caratteri per tweet.\\n6. Lingua: solo ${langName}.\\n\\nRISTITUISCI SOLO JSON VALIDO:\\n{\\n  \\\"hook_tweet\\\": \\\"max 280 char\\\",\\n  \\\"body_tweets\\\": [\\\"tweet 1\\\", \\\"tweet 2\\\", ...],\\n  \\\"conclusion_tweet\\\": \\\"CTA final, max 280\\\",\\n  \\\"hashtags\\\": [\\\"#tag1\\\", \\\"#tag2\\\", ...]\\n}`;\n\nreturn [{ json: { ...\\$json, prompt, schema_type: 'thread' } }];"
+      }
+    },
+    {
+      "id": "node-010-format-carousel-prompt",
+      "name": "Format: Carousel prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        300
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const { concept, format, lang, platform, tone } = $json;\nif (format !== 'carousel') return [{ json: $json }];\n\nconst LANG_NAMES = { it: 'italiano', en: 'English', de: 'Deutsch', fr: 'français', es: 'español', pt: 'português' };\nconst langName = LANG_NAMES[lang] || lang;\n\nconst prompt = `Sei copywriter brand AdOff. Crea CAROUSEL SLIDES per ${platform.toUpperCase()} in ${langName} su: ${concept}\\n\\nVINCOLI:\\n1. MAI brand famosi. Usa sinonimi.\\n2. MAI \\\"149 KB\\\".\\n3. Voice: ${tone}.\\n4. 5-8 slide (cover + intermedie + final CTA).\\n5. Cover: headline max 60 char, subtitle max 100 char.\\n6. Slide intermedie: headline max 50 char, body max 150 char.\\n7. Visual brief (1-2 righe per ogni slide) per guida designer.\\n8. Final slide: CTA AdOff trial.\\n\\nRISTITUISCI SOLO JSON:\\n{\\n  \\\"cover\\\": {\\n    \\\"title\\\": \\\"max 60 char\\\",\\n    \\\"subtitle\\\": \\\"max 100 char\\\",\\n    \\\"visual_brief\\\": \\\"description for designer\\\"\\n  },\\n  \\\"slides\\\": [\\n    {\\\"slide_num\\\": 1, \\\"headline\\\": \\\"max 50 char\\\", \\\"body\\\": \\\"max 150 char\\\", \\\"visual_brief\\\": \\\"...\\\"}\\n  ],\\n  \\\"final_cta_slide\\\": {\\n    \\\"headline\\\": \\\"CTA headline\\\",\\n    \\\"cta_text\\\": \\\"Try AdOff free for 15 days\\\"\\n  }\\n}`;\n\nreturn [{ json: { ...\\$json, prompt, schema_type: 'carousel' } }];"
+      }
+    },
+    {
+      "id": "node-011-format-reel-prompt",
+      "name": "Format: Reel/TikTok script prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        450
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const { concept, format, lang, platform, tone } = $json;\nif (format !== 'reel_script') return [{ json: $json }];\n\nconst LANG_NAMES = { it: 'italiano', en: 'English', de: 'Deutsch', fr: 'français', es: 'español', pt: 'português' };\nconst langName = LANG_NAMES[lang] || lang;\n\nconst prompt = `Sei scriptwriter per Reel/TikTok. Crea script 15-60 sec in ${langName} su: ${concept}\\n\\nVINCOLI:\\n1. MAI brand famosi. Sinonimi obbligatori.\\n2. MAI \\\"149 KB\\\".\\n3. Voice: ${tone}. Frasi cortissime.\\n4. Hook 0-3s: DEMOLIZIONER (pattern interrupt + reveal + curiosity).\\n5. Body beat scenes 3-50s: text overlay + action/cut description.\\n6. CTA last 3s: call-to-action soft AdOff.\\n7. Music brief: 1 parola (energetic/cinematic/playful).\\n8. Lingua: solo ${langName}.\\n\\nRISTITUISCI SOLO JSON:\\n{\\n  \\\"hook_seconds_0_3\\\": \\\"demolitore hook\\\",\\n  \\\"body_beats\\\": [\\n    {\\\"time_seconds\\\": \\\"4-8\\\", \\\"text\\\": \\\"voiceover/text\\\", \\\"action\\\": \\\"cut to ...\\\", \\\"text_overlay\\\": \\\"...\\\"}\\n  ],\\n  \\\"cta_seconds_last_3\\\": \\\"CTA text\\\",\\n  \\\"music_brief\\\": \\\"energetic\\\",\\n  \\\"total_duration_sec\\\": 45\\n}`;\n\nreturn [{ json: { ...\\$json, prompt, schema_type: 'reel_script' } }];"
+      }
+    },
+    {
+      "id": "node-012-format-short-prompt",
+      "name": "Format: YouTube Short script prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        600
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const { concept, format, lang, platform, tone } = $json;\nif (format !== 'short_script') return [{ json: $json }];\n\nconst LANG_NAMES = { it: 'italiano', en: 'English', de: 'Deutsch', fr: 'français', es: 'español', pt: 'português' };\nconst langName = LANG_NAMES[lang] || lang;\n\nconst prompt = `Sei scriptwriter per YouTube Shorts. Crea script 45-60 sec in ${langName} su: ${concept}\\n\\nVINCOLI:\\n1. MAI brand famosi. Sinonimi.\\n2. MAI \\\"149 KB\\\".\\n3. Voice: ${tone}.\\n4. Hook first 3 sec: destabilizzante.\\n5. Narrative arc: problem → twist → solution → CTA.\\n6. B-roll suggestions per ogni beat.\\n7. Title 60 char: ottimizzato per CTR.\\n8. Description 140 char.\\n9. Tags: 5-7 rilevanti (\\\"ad blocker\\\", \\\"privacy\\\", etc).\\n\\nRISTITUISCI SOLO JSON:\\n{\\n  \\\"hook\\\": \\\"first 3 sec\\\",\\n  \\\"narrative_beats\\\": [\\n    {\\\"time\\\": \\\"0-10s\\\", \\\"voiceover\\\": \\\"VO text\\\", \\\"b_roll_suggestion\\\": \\\"...\\\"}\\n  ],\\n  \\\"cta\\\": \\\"last 5 sec CTA\\\",\\n  \\\"title_60char\\\": \\\"...\\\",\\n  \\\"description_140char\\\": \\\"...\\\",\\n  \\\"tags\\\": [\\\"#tag1\\\", \\\"#tag2\\\"]\\n}`;\n\nreturn [{ json: { ...\\$json, prompt, schema_type: 'short_script' } }];"
+      }
+    },
+    {
+      "id": "node-013-route-by-format",
+      "name": "Route by format type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        350
+      ],
+      "parameters": {
+        "dataType": "string",
+        "value": "={{ $json.format }}",
+        "options": {
+          "rules": [
+            {
+              "value": "thread",
+              "output": 0
+            },
+            {
+              "value": "carousel",
+              "output": 1
+            },
+            {
+              "value": "reel_script",
+              "output": 2
+            },
+            {
+              "value": "short_script",
+              "output": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-014-gemini-call",
+      "name": "Gemini 2.5 Flash (multi-format)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        350
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contents:[{role:'user',parts:[{text:$json.prompt}]}], generationConfig:{ temperature:0.8, topP:0.95, maxOutputTokens:2000, responseMimeType:'application/json', thinkingConfig:{thinkingBudget:0} }, safetySettings:[ {category:'HARM_CATEGORY_HARASSMENT',threshold:'BLOCK_NONE'}, {category:'HARM_CATEGORY_HATE_SPEECH',threshold:'BLOCK_NONE'}, {category:'HARM_CATEGORY_SEXUALLY_EXPLICIT',threshold:'BLOCK_NONE'}, {category:'HARM_CATEGORY_DANGEROUS_CONTENT',threshold:'BLOCK_NONE'} ] }) }}",
+        "options": {
+          "timeout": 45000,
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "adoff-gemini-credential-2026",
+          "name": "AdOff Gemini API (ServerN8N free/tier1)"
+        }
+      }
+    },
+    {
+      "id": "node-015-parse-guard",
+      "name": "Parse + Brand-guard (multi-format)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        350
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "function normalizeForGuard(s) {\n  if (!s) return '';\n  return String(s)\n    .normalize('NFD').replace(/[̀-ͯ]/g, '')\n    .toLowerCase()\n    .replace(/[·•​-‍﻿⁠]/g, '')\n    .replace(/\\\\s+/g, ' ');\n}\n\nfunction brandGuardCheck(rawText) {\n  const t = normalizeForGuard(rawText);\n  const BRANDS = ['youtube','you tube','google','facebook','face book','instagram','insta gram','tiktok','tik tok','tik-tok','twitter','\\\\bx\\\\b','amazon','reddit','twitch','github','linkedin'];\n  for (const b of BRANDS) {\n    const rx = new RegExp(b, 'iu');\n    if (rx.test(t)) return { ok: false, hit: b };\n  }\n  if (/149[\\\\s\\\\-_]*k(?:ilo)?b(?:yte)?s?/iu.test(t)) return { ok: false, hit: '149kb' };\n  return { ok: true };\n}\n\nconst meta = $json;\nconst resp = $json;\nlet text = '';\ntry { text = resp.candidates?.[0]?.content?.parts?.[0]?.text || ''; } catch(e){}\n\nlet parsed = null;\ntry { parsed = JSON.parse(text); } catch(e) {\n  const m = text.match(/\\\\{[\\\\s\\\\S]*\\\\}/);\n  if (m) { try { parsed = JSON.parse(m[0]); } catch(e2){} }\n}\n\nif (!parsed) {\n  return [{ json: { ...meta, ok: false, reason: 'gemini_no_valid_json', raw: text.slice(0, 300) } }];\n}\n\nconst fullText = JSON.stringify(parsed);\nconst guard = brandGuardCheck(fullText);\nif (!guard.ok) {\n  return [{ json: { ...meta, ok: false, reason: 'brand_guard_' + guard.hit, preview: fullText.slice(0, 200) } }];\n}\n\nreturn [{ json: { ...meta, ok: true, body_json: JSON.stringify(parsed), model: 'gemini-2.5-flash', tokens_in: resp.usageMetadata?.promptTokenCount || 0, tokens_out: resp.usageMetadata?.candidatesTokenCount || 0 } }];"
+      }
+    },
+    {
+      "id": "node-016-if-ok",
+      "name": "IF ok?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        350
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-ok",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-017-pg-insert",
+      "name": "Postgres INSERT gemini_copy_drafts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2640,
+        280
+      ],
+      "parameters": {
+        "operation": "insert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "adoff_autopilot"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gemini_copy_drafts"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow": "w49-multi-format",
+            "asset_type": "={{ $json.format }}",
+            "platform": "={{ $json.platform }}",
+            "lang": "={{ $json.lang }}",
+            "concept": "={{ $json.concept }}",
+            "body": "={{ $json.body_json }}",
+            "status": "draft",
+            "brand_guard_ok": true,
+            "source_seed_id": "={{ $json.source_seed_id }}",
+            "model": "={{ $json.model }}",
+            "tokens_in": "={{ $json.tokens_in }}",
+            "tokens_out": "={{ $json.tokens_out }}"
+          },
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "adoff-pg-autopilot-credential-1234",
+          "name": "AdOff Autopilot Postgres"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "id": "node-018-log-fail",
+      "name": "Log fail (brand guard or DB)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        420
+      ],
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "console.warn('[w49] multi-format rejected:', JSON.stringify({ format: $json.format, lang: $json.lang, platform: $json.platform, reason: $json.reason, preview: $json.preview }));\nreturn [{ json: { ...$json, dropped: true } }];"
+      }
+    },
+    {
+      "id": "node-019-wait-throttle",
+      "name": "Wait 1s (rate limit)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2880,
+        350
+      ],
+      "parameters": {
+        "amount": 1,
+        "unit": "seconds"
+      }
+    },
+    {
+      "id": "node-020-webhook-response",
+      "name": "Webhook response (success)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        2640,
+        100
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, asset_type: $json.format, lang: $json.lang, platform: $json.platform, rows_inserted: 1 } }}"
+      }
+    },
+    {
+      "id": "node-021-webhook-error",
+      "name": "Webhook response (error HMAC)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        960,
+        100
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 401,
+        "responseBody": "={{ { ok: false, error: $node[\"HMAC-Validate webhook\"].json.__hmac_error } }}"
+      }
+    },
+    {
+      "id": "node-023-final-merge",
+      "name": "Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3120,
+        350
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Webhook /multi-format-create": {
+      "main": [
+        [
+          {
+            "node": "HMAC-Validate webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule (every 6h)": {
+      "main": [
+        [
+          {
+            "node": "Fetch top-performing seeds (schedule)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch top-performing seeds (schedule)": {
+      "main": [
+        [
+          {
+            "node": "Build webhook payloads from seeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build webhook payloads from seeds": {
+      "main": [
+        [
+          {
+            "node": "Set defaults + cost guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HMAC-Validate webhook": {
+      "main": [
+        [
+          {
+            "node": "IF HMAC valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF HMAC valid?": {
+      "main": [
+        [
+          {
+            "node": "Set defaults + cost guard",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Webhook response (error HMAC)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set defaults + cost guard": {
+      "main": [
+        [
+          {
+            "node": "Throttle (1 req/s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Throttle (1 req/s)": {
+      "main": [
+        [
+          {
+            "node": "Format: Thread prompt",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Format: Carousel prompt",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Format: Reel/TikTok script prompt",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Format: YouTube Short script prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format: Thread prompt": {
+      "main": [
+        [
+          {
+            "node": "Route by format type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format: Carousel prompt": {
+      "main": [
+        [
+          {
+            "node": "Route by format type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format: Reel/TikTok script prompt": {
+      "main": [
+        [
+          {
+            "node": "Route by format type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format: YouTube Short script prompt": {
+      "main": [
+        [
+          {
+            "node": "Route by format type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by format type": {
+      "main": [
+        [
+          {
+            "node": "Gemini 2.5 Flash (multi-format)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gemini 2.5 Flash (multi-format)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gemini 2.5 Flash (multi-format)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gemini 2.5 Flash (multi-format)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini 2.5 Flash (multi-format)": {
+      "main": [
+        [
+          {
+            "node": "Parse + Brand-guard (multi-format)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse + Brand-guard (multi-format)": {
+      "main": [
+        [
+          {
+            "node": "IF ok?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF ok?": {
+      "main": [
+        [
+          {
+            "node": "Postgres INSERT gemini_copy_drafts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log fail (brand guard or DB)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres INSERT gemini_copy_drafts": {
+      "main": [
+        [
+          {
+            "node": "Webhook response (success)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log fail (brand guard or DB)": {
+      "main": [
+        [
+          {
+            "node": "Wait 1s (rate limit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook response (success)": {
+      "main": [
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1s (rate limit)": {
+      "main": [
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

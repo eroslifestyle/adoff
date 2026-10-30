@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-uk",
+  "lang": "pt",
+  "title": "Bloqueador de Anúncios para Catch-Up TV no Reino Unido | AdOff",
+  "description": "Remova anúncios em vídeo no BBC iPlayer, ITVX, Channel 4, Channel 5 e mais. O AdOff é uma extensão gratuita que neutraliza o SDK de anúncios nos players de reprise.",
+  "h1": "Bloqueador de Anúncios para Serviços de TV de Reprise no Reino Unido",
+  "answer": "O AdOff remove os anúncios pré-roll e mid-roll dos serviços de TV sob demanda do Reino Unido no navegador, na maioria dos casos. Ele substitui o SDK de anúncios Google IMA carregado por esses players por um stub leve que retoma a reprodução imediatamente, permitindo que o programa seja exibido sem interrupções publicitárias. A cobertura aplica-se aos players da web para desktop enquanto o serviço depender do SDK padrão.",
+  "sections": [
+    {
+      "h2": "Quais serviços do Reino Unido são cobertos",
+      "body": [
+        "<p>As emissoras britânicas operam plataformas gratuitas de reprise (catch-up) financiadas por publicidade. Quando essas plataformas são carregadas em um navegador de desktop e solicitam o SDK Google IMA, o AdOff intercepta a solicitação e serve um *stub* local em substituição. Os serviços cobertos atualmente:</p>",
+        "<ul><li><strong>BBC iPlayer</strong> (bbc.co.uk, bbc.com)</li><li><strong>ITV e ITVX</strong> (itv.com, itvx.com)</li><li><strong>Channel 4</strong> (channel4.com)</li><li><strong>Channel 5</strong> (channel5.com)</li><li><strong>My5</strong> (my5.tv)</li><li><strong>Pluto TV</strong> e <strong>Tubi</strong>, ambos disponíveis no mercado britânico</li></ul>"
+      ]
+    },
+    {
+      "h2": "Como funciona em um player de reprise",
+      "body": [
+        "<p>A maioria das plataformas de reprise britânicas integra o SDK Google IMA para programar *pre-rolls* e *mid-rolls*. O AdOff redireciona a solicitação do script do SDK para um *stub* incluído na extensão. Quando a plataforma chama o *stub* para iniciar um intervalo publicitário, o *stub* responde imediatamente “solicitação de retomada do conteúdo recebida”: a plataforma acredita que o intervalo terminou e continua com a programação.</p>",
+        "<p>Isso ocorre localmente no seu navegador. Nada é baixado duas vezes e o fluxo de vídeo em si permanece inalterado — apenas a camada de orquestração de anúncios é neutralizada.</p>"
+      ]
+    },
+    {
+      "h2": "Por que a TV de reprise é diferente da streaming por assinatura",
+      "body": [
+        "<p>As plataformas de reprise das emissoras são gratuitas para visualização porque exibem publicidade. Isso torna sua cadeia de anúncios padronizada: elas dependem do mesmo SDK que milhares de sites utilizam. Já as plataformas por assinatura inserem os anúncios no fluxo de vídeo diretamente no servidor (*server-side*), algo que uma extensão de navegador não consegue alterar. Por isso, a reprise televisiva é justamente o segmento em que a neutralização de anúncios no navegador funciona de fato.</p>"
+      ]
+    },
+    {
+      "h2": "O que o AdOff faz além do player de vídeo",
+      "body": [
+        "<p>A extensão também inclui 180 regras estáticas de bloqueio de rede que impedem solicitações a domínios de publicidade e rastreamento, além de um filtro cosmético baseado em CSS/DOM que oculta banners publicitários, caixas *overlay* e blocos promocionais nas páginas próprias das emissoras. O resultado é uma página do iPlayer, ITVX ou Channel 4 mais limpa já antes mesmo de você clicar em reproduzir.</p>"
+      ]
+    },
+    {
+      "h2": "Limitações que você deve conhecer",
+      "body": [
+        "<p>A cobertura é real, mas condicional:</p>",
+        "<ul><li>Se uma emissora migrar para a <strong>inserção de anúncios no servidor (SSAI)</strong>, o anúncio será integrado diretamente ao fluxo de vídeo e o *stub* do SDK não terá efeito.</li><li>O AdOff funciona <strong>apenas no navegador de desktop</strong> — não em aplicativos nativos, smart TVs ou decodificadores (*set-top boxes*).</li><li>Alguns <strong>transmissões ao vivo e esportes</strong> utilizam pipelines de entrega diferentes.</li><li>As emissoras atualizam seus players com frequência, portanto a cobertura é mantida ao longo do tempo, e não garantida para sempre.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Grátis, sem necessidade de cadastro, funciona em cinco navegadores",
+      "body": [
+        "<p>O AdOff é uma extensão Manifest V3, totalmente gratuita, sem necessidade de cadastro e sem período de teste. Funciona no Chrome, Firefox, Safari, Edge e Opera. Instale-a, mantenha a proteção ativada e abra sua plataforma de reprise como de costume.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Isso funciona no BBC iPlayer?",
+      "a": "Na maioria dos casos, sim — quando o iPlayer exibe anúncios por meio do SDK Google IMA no navegador. O AdOff substitui esse SDK por um “stub” que retoma o programa imediatamente. Como o BBC iPlayer possui relativamente poucos intervalos publicitários em comparação com o ITVX, a diferença prática varia conforme o programa."
+    },
+    {
+      "q": "Posso remover os anúncios no ITVX sem pagar pelo Premium?",
+      "a": "O AdOff neutraliza o SDK de anúncios no reprodutor web do ITVX, de modo que, na maioria dos casos, os pré-rolls e mid-rolls não são reproduzidos. O ITVX Premium é um produto comercial separado, com canais adicionais e transmissão sem anúncios; o AdOff não interage de forma alguma com sua conta."
+    },
+    {
+      "q": "Funciona no aplicativo móvel do ITVX ou do iPlayer?",
+      "a": "Não. O AdOff é uma extensão para navegador e atua apenas em páginas carregadas em um navegador de desktop. Aplicativos nativos para dispositivos móveis, aplicativos para TV inteligente e sessões de transmissão (cast) estão fora de seu alcance."
+    },
+    {
+      "q": "Meu conta de replay será sinalizada?",
+      "a": "O AdOff é executado localmente e não modifica as requisições aos servidores de conteúdo da emissora — apenas o script do SDK de anúncios é substituído. Ele não faz login em nada, mas nenhuma ferramenta pode garantir o comportamento de plataformas de terceiros; portanto, use-o por sua conta e risco."
+    },
+    {
+      "q": "O AdOff custa algo?",
+      "a": "Não. A extensão é totalmente gratuita, sem necessidade de conta, sem período de avaliação e sem versão paga. Todos os recursos, incluindo a neutralização de anúncios em vídeos em plataformas de reprise, estão disponíveis desde a instalação."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Como o bloqueio de anúncios em streaming funciona"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Explicação do bloqueio de anúncios no IMA SDK"
+    },
+    {
+      "href": "/tv-streaming-ad-blocker",
+      "text": "Visão geral do bloqueador de anúncios para streaming na TV"
+    }
+  ],
+  "cta": {
+    "h3": "Assista à TV de reprise do Reino Unido sem pausas publicitárias",
+    "p": "Instale o AdOff no seu navegador e deixe o stub lidar com o SDK de anúncios no iPlayer, ITVX e demais plataformas.",
+    "btn": "Instale o AdOff gratuitamente"
+  },
+  "report": {
+    "intro": "Falta algum serviço britânico de reprise nesta lista? Se sua plataforma favorita ainda exibir pausas publicitárias em https://adoff.app/catch-up-tv-ad-blocker-uk, informe-nos qual é. Relatórios como o seu definem quais serviços serão cobertos em seguida.",
+    "btn_text": "Relatar um serviço britânico ausente",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

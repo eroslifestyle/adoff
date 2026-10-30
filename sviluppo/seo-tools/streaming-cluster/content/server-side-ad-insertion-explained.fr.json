@@ -1,0 +1,96 @@
+{
+  "slug": "server-side-ad-insertion-explained",
+  "lang": "fr",
+  "title": "Explication serveur des pubs : pourquoi les bloqueurs échouent | AdOff",
+  "description": "Le SSAI intègre les pubs directement dans le flux vidéo, sans requête distincte à bloquer. Découvrez comment la manipulation de manifeste fonctionne et son impact…",
+  "h1": "Insertion publicitaire côté serveur expliquée : pourquoi les bloqueurs publicitaires réseau ne peuvent pas détecter ces publicités",
+  "answer": "Non — l’insertion publicitaire côté serveur (SSAI) ne peut pas être bloquée par les bloqueurs publicitaires basés sur les requêtes, car la publicité est intégrée dans le même flux vidéo que le contenu, avant même qu’il ne quitte le serveur. Votre navigateur télécharge un seul manifeste continu et un seul flux continu ; il n’existe aucune requête publicitaire distincte à intercepter.",
+  "sections": [
+    {
+      "h2": "Ce qu’est réellement l’insertion publicitaire côté serveur",
+      "body": [
+        "<p>L’insertion publicitaire côté serveur (SSAI), également appelée « stitching » publicitaire, est une technique dans laquelle le fournisseur de vidéo fusionne la publicité et le contenu en un seul flux vidéo <strong>côté serveur</strong>, avant la diffusion. L’appareil du spectateur reçoit un flux continu déjà intégrant les publicités — contrairement à l’insertion publicitaire côté client (CSAI), dans laquelle le lecteur charge le contenu, puis émet des demandes séparées vers un serveur publicitaire pour chaque interruption.</p>",
+        "<p>Vous verrez la SSAI décrite dans les documents techniques comme des « manifestes assemblés » ou comme une « livraison à manifeste unique ». C’est l’approche dominante pour le streaming en direct et pour les offres gratuites des services vidéo à abonnement, car elle est plus difficile à contourner et se comporte de manière identique sur chaque appareil.</p>"
+      ]
+    },
+    {
+      "h2": "Son fonctionnement dans les manifestes HLS et DASH",
+      "body": [
+        "<p>La diffusion vidéo moderne utilise des formats de streaming adaptatif — HLS (listes <code>.m3u8</code>) et DASH (manifestes <code>.mpd</code>). Le flux est divisé en segments courts (généralement de quelques secondes chacun), et le manifeste répertorie ces segments dans l’ordre de lecture. Un lecteur côté client suit cette liste.</p>",
+        "<p>Avec SSAI, les segments publicitaires sont insérés directement dans cette liste de segments. Le manifest transmis à votre lecteur est réécrit de sorte qu’un segment publicitaire apparaît exactement à l’emplacement où un segment de contenu aurait dû se trouver. Certaines implémentations utilisent des marqueurs de discontinuité (<code>#EXT-X-DISCONTINUITY</code> dans HLS) pour signaler des changements d’encodage, mais c’est bien la liste elle-même que le lecteur lit légitimement. Du point de vue du lecteur, la publicité <em>fait partie</em> du programme.</p>"
+      ]
+    },
+    {
+      "h2": "Pourquoi les bloqueurs publicitaires basés sur des requêtes n’ont rien à intercepter",
+      "body": [
+        "<p>Un bloqueur de publicités basé sur une extension fonctionne au niveau réseau : il identifie les demandes vers des domaines publicitaires connus et les bloque ou les réécrit. Ce modèle suppose que la publicité arrive sous la forme d’une demande distincte, provenant d’un domaine distinct, qu’il est possible de distinguer du contenu. L’SSAI supprime entièrement cette hypothèse.</p>",
+        "<p>Avec les publicités « stitched », les segments contenant la publicité proviennent du même réseau de distribution de contenu, souvent sous le même domaine, et intégrés dans le même manifeste que la vidéo. Bloquer la requête reviendrait à bloquer la vidéo elle-même. Un bloqueur de publicités qui tente malgré tout de le faire interrompt généralement la lecture ou, sur les flux en direct, génère les images figées en remplacement que les utilisateurs signalent. Il s’agit d’une limitation structurelle, et non d’un écart temporaire : tout outil fonctionnant par filtrage des requêtes réseau ne peut pas distinguer une publicité « stitched » du contenu qui l’entoure.</p>"
+      ]
+    },
+    {
+      "h2": "L’insertion côté client : le modèle que les bloqueurs publicitaires peuvent gérer",
+      "body": [
+        "<p>Pour comparaison : dans l’insertion de publicités côté client, le lecteur vidéo appelle un SDK publicitaire pendant la lecture, le SDK récupère les fichiers créatifs auprès de domaines publicitaires, et le lecteur les affiche dans une zone dédiée. Ces requêtes sont visibles, distinctes et bloquables. Neutraliser le SDK publicitaire — ce que fait AdOff avec le SDK de publicité vidéo utilisé sur l’ensemble du Web — fait en sorte que le lecteur revienne directement au contenu.</p>",
+        "<p>C’est pourquoi les bloqueurs de publicités restent efficaces sur une grande partie du Web, y compris sur de nombreux sites intégrant des lecteurs vidéo avec des appels publicitaires côté client, et pourquoi les mêmes bloqueurs échouent sur les plateformes de streaming en direct et les services d’abonnement qui intègrent les publicités côté serveur.</p>"
+      ]
+    },
+    {
+      "h2": "Ce qu’il faudrait pour supprimer les publicités intégrées (« stitched ads »)",
+      "body": [
+        "<p>Supprimer une publicité intégrée nécessite de comprendre le flux, et non le réseau : détecter les marqueurs de discontinuité et les motifs de bordure de segments, réécrire le manifeste pour supprimer les segments publicitaires, et espérer que le fournisseur ne modifie pas la structure. Ce procédé est intrinsèquement fragile — toute modification côté fournisseur rompt la solution de contournement, et sur les flux en direct, le lecteur réécrit tombe souvent en retard ou affiche un substitut dégradé.</p>",
+        "<p>L’autre solution, fiable, n’est pas technique du tout : les fournisseurs intègrent des publicités car le forfait souscrit est publicitaire ; choisir un abonnement sans publicité les supprime donc par conception. Tout le reste constitue une course aux armements qui dégrade principalement l’expérience de visionnage.</p>"
+      ]
+    },
+    {
+      "h2": "La position d’AdOff",
+      "body": [
+        "<p>AdOff est une extension de navigateur gratuite (Chrome, Firefox, Safari, Edge, Opera) qui bloque les publicités réseau à l’aide de règles de filtrage statiques, masque les éléments publicitaires dans la page et neutralise le SDK de publicité vidéo côté client en le remplaçant par un stub qui reprend immédiatement la lecture du contenu. Elle fonctionne uniquement sur les lecteurs web des applications, là où les publicités sont intégrées côté client ; elle ne prétend pas supprimer les publicités des flux intégrés côté serveur, et elle ne perturbe délibérément pas les lecteurs vidéo abonnés afin d’éviter de les dégrader.</p>",
+        "<p>Cette honnêteté est précisément l’objectif de cette page : connaître le modèle utilisé par un site vous permet de savoir si une extension peut vous aider, avant même de l’installer.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Quelle est la différence entre SSAI et CSAI ?",
+      "a": "Dans l’insertion client-side des publicités (CSAI), le lecteur demande les publicités séparément au moment de la lecture, de sorte que ces demandes sont visibles des bloqueurs de publicités. Dans l’insertion server-side des publicités (SSAI), les publicités sont intégrées au flux vidéo côté serveur avant la diffusion, de sorte qu’aucune demande de publicité distincte n’existe à bloquer."
+    },
+    {
+      "q": "Un extension de navigateur peut-elle bloquer les publicités SSAI ?",
+      "a": "Aucune extension fonctionnant par filtrage des requêtes réseau ne peut supprimer une publicité intégrée sans rompre le flux, car la publicité et le contenu circulent ensemble dans le même manifeste et les mêmes segments. Les outils qui tentent cela provoquent généralement des images figées, des baisses de qualité ou des erreurs de lecture."
+    },
+    {
+      "q": "Pourquoi les flux en direct utilisent-ils le SSAI plutôt que des publicités classiques ?",
+      "a": "Le streaming en direct exige que la pause publicitaire reste synchronisée pour chaque spectateur et que la lecture se déroule sans interruption, ce que garantit l’intégration server-side. Elle fonctionne également de manière identique sur tous les appareils, y compris les téléviseurs intelligents où les extensions n’existent pas."
+    },
+    {
+      "q": "Le SSAI est-il identique à une publicité qu’on ne peut pas ignorer ?",
+      "a": "Pas exactement. Le saut est une décision du lecteur contrôlée par les métadonnées du flux. En SSAI, les publicités font partie intégrante du flux, de sorte que ni le spectateur ni une extension de navigateur ne dispose d’un point de contrôle permettant de les sauter ou de les supprimer."
+    },
+    {
+      "q": "AdOff fonctionne-t-il sur les sites utilisant le SSAI ?",
+      "a": "Sur ces flux spécifiques, non — et AdOff ne prétend pas le contraire. Sur les publicités non vidéo des mêmes sites, ainsi que dans l’ensemble de votre navigation (bannières publicitaires, suivi, SDK de publicités vidéo client-side), AdOff bloque et masque les publicités comme d’habitude."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Blocage des publicités en streaming : ce qui fonctionne et ce qui ne fonctionne pas"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Comment les SDK de publicités vidéo côté client sont neutralisés"
+    },
+    {
+      "href": "/twitch-ad-blocker",
+      "text": "Publicités Twitch : pourquoi les extensions échouent sur les flux en direct"
+    }
+  ],
+  "cta": {
+    "h3": "Bloquer les publicités qu’il est possible de bloquer",
+    "p": "AdOff ne peut pas supprimer les publicités intégrées (« stitched ads ») — aucune solution honnête n’y parvient. En revanche, les publicités d’affichage, le suivi et les publicités vidéo côté client que vous rencontrez lors de votre navigation quotidienne, AdOff les supprime gratuitement, sans nécessiter de compte.",
+    "btn": "Installez AdOff — c’est gratuit"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

@@ -1,0 +1,97 @@
+{
+  "slug": "smart-tv-ad-blocking",
+  "lang": "tr",
+  "title": "Akıllı TV’lerde Reklamları Engelleme: Gerçekten İşe Yarayanlar | AdOff",
+  "description": "Tarayıcı eklentileri akıllı TV’lerde çalışmaz. Gerçekten işe yarayanlar: Ev ağınızda DNS düzeyinde filtreleme, TV gizlilik ayarları ve AdOff’in buradaki yeri.",
+  "h1": "Akıllı TV’lerde reklam engelleme: samimi rehber",
+  "answer": "Bir tarayıcı uzantısı, akıllı TV veya akış cihazında çalışamaz, bu nedenle hiçbir uzantı, TV’deki reklamları doğrudan engelleyemez. Bunun yerine, ev ağınızda DNS seviyesinde filtreleme ve TV’nin kendi gizlilik ayarları çalışır; AdOff ise bilgisayarınızdaki tarayıcıyı, TV’yi değil, korur.",
+  "sections": [
+    {
+      "h2": "Bir uzantının TV’nize nasıl yardımcı olamayacağı",
+      "body": [
+        "<p>AdOff gibi reklam engelleyiciler tarayıcı uzantılarıdır: bir tarayıcının içinde bulunur, tarayıcının isteklerini, betiklerini ve DOM’unu engeller. Akıllı TV uygulamaları — bir yayıcı uygulaması, televizyondaki YouTube — bir tarayıcı sayfası değildir. Kendi ağ yığınına sahip yerel bir uygulamadır ve hiçbir tarayıcı uzantısı ona erişemez.</p>",
+        "<p>Bunu açıkça belirtmek değerlidir, çünkü arama sonuçları, belirsiz vaatlerle doludur: <strong>TV ekranında reklamları engelleyen hiçbir uzantı yoktur</strong>. TV’de çalışan araçlar, ağ düzeyinde, bir seviye aşağıda çalışır.</p>"
+      ]
+    },
+    {
+      "h2": "Gerçekten işe yarayan: Evde DNS seviyesinde filtreleme",
+      "body": [
+        "<p>Evdeki her cihaz — TV dahil — domain adlarını ağın DNS’si aracılığıyla çözümler. Bu DNS’yi bir filtreleyici çözümleyiciye yönlendirirseniz, TV, reklam ve izleme domainlerine ulaşma yeteneğini kaybeder: bu istekler, herhangi bir reklam sunucusuna ulaşmadan önce başarısız olur.</p>",
+        "<p>Bunu, router üzerinden (tüm cihazları aynı anda kapsar) veya TV’nin ağ ayarlarında cihaz bazlı olarak kurabilirsiniz. Buna yönelik araçlar arasında Android/Android TV’deki özel DNS ve router üzerinde yapılandırılan özel filtreleme çözümleyicileri yer alır. Android TV sürümünü adım adım <a href=\"/android-dns\">DNS filtreleme kılavuzumuzda</a> ele alıyoruz.</p>",
+        "<p>Doğru sınır: DNS filtreleme, etki alanı bazında engelleme yapar. Reklam-telemetri ve bazı reklam sunucu etki alanlarını kaldırır, ancak video akışına eklenmiş reklamları kaldıramaz ve kendi ana etki alanı üzerinden reklam sunan uygulamalar bu reklamları göstermeye devam eder.</p>"
+      ]
+    },
+    {
+      "h2": "TV’nizin kendi gizlilik ayarları",
+      "body": [
+        "<p>Ağ bağlantısına geçmeden önce televizyonu kontrol edin. Çoğu akıllı TV platformu, ayarlar menüsünden reklam gösterimini azaltmanıza olanak tanır:</p>",
+        "<ul><li>Kişiselleştirilmiş reklamları <strong>kapatın</strong> / reklam kimliğini sıfırlayın.</li><li>Görüntüleme verisi toplamayı (<strong>ACR</strong>, bazı markalarda) devre dışı bırakın; bu, hedefleme işleminin ilk başta değerli olmasını sağlayan özelliktir.</li><li>Kurulum sırasında veya daha sonra gizlilik ayarlarında isteğe bağlı promosyon onayını reddedin.</li><li>Bazı platformlarda, başlatıcı arayüzündeki sponsorlu satırları ve önerileri de devre dışı bırakabilirsiniz.</li></ul>",
+        "<p>Bu, reklamları kaldırmaz, ancak onları karlı kılan izlemeyi keser ve genellikle arayüze entegre edilmiş tanıtım gereksizliklerinin bir kısmını ortadan kaldırır.</p>"
+      ]
+    },
+    {
+      "h2": "AdOff’in yer aldığı yer",
+      "body": [
+        "<p>AdOff, Chrome, Firefox, Safari, Edge ve Opera için ücretsiz, hesapsız bir Manifest V3 uzantısıdır. Ana kullanım alanı <strong>masaüstü tarayıcısı</strong>dır: Bilgisayarınızda açtığınız akış sitelerindeki video reklamlarını engeller; bunların arasında, istemci tarafı reklam SDK’sını bir stub ile etkisizleştirerek içeriği hemen devam ettiren 42 Avrupa yayıcı platformu da yer alır.</p>",
+        "<p>Eğer TV’ye HDMI ile bağlanmış bir dizüstü bilgisayarda tarayıcı üzerinden catch-up TV ve tekrar izlemeleri izliyorsanız, AdOff bu oturumu da diğer tarayıcı oturumları gibi engeller. Ancak TV’nin kendi uygulamaları bu etki alanı dışındadır — bunlar için yukarıda belirtilen ağ düzeyindeki önlemleri kullanın.</p>"
+      ]
+    },
+    {
+      "h2": "Gerçekçi beklentiler, platform platform",
+      "body": [
+        "<ul><li><strong>TV arayüzündeki banner reklamlar ve izleme</strong>: DNS filtreleme, anlamlı bir payı ortadan kaldırır; gizlilik ayarları hedeflemeyi engeller.</li><li><strong>Ücretsiz uygulamalarda içerikten önce gelen video reklamlar</strong>: yalnızca ayrı reklam alan adlarından gelenler DNS tarafından etkilenir; diğerleri kalır.</li><li><strong>Yayın akışına eklenen reklamlar (SSAI)</strong>: bugün ev ağı araçlarıyla kaldırılamaz.</li><li><strong>Bilgisayarınızda tarayıcı tabanlı akış</strong>: tamamen AdOff’in kapsamındadır.</li></ul>",
+        "<p>Yapılandırma gerektirmeyen hiçbir şey, akıllı TV’den tüm reklamları kaldırmaz. Bunu vaat eden herkes bir şey satıyor.</p>"
+      ]
+    },
+    {
+      "h2": "Üç adımda pratik bir kurulum",
+      "body": [
+        "<ol><li>Router’unuzda filtreleme DNS’i veya TV’nizde özel DNS’i ayarlayın; bunun için <a href=\"/android-dns\">rehberimize</a> bakın.</li><li>TV’nizin gizlilik menüsünden şu ayarları yapın: Reklam kimliği kapalı, izleme verileri kapalı, tanıtım izni reddedildi.</li><li>Gerçekten akış yaptığınız bilgisayarların tarayıcılarına AdOff’u kurun — ücretsizdir, kayıt gerektirmez — ve bir uzantının gerçekten işe yaradığı yerlerde güçlü video reklam engelleme sağlayın.</li></ol>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Akıllı TV’mde reklam engelleyici kurabilir miyim?",
+      "a": "Eklenti olarak değil: TV’de bunu destekleyecek bir tarayıcı bulunmamaktadır. Etkili alternatifler, router’ınızda veya TV’nin ağ ayarlarında DNS seviyesinde filtreleme yapmak ve TV’nin kendi gizlilik ayarlarını kullanmaktır."
+    },
+    {
+      "q": "DNS filtreleme, TV uygulamalarındaki reklamları kaldırır mı?",
+      "a": "Kısmen evet: Uygulamaların ayrı reklam ve izleme sunucularına ulaşmasını engeller; bu sayede telemetri ve bazı reklam sunumları engellenir. Ancak uygulamanın kendi etki alanı üzerinden veya video akışına eklenerek sunulan reklamlar etkilenmez."
+    },
+    {
+      "q": "DNS’i router’da mı yoksa TV’de mi değiştirmeliyim?",
+      "a": "Mümkünse router’da yapın: Bu yöntem, evdeki tüm cihazları — misafirlerin telefonlarını da dahil — aynı anda kapsar. Router’a erişim sağlayamadığınız durumlarda, örneğin yönetilen bir ağda, TV’de değiştirin."
+    },
+    {
+      "q": "AdOff, TV’nin tarayıcısında (varsa) çalışır mı?",
+      "a": "Hayır. TV tarayıcıları genellikle tarayıcı eklentileriyle uyumlu değildir. AdOff, masaüstü ve mobil tarayıcılarda (Chrome, Firefox, Safari, Edge ve Opera) çalışır ve istemci tarafındaki video reklamları, bunların arasında 42 Avrupa yayınıcısı platformunu da içerir, etkisiz hale getirir."
+    },
+    {
+      "q": "Akıllı TV’min beni izlemesini en azından durdurabilir miyim?",
+      "a": "Kısmen evet: Kişiselleştirilmiş reklamları kapatın, reklam kimliğini sıfırlayın veya devre dışı bırakın, izleme verisi toplamayı (ACR) reddedin ve gizlilik menüsünden isteğe bağlı promosyon onayını reddedin. Bunun üzerine DNS filtrelemesi uygulanırsa, birçok telemetri etki alanı da engellenir."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Akış reklam engelleme: kapsamlı rehber"
+    },
+    {
+      "href": "/android-dns",
+      "text": "Android TV’de DNS seviyesinde reklam filtreleme"
+    },
+    {
+      "href": "/tv-streaming-ad-blocker",
+      "text": "TV ve akış cihazları için reklam engelleyiciler"
+    }
+  ],
+  "cta": {
+    "h3": "Gerçekten izlediğiniz tarayıcıyı kapsayın",
+    "p": "AdOff, masaüstü tarayıcınızda video reklamlarını engeller — ücretsiz, hesap gerektirmez, kayıt gerektirmez.",
+    "btn": "AdOff’u ücretsiz kurun"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

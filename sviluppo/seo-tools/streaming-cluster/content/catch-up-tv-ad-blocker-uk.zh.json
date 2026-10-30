@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-uk",
+  "lang": "zh",
+  "title": "英国电视点播广告拦截器 | AdOff",
+  "description": "移除 BBC iPlayer、ITVX、Channel 4、Channel 5 等平台的视频广告。AdOff 是一款免费的浏览器扩展，可中和点播播放器中的广告 SDK。",
+  "h1": "英国广播服务商的回看电视广告拦截器",
+  "answer": "AdOff 可在浏览器中移除英国点播电视服务的前贴片和中插广告（多数情况下）。它会将播放器加载的 Google IMA 广告 SDK 替换为一个轻量级占位模块，使视频播放立即恢复，从而实现无广告中断的节目观看体验。该功能适用于桌面端网页播放器，前提是相关服务使用的是标准 SDK。",
+  "sections": [
+    {
+      "h2": "覆盖哪些英国服务",
+      "body": [
+        "<p>英国广播公司运营着由广告收入资助的免费回看平台。当这些平台在桌面浏览器中加载并请求 Google IMA SDK 时，AdOff 会拦截该请求，并提供一个本地存根（stub）替代。目前支持的服务包括：</p>",
+        "<ul><li><strong>BBC iPlayer</strong>（bbc.co.uk、bbc.com）</li><li><strong>ITV 和 ITVX</strong>（itv.com、itvx.com）</li><li><strong>第四频道（Channel 4）</strong>（channel4.com）</li><li><strong>第五频道（Channel 5）</strong>（channel5.com）</li><li><strong>My5</strong>（my5.tv）</li><li><strong>Pluto TV</strong> 和 <strong>Tubi</strong>，二者均在英国市场提供</li></ul>"
+      ]
+    },
+    {
+      "h2": "在回看平台上的工作原理",
+      "body": [
+        "<p>大多数英国回看平台集成 Google IMA SDK 以安排前贴片（pre-rolls）和中插（mid-rolls）广告。AdOff 将 SDK 脚本的请求重定向至扩展程序内置的存根。当播放器调用该存根以启动广告时段时，存根会立即返回“请求恢复内容播放”；播放器误以为广告时段已结束，从而继续播放节目内容。</p>",
+        "<p>该过程完全在您的浏览器本地发生。视频流本身未被修改，也无重复下载，仅广告编排层被中和。</p>"
+      ]
+    },
+    {
+      "h2": "回看电视与订阅流媒体的区别",
+      "body": [
+        "<p>广播公司的回看平台之所以免费观看，是因为其包含广告。这使得其广告投放流程标准化：它们依赖于数千个网站共同使用的同一 SDK。而订阅制平台则在服务器端将广告拼接到视频流中，这是浏览器扩展无法干预的。因此，回看电视正是浏览器内广告屏蔽真正有效的领域。</p>"
+      ]
+    },
+    {
+      "h2": "AdOff 除视频播放器外的其他功能",
+      "body": [
+        "<p>该扩展还内置了 180 条静态网络规则，用于拦截对广告与追踪域名的请求；此外还提供一套 CSS/DOM 视觉过滤规则，可隐藏广播公司自有页面上的广告横幅、覆盖层弹窗及推广卡片。结果是：在您点击播放前，iPlayer、ITVX 或 Channel 4 页面已更加清爽。</p>"
+      ]
+    },
+    {
+      "h2": "您应了解的限制",
+      "body": [
+        "<p>覆盖效果真实存在，但有条件限制：</p>",
+        "<ul><li>若广播公司转向<strong>服务器端广告插入（SSAI）</strong>，广告将直接嵌入视频流本身，此时 SDK 存根将失效。</li><li>AdOff 仅适用于<strong>桌面浏览器</strong>——不支持原生 App、智能电视或机顶盒。</li><li>部分<strong>直播与体育赛事</strong>使用不同的传输流程。</li><li>广播公司会频繁更新其播放器，因此覆盖范围需持续维护，而非一劳永逸。</li></ul>"
+      ]
+    },
+    {
+      "h2": "免费、无需注册、支持五种浏览器",
+      "body": [
+        "<p>AdOff 是一款 Manifest V3 扩展，完全免费，无需注册，也无试用期。它支持 Chrome、Firefox、Safari、Edge 和 Opera 浏览器。安装后，保持保护功能开启，即可像往常一样打开您的回看服务。</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "这适用于BBC iPlayer吗？",
+      "a": "在大多数情况下是的，当 iPlayer 通过浏览器中的 Google IMA SDK 播放广告时，AdOff 会以一个占位脚本替代该 SDK，从而立即恢复节目播放。BBC iPlayer 相较于 ITVX 的广告插播次数较少，因此实际效果因节目而异。"
+    },
+    {
+      "q": "我能否在不付费订阅Premium的情况下移除ITVX上的广告？",
+      "a": "AdOff 使 ITVX 网页播放器中的广告 SDK 失效，因此在大多数情况下，片头广告（前贴片）和中场广告（中插片）不会播放。ITVX Premium 是一项独立的商业产品，提供额外频道及无广告流媒体服务；AdOff 完全不会与您的账户产生任何交互。"
+    },
+    {
+      "q": "它是否适用于ITVX或iPlayer的移动应用？",
+      "a": "否。AdOff 是一款浏览器扩展程序，仅作用于桌面浏览器中加载的页面；原生移动应用、智能电视应用及投屏会话均在其功能范围之外。"
+    },
+    {
+      "q": "我的点播账户会被标记吗？",
+      "a": "AdOff 在本地运行，不会修改对广播方内容服务器的请求——仅替换广告 SDK 脚本。它不会登录任何账户，但任何工具都无法保证第三方平台的行为，因此请自行斟酌使用。"
+    },
+    {
+      "q": "AdOff是否收费？",
+      "a": "否。该扩展完全免费，无需注册账户、无需试用，也不存在付费版本。所有功能（包括在回看平台上的视频广告屏蔽）均在安装后即刻启用。"
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "流媒体广告屏蔽的工作原理"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "IMA SDK 广告屏蔽详解"
+    },
+    {
+      "href": "/tv-streaming-ad-blocker",
+      "text": "电视流媒体广告屏蔽器概览"
+    }
+  ],
+  "cta": {
+    "h3": "无广告中断，畅享英国回看电视节目",
+    "p": "在您的浏览器中安装 AdOff，让其替您处理 iPlayer、ITVX 等平台上的广告 SDK。",
+    "btn": "免费安装 AdOff"
+  },
+  "report": {
+    "intro": "英国回看服务中是否有遗漏？若您喜爱的平台仍在 https://adoff.app/catch-up-tv-ad-blocker-uk 上显示广告插播，请告知我们具体是哪个平台。您的反馈将决定我们下一步支持的服务。",
+    "btn_text": "报告缺失的英国服务",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

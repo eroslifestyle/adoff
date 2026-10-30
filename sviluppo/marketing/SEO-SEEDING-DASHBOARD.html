@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AdOff · SEO & Seeding Dashboard</title>
+<style>
+  :root{--bg:#0a0a1a;--panel:#12122a;--panel2:#161636;--border:#2a2a4a;--txt:#e6e6f2;--dim:#9a9ab8;--accent:#7c5cfc;--green:#4ade80;--red:#f87171;--amber:#fbbf24;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.55;padding-bottom:80px}
+  a{color:var(--accent)}
+  header{position:sticky;top:0;z-index:10;background:rgba(10,10,26,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);padding:16px 24px}
+  .brand{font-size:1.3rem;font-weight:800}.brand span{color:var(--accent)}
+  .sub{color:var(--dim);font-size:.85rem;margin-top:2px}
+  .progwrap{margin-top:12px}
+  .progbar{height:8px;background:var(--panel2);border-radius:6px;overflow:hidden}
+  .progfill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));width:0;transition:width .3s}
+  .progtxt{font-size:.78rem;color:var(--dim);margin-top:4px}
+  nav{display:flex;gap:6px;flex-wrap:wrap;padding:14px 24px;position:sticky;top:88px;z-index:9;background:rgba(10,10,26,.92);backdrop-filter:blur(8px)}
+  nav button{background:var(--panel);border:1px solid var(--border);color:var(--dim);padding:8px 14px;border-radius:20px;cursor:pointer;font-size:.85rem;font-weight:600}
+  nav button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  main{max-width:920px;margin:0 auto;padding:24px}
+  section{display:none}section.active{display:block}
+  h2{font-size:1.4rem;margin:8px 0 16px}
+  h3{font-size:1.05rem;margin:20px 0 8px;color:#fff}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
+  .pill{display:inline-block;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em}
+  .pill.done{background:rgba(74,222,128,.15);color:var(--green)}
+  .pill.todo{background:rgba(251,191,36,.15);color:var(--amber)}
+  .pill.p1{background:rgba(248,113,113,.15);color:var(--red)}
+  .pill.p2{background:rgba(124,92,252,.18);color:#b9a6ff}
+  .pill.p3{background:rgba(154,154,184,.15);color:var(--dim)}
+  ul{margin:8px 0 8px 20px}li{margin:4px 0;color:var(--dim)}
+  .chk{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #1f1f3a}
+  .chk:last-child{border:none}
+  .chk input{margin-top:4px;width:18px;height:18px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+  .chk label{cursor:pointer;flex:1}
+  .chk .meta{font-size:.78rem;color:var(--dim);display:block;margin-top:2px}
+  .chk.checked label{opacity:.5;text-decoration:line-through}
+  .copyblock{position:relative;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px 14px 14px;margin:8px 0;white-space:pre-wrap;font-size:.86rem;color:#cfcfe6;font-family:ui-monospace,Menlo,monospace}
+  .copybtn{position:absolute;top:8px;right:8px;background:var(--accent);color:#fff;border:none;border-radius:7px;padding:5px 12px;font-size:.74rem;font-weight:700;cursor:pointer}
+  .copybtn.ok{background:var(--green)}
+  .kv{font-size:.85rem;color:var(--dim);margin:2px 0}.kv b{color:#fff}
+  .linkrow a{display:inline-block;background:var(--panel2);border:1px solid var(--border);padding:6px 12px;border-radius:8px;margin:4px 6px 4px 0;font-size:.82rem;text-decoration:none}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+  .gallery figure{background:var(--panel2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .gallery img{width:100%;display:block}
+  .gallery figcaption{font-size:.76rem;color:var(--dim);padding:8px 10px}
+  .note{font-size:.82rem;color:var(--dim);background:rgba(124,92,252,.08);border-left:3px solid var(--accent);padding:10px 14px;border-radius:6px;margin:10px 0}
+  .resetbtn{background:transparent;border:1px solid var(--border);color:var(--dim);padding:6px 12px;border-radius:8px;font-size:.78rem;cursor:pointer;margin-top:8px}
+  .track{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;padding-top:10px;border-top:1px dashed #2a2a4a}
+  .track select,.track input{background:var(--panel2);border:1px solid var(--border);color:var(--txt);border-radius:7px;padding:6px 8px;font-size:.8rem}
+  .track input{flex:1;min-width:140px}
+  .track label{font-size:.74rem;color:var(--dim);font-weight:700}
+  .card.st-sent{border-color:var(--accent)}
+  .card.st-reply{border-color:var(--amber)}
+  .card.st-won{border-color:var(--green);box-shadow:0 0 0 1px var(--green) inset}
+  .card.st-lost{opacity:.55}
+  .trksum{font-size:.82rem;color:var(--dim);margin:6px 0 14px}
+  .trksum b{color:#fff}
+  .refgen{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .refgen input{background:var(--panel2);border:1px solid var(--border);color:var(--txt);border-radius:8px;padding:8px 12px;font-size:.85rem;flex:1;min-width:200px}
+  .refgen button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer;font-size:.82rem}
+  .refout{font-family:ui-monospace,monospace;color:var(--green);font-weight:700;font-size:1rem}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Ad<span>Off</span> · SEO &amp; Seeding Dashboard</div>
+  <div class="sub">Cruscotto interno — esecuzione Binario B. Le spunte si salvano nel browser.</div>
+  <div class="progwrap"><div class="progbar"><div class="progfill" id="progfill"></div></div><div class="progtxt" id="progtxt"></div></div>
+</header>
+<nav id="nav"></nav>
+<main>
+  <section id="overview" class="active"></section>
+  <section id="outreach"></section>
+  <section id="reddit"></section>
+  <section id="alternativeto"></section>
+  <section id="producthunt"></section>
+  <section id="assets"></section>
+</main>
+
+<script>
+const TABS=[["overview","Panoramica"],["outreach","Outreach (15)"],["reddit","Reddit"],["alternativeto","AlternativeTo"],["producthunt","Product Hunt"],["assets","Asset"]];
+const TOOL_EN="https://adoff.app/adblock-detector", TOOL_IT="https://adoff.app/it/adblock-detector";
+
+const OVERVIEW=`
+<h2>Stato del piano</h2>
+<div class="card">
+  <span class="pill done">Binario A · FATTO</span>
+  <h3>Asset on-site (live, indicizzabili)</h3>
+  <div class="linkrow">
+    <a href="${TOOL_EN}" target="_blank">Tool detector EN</a>
+    <a href="${TOOL_IT}" target="_blank">Tool detector IT</a>
+    <a href="https://adoff.app/blog/how-to-block-ads-on-chrome" target="_blank">Guida EN</a>
+    <a href="https://adoff.app/it/blog/how-to-block-ads-on-chrome" target="_blank">Guida IT</a>
+    <a href="https://adoff.app/undetectable-ad-blocker" target="_blank">Landing: undetectable</a>
+    <a href="https://adoff.app/bypass-anti-adblock" target="_blank">Landing: anti-adblock</a>
+    <a href="https://adoff.app/lightweight-ad-blocker" target="_blank">Landing: lightweight</a>
+    <a href="https://adoff.app/manifest-v3-ad-blocker" target="_blank">Landing: MV3</a>
+    <a href="https://adoff.app/block-video-ads" target="_blank">Landing: video</a>
+    <a href="https://adoff.app/private-ad-blocker" target="_blank">Landing: private</a>
+  </div>
+  <ul><li>15 homepage statiche localizzate + FAQ PAA in 15 lingue + JSON-LD localizzato</li>
+  <li>Sitemap 218 URL · tutto linkato dal footer (no orphan)</li></ul>
+</div>
+<div class="card">
+  <span class="pill todo">Binario B · DA ESEGUIRE (tu)</span>
+  <h3>Checklist settimana 1 (~5h)</h3>
+  <div id="checklist"></div>
+  <button class="resetbtn" onclick="resetChecks()">Azzera spunte</button>
+</div>
+<div class="note">Onestà: il lavoro on-site è fatto e indicizzabile, ma ciò che ti fa entrare nelle risposte AI e nelle query competitive sono le <b>citazioni di terze parti</b> (Binario B). È una maratona di settimane. Le azioni Reddit/AlternativeTo/PH/email vanno fatte da TE con account reali — automatizzarle = ban.</div>
+`;
+
+const CHECKLIST=[
+  ["c1","Submit AlternativeTo (copy + icona pronti)","30 min · tab AlternativeTo"],
+  ["c2","Crea account: Reddit IT+EN, Product Hunt, Hacker News","30 min"],
+  ["c3","Avvia warm-up Reddit (commenti genuini, 0 menzioni)","20 min/giorno × 2-3 settimane"],
+  ["c4","Invia 8 email Priorità 1 (review site 'best ad blocker')","1h · tab Outreach"],
+  ["c5","Invia 4 email Priorità 2 (privacy authority)","45 min · tab Outreach"],
+  ["c6","Invia 3 email Priorità 3 (creator FOSS)","30 min · tab Outreach"],
+  ["c7","Prepara gallery + submit Product Hunt (martedì/mercoledì)","1h · tab Product Hunt"],
+  ["c8","Post Reddit 'Show & tell' — SOLO dopo 100+ karma","settimana 3+ · tab Reddit"],
+];
+
+const OUTREACH=[
+  {id:"o1",pri:"p1",t:"Cybernews",c:"Form contatto (footer cybernews.com)",s:"AdOff for your best ad blockers roundup — independent testing welcome",
+   b:`Hi Cybernews team,\nI'd like to submit AdOff for consideration in your best ad blockers coverage. AdOff is a Manifest V3 ad blocker for Chrome/Edge/Opera/Brave/Firefox/Safari with a distinctive angle: a stealth anti-detection layer that blocks ads without tripping anti-adblock walls.\nA concrete, testable demo: our free in-browser tool shows whether any blocker is detectable — ${TOOL_EN} (runs client-side, collects nothing). Feel free to test AdOff against your own benchmarks; we welcome an independent, honest review. Happy to provide a free Pro license and a referral code for transparent tracking.\nThanks for considering it. — The AdOff team`},
+  {id:"o2",pri:"p1",t:"TechRadar Pro",c:"PR/contact form",s:"Manifest V3 ad blocker with stealth anti-detection — review unit available",
+   b:`Hi,\nSubmitting AdOff for independent review for your best ad blockers guide. It's a native Manifest V3 blocker (network + cosmetic + video ad neutralization) whose differentiator is stealth: it bypasses anti-adblock walls instead of just dismissing them. Lightweight, zero data collection.\nYou can verify the detection angle directly: ${TOOL_EN} runs the same probes anti-adblock scripts use, in-browser. Glad to send a free Pro license for testing against your methodology. — The AdOff team`},
+  {id:"o3",pri:"p1",t:"PCRisk",c:"press@pcrisk.com",s:"Independent review request — AdOff (stealth ad blocker, MV3)",
+   b:`Hello PCRisk team,\nRequesting an independent review of AdOff for your ad blockers section. It's a lightweight Manifest V3 blocker with network blocking, cosmetic filtering, video ad neutralization and stealth anti-detection. Zero data collection, local-only storage.\nObjective demo: ${TOOL_EN} (in-browser detection test, collects nothing). Happy to provide a Pro license + referral code with transparent disclosure. — The AdOff team`},
+  {id:"o4",pri:"p1",t:"ProPrivacy",c:"Contact / affiliate inquiry",s:"AdOff for your ad blocker coverage — transparent affiliate per your policy",
+   b:`Hi ProPrivacy,\nI'd like AdOff considered for your ad blocker coverage. Privacy-first by design: zero-log policy, local-only storage, GDPR by design, plus a stealth layer that bypasses anti-adblock walls. Test the detection angle here: ${TOOL_EN}.\nOpen to a transparent affiliate arrangement per your disclosure policy, with a referral code for tracking. Free Pro license for testing. — The AdOff team`},
+  {id:"o5",pri:"p1",t:"Restore Privacy",c:"Contact form",s:"AdOff — stealth, privacy-first ad blocker for your roundup",
+   b:`Hi,\nSubmitting AdOff for your best ad blocker article. Angle: privacy-first (zero-log, local-only) + stealth anti-detection that gets past "disable your ad blocker" walls. In-browser proof of the detection problem: ${TOOL_EN}. Free Pro license + referral code available, transparent disclosure. — The AdOff team`},
+  {id:"o6",pri:"p1",t:"All About Cookies",c:"Contact form",s:"Include AdOff in your ad blocker roundup (transparent disclosure)",
+   b:`Hi team,\nAdOff is a privacy-first, Manifest V3 ad blocker with stealth anti-detection and zero data collection. I'd love it considered for your ad blocker roundup, with transparent affiliate disclosure and a referral link if included. Objective demo: ${TOOL_EN}. Free Pro license for testing. — The AdOff team`},
+  {id:"o7",pri:"p1",t:"Ad Block Tester",c:"Contact form",s:"Submit AdOff for benchmarking",
+   b:`Hi,\nSubmitting AdOff for your ad blocker testing/ranking. It uses ~130 targeted network rules plus cosmetic filtering and stealth anti-detection — please run it against your benchmark suite. We also built our own in-browser detection test you might find interesting: ${TOOL_EN}. Free Pro license available. — The AdOff team`},
+  {id:"o8",pri:"p1",t:"Privacy Guides (forum)",c:"discuss.privacyguides.net — NO payment",s:"AdOff — privacy-first MV3 ad blocker, for the Browser Extensions list?",
+   b:`Hi everyone — sharing AdOff for consideration against the criteria for the Browser Extensions list. It's Manifest V3 native, has a strict zero-log policy (local-only storage, GDPR by design), and includes stealth anti-detection. No payment involved — purely submitting it against your standards. Detection test (client-side, collects nothing): ${TOOL_EN}. Honest scrutiny welcome.`},
+  {id:"o9",pri:"p2",t:"Naomi Brockwell (NBTV)",c:"contact@nbtv.media",s:"An ad blocker that's actually invisible to anti-adblock",
+   b:`Hi Naomi,\nLong-time admirer of NBTV's work on privacy and freedom tech. I built AdOff, an ad blocker whose angle is stealth: it blocks ads without leaving the traces anti-adblock systems detect, so the "disable your ad blocker" walls never trigger. Zero data collection, local-only, GDPR by design.\nI made a free in-browser tool that shows whether any blocker is detectable — might be a fun demo regardless of coverage: ${TOOL_EN}. Happy to give you a free Pro license + referral code, zero strings. If it's worth a mention, great; if not, thanks for testing. — The AdOff team`},
+  {id:"o10",pri:"p2",t:"Techlore",c:"contact@techlore.tech",s:"Stealth ad blocker (MV3, zero-log) — free access for testing",
+   b:`Hi Techlore team,\nAdOff is a Manifest V3 ad blocker built privacy-first: zero-log, local-only storage, and a stealth layer that bypasses anti-adblock walls. Given your FOSS/privacy focus, thought it might interest you. Objective demo of the detection problem: ${TOOL_EN} (client-side, collects nothing). Free Pro license + referral code, no expectations. — The AdOff team`},
+  {id:"o11",pri:"p2",t:"The Hated One",c:"Patreon / community post",s:"Free Pro access — stealth ad blocker, no strings",
+   b:`Hi — built AdOff, an ad blocker focused on transparency vs the anti-adblock industry: it blocks ads AND stays undetected, with zero data collection. Free in-browser detection test: ${TOOL_EN}. Offering free Pro access + a referral code — if you find it worth covering, share it; if not, thanks for testing. — The AdOff team`},
+  {id:"o12",pri:"p2",t:"Rob Braxman",c:"brax.me secure contact",s:"Internet-privacy-aligned ad blocker, stealth anti-detection",
+   b:`Hi Rob,\nAdOff is an ad blocker built around stealth anti-detection — it blocks corporate ads/trackers without being detectable, zero-log and local-only. Aligns with your anti-tracking focus. In-browser demo: ${TOOL_EN}. Free Pro access + referral code, no strings. — The AdOff team`},
+  {id:"o13",pri:"p3",t:"DistroTube (Derek)",c:"derek@distrotube.com",s:"Lightweight MV3 ad blocker for the FOSS crowd",
+   b:`Hi Derek,\nAdOff is an ultra-light Manifest V3 ad blocker (a fraction of typical blocker size) with stealth anti-detection and zero data collection — works on Chrome, Edge, Opera, Brave, Firefox. Thought your Arch/FOSS audience might appreciate the lightweight + privacy angle. Detection demo: ${TOOL_EN}. Free Pro access + referral code. — The AdOff team`},
+  {id:"o14",pri:"p3",t:"Luke Smith",c:"luke@lukesmith.xyz",s:"Minimal, lightweight ad blocker (MV3, zero-log)",
+   b:`Hi Luke,\nBuilt AdOff with a minimalist ethos — ~130 targeted rules instead of 80,000+, ultra-light, zero data collection, stealth anti-detection. Fits the LARBS/minimal philosophy. Free in-browser detection test: ${TOOL_EN}. Free Pro access + referral code if useful. — The AdOff team`},
+  {id:"o15",pri:"p3",t:"It's FOSS (Abhishek)",c:"hello@itsfoss.com",s:"AdOff — MV3 ad blocker, possible coverage for It's FOSS",
+   b:`Hi Abhishek,\nAdOff is a lightweight Manifest V3 ad blocker (network + cosmetic + video + stealth anti-detection), privacy-first with zero data collection, available across Chromium browsers + Firefox. Might suit an It's FOSS review. Objective demo: ${TOOL_EN}. Free Pro license + referral code for tracking. — The AdOff team`},
+];
+
+const REDDIT=`
+<h2>Reddit — warm-up &amp; seeding (ban-proof)</h2>
+<div class="note">Account NUOVI: 2-3 settimane di warm-up PRIMA di menzionare AdOff. Regola 9:1 (9 contributi utili : 1 menzione). Sempre disclosure. Mai stesso testo copiato in più thread. Mai account multipli.</div>
+<div class="card"><h3>Fase warm-up (settimana 1-3)</h3>
+<ul><li>1 account EN + 1 IT (username neutro, non "AdOffOfficial")</li>
+<li>Commenta genuino in: r/Adblock, r/chrome, r/privacy, r/browsers, r/firefox (EN) · r/italyinformatica, r/Italia (IT)</li>
+<li>Obiettivo: 100+ karma. Mai nominare AdOff in questa fase.</li></ul></div>
+<div class="card"><h3>Post "Show &amp; tell" su r/Adblock (settimana 3+, con disclosure)</h3>
+<div class="kv"><b>Titolo:</b></div>
+<div class="copyblock" data-copy>I built a Manifest V3 ad blocker with anti-detection — would love feedback</div>
+<div class="kv"><b>Corpo:</b></div>
+<div class="copyblock" data-copy>Full disclosure: I'm involved in the project. After Manifest V3 weakened a lot of blockers, I built AdOff — it does network + cosmetic blocking, neutralizes video ads at the SDK level, and has a stealth layer that bypasses anti-adblock walls (no more "disable your ad blocker" nags).
+
+I also made a free, private in-browser test so you can check if your *current* blocker is detectable: ${TOOL_EN} — it runs the same probes anti-adblock scripts use, collects nothing.
+
+Honest feedback welcome, including the harsh kind.</div></div>
+<div class="card"><h3>Reply template (quando qualcuno chiede genuinamente)</h3>
+<div class="copyblock" data-copy>If the issue is sites *detecting* your blocker, the problem is that most blockers block in a visible way. There are stealth-focused options that bypass anti-adblock walls. (Disclosure: I work on one, AdOff — but you can verify the detection problem yourself with any blocker here: ${TOOL_EN}.)</div></div>
+`;
+
+const ALTERNATIVETO=`
+<h2>AlternativeTo — submit (30 min, alto valore)</h2>
+<div class="note">alternativeto.net → "Add application". Backlink + scoperta + comparsa nelle ricerche "alternative to uBlock/AdGuard". Usa icona <b>at-icon-256.png</b> + screenshot <b>ph-1-tool.png</b>.</div>
+<div class="card">
+<div class="kv"><b>Name:</b> AdOff</div>
+<div class="kv"><b>Tagline:</b></div><div class="copyblock" data-copy>Invisible ad blocker for Chrome with stealth anti-detection</div>
+<div class="kv"><b>URL:</b> https://adoff.app · <b>License:</b> Freemium</div>
+<div class="kv"><b>Platforms:</b> Chrome, Edge, Opera, Brave, Firefox, Safari</div>
+<div class="kv"><b>Description:</b></div>
+<div class="copyblock" data-copy>AdOff is a lightweight Manifest V3 ad blocker that blocks banners, pop-ups, trackers and video ads. Its standout feature is Stealth anti-detection: it blocks ads without leaving the traces that trigger "disable your ad blocker" walls, so it stays invisible to anti-adblock systems. Zero data collection (local-only, GDPR by design), ultra-light footprint, and free with a 30-day Pro trial. Available on Chrome, Edge, Opera, Brave, Firefox and Safari.</div>
+<div class="kv"><b>Add as alternative to:</b> uBlock Origin, AdBlock Plus, AdGuard, Ghostery, AdBlock</div>
+<div class="kv"><b>Tags:</b> ad-blocker, privacy, anti-adblock, manifest-v3, stealth</div>
+</div>
+`;
+
+const PRODUCTHUNT=`
+<h2>Product Hunt — launch kit</h2>
+<div class="note">Scegli martedì/mercoledì. Gallery: usa ph-1..4 (1270×760) + thumbnail ph-thumbnail-240.png. Vedi tab Asset.</div>
+<div class="card">
+<div class="kv"><b>Name:</b> AdOff</div>
+<div class="kv"><b>Tagline (60 char):</b></div><div class="copyblock" data-copy>The ad blocker websites can't detect</div>
+<div class="kv"><b>Description:</b></div>
+<div class="copyblock" data-copy>AdOff blocks banners, pop-ups, trackers and video ads on Chrome, Edge, Opera, Brave, Firefox and Safari. Unlike most blockers, its Stealth mode hides the blocking itself — so anti-adblock walls never trigger. Manifest V3 native, ultra-light, zero data collection. Free with a 30-day Pro trial.</div>
+<div class="kv"><b>First comment (maker):</b></div>
+<div class="copyblock" data-copy>Hi PH 👋 I built AdOff because every ad blocker I tried got detected — sites would nag me to turn it off. AdOff blocks ads AND stays invisible to anti-adblock scripts (you can test whether your current blocker is detectable here: ${TOOL_EN}). It's Manifest V3 native, ultra-light, and collects zero data. Happy to answer anything!</div>
+<div class="kv"><b>Topics:</b> Chrome Extensions, Privacy, Productivity</div>
+</div>
+`;
+
+const ASSETS=`
+<h2>Asset pronti</h2>
+<div class="note">In <b>sviluppo/marketing/assets/seeding/</b>. Se apri questa dashboard da lì, le anteprime qui sotto si vedono.</div>
+<h3>Product Hunt gallery (1270×760)</h3>
+<div class="gallery">
+<figure><img src="assets/seeding/ph-1-tool.png" loading="lazy"><figcaption>ph-1-tool.png · tool hero</figcaption></figure>
+<figure><img src="assets/seeding/ph-2-result.png" loading="lazy"><figcaption>ph-2-result.png · risultato test</figcaption></figure>
+<figure><img src="assets/seeding/ph-3-home.png" loading="lazy"><figcaption>ph-3-home.png · homepage</figcaption></figure>
+<figure><img src="assets/seeding/ph-4-landing.png" loading="lazy"><figcaption>ph-4-landing.png · landing</figcaption></figure>
+</div>
+<h3>Icone</h3>
+<div class="gallery">
+<figure><img src="assets/seeding/ph-thumbnail-240.png" loading="lazy"><figcaption>ph-thumbnail-240.png · PH thumb</figcaption></figure>
+<figure><img src="assets/seeding/at-icon-256.png" loading="lazy"><figcaption>at-icon-256.png · AlternativeTo</figcaption></figure>
+</div>
+`;
+
+// ---- render ----
+const nav=document.getElementById('nav');
+TABS.forEach(([id,label],i)=>{const b=document.createElement('button');b.textContent=label;b.className=i===0?'active':'';b.onclick=()=>show(id,b);nav.appendChild(b);});
+function show(id,btn){document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');window.scrollTo(0,0);}
+
+document.getElementById('overview').innerHTML=OVERVIEW;
+document.getElementById('reddit').innerHTML=REDDIT;
+document.getElementById('alternativeto').innerHTML=ALTERNATIVETO;
+document.getElementById('producthunt').innerHTML=PRODUCTHUNT;
+document.getElementById('assets').innerHTML=ASSETS;
+
+// outreach
+let oh='<h2>Outreach — coda pronta da inviare</h2>';
+oh+=`<div class="card"><h3 style="margin-top:0">Generatore referral code</h3>
+  <div class="refgen">
+    <input id="refname" placeholder="Nome creator (es. Naomi Brockwell)">
+    <button id="refbtn">Genera</button>
+    <span class="refout" id="refout"></span>
+    <button id="refcopy" style="display:none">Copia</button>
+  </div>
+  <div class="kv">Formato: NOME-Q2-2026 (maiuscolo, senza spazi). Incollalo al posto di [CODICE] nelle email.</div>
+</div>`;
+oh+='<div class="trksum" id="trksum"></div>';
+oh+='<div class="note">Stato e note si salvano nel browser. Allega screenshot da tab Asset dove il form lo permette.</div>';
+const PRINAMES={p1:"Priorità 1 · review site",p2:"Priorità 2 · privacy authority",p3:"Priorità 3 · creator FOSS"};
+let lastPri='';
+OUTREACH.forEach(o=>{
+  if(o.pri!==lastPri){oh+=`<h3>${PRINAMES[o.pri]}</h3>`;lastPri=o.pri;}
+  oh+=`<div class="card" id="card-${o.id}"><span class="pill ${o.pri}">${o.pri.toUpperCase()}</span> <b>${o.t}</b>
+  <div class="kv"><b>Contatto:</b> ${o.c}</div>
+  <div class="kv"><b>Subject:</b></div><div class="copyblock" data-copy>${o.s}</div>
+  <div class="kv"><b>Messaggio:</b></div><div class="copyblock" data-copy>${o.b}</div>
+  <div class="track">
+    <label>Stato</label>
+    <select data-trk="${o.id}" data-f="status">
+      <option value="">Da inviare</option><option value="sent">Inviato</option><option value="reply">Risposta</option><option value="won">Esito +</option><option value="lost">Esito −</option>
+    </select>
+    <input data-trk="${o.id}" data-f="note" placeholder="note / data invio / referral code usato">
+  </div></div>`;
+});
+document.getElementById('outreach').innerHTML=oh;
+
+// referral generator
+function genRef(){
+  const n=(document.getElementById('refname').value||'').trim();
+  const out=document.getElementById('refout'),cp=document.getElementById('refcopy');
+  if(!n){out.textContent='';cp.style.display='none';return;}
+  const code=n.toUpperCase().replace(/[^A-Z0-9]+/g,'-').replace(/^-+|-+$/g,'')+'-Q2-2026';
+  out.textContent=code;cp.style.display='';cp.dataset.code=code;
+}
+document.getElementById('refbtn').onclick=genRef;
+document.getElementById('refname').addEventListener('keydown',e=>{if(e.key==='Enter')genRef();});
+document.getElementById('refcopy').onclick=function(){navigator.clipboard.writeText(this.dataset.code||'').then(()=>{this.textContent='Copiato ✓';setTimeout(()=>this.textContent='Copia',1500);});};
+
+// outreach tracker (persisted)
+const TK='adoff_dash_track';
+function getTrack(){try{return JSON.parse(localStorage.getItem(TK)||'{}')}catch(e){return{}}}
+function setTrack(o){localStorage.setItem(TK,JSON.stringify(o))}
+function applyTrackCard(id,status){
+  const card=document.getElementById('card-'+id);if(!card)return;
+  card.classList.remove('st-sent','st-reply','st-won','st-lost');
+  if(status)card.classList.add('st-'+status);
+}
+function updateTrackSum(){
+  const t=getTrack();const vals=OUTREACH.map(o=>(t[o.id]&&t[o.id].status)||'');
+  const sent=vals.filter(v=>v&&v!=='').length;
+  const reply=vals.filter(v=>['reply','won','lost'].includes(v)).length;
+  const won=vals.filter(v=>v==='won').length;
+  const el=document.getElementById('trksum');
+  if(el)el.innerHTML=`📊 Avanzamento outreach: <b>${sent}/${OUTREACH.length}</b> contattati · <b>${reply}</b> risposte · <b>${won}</b> esiti positivi`;
+}
+(function initTrack(){
+  const t=getTrack();
+  document.querySelectorAll('[data-trk]').forEach(el=>{
+    const id=el.dataset.trk,f=el.dataset.f;
+    if(t[id]&&t[id][f]!==undefined)el.value=t[id][f];
+    if(f==='status')applyTrackCard(id,t[id]&&t[id].status);
+    el.addEventListener('change',()=>{
+      const s=getTrack();s[id]=s[id]||{};s[id][f]=el.value;setTrack(s);
+      if(f==='status')applyTrackCard(id,el.value);
+      updateTrackSum();
+    });
+  });
+  updateTrackSum();
+})();
+
+// checklist (persisted)
+const CK='adoff_dash_checks';
+function getChecks(){try{return JSON.parse(localStorage.getItem(CK)||'{}')}catch(e){return{}}}
+function setChecks(o){localStorage.setItem(CK,JSON.stringify(o))}
+function renderChecklist(){
+  const wrap=document.getElementById('checklist');if(!wrap)return;
+  const st=getChecks();wrap.innerHTML='';
+  CHECKLIST.forEach(([id,txt,meta])=>{
+    const div=document.createElement('div');div.className='chk'+(st[id]?' checked':'');
+    div.innerHTML=`<input type="checkbox" id="${id}" ${st[id]?'checked':''}><label for="${id}">${txt}<span class="meta">${meta}</span></label>`;
+    div.querySelector('input').onchange=e=>{const s=getChecks();s[id]=e.target.checked;setChecks(s);div.classList.toggle('checked',e.target.checked);updateProg();};
+    wrap.appendChild(div);
+  });
+}
+function resetChecks(){setChecks({});renderChecklist();updateProg();}
+function updateProg(){
+  const st=getChecks();const done=CHECKLIST.filter(c=>st[c[0]]).length;const tot=CHECKLIST.length;
+  const pct=Math.round(done/tot*100);
+  document.getElementById('progfill').style.width=pct+'%';
+  document.getElementById('progtxt').textContent=`Binario B: ${done}/${tot} azioni completate (${pct}%)`;
+}
+renderChecklist();updateProg();
+
+// copy buttons
+document.querySelectorAll('.copyblock[data-copy]').forEach(el=>{
+  const btn=document.createElement('button');btn.className='copybtn';btn.textContent='Copia';
+  btn.onclick=()=>{const txt=el.textContent;navigator.clipboard.writeText(txt).then(()=>{btn.textContent='Copiato ✓';btn.classList.add('ok');setTimeout(()=>{btn.textContent='Copia';btn.classList.remove('ok');},1500);});};
+  el.appendChild(btn);
+});
+</script>
+</body>
+</html>

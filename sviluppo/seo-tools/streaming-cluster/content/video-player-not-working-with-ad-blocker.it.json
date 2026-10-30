@@ -1,0 +1,91 @@
+{
+  "slug": "video-player-not-working-with-ad-blocker",
+  "lang": "it",
+  "title": "Il video non parte con l'ad blocker attivo | AdOff",
+  "description": "Il video non si avvia con l'ad blocker attivo? Diagnosi passo passo: pausa per sito, conflitti tra estensioni, muri anti-adblock o player davvero rotti.",
+  "h1": "Il video non parte con l'ad blocker? Diagnosi passo passo",
+  "answer": "Quando un video si rifiuta di partire con un ad blocker attivo, la causa è quasi sempre una di tre: un muro anti-adblock, un conflitto tra due estensioni, o un player che gestisce male una richiesta bloccata. Prima metti in pausa la protezione su quel sito, poi segui questa checklist.",
+  "sections": [
+    {
+      "h2": "Passo 1: pausa la protezione solo su quel sito",
+      "body": [
+        "<p>Il primo rimedio non è spegnere l'ad blocker: è metterlo in pausa per il singolo sito che dà problemi. AdOff ha una <strong>pausa per sito</strong> con più opzioni, raggiungibile dal popup: il sito torna al suo comportamento originale mentre tutti gli altri restano protetti.</p>",
+        "<p>Dopo la pausa, ricarica la pagina con un refresh forzato (Ctrl+Shift+R / Cmd+Shift+R), così gli script del player vengono caricati da zero. Se ora il video parte, il player reagiva a una richiesta bloccata — e il problema si è restringerto parecchio.</p>"
+      ]
+    },
+    {
+      "h2": "Passo 2: controlla i conflitti con le altre estensioni",
+      "body": [
+        "<p>Due ad blocker attivi insieme sono la causa più comune di riproduzione rotta. Ognuno prova a intercettare le stesse richieste, e il player può ricevere risposte contraddittorie. Disattiva ogni altro ad blocker, estensione privacy e gestore di script (in <code>chrome://extensions</code> o nella pagina equivalente) e riprova con uno solo attivo.</p>",
+        "<p>Già che ci sei, verifica che l'estensione sia aggiornata: le API dei player cambiano, e uno strato di neutralizzazione datato può perdersi ciò che uno aggiornato gestisce.</p>"
+      ]
+    },
+    {
+      "h2": "Passo 3: distinguere un muro anti-adblock da un player rotto",
+      "body": [
+        "<p>Non ogni player vuoto è un incidente. I sintomi si distinguono:</p>",
+        "<ul><li><strong>Muro anti-adblock</strong>: la pagina carica, ma compare un messaggio esplicito (\"disattiva il tuo ad blocker\", \"consenti gli annunci\"), oppure il video non parte mai mentre uno spinner gira all'infinito. Il sito si rifiuta deliberatamente di riprodurre finché non rileva assenza di blocco.</li><li><strong>Player davvero rotto</strong>: un codice errore preciso, un rettangolo nero, controlli che non rispondono nemmeno dopo vari ricaricamenti, oppure una riproduzione che fallisce su quel sito anche in finestra privata con tutte le estensioni spente — quest'ultimo caso significa che il problema non è affatto il tuo ad blocker.</li></ul>",
+        "<p>AdOff include uno strato stealth (spoofing delle esche, intercettazione fetch/XHR) costruito proprio per il primo caso: far credere alla pagina che non ci sia alcun blocco.</p>"
+      ]
+    },
+    {
+      "h2": "Perché AdOff esclude di proposito alcuni servizi",
+      "body": [
+        "<p>Alcuni servizi di streaming in abbonamento usano pipeline player proprietarie così agganciate al loro codice che qualunque interferenza rischia di rompere del tutto la riproduzione. Per questo AdOff <strong>esclude deliberatamente</strong> un elenco di questi servizi: è una scelta di qualità documentata nel codice, non una dimenticanza.</p>",
+        "<p>Il compromesso è onesto: su quelle piattaforme gli annunci restano, ma il video funziona sempre. Se un ad blocker promette riproduzione senza annunci e zero rotture su ogni servizio, diffida.</p>"
+      ]
+    },
+    {
+      "h2": "Passo 4: ancora niente? Segnalalo",
+      "body": [
+        "<p>Se hai messo in pausa, escluso i conflitti tra estensioni e il player fallisce solo con AdOff attivo, è esattamente il tipo di caso che vale la pena segnalare. Le segnalazioni con l'URL esatto della pagina alimentano direttamente la scelta di quali regole e correzioni costruire dopo — molte correzioni passate sono nate dalla segnalazione di un solo utente.</p>",
+        "<p>Usa il bottone di segnalazione su questa pagina, incolla l'URL del sito con il problema e descrivi ciò che vedi. Non serve alcun account.</p>"
+      ]
+    },
+    {
+      "h2": "Checklist di riferimento rapida",
+      "body": [
+        "<ol><li>Metti in pausa AdOff su quel sito dal popup, poi ricarica forzando la cache.</li><li>Se funziona, riattiva e verifica se si rompe di nuovo: identifichi la richiesta colpevole.</li><li>Disattiva gli altri ad blocker ed estensioni privacy; tienine uno.</li><li>Verifica se la pagina mostra un messaggio anti-adblock esplicito (muro) o un errore del player (player rotto).</li><li>Aggiorna l'estensione all'ultima versione.</li><li>Prova in finestra privata con tutte le estensioni spente per escludere un problema del sito.</li><li>Continua a fallire? Segnala il sito con il suo URL esatto.</li></ol>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Perché il mio player video fallisce solo su un sito?",
+      "a": "Perché il player di quel sito reagisce male a una richiesta bloccata specifica, oppure esegue un controllo anti-adblock che il resto del web non fa. Metti in pausa AdOff solo su quel sito — la pausa per sito esiste proprio per questo — e ricarica per capire quale dei due casi è."
+    },
+    {
+      "q": "Si possono usare due ad blocker insieme?",
+      "a": "Non è consigliabile. Competono per intercettare le stesse richieste, e un player video può ricevere risposte contraddittorie, con la riproduzione che spesso non parte mai. Meglio tenerne uno ben mantenuto invece di due sovrapposti."
+    },
+    {
+      "q": "Come capisco se un sito ha un muro anti-adblock?",
+      "a": "Di norma lo dice esplicitamente, oppure il video resta su uno spinner infinito senza codice errore. Se la riproduzione funziona in finestra privata con tutte le estensioni disattivate, la causa era il blocco; se fallisce anche lì, il problema è del sito."
+    },
+    {
+      "q": "La pausa di AdOff su un sito influenza gli altri siti?",
+      "a": "No. La pausa per sito cambia il comportamento solo su quel sito specifico. Tutti gli altri mantengono la protezione completa, e puoi riattivarla sul sito in pausa in qualsiasi momento dal popup."
+    },
+    {
+      "q": "Perché AdOff non blocca gli annunci su alcune piattaforme a pagamento?",
+      "a": "Scelta deliberata. Le loro pipeline player sono proprietarie e strettamente agganciate, e interferire rischia di rompere del tutto la riproduzione del video. AdOff le esclude perché il servizio funzioni: gli annunci restano, ma il player non si rompe."
+    }
+  ],
+  "related": [
+    {"href": "/it/streaming-ad-blocking", "text": "Blocco delle pubblicità nello streaming: la guida completa"},
+    {"href": "/it/bypass-anti-adblock", "text": "Come si aggirano i muri anti-adblock"},
+    {"href": "/it/adblock-detector", "text": "Come funziona il rilevamento degli ad blocker"}
+  ],
+  "cta": {
+    "h3": "Un ad blocker che convive con i player",
+    "p": "Pausa per sito, esclusioni deliberate e strato stealth: AdOff è costruito per bloccare gli annunci senza rompere i video. Gratis, senza account.",
+    "btn": "Installa AdOff gratis"
+  },
+  "report": {
+    "intro": "Hai seguito la checklist e un player continua a fallire con AdOff attivo? Segnala il caso con l'URL esatto della pagina: le segnalazioni degli utenti decidono quali siti e regole correggeremo dopo.",
+    "btn_text": "Segnala questo sito",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

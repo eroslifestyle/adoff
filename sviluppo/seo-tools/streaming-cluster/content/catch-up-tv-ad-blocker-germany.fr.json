@@ -1,0 +1,96 @@
+{
+  "slug": "catch-up-tv-ad-blocker-germany",
+  "lang": "fr",
+  "title": "Bloquez les publicités sur ZDF Mediathek, ARD, RTL, Joyn | AdOff",
+  "description": "AdOff bloque les pubs vidéo sur les plateformes allemandes : ZDF, ARD Mediathek, RTL+, Joyn, ServusTV, ORF. Extension gratuite, pas de compte nécessaire.",
+  "h1": "Bloqueur de publicités pour les chaînes allemandes en replay : ZDF, ARD, RTL, Joyn",
+  "answer": "AdOff supprime les publicités avant le début (pre-roll) et en cours de lecture (mid-roll) des plateformes allemandes de télévision à la demande dans le navigateur, dans la plupart des cas. Il remplace le SDK Google IMA chargé par ces lecteurs par un stub qui reprend immédiatement la lecture, de sorte que ZDF, ARD ou Joyn fonctionnent sans interrompre la lecture par des publicités.",
+  "sections": [
+    {
+      "h2": "Services en langue allemande couvertes",
+      "body": [
+        "<p>Les radiodiffuseurs publics et commerciaux du marché germanophone monétisent leurs médiathèques grâce à des publicités vidéo diffusées via le SDK Google IMA standard. AdOff couvre :</p>",
+        "<ul><li><strong>ZDF</strong> (zdf.de)</li><li><strong>ARD et ARD Mediathek</strong> (ard.de, ardmediathek.de)</li><li><strong>RTL et RTL+</strong> (rtl.de, rtlplus.de)</li><li><strong>Joyn</strong> (joyn.de)</li><li><strong>ServusTV</strong> (servustv.com)</li><li><strong>ORF</strong> (orf.at) — Autriche, faisant partie du même marché de langue allemande</li></ul>"
+      ]
+    },
+    {
+      "h2": "Comment l’extension gère la pause publicitaire",
+      "body": [
+        "<p>Les lecteurs de médiathèques allemands intègrent généralement le SDK IMA pour planifier les pré-rolls et les mid-rolls. AdOff redirige la requête vers le script SDK vers un stub intégré. Lorsque le lecteur demande au stub de commencer une pause publicitaire, le stub répond immédiatement par un signal de reprise du contenu, et la lecture continue sans interruption.</p>",
+        "<p>Le flux vidéo n’est jamais modifié — seule la couche d’orchestration publicitaire est remplacée, localement, dans votre navigateur.</p>"
+      ]
+    },
+    {
+      "h2": "Radiodiffuseurs publics, radiodiffuseurs privés, même mécanisme",
+      "body": [
+        "<p>Cela peut sembler étrange qu’une extension de navigateur puisse affecter à la fois les médiathèques publiques (ZDF, ARD) et les plateformes commerciales (RTL+, Joyn, ServusTV). La raison est que tous utilisent le même SDK publicitaire standard pour leurs lecteurs web. Partout où le SDK standard est utilisé, la même neutralisation s’applique. C’est pourquoi la télévision de rattrapage se comporte différemment des services de streaming par abonnement, où les publicités sont intégrées côté serveur et délibérément exclues de l’extension.</p>"
+      ]
+    },
+    {
+      "h2": "Autres cibles du filtrage d’AdOff sur ces sites",
+      "body": [
+        "<p>Autour du lecteur, l’extension applique 180 règles réseau statiques contre les domaines publicitaires et de suivi, ainsi qu’un filtre cosmétique CSS/DOM qui masque les bannières et les superpositions promotionnelles. Sur les pages Joyn ou RTL, cela supprime non seulement les interruptions vidéo, mais aussi les boîtes promotionnelles et les panneaux d’affichage de l’interface.</p>"
+      ]
+    },
+    {
+      "h2": "Limites honnêtes",
+      "body": [
+        "<ul><li>Si un diffuseur passe à l’<strong>insertion publicitaire côté serveur (SSAI)</strong>, la publicité est intégrée directement dans le flux, et le stub n’a aucun effet.</li><li>Uniquement sur navigateur de bureau — <strong>les applications natives et les téléviseurs intelligents</strong> ne sont pas concernés.</li><li>Certains <strong>flux en direct et événements sportifs</strong> utilisent des pipelines différents.</li><li>Les lecteurs évoluent fréquemment ; la couverture est maintenue dans le temps plutôt que fixée une fois pour toutes.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Gratuit, pas d’inscription requise, cinq navigateurs pris en charge",
+      "body": [
+        "<p>AdOff est une extension gratuite basée sur Manifest V3, sans compte requis ni période d’essai. Elle fonctionne sur Chrome, Firefox, Safari, Edge et Opera. Installez-la, laissez la protection activée, et ouvrez votre médiathèque comme d’habitude.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Supprime-t-il les publicités sur la ZDF Mediathek ?",
+      "a": "Dans la plupart des cas, oui : lorsque le lecteur web de ZDF charge des publicités via le SDK Google IMA, AdOff remplace la publicité par un stub qui reprend immédiatement le programme. La couverture suit celle du SDK — si ZDF change de technologie d’insertion, les résultats peuvent différer."
+    },
+    {
+      "q": "Puis-je ignorer les publicités sur Joyn gratuitement ?",
+      "a": "AdOff est une extension gratuite pour navigateur qui neutralise le SDK publicitaire IMA dans le lecteur web de Joyn, de sorte que les publicités habituelles ne s’affichent généralement pas. Les offres payantes de Joyn constituent un produit commercial distinct ; AdOff n’interagit pas avec votre compte."
+    },
+    {
+      "q": "Fonctionne-t-il sur ORF et ServusTV en Autriche ?",
+      "a": "Oui, les deux font partie du même groupe linguistique allemand. Le même mécanisme s’applique lorsque leurs lecteurs web demandent le SDK publicitaire standard."
+    },
+    {
+      "q": "AdOff remplace-t-il la contribution radiodiffuseur ARD/ZDF ?",
+      "a": "Non. L’extension n’affecte que la publicité à l’intérieur du lecteur et sur la page. La Rundfunkbeitrag est une contribution légale et n’a aucun lien avec le blocage publicitaire via le navigateur."
+    },
+    {
+      "q": "Qu’en est-il des applications TV connectée ZDF ou Joyn ?",
+      "a": "AdOff ne fonctionne que dans les navigateurs de bureau. Les applications TV connectée, les applications mobiles et les clés de streaming échappent à son champ d’application."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Comment le blocage des publicités en streaming fonctionne"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Explication du blocage de publicités via le SDK IMA"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-france",
+      "text": "Blocage des publicités pour les chaînes de télévision en replay françaises"
+    }
+  ],
+  "cta": {
+    "h3": "Mediathek sans interruptions publicitaires",
+    "p": "Installez AdOff et laissez le stub gérer le SDK publicitaire sur ZDF, ARD, RTL+ et Joyn.",
+    "btn": "Installez AdOff gratuitement"
+  },
+  "report": {
+    "intro": "Une plateforme allemande ou autrichienne manque-t-elle ici ? Si des coupures persistent sur https://adoff.app/catch-up-tv-ad-blocker-germany, signalez le service. Les rapports indiquent quels diffuseurs nous couvrirons ensuite.",
+    "btn_text": "Signaler un service manquant",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

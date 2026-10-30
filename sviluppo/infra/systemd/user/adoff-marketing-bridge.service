@@ -1,0 +1,15 @@
+[Unit]
+Description=AdOff Marketing Bridge (host HTTP for n8n cyber-purge build)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=PYTHONUNBUFFERED=1
+WorkingDirectory=/home/mrxxx/Dropbox/1 Programmazione/Progetti/ChromePlugin/sviluppo/ai-autopilot/n8n-workflows/scripts
+ExecStart=/home/mrxxx/.cache/adoff-chatterbox-venv/bin/uvicorn marketing_bridge:app --host 0.0.0.0 --port 8792 --workers 1
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

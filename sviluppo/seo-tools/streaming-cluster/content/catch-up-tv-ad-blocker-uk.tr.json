@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-uk",
+  "lang": "tr",
+  "title": "İngiltere Servisleri İçin Geri Alınan TV Reklam Engelleyici | AdOff",
+  "description": "BBC iPlayer, ITVX, Channel 4, Channel 5 ve daha fazlasında video reklamlarını kaldırın. AdOff, geri izleme oynatıcılardaki reklam SDK’sını etkisiz hale getiren…",
+  "h1": "İngiltere Yayın Servisleri İçin Geri Alın TV Reklam Engelleyici",
+  "answer": "AdOff, tarayıcıda İngiltere’nin catch-up TV hizmetlerinden ön-ve orta-rol reklamları, çoğu durumda kaldırır. Bu, oynatıcıların yüklediği Google IMA reklam SDK’sını hemen oynatmayı yeniden başlatan hafif bir stub ile değiştirerek çalışır; böylece program reklamsız olarak oynar. Kapsam, hizmetin standart SDK’yı kullandığı masaüstü web oynatıcıları için geçerlidir.",
+  "sections": [
+    {
+      "h2": "Hangi İngiliz hizmetleri kapsanır",
+      "body": [
+        "<p>İngiltere'deki yayıncılar, reklamlarla finanse edilen ücretsiz geri izleme platformları sunar. Bu platformlar bir masaüstü tarayıcısında yüklendiğinde ve Google IMA SDK’sını talep ettiğinde, AdOff bu talebi engeller ve yerel bir stub (sabitlenmiş basit kod) sunar. Günümüzde desteklenen hizmetler:</p>",
+        "<ul><li><strong>BBC iPlayer</strong> (bbc.co.uk, bbc.com)</li><li><strong>ITV ve ITVX</strong> (itv.com, itvx.com)</li><li><strong>Channel 4</strong> (channel4.com)</li><li><strong>Channel 5</strong> (channel5.com)</li><li><strong>My5</strong> (my5.tv)</li><li><strong>Pluto TV</strong> ve <strong>Tubi</strong>, her ikisi de İngiltere pazarında mevcuttur</li></ul>"
+      ]
+    },
+    {
+      "h2": "Bir geri alım oynatıcısında nasıl çalışır",
+      "body": [
+        "<p>Çoğu İngiliz geri izleme oynatıcısı, önceden kaydedilmiş reklamları (pre-rolls) ve orta noktalardaki reklam aralarını (mid-rolls) zamanlamak için Google IMA SDK’sını entegre eder. AdOff, SDK betiğinin talep edilmesini, eklentiyle birlikte gelen bir stub’a yönlendirir. Oynatıcı, reklam arası başlaması için stub’ı çağırdığında, stub hemen “içerik devam ettirme istendi” yanıtını verir; bu da oynatıcının aranın bittiğini düşünmesine ve programın devam etmesine neden olur.</p>",
+        "<p>Bu işlem tarayıcınızda yerel olarak gerçekleşir. Hiçbir şey iki kez indirilmez ve video akışı kendisi değiştirilmez — sadece reklam koordinasyon katmanı etkisiz hale getirilir.</p>"
+      ]
+    },
+    {
+      "h2": "Geri alım TV’sinin abonelik akışından farkı nedir",
+      "body": [
+        "<p>Yayıncıların geri izleme platformları, reklam içeriği sundukları için ücretsiz izlenebilir. Bu durum, reklam süreçlerinin standartlaşmasına neden olur: binlerce web sitesinin kullandığı aynı SDK’ya dayanırlar. Abonelik tabanlı platformlar ise reklamları sunucu tarafında (server-side) video akışına ekler; bu da bir tarayıcı eklentisinin erişemeyeceği bir yapıdır. Bu nedenle, geri izleme TV’si, tarayıcı içi reklam engelleme yöntemlerinin gerçekten işlediği alandır.</p>"
+      ]
+    },
+    {
+      "h2": "AdOff’in video oynatıcıya ek olarak yaptığı diğer işlemler",
+      "body": [
+        "<p>Eklenti ayrıca, reklam ve izleme alanlarına yönelik istekleri engelleyen 180 statik ağ kuralı ve yayıncının kendi sayfalarındaki reklam afişlerini, üst üste bindirilen kutuları ve tanıtım bloklarını gizleyen görsel CSS/DOM filtresi de içerir. Sonuç olarak, oynatma butonuna basmadan önce iPlayer, ITVX veya Channel 4 sayfaları daha temiz olur.</p>"
+      ]
+    },
+    {
+      "h2": "Bilmeniz gereken sınırlamalar",
+      "body": [
+        "<p>Destek, gerçek ancak koşulludur:</p>",
+        "<ul><li>Bir yayıncı <strong>sunucu tarafında reklam ekleme (SSAI)</strong> sistemine geçerse, reklam doğrudan video akışına eklenir ve SDK stub’ı hiçbir etki yaratmaz.</li><li>AdOff yalnızca <strong>masaüstü tarayıcısında</strong> çalışır — yerel uygulamalarda, akıllı televizyonlarda veya set-top kutularında değil.</li><li>Bazı <strong>canlı yayınlar ve spor içerikleri</strong> farklı dağıtım süreçlerini kullanır.</li><li>Yayıncılar oynatıcılarını sık sık günceller; bu nedenle destek, kalıcı değil, zaman içinde sürdürülmeye devam edilir.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Ücretsiz, hesap gerektirmez, beş tarayıcıda çalışır",
+      "body": [
+        "<p>AdOff, Manifest V3 tabanlı, tamamen ücretsiz bir eklentidir; kayıt gerektirmez ve deneme süresi yoktur. Chrome, Firefox, Safari, Edge ve Opera’da çalışır. Kurun, koruma modunu açık tutun ve normalde yaptığınız gibi geri izleme hizmetinizi açın.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Bu BBC iPlayer’da çalışır mı?",
+      "a": "Çoğu durumda evet, iPlayer tarayıcıda Google IMA SDK aracılığıyla reklamları oynattığında. AdOff, bu SDK’yı programın hemen devam etmesini sağlayan bir stub (sabit kod) ile değiştirir. BBC iPlayer, ITVX’e kıyasla nispeten az sayıda reklam aralığına sahip olduğu için, pratik fark programdan programa değişir."
+    },
+    {
+      "q": "Premium için ödeme yapmadan ITVX’te reklamları kaldırabilir miyim?",
+      "a": "AdOff, ITVX web oynatıcısındaki reklam SDK’sını etkisiz hale getirir, bu nedenle çoğu durumda önceden yüklenen (pre-roll) ve orta bölümlerdeki (mid-roll) reklamlar oynatılmaz. ITVX Premium, ek kanallar ve reklamsız akış sunan ayrı bir ticari üründür; AdOff, hesabınızla hiçbir şekilde etkileşime girmez."
+    },
+    {
+      "q": "ITVX veya iPlayer mobil uygulamasında çalışır mı?",
+      "a": "Hayır. AdOff bir tarayıcı uzantısıdır ve yalnızca bir masaüstü tarayıcısında yüklenen sayfalarda çalışır. Yerel mobil uygulamalar, akıllı TV uygulamaları ve cast oturumları onun erişim alanı dışındadır."
+    },
+    {
+      "q": "Canlı izleme hesabım işaretlenir mi?",
+      "a": "AdOff yerel olarak çalışır ve yayINCı kurumun içerik sunucularına yapılan istekleri değiştirmez — yalnızca reklam SDK betiği değiştirilir. Hiçbir şeye giriş yapmaz, ancak herhangi bir araç, üçüncü taraf bir platformun nasıl davranacağını garanti edemez; bu nedenle kullanım kendi sorumluluğunuzdadır."
+    },
+    {
+      "q": "AdOff bir ücret içerir mi?",
+      "a": "Hayır. Uzantı tamamen ücretsizdir, hesap gerektirmez, deneme süresi yoktur ve ücretli bir sürümü bulunmaz. Tarama platformlarında video reklamlarını etkisiz hale getirme dahil tüm özellikler, kurulumdan itibaren kullanıma sunulur."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Akış reklam engelleme nasıl çalışır"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "IMA SDK reklam engelleme açıklaması"
+    },
+    {
+      "href": "/tv-streaming-ad-blocker",
+      "text": "TV akış reklam engelleyici genel bakış"
+    }
+  ],
+  "cta": {
+    "h3": "İngiltere’nin geri izleme TV’sini reklam araları olmadan izleyin",
+    "p": "AdOff’u tarayıcınıza yükleyin ve iPlayer, ITVX ve diğerlerindeki reklam SDK’sını stub’in ele almasına izin verin.",
+    "btn": "AdOff’u ücretsiz yükleyin"
+  },
+  "report": {
+    "intro": "Bu listede eksik bir İngiliz geri izleme hizmeti mi var? Sevdiğiniz platform hâlâ https://adoff.app/catch-up-tv-ad-blocker-uk adresinde reklam araları gösteriyorsa, hangi hizmet olduğunu bize bildirin. Sizin gibi kullanıcıların gönderdiği raporlar, bir sonraki hangi hizmetleri kapsayacağımızı belirler.",
+    "btn_text": "Eksik bir İngiliz hizmetini bildirin",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

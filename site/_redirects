@@ -1,0 +1,136 @@
+# NOTA: il 301 www -> apex NON si puo' fare qui. _redirects di Pages matcha
+# solo il PATH, non l'hostname: provato e verificato, www continuava a dare 200.
+# Va creato come Redirect Rule di zona nel dashboard Cloudflare.
+
+# GitHub — indirezione brandizzata (privacy: l'account personale del developer
+# NON deve comparire nei sorgenti/pagine). Se il repo migra a un'org GitHub,
+# cambia SOLO questo blocco, non le pagine.
+# NOTA: il redirect generico /r/:code -> /?ref=:code vive in functions/r/[code].js
+# (le regole di _redirects sono valutate PRIMA delle Functions e lo oscuravano).
+# L'APK Android non e' un prodotto ufficiale: la regola esiste solo per non
+# lasciare morti i vecchi link /r/apk condivisi in giro.
+/r/apk        /android-ad-blocker  301
+/r/rules      https://github.com/eroslifestyle/adoff/blob/main/app/rules/adblock-rules.json  301
+/r/github     https://github.com/eroslifestyle  301
+/r/api/repo   https://api.github.com/repos/eroslifestyle/adoff  301
+/r/repo       https://github.com/eroslifestyle/adoff  301
+/r/issues/new https://github.com/eroslifestyle/adoff/issues/new  301
+/r/issues     https://github.com/eroslifestyle/adoff/issues  301
+
+# VPN pages archived 2026-08-20 (product discontinued)
+# Comparison pages
+/vs/nordvpn.html  /vs/  301
+/vs/nordvpn  /vs/  301
+/vs/expressvpn.html  /vs/  301
+/vs/expressvpn  /vs/  301
+/vs/protonvpn.html  /vs/  301
+/vs/protonvpn  /vs/  301
+/vs/adguard-vpn.html  /vs/  301
+/vs/adguard-vpn  /vs/  301
+/vs/brave-vpn.html  /vs/  301
+/vs/brave-vpn  /vs/  301
+/vs/vpn-standalone.html  /vs/  301
+/vs/vpn-standalone  /vs/  301
+# VPN product pages
+/premium.html  /  301
+/premium  /  301
+/pricing.html  /  301
+/pricing  /  301
+/vpn-policy.html  /privacy  301
+/vpn-policy  /privacy  301
+# Blog
+/blog/annuncio-lancio-adblock-vpn.html  /blog/  301
+/blog/annuncio-lancio-adblock-vpn  /blog/  301
+
+# /en/<slug> duplicava la root EN delle pagine baked (prose_i18n: EN vive in root).
+# Rimossi 2026-08-22: erano fuori dal sistema i18n e servivano copy vecchia (card Discord, link morti).
+/en/adblock-detector.html  /adblock-detector  301
+/en/adblock-detector  /adblock-detector  301
+/en/best-ad-blocker-2026.html  /best-ad-blocker-2026  301
+/en/best-ad-blocker-2026  /best-ad-blocker-2026  301
+/en/block-video-ads.html  /block-video-ads  301
+/en/block-video-ads  /block-video-ads  301
+/en/bypass-anti-adblock.html  /bypass-anti-adblock  301
+/en/bypass-anti-adblock  /bypass-anti-adblock  301
+/en/community.html  /community  301
+/en/community  /community  301
+/en/how-it-works.html  /how-it-works  301
+/en/how-it-works  /how-it-works  301
+/en/lightweight-ad-blocker.html  /lightweight-ad-blocker  301
+/en/lightweight-ad-blocker  /lightweight-ad-blocker  301
+/en/manifest-v3-ad-blocker.html  /manifest-v3-ad-blocker  301
+/en/manifest-v3-ad-blocker  /manifest-v3-ad-blocker  301
+/en/press.html  /press  301
+/en/press  /press  301
+/en/private-ad-blocker.html  /private-ad-blocker  301
+/en/private-ad-blocker  /private-ad-blocker  301
+/en/undetectable-ad-blocker.html  /undetectable-ad-blocker  301
+/en/undetectable-ad-blocker  /undetectable-ad-blocker  301
+/en/unique-tech.html  /unique-tech  301
+/en/unique-tech  /unique-tech  301
+/netflix-ad-blocker /streaming-ad-blocking 301
+/it/netflix-ad-blocker /it/streaming-ad-blocking 301
+
+# salesletter EN + license-guide archived 2026-09-27 (pages removed)
+/en/salesletter.html  /  301
+/en/salesletter  /  301
+/license-guide.html  /  301
+/license-guide  /  301
+
+# salesletter + license-guide legacy removed 2026-10-16 (all langs)
+/ar/salesletter.html  /  301
+/ar/salesletter  /  301
+/ar/license-guide.html  /  301
+/ar/license-guide  /  301
+/de/salesletter.html  /  301
+/de/salesletter  /  301
+/de/license-guide.html  /  301
+/de/license-guide  /  301
+/es/salesletter.html  /  301
+/es/salesletter  /  301
+/es/license-guide.html  /  301
+/es/license-guide  /  301
+/fr/salesletter.html  /  301
+/fr/salesletter  /  301
+/fr/license-guide.html  /  301
+/fr/license-guide  /  301
+/hi/salesletter.html  /  301
+/hi/salesletter  /  301
+/hi/license-guide.html  /  301
+/hi/license-guide  /  301
+/id/salesletter.html  /  301
+/id/salesletter  /  301
+/id/license-guide.html  /  301
+/id/license-guide  /  301
+/it/license-guide.html  /  301
+/it/license-guide  /  301
+/ja/salesletter.html  /  301
+/ja/salesletter  /  301
+/ja/license-guide.html  /  301
+/ja/license-guide  /  301
+/ko/salesletter.html  /  301
+/ko/salesletter  /  301
+/ko/license-guide.html  /  301
+/ko/license-guide  /  301
+/pl/salesletter.html  /  301
+/pl/salesletter  /  301
+/pl/license-guide.html  /  301
+/pl/license-guide  /  301
+/pt/salesletter.html  /  301
+/pt/salesletter  /  301
+/pt/license-guide.html  /  301
+/pt/license-guide  /  301
+/ru/salesletter.html  /  301
+/ru/salesletter  /  301
+/ru/license-guide.html  /  301
+/ru/license-guide  /  301
+/tr/salesletter.html  /  301
+/tr/salesletter  /  301
+/tr/license-guide.html  /  301
+/tr/license-guide  /  301
+/zh/salesletter.html  /  301
+/zh/salesletter  /  301
+/zh/license-guide.html  /  301
+/zh/license-guide  /  301
+/salesletter.html  /  301
+/salesletter  /  301

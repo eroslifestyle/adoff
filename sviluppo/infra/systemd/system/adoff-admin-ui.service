@@ -1,0 +1,19 @@
+[Unit]
+Description=AdOff Social Admin UI (gate approvazione + audit TikTok/Meta)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mrxxx
+WorkingDirectory=/home/mrxxx/adoff/sviluppo/ai-autopilot/n8n-workflows/admin-ui
+# Credenziali basic auth fuori dall'unit (gitignored, chmod 600).
+EnvironmentFile=/home/mrxxx/adoff/sviluppo/ai-autopilot/n8n-workflows/.secrets/admin-ui.env
+ExecStart=/home/mrxxx/adoff/sviluppo/ai-autopilot/n8n-workflows/admin-ui/.venv/bin/python -m uvicorn app:app --host 127.0.0.1 --port 8790
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/adoff-admin-ui.log
+StandardError=append:/var/log/adoff-admin-ui.log
+
+[Install]
+WantedBy=multi-user.target

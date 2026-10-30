@@ -1,0 +1,96 @@
+{
+  "slug": "catch-up-tv-ad-blocker-germany",
+  "lang": "de",
+  "title": "Werben blockieren auf ZDF Mediathek, ARD, RTL, Joyn | AdOff",
+  "description": "AdOff blockiert Video-Werbung in deutschen Catch-up-Playern: ZDF, ARD Mediathek, RTL+, Joyn, ServusTV, ORF. Kostenlos, keine Registrierung nötig.",
+  "h1": "Werbeblocker für deutsche Catch-up TV-Dienste: ZDF, ARD, RTL, Joyn",
+  "answer": "AdOff entfernt Pre-Roll- und Mid-Roll-Werbeunterbrechungen von deutschen Catch-up-TV-Plattformen im Browser – in den meisten Fällen. Es ersetzt das Google IMA-Ad-SDK, das diese Player laden, durch einen Stub, der die Wiedergabe sofort fortsetzt, sodass ZDF, ARD oder Joyn ohne Werbeunterbrechungen laufen. Die Abdeckung richtet sich nach dem SDK: Sie greift solange, wie diese Dienste die Standard-Player-Integration verwenden.",
+  "sections": [
+    {
+      "h2": "Deutschsprachige Dienstleistungen abgedeckt",
+      "body": [
+        "<p>Öffentliche und kommerzielle Sender im deutschsprachigen Raum monetarisieren ihre Mediatheken mit Video-Werbung, die über das standardmäßige Google IMA SDK ausgeliefert wird. AdOff deckt Folgendes ab:</p>",
+        "<ul><li><strong>ZDF</strong> (zdf.de)</li><li><strong>ARD und ARD Mediathek</strong> (ard.de, ardmediathek.de)</li><li><strong>RTL und RTL+</strong> (rtl.de, rtlplus.de)</li><li><strong>Joyn</strong> (joyn.de)</li><li><strong>ServusTV</strong> (servustv.com)</li><li><strong>ORF</strong> (orf.at) — Österreich, Teil desselben deutschsprachigen Marktes</li></ul>"
+      ]
+    },
+    {
+      "h2": "Wie der Stub die Werbeunterbrechung behandelt",
+      "body": [
+        "<p>Deutsche Mediathek-Player integrieren in der Regel das IMA SDK, um Pre-Rolls und Mid-Rolls zu planen. AdOff leitet die SDK-Skriptanfrage an einen gebündelten Stub weiter. Wenn der Player den Stub auffordert, eine Werbeunterbrechung zu starten, antwortet der Stub umgehend mit einem Signal zur Wiederaufnahme des Inhalts, und die Wiedergabe setzt ohne die Unterbrechung fort.</p>",
+        "<p>Der Video-Stream wird niemals verändert – lediglich die Werbeorchestrierungsschicht wird lokal innerhalb Ihres Browsers ausgetauscht.</p>"
+      ]
+    },
+    {
+      "h2": "Öffentlich-rechtliche Sender, private Sender, gleicher Mechanismus",
+      "body": [
+        "<p>Es mag seltsam erscheinen, dass eine Browser-Erweiterung sowohl öffentliche Mediatheken (ZDF, ARD) als auch kommerzielle Anbieter (RTL+, Joyn, ServusTV) beeinflussen kann. Der Grund dafür ist, dass alle auf denselben Werbe-SDK für ihre Browser-Player zurückgreifen. Wo immer das Standard-SDK zum Einsatz kommt, greift dieselbe Neutralisierung. Deshalb verhält sich die Mediathek anders als das Abo-Streaming, bei dem Werbung serverseitig eingefügt wird und die Erweiterung diese bewusst nicht beeinflusst.</p>"
+      ]
+    },
+    {
+      "h2": "Was sonst noch AdOff auf diesen Seiten filtert",
+      "body": [
+        "<p>Um den Player herum führt die Erweiterung 180 statische Netzwerkregeln gegen Werbe- und Tracking-Domains aus sowie einen kosmetischen CSS/DOM-Filter, der Banner und Werbeüberlagerungen ausblendet. Auf Joyn- oder RTL-Seiten entfernt dies Promo-Boxen und Werbeplakate aus der Oberfläche – nicht nur Video-Unterbrechungen.</p>"
+      ]
+    },
+    {
+      "h2": "Ehrliche Grenzen",
+      "body": [
+        "<ul><li>Wenn ein Sender auf <strong>Serverseitige Werbeeinfügung (SSAI)</strong> umstellt, wird die Werbung direkt in den Stream eingefügt, wodurch der Stub keine Wirkung entfaltet.</li><li>Nur Desktop-Browser – <strong>Native Apps und Smart TVs</strong> sind nicht abgedeckt.</li><li>Einige <strong>Live-Streams und Sportübertragungen</strong> nutzen andere Pipelines.</li><li>Player ändern sich häufig; die Abdeckung wird über die Zeit hinweg aufrechterhalten, nicht einmal festgelegt und dann beibehalten.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Kostenlos, keine Anmeldung erforderlich, fünf Browser",
+      "body": [
+        "<p>AdOff ist eine kostenlose Manifest-V3-Erweiterung ohne Konto und ohne Testphase. Sie läuft auf Chrome, Firefox, Safari, Edge und Opera. Installieren Sie sie, lassen Sie den Schutz aktiviert, und öffnen Sie Ihre Mediathek wie gewohnt.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Entfernt es Werbung aus der ZDF Mediathek?",
+      "a": "In den meisten Fällen ja: Wenn der ZDF-Web-Player Werbung über das Google IMA SDK lädt, ersetzt AdOff einen Stub, der das Programm sofort fortsetzt. Die Abdeckung richtet sich nach dem SDK – bei einer Änderung der Einblendungstechnologie durch ZDF können die Ergebnisse variieren."
+    },
+    {
+      "q": "Kann ich die Werbung auf Joyn kostenlos überspringen?",
+      "a": "AdOff ist eine kostenlose Browser-Erweiterung, die das IMA-Werbe-SDK im Joyn-Web-Player neutralisiert, wodurch Werbeunterbrechungen in der Regel nicht abgespielt werden. Die kostenpflichtigen Tarife von Joyn sind ein separates kommerzielles Produkt; AdOff hat keine Verbindung zu Ihrem Konto."
+    },
+    {
+      "q": "Funktioniert es bei ORF und ServusTV in Österreich?",
+      "a": "Ja, beide gehören zur abgedeckten deutschsprachigen Gruppe. Der gleiche Mechanismus gilt auch, wenn ihre Browser-Player das standardmäßige Werbe-SDK anfordern."
+    },
+    {
+      "q": "Ersetzt AdOff den ARD/ZDF Rundfunkbeitrag?",
+      "a": "Nein. Die Erweiterung wirkt sich ausschließlich auf Werbung innerhalb des Players und auf der Seite aus. Der Rundfunkbeitrag ist ein gesetzlicher Beitrag und hat mit dem Blockieren von Werbung im Browser nichts zu tun."
+    },
+    {
+      "q": "Und wie sieht es mit der ZDF- oder Joyn-Smart-TV-App aus?",
+      "a": "AdOff funktioniert nur in Desktop-Browsern. Smart-TV-Apps, Mobile-Apps und Streaming-Sticks liegen außerhalb seines Wirkungsbereichs."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Wie das Blockieren von Streaming-Werbung funktioniert"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Erklärung der IMA SDK-Anzeigenblockierung"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-france",
+      "text": "Französischer Catch-up-TV-Werbeblocker"
+    }
+  ],
+  "cta": {
+    "h3": "Mediathek ohne Werbeunterbrechungen",
+    "p": "Installieren Sie AdOff und überlassen Sie den Stub die Verwaltung des Werbe-SDKs auf ZDF, ARD, RTL+ und Joyn.",
+    "btn": "AdOff kostenlos installieren"
+  },
+  "report": {
+    "intro": "Fehlt hier eine deutsche oder österreichische Plattform? Falls weiterhin Unterbrechungen auf https://adoff.app/catch-up-tv-ad-blocker-germany auftreten, melden Sie den Dienst. Die Berichte zeigen an, welcher Sender als Nächstes abgedeckt wird.",
+    "btn_text": "Einen fehlenden Service melden",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

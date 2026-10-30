@@ -1,0 +1,123 @@
+{
+  "slug": "streaming-ad-blocking",
+  "lang": "pt",
+  "title": "Bloqueio de Anúncios em Streaming: O que Funciona em 2026 | AdOff",
+  "description": "Guia honesto: como bloquear anúncios em vídeos e streaming — quais removíveis, quais não, e o que esperar em cada plataforma.",
+  "h1": "Bloqueio de Anúncios em Streaming: O que Realmente Funciona em 2026",
+  "answer": "O bloqueio de anúncios em streaming funciona removendo os anúncios antes que eles cheguem ao player de vídeo: regras de rede bloqueiam as requisições de anúncios, e um *stub* substitui o SDK de anúncios de vídeo, permitindo que o player retome o conteúdo instantaneamente. Isso funciona em casos onde os anúncios são solicitados separadamente, como no YouTube e na TV de reaproveitamento europeia. Não funciona em casos onde os anúncios são integrados diretamente ao fluxo de vídeo, como no SSAI.",
+  "sections": [
+    {
+      "h2": "Por que os anúncios em vídeo são mais difíceis de bloquear do que os anúncios em banner",
+      "body": [
+        "<p>Os banners de anúncios residem na página. Eles são requisições HTTP separadas para redes de anúncios conhecidas, portanto, uma lista de regras de rede pode impedi-los antes que carreguem. Os anúncios em vídeo são diferentes: fazem parte da experiência de visualização, são agendados pelo próprio player e, frequentemente, entregues por meio da mesma infraestrutura que o conteúdo. Um bloqueador que só saiba como ocultar elementos da página perderá a maioria deles.</p>",
+        "<p>É por isso que muitos bloqueadores de anúncios escondem banners em todos os lugares, mas ainda exibem pré-rolls em sites de vídeo. Um bloqueio eficaz de anúncios em streaming precisa atuar na camada de agendamento, e não apenas na camada de exibição.</p>"
+      ]
+    },
+    {
+      "h2": "Os quatro tipos de anúncios em vídeo",
+      "body": [
+        "<p>A publicidade em vídeo utiliza um vocabulário limitado, e conhecê-lo permite saber o que um bloqueador pode e não pode fazer:</p>",
+        "<ul><li><strong>Pré-roll</strong>: exibe antes do vídeo começar. É o mais fácil de interceptar, pois é uma solicitação separada e previsível.</li><li><strong>Mid-roll</strong>: inserido durante a reprodução. A programação é decidida pelo servidor para cada espectador, o que torna mais difícil prever e pular.</li><li><strong>Pós-roll</strong>: exibe após o término do vídeo. Raramente é visto, pois a maioria dos espectadores sai antes.</li><li><strong>Anúncios no feed</strong>: unidades nativas dentro de feeds de rolagem, como anúncios entre vídeos verticais curtos. Esses são elementos da página, não anúncios do player.</li></ul>",
+        "<p>Explicamos em detalhes a taxonomia de pré-roll / meio-roll / pós-roll em <a href=\"/preroll-midroll-postroll-explained\">pré-roll, meio-roll e pós-roll explicados</a>.</p>"
+      ]
+    },
+    {
+      "h2": "O local onde os anúncios são entregues decide se eles podem ser bloqueados",
+      "body": [
+        "<p>A distinção técnica mais importante é <strong>entrega de anúncios no cliente versus no servidor</strong>. Com anúncios no cliente, o player faz uma solicitação separada a um servidor de anúncios: o anúncio chega como seu próprio segmento de vídeo ou chamada de SDK, e um bloqueador pode interceptar essa solicitação. Com a inserção de anúncios no servidor (SSAI), o anúncio é integrado ao mesmo fluxo de vídeo que o conteúdo antes mesmo de ser enviado a você. Não há solicitação separada para ser bloqueada.</p>",
+        "<p>O SSAI é o motivo pelo qual as plataformas ao vivo e as camadas de assinatura com anúncios são tão resistentes aos bloqueadores. Abordamos os mecanismos em <a href=\"/server-side-ad-insertion-explained\">inserção de anúncios no lado do servidor explicada</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Como um bloqueador de quatro camadas lida com anúncios em vídeo",
+      "body": [
+        "<p>AdOff é uma extensão gratuita para Chrome, Firefox, Safari, Edge e Opera (sem necessidade de conta, sem período de teste) construída em quatro camadas:</p>",
+        "<ol><li><strong>Bloqueio de rede</strong>: 180 regras estáticas declarativasNetRequest impedem que solicitações de anúncios e rastreamento sejam iniciadas.</li><li><strong>Filtragem cosmética</strong>: varredura de CSS e DOM oculta elementos de anúncios que a camada de rede não consegue detectar.</li><li><strong>Neutralização de anúncios em vídeo</strong>: um stub substitui o SDK de anúncios em vídeo da Google (IMA). Quando o player solicita ao SDK que inicie uma pausa para anúncios, o stub responde imediatamente “retomar conteúdo” — sem anúncios, com o player intacto. Funciona por meio de duas abordagens: substituição direta na página e redirecionamento de rede do próprio script do SDK para o stub.</li><li><strong>Anti-deteção furtiva</strong>: iscas e falsificação de variáveis para que scripts anti-bloqueio de anúncios vejam um ambiente normal.</li></ol>",
+        "<p>O detalhe técnico de cada camada está em <a href=\"/how-it-works\">como o AdOff funciona</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Cobertura de plataforma: uma tabela honesta",
+      "body": [
+        "<p>Nem toda plataforma pode ser coberta, e preferimos dizer isso desde o início. A cobertura depende inteiramente de como cada plataforma entrega seus anúncios. Esta tabela reflete o que a extensão realmente faz hoje:</p>",
+        "<table><tr><th>Plataforma</th><th>Tipo de anúncio</th><th>O que o AdOff pode fazer</th></tr><tr><td>YouTube</td><td>Anúncios pré-roll, mid-roll, anúncios no feed e sobreposições</td><td>Cobertura completa e dedicada: agendamento de anúncios removido da resposta do player; aceleração de reprodução em 16x para quaisquer intervalos restantes; regras de rede e seletores cosméticos.</td></tr><tr><td>TVs de retorno europeias e emissoras (42 domínios)</td><td>Anúncios de vídeo via IMA SDK</td><td>Cobertura real por meio da neutralização do IMA: o SDK de anúncios é substituído, permitindo que o player retome o conteúdo sem interrupções publicitárias.</td></tr><tr><td>Plataformas ao vivo com SSAI (ex.: Twitch, Kick)</td><td>Anúncios de vídeo com costura no servidor</td><td>Não podem ser bloqueados: o anúncio é costurado ao mesmo fluxo de vídeo que o conteúdo, não em uma solicitação separada.</td></tr><tr><td>Alguns serviços de assinatura com anúncios</td><td>Anúncios com costura no servidor ou proprietários</td><td>Excluídos intencionalmente para evitar danificar seus players; a entrega de anúncios não é interceptável de qualquer forma.</td></tr><tr><td>Feeds sociais e de vídeos curtos</td><td>Anúncios nativos no feed</td><td>Apenas regras anti-rastreamento; sem neutralização dedicada de anúncios de vídeo.</td></tr></table>",
+        "<p>Páginas específicas por plataforma: <a href=\"/youtube-ad-blocker\">Bloqueador de anúncios do YouTube</a>, <a href=\"/twitch-ad-blocker\">Twitch</a>, <a href=\"/prime-video-ad-blocker\">Prime Video</a>, <a href=\"/spotify-ad-blocker\">Spotify</a>, <a href=\"/disney-plus-ad-blocker\">Disney+</a>, e TV de reprise para o <a href=\"/catch-up-tv-ad-blocker-uk\">Reino Unido</a>, <a href=\"/catch-up-tv-ad-blocker-italy\">Itália</a>, <a href=\"/catch-up-tv-ad-blocker-germany\">Alemanha</a>, <a href=\"/catch-up-tv-ad-blocker-france\">França</a> e <a href=\"/catch-up-tv-ad-blocker-spain\">Espanha</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Por que a pipeline do YouTube é diferente",
+      "body": [
+        "<p>O YouTube é a única plataforma com uma pipeline end-to-end dedicada no AdOff. Isso é necessário: o YouTube não utiliza o SDK IMA padrão, portanto, o stub genérico nunca seria acionado. Em vez disso, a extensão remove o cronograma de anúncios da resposta do player antes que o player o leia, intercepta as chamadas da API do player que solicitam intervalos de anúncios, aplica regras de rede aos endpoints de anúncios e oculta elementos residuais de anúncios com seletores cosméticos.</p>",
+        "<p>Quando uma pausa ainda escapa, a reprodução acelera através dela em vez de esperar pelo botão de pular. Os detalhes estão em <a href=\"/youtube-ad-blocker\">bloqueador de anúncios do YouTube</a> e <a href=\"/skip-youtube-ads-automatically\">pulo automático de anúncios</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Shorts, paredes e a corrida armamentista contra bloqueadores de anúncios",
+      "body": [
+        "<p>Três situações recorrentes merecem atenção própria. Os anúncios em feeds curtos de vídeos verticais são unidades nativas de rolagem, não anúncios em player, portanto são tratados por filtragem cosmética com limites honestos — veja <a href=\"/block-youtube-shorts-ads\">bloqueio de anúncios em shorts</a>. As barreiras contra bloqueadores de anúncios que travam a reprodução até que você desative seu bloqueador são um problema distinto, abordado em <a href=\"/youtube-anti-adblock-wall\">barreiras contra bloqueadores de anúncios</a> e <a href=\"/bypass-anti-adblock\">burlando a detecção</a>.</p>",
+        "<p>E quando um bloqueador de anúncios parece parar de funcionar, a causa é quase sempre uma mudança do lado da plataforma, e não algo que você fez. Os caminhos de solução de problemas estão em <a href=\"/youtube-ad-blocker-not-working\">bloqueador de anúncios não está funcionando</a> e <a href=\"/video-player-not-working-with-ad-blocker\">problemas com o player</a>.</p>"
+      ]
+    },
+    {
+      "h2": "Onde o bloqueio de anúncios em streaming não alcança",
+      "body": [
+        "<p>Sendo honestos sobre os limites: a inserção de anúncios no lado do servidor não pode ser bloqueada por nenhuma extensão, pois o anúncio está dentro do fluxo do vídeo. Aplicativos nativos em celulares estão fora do alcance das extensões do navegador — as opções realistas para dispositivos móveis são descritas em <a href=\"/youtube-ads-on-phone\">anúncios no seu celular</a> e <a href=\"/android-dns\">DNS em nível de rede no Android</a>. As Smart TVs executam seus próprios aplicativos totalmente fora do navegador, conforme abordado em <a href=\"/smart-tv-ad-blocking\">bloqueio de anúncios em Smart TVs</a>. E nenhuma extensão pode garantir resultados permanentes: as plataformas alteram frequentemente a forma como entregam anúncios, e a cobertura segue essas mudanças.</p>"
+      ]
+    },
+    {
+      "h2": "Escolhendo um bloqueador de anúncios em streaming em 2026",
+      "body": [
+        "<p>Ao comparar bloqueadores para vídeos, as perguntas que importam são: ele funciona na camada de agendamento ou apenas oculta elementos? Ele tem uma solução para o SDK de anúncios de vídeo? Ele lida com detecção de bloqueio de anúncios? Ele é transparente quanto ao SSAI? Nossa comparação de <a href=\"/best-ad-blocker-for-streaming-2026\">os melhores bloqueadores de anúncios para streaming em 2026</a> e a comparação geral de <a href=\"/best-ad-blocker-2026\">2026</a> aplicam esses critérios.</p>",
+        "<p>O AdOff é gratuito, não exige cadastro e funciona no Chrome, Firefox, Safari, Edge e Opera.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Os bloqueadores de anúncios conseguem remover anúncios de plataformas de streaming?",
+      "a": "Sim, onde os anúncios são entregues no lado do cliente. Quando o player solicita anúncios por meio de chamadas separadas a um SDK de anúncios, um bloqueador pode interceptar ou substituir essas chamadas. Já quando os anúncios são integrados diretamente ao fluxo de vídeo (inserção de anúncios no servidor, ou SSAI), nenhuma extensão de navegador consegue removê-los."
+    },
+    {
+      "q": "O AdOff bloqueia anúncios no Prime Video?",
+      "a": "Não, e isso é feito intencionalmente. O Prime Video utiliza entrega de anúncios via servidor com tecnologia proprietária, e interferir em seus players interromperia a reprodução. A extensão os exclui deliberadamente para evitar danos ao player."
+    },
+    {
+      "q": "Por que os bloqueadores de anúncios não conseguem bloquear anúncios no Twitch?",
+      "a": "O Twitch insere anúncios no fluxo de vídeo no servidor antes de enviá-lo, uma técnica chamada SSAI. Os segmentos de anúncios e os segmentos de conteúdo chegam no mesmo fluxo, de modo que não há chamada de anúncio separada a ser bloqueada."
+    },
+    {
+      "q": "Os bloqueadores de anúncios funcionam em smart TVs?",
+      "a": "Geralmente não. Os aplicativos de TV inteligente rodam fora de qualquer navegador, portanto extensões de navegador não conseguem acessá-los. Abordagens no nível de rede (como filtragem por DNS no roteador) podem reduzir o rastreamento, mas os anúncios em fluxo de vídeo permanecem."
+    },
+    {
+      "q": "O AdOff é gratuito?",
+      "a": "Sim. O AdOff é totalmente gratuito, sem necessidade de cadastro, sem período de teste e sem funcionalidades bloqueadas, disponível no Chrome, Firefox, Safari, Edge e Opera."
+    },
+    {
+      "q": "O bloqueio ainda funcionará se a plataforma fizer alguma alteração?",
+      "a": "As plataformas alteram frequentemente sua entrega de anúncios, portanto a cobertura pode mudar. Nenhum bloqueador consegue garantir resultados permanentes; o que importa é que o bloqueador seja atualizado em resposta a essas mudanças. Espere breves lacunas após grandes alterações nas plataformas."
+    }
+  ],
+  "related": [
+    {
+      "href": "/youtube-ad-blocker",
+      "text": "Bloqueador de anúncios do YouTube: como funciona em 2026"
+    },
+    {
+      "href": "/preroll-midroll-postroll-explained",
+      "text": "Explicação dos anúncios pré-roll, mid-roll e pós-roll"
+    },
+    {
+      "href": "/best-ad-blocker-for-streaming-2026",
+      "text": "Melhor bloqueador de anúncios para streaming em 2026"
+    }
+  ],
+  "cta": {
+    "h3": "Assista sem os intervalos publicitários",
+    "p": "O AdOff é gratuito, não exige cadastro e funciona no Chrome, Firefox, Safari, Edge e Opera.",
+    "btn": "Instale o AdOff gratuitamente"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

@@ -1,0 +1,105 @@
+{
+  "slug": "ima-sdk-ad-blocking-explained",
+  "lang": "fr",
+  "title": "Explication du blocage des publicités par le SDK IMA | AdOff",
+  "description": "Comment le SDK IMA charge les pubs vidéo, le parcours de la demande dans le lecteur, et comment un stub « reprendre le contenu » la neutralise.",
+  "h1": "Blocage des publicités par le SDK IMA, expliqué",
+  "answer": "Le SDK IMA de Google est la bibliothèque utilisée par les lecteurs vidéo pour demander et diffuser des publicités. Le bloquer au niveau réseau fait tomber les lecteurs, aussi AdOff le remplace-t-il par une version factice qui répond à chaque demande de publicité par un événement immédiat « reprendre la lecture du contenu » : le lecteur fonctionne, mais les publicités ne s’affichent jamais.",
+  "sections": [
+    {
+      "h2": "Ce qu’est réellement le SDK IMA",
+      "body": [
+        "<p>Le <strong>SDK Interactive Media Ads (IMA)</strong> est la bibliothèque côté client de Google dédiée à la publicité vidéo. Un site web souhaitant monétiser une vidéo ne construit généralement pas son propre lecteur publicitaire : il charge <code>imasdk.googleapis.com/js/sdkloader/ima3.js</code> (ou la variante dynamique <code>ima3_dai.js</code>), initialise un <code>AdDisplayContainer</code>, et transmet au SDK une URL de balise publicitaire. Le SDK récupère ensuite une réponse VAST, affiche la publicité à l’intérieur du lecteur, suit les impressions et les quartiles, puis restitue le contrôle au contenu éditorial du éditeur.</p>",
+        "<p>Parce qu’il s’agit d’un seul et même script partagé servi depuis un seul et même domaine, le SDK IMA constitue le point de blocage le plus stratégique dans la publicité vidéo web : le neutraliser une seule fois suffit à faire cesser la diffusion d’annonces pour tous les lecteurs qui l’utilisent.</p>"
+      ]
+    },
+    {
+      "h2": "Le cycle de vie d’une demande d’annonce",
+      "body": [
+        "<p>Lorsqu’un spectateur appuie sur lecture, le lecteur exécute généralement cette séquence :</p>",
+        "<ol><li>La page charge <code>ima3.js</code> à partir des serveurs de Google.</li><li>Le lecteur crée un chargeur de publicités et demande des publicités via une balise publicitaire pointant vers un serveur de publicités.</li><li>Le SDK récupère la publicité (généralement un document VAST/VMAP via DoubleClick), l’analyse, puis affiche le contenu publicitaire dans un conteneur superposé à la vidéo.</li><li>Les pixels de suivi sont déclenchés ; le lecteur attend.</li><li>Lorsque la publicité se termine (ou génère une erreur), le SDK déclenche <code>CONTENT_RESUME_REQUESTED</code>, et le lecteur reprend la vidéo principale.</li></ol>",
+        "<p>Cet événement dernier est crucial : le lecteur est programmé pour attendre qu’il se produise. Celui qui contrôle le SDK contrôle le moment où le contenu reprend.</p>"
+      ]
+    },
+    {
+      "h2": "Pourquoi bloquer simplement le SDK fait planter les lecteurs",
+      "body": [
+        "<p>La méthode brute consiste à bloquer <code>imasdk.googleapis.com</code> au niveau réseau et à s’arrêter là. Le problème : de nombreux lecteurs interprètent un échec ou une absence de SDK comme une erreur fatale et refusent de lancer la vidéo, affichant au lieu du contenu une roue de chargement ou un mur « bloqueur de publicités détecté ».</p>",
+        "<p>C’est pourquoi les bloqueurs classiques au niveau réseau sont inefficaces face aux publicités vidéo : ils peuvent bloquer la requête publicitaire, mais ils ne peuvent pas répondre à la question du lecteur « Puis-je reprendre maintenant ? ». Seul un composant agissant à la place du SDK peut le faire.</p>"
+      ]
+    },
+    {
+      "h2": "Neutralisation par substitution : l’approche « stub »",
+      "body": [
+        "<p>AdOff emprunte une voie différente : au lieu de bloquer le SDK, il le <strong>remplace</strong>. Un stub qui imite l’API publique du SDK IMA est inséré à sa place, de sorte que le lecteur « voit » toujours un SDK fonctionnel — un SDK qui se comporte comme si chaque interruption publicitaire était vide.</p>",
+        "<p>Lorsque le lecteur appelle <code>adsManager.start()</code>, le stub émet immédiatement <code>CONTENT_RESUME_REQUESTED</code>. Le lecteur reprend le contenu instantanément. Aucune publicité n’est récupérée, aucune publicité n’est rendue, et le lecteur n’entre jamais dans un état d’erreur, car il ne remarque rien de manquant.</p>"
+      ]
+    },
+    {
+      "h2": "Deux canaux de livraison pour le même stub",
+      "body": [
+        "<p>AdOff envoie le même stub via deux canaux, car les différents sites chargent le SDK de manière différente :</p>",
+        "<ul><li><strong>Injection dans la page.</strong> Sur les sites non exclus, un script du monde principal définit <code>window.google.ima</code> avant l’initialisation du lecteur, de sorte que le SDK intégré ou chargé externement est remplacé par le stub.</li><li><strong>Redirection réseau.</strong> Pour un ensemble de 42 domaines de diffuseurs européens, les règles declarativeNetRequest redirigent la requête vers <code>ima3.js</code> et <code>ima3_dai.js</code> vers le fichier stub intégré dans l’extension. La page charge ce qu’elle croit être le SDK de Google, mais obtient en réalité celui d’AdOff.</li></ul>",
+        "<p>Ces deux canaux aboutissent au même résultat : le joueur obtient un SDK réactif, et le spectateur obtient du contenu.</p>"
+      ]
+    },
+    {
+      "h2": "Où cette approche fonctionne et où elle ne s’applique pas",
+      "body": [
+        "<p>Le stub neutralise la publicité basée sur IMA côté client. Il n’a aucun effet sur <a href=\"/server-side-ad-insertion-explained\">l’insertion serveur de publicité (SSAI)</a>, où les publicités sont intégrées directement dans le flux vidéo avant sa diffusion — il n’y a alors aucun appel SDK à intercepter. Les services d’abonnement premium utilisant leurs propres pipelines publicitaires sont délibérément exclus afin que leurs lecteurs continuent à fonctionner.</p>",
+        "<p>La principale plateforme vidéo bénéficie également d’un pipeline dédié en plus : la programmation des publicités est supprimée de la réponse du lecteur avant que la page ne la lise, et tout ce qui échappe à cette suppression est avancé rapidement.</p>"
+      ]
+    },
+    {
+      "h2": "Pourquoi cela compte pour l’avenir du blocage d’annonces",
+      "body": [
+        "<p>Les plateformes publicitaires transfèrent progressivement la charge vers les SDK côté client précisément parce que les bloqueurs naïfs peinent à les gérer. Une approche qui répond au lecteur plutôt que de le priver de contenu est robuste : elle ne dépend pas de l’énumération de chaque URL publicitaire, mais uniquement du contrat propre au SDK selon lequel le contenu doit reprendre.</p>",
+        "<p>AdOff est une extension Manifest V3 gratuite, sans compte, disponible pour Chrome, Firefox, Safari, Edge et Opera, et sa couche de neutralisation des vidéos est incluse pour tous.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Bloquer le SDK IMA revient-il à le remplacer ?",
+      "a": "Non. Le bloquer au niveau réseau empêche souvent la lecture de la vidéo, car les lecteurs attendent que le SDK signale que le contenu peut reprendre. Le remplacer par un stub permet de garder le lecteur entièrement fonctionnel tout en garantissant qu’aucune publicité n’est jamais demandée."
+    },
+    {
+      "q": "Que se passe-t-il lorsque l’« stub » reçoit une demande d’annonce ?",
+      "a": "Le stub expose la même surface d’API que les lecteurs attendent. Lorsqu’on lui demande de lancer les publicités, il déclenche immédiatement l’événement de reprise du contenu, afin que la lecture se poursuive sans aucune publicité ne soit récupérée ni affichée."
+    },
+    {
+      "q": "Un « stub » IMA fonctionne-t-il avec l’insertion d’annonces côté serveur ?",
+      "a": "Non. Avec SSAI, les publicités sont intégrées dans le flux vidéo côté serveur avant la diffusion, donc aucune appel au SDK côté client n’est à intercepter. L’insertion côté serveur nécessite des contre-mesures différentes et dépasse le cadre d’une extension de navigateur."
+    },
+    {
+      "q": "Quels navigateurs peuvent exécuter ce type d’extension ?",
+      "a": "AdOff est construit sur Manifest V3 et fonctionne sur Chrome, Firefox, Safari, Edge et Opera. La couche de neutralisation IMA est incluse dans la version gratuite, sans compte ni inscription requis."
+    },
+    {
+      "q": "Un site peut-il détecter que le SDK a été remplacé ?",
+      "a": "C’est précisément le rôle de la couche furtive : le spoofing de pièges et l’interception de fetch/XHR donnent l’impression à des scripts anti-blocage de publicités que l’environnement est ordinaire. Aucune méthode n’est permanente, car les plateformes modifient fréquemment leurs mécanismes de détection."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Blocage des publicités en streaming : le guide complet"
+    },
+    {
+      "href": "/preroll-midroll-postroll-explained",
+      "text": "Pré-roll, mid-roll, post-roll : les formats de publicités vidéo expliqués"
+    },
+    {
+      "href": "/how-it-works",
+      "text": "Comment AdOff fonctionne, couche par couche"
+    }
+  ],
+  "cta": {
+    "h3": "Voyez-le en action sur des lecteurs réels",
+    "p": "AdOff remplace le SDK publicitaire par un stub de reprise immédiate, gratuit pour tous, sans compte requis.",
+    "btn": "Installer AdOff gratuitement"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

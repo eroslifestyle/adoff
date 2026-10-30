@@ -1,0 +1,87 @@
+{
+  "slug": "server-side-ad-insertion-explained",
+  "lang": "en",
+  "title": "Server-Side Ad Insertion Explained: Why Blockers Fail | AdOff",
+  "description": "SSAI stitches ads into the video stream itself, so there is no separate ad request to block. How manifest manipulation works and what it means for ad blockers.",
+  "h1": "Server-Side Ad Insertion Explained: Why Network Ad Blockers Can't See These Ads",
+  "answer": "No — server-side ad insertion (SSAI) cannot be blocked by request-based ad blockers, because the ad is stitched into the same video stream as the content before it ever leaves the server. Your browser downloads one continuous manifest and one continuous stream; there is no separate ad request to intercept.",
+  "sections": [
+    {
+      "h2": "What server-side ad insertion actually is",
+      "body": [
+        "<p>Server-side ad insertion (SSAI), also called ad stitching, is a technique where the video provider merges advertising and content into a single video stream <strong>on the server</strong>, before delivery. The viewer's device receives one continuous stream that already contains the ads — as opposed to client-side ad insertion (CSAI), where the player loads the content and then makes separate requests to an ad server for each break.</p>",
+        "<p>You will see SSAI described in technical docs as \"stitched manifests\" or \"single-manifest delivery\". It is the dominant approach for live streaming and for the ad-supported tiers of subscription video services, because it is harder to circumvent and behaves identically on every device.</p>"
+      ]
+    },
+    {
+      "h2": "How it works in HLS and DASH manifests",
+      "body": [
+        "<p>Modern video delivery uses adaptive streaming formats — HLS (<code>.m3u8</code> playlists) and DASH (<code>.mpd</code> manifests). The stream is split into short segments (typically a few seconds each), and the manifest lists the segments in playback order. A client-side player follows that list.</p>",
+        "<p>With SSAI, the ad segments are inserted directly into that segment list. The manifest handed to your player is rewritten so that a segment of advertising appears exactly where a content segment would. Some implementations use discontinuity markers (<code>#EXT-X-DISCONTINUITY</code> in HLS) to flag encoding changes, but the playlist itself is what the player legitimately plays. From the player's point of view, the ad <em>is</em> part of the program.</p>"
+      ]
+    },
+    {
+      "h2": "Why request-based ad blockers have nothing to intercept",
+      "body": [
+        "<p>An extension-based ad blocker works at the network layer: it matches requests for known advertising domains and blocks or rewrites them. That model assumes the ad arrives as a separate request, from a separate domain, that can be told apart from the content. SSAI removes that assumption entirely.</p>",
+        "<p>With stitched ads, the segments carrying the advertisement come from the same content delivery network, often under the same domain, inside the same manifest as the show. Blocking the request would mean blocking the video itself. An ad blocker that tries anyway typically breaks playback or, on live streams, produces the frozen placeholder frames users report. This is a structural limit, not a temporary gap: any tool that works by filtering network requests cannot distinguish a stitched ad from the content around it.</p>"
+      ]
+    },
+    {
+      "h2": "Client-side insertion: the model ad blockers can handle",
+      "body": [
+        "<p>For contrast: in client-side ad insertion, the video player calls an ad SDK during playback, the SDK fetches creative files from advertising domains, and the player plays them in a slot. Those requests are visible, separate and blockable. Neutralizing the ad SDK — which is what AdOff does with the video advertising SDK used across the web — makes the player skip straight back to content.</p>",
+        "<p>This is why ad blockers still work on large parts of the web, including many sites that embed video players with client-side ad calls, and why the same blockers fail on live streaming platforms and subscription services that stitch server-side.</p>"
+      ]
+    },
+    {
+      "h2": "What would it take to remove stitched ads?",
+      "body": [
+        "<p>Removing a stitched ad requires understanding the stream, not the network: detecting discontinuity markers and segment-boundary patterns, re-writing the manifest to drop ad segments, and hoping the provider does not change the layout. It is fragile by nature — any provider-side change breaks the workaround, and on live streams the re-written player often falls behind or displays a degraded placeholder.</p>",
+        "<p>The other, reliable route is not technical at all: providers stitch ads because the subscription tier is ad-supported, so choosing a plan without advertising removes them by design. Everything else is an arms race that mostly degrades the viewing experience.</p>"
+      ]
+    },
+    {
+      "h2": "Where AdOff stands",
+      "body": [
+        "<p>AdOff is a free browser extension (Chrome, Firefox, Safari, Edge, Opera) that blocks network advertising with static filtering rules, hides ad elements in the page, and neutralizes the client-side video ad SDK by replacing it with a stub that immediately resumes content. It works on apps' web players only where the ads are client-side; it does not pretend to strip ads from server-side stitched streams, and it deliberately does not interfere with subscription video players to avoid breaking them.</p>",
+        "<p>That honesty is the point of this page: knowing which model a site uses tells you whether an extension can help before you install one.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "What is the difference between SSAI and CSAI?",
+      "a": "In client-side ad insertion (CSAI), the player requests ads separately at playback time, so those requests are visible to ad blockers. In server-side ad insertion (SSAI), ads are merged into the video stream on the server before delivery, so no separate ad request exists to block."
+    },
+    {
+      "q": "Can any browser extension block SSAI ads?",
+      "a": "No extension that works by filtering network requests can remove a stitched ad without breaking the stream, because the ad and the content travel together in the same manifest and the same segments. Tools that attempt it usually cause frozen frames, quality drops or playback errors."
+    },
+    {
+      "q": "Why do live streams use SSAI instead of regular ads?",
+      "a": "Live streaming needs the ad break to stay in sync for every viewer and to keep playback uninterrupted, which server-side stitching guarantees. It also works identically on every device, including smart TVs where extensions do not exist."
+    },
+    {
+      "q": "Is SSAI the same as an ad that cannot be skipped?",
+      "a": "Not exactly. Skipping is a player decision controlled by the stream metadata. With SSAI the ads are part of the stream, so neither the viewer nor a browser extension has a control point to skip or remove them."
+    },
+    {
+      "q": "Does AdOff work on sites that use SSAI?",
+      "a": "On those specific streams, no — and AdOff does not claim otherwise. On the same sites' non-video advertising, and across the rest of your browsing (display ads, tracking, client-side video ad SDKs), AdOff blocks and hides ads as usual."
+    }
+  ],
+  "related": [
+    { "href": "/streaming-ad-blocking", "text": "Streaming ad blocking: what works and what can't" },
+    { "href": "/ima-sdk-ad-blocking-explained", "text": "How client-side video ad SDKs are neutralized" },
+    { "href": "/twitch-ad-blocker", "text": "Twitch ads: why extensions fail on live streams" }
+  ],
+  "cta": {
+    "h3": "Block the ads that can be blocked",
+    "p": "AdOff can't remove stitched ads — nothing honest can. But display ads, tracking and client-side video ads across your everyday browsing are a different story, and AdOff handles those for free, with no account.",
+    "btn": "Install AdOff — it's free"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

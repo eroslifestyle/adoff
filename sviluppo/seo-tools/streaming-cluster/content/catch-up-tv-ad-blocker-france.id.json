@@ -1,0 +1,96 @@
+{
+  "slug": "catch-up-tv-ad-blocker-france",
+  "lang": "id",
+  "title": "Blokir Iklan di france.tv, TF1, 6play, myCANAL | AdOff",
+  "description": "AdOff menonaktifkan iklan video di france.tv, TF1, 6play, M6, Arte, dan myCANAL di browser. Ekstensi Manifest V3 gratis, tanpa akun, didukung di lima browser.",
+  "h1": "Ad Blocker untuk TV Catch-Up Prancis: france.tv, TF1, 6play",
+  "answer": "AdOff menghapus iklan pra-putar dan iklan tengah-putar dari platform TV on-demand Prancis di browser, dalam sebagian besar kasus. Alat ini menggantikan stub lokal untuk Google IMA ad SDK yang diminta oleh pemutar tersebut, sehingga pemutaran langsung dilanjutkan tanpa menjalankan jeda iklan. AdOff berfungsi pada pemutar web desktop selama platform tersebut menggunakan integrasi SDK standar.",
+  "sections": [
+    {
+      "h2": "Layanan Prancis yang tercakup",
+      "body": [
+        "<p>Penyiar Prancis membiayai platform replay mereka melalui iklan video yang disampaikan melalui Google IMA SDK standar di pemutar browser. AdOff mencakup:</p>",
+        "<ul><li><strong>france.tv</strong> (france.tv)</li><li><strong>TF1</strong> (tf1.fr)</li><li><strong>6play</strong> (6play.fr)</li><li><strong>M6</strong> (m6.fr)</li><li><strong>Arte</strong> (arte.tv)</li><li><strong>myCANAL</strong> (mycanal.fr)</li></ul>"
+      ]
+    },
+    {
+      "h2": "Pendekatan berpusat pada pemain, bukan pendekatan “whack-a-mole”",
+      "body": [
+        "<p>Bukan mengejar satu per satu format iklan masing-masing penyiar, AdOff menargetkan komponen bersama: SDK iklan tersebut. Ekstensi ini mengalihkan permintaan skrip SDK ke sebuah *stub* yang disediakannya sendiri. *Stub* ini menjaga mesin keadaan (*state machine*) pemutar tetap berjalan—ia mengakui permintaan iklan dan segera memberi sinyal untuk melanjutkan konten—sehingga program berlanjut tanpa jeda iklan yang sebenarnya terjadi.</p>",
+        "<p>Satu mekanisme yang diterapkan di mana pun SDK standar muncul, menjadikan cakupan lintas enam platform Prancis berbeda menjadi praktis untuk dikelola.</p>"
+      ]
+    },
+    {
+      "h2": "Tingkat langganan Replay versus Live versus Canal",
+      "body": [
+        "<p>Stream replay di TF1 atau 6play bersifat gratis karena disertai iklan, dan situlah efek netralisasi bekerja. Saluran siaran langsung (*live*) dan sebagian konten olahraga menggunakan jalur berbeda, sehingga hasilnya bervariasi. myCANAL juga menyediakan langganan berbayar dengan penyisipan sisi server (*server-side insertion*): stream-stream tersebut menyematkan iklan secara langsung ke dalam video, dan ekstensi secara sengaja tidak mengganggunya agar pemutar tetap berfungsi.</p>"
+      ]
+    },
+    {
+      "h2": "Penyaringan berbasis halaman di sekitar pemutar",
+      "body": [
+        "<p>Selain lapisan video, AdOff menerapkan 180 aturan jaringan statis terhadap domain iklan dan pelacakan, serta menerapkan filter CSS/DOM kosmetik. Di halaman france.tv atau TF1, ini menghilangkan banner promosi dan kotak *overlay* dari antarmuka, sehingga halaman menjadi lebih ringan bahkan sebelum Anda memulai replay.</p>"
+      ]
+    },
+    {
+      "h2": "Batasan yang dinyatakan secara jelas",
+      "body": [
+        "<ul><li><strong>SSAI</strong>: setelah iklan disematkan di sisi server ke dalam stream, *stub* tidak lagi berlaku.</li><li><strong>Hanya browser desktop</strong>: aplikasi TF1 atau 6play di mobile dan aplikasi TV pintar berada di luar cakupan.</li><li>Beberapa <strong>stream siaran langsung dan olahraga</strong> menggunakan pengiriman berbeda.</li><li>Penyiar sering memperbarui pemutar mereka; cakupan tetap diperbarui sepanjang waktu, tidak pernah membeku.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Gratis, tanpa akun, lima browser",
+      "body": [
+        "<p>AdOff adalah ekstensi Manifest V3 yang gratis, tidak memerlukan pendaftaran, dan tidak memiliki masa percobaan. Didukung di Chrome, Firefox, Safari, Edge, dan Opera. Instal, biarkan tombol aktif, lalu buka platform replay seperti biasa.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Apakah AdOff menghapus iklan di TF1 replay?",
+      "a": "Dalam kebanyakan kasus, ya: pemutar web TF1 memuat iklannya melalui Google IMA SDK, dan AdOff mengganti SDK tersebut dengan stub yang langsung melanjutkan program. Di mana TF1 menggunakan teknik penyisipan lain, cakupannya bisa berbeda."
+    },
+    {
+      "q": "Apakah saya bisa menonton 6play tanpa iklan secara gratis?",
+      "a": "AdOff adalah ekstensi browser gratis yang menonaktifkan SDK iklan di pemutar web 6play, sehingga iklan biasanya tidak diputar. 6play Max adalah produk berbayar terpisah; AdOff tidak mengubah akun Anda dan tidak memiliki versi berbayar sendiri."
+    },
+    {
+      "q": "Bagaimana dengan myCANAL?",
+      "a": "myCANAL tercakup di mana pemutar browsernya menggunakan SDK IMA standar. Siaran berlangganan Canal dengan penyisipan iklan di sisi server secara sengaja dikecualikan agar pemutar tetap berfungsi dengan benar."
+    },
+    {
+      "q": "Apakah AdOff berfungsi di aplikasi francetv atau di TV pintar?",
+      "a": "Tidak. AdOff hanya berfungsi di browser desktop. Aplikasi mobile, aplikasi TV pintar, dan perangkat streaming stick berada di luar jangkauannya."
+    },
+    {
+      "q": "Apakah Arte juga tercakup?",
+      "a": "Ya, arte.tv termasuk dalam kelompok yang tercakup. Mekanisme stub yang sama berlaku ketika pemutar web Arte meminta SDK iklan standar, sehingga dalam kebanyakan kasus konten dilanjutkan tanpa jeda iklan."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Cara kerja pemblokiran iklan streaming"
+    },
+    {
+      "href": "/block-video-ads",
+      "text": "Memblokir iklan video secara umum"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-germany",
+      "text": "Pemblokir iklan TV catch-up Jerman"
+    }
+  ],
+  "cta": {
+    "h3": "Replay Prancis tanpa potongan iklan",
+    "p": "Pasang AdOff di browser Anda dan biarkan stub menetralkan SDK iklan di france.tv, TF1, dan 6play.",
+    "btn": "Pasang AdOff secara gratis"
+  },
+  "report": {
+    "intro": "Platform Prancis yang belum muncul di halaman ini? Jika iklan masih muncul di https://adoff.app/catch-up-tv-ad-blocker-france, beri tahu kami layanan mana yang dimaksud. Laporan yang Anda kirimkan menentukan stasiun penyiar mana yang akan kami tambahkan selanjutnya.",
+    "btn_text": "Laporkan layanan yang belum tersedia",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

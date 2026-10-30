@@ -1,0 +1,96 @@
+{
+  "slug": "catch-up-tv-ad-blocker-france",
+  "lang": "tr",
+  "title": "france.tv, TF1, 6play, myCANAL’da Reklamları Engelle | AdOff",
+  "description": "AdOff, france.tv, TF1, 6play, M6, Arte ve myCANAL’deki video reklamlarını tarayıcıda engeller. Ücretsiz, hesap gerektirmez, beş tarayıcıyı destekler.",
+  "h1": "Fransız Catch-Up TV için Reklam Engelleyici: france.tv, TF1, 6play",
+  "answer": "AdOff, tarayıcıda Fransız catch-up TV platformlarında önceden kaydedilmiş (pre-roll) ve orta bölümlerdeki (mid-roll) reklamları, çoğu durumda kaldırır. Bu, oynatıcıların talep ettiği Google IMA reklam SDK’sı yerine yerel bir stub ile değiştirilerek gerçekleştirilir; böylece reklam aralığı çalıştırılmak yerine oynatma hemen devam eder. Platform standart SDK entegrasyonunu kullandığı sürece, masaüstü web oynatıcılarda da çalışır.",
+  "sections": [
+    {
+      "h2": "Fransız hizmetleri kapsandı",
+      "body": [
+        "<p>Fransız yayın şirketleri, tarayıcı oynatıcılarında standart Google IMA SDK aracılığıyla sunulan video reklamlarla yeniden oynatma platformlarını finanse eder. AdOff şunları engeller:</p>",
+        "<ul><li><strong>france.tv</strong> (france.tv)</li><li><strong>TF1</strong> (tf1.fr)</li><li><strong>6play</strong> (6play.fr)</li><li><strong>M6</strong> (m6.fr)</li><li><strong>Arte</strong> (arte.tv)</li><li><strong>myCANAL</strong> (mycanal.fr)</li></ul>"
+      ]
+    },
+    {
+      "h2": "Bir oyuncu merkezli yaklaşım, bir “whack-a-mole” (fareyi vurma) yaklaşımı değil",
+      "body": [
+        "<p>Her bir yayının reklam formatlarını tek tek takip etmek yerine, AdOff ortak bileşeni hedef alır: reklam SDK’sı. Eklenti, SDK betiğinin isteğini, kendisiyle birlikte gelen bir stub’a yönlendirir. Stub, oynatıcının durum makinesini memnun eder — reklam isteğini kabul eder ve hemen içerik devam ettirme sinyali gönderir — böylece program normal akışına devam eder ve aralık asla ortaya çıkmaz.</p>",
+        "<p>Bir mekanizma, standart SDK’nın göründüğü her yerde uygulanır; bu, altı farklı Fransız platformda kapsamanın sürdürülebilirliğini sağlar.</p>"
+      ]
+    },
+    {
+      "h2": "Yeniden oynatma, Canlı Yayın ve Canal abonelik katmanları",
+      "body": [
+        "<p>TF1 veya 6play’deki yeniden oynatma akışları reklamlar içerdiği için ücretsizdir ve tam da burada engelleme etkili olur. Canlı kanallar ve bazı spor içerikleri farklı sistemler kullanır ve sonuçlar değişir. myCANAL ayrıca sunucu tarafında eklenen reklamlarla çalışan ücretli abonelik katmanlarını da sunar: bu akışlarda reklamlar videoya doğrudan eklenir ve eklenti, oynatıcının düzgün çalışmasını sürdürmesi için bilinçli olarak devre dışı kalır.</p>"
+      ]
+    },
+    {
+      "h2": "Oynatıcı etrafında sayfa düzeyinde filtreleme",
+      "body": [
+        "<p>Video katmanının yanı sıra, AdOff reklam ve izleme alan adlarına karşı 180 statik ağ kuralı çalıştırır ve bir görsel CSS/DOM filtresi uygular. france.tv veya TF1 sayfalarında bu, arayüzden promosyon afişlerini ve üst üste bindirme kutularını kaldırır; böylece bir yeniden oynatma başlatmadan önce bile sayfa daha hafif olur.</p>"
+      ]
+    },
+    {
+      "h2": "Sınırlar açıkça belirtilmiş",
+      "body": [
+        "<ul><li><strong>SSAI</strong>: Reklamlar sunucu tarafında akışa entegre edildiğinde stub artık uygulanmaz.</li><li><strong>Sadece masaüstü tarayıcı</strong>: TF1 veya 6play mobil uygulamaları ve akıllı TV uygulamaları kapsam dışındadır.</li><li>Bazı <strong>canlı akışlar ve spor içerikleri</strong> farklı dağıtım yöntemleri kullanır.</li><li>Yayın şirketleri oynatıcıları sık sık günceller; kapsama süreklilikle sürdürülmekte, asla dondurulmaz.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Ücretsiz, hesap gerektirmez, beş tarayıcı",
+      "body": [
+        "<p>AdOff, Manifest V3 tabanlı bir eklentidir, hiçbir ücret gerektirmez, kayıt istemez ve deneme süresi sunmaz. Chrome, Firefox, Safari, Edge ve Opera desteklenir. Kurun, açılış anahtarını açık tutun ve normalde yaptığınız gibi yeniden oynatma platformunu açın.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "AdOff, TF1 replay'daki reklamları kaldırıyor mu?",
+      "a": "Çoğu durumda evet: TF1 web oynatıcısı reklamlarını Google IMA SDK’sı aracılığıyla yükler ve AdOff, bu SDK’yı programanın hemen devam etmesini sağlayan bir stub ile değiştirir. TF1’in diğer ekleme tekniklerini kullandığı durumlarda kapsama alanı farklı olabilir."
+    },
+    {
+      "q": "6play’ı reklamsız olarak ücretsiz izleyebilir miyim?",
+      "a": "AdOff, 6play web oynatıcısındaki reklam SDK’sını etkisiz hale getiren ücretsiz bir tarayıcı eklentisidir; bu nedenle reklam araları genellikle oynatılmaz. 6play Max, ayrı bir ücretli bir üründür; AdOff, hesabınızı etkilemez ve kendi ücretli bir sürümü yoktur."
+    },
+    {
+      "q": "myCANAL için durum nedir?",
+      "a": "myCANAL, tarayıcı oynatıcısı standart IMA SDK’yı kullandığı durumlarda kapsama alanı içindedir. Canal’ın sunucu tarafında reklam ekleme yapan abonelik akışları, oynatıcının düzgün çalışmasını sağlamak amacıyla bilinçli olarak hariç tutulmuştur."
+    },
+    {
+      "q": "Francetv uygulamasında veya akıllı TV’de çalışır mı?",
+      "a": "Hayır. AdOff yalnızca masaüstü tarayıcılarında çalışır. Mobil uygulamalar, akıllı TV uygulamaları ve akış çubukları (streaming stick) AdOff’in erişim alanı dışındadır."
+    },
+    {
+      "q": "Arte de kapsanıyor mu?",
+      "a": "Evet, arte.tv kapsanan grup içindedir. Arte web oynatıcısı standart reklam SDK’sını kullandığında aynı stub mekanizması uygulanır ve çoğu durumda içerik reklam arası olmadan devam eder."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Akış reklam engellemenin nasıl çalıştığı"
+    },
+    {
+      "href": "/block-video-ads",
+      "text": "Genel olarak video reklamları engelleme"
+    },
+    {
+      "href": "/catch-up-tv-ad-blocker-germany",
+      "text": "Alman geri izleme TV reklam engelleyici"
+    }
+  ],
+  "cta": {
+    "h3": "Fransızca geri izleme TV, reklamsız",
+    "p": "AdOff’u tarayıcınıza yükleyin ve stub, france.tv, TF1 ve 6play’teki reklam SDK’sını etkisiz hale getirsin.",
+    "btn": "AdOff’u ücretsiz yükleyin"
+  },
+  "report": {
+    "intro": "Bu sayfada eksik bir Fransız platformu mu var? https://adoff.app/catch-up-tv-ad-blocker-france adresinde hâlâ reklamlar görünüyorsa, hangi hizmet olduğunu bize bildirin. Raporlar, hangi yayincıları bir sonraki ekleyeceğimizi belirler.",
+    "btn_text": "Eksik bir hizmeti bildirin",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

@@ -1,0 +1,92 @@
+{
+  "slug": "live-sports-ad-blocking",
+  "lang": "it",
+  "title": "Bloccare le pubblicità nello sport in diretta | AdOff",
+  "description": "Perché lo sport live è il caso più difficile per un ad blocker, cosa può e non può fare un'estensione, e quali broadcaster copre davvero AdOff.",
+  "h1": "Ad blocking nello sport in diretta: cosa funziona davvero",
+  "answer": "Lo sport live è il terreno più difficile: le diretta vere usano spesso l'inserimento annunci lato server, che nessuna estensione può rimuovere. Dove un'estensione funziona è sulla differita e sui replay dei broadcaster che caricano gli annunci client-side — ed è esattamente ciò che AdOff neutralizza.",
+  "sections": [
+    {
+      "h2": "Perché il live è il caso più difficile",
+      "body": [
+        "<p>Lo sport in diretta è il gioiello di corona della pubblicità video, ed è difeso di conseguenza. Una diretta vera non può permettersi che un SDK lato client faccia viaggi di andata e ritorno verso un ad server prima di ogni interruzione: il ritardo disincronizzerebbe gli spettatori. Per questo molti servizi live adottano l'<a href=\"/it/server-side-ad-insertion-explained\">inserimento annunci lato server (SSAI)</a>, dove la pubblicità viene cucita nel flusso video prima ancora che arrivi sul tuo dispositivo.</p>",
+        "<p>A quel punto i pixel dell'annuncio fanno parte del video stesso. Un'estensione per browser — qualsiasi estensione, non solo AdOff — non ha modo di separarli dopo. Dire il contrario sarebbe disonesto.</p>"
+      ]
+    },
+    {
+      "h2": "Cosa può fare realisticamente un'estensione su un evento live",
+      "body": [
+        "<p>Le estensioni operano nel browser, sulla pagina. Possono intercettare JavaScript, bloccare richieste di rete, nascondere elementi DOM e sostituire script. Quell'arsenale è decisivo contro la pubblicità <strong>client-side</strong> — dove un SDK nella pagina richiede e disegna gli annunci — e inutile contro gli annunci già cuciti nel flusso video.</p>",
+        "<p>Quindi l'aspettativa onesta è: ottimi risultati dove il broadcaster usa ancora la consegna client-side, nessun effetto dove il flusso è lato server. Il mix varia per servizio, evento e persino per paese: è il motivo per cui la stessa partita può essere senza pubblicità su una piattaforma e non su un'altra.</p>"
+      ]
+    },
+    {
+      "h2": "Dove AdOff funziona: differite e replay",
+      "body": [
+        "<p>Molta di quella che chiamiamo \"sport online\" non è la diretta: è il replay, l'evidenza, la partita intera in differita sulla piattaforma di un broadcaster nazionale. Questi contenuti on-demand sono il caso classico degli SDK pubblicitari client-side, perché il ritardo non conta più.</p>",
+        "<p>AdOff copre 42 domini di broadcaster europei — tra cui RaiPlay, Mediaset Infinity, La7, discovery+, BBC iPlayer, ITVX, ZDF, ARD, France.tv, TF1, RTVE e altri — redirigendo lo script dell'SDK pubblicitario verso uno stub che dice al player di riprendere subito il contenuto. Il replay parte, senza pre-roll né mid-roll.</p>"
+      ]
+    },
+    {
+      "h2": "I due meccanismi che fanno il lavoro",
+      "body": [
+        "<p>Sui siti di quei broadcaster la neutralizzazione gira su due canali che prendono di mira lo stesso SDK: uno stub in-pagina che surclassa <code>window.google.ima</code> prima che il player si inizializzi, e regole declarativeNetRequest che redirigono il file dello script verso lo stub incluso nell'estensione. In entrambi i casi, quando il player chiede di avviare un'interruzione pubblicitaria, gli si risponde che l'interruzione è già finita.</p>",
+        "<p>Le regole di rete bloccano 180 pattern di richieste verso network pubblicitari su ogni sito; il filtro cosmetico nasconde banner e overlay attorno al player; lo strato stealth lavora contro i controlli anti-adblock che alcune piattaforme eseguono prima della riproduzione.</p>"
+      ]
+    },
+    {
+      "h2": "Cosa non funziona — e perché lo diciamo",
+      "body": [
+        "<p>Sulle limitazioni, a viso aperto:</p>",
+        "<ul><li><strong>Inserimento lato server (SSAI)</strong>: fuori portata per qualsiasi estensione. Gli annunci arrivano dentro il flusso.</li><li><strong>App native per TV</strong>: un'estensione gira solo nel browser, non nell'app della smart TV o del decoder.</li><li><strong>Servizi in abbonamento</strong> con pipeline proprietarie: AdOff li esclude di proposito, perché i loro player continuino a funzionare.</li></ul>",
+        "<p>Nessun ad blocker, su nessuna piattaforma, rimuove ogni annuncio da ogni evento live. Se un prodotto lo promette, è un campanello d'allarme.</p>"
+      ]
+    },
+    {
+      "h2": "Setup pratico per il giorno di partita",
+      "body": [
+        "<p>Se guardi replay ed evidenze sui siti dei broadcaster, installa AdOff nel browser desktop (Chrome, Firefox, Safari, Edge o Opera) e tieni la protezione attiva: è gratis e non serve alcun account. Se un player specifico si rifiuta di partire, usa la pausa per sito invece di disattivare tutto, poi ricarica.</p>",
+        "<p>Per le dirette vere sui servizi che usano SSAI le alternative realistiche stanno fuori dal browser: un filtro DNS a livello di rete può rimuovere alcuni domini di tracciamento pubblicitario su tutta la rete di casa — vedi la nostra guida al <a href=\"/android-dns\">filtraggio via DNS</a> — anche se non taglierà gli annunci cuciti nel flusso.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Un ad blocker può togliere le pubblicità da una partita di calcio in diretta?",
+      "a": "Spesso no. Le dirette vere usano frequentemente l'inserimento annunci lato server, con la pubblicità cucita nel video prima della consegna: nessuna estensione può annullarlo. Dove la piattaforma carica ancora gli annunci tramite un SDK client-side, un'estensione come AdOff può neutralizzarli."
+    },
+    {
+      "q": "AdOff funziona sui servizi catch-up dei broadcaster nazionali?",
+      "a": "Sì. AdOff copre 42 domini di broadcaster europei — tra cui RaiPlay, Mediaset Infinity, BBC iPlayer, ITVX, ZDF e France.tv — sostituendo l'SDK pubblicitario con uno stub che riprende subito il contenuto, così i replay partono senza pre-roll né mid-roll."
+    },
+    {
+      "q": "Perché alcune piattaforme sportive rivelano il mio ad blocker?",
+      "a": "Alcune piattaforme eseguono script anti-adblock prima di consentire la riproduzione. AdOff include uno strato stealth — spoofing delle esche e intercettazione fetch/XHR — pensato per aggirare questi controlli, anche se nessuna evasion dura per sempre: le piattaforme aggiornano di continuo i loro sistemi di rilevamento."
+    },
+    {
+      "q": "Esiste un modo per bloccare gli annunci SSAI dalla mia rete?",
+      "a": "Non gli annunci in sé: sono parte del flusso video. Un filtraggio DNS sul router può bloccare i domini di tracciamento pubblicitario per tutti i dispositivi di casa, ma non può separare i segmenti pubblicitari cuciti dai segmenti di contenuto."
+    },
+    {
+      "q": "Perché AdOff non tocca i servizi di streaming a pagamento?",
+      "a": "È una scelta deliberata: quei servizi usano pipeline proprietarie, e forzarle rischia di rompere del tutto la riproduzione. Escluderli mantiene il loro video funzionante, che conta più di una promessa inaffidabile di assenza di annunci."
+    }
+  ],
+  "related": [
+    {"href": "/it/streaming-ad-blocking", "text": "Blocco delle pubblicità nello streaming: la guida completa"},
+    {"href": "/it/server-side-ad-insertion-explained", "text": "L'inserimento annunci lato server (SSAI) spiegato"},
+    {"href": "/it/tv-streaming-ad-blocker", "text": "Ad blocker per TV e dispositivi di streaming"}
+  ],
+  "cta": {
+    "h3": "Guarda le differite senza interruzioni",
+    "p": "AdOff neutralizza gli annunci video client-side su 42 piattaforme di broadcaster europee. Gratis, senza account.",
+    "btn": "Installa AdOff gratis"
+  },
+  "report": {
+    "intro": "Hai provato AdOff su un evento live o su un broadcaster specifico e qualcosa non ha funzionato? Segnala il caso con l'URL esatto della pagina: segnalazioni come la tua decidono quali regole e correzioni pubblicheremo dopo.",
+    "btn_text": "Segnala questo sito",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

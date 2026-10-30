@@ -1,0 +1,100 @@
+{
+  "slug": "video-player-not-working-with-ad-blocker",
+  "lang": "pt",
+  "title": "Vídeo não reproduzindo com bloqueador de anúncios ativado | AdOff",
+  "description": "O vídeo não inicia com bloqueador ativo? Diagnóstico passo a passo: pausa por site, conflitos com extensões, paredes contra bloqueadores versus players com falha.",
+  "h1": "Reprodutor de vídeo não está funcionando com seu bloqueador de anúncios? Um diagnóstico passo a passo",
+  "answer": "Quando um vídeo se recusa a iniciar com um bloqueador de anúncios ativado, a causa é quase sempre uma dessas três: uma parede contra bloqueadores de anúncios, um conflito entre duas extensões ou um player que lida mal com uma solicitação bloqueada. Desative a proteção contra bloqueadores nesse site específico primeiro, depois siga esta lista de verificação.",
+  "sections": [
+    {
+      "h2": "Passo 1: pausar a proteção apenas nesse site",
+      "body": [
+        "<p>A primeira solução não é desativar seu bloqueador de anúncios — é pausá-lo apenas para o site que está apresentando problemas. O AdOff possui uma <strong>pausa por site</strong> com várias opções, acessíveis a partir da janela pop-up: o site volta ao seu comportamento original, enquanto todos os demais continuam protegidos.</p>",
+        "<p>Após a pausa, recarregue a página com uma atualização forçada (Ctrl+Shift+R / Cmd+Shift+R), para que os scripts do player sejam carregados novamente do zero. Se o vídeo começar a ser reproduzido agora, isso indica que o player estava reagindo a uma requisição bloqueada — o que reduz significativamente o escopo do problema.</p>"
+      ]
+    },
+    {
+      "h2": "Passo 2: verificar conflitos com outras extensões",
+      "body": [
+        "<p>Dois bloqueadores de anúncios rodando simultaneamente são a causa mais comum de reprodução interrompida. Cada um tenta interceptar as mesmas requisições, e o player pode receber respostas contraditórias. Desative todos os outros bloqueadores de anúncios, extensões de privacidade e gerenciadores de scripts (em <code>chrome://extensions</code> ou na página equivalente no seu navegador) e teste novamente com apenas um ativo.</p>",
+        "<p>Enquanto estiver nessa página, verifique se a extensão está atualizada: as APIs do player mudam com o tempo, e uma camada de neutralização desatualizada pode não detectar o que uma versão mais recente já consegue lidar.</p>"
+      ]
+    },
+    {
+      "h2": "Passo 3: diferenciar um bloqueio anti-adblock de um player com falha",
+      "body": [
+        "<p>Nem todo player em branco é resultado de um acidente. Os sintomas variam:</p>",
+        "<ul><li><strong>Parede anti-bloqueador</strong>: a página carrega, mas você recebe uma mensagem explícita (“desative seu bloqueador de anúncios”, “por favor, permita os anúncios”) ou o vídeo nunca começa, enquanto um indicador de carregamento gira indefinidamente. O site está recusando intencionalmente a reprodução até que detecte que nenhum bloqueio está ocorrendo.</li><li><strong>Player realmente danificado</strong>: um código de erro específico, um retângulo preto, controles que não respondem mesmo após várias recargas ou falha na reprodução nesse site mesmo em uma janela privada com todas as extensões desativadas — essa última situação indica que o problema não tem relação alguma com seu bloqueador de anúncios.</li></ul>",
+        "<p>O AdOff inclui uma camada furtiva (simulação de iscas, interceptação de chamadas fetch/XHR) construída exatamente para o primeiro caso: fazer com que a página acredite que nenhum bloqueio está ocorrendo.</p>"
+      ]
+    },
+    {
+      "h2": "Por que o AdOff exclui deliberadamente alguns serviços",
+      "body": [
+        "<p>Alguns serviços de streaming por assinatura utilizam pipelines de player proprietários tão fortemente acoplados ao seu código que qualquer interferência corre o risco de quebrar a reprodução completamente. É por isso que o AdOff <strong>exclui deliberadamente</strong> uma lista desses serviços: trata-se de uma decisão documentada de qualidade, no código, e não de um descuido.</p>",
+        "<p>A troca é honesta: nesses serviços, os anúncios permanecem, mas o vídeo sempre funciona. Se um bloqueador de anúncios prometer tanto reprodução sem anúncios quanto zero de falhas em todos os serviços, mantenha-se cético.</p>"
+      ]
+    },
+    {
+      "h2": "Passo 4: ainda não funcionou? Relate o problema",
+      "body": [
+        "<p>Se você já pausou o AdOff, descartou conflitos com outras extensões e o player ainda falha apenas com o AdOff ativo, esse é exatamente o tipo de caso que vale a pena relatar. Relatórios que incluem a URL exata da página alimentam diretamente quais regras e correções serão implementadas em seguida — muitas correções anteriores começaram como um único relatório de usuário.</p>",
+        "<p>Use o botão de relato nesta página, cole a URL do site com o problema e descreva o que você observa. Nenhuma conta é necessária.</p>"
+      ]
+    },
+    {
+      "h2": "Lista rápida de verificação",
+      "body": [
+        "<ol><li>Pause o AdOff nesse site a partir da janela pop-up e, em seguida, recarregue a página com atualização forçada.</li><li>Se funcionar, reative o AdOff e observe se o problema volta a ocorrer — isso identifica a requisição problemática.</li><li>Desative outros bloqueadores de anúncios e extensões de privacidade; mantenha apenas uma.</li><li>Verifique se a página exibe uma mensagem explícita anti-bloqueador (parede) ou um erro no player (player danificado).</li><li>Atualize a extensão para a versão mais recente.</li><li>Teste em uma janela privada com todas as extensões desativadas, para descartar um problema no lado do site.</li><li>Ainda com falha? Relate o site com sua URL exata.</li></ol>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Por que meu player de vídeo falha apenas em um site?",
+      "a": "Porque o player desse site reage mal a uma solicitação específica bloqueada, ou ele executa uma verificação contra bloqueadores de anúncios, o que o resto da web não faz. Pausar o AdOff nesse site específico — a pausa por site existe exatamente para isso — e recarregar a página para confirmar qual das duas situações ocorre."
+    },
+    {
+      "q": "Posso usar dois bloqueadores de anúncios ao mesmo tempo?",
+      "a": "Não é recomendado. Eles competem para interceptar as mesmas solicitações, e um player de vídeo pode receber respostas contraditórias, o que frequentemente resulta em reprodução que nunca começa. Mantenha apenas um bloqueador bem mantido, em vez de dois que se sobrepõem."
+    },
+    {
+      "q": "Como saber se um site possui uma parede contra bloqueadores de anúncios?",
+      "a": "Geralmente, a página indica isso explicitamente, ou o vídeo fica preso em um carregamento infinito sem nenhum código de erro. Se a reprodução funcionar em uma janela anônima com todas as extensões desativadas, o bloqueio foi a causa; se também falhar nesse cenário, o problema está no próprio site."
+    },
+    {
+      "q": "Interromper o AdOff em um site afeta outros sites?",
+      "a": "Não. A pausa por site altera o comportamento apenas naquele site específico. Todos os demais sites mantêm a proteção total, e você pode retomar a proteção no site pausado a qualquer momento a partir do pop-up."
+    },
+    {
+      "q": "Por que o AdOff não bloqueia anúncios em algumas plataformas de assinatura?",
+      "a": "Escolha deliberada. Os pipelines de player deles são proprietários e fortemente acoplados, e interferir neles corre o risco de quebrar completamente a reprodução de vídeo. O AdOff os exclui para que o serviço funcione — os anúncios permanecem, mas o player não quebra."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Bloqueio de anúncios em streaming: o guia completo"
+    },
+    {
+      "href": "/bypass-anti-adblock",
+      "text": "Como os muros contra bloqueadores de anúncios são contornados"
+    },
+    {
+      "href": "/adblock-detector",
+      "text": "Como a detecção de bloqueadores de anúncios funciona"
+    }
+  ],
+  "cta": {
+    "h3": "Um bloqueador de anúncios que se comporta bem com players",
+    "p": "Pausa por site, exclusões deliberadas e uma camada de sigilo: o AdOff foi desenvolvido para bloquear anúncios sem interromper a reprodução de vídeos. Gratuito, sem necessidade de conta.",
+    "btn": "Instalar o AdOff gratuitamente"
+  },
+  "report": {
+    "intro": "Seguiu a lista de verificação e o player ainda apresenta falhas com o AdOff ativado? Relate o caso com a URL exata da página — os relatos dos usuários definem quais sites e regras serão corrigidos em seguida.",
+    "btn_text": "Relatar este site",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

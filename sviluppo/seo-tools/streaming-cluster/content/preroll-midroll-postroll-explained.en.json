@@ -1,0 +1,88 @@
+{
+  "slug": "preroll-midroll-postroll-explained",
+  "lang": "en",
+  "title": "Pre-roll, Mid-roll, Post-roll Ads Explained | AdOff",
+  "description": "Every video ad placement explained: pre-roll, mid-roll, post-roll, bumpers, overlays and companions — how each is delivered and how hard it is to block.",
+  "h1": "Pre-roll, mid-roll, post-roll: every video ad placement explained",
+  "answer": "Pre-roll ads play before the video, mid-roll ads interrupt it, post-roll ads follow it. The easier placements to block are delivered through client-side SDKs like Google IMA; AdOff neutralizes them with an instant-resume stub, while server-side stitched ads remain out of reach for any browser extension.",
+  "sections": [
+    {
+      "h2": "Pre-roll: the ad before the video",
+      "body": [
+        "<p>The <strong>pre-roll</strong> plays before the requested content starts. It is the most valuable placement in video advertising because it is unskippable attention at the exact moment intent peaks — and the most annoying one for viewers, since it delays the video they clicked for.</p>",
+        "<p>It is usually delivered client-side: the player initializes the IMA SDK, requests a VAST ad, and overlays it on the video surface. Because the entire transaction happens in the page, it is highly blockable. AdOff's stub answers the SDK's start request with an immediate content-resume event, so the pre-roll is simply skipped and playback begins.</p>"
+      ]
+    },
+    {
+      "h2": "Mid-roll: ads inserted inside the video",
+      "body": [
+        "<p>The <strong>mid-roll</strong> interrupts the content at scheduled points, mimicking a TV commercial break. Players describe the break points in a VMAP document or the platform schedules them in the ad response. Mid-rolls generate the most frustration because they cut the video at its most interesting moment.</p>",
+        "<p>Client-side mid-rolls go through the same SDK path as pre-rolls and are neutralized the same way: when the player asks to start an ad break, the stub responds that the break is over before it begins. On the main video platform, AdOff additionally strips ad scheduling from the player response before the page reads it and fast-forwards anything that slips through.</p>"
+      ]
+    },
+    {
+      "h2": "Post-roll: the ad after the video ends",
+      "body": [
+        "<p>The <strong>post-roll</strong> plays after the content finishes. Viewers tolerate it best — most have already stopped watching — but advertisers still pay for it, so players run it through the same client-side pipeline.</p>",
+        "<p>Same delivery, same weakness: if the ad request goes through a client-side SDK, the stub's instant resume means the video ends cleanly with no trailing ad.</p>"
+      ]
+    },
+    {
+      "h2": "Bumpers, overlays and companion ads",
+      "body": [
+        "<p>Not every placement owns the video surface for seconds at a time:</p>",
+        "<ul><li><strong>Bumpers</strong> are very short (around 6 seconds) non-skippable ads, often run as pre-rolls. Delivered through the same SDK, neutralized the same way.</li><li><strong>Overlays</strong> are banners that appear over the lower part of a playing video, without pausing it. They are plain DOM elements, so the cosmetic filtering layer (CSS rules plus a content script) hides them on every site.</li><li><strong>Companion ads</strong> are display banners shown beside the player while the video ad runs. They are also ordinary page elements and get hidden by cosmetic filtering.</li><li><strong>In-feed ads</strong> are video ads disguised as recommended items in a list. Cosmetic filtering and generic selectors catch them in the same way.</li></ul>"
+      ]
+    },
+    {
+      "h2": "What makes a placement hard or impossible to block",
+      "body": [
+        "<p>The dividing line is <strong>where the ad is assembled</strong>. If the ad is fetched and rendered by JavaScript in your browser — which is true of everything delivered through an SDK like IMA — an extension can intercept, substitute or hide it.</p>",
+        "<p>If instead the ad is stitched into the video stream on the server before delivery (<a href=\"/server-side-ad-insertion-explained\">SSAI</a>), the pixels of the commercial are indistinguishable from the pixels of the show. No browser extension can separate them afterwards; that is why premium subscription services using SSAI are deliberately left alone by AdOff rather than risking broken playback.</p>"
+      ]
+    },
+    {
+      "h2": "How AdOff maps layers to placements",
+      "body": [
+        "<p>Each placement falls to the layer designed for it:</p>",
+        "<ul><li>SDK-delivered pre/mid/post-rolls and bumpers → IMA neutralization (in-page stub or network redirect on 42 European broadcaster domains).</li><li>Overlays, companions, in-feed ads → cosmetic filtering (CSS + content script).</li><li>Ad network requests → 180 static network rules (real ads counted in the badge, tracking blocked but not counted).</li><li>Anti-adblock walls → stealth layer with bait spoofing and fetch/XHR interception.</li></ul>",
+        "<p>All of it ships free in one extension for Chrome, Firefox, Safari, Edge and Opera, with no account.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Which video ads are hardest to block?",
+      "a": "Ads stitched into the stream on the server (SSAI) are effectively impossible for a browser extension to separate from the content, because they arrive as part of the video itself. Client-side ads delivered through SDKs are far more accessible to neutralization."
+    },
+    {
+      "q": "Are mid-roll ads blocked differently than pre-roll ads?",
+      "a": "Not when they share the same delivery path. Both typically go through the same client-side SDK, so a stub that responds to ad-break requests with an immediate resume event removes pre-rolls and mid-rolls alike."
+    },
+    {
+      "q": "What is a bumper ad?",
+      "a": "A bumper is a very short, non-skippable video ad, usually around six seconds, typically shown before the content. Because it is delivered through the same SDK as longer ads, it is neutralized by the same mechanism."
+    },
+    {
+      "q": "How are overlay and companion ads removed?",
+      "a": "They are ordinary page elements, not video frames. Cosmetic filtering — CSS rules plus a content script that scans the DOM — hides them, while network-level rules block their ad requests."
+    },
+    {
+      "q": "Do ad blockers count every blocked request as an ad?",
+      "a": "AdOff separates real advertising from tracking: analytics and trackers are blocked as well, but the badge and popup counters only include actual ads, so the numbers reflect what you actually skipped."
+    }
+  ],
+  "related": [
+    {"href": "/streaming-ad-blocking", "text": "Streaming ad blocking: the complete guide"},
+    {"href": "/ima-sdk-ad-blocking-explained", "text": "How IMA SDK ad blocking works"},
+    {"href": "/server-side-ad-insertion-explained", "text": "Server-side ad insertion (SSAI) explained"}
+  ],
+  "cta": {
+    "h3": "Every placement, one extension",
+    "p": "Pre-rolls, mid-rolls, overlays and banners — AdOff handles each with the right layer, free for everyone.",
+    "btn": "Install AdOff free"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

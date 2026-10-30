@@ -1,0 +1,101 @@
+{
+  "slug": "live-sports-ad-blocking",
+  "lang": "de",
+  "title": "Werbung auf Live-Sport-Streams blockieren | AdOff",
+  "description": "Warum Live-Sport das schwierigste Anwendungsbeispiel für Werbeblocker ist – was eine Browser-Erweiterung kann/nicht kann und welche Sender AdOff abdeckt.",
+  "h1": "Werbeblockierung bei Live-Sportübertragungen: Was tatsächlich funktioniert",
+  "answer": "Live-Sport ist der schwierigste Bereich, um Werbung zu blockieren: Echtzeit-Übertragungen nutzen häufig serverseitige Werbeeinfügung, die keine Browser-Erweiterung entfernen kann. Dort, wo eine Browser-Erweiterung jedoch funktioniert, ist bei on-demand- und catch-up-Übertragungen von Sendern, die Werbung clientseitig laden – und genau das neutralisiert AdOff.",
+  "sections": [
+    {
+      "h2": "Warum Live die schwierigste Fall ist",
+      "body": [
+        "<p>Live-Sport ist der Krönungspunkt der Video-Werbung, und er wird entsprechend verteidigt. Eine echte Live-Übertragung kann keine clientseitige Werbe-SDK-Instanz tolerieren, die vor jedem Werbeblock eine Rundreise zum Werbeserver unternimmt: Die Verzögerung würde die Synchronisation der Zuschauer stören. Daher setzen viele Live-Dienste <a href=\"/server-side-ad-insertion-explained\">Server-Side Ad Insertion (SSAI)</a> ein, bei dem die Werbung bereits vor der Übertragung an Ihr Gerät in den Video-Stream eingefügt wird.</p>",
+        "<p>Wenn dies geschieht, sind die Anzeigen-Pixel Teil des Videos selbst. Eine Browser-Erweiterung – egal welcher Art, nicht nur AdOff – kann sie danach nicht mehr trennen. Eine anderslautende Behauptung wäre unehrlich.</p>"
+      ]
+    },
+    {
+      "h2": "Was eine Browser-Erweiterung bei Live-Veranstaltungen realistisch leisten kann",
+      "body": [
+        "<p>Erweiterungen arbeiten im Browser, auf der Seite selbst. Sie können JavaScript abfangen, Netzwerkanfragen blockieren, DOM-Elemente ausblenden und Skripte ersetzen. Dieses Toolkit ist entscheidend gegen <strong>clientseitige</strong> Werbung – also jene, bei der ein SDK auf der Seite Anzeigen anfordert und anzeigt – und wirkungslos gegen Anzeigen, die bereits fest in den Video-Stream eingearbeitet sind.</p>",
+        "<p>Die ehrliche Erwartung lautet daher: starke Ergebnisse dort, wo der Sender noch clientseitige Auslieferung nutzt, und keine Wirkung dort, wo der Feed serverseitig erfolgt. Die Mischung variiert je nach Dienst, Event und sogar Region, weshalb das gleiche Spiel auf einer Plattform werbefrei und auf einer anderen nicht ist.</p>"
+      ]
+    },
+    {
+      "h2": "Wo AdOff funktioniert: Catch-up- und On-Demand-Sendungen",
+      "body": [
+        "<p>Viel dessen, was Leute als „Sport online schauen“ bezeichnen, ist nicht die Live-Übertragung: Es ist die Wiederholung, die Highlights, die komplette Sendung zur Nachschau auf der Plattform eines nationalen Rundfunksenders. Diese On-Demand-Streams sind der klassische Anwendungsfall für clientseitige Werbe-SDKs, da Verzögerungen hier keine Rolle mehr spielen.</p>",
+        "<p>AdOff deckt 42 Domains europäischer Rundfunkanbieter ab – darunter RaiPlay, Mediaset Infinity, La7, discovery+, BBC iPlayer, ITVX, ZDF, ARD, France.tv, TF1, RTVE und weitere –, indem es das Skript des Werbe-SDKs auf einen Stub umleitet, der dem Player mitteilt, den Inhalt sofort fortzusetzen. Die Wiederholung beginnt, ohne dass ein Pre-roll- oder Mid-roll-Werbeblock abgerufen wird.</p>"
+      ]
+    },
+    {
+      "h2": "Die beiden Mechanismen, die die Arbeit leisten",
+      "body": [
+        "<p>Auf diesen Sender-Webseiten erfolgt die Neutralisierung über zwei Kanäle, die dasselbe SDK ansprechen: ein im-Page-Stub, der <code>window.google.ima</code> vor der Initialisierung des Players überschreibt, sowie declarativeNetRequest-Regeln, die die Skriptdatei des SDKs auf den Stub umleiten, der in der Erweiterung eingebettet ist. In beiden Fällen erhält der Player die Information, dass der Werbeblock bereits beendet sei, sobald er einen Werbeblock abspielen möchte.</p>",
+        "<p>Netzwerkebene-Regeln blockieren 180 Werbenetzwerk-Anfrage-Muster auf jeder Seite; kosmetische Filter verbergen Banner und Overlays rund um den Player; und die Stealth-Ebene wirkt gegen Anti-Adblock-Prüfungen, die einige Plattformen vor der Wiedergabe durchführen.</p>"
+      ]
+    },
+    {
+      "h2": "Was nicht funktioniert – und warum wir das so sagen",
+      "body": [
+        "<p>Ehrlichkeit gegenüber den Grenzen:</p>",
+        "<ul><li><strong>Server-Side Ad Insertion</strong>: nicht durch irgendeine Browser-Erweiterung adressierbar. Anzeigen gelangen bereits im Stream.</li><li><strong>Native TV-Apps</strong>: eine Erweiterung läuft nur im Browser, nicht in der Smart-TV- oder Set-Top-Box-App.</li><li><strong>Premium-Abonnementdienste</strong> mit proprietären Pipelines: AdOff schließt diese bewusst aus, damit deren Player weiterhin funktionieren.</li></ul>",
+        "<p>Kein Adblocker, egal auf welcher Plattform, entfernt jede Werbung aus jedem Live-Event. Wenn ein Produkt das verspricht, sollten Sie es als Warnsignal werten.</p>"
+      ]
+    },
+    {
+      "h2": "Praktische Einrichtung für den Spieltag",
+      "body": [
+        "<p>Falls Sie Wiederholungen und Highlights auf Sender-Webseiten schauen, installieren Sie AdOff in Ihrem Desktop-Browser (Chrome, Firefox, Safari, Edge oder Opera) und lassen Sie den Schutz aktiviert – er ist kostenlos und erfordert keinen Account. Falls ein spezifischer Player nicht startet, nutzen Sie stattdessen die sitespezifische Pause-Funktion, anstatt alles zu deaktivieren, und laden Sie danach neu.</p>",
+        "<p>Für echte Live-Streams auf Diensten, die SSAI nutzen, liegen realistische Alternativen außerhalb des Browsers: Netzwerkweite DNS-Filterung kann einige Werbe-Tracking-Domains in Ihrem Heimnetzwerk entfernen – siehe unseren Leitfaden zu <a href=\"/android-dns\">DNS-basierter Filterung</a> –, entfernt jedoch nicht die Anzeigen, die fest in den Stream eingearbeitet sind."
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Kann ein Werbeblocker Werbung aus einem Live-Fußballspiel entfernen?",
+      "a": "Oft nicht. Echte Live-Streams nutzen häufig eine serverseitige Werbeeinfügung (Server-Side Ad Insertion), bei der Werbung bereits vor der Auslieferung in das Video eingefügt wird – eine Maßnahme, die keine Browser-Erweiterung rückgängig machen kann. Wo die Plattform Werbung dennoch über ein clientseitiges SDK lädt, kann eine Erweiterung wie AdOff diese neutralisieren."
+    },
+    {
+      "q": "Funktioniert AdOff auch bei Catch-up-Diensten nationaler Rundfunkanstalten?",
+      "a": "Ja. AdOff deckt 42 europäische Rundfunkanbieter-Domains ab – darunter RaiPlay, Mediaset Infinity, BBC iPlayer, ITVX, ZDF und France.tv –, indem es das Werbe-SDK durch einen Stub ersetzt, der die Wiedergabe sofort fortsetzt, sodass Wiederholungen ohne Pre-roll- oder Mid-roll-Werbung starten."
+    },
+    {
+      "q": "Warum erkennen einige Sportplattformen meinen Werbeblocker?",
+      "a": "Einige Plattformen führen Anti-Adblock-Skripte aus, bevor die Wiedergabe erlaubt wird. AdOff enthält eine „Stealth-Layer“-Komponente – mit Täuschungsmethoden (Bait Spoofing) sowie Abfangen von Fetch- und XHR-Anfragen –, die darauf ausgelegt ist, diese Prüfungen zu umgehen; doch kein Umgehungssystem hält ewig stand, da die Plattformen ihre Erkennungsmethoden ständig weiterentwickeln."
+    },
+    {
+      "q": "Gibt es eine Möglichkeit, SSAI-Werbung in meinem Netzwerk zu blockieren?",
+      "a": "Nicht die Werbung selbst: Sie ist Teil des Video-Streams. Eine DNS-basierte Filterung auf Ihrem Router kann zwar Werbe-Tracking-Domains für alle Geräte zu Hause blockieren, aber sie kann keine aus dem Stream eingefügten Werbeabschnitte von den Inhaltabschnitten trennen."
+    },
+    {
+      "q": "Warum berührt AdOff bezahlte Streamingdienste nicht?",
+      "a": "Dies ist eine bewusste Entscheidung: Diese Dienste nutzen proprietäre Player-Pipelines, und das Erzwingen von Änderungen darin könnte die Wiedergabe vollständig unterbrechen. Durch das Ausschließen dieser Dienste bleibt deren Video-Wiedergabe erhalten, was wichtiger ist als eine unzuverlässige „werbefreie“-Angabe."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Streaming-Werbeblockierung: Der umfassende Leitfaden"
+    },
+    {
+      "href": "/server-side-ad-insertion-explained",
+      "text": "Serverseitige Werbeeinfügung (SSAI) erklärt"
+    },
+    {
+      "href": "/tv-streaming-ad-blocker",
+      "text": "Werbeblocker für Fernseher und Streaming-Geräte"
+    }
+  ],
+  "cta": {
+    "h3": "Wiedergabe von Sendungen ohne Werbeunterbrechungen",
+    "p": "AdOff blockiert clientseitige Videoanzeigen auf 42 europäischen Rundfunkanbieter-Plattformen. Kostenlos, ohne Registrierung.",
+    "btn": "AdOff kostenlos installieren"
+  },
+  "report": {
+    "intro": "Haben Sie AdOff bei einer Live-Veranstaltung oder bei einem bestimmten Rundfunkanbieter ausprobiert und funktioniert etwas nicht? Melden Sie den Fall mit der exakten URL der Seite: Ihre Meldungen entscheiden darüber, welche Regeln und Korrekturen wir als Nächstes freigeben.",
+    "btn_text": "Diese Seite melden",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

@@ -1,0 +1,85 @@
+{
+  "name": "AdOff 05 - Competitor Watch",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {"interval": [{"field": "hours", "hoursInterval": 6}]}
+      },
+      "id": "trig",
+      "name": "Every 6h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Competitor GitHub release/commit feeds\nreturn [\n  { json: { competitor: 'ublock', kind: 'release', url: 'https://api.github.com/repos/gorhill/uBlock/releases?per_page=5' }},\n  { json: { competitor: 'adblockplus', kind: 'release', url: 'https://api.github.com/repos/adblockplus/adblockpluschrome/releases?per_page=5' }},\n  { json: { competitor: 'adguard', kind: 'release', url: 'https://api.github.com/repos/AdguardTeam/AdguardBrowserExtension/releases?per_page=5' }},\n  { json: { competitor: 'ghostery', kind: 'release', url: 'https://api.github.com/repos/ghostery/ghostery-extension/releases?per_page=5' }},\n  { json: { competitor: 'brave-shields', kind: 'release', url: 'https://api.github.com/repos/brave/brave-core/releases?per_page=3' }}\n];"
+      },
+      "id": "list",
+      "name": "Competitor sources",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {"timeout": 15000, "response": {"response": {"neverError": true}}},
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "User-Agent", "value": "AdOffWatcher/1.0"},{"name": "Accept", "value": "application/vnd.github+json"}]}
+      },
+      "id": "fetch",
+      "name": "GitHub fetch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst out = [];\nfor (const it of items) {\n  const ctx = it.json;\n  const releases = Array.isArray(ctx.data) ? ctx.data : (Array.isArray(ctx) ? ctx : []);\n  // raw http output may be an array directly\n  const arr = Array.isArray(ctx) ? ctx : releases;\n  for (const r of arr) {\n    if (!r || !r.html_url) continue;\n    out.push({ json: {\n      competitor: ctx.competitor || 'unknown',\n      activity_type: 'release',\n      url: r.html_url,\n      title: r.tag_name + ' - ' + (r.name || ''),\n      body: (r.body || '').slice(0, 4000),\n      happened_at: r.published_at\n    }});\n  }\n}\nreturn out;"
+      },
+      "id": "norm",
+      "name": "Normalize releases",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://172.17.0.1:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"model\":\"fast-max\",\"stream\":false,\"options\":{\"temperature\":0.3,\"num_predict\":300},\"prompt\":\"You analyze ad-blocker competitor release notes. For the release below, write 1-2 sentences explaining: (1) what changed, (2) how AdOff could position against it or learn from it. Be concrete and tactical.\\n\\nCOMPETITOR: {{ $json.competitor }}\\nRELEASE: {{ $json.title }}\\nNOTES:\\n{{ $json.body }}\\n\\nResponse:\"}",
+        "options": {"timeout": 30000, "response": {"response": {"neverError": true}}}
+      },
+      "id": "llm",
+      "name": "LLM response idea",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO adoff_autopilot.competitor_activity (competitor, activity_type, url, title, body, happened_at, response_idea) VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (url) DO UPDATE SET response_idea = EXCLUDED.response_idea RETURNING id;",
+        "options": {"queryReplacement": "={{ $('Normalize releases').item.json.competitor }},{{ $('Normalize releases').item.json.activity_type }},{{ $('Normalize releases').item.json.url }},{{ $('Normalize releases').item.json.title }},{{ $('Normalize releases').item.json.body }},{{ $('Normalize releases').item.json.happened_at }},{{ $json.response || '' }}"}
+      },
+      "id": "store",
+      "name": "Store competitor activity",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1340, 400],
+      "credentials": {"postgres": {"id": "PLACEHOLDER_PG_CREDENTIAL", "name": "n8n-postgres"}}
+    }
+  ],
+  "connections": {
+    "Every 6h": {"main": [[{"node": "Competitor sources", "type": "main", "index": 0}]]},
+    "Competitor sources": {"main": [[{"node": "GitHub fetch", "type": "main", "index": 0}]]},
+    "GitHub fetch": {"main": [[{"node": "Normalize releases", "type": "main", "index": 0}]]},
+    "Normalize releases": {"main": [[{"node": "LLM response idea", "type": "main", "index": 0}]]},
+    "LLM response idea": {"main": [[{"node": "Store competitor activity", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "saveExecutionProgress": true},
+  "tags": [{"name": "adoff"}, {"name": "intel"}],
+  "active": false
+}

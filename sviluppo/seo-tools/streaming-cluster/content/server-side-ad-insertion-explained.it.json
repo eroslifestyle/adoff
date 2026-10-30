@@ -1,0 +1,87 @@
+{
+  "slug": "server-side-ad-insertion-explained",
+  "lang": "it",
+  "title": "Server-Side Ad Insertion: perché i blocchi annunci falliscono | AdOff",
+  "description": "Con la SSAI gli annunci vengono cuciti nello stesso flusso video del contenuto: non esiste una richiesta separata da bloccare. Come funzionano i manifest HLS e DASH.",
+  "h1": "Server-Side Ad Insertion spiegata: perché i blocchinaunti basati su rete non vedono questi annunci",
+  "answer": "No — la server-side ad insertion (SSAI) non si può bloccare con un'estensione basata su richieste di rete, perché l'annuncio viene cucito nello stesso flusso video del contenuto prima ancora di lasciare il server. Il browser riceve un unico manifest e un unico flusso continuo: non c'è una richiesta pubblicitaria separata da intercettare.",
+  "sections": [
+    {
+      "h2": "Che cos'è davvero la server-side ad insertion",
+      "body": [
+        "<p>La server-side ad insertion (SSAI), detta anche ad stitching, è una tecnica con cui il fornitore del video unisce pubblicità e contenuto in un unico flusso video <strong>sul server</strong>, prima della distribuzione. Il dispositivo dello spettatore riceve un flusso continuo che contiene già gli annunci — all'opposto della client-side ad insertion (CSAI), dove il player carica il contenuto e poi fa richieste separate a un ad server per ogni interruzione pubblicitaria.</p>",
+        "<p>Nella documentazione tecnica la SSAI compare come \"manifest cuciti\" o \"single-manifest delivery\". È l'approccio dominante nel live streaming e nei piani con pubblicità dei servizi video in abbonamento, perché è più difficile aggirarla e si comporta allo stesso modo su ogni dispositivo.</p>"
+      ]
+    },
+    {
+      "h2": "Come funziona nei manifest HLS e DASH",
+      "body": [
+        "<p>Il video moderno viaggia in formati adattivi: HLS (playlist <code>.m3u8</code>) e DASH (manifest <code>.mpd</code>). Il flusso è spezzato in segmenti brevi di pochi secondi e il manifest ne elenca l'ordine di riproduzione. Il player segue semplicemente quella lista.</p>",
+        "<p>Con la SSAI i segmenti dell'annuncio vengono inseriti direttamente in quella lista. Il manifest consegnato al player viene riscritto così che un segmento di pubblicità compaia esattamente dove starebbe un segmento di contenuto. Alcune implementazioni usano marcatore di discontinuità (<code>#EXT-X-DISCONTINUITY</code> in HLS) per segnalare cambi di codifica, ma la playlist è ciò che il player legittimamente riproduce. Dal punto di vista del player, l'annuncio <em>è</em> parte del programma.</p>"
+      ]
+    },
+    {
+      "h2": "Perché i blocchinaunti basati su rete non hanno nulla da intercettare",
+      "body": [
+        "<p>Un'estensione che blocca la pubblicità lavora sul livello di rete: riconosce le richieste verso domini pubblicitari noti e le blocca o le riscrive. Quel modello presuppone che l'annuncio arrivi come richiesta separata, da un dominio separato, distinguibile dal contenuto. La SSAI elimina del tutto questa premessa.</p>",
+        "<p>Con gli annunci cuciti, i segmenti che trasportano la pubblicità arrivano dalla stessa rete di distribuzione, spesso dallo stesso dominio, dentro lo stesso manifest della trasmissione. Bloccare la richiesta significherebbe bloccare il video. Chi ci prova comunque tipicamente rompe la riproduzione o, sui live, produce i frame congelati che gli utenti segnalano. È un limite strutturale, non un ritardo temporaneo: qualunque strumento che filtra le richieste di rete non può distinguere un annuncio cucito dal contenuto che lo circonda.</p>"
+      ]
+    },
+    {
+      "h2": "La client-side insertion: il modello che i blocchinaunti riescono a gestire",
+      "body": [
+        "<p>Per contrasto: nella client-side ad insertion il player chiama un SDK pubblicitario durante la riproduzione, l'SDK scarica i file creativi da domini di advertising e il player li riproduce in uno slot. Quelle richieste sono visibili, separate e bloccabili. Neutralizzare l'SDK — come fa AdOff con l'SDK pubblicitario video usato sul web — fa sì che il player torni subito al contenuto.</p>",
+        "<p>È per questo che i blocchinaunti funzionano ancora su gran parte del web, compresi molti siti con player video che usano chiamate pubblicitarie client-side, e sugli stessi siti falliscono sulle piattaforme di live streaming e sui servizi in abbonamento che cucitano gli annunci lato server.</p>"
+      ]
+    },
+    {
+      "h2": "Cosa servirebbe per togliere gli annunci cuciti",
+      "body": [
+        "<p>Togliere un annuncio cucito richiede di capire il flusso, non la rete: rilevare i marcatori di discontinuità e i pattern tra i segmenti, riscrivere il manifest per scartare i segmenti pubblicitari, e sperare che il fornitore non cambi il layout. È fragile per natura: ogni modifica lato server rompe il workaround e, sui live, il player riscritto spesso va in ritardo o mostra un placeholder degradato.</p>",
+        "<p>L'altra strada, quella affidabile, non è tecnica: i fornitori cucitano gli annunci perché quel piano d'abbonamento è supportato dalla pubblicità, quindi scegliere un piano senza pubblicità li elimina per costruzione. Tutto il resto è una corsa agli armamenti che peggiora soprattutto l'esperienza di visione.</p>"
+      ]
+    },
+    {
+      "h2": "Come si colloca AdOff",
+      "body": [
+        "<p>AdOff è un'estensione gratuita (Chrome, Firefox, Safari, Edge, Opera) che blocca la pubblicità di rete con regole di filtraggio statiche, nasconde gli elementi pubblicitari nella pagina e neutralizza l'SDK pubblicitario video client-side sostituendolo con uno stub che riprende subito il contenuto. Funziona sui player web solo dove gli annunci sono client-side; non finge di togliere gli annunci dai flussi cuciti lato server e non interferisce di proposito con i player dei servizi in abbonamento, per non romperli.</p>",
+        "<p>Questa onestà è il senso di questa pagina: sapere quale modello usa un sito ti dice se un'estensione può aiutarti, prima ancora di installarla.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Qual è la differenza tra SSAI e CSAI?",
+      "a": "Nella client-side ad insertion (CSAI) il player richiede gli annunci separatamente durante la riproduzione, quindi quelle richieste sono visibili ai blocchinaunti. Nella server-side ad insertion (SSAI) gli annunci vengono uniti al flusso video sul server prima della distribuzione: non esiste una richiesta pubblicitaria separata da bloccare."
+    },
+    {
+      "q": "Esiste un'estensione in grado di bloccare la SSAI?",
+      "a": "Nessuna estensione che filtra le richieste di rete può togliere un annuncio cucito senza rompere il flusso, perché annuncio e contenuto viaggiano insieme nello stesso manifest e negli stessi segmenti. Gli strumenti che ci provano causano in genere frame congelati, cali di qualità o errori di riproduzione."
+    },
+    {
+      "q": "Perché i live streaming usano la SSAI invece della pubblicità normale?",
+      "a": "Il live streaming richiede che l'interruzione pubblicitaria resti sincronizzata per tutti gli spettatori e che la riproduzione non si interrompa: la cucitura lato server lo assicura. Inoltre funziona allo stesso modo su ogni dispositivo, comprese le smart TV dove le estensioni non esistono."
+    },
+    {
+      "q": "La SSAI è la stessa cosa di un annuncio non saltabile?",
+      "a": "Non esattamente. Il salto è una decisione del player, governata dai metadati del flusso. Con la SSAI gli annunci sono parte del flusso, quindi né lo spettatore né un'estensione del browser hanno un punto di controllo per saltarli o toglierli."
+    },
+    {
+      "q": "AdOff funziona sui siti che usano la SSAI?",
+      "a": "Su quei flussi specifici no — e AdOff non dichiara il contrario. Sulla pubblicità non-video degli stessi siti, e su tutto il resto della navigazione (banner, tracciamento, SDK video client-side), AdOff blocca e nasconde gli annunci come al solito."
+    }
+  ],
+  "related": [
+    { "href": "/it/streaming-ad-blocking", "text": "Blocco annunci nello streaming: cosa funziona e cosa no" },
+    { "href": "/it/ima-sdk-ad-blocking-explained", "text": "Come si neutralizzano gli SDK pubblicitari video client-side" },
+    { "href": "/it/twitch-ad-blocker", "text": "Annunci sulla piattaforma di live streaming: perché le estensioni falliscono" }
+  ],
+  "cta": {
+    "h3": "Blocca gli annunci che si possono bloccare",
+    "p": "AdOff non può togliere gli annunci cuciti — e niente di onesto lo può fare. Ma banner, tracciamento e annunci video client-side nel resto della tua navigazione sono un'altra storia, e AdOff li gestisce gratis e senza account.",
+    "btn": "Installa AdOff — è gratis"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

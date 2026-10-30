@@ -1,0 +1,96 @@
+{
+  "slug": "server-side-ad-insertion-explained",
+  "lang": "de",
+  "title": "Serverseitige Werbeeinfügung erklärt: Warum Blocker versagen | AdOff",
+  "description": "SSAI integriert Werbung direkt in den Video-Stream – kein separater Anforderungsaufruf, der blockiert werden könnte.",
+  "h1": "Serverseitige Werbeeinblendung erklärt: Warum Netzwerk-Werbeblocker diese Anzeigen nicht sehen können",
+  "answer": "Nein – Server-seitige Werbeeinfügung (SSAI) kann nicht durch anfragenbasierte Werbeblocker blockiert werden, da die Werbung bereits auf dem Server in denselben Video-Stream eingefügt wird, bevor dieser den Server verlässt. Ihr Browser lädt nur ein einziges kontinuierliches Manifest und einen einziges kontinuierliches Stream herunter; es gibt keinen separaten Werbeanfragen, die abgefangen werden könnten.",
+  "sections": [
+    {
+      "h2": "Was Server-seitige Werbeeinfügung tatsächlich ist",
+      "body": [
+        "<p>Serverseitige Werbeeinfügung (SSAI), auch als Werbestitching bezeichnet, ist eine Technik, bei der der Videoanbieter Werbung und Inhalt <strong>auf dem Server</strong> zu einem einzigen Video-Stream zusammenfügt, bevor dieser übertragen wird. Das Gerät des Zuschauers empfängt einen kontinuierlichen Stream, der die Werbung bereits enthält – im Gegensatz zur clientseitigen Werbeeinfügung (CSAI), bei der der Player den Inhalt lädt und anschließend für jede Werbepause eine separate Anfrage an einen Werbeserver stellt.</p>",
+        "<p>Im technischen Dokumentationen wird SSAI als „verknüpfte Manifeste“ oder „Ein-Manifest-Übertragung“ bezeichnet. Dies ist der vorherrschende Ansatz für Live-Streaming sowie für die werbefinanzierten Abonnementstufen von Video-on-Demand-Diensten, da er schwerer zu umgehen ist und auf jedem Gerät identisch funktioniert.</p>"
+      ]
+    },
+    {
+      "h2": "Wie sie in HLS- und DASH-Manifesten funktioniert",
+      "body": [
+        "<p>Die moderne Videoübertragung nutzt adaptive Streaming-Formate – HLS (<code>.m3u8</code>-Playlisten) und DASH (<code>.mpd</code>-Manifeste). Der Stream wird in kurze Segmente (typischerweise jeweils einige Sekunden lang) unterteilt, und das Manifest listet die Segmente in der Wiedergabereihenfolge auf. Ein Client-seitiger Player folgt dieser Liste.</p>",
+        "<p>Mit SSAI werden die Werbeabschnitte direkt in die Abschnittsliste eingefügt. Das Manifest, das an Ihren Player übergeben wird, wird so umgeschrieben, dass ein Werbeabschnitt genau an der Stelle erscheint, an der sonst ein Inhaltsabschnitt stehen würde. Einige Implementierungen verwenden Diskontinuitätsmarkierungen (<code>#EXT-X-DISCONTINUITY</code> in HLS), um Kodierungsänderungen zu kennzeichnen; die Wiedergabeliste selbst ist jedoch das, was der Player tatsächlich abspielt. Aus Sicht des Players <em>ist</em> die Werbung Teil des Programms.</p>"
+      ]
+    },
+    {
+      "h2": "Warum anfragenbasierte Werbeblocker nichts abfangen können",
+      "body": [
+        "<p>Eine erweiterungsbasierte Werbeblocker arbeiten auf der Netzwerkebene: Sie vergleichen Anfragen an bekannte Werbe-Domains und blockieren oder ersetzen diese. Dieses Modell setzt voraus, dass die Werbung als separate Anfrage von einer separaten Domain kommt, die sich von dem Inhalt unterscheiden lässt. SSAI beseitigt diese Annahme vollständig.</p>",
+        "<p>Mit stitched ads stammen die Segmente, die die Werbung enthalten, aus demselben Content-Delivery-Netzwerk, oft unter derselben Domain und innerhalb desselben Manifests wie die Sendung. Das Blockieren der Anfrage würde bedeuten, dass auch das Video selbst blockiert wird. Ein Werbeblocker, der dennoch versucht, bricht die Wiedergabe in der Regel aus oder erzeugt bei Live-Streams die eingefrorenen Platzhalter-Frames, die Nutzer melden. Dies ist eine strukturelle Einschränkung, keine vorübergehende Lücke: Jedes Tool, das durch Filtern von Netzwerkanfragen funktioniert, kann eine stitched ad nicht von dem umgebenden Inhalt unterscheiden.</p>"
+      ]
+    },
+    {
+      "h2": "Client-seitige Einfügung: das Modell, das Werbeblocker bewältigen können",
+      "body": [
+        "<p>Zum Vergleich: Bei clientseitiger Werbeeinfügung ruft der Videoplayer während der Wiedergabe ein Werbe-SDK auf, das Werbe-SDK lädt die kreativen Dateien von Werbe-Domänen, und der Player spielt sie in einem Slot ab. Diese Anfragen sind sichtbar, separat und blockierbar. Die Neutralisierung des Werbe-SDK – was AdOff mit dem Videowerbe-SDK tut, das im gesamten Web verwendet wird – bewirkt, dass der Player direkt wieder zum Inhalt zurückkehrt.</p>",
+        "<p>Darum funktionieren Werbeblocker weiterhin auf einem großen Teil des Webs, einschließlich vieler Seiten, die Videoplayer mit clientseitigen Werbeanrufen einbetten, und darum scheitern dieselben Blocker bei Live-Streaming-Plattformen und Abonnementdiensten, die serverseitig zusammenfügen.</p>"
+      ]
+    },
+    {
+      "h2": "Was nötig wäre, um eingefügte Werbeanzeigen zu entfernen",
+      "body": [
+        "<p>Das Entfernen eines eingefügten Werbeblocks erfordert das Verständnis des Streams, nicht des Netzwerks: die Erkennung von Diskontinuitätsmarkern und Segmentgrenzmustern, das Neuschreiben des Manifests zum Ausschluss der Werbe-Segmente sowie die Hoffnung, dass der Anbieter das Layout nicht ändert. Dieser Ansatz ist von Natur aus brüchig – jede Änderung seitens des Anbieters bricht die Umgehungslösung, und bei Live-Streams gerät der neu geschriebene Player oft hinterher oder zeigt einen verschlechterten Platzhalter an.</p>",
+        "<p>Der andere, zuverlässige Weg ist überhaupt nicht technischer Natur: Anbieter fügen Werbung ein, weil das Abonnementmodell werbefinanziert ist; die Wahl eines Tarifs ohne Werbung entfernt diese daher von vornherein. Alles andere ist ein Wettrüsten, das die Seherfahrung meist verschlechtert.</p>"
+      ]
+    },
+    {
+      "h2": "Wo AdOff steht",
+      "body": [
+        "<p>AdOff ist eine kostenlose Browser-Erweiterung (für Chrome, Firefox, Safari, Edge und Opera), die Netzwerbwerbung mittels statischer Filterregeln blockiert, Werbeelemente auf der Seite ausblendet und das clientseitige Video-Werbe-SDK neutralisiert, indem es durch einen Stub ersetzt wird, der den Inhalt sofort fortsetzt. Es funktioniert ausschließlich in den Web-Playern von Apps, bei denen die Werbung clientseitig eingebettet ist; es behauptet nicht, Werbung aus serverseitig zusammengesetzten Streams zu entfernen, und greift bewusst nicht in Abonnement-Video-Player ein, um deren Funktionsweise nicht zu stören.</p>",
+        "<p>Dass Ehrlichkeit hier das Ziel ist: Wenn Sie wissen, welches Modell eine Website verwendet, können Sie bereits vor der Installation feststellen, ob eine Erweiterung Ihnen helfen kann.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Was ist der Unterschied zwischen SSAI und CSAI?",
+      "a": "Bei clientseitiger Werbeeinfügung (CSAI) fordert der Player Werbung separat zur Wiedergabezeit an, sodass diese Anfragen für Werbeblocker sichtbar sind. Bei serverseitiger Werbeeinfügung (SSAI) werden Werbung und Videoinhalt bereits auf dem Server vor der Auslieferung zusammengefügt, sodass keine separate Werbeanfrage existiert, die blockiert werden könnte."
+    },
+    {
+      "q": "Kann eine Browser-Erweiterung SSAI-Werbung blockieren?",
+      "a": "Keine Erweiterung, die durch Filtern von Netzwerkanfragen funktioniert, kann eine eingefügte Werbung entfernen, ohne den Stream zu beschädigen, da Werbung und Inhalt gemeinsam im selben Manifest und denselben Segmenten übertragen werden. Tools, die dies versuchen, führen in der Regel zu eingefrorenen Bildern, Qualitätsverlusten oder Wiedergabefehlern."
+    },
+    {
+      "q": "Warum nutzen Live-Streams SSAI statt herkömmlicher Werbung?",
+      "a": "Beim Live-Streaming muss die Werbeunterbrechung für jeden Viewer synchron bleiben und die Wiedergabe unterbrechungsfrei gewährleistet sein – dies garantiert die serverseitige Zusammenführung. Zudem funktioniert sie auf jedem Gerät identisch, einschließlich Smart TVs, für die keine Erweiterungen verfügbar sind."
+    },
+    {
+      "q": "Ist SSAI dasselbe wie eine Werbung, die nicht übersprungen werden kann?",
+      "a": "Nicht genau. Das Überspringen ist eine Entscheidung des Players, die durch die Stream-Metadaten gesteuert wird. Bei SSAI ist die Werbung Teil des Streams, sodass weder der Viewer noch eine Browser-Erweiterung einen Steuerungspunkt zum Überspringen oder Entfernen hat."
+    },
+    {
+      "q": "Funktioniert AdOff auf Webseiten, die SSAI verwenden?",
+      "a": "Bei diesen spezifischen Streams nein – und AdOff macht hierfür keine entsprechenden Behauptungen. Bei den nicht-video-basierten Werbeformen derselben Webseiten sowie im übrigen Browserverkehr (Bildwerbung, Tracking, clientseitige Video-Werbe-SDKs) blockiert und blendet AdOff Werbung wie üblich aus."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Streaming-Werbung blockieren: Was funktioniert und was nicht möglich ist"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Wie clientseitige Video-Werbe-SDKs neutralisiert werden"
+    },
+    {
+      "href": "/twitch-ad-blocker",
+      "text": "Twitch-Werbung: Warum Erweiterungen bei Live-Streams versagen"
+    }
+  ],
+  "cta": {
+    "h3": "Blockieren Sie die Werbung, die blockiert werden kann",
+    "p": "AdOff kann stitched-Werbung nicht entfernen – auch keine ehrliche Lösung kann das. Anzeigewerbung, Tracking und clientseitige Video-Werbung während Ihres alltäglichen Surzens hingegen schon – und AdOff übernimmt das kostenlos und ohne Registrierung.",
+    "btn": "AdOff installieren – es ist kostenlos"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

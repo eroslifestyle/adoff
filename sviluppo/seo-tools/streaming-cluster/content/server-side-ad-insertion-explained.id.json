@@ -1,0 +1,96 @@
+{
+  "slug": "server-side-ad-insertion-explained",
+  "lang": "id",
+  "title": "Penjelasan Server-Side Ad Insertion: Mengapa Pemblokir Gagal | AdOff",
+  "description": "SSAI menyisipkan iklan langsung ke aliran video, tanpa permintaan iklan terpisah yang bisa diblokir.",
+  "h1": "Penjelasan Server-Side Ad Insertion: Mengapa Pemblokir Iklan di Jaringan Tidak Dapat Melihat Iklan Ini",
+  "answer": "Tidak — penyisipan iklan di sisi server (SSAI) tidak dapat diblokir oleh pemblokir iklan berbasis permintaan, karena iklan disatukan ke dalam aliran video yang sama dengan konten sebelum meninggalkan server. Browser Anda mengunduh satu manifes dan satu aliran yang berkelanjutan; tidak ada permintaan iklan terpisah yang dapat ditangkap.",
+  "sections": [
+    {
+      "h2": "Apa itu penyisipan iklan di sisi server sebenarnya",
+      "body": [
+        "<p>Penyisipan iklan di sisi server (SSAI), juga dikenal sebagai penggabungan iklan, adalah teknik di mana penyedia video menggabungkan iklan dan konten menjadi satu aliran video <strong>di sisi server</strong>, sebelum pengiriman. Perangkat penonton menerima satu aliran kontinu yang sudah mencakup iklan — berbeda dengan penyisipan iklan di sisi klien (CSAI), di mana pemutar memuat konten terlebih dahulu, lalu mengirim permintaan terpisah ke server iklan untuk setiap jeda.</p>",
+        "<p>Anda akan melihat SSAI dijelaskan dalam dokumen teknis sebagai “manifes yang dijahit” atau “pengiriman manifes tunggal”. Pendekatan ini merupakan yang paling dominan untuk streaming langsung dan untuk tier berbayar layanan video berlangganan yang didukung iklan, karena lebih sulit untuk dibypass dan berperilaku identik di setiap perangkat.</p>"
+      ]
+    },
+    {
+      "h2": "Cara kerjanya dalam manifest HLS dan DASH",
+      "body": [
+        "<p>Pengiriman video modern menggunakan format streaming adaptif — HLS (<code>.m3u8</code> playlist) dan DASH (<code>.mpd</code> manifest). Stream dibagi menjadi segmen-segmen pendek (biasanya beberapa detik per segmen), dan manifest mencantumkan segmen-segmen tersebut dalam urutan pemutaran. Pemain di sisi klien mengikuti daftar tersebut.</p>",
+        "<p>Dengan SSAI, segmen iklan dimasukkan langsung ke dalam daftar segmen tersebut. Manifes yang diberikan kepada pemutar Anda ditulis ulang sehingga segmen iklan muncul tepat di lokasi segmen konten. Beberapa implementasi menggunakan penanda ketidakberlanjutan (<code>#EXT-X-DISCONTINUITY</code> dalam HLS) untuk menandai perubahan encoding, tetapi daftar putar itulah yang secara sah dimainkan oleh pemutar. Dari sudut pandang pemutar, iklan <em>adalah</em> bagian dari program.</p>"
+      ]
+    },
+    {
+      "h2": "Mengapa pemblokir iklan berbasis permintaan tidak memiliki apa pun yang bisa diintercept",
+      "body": [
+        "<p>Sebuah pemblokir iklan berbasis ekstensi bekerja pada lapisan jaringan: ia mencocokkan permintaan untuk domain iklan yang diketahui dan memblokir atau mengubahnya. Model ini mengasumsikan bahwa iklan tiba sebagai permintaan terpisah, dari domain terpisah, yang dapat dibedakan dari konten. SSAI menghilangkan asumsi ini sepenuhnya.</p>",
+        "<p>Dengan iklan yang dijahit (stitched ads), segmen yang membawa iklan berasal dari jaringan pengiriman konten yang sama, sering kali di bawah domain yang sama, dan berada di dalam manifes yang sama dengan tayangan. Memblokir permintaan tersebut berarti memblokir video itu sendiri. Pemblokir iklan yang tetap mencoba melakukannya biasanya akan mengganggu pemutaran atau, pada siaran langsung, menghasilkan frame placeholder yang beku sebagaimana dilaporkan pengguna. Ini merupakan keterbatasan struktural, bukan celah sementara: alat apa pun yang bekerja dengan menyaring permintaan jaringan tidak dapat membedakan iklan yang dijahit dari konten di sekitarnya.</p>"
+      ]
+    },
+    {
+      "h2": "Penyisipan di sisi klien: model yang bisa ditangani oleh pemblokir iklan",
+      "body": [
+        "<p>Sebagai perbandingan: dalam penyisipan iklan di sisi klien, pemutar video memanggil SDK iklan selama pemutaran, SDK mengambil file kreatif dari domain periklanan, dan pemutar memutar mereka di dalam slot. Permintaan tersebut terlihat, terpisah, dan dapat diblokir. Menonaktifkan SDK iklan — yang dilakukan AdOff terhadap SDK periklanan video yang digunakan di seluruh web — menyebabkan pemutar langsung kembali ke konten.</p>",
+        "<p>Inilah sebabnya pemblokir iklan masih berfungsi di sebagian besar web, termasuk banyak situs yang menyematkan pemutar video dengan panggilan iklan di sisi klien, dan mengapa pemblokir yang sama gagal pada platform streaming langsung dan layanan berlangganan yang menyatukan iklan di sisi server.</p>"
+      ]
+    },
+    {
+      "h2": "Apa yang diperlukan untuk menghapus iklan yang telah dijahit",
+      "body": [
+        "<p>Menghapus iklan yang dijahit memerlukan pemahaman terhadap aliran konten, bukan terhadap jaringan: mendeteksi penanda ketidakberlanjutan dan pola batas segmen, menulis ulang manifes agar segmen iklan dihapus, serta berharap penyedia tidak mengubah tata letaknya. Metode ini pada dasarnya rentan—perubahan apa pun dari sisi penyedia akan membuat solusi sementara ini gagal, dan pada siaran langsung pemutar yang telah ditulis ulang seringkali tertinggal atau menampilkan placeholder yang berkualitas rendah.</p>",
+        "<p>Jalur lain yang andal sama sekali tidak bersifat teknis: penyedia memasang iklan karena paket langganan tersebut didukung iklan, sehingga memilih paket tanpa iklan secara otomatis menghilangkan iklan tersebut sesuai desainnya. Segala hal lainnya hanyalah perlombaan senjata yang sebagian besar justru merusak pengalaman menonton.</p>"
+      ]
+    },
+    {
+      "h2": "Posisi AdOff saat ini",
+      "body": [
+        "<p>AdOff adalah ekstensi browser gratis (Chrome, Firefox, Safari, Edge, Opera) yang memblokir iklan jaringan menggunakan aturan penyaringan statis, menyembunyikan elemen iklan di halaman, serta menetralkan SDK iklan video sisi klien dengan menggantinya menggunakan stub yang langsung melanjutkan konten. AdOff hanya berfungsi pada pemutar web aplikasi, di mana iklannya bersifat sisi klien; tidak berupaya menghapus iklan dari aliran yang disatukan di sisi server, dan secara sengaja tidak mengganggu pemutar video berlangganan guna menghindari kerusakan padanya.</p>",
+        "<p>Keterbukaan itulah tujuan halaman ini: mengetahui model apa yang digunakan suatu situs memberi tahu Anda apakah ekstensi bisa membantu sebelum Anda menginstalnya.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Apa perbedaan antara SSAI dan CSAI?",
+      "a": "Dalam penyisipan iklan di sisi klien (CSAI), pemutar meminta iklan secara terpisah saat waktu pemutaran, sehingga permintaan tersebut terlihat oleh pemblokir iklan. Dalam penyisipan iklan di sisi server (SSAI), iklan digabungkan ke dalam aliran video di server sebelum pengiriman, sehingga tidak ada permintaan iklan terpisah yang bisa diblokir."
+    },
+    {
+      "q": "Apakah ekstensi browser apa pun dapat memblokir iklan SSAI?",
+      "a": "Tidak ada ekstensi yang bekerja dengan menyaring permintaan jaringan yang dapat menghapus iklan yang telah disatukan tanpa merusak aliran, karena iklan dan konten bergerak bersama dalam manifes dan segmen yang sama. Alat yang mencoba melakukannya biasanya menyebabkan frame membeku, penurunan kualitas, atau kesalahan pemutaran."
+    },
+    {
+      "q": "Mengapa siaran langsung menggunakan SSAI daripada iklan biasa?",
+      "a": "Streaming langsung memerlukan jeda iklan tetap sinkron bagi setiap penonton dan menjaga pemutaran tanpa gangguan, yang dijamin oleh penyatuan di sisi server. Selain itu, metode ini berfungsi secara identik di semua perangkat, termasuk TV pintar di mana ekstensi tidak tersedia."
+    },
+    {
+      "q": "Apakah SSAI sama dengan iklan yang tidak bisa dilewati?",
+      "a": "Tidak juga. Fitur melewati iklan merupakan keputusan pemutar yang dikendalikan oleh metadata aliran. Dengan SSAI, iklan merupakan bagian dari aliran itu sendiri, sehingga baik penonton maupun ekstensi browser tidak memiliki titik kontrol untuk melewati atau menghapusnya."
+    },
+    {
+      "q": "Apakah AdOff berfungsi di situs yang menggunakan SSAI?",
+      "a": "Pada aliran spesifik tersebut, tidak — dan AdOff tidak mengklaim sebaliknya. Pada iklan non-video di situs yang sama, serta di seluruh aktivitas penjelajahan Anda (iklan tampilan, pelacakan, SDK iklan video di sisi klien), AdOff tetap memblokir dan menyembunyikan iklan seperti biasa."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Pemblokiran iklan streaming: apa yang berhasil dan apa yang tidak bisa"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Bagaimana SDK iklan video sisi klien dinetralkan"
+    },
+    {
+      "href": "/twitch-ad-blocker",
+      "text": "Iklan Twitch: mengapa ekstensi gagal pada siaran langsung"
+    }
+  ],
+  "cta": {
+    "h3": "Blokir iklan yang bisa diblokir",
+    "p": "AdOff tidak bisa menghapus iklan yang di-stitch — tidak ada solusi jujur pun yang bisa. Namun, iklan tampilan, pelacakan, dan iklan video sisi klien yang muncul selama penjelajahan sehari-hari Anda adalah hal yang berbeda, dan AdOff menanganinya secara gratis tanpa memerlukan akun.",
+    "btn": "Pasang AdOff — gratis"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

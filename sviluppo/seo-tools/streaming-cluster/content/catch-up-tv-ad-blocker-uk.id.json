@@ -1,0 +1,97 @@
+{
+  "slug": "catch-up-tv-ad-blocker-uk",
+  "lang": "id",
+  "title": "Pemblokir Iklan Catch-Up TV untuk Layanan UK | AdOff",
+  "description": "Hilangkan iklan video di BBC iPlayer, ITVX, Channel 4, Channel 5, dll. AdOff ekstensi gratis yang menonaktifkan SDK iklan pemutar siaran ulang.",
+  "h1": "Pemblokir Iklan Catch-Up TV untuk Layanan Penyiar Inggris",
+  "answer": "AdOff menghapus iklan pra-sesi dan iklan tengah-sesi dari layanan TV *catch-up* Inggris di browser, dalam sebagian besar kasus. Alat ini menggantikan Google IMA ad SDK yang dimuat oleh pemutar dengan *stub* ringan yang langsung melanjutkan pemutaran, sehingga program dapat ditonton tanpa jeda iklan. Cakupan berlaku untuk pemutar web desktop, selama layanan tersebut menggunakan SDK standar.",
+  "sections": [
+    {
+      "h2": "Layanan mana saja di Inggris yang tercakup",
+      "body": [
+        "<p>Penyiar Inggris Raya menyediakan platform catch-up gratis yang didanai oleh iklan. Ketika platform-platform ini dimuat di browser desktop dan meminta Google IMA SDK, AdOff menyisipkan permintaan tersebut dan menyajikan stub lokal sebagai gantinya. Layanan-layanan yang mencakup hari ini:</p>",
+        "<ul><li><strong>BBC iPlayer</strong> (bbc.co.uk, bbc.com)</li><li><strong>ITV dan ITVX</strong> (itv.com, itvx.com)</li><li><strong>Channel 4</strong> (channel4.com)</li><li><strong>Channel 5</strong> (channel5.com)</li><li><strong>My5</strong> (my5.tv)</li><li><strong>Pluto TV</strong> dan <strong>Tubi</strong>, keduanya tersedia di pasar Inggris Raya</li></ul>"
+      ]
+    },
+    {
+      "h2": "Cara kerjanya pada pemutar siaran ulang",
+      "body": [
+        "<p>Kebanyakan pemutar catch-up Inggris Raya mengintegrasikan Google IMA SDK untuk menjadwalkan pre-roll dan mid-roll. AdOff mengalihkan permintaan skrip SDK ke stub yang disertakan bersama ekstensi. Ketika pemutar memanggil stub tersebut untuk memulai jeda iklan, stub segera menjawab “permintaan lanjutan konten diterima”: pemutar mengira jeda iklan telah selesai dan melanjutkan pemutaran program.</p>",
+        "<p>Hal ini terjadi secara lokal di browser Anda. Tidak ada yang diunduh dua kali dan aliran video itu sendiri tidak diubah — hanya lapisan orkestrasi iklan yang dinetralkan.</p>"
+      ]
+    },
+    {
+      "h2": "Mengapa TV siaran ulang berbeda dari streaming berlangganan",
+      "body": [
+        "<p>Platform catch-up penyiar dinilai gratis untuk ditonton karena mereka menayangkan iklan. Ini membuat jalur iklan mereka menjadi standar: mereka mengandalkan SDK yang sama yang digunakan ribuan situs web. Sebaliknya, platform berlangganan menyisipkan iklan ke dalam aliran video secara di sisi server, yang tidak bisa diakses oleh ekstensi browser. Oleh karena itu, TV catch-up merupakan segmen di mana netralisasi iklan di dalam browser benar-benar berfungsi.</p>"
+      ]
+    },
+    {
+      "h2": "Apa saja yang dilakukan AdOff selain pada pemutar video",
+      "body": [
+        "<p>Ekstensi ini juga menyertakan 180 aturan jaringan statis yang memblokir permintaan ke domain iklan dan pelacakan, serta filter CSS/DOM kosmetik yang menyembunyikan spanduk iklan, kotak overlay, dan ubin promosi di halaman-halaman penyiar itu sendiri. Hasilnya adalah tampilan halaman iPlayer, ITVX, atau Channel 4 yang lebih bersih sebelum Anda bahkan menekan tombol putar.</p>"
+      ]
+    },
+    {
+      "h2": "Keterbatasan yang perlu Anda ketahui",
+      "body": [
+        "<p>Cakupannya nyata namun bersyarat:</p>",
+        "<ul><li>Jika penyiar beralih ke <strong>penyisipan iklan di sisi server (SSAI)</strong>, iklan disisipkan langsung ke dalam aliran video, sehingga stub SDK tidak berpengaruh.</li><li>AdOff hanya berfungsi di <strong>browser desktop saja</strong> — tidak di aplikasi asli, TV pintar, atau set-top box.</li><li>Beberapa <strong>siaran langsung dan acara olahraga</strong> menggunakan jalur pengiriman yang berbeda.</li><li>Penyiar sering memperbarui pemutar mereka, sehingga cakupan dipertahankan sepanjang waktu, bukan bersifat tetap selamanya.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Gratis, tanpa akun, berfungsi di lima browser",
+      "body": [
+        "<p>AdOff adalah ekstensi Manifest V3, sepenuhnya gratis, tanpa pendaftaran dan tanpa masa percobaan. Ekstensi ini berjalan di Chrome, Firefox, Safari, Edge, dan Opera. Pasang ekstensi ini, pastikan perlindungan tetap aktif, dan buka layanan catch-up Anda seperti biasa.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Apakah ini berfungsi di BBC iPlayer?",
+      "a": "Dalam sebagian besar kasus, ya, ketika iPlayer menayangkan iklan melalui Google IMA SDK di browser. AdOff mengganti SDK tersebut dengan versi stub yang langsung melanjutkan program setelahnya. BBC iPlayer memiliki jumlah jeda iklan relatif sedikit dibandingkan ITVX, sehingga perbedaan praktisnya bervariasi tergantung programnya."
+    },
+    {
+      "q": "Bisakah saya menghilangkan iklan di ITVX tanpa membayar untuk Premium?",
+      "a": "AdOff menonaktifkan SDK iklan pada pemutar web ITVX, sehingga dalam sebagian besar kasus iklan pra-tayang (pre-rolls) dan iklan tengah-tengah (mid-rolls) tidak diputar. ITVX Premium adalah produk komersial terpisah yang menyediakan saluran tambahan dan streaming tanpa iklan; AdOff sama sekali tidak berinteraksi dengan akun Anda."
+    },
+    {
+      "q": "Apakah ini berfungsi di aplikasi seluler ITVX atau iPlayer?",
+      "a": "Tidak. AdOff adalah ekstensi browser dan hanya berfungsi pada halaman yang dimuat di browser desktop. Aplikasi mobile asli, aplikasi TV pintar, serta sesi casting berada di luar jangkauannya."
+    },
+    {
+      "q": "Apakah akun catch-up saya akan terdeteksi?",
+      "a": "AdOff berjalan secara lokal dan tidak memodifikasi permintaan ke server konten penyiar — hanya skrip SDK iklan yang diganti. Ekstensi ini tidak masuk ke dalam sistem apa pun, tetapi tidak ada alat yang dapat menjamin perilaku platform pihak ketiga, sehingga penggunaannya dilakukan atas risiko Anda sendiri."
+    },
+    {
+      "q": "Apakah AdOff memerlukan biaya?",
+      "a": "Tidak. Ekstensi ini sepenuhnya gratis, tanpa akun, tanpa masa percobaan, dan tanpa versi berbayar. Semua fitur, termasuk penonaktifan iklan video di platform catch-up, sudah termasuk sejak instalasi."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Cara kerja pemblokiran iklan streaming"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Penjelasan pemblokiran iklan pada IMA SDK"
+    },
+    {
+      "href": "/tv-streaming-ad-blocker",
+      "text": "Ikhtisar pemblokir iklan untuk streaming TV"
+    }
+  ],
+  "cta": {
+    "h3": "Tonton siaran ulang TV Inggris tanpa jeda iklan",
+    "p": "Pasang AdOff di browser Anda dan biarkan stub menangani SDK iklan di iPlayer, ITVX, dan layanan lainnya.",
+    "btn": "Pasang AdOff secara gratis"
+  },
+  "report": {
+    "intro": "Apakah layanan siaran ulang Inggris tertentu belum tercantum dalam daftar ini? Jika platform favorit Anda masih menampilkan jeda iklan di https://adoff.app/catch-up-tv-ad-blocker-uk, beri tahu kami layanan mana yang dimaksud. Laporan seperti yours-lah yang menentukan layanan mana yang akan kami tambahkan selanjutnya.",
+    "btn_text": "Laporkan layanan Inggris yang belum terdaftar",
+    "btn_href": "https://adoff.app/r/issues/new"
+  },
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

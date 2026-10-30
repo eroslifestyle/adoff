@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdOff AI Autopilot — Questionario Strategico</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: radial-gradient(circle at 50% 0%, #1a1a3e 0%, #0a0a1a 70%);
+    color: #fff;
+    min-height: 100vh;
+    padding: 40px 20px;
+    line-height: 1.6;
+  }
+  .container { max-width: 980px; margin: 0 auto; }
+  header {
+    text-align: center;
+    margin-bottom: 50px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #2a2a4a;
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #7c5cfc 0%, #b8a9ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+  }
+  .subtitle { color: #8a8aaa; font-size: 14px; }
+  .meta { color: #5a5a7a; font-size: 12px; margin-top: 8px; }
+  .progress-bar {
+    position: sticky;
+    top: 0;
+    background: #0a0a1a;
+    padding: 12px 0;
+    z-index: 100;
+    border-bottom: 1px solid #2a2a4a;
+    margin-bottom: 30px;
+  }
+  .progress-track {
+    height: 6px;
+    background: #1a1a3e;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7c5cfc, #b8a9ff);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  .progress-text {
+    font-size: 12px;
+    color: #8a8aaa;
+    text-align: center;
+    margin-top: 6px;
+  }
+  .section {
+    background: #12122a;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    border: 1px solid #1f1f3e;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #1f1f3e;
+  }
+  .section-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #7c5cfc 0%, #4c3ad4 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+  .section-title { font-size: 18px; font-weight: 600; }
+  .section-desc { color: #8a8aaa; font-size: 13px; margin-bottom: 20px; }
+  .question {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed #2a2a4a;
+  }
+  .question:last-child { border-bottom: none; padding-bottom: 0; }
+  .q-number {
+    color: #7c5cfc;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .q-text { font-size: 16px; font-weight: 500; margin-bottom: 14px; }
+  .q-context {
+    color: #8a8aaa;
+    font-size: 13px;
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    background: #0a0a1a;
+    border-left: 3px solid #4c3ad4;
+    border-radius: 4px;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #0a0a1a;
+    border: 1px solid #1f1f3e;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .option:hover { border-color: #4c3ad4; background: #14143a; }
+  .option.selected {
+    border-color: #7c5cfc;
+    background: rgba(124, 92, 252, 0.1);
+  }
+  .option input { margin-top: 4px; accent-color: #7c5cfc; }
+  .option-content { flex: 1; }
+  .option-label {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .badge-rec {
+    background: rgba(74, 222, 128, 0.15);
+    color: #4ade80;
+    border: 1px solid #4ade80;
+  }
+  .badge-warn {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fbbf24;
+    border: 1px solid #fbbf24;
+  }
+  .badge-risk {
+    background: rgba(244, 63, 94, 0.15);
+    color: #f43f5e;
+    border: 1px solid #f43f5e;
+  }
+  .badge-cost {
+    background: rgba(124, 92, 252, 0.15);
+    color: #b8a9ff;
+    border: 1px solid #7c5cfc;
+  }
+  .option-comment {
+    font-size: 12px;
+    color: #8a8aaa;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .actions {
+    position: sticky;
+    bottom: 20px;
+    background: rgba(10, 10, 26, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #2a2a4a;
+    display: flex;
+    gap: 12px;
+    margin-top: 30px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .btn {
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #7c5cfc 0%, #4c3ad4 100%);
+    color: #fff;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124, 92, 252, 0.4); }
+  .btn-secondary {
+    background: transparent;
+    color: #b8a9ff;
+    border: 1px solid #7c5cfc;
+  }
+  .btn-secondary:hover { background: rgba(124, 92, 252, 0.1); }
+  .stats { font-size: 13px; color: #8a8aaa; }
+  .free-text {
+    width: 100%;
+    margin-top: 10px;
+    background: #0a0a1a;
+    border: 1px solid #1f1f3e;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    resize: vertical;
+    min-height: 60px;
+  }
+  .free-text:focus { outline: none; border-color: #7c5cfc; }
+  footer {
+    text-align: center;
+    color: #5a5a7a;
+    font-size: 12px;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #2a2a4a;
+  }
+  pre.export {
+    background: #0a0a1a;
+    border: 1px solid #2a2a4a;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+    color: #b8a9ff;
+    font-size: 12px;
+    overflow-x: auto;
+    max-height: 400px;
+    display: none;
+  }
+  pre.export.show { display: block; }
+  .btn-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+    color: #0a0a1a;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 8px 32px rgba(74, 222, 128, 0.4);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .toast.error {
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(244, 63, 94, 0.4);
+  }
+  .toast.info {
+    background: linear-gradient(135deg, #7c5cfc 0%, #4c3ad4 100%);
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(124, 92, 252, 0.4);
+  }
+  @media (max-width: 720px) {
+    .actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .btn-group { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>AdOff AI Autopilot — Questionario Strategico</h1>
+  <div class="subtitle">25 domande per definire i boundaries dell'AI che gestirà il business end-to-end</div>
+  <div class="meta">v1.0 · 2026-05-07 · Pre-vendita → Vendita → Post-vendita → Auto-fix → Auto-deploy</div>
+  <div class="meta" style="margin-top: 14px; color: #4ade80;">✓ Auto-save attivo (localStorage) · 💾 Salva · 📥 Scarica JSON · 📄 Scarica Markdown · 📋 Copia · Ctrl+S</div>
+</header>
+
+<div class="progress-bar">
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText">0 / 25 risposte</div>
+</div>
+
+<!-- ============== SEZIONE 1: AUTONOMIA AI ============== -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-icon">A</div>
+    <div>
+      <div class="section-title">Autonomia AI sul codice e deploy</div>
+    </div>
+  </div>
+  <div class="section-desc">L'AI può modificare codice e deployare? Fino a che livello? Questi 4 quesiti definiscono il blast radius dell'autonomia.</div>
+
+  <div class="question">
+    <div class="q-number">Domanda 1 · Scope modifiche codice</div>
+    <div class="q-text">Cosa può modificare AUTONOMAMENTE l'AI senza approvazione umana?</div>
+    <div class="q-context">Trade-off: più autonomia = più velocità ma anche più rischio bug in produzione. Il sistema attuale ha 4 layer (network rules, CSS, content scripts, stealth) + sito + backend.</div>
+    <div class="options" data-q="q1">
+      <label class="option">
+        <input type="radio" name="q1" value="rules-only">
+        <div class="option-content">
+          <div class="option-label">Solo regole adblock e CSS hiding <span class="badge badge-rec">RACCOMANDATO MVP</span></div>
+          <div class="option-comment">Zero rischio crash dell'estensione. AdOff aggiorna i filtri quando un sito cambia ad system. Backend e logica core restano umani. Best per fase 1 (mesi 1-3).</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q1" value="content-marketing">
+        <div class="option-content">
+          <div class="option-label">+ Content sito (blog, landing, copy) <span class="badge badge-rec">RACCOMANDATO FASE 2</span></div>
+          <div class="option-comment">Aggiunge SEO automatico: nuovi articoli, vs/competitor, traduzioni. Richiede solo deploy CF Pages, no danno utenti finali. Da abilitare al mese 2.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q1" value="full-extension">
+        <div class="option-content">
+          <div class="option-label">+ Logica estensione (popup, options, content script) <span class="badge badge-warn">RISCHIO MEDIO</span></div>
+          <div class="option-comment">L'AI può fixare bug UI o aggiungere feature minor. Richiede gate test Playwright + smoke test su 10 siti reali. Solo dopo 60+ gg di stabilità del MVP.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q1" value="full-stack">
+        <div class="option-content">
+          <div class="option-label">Tutto: estensione + sito + backend Cloudflare <span class="badge badge-risk">ALTO RISCHIO</span></div>
+          <div class="option-comment">Pieno autopilot ma backend gestisce licenze e Stripe — un bug può perdere fatturato o esporre licenze. Sconsigliato senza staging environment + observability completa.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 2 · Deploy autonomy</div>
+    <div class="q-text">Fino a dove l'AI può deployare automaticamente?</div>
+    <div class="q-context">Chrome Web Store ha review umana 1-7gg. Firefox AMO 0-24h. Edge 1-3gg. Il sito CF Pages è instant. CWS può rifiutare aggiornamenti aggressivi e risultare in ban.</div>
+    <div class="options" data-q="q2">
+      <label class="option">
+        <input type="radio" name="q2" value="staging-only">
+        <div class="option-content">
+          <div class="option-label">Solo staging (sito beta + ext sideload) <span class="badge badge-warn">SICURO MA LENTO</span></div>
+          <div class="option-comment">L'AI commit + crea PR + deploya beta.adoff.app. Founder approva merge a main. Massima sicurezza ma collo di bottiglia umano. Per primi 30gg.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q2" value="prod-canary">
+        <div class="option-content">
+          <div class="option-label">Production con canary (5% utenti) <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Sito CF Pages: rollout graduale via feature flag. Estensione: rilasciata al 5% via CWS staged rollout (feature ufficiale). Auto-rollback se crash rate sale 2x baseline.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q2" value="prod-direct">
+        <div class="option-content">
+          <div class="option-label">Production diretto (100% utenti subito) <span class="badge badge-risk">RISCHIO ALTO</span></div>
+          <div class="option-comment">Massima velocità ma un bug finisce su tutti i 50K+ utenti istantaneamente. Solo per fix di sole regole adblock (basso rischio) e copy sito.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q2" value="hybrid-rules">
+        <div class="option-content">
+          <div class="option-label">Misto: regole adblock direct, codice via canary <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Regole = JSON, low-risk → deploy diretto a CWS giornaliero. Codice JS = canary 5% → 25% → 100% in 72h. Best balance velocità/sicurezza.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 3 · Human-in-loop gates</div>
+    <div class="q-text">Quando è OBBLIGATORIO l'approve umano prima dell'azione AI?</div>
+    <div class="q-context">Definisce dove l'AI deve fermarsi e chiedere conferma. Più gates = più sicurezza ma più friction. Notifica via Telegram esistente per approve da mobile.</div>
+    <div class="options" data-q="q3">
+      <label class="option">
+        <input type="checkbox" name="q3" value="pricing-changes">
+        <div class="option-content">
+          <div class="option-label">Modifiche pricing/devices/lifetime <span class="badge badge-rec">CRITICO</span></div>
+          <div class="option-comment">Mai delegare interamente all'AI. Fatturato a rischio diretto.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q3" value="legal-pages">
+        <div class="option-content">
+          <div class="option-label">Privacy policy, terms, withdrawal <span class="badge badge-rec">CRITICO</span></div>
+          <div class="option-comment">Compliance EU/GDPR: errori = sanzioni. Solo sotto review umana o legal.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q3" value="extension-breaking">
+        <div class="option-content">
+          <div class="option-label">Modifiche che richiedono nuovo permission CWS <span class="badge badge-rec">CRITICO</span></div>
+          <div class="option-comment">Aggiungere permessi causa re-review CWS lunga. Trigger umano necessario.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q3" value="customer-refund">
+        <div class="option-content">
+          <div class="option-label">Refund o licenza compensativa &gt;10 EUR <span class="badge badge-rec">CONSIGLIATO</span></div>
+          <div class="option-comment">L'AI può dare giorni Pro gratis (referral system) ma cash refund deve essere umano sopra soglia.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q3" value="public-statements">
+        <div class="option-content">
+          <div class="option-label">Comunicati pubblici / risposte crisis <span class="badge badge-rec">CRITICO</span></div>
+          <div class="option-comment">Es. CWS rifiuta release, dataleak, controversia social. Voce brand = solo umano.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q3" value="ban-handling">
+        <div class="option-content">
+          <div class="option-label">Account social bannati (ricostruzione) <span class="badge badge-warn">CONSIGLIATO</span></div>
+          <div class="option-comment">L'AI può segnalare ban ma non auto-creare nuovi account (rischio ban-evasion ToS).</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 4 · Rollback automatico</div>
+    <div class="q-text">Quando deve scattare auto-rollback senza intervento umano?</div>
+    <div class="q-context">Sentry/error tracking + analytics conversion. Auto-rollback evita disastri ma se troppo aggressivo blocca improvements legittimi.</div>
+    <div class="options" data-q="q4">
+      <label class="option">
+        <input type="radio" name="q4" value="conservative">
+        <div class="option-content">
+          <div class="option-label">Solo se crash rate &gt; 5x baseline in 1h <span class="badge badge-warn">CONSERVATIVO</span></div>
+          <div class="option-comment">Soglia alta. Rischio: bug medi non triggerano. Adatto se observability immatura.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q4" value="balanced">
+        <div class="option-content">
+          <div class="option-label">Crash &gt; 2x OR conversion -25% OR review rating -0.3★ in 24h <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Soglie multiple = copertura ampia. Rollback istantaneo per crash, lento per conversion. Best balance.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q4" value="aggressive">
+        <div class="option-content">
+          <div class="option-label">Crash &gt; 1.5x OR qualsiasi review 1-2★ nuova <span class="badge badge-risk">AGGRESSIVO</span></div>
+          <div class="option-comment">Rollback su singola review negativa = bias. Sconsigliato: blocca innovation.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ============== SEZIONE 2: AI BOT SOCIAL ============== -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-icon">B</div>
+    <div>
+      <div class="section-title">AI Bot Social "Umano"</div>
+    </div>
+  </div>
+  <div class="section-desc">Identità, trasparenza, lingue, tono dell'AI che interagisce sui social. Le scelte qui determinano i rischi ToS Reddit/Twitter/altri.</div>
+
+  <div class="question">
+    <div class="q-number">Domanda 5 · Identità persona AI</div>
+    <div class="q-text">Quale identità ha il bot social?</div>
+    <div class="q-context">Una persona fittizia coerente vs identità multiple per piattaforma vs identità "AdOff team" trasparente.</div>
+    <div class="options" data-q="q5">
+      <label class="option">
+        <input type="radio" name="q5" value="single-founder">
+        <div class="option-content">
+          <div class="option-label">Una persona fittizia (founder fake con storia) <span class="badge badge-warn">RISCHIO ETICO</span></div>
+          <div class="option-comment">Coerenza alta cross-piattaforma ma se scoperto = brand collapse + ToS violation. Reddit ban policy specifica vieta personas false.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q5" value="multi-personas">
+        <div class="option-content">
+          <div class="option-label">Multiple personas (3-5 founder/employee fake) <span class="badge badge-risk">ALTO RISCHIO</span></div>
+          <div class="option-comment">Sock puppeting esplicito. Ban garantito appena correlazioni IP/timing emergono. Sconsigliato.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q5" value="brand-team">
+        <div class="option-content">
+          <div class="option-label">Account ufficiale "AdOff" + AI dichiarata come assistente brand <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Trasparenza compliant. ToS-friendly. Bio "AI-assisted support team". Reddit r/AdOff ufficiale + commenti su altri sub solo da account brand.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q5" value="hybrid">
+        <div class="option-content">
+          <div class="option-label">Brand ufficiale + 1 founder REALE (Eros) + AI come ghostwriter <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Il founder vero firma post personali, AI scrive draft. Account brand AdOff per support. Massima credibilità + scalabilità AI. Privacy: usare pseudonimo coerente per anonimato.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 6 · Disclosure AI</div>
+    <div class="q-text">L'AI bot deve dichiarare di essere AI quando interagisce?</div>
+    <div class="q-context">EU AI Act (2026 in vigore) richiede disclosure per chatbot consumer. Reddit ToS richiede disclosure per bot. Twitter/X non lo richiede esplicitamente.</div>
+    <div class="options" data-q="q6">
+      <label class="option">
+        <input type="radio" name="q6" value="always-disclose">
+        <div class="option-content">
+          <div class="option-label">Sempre dichiarata come AI <span class="badge badge-rec">COMPLIANCE</span></div>
+          <div class="option-comment">Compliant EU AI Act. Bio: "🤖 AI assistant for AdOff team". Trade-off: alcuni utenti diffidano ma protegge legalmente.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q6" value="contextual">
+        <div class="option-content">
+          <div class="option-label">Dichiarata in supporto tecnico, non in social marketing <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Customer support bot 100% trasparente. Social marketing: voce brand "noi" senza specificare se umano/AI scrive. Best balance.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q6" value="never">
+        <div class="option-content">
+          <div class="option-label">Mai dichiarata <span class="badge badge-risk">VIOLAZIONE EU AI ACT</span></div>
+          <div class="option-comment">Sanzioni EU fino al 7% fatturato. Reddit ban garantito. Sconsigliato categoricamente.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 7 · Strategia lingue (revisione)</div>
+    <div class="q-text">Visto che AI scala, quante lingue veramente prioritarie?</div>
+    <div class="q-context">15 lingue richiedono 15 keyword research, 15 thread di lancio, 15 set di account social. AI rende fattibile ma il ROI per lingua varia.</div>
+    <div class="options" data-q="q7">
+      <label class="option">
+        <input type="radio" name="q7" value="all-15">
+        <div class="option-content">
+          <div class="option-label">Tutte le 15 lingue Day-1 <span class="badge badge-warn">RISCHIO DISPERSIONE</span></div>
+          <div class="option-comment">Massimo reach ma ogni lingua riceve attenzione superficiale. Account social nuovi su 15 piattaforme = pattern AI moderation = ban facili.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q7" value="tier-8-7">
+        <div class="option-content">
+          <div class="option-label">Tier 1 (8) Day-1, Tier 2 (7) Day +30 <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">EN/ES/PT/DE/FR/IT/HI/RU primi (80% utenti Chrome). JA/KO/ZH/PL/TR/AR/ID secondi. Account warming concentrato.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q7" value="top-5">
+        <div class="option-content">
+          <div class="option-label">Solo 5 lingue chiave (EN, ES, PT, DE, IT) <span class="badge badge-rec">RACCOMANDATO MINIMO</span></div>
+          <div class="option-comment">Concentrazione massima, ROI per investimento più alto. Aggiunte progressive solo se MRR validato. Migliore per partenza zero account.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q7" value="en-only-launch">
+        <div class="option-content">
+          <div class="option-label">Solo EN per launch, espansione data-driven <span class="badge badge-warn">CONSERVATIVO</span></div>
+          <div class="option-comment">Lancio Product Hunt + HN solo in EN. Se converte, espandi. Risk: lascia opportunità sul tavolo per mercati maturi.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 8 · Aggressività anti-spam</div>
+    <div class="q-text">Quanto puó posrare il bot al giorno per piattaforma?</div>
+    <div class="q-context">Reddit shadowban se &gt;10 commenti/giorno con link da account giovane. Twitter rate limit ~300 azioni/giorno. Più aggressive = più reach, più ban.</div>
+    <div class="options" data-q="q8">
+      <label class="option">
+        <input type="radio" name="q8" value="ultra-safe">
+        <div class="option-content">
+          <div class="option-label">1-2 post/giorno per account, max 3 commenti <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Pattern indistinguibile da utente reale. Crescita lenta ma sostenibile. 0 ban su 3+ mesi.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q8" value="moderate">
+        <div class="option-content">
+          <div class="option-label">3-5 post/giorno, 8-10 commenti <span class="badge badge-warn">RISCHIO MEDIO</span></div>
+          <div class="option-comment">Crescita più veloce. Su account warmati 30+gg accettabile. Necessita randomizzazione timing avanzata.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q8" value="aggressive">
+        <div class="option-content">
+          <div class="option-label">10+ azioni/giorno con multi-account rotation <span class="badge badge-risk">ALTO RISCHIO</span></div>
+          <div class="option-comment">Black hat. Ban garantito su Reddit/X in 2-4 settimane. Solo se accetti approccio "burn-and-replace" account.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ============== SEZIONE 3: CUSTOMER SUPPORT AI ============== -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-icon">C</div>
+    <div>
+      <div class="section-title">AI Customer Support Bot</div>
+    </div>
+  </div>
+  <div class="section-desc">Il bot FAQ che risponde ai clienti 24/7. Dove vive, cosa sa, quando passa a umano.</div>
+
+  <div class="question">
+    <div class="q-number">Domanda 9 · Canali del bot support</div>
+    <div class="q-text">Dove deve vivere il bot di supporto AI?</div>
+    <div class="q-context">Già esiste: Telegram bot per ticket, form web in options.html, email support@adoff.app via Resend. Aggiungere bot AI è incrementale.</div>
+    <div class="options" data-q="q9">
+      <label class="option">
+        <input type="checkbox" name="q9" value="extension-popup">
+        <div class="option-content">
+          <div class="option-label">Estensione popup (chat AI integrata) <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Massimo touchpoint. Sostituisce le FAQ statiche con chat live. Risposte contestuali (vede sito corrente, versione, licenza).</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q9" value="website-chat">
+        <div class="option-content">
+          <div class="option-label">Sito adoff.app (widget chat) <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Pre-vendita: risponde dubbi prima dell'install. Conversion booster. Esposto in support.html + ?lang= per 15 lingue.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q9" value="telegram-public">
+        <div class="option-content">
+          <div class="option-label">Telegram bot pubblico @AdOffSupport <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Già esiste infra Telegram. Estendere bot esistente con AI handler. 0 utenti su email — tutti aprono Telegram.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q9" value="email-auto-reply">
+        <div class="option-content">
+          <div class="option-label">Email auto-reply (support@adoff.app) <span class="badge badge-warn">SECONDARIO</span></div>
+          <div class="option-comment">Useful per chi non usa chat. Response time medio 5-10 sec via Resend webhook + Claude.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q9" value="discord">
+        <div class="option-content">
+          <div class="option-label">Server Discord (community + AI bot) <span class="badge badge-warn">FUTURE</span></div>
+          <div class="option-comment">Solo dopo che community esiste (mese 3+). Discord Slash command /ask + AI brain.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 10 · Knowledge base AI</div>
+    <div class="q-text">Cosa deve leggere l'AI come ground truth per rispondere?</div>
+    <div class="q-context">RAG (Retrieval-Augmented Generation) richiede chunking + embedding + vector DB. Più sources = più copertura, più rumore.</div>
+    <div class="options" data-q="q10">
+      <label class="option">
+        <input type="checkbox" name="q10" value="bibbia">
+        <div class="option-content">
+          <div class="option-label">Bibbia Marketing + store-listing + manuale <span class="badge badge-rec">CORE</span></div>
+          <div class="option-comment">Documenti già esistenti, ~100KB testo. Coverage product features 100%.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q10" value="codebase">
+        <div class="option-content">
+          <div class="option-label">Codice estensione (regole adblock, content scripts) <span class="badge badge-rec">CORE</span></div>
+          <div class="option-comment">Permette domande tipo "perché su sito X non funziona?" → AI legge regole e risponde precisamente.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q10" value="tickets-history">
+        <div class="option-content">
+          <div class="option-label">Storico ticket Telegram + risposte umane <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">AI impara dal tono/risposte umane reali. Migliora con tempo. Trade-off: GDPR (anonimizzare email/PII prima di indicizzare).</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q10" value="reviews">
+        <div class="option-content">
+          <div class="option-label">Recensioni CWS/AMO/Edge (sentiment + topic) <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">AI sa quali sono i pain points reali e risponde proattivamente. Richiede scraping (CWS API + altri).</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q10" value="competitor-docs">
+        <div class="option-content">
+          <div class="option-label">Documentazione competitor (uBO, ABP, AdGuard) <span class="badge badge-warn">OPZIONALE</span></div>
+          <div class="option-comment">Permette risposte "vs uBlock" precise. Risk: AI cita competitor in modo che li promuove.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q10" value="blog-articles">
+        <div class="option-content">
+          <div class="option-label">Articoli blog tech esterni (HN, Reddit, dev.to) <span class="badge badge-warn">FUTURE</span></div>
+          <div class="option-comment">Richiede crawling + filtri qualità. Solo dopo MVP knowledge base interna stabile.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 11 · Escalation umana</div>
+    <div class="q-text">Quando l'AI deve passare la palla a un umano?</div>
+    <div class="q-context">Tutti = troppo manual. Mai = customer rage quando AI gira in loop. La soglia giusta è critica per UX.</div>
+    <div class="options" data-q="q11">
+      <label class="option">
+        <input type="checkbox" name="q11" value="confidence-low">
+        <div class="option-content">
+          <div class="option-label">Quando confidence AI &lt; 70% sulla risposta <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Claude restituisce confidence stimata. Soglia 70% = ~10-15% delle conversazioni escalano. Sostenibile.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q11" value="user-asks">
+        <div class="option-content">
+          <div class="option-label">Quando l'utente esplicitamente chiede umano <span class="badge badge-rec">CRITICO</span></div>
+          <div class="option-comment">Sempre rispettare. Bottone visibile "Parla con umano". Riduce frustrazione.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q11" value="refund-billing">
+        <div class="option-content">
+          <div class="option-label">Tutte le richieste refund/billing <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Soldi reali = umano. Solo umano accede a Stripe customer portal.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q11" value="loop-detected">
+        <div class="option-content">
+          <div class="option-label">Dopo 3 round senza risoluzione <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Anti-frustrazione. AI rileva che user ripete il problema → "ti passo al team".</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q11" value="legal-keywords">
+        <div class="option-content">
+          <div class="option-label">Trigger word: "lawyer", "GDPR", "stampa", "denunciare" <span class="badge badge-rec">CRITICO</span></div>
+          <div class="option-comment">Ogni keyword legale = stop AI, escalation immediata. Protezione brand.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q11" value="vip-customer">
+        <div class="option-content">
+          <div class="option-label">Customer Lifetime &gt; 100 EUR (lifetime/anni multipli) <span class="badge badge-warn">OPZIONALE</span></div>
+          <div class="option-comment">VIP treatment: top spender ricevono umano sempre. Boosta retention ma scala mal a volumi alti.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 12 · Lingue del bot support</div>
+    <div class="q-text">In quante lingue risponde il bot?</div>
+    <div class="q-context">Claude/GPT-4 supporta 95+ lingue native. Ma quality varia. Test su HI/AR mostra 90% accuratezza, JA/KO 95%.</div>
+    <div class="options" data-q="q12">
+      <label class="option">
+        <input type="radio" name="q12" value="all-15">
+        <div class="option-content">
+          <div class="option-label">Tutte le 15 lingue dell'estensione <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Claude gestisce native. Il bot rileva lingua user (browser locale o testo) e risponde in quella. Coverage 99% utenti.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q12" value="tier-1-8">
+        <div class="option-content">
+          <div class="option-label">Solo Tier 1 (8 lingue) <span class="badge badge-warn">OK</span></div>
+          <div class="option-comment">Tier 2 (JA/KO/ZH/AR/HI/PL/TR/ID) → fallback EN. Ok ma perde utenti che non capiscono EN bene.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q12" value="en-it">
+        <div class="option-content">
+          <div class="option-label">Solo EN + IT <span class="badge badge-risk">SCONSIGLIATO</span></div>
+          <div class="option-comment">Spreca 13 lingue di estensione. Adoption non-EN/IT crollerà.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ============== SEZIONE 4: AUTO-FIX LOOP ============== -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-icon">D</div>
+    <div>
+      <div class="section-title">Auto-Fix Loop (Review → Fix → Deploy)</div>
+    </div>
+  </div>
+  <div class="section-desc">Il cuore del sistema: AI legge feedback, identifica bug, scrive fix, testa, deploya. Il ciclo che chiude il loop prodotto.</div>
+
+  <div class="question">
+    <div class="q-number">Domanda 13 · Fonti feedback per auto-fix</div>
+    <div class="q-text">Da quali sources l'AI estrae bug e feature request?</div>
+    <div class="q-context">Più fonti = più segnale ma anche più rumore. Ogni source richiede integrator (scraping/API).</div>
+    <div class="options" data-q="q13">
+      <label class="option">
+        <input type="checkbox" name="q13" value="cws-reviews">
+        <div class="option-content">
+          <div class="option-label">Recensioni Chrome Web Store <span class="badge badge-rec">CORE</span></div>
+          <div class="option-comment">Source #1 di feedback strutturato. Richiede CWS API o scraping. Sentiment + topic extraction = bug list automatica.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q13" value="amo-reviews">
+        <div class="option-content">
+          <div class="option-label">Recensioni Firefox AMO + Edge <span class="badge badge-rec">CORE</span></div>
+          <div class="option-comment">AMO ha API pubblica. Edge richiede scraping. Stesso pipeline CWS.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q13" value="telegram-tickets">
+        <div class="option-content">
+          <div class="option-label">Ticket Telegram (worker già operativo) <span class="badge badge-rec">CORE</span></div>
+          <div class="option-comment">Già strutturati per topic Support/Suggerimenti. Zero scraping necessario, solo classificazione AI.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q13" value="reddit-mentions">
+        <div class="option-content">
+          <div class="option-label">Menzioni Reddit/Twitter sull'estensione <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Richiede mention sentinel n8n. Catches bug riportati senza che l'utente apra ticket ufficiale.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q13" value="error-tracking">
+        <div class="option-content">
+          <div class="option-label">Sentry/Cloudflare Workers errors <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Crash silenziosi che gli utenti non riportano. Sentry free tier 5K events/mo.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q13" value="usage-metrics">
+        <div class="option-content">
+          <div class="option-label">Analytics estensione (uninstall rate, feature usage) <span class="badge badge-warn">PRIVACY-SENSITIVE</span></div>
+          <div class="option-comment">Telemetria leggera con opt-in. Mostra quale feature è ignorata = candidate to remove. Conflitto con privacy stance attuale.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q13" value="competitor-changes">
+        <div class="option-content">
+          <div class="option-label">Cambi sui siti che breakerebbero le regole <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Crawler che monitora top 100 siti per ad system changes. Trigger update regole proattivo.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 14 · Test gate prima del deploy</div>
+    <div class="q-text">Quali test devono passare prima che AI deploya autonomamente?</div>
+    <div class="q-context">Più test = più sicurezza ma più lentezza. Trade-off cycle time vs reliability.</div>
+    <div class="options" data-q="q14">
+      <label class="option">
+        <input type="checkbox" name="q14" value="lint-build">
+        <div class="option-content">
+          <div class="option-label">Lint + build success <span class="badge badge-rec">MINIMO</span></div>
+          <div class="option-comment">Sempre obbligatorio. ~30 secondi.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q14" value="unit-tests">
+        <div class="option-content">
+          <div class="option-label">Unit test (Vitest sui workers) <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Da scrivere (oggi non ci sono). 1-2 settimane setup ma blocca regression.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q14" value="playwright-smoke">
+        <div class="option-content">
+          <div class="option-label">Playwright smoke test (10 siti reali) <span class="badge badge-rec">CORE</span></div>
+          <div class="option-comment">Prove che AdOff blocca su YouTube/CNN/Repubblica/etc. ~5 min. Già esiste tooling base in sviluppo/tests/.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q14" value="visual-regression">
+        <div class="option-content">
+          <div class="option-label">Visual regression (popup + options) <span class="badge badge-warn">CONSIGLIATO</span></div>
+          <div class="option-comment">Screenshot pixel-diff. Catches CSS bug. Setup Percy free tier o self-hosted.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q14" value="contract-tests">
+        <div class="option-content">
+          <div class="option-label">Contract test backend (license API) <span class="badge badge-rec">CORE</span></div>
+          <div class="option-comment">Prove che endpoint /validate, /activate ecc rispondono come atteso. Critico per non rompere licenze.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q14" value="manual-staging">
+        <div class="option-content">
+          <div class="option-label">Manual sign-off dopo staging 24h <span class="badge badge-warn">SLOW</span></div>
+          <div class="option-comment">Founder approva ogni release. Tornano collo bottiglia umano. Solo per prime 4-8 settimane MVP.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 15 · Frequency auto-deploy</div>
+    <div class="q-text">Con che frequenza l'AI deploya automaticamente?</div>
+    <div class="q-context">CWS preferisce update non troppo frequenti (alza alert flag su bot detection). AMO Firefox più tollerante.</div>
+    <div class="options" data-q="q15">
+      <label class="option">
+        <input type="radio" name="q15" value="continuous">
+        <div class="option-content">
+          <div class="option-label">Continuous (ogni commit auto-merge) <span class="badge badge-risk">RISCHIO CWS</span></div>
+          <div class="option-comment">CWS bot flag se 2+ release/giorno. Su sito ok ma su estensione sconsigliato.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q15" value="daily">
+        <div class="option-content">
+          <div class="option-label">Daily (ogni 24h se ci sono commit) <span class="badge badge-warn">OK SOLO REGOLE</span></div>
+          <div class="option-comment">Solo per regole adblock JSON. Codice JS = settimanale max.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q15" value="weekly">
+        <div class="option-content">
+          <div class="option-label">Weekly (ogni martedì 09:00 UTC) <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Cycle predictable. Dà tempo a review users di filtrare. CWS-friendly.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q15" value="event-driven">
+        <div class="option-content">
+          <div class="option-label">Event-driven (urgent fix subito, normale weekly) <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Bug critici (crash rate > 5%) → deploy istantaneo. Update normali → batch settimanale.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 16 · CWS upload automation</div>
+    <div class="q-text">Come automatizzare upload CWS/AMO/Edge?</div>
+    <div class="q-context">CWS API esiste ma OAuth tokens scadono ogni 7gg se consent screen Testing. AMO API stabile. Edge ApiKey scheme nuovo.</div>
+    <div class="options" data-q="q16">
+      <label class="option">
+        <input type="radio" name="q16" value="full-auto">
+        <div class="option-content">
+          <div class="option-label">Full auto upload + auto-publish <span class="badge badge-rec">RACCOMANDATO POST-VALIDATION</span></div>
+          <div class="option-comment">Build → ZIP → upload CWS+AMO+Edge → publish. Total ~5 min. Solo dopo che pipeline è validata su 4-8 release.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q16" value="auto-upload-manual-publish">
+        <div class="option-content">
+          <div class="option-label">Auto upload, publish manuale <span class="badge badge-rec">RACCOMANDATO MVP</span></div>
+          <div class="option-comment">AI prepara release, founder clicca "Publish" da Telegram bot. Safety net senza grossa friction.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q16" value="manual-everything">
+        <div class="option-content">
+          <div class="option-label">Tutto manual <span class="badge badge-risk">SLOW</span></div>
+          <div class="option-comment">Fondamentale automatizzare almeno upload. Manual = 30 min/release × 3 store = 90 min ogni volta.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ============== SEZIONE 5: PRE-VENDITA ============== -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-icon">E</div>
+    <div>
+      <div class="section-title">Pre-vendita & Acquisizione</div>
+    </div>
+  </div>
+  <div class="section-desc">Marketing automation: SEO, content, social, ads. Come l'AI porta utenti dal nulla a install.</div>
+
+  <div class="question">
+    <div class="q-number">Domanda 17 · Strategia content AI</div>
+    <div class="q-text">Cosa scrive AI in autonomia per il sito?</div>
+    <div class="q-context">CF Pages è instant deploy. Sito ha già 15 lingue. AI può generare blog, vs/competitor, FAQ aggiuntive, landing per keyword long-tail.</div>
+    <div class="options" data-q="q17">
+      <label class="option">
+        <input type="checkbox" name="q17" value="blog-articles">
+        <div class="option-content">
+          <div class="option-label">Blog SEO (1-2 articoli/settimana per lingua) <span class="badge badge-rec">CORE</span></div>
+          <div class="option-comment">Mira long-tail keyword: "ublock not working chrome 2026", "anti-adblock bypass", etc. AI genera draft + sito self-publish dopo grammar check.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q17" value="vs-pages">
+        <div class="option-content">
+          <div class="option-label">Pagine /vs/[competitor] auto-aggiornate <span class="badge badge-rec">CORE</span></div>
+          <div class="option-comment">AI confronta feature, prezzi, recensioni di uBO/ABP/AdGuard mensilmente. Aggiorna le 3 pagine vs/ esistenti.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q17" value="landing-pages">
+        <div class="option-content">
+          <div class="option-label">Landing per keyword (300+ pagine SEO) <span class="badge badge-warn">RISCHIO PENALTY</span></div>
+          <div class="option-comment">"Doorway page" tactic. Google può penalizzare se contenuto thin. Solo se ogni landing è genuinely utile.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q17" value="faq-expansion">
+        <div class="option-content">
+          <div class="option-label">FAQ auto-generata da ticket Telegram <span class="badge badge-rec">CORE</span></div>
+          <div class="option-comment">AI legge ticket reali e crea entry FAQ pubblica. Riduce ticket futuri del 30-50%.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q17" value="release-notes">
+        <div class="option-content">
+          <div class="option-label">Release notes + changelog auto-published <span class="badge badge-rec">CORE</span></div>
+          <div class="option-comment">Ogni deploy → AI genera changelog leggibile dal git diff. Pubblicato su sito + popup estensione.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 18 · Ads paid (Google/Meta)</div>
+    <div class="q-text">L'AI può gestire ads paid (Google Ads, Meta Ads)?</div>
+    <div class="q-context">Hai detto "budget zero" per il marketing. Ma se l'autopilot guadagna MRR, è ragionevole reinvestire.</div>
+    <div class="options" data-q="q18">
+      <label class="option">
+        <input type="radio" name="q18" value="never">
+        <div class="option-content">
+          <div class="option-label">Mai ads paid <span class="badge badge-warn">PURO ORGANIC</span></div>
+          <div class="option-comment">Crescita 100% organic. Più lenta ma profittevole 100%. Sostenibile se MRR target 5K-20K.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q18" value="reinvest-mrr">
+        <div class="option-content">
+          <div class="option-label">Solo dopo MRR &gt; 1K, reinvestire 20% <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">AI può gestire Google Ads search keyword (low CPC su ad blocker keyword) con budget cap mensile. Founder approva campaign new.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q18" value="full-auto">
+        <div class="option-content">
+          <div class="option-label">AI alloca budget autonomamente <span class="badge badge-risk">RISCHIO BURN</span></div>
+          <div class="option-comment">AI può bruciare 1000 EUR in 1 giorno se mistune. Solo con cap rigidi (max 50 EUR/giorno) e KPI clear.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 19 · Roadmap AI-driven</div>
+    <div class="q-text">L'AI può proporre nuove feature autonomamente?</div>
+    <div class="q-context">AI legge feedback + competitive intel + analytics → suggerisce roadmap. Trade-off: AI può proporre cose stupide o cose geniali.</div>
+    <div class="options" data-q="q19">
+      <label class="option">
+        <input type="radio" name="q19" value="ai-proposes-human-decides">
+        <div class="option-content">
+          <div class="option-label">AI propone, founder decide (priorità mensile) <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Ogni 1° del mese: AI presenta top 5 feature da feedback aggregato + ROI stima. Founder picks 1-2.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q19" value="ai-implements-flagged">
+        <div class="option-content">
+          <div class="option-label">AI implementa feature richieste 10+ volte <span class="badge badge-warn">CALIBRARE</span></div>
+          <div class="option-comment">Auto-prioritization. Soglia 10 = già consensus. Va validato prima per evitare scope creep.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q19" value="founder-only">
+        <div class="option-content">
+          <div class="option-label">Solo founder decide, AI esegue <span class="badge badge-warn">SLOW</span></div>
+          <div class="option-comment">Founder bottleneck. Va bene se hai tempo per gestire ogni decisione strategica.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ============== SEZIONE 6: INFRA & STACK ============== -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-icon">F</div>
+    <div>
+      <div class="section-title">Infrastruttura AI & Stack tecnico</div>
+    </div>
+  </div>
+  <div class="section-desc">LLM provider, vector DB, orchestrator, observability. Le scelte tecniche che reggono l'autopilot.</div>
+
+  <div class="question">
+    <div class="q-number">Domanda 20 · LLM provider primario</div>
+    <div class="q-text">Quale LLM esegue il pensiero principale dell'autopilot?</div>
+    <div class="q-context">Costo medio per "ciclo autopilot" (review→fix→deploy): 50-200K token = $0.50-$3 con Claude. 100x meno con Groq Llama.</div>
+    <div class="options" data-q="q20">
+      <label class="option">
+        <input type="radio" name="q20" value="claude-only">
+        <div class="option-content">
+          <div class="option-label">Claude (Sonnet 4.6 + Haiku 4.5 mix) <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Best quality coding + reasoning. Haiku per FAQ ($0.80/M tokens). Sonnet per code gen ($3/M). Costo stimato $50-150/mese a regime.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q20" value="multi-provider">
+        <div class="option-content">
+          <div class="option-label">Multi-provider (Claude critico + Groq economico) <span class="badge badge-rec">RACCOMANDATO COST-OPT</span></div>
+          <div class="option-comment">Claude per code modifications + decisioni. Groq Llama 3.3 70B free per FAQ + classifica review. Risparmio 70%.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q20" value="open-source">
+        <div class="option-content">
+          <div class="option-label">100% open source (Llama 70B self-hosted) <span class="badge badge-warn">COMPLEX</span></div>
+          <div class="option-comment">Zero cost API ma serve GPU server. Quality 80% di Claude. ROI solo a volumi enormi.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q20" value="gpt4">
+        <div class="option-content">
+          <div class="option-label">GPT-4 / GPT-5 OpenAI <span class="badge badge-warn">ALTERNATIVA</span></div>
+          <div class="option-comment">Quality alto, costo simile a Claude. No vantaggi specifici per il task. Claude meglio per code.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 21 · Vector DB per RAG</div>
+    <div class="q-text">Dove memorizzare embeddings di KB + tickets + reviews?</div>
+    <div class="q-context">RAG richiede vector DB. Volume previsto: ~50K chunk dopo 6 mesi. Tutti i provider hanno free tier sotto 100K vectors.</div>
+    <div class="options" data-q="q21">
+      <label class="option">
+        <input type="radio" name="q21" value="cloudflare-vectorize">
+        <div class="option-content">
+          <div class="option-label">Cloudflare Vectorize <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Già integrato con Workers/D1. Free tier 5M vectors/mo. Latenza basssima per worker chiamate. Stack-coherent.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q21" value="qdrant-self">
+        <div class="option-content">
+          <div class="option-label">Qdrant self-hosted (Oracle VM) <span class="badge badge-warn">CONTROLLO TOTALE</span></div>
+          <div class="option-comment">Open source, zero cost, full control. Richiede manutenzione VM. Best se Oracle VM è già setup per n8n.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q21" value="pinecone">
+        <div class="option-content">
+          <div class="option-label">Pinecone (cloud managed) <span class="badge badge-warn">COSTO</span></div>
+          <div class="option-comment">Free tier 100K vectors. Sotto threshold 50K free. Sopra $70/mo. Ok ma duplicato vs CF.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q21" value="postgres-pgvector">
+        <div class="option-content">
+          <div class="option-label">Postgres + pgvector (n8n container) <span class="badge badge-rec">SEMPLICE</span></div>
+          <div class="option-comment">SQL+vector in 1 DB. Postgres c'è già per n8n. Zero infra extra. Trade-off: latenza vs CF Vectorize.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 22 · Orchestrator workflow</div>
+    <div class="q-text">Cosa orchestra le pipeline autopilot?</div>
+    <div class="q-context">Pre-vendita, sales, support, fix-loop sono pipeline distinte. Tutto in n8n o split?</div>
+    <div class="options" data-q="q22">
+      <label class="option">
+        <input type="radio" name="q22" value="n8n-only">
+        <div class="option-content">
+          <div class="option-label">Tutto in n8n (Oracle VM) <span class="badge badge-rec">RACCOMANDATO MVP</span></div>
+          <div class="option-comment">600+ integration. UI visuale per debug. Single source. Richiede VM uptime.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q22" value="hybrid">
+        <div class="option-content">
+          <div class="option-label">n8n + Cloudflare Workers (event-driven) <span class="badge badge-rec">RACCOMANDATO SCALE</span></div>
+          <div class="option-comment">n8n per cron + complex flow. CF Workers per event reattivi (Stripe webhook, Telegram, ticket). Best of both.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q22" value="custom-claude-agents">
+        <div class="option-content">
+          <div class="option-label">Custom: Claude Agent SDK su CF Workers <span class="badge badge-warn">CUTTING EDGE</span></div>
+          <div class="option-comment">Claude Agent SDK lanciato 2026. Agent autonomi multi-step. Più potente ma immature, debug difficile.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q22" value="github-actions">
+        <div class="option-content">
+          <div class="option-label">GitHub Actions per CI/CD + n8n per business <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">GHA gratis 2000 min/mo per repo private. Build/test/deploy estensione. n8n per social/support/marketing.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 23 · Observability e alerting</div>
+    <div class="q-text">Come monitoriamo l'AI e l'app?</div>
+    <div class="q-context">Senza observability, l'AI può andare in loop o degradare silenziosamente. Critico per autopilot.</div>
+    <div class="options" data-q="q23">
+      <label class="option">
+        <input type="checkbox" name="q23" value="cf-analytics">
+        <div class="option-content">
+          <div class="option-label">Cloudflare Analytics + Workers logs <span class="badge badge-rec">CORE</span></div>
+          <div class="option-comment">Built-in, zero setup. Mostra request rate, error rate, latency. Sufficient per workers.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q23" value="sentry">
+        <div class="option-content">
+          <div class="option-label">Sentry (extension + workers errors) <span class="badge badge-rec">CORE</span></div>
+          <div class="option-comment">Free tier 5K events/mo. Stack trace + user context. Essenziale per fix-loop.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q23" value="grafana-cloud">
+        <div class="option-content">
+          <div class="option-label">Grafana Cloud Free (10K series, 14d retention) <span class="badge badge-warn">OPZIONALE</span></div>
+          <div class="option-comment">Custom dashboard MRR/churn/conversion. Setup ~4h. Solo se metriche grezze CF non bastano.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q23" value="ai-self-monitor">
+        <div class="option-content">
+          <div class="option-label">AI auto-monitor (Claude review settimanale logs) <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Claude legge logs settimanali, scrive summary, alerta su pattern anomali. Health check automatica.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q23" value="telegram-alerts">
+        <div class="option-content">
+          <div class="option-label">Alert Telegram (incident severity 1-3) <span class="badge badge-rec">CORE</span></div>
+          <div class="option-comment">Bot esistente. P0 = subito, P1 = ogni ora, P2 = digest serale. Founder mobile-friendly.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ============== SEZIONE 7: BUSINESS CRITICAL ============== -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-icon">G</div>
+    <div>
+      <div class="section-title">Business critical: KPI & ownership</div>
+    </div>
+  </div>
+  <div class="section-desc">Le metriche che l'AI ottimizza, gli scenari di crisi, la divisione del lavoro tra AI e founder.</div>
+
+  <div class="question">
+    <div class="q-number">Domanda 24 · KPI primaria AI</div>
+    <div class="q-text">Quale METRICA l'AI ottimizza come obiettivo primario?</div>
+    <div class="q-context">L'AI persegue ciò che metti. Se ottimizza install ma trascura conversion, hai 100K user free e 0 EUR. La metrica deve essere cleanly money-aligned.</div>
+    <div class="options" data-q="q24">
+      <label class="option">
+        <input type="radio" name="q24" value="installs">
+        <div class="option-content">
+          <div class="option-label">Numero install CWS/AMO/Edge <span class="badge badge-warn">VANITY</span></div>
+          <div class="option-comment">Vanity metric. Install free non genera fatturato. AI può gonfiarla con SEO low-quality. Non raccomandato come primary.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q24" value="mrr">
+        <div class="option-content">
+          <div class="option-label">MRR (Monthly Recurring Revenue) <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Money-aligned. Bilanciatore tra conversion + retention + pricing. Difficile da gonfiare artificialmente.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q24" value="ltv-cac">
+        <div class="option-content">
+          <div class="option-label">LTV/CAC ratio <span class="badge badge-rec">AVANZATO</span></div>
+          <div class="option-comment">Più sofisticato. Optimizza per profittabilità unit economics. Richiede attribution + cohort analysis. Per fase 6+ mesi.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="radio" name="q24" value="rating">
+        <div class="option-content">
+          <div class="option-label">CWS rating (★) + recensioni positive <span class="badge badge-warn">SECONDARIA</span></div>
+          <div class="option-comment">Importantissima per organic install ma non money-aligned diretto. Bias verso fix UI vs feature monetizzanti.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda 25 · Scenario crisis (esempi)</div>
+    <div class="q-text">In quali scenari fermi tutto l'autopilot e prendi controllo?</div>
+    <div class="q-context">Kill switch deve esserci. Pattern: founder digita /KILL su Telegram bot → AI freezata su tutti i fronti per N ore.</div>
+    <div class="options" data-q="q25">
+      <label class="option">
+        <input type="checkbox" name="q25" value="negative-press">
+        <div class="option-content">
+          <div class="option-label">Negative press / viral controversy <span class="badge badge-rec">CRITICO</span></div>
+          <div class="option-comment">AI può solo monitorare, non rispondere. Founder gestisce.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q25" value="security-incident">
+        <div class="option-content">
+          <div class="option-label">Security incident (data leak, RCE) <span class="badge badge-rec">CRITICO</span></div>
+          <div class="option-comment">Stop tutti i deploy AI. Manual incident response.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q25" value="cws-rejection">
+        <div class="option-content">
+          <div class="option-label">CWS rejection o ban estensione <span class="badge badge-rec">CRITICO</span></div>
+          <div class="option-comment">Pause auto-deploy. Founder negozia con CWS team.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q25" value="legal-notice">
+        <div class="option-content">
+          <div class="option-label">Cease & desist / DMCA notice <span class="badge badge-rec">CRITICO</span></div>
+          <div class="option-comment">Solo umano + legale. AI freezata su content + social.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q25" value="payment-issue">
+        <div class="option-content">
+          <div class="option-label">Stripe account hold o frodi massive <span class="badge badge-rec">CRITICO</span></div>
+          <div class="option-comment">AI non gestisce relations Stripe. Solo founder.</div>
+        </div>
+      </label>
+      <label class="option">
+        <input type="checkbox" name="q25" value="mrr-collapse">
+        <div class="option-content">
+          <div class="option-label">MRR drops &gt; 30% in 7gg <span class="badge badge-rec">RACCOMANDATO</span></div>
+          <div class="option-comment">Auto-pause new feature deploy + revert ultimi 7gg di changes. Founder investiga root cause.</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="question">
+    <div class="q-number">Domanda BONUS · Note libere</div>
+    <div class="q-text">Aggiungi qui qualsiasi vincolo, preferenza o requisito non coperto sopra.</div>
+    <div class="options">
+      <textarea class="free-text" id="free-notes" placeholder="Es: 'Voglio usare solo provider EU per GDPR', 'Budget massimo 100 EUR/mese', 'Lingua del founder è solo italiano', 'Da settembre lavorerò 8h/settimana max sul progetto'..."></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ============== ACTIONS ============== -->
+<div class="actions">
+  <div class="stats" id="statsText">Inizia rispondendo alle domande</div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="saveNow()" title="Salva subito in localStorage (auto-save è già attivo)">💾 Salva</button>
+    <button class="btn btn-secondary" onclick="downloadJSON()" title="Scarica file JSON con tutte le risposte">📥 Scarica JSON</button>
+    <button class="btn btn-secondary" onclick="downloadMarkdown()" title="Scarica sommario in Markdown">📄 Scarica MD</button>
+    <button class="btn btn-secondary" onclick="copyToClipboard()" title="Copia sommario in clipboard">📋 Copia</button>
+    <button class="btn btn-secondary" onclick="resetAnswers()" title="Cancella tutte le risposte">🗑️ Reset</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<pre class="export" id="exportBox"></pre>
+
+<footer>
+  AdOff AI Autopilot Questionario v1.0 · 2026-05-07 · Tutte le risposte sono salvate localmente nel browser (localStorage) e non vengono inviate a nessun server.
+</footer>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'adoff_autopilot_answers_v1';
+const TOTAL_QUESTIONS = 25;
+
+function loadAnswers() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return {};
+  try { return JSON.parse(raw); } catch { return {}; }
+}
+
+function saveAnswers(answers) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
+}
+
+function getCurrentAnswers() {
+  const answers = {};
+  document.querySelectorAll('input[type=radio]:checked').forEach(input => {
+    answers[input.name] = input.value;
+  });
+  document.querySelectorAll('input[type=checkbox]:checked').forEach(input => {
+    if (!answers[input.name]) answers[input.name] = [];
+    answers[input.name].push(input.value);
+  });
+  const notes = document.getElementById('free-notes')?.value?.trim();
+  if (notes) answers.notes = notes;
+  return answers;
+}
+
+function updateProgress() {
+  const answers = getCurrentAnswers();
+  const answered = Object.keys(answers).filter(k => k !== 'notes').length;
+  const pct = Math.round((answered / TOTAL_QUESTIONS) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${answered} / ${TOTAL_QUESTIONS} risposte (${pct}%)`;
+  document.getElementById('statsText').textContent = answered === TOTAL_QUESTIONS
+    ? '✓ Tutte le risposte raccolte. Pronto per esportare.'
+    : `Risposte: ${answered}/${TOTAL_QUESTIONS}. Continua...`;
+}
+
+function highlightSelected() {
+  document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+  document.querySelectorAll('input:checked').forEach(input => {
+    input.closest('.option')?.classList.add('selected');
+  });
+}
+
+function restoreAnswers() {
+  const answers = loadAnswers();
+  Object.entries(answers).forEach(([name, value]) => {
+    if (name === 'notes') {
+      const ta = document.getElementById('free-notes');
+      if (ta) ta.value = value;
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach(v => {
+        const input = document.querySelector(`input[name="${name}"][value="${v}"]`);
+        if (input) input.checked = true;
+      });
+    } else {
+      const input = document.querySelector(`input[name="${name}"][value="${value}"]`);
+      if (input) input.checked = true;
+    }
+  });
+  highlightSelected();
+  updateProgress();
+}
+
+function showToast(message, type) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(window._toastTimeout);
+  window._toastTimeout = setTimeout(() => {
+    toast.className = 'toast' + (type ? ' ' + type : '');
+  }, 2400);
+}
+
+function buildJSONPayload() {
+  const answers = getCurrentAnswers();
+  return {
+    version: '1.0',
+    exported_at: new Date().toISOString(),
+    answers: answers,
+    total_answered: Object.keys(answers).filter(k => k !== 'notes').length,
+    total_questions: TOTAL_QUESTIONS
+  };
+}
+
+function buildMarkdownSummary() {
+  const answers = getCurrentAnswers();
+  const lines = [];
+  lines.push('# AdOff AI Autopilot — Decisioni');
+  lines.push('');
+  lines.push(`Generato: ${new Date().toLocaleString('it-IT')}`);
+  lines.push(`Risposte: ${Object.keys(answers).filter(k => k !== 'notes').length}/${TOTAL_QUESTIONS}`);
+  lines.push('');
+  Object.entries(answers).forEach(([k, v]) => {
+    if (k === 'notes') {
+      lines.push('');
+      lines.push('## Note libere');
+      lines.push('');
+      lines.push(v);
+    } else {
+      const arr = Array.isArray(v) ? v.join(', ') : v;
+      lines.push(`- **${k}**: ${arr}`);
+    }
+  });
+  return lines.join('\n');
+}
+
+function downloadFile(filename, content, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
+}
+
+function saveNow() {
+  saveAnswers(getCurrentAnswers());
+  const answered = Object.keys(getCurrentAnswers()).filter(k => k !== 'notes').length;
+  showToast(`✓ Salvato (${answered}/${TOTAL_QUESTIONS} risposte)`, '');
+}
+
+function downloadJSON() {
+  const data = buildJSONPayload();
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[T:]/g, '-');
+  downloadFile(`adoff-autopilot-answers-${stamp}.json`, JSON.stringify(data, null, 2), 'application/json');
+  document.getElementById('exportBox').textContent = JSON.stringify(data, null, 2);
+  document.getElementById('exportBox').classList.add('show');
+  showToast('✓ JSON scaricato', '');
+}
+
+function downloadMarkdown() {
+  const md = buildMarkdownSummary();
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[T:]/g, '-');
+  downloadFile(`adoff-autopilot-decisioni-${stamp}.md`, md, 'text/markdown');
+  document.getElementById('exportBox').textContent = md;
+  document.getElementById('exportBox').classList.add('show');
+  showToast('✓ Markdown scaricato', '');
+}
+
+function copyToClipboard() {
+  const md = buildMarkdownSummary();
+  document.getElementById('exportBox').textContent = md;
+  document.getElementById('exportBox').classList.add('show');
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(md).then(() => {
+      showToast('✓ Copiato in clipboard. Incolla nel chat con Claude.', '');
+    }).catch(() => {
+      showToast('Impossibile copiare. Seleziona manualmente dal box sotto.', 'error');
+    });
+  } else {
+    showToast('Clipboard non disponibile. Seleziona dal box sotto.', 'error');
+  }
+}
+
+function resetAnswers() {
+  if (!confirm('Cancellare tutte le risposte? Operazione non annullabile.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  document.querySelectorAll('input').forEach(i => i.checked = false);
+  const ta = document.getElementById('free-notes');
+  if (ta) ta.value = '';
+  document.getElementById('exportBox').classList.remove('show');
+  highlightSelected();
+  updateProgress();
+  showToast('Reset completato', 'info');
+}
+
+document.querySelectorAll('input').forEach(input => {
+  input.addEventListener('change', () => {
+    saveAnswers(getCurrentAnswers());
+    highlightSelected();
+    updateProgress();
+  });
+});
+document.getElementById('free-notes')?.addEventListener('input', () => {
+  saveAnswers(getCurrentAnswers());
+});
+
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    saveNow();
+  }
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
+    e.preventDefault();
+    downloadMarkdown();
+  }
+});
+
+restoreAnswers();
+showToast('Auto-save attivo · Ctrl+S per conferma · Ctrl+Shift+D per download', 'info');
+</script>
+</body>
+</html>

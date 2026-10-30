@@ -1,0 +1,97 @@
+{
+  "slug": "preroll-midroll-postroll-explained",
+  "lang": "fr",
+  "title": "Publicités pré-roll, mid-roll et post-roll expliquées | AdOff",
+  "description": "Tous les formats vidéo : pré-roll, mid-roll, post-roll, bumpers, overlays, companions — diffusion et difficulté de blocage.",
+  "h1": "Pré-roll, mid-roll, post-roll : chaque emplacement de publicité vidéo expliqué",
+  "answer": "Les publicités pré-roll s’affichent avant la vidéo, les publicités mid-roll l’interrompent, et les publicités post-roll suivent la vidéo. Les placements les plus faciles à bloquer sont ceux diffusés via des SDK côté client, comme Google IMA ; AdOff les neutralise grâce à un stub de reprise immédiate, tandis que les publicités intégrées côté serveur restent hors d’atteinte pour toute extension de navigateur.",
+  "sections": [
+    {
+      "h2": "Pré-roll : la publicité avant la vidéo",
+      "body": [
+        "<p>La <strong>pub pré-roll</strong> s’affiche avant le début du contenu demandé. C’est le placement le plus précieux dans la publicité vidéo, car elle capte une attention incontournable au moment où l’intention atteint son pic — mais aussi le plus agaçant pour les spectateurs, puisqu’elle retarde la vidéo qu’ils ont cliquée.</p>",
+        "<p>Elle est généralement diffusée côté client : le lecteur initialise le SDK IMA, demande une publicité VAST, puis la superpose à la surface vidéo. Comme toute la transaction se déroule dans la page, elle est hautement bloquable. Le stub d’AdOff répond à la demande de lancement du SDK par un événement immédiat de reprise du contenu, de sorte que la pub pré-roll est simplement ignorée et la lecture débute.</p>"
+      ]
+    },
+    {
+      "h2": "Mid-roll : publicités insérées à l’intérieur de la vidéo",
+      "body": [
+        "<p>La <strong>pub mid-roll</strong> interrompt le contenu à des moments prédéfinis, imitant une pause publicitaire à la télévision. Les lecteurs indiquent ces points d’interruption dans un document VMAP ou la plateforme les programme dans la réponse publicitaire. Les mid-rolls génèrent le plus de frustration, car elles coupent la vidéo au moment le plus captivant.</p>",
+        "<p>Les mid-rolls côté client suivent le même chemin SDK que les pré-rolls et sont neutralisées de la même manière : lorsque le lecteur demande de lancer une pause publicitaire, le stub répond que cette pause est déjà terminée avant même qu’elle n’ait commencé. Sur la plateforme vidéo principale, AdOff supprime en outre la programmation publicitaire de la réponse du lecteur avant que la page ne la lise, et effectue un saut automatique vers la fin de tout contenu qui aurait échappé à la neutralisation.</p>"
+      ]
+    },
+    {
+      "h2": "Post-roll : la publicité après la fin de la vidéo",
+      "body": [
+        "<p>La <strong>pub post-roll</strong> s’affiche après la fin du contenu. Les spectateurs la tolèrent le mieux — la plupart ont déjà arrêté de regarder — mais les annonceurs la paient toujours, de sorte que les lecteurs la diffusent via le même pipeline côté client.</p>",
+        "<p>Même diffusion, même faiblesse : si la demande publicitaire passe par un SDK côté client, la reprise instantanée du stub signifie que la vidéo se termine proprement, sans pub finale.</p>"
+      ]
+    },
+    {
+      "h2": "Bumpers, overlays et publicités compagnons",
+      "body": [
+        "<p>Tous les placements ne possèdent pas la surface vidéo pendant plusieurs secondes d’affilée :</p>",
+        "<ul><li><strong>Les bumpers</strong> sont des publicités très courtes (environ 6 secondes), non sautables, souvent diffusées en pré-roll. Elles sont livrées via le même SDK et neutralisées de la même manière.</li><li><strong>Les overlays</strong> sont des bannières apparaissant dans la partie inférieure d’une vidéo en cours de lecture, sans la mettre en pause. Ce sont des éléments DOM classiques, que la couche de filtrage cosmétique (règles CSS + script de contenu) masque sur chaque site.</li><li><strong>Les companion ads</strong> sont des bannières d’affichage affichées à côté du lecteur pendant la diffusion de la publicité vidéo. Ce sont également des éléments de page ordinaires et sont masqués par le filtrage cosmétique.</li><li><strong>Les in-feed ads</strong> sont des publicités vidéo déguisées en éléments recommandés dans une liste. Elles sont détectées et masquées de la même manière grâce au filtrage cosmétique et aux sélecteurs génériques.</li></ul>"
+      ]
+    },
+    {
+      "h2": "Ce qui rend un emplacement difficile ou impossible à bloquer",
+      "body": [
+        "<p>La frontière réside dans <strong>l’endroit où la publicité est assemblée</strong>. Si la publicité est récupérée et rendue par du JavaScript dans votre navigateur — ce qui est le cas de tout contenu diffusé via un SDK comme IMA — une extension peut l’intercepter, la substituer ou la masquer.</p>",
+        "<p>Si, en revanche, la publicité est intégrée directement dans le flux vidéo côté serveur avant la diffusion (<a href=\"/server-side-ad-insertion-explained\">SSAI</a>), les pixels de la publicité sont indiscernables de ceux de la série. Aucune extension navigateur ne peut les séparer par la suite ; c’est pourquoi les services d’abonnement premium utilisant le SSAI sont délibérément laissés de côté par AdOff, afin d’éviter tout risque de lecture défectueuse.</p>"
+      ]
+    },
+    {
+      "h2": "Comment AdOff associe les couches aux emplacements",
+      "body": [
+        "<p>Chaque placement est traité par la couche qui lui est dédiée :</p>",
+        "<ul><li>Pré/mid/post-rolls et bumpers diffusés via SDK → neutralisation IMA (stub en page ou redirection réseau sur les domaines de 180 diffuseurs européens).</li><li>Overlays, companions, in-feed ads → filtrage cosmétique (CSS + script de contenu).</li><li>Demandes vers les réseaux publicitaires → 180 règles réseau statiques (publicités réelles comptabilisées dans le badge, le suivi est bloqué mais non comptabilisé).</li><li>Murs anti-publicité → couche furtive avec spoofing de pièges et interception de fetch/XHR.</li></ul>",
+        "<p>Tout cela est fourni gratuitement dans une seule extension pour Chrome, Firefox, Safari, Edge et Opera, sans compte requis.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Quelles publicités vidéo sont les plus difficiles à bloquer ?",
+      "a": "Les publicités intégrées dans le flux côté serveur (SSAI) sont effectivement impossibles à séparer du contenu par une extension de navigateur, car elles arrivent intégrées directement dans la vidéo elle-même. En revanche, les publicités côté client, livrées via des SDK, sont beaucoup plus faciles à neutraliser."
+    },
+    {
+      "q": "Les publicités mid-roll sont-elles bloquées différemment des publicités pre-roll ?",
+      "a": "Pas lorsqu’elles empruntent le même chemin de livraison. Les deux passent généralement par le même SDK côté client, de sorte qu’un stub qui répond aux demandes de pauses publicitaires par un événement de reprise immédiat neutralise à la fois les pré-rolls et les mid-rolls."
+    },
+    {
+      "q": "Qu’est-ce qu’une publicité bumper ?",
+      "a": "Un bumper est une courte publicité vidéo non sautable, généralement d’environ six secondes, affichée typiquement avant le contenu. Comme elle est livrée via le même SDK que les publicités plus longues, elle est neutralisée par le même mécanisme."
+    },
+    {
+      "q": "Comment les publicités overlay et companion sont-elles supprimées ?",
+      "a": "Ce sont des éléments normaux de la page, pas des images vidéo. Le filtrage cosmétique — composé de règles CSS et d’un script de contenu qui analyse le DOM — les masque, tandis que les règles au niveau réseau bloquent leurs requêtes publicitaires."
+    },
+    {
+      "q": "Les bloqueurs de publicités comptent-ils chaque requête bloquée comme une publicité ?",
+      "a": "AdOff distingue la publicité réelle du suivi : les analyses et les traceurs sont également bloqués, mais l’icône et les compteurs dans la fenêtre contextuelle ne prennent en compte que les publicités réelles, de sorte que les chiffres reflètent ce que vous avez effectivement sauté."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Blocage des publicités en streaming : le guide complet"
+    },
+    {
+      "href": "/ima-sdk-ad-blocking-explained",
+      "text": "Comment fonctionne le blocage des publicités via l’IMA SDK"
+    },
+    {
+      "href": "/server-side-ad-insertion-explained",
+      "text": "Explication de l’insertion serveur des publicités (SSAI)"
+    }
+  ],
+  "cta": {
+    "h3": "Tous les emplacements, une seule extension",
+    "p": "Prerolls, midrolls, overlays et bannières — AdOff les gère chacun avec la couche adaptée, gratuitement pour tous.",
+    "btn": "Installer AdOff gratuitement"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

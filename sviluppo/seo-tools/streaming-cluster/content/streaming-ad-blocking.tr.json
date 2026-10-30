@@ -1,0 +1,123 @@
+{
+  "slug": "streaming-ad-blocking",
+  "lang": "tr",
+  "title": "Akış Reklam Engelleme: 2026’da Ne Çalışır? | AdOff",
+  "description": "Reklamları engellemenin açık rehberi: hangi türler kaldırılabilir, hangileri değil ve her platformda ne bekleyebilirsiniz.",
+  "h1": "Akış Reklam Engelleme: 2026’da Gerçekten Ne Çalışır",
+  "answer": "Akış reklam engelleme, reklamlar video oynatıcıya ulaşmadan önce bunları kaldırarak çalışır: ağ kuralları, reklam isteklerini engeller ve video reklam SDK’sının yerine bir “stub” (sabitlenmiş kod) eklenerek oynatıcı, içeriği anında oynatmaya devam eder. Bu yöntem, YouTube ve Avrupa’daki catch-up TV gibi reklamların ayrı olarak istendiği durumlarda işe yarar. Ancak, reklamların doğrudan akışa entegre edildiği SSAI (Server-Side Ad Insertion) gibi durumlarda çalışmaz.",
+  "sections": [
+    {
+      "h2": "Neden video reklamlar, afiş reklamlardan daha engellenmesi zordur",
+      "body": [
+        "<p>Banner reklamlar sayfanın içinde bulunur. Bilinen reklam ağlarına yönelik ayrı HTTP istekleri olduklarından, ağ kuralları listesi ile yüklenmeden önce engellenebilirler. Video reklamlar ise farklıdır: izleme deneyiminin bir parçası olarak, oynatıcı tarafından kendi kendine planlanır ve genellikle içerikle aynı altyapı üzerinden iletilir. Yalnızca sayfadaki şeyleri gizleyebilen bir engelleyici, bunların çoğunu kaçırır.</p>",
+        "<p>Bu yüzden birçok reklam engelleyici, tüm yerlerdeki banner’ları gizlerken, video sitelerindeki önceden planlanmış reklamları (pre-rolls) göstermeye devam eder. Etkili akış reklam engellemesi, yalnızca görüntüleme katmanında değil, aynı zamanda zamanlama katmanında da çalışmalıdır.</p>"
+      ]
+    },
+    {
+      "h2": "Dört tür video reklam",
+      "body": [
+        "<p>Video reklamcılık, küçük bir sözlük kullanır ve bunu bilmek, bir engelleyicinin ne yapabileceğini ve ne yapamayacağını gösterir:</p>",
+        "<ul><li><strong>Ön-eleme (Pre-roll)</strong>: Video başlamadan önce oynatılır. Bağımsız ve öngörülebilir bir istek olduğu için engellenmesi en kolaydır.</li><li><strong>Orta-eleme (Mid-roll)</strong>: Oynatma sırasında araya eklenir. Ziyatere göre sunucu tarafında belirlenir, bu nedenle tahmin edilmesi ve atlanması daha zordur.</li><li><strong>Son-eleme (Post-roll)</strong>: Video bittikten sonra oynatılır. İzleyenlerin çoğu video bitmeden çıkığından nadiren görülür.</li><li><strong>Akış reklamları (Feed ads)</strong>: Kısa dikey videoların arasında gibi, kaydırılabilir akışlara yerleştirilen yerel reklam birimleridir. Bu tür reklamlar, oynatıcıya ait değil, sayfa öğeleridir.</li></ul>",
+        "<p>Pre-roll / mid-roll / post-roll sınıflandırmasını detaylı olarak <a href=\"/preroll-midroll-postroll-explained\">pre-roll, mid-roll ve post-roll açıklaması</a> başlıklı makalemizde açıklıyoruz.</p>"
+      ]
+    },
+    {
+      "h2": "Reklamların hangi platformlardan ulaştığı, engellenip engellenemeyeceğini belirler",
+      "body": [
+        "<p>En önemli teknik fark, <strong>istemci tarafı ve sunucu tarafı reklam teslimatı</strong> arasındaki farktır. İstemci tarafı reklamlarda, oynatıcı, reklam sunucusuna ayrı bir istekte bulunur: reklam, kendi video segmenti veya SDK çağrısı olarak gelir ve engelleyici bu isteği engelleyebilir. Sunucu tarafı reklam ekleme (SSAI) ile ise, reklam, size hiç gönderilmeden önce içerikle aynı video akışına eklenir. Engellenecek ayrı bir istek yoktur.</p>",
+        "<p>SSAI, canlı platformların ve reklam destekli abonelik katmanlarının engelleyicilere karşı ne kadar dirençli olduğunu açıklar. Mekanizmaları <a href=\"/server-side-ad-insertion-explained\">sunucu tarafı reklam ekleme nasıl çalışır?</a> başlıklı makalemizde inceliyoruz.</p>"
+      ]
+    },
+    {
+      "h2": "Dört katmanlı engelleme sisteminin video reklamlara yaklaşımı",
+      "body": [
+        "<p>AdOff, Chrome, Firefox, Safari, Edge ve Opera için ücretsiz bir uzantıdır (hesap gerektirmez, deneme süresi yok) ve dört katmandan oluşur:</p>",
+        "<ol><li><strong>Ağ engelleme</strong>: 180 statik declarativeNetRequest kuralı, reklam ve izleme isteklerinin başlamasından önce bunları durdurur.</li><li><strong>Kosmetik filtreleme</strong>: CSS ve DOM taraması, ağ katmanının göremediği reklam öğelerini gizler.</li><li><strong>Video reklamların nötrleştirilmesi</strong>: Google’ın IMA video reklam SDK’sını bir stub ile değiştirir. Oynatıcı, SDK’dan bir reklam aralığı başlatmasını istediğinde, stub hemen “içerik devam ettirilsin” yanıtını verir — reklam yok, oynatıcı bozulmadan kalır. Bu, iki kanal aracılığıyla çalışır: sayfa içi değiştirme ve SDK betiğinin kendisinin ağ üzerinden stub’a yönlendirilmesi.</li><li><strong>Gizli anti-tespit</strong>: Anti-reklam engelleme betiklerinin normal bir ortam gördüğünü sanmasını sağlamak için tuzak ve değişken sahteciliği uygulanır.</li></ol>",
+        "<p>Her katmanın teknik detayları <a href=\"/how-it-works\">AdOff’in nasıl çalıştığı</a> sayfasında yer alır.</p>"
+      ]
+    },
+    {
+      "h2": "Platform kapsaması: samimi bir tablo",
+      "body": [
+        "<p>Her platformın kapsanması mümkün değildir ve bunu açıkça belirtmeyi tercih ediyoruz. Kapsama, her platformun reklamlarını nasıl sunduğuna tamamen bağlıdır. Bu tablo, eklentinin bugün aslında ne yaptığını yansıtır:</p>",
+        "<table><tr><th>Platform</th><th>Reklam Türü</th><th>AdOff’in Yapabildikleri</th></tr><tr><td>YouTube</td><td>Ön girdi, orta girdi, akış reklamları, katmanlar</td><td>Tam kapsamlı çözüm: Oynatıcı yanıtı üzerinden reklam zamanlaması kaldırılır; kalan aralıklar için 16x oynatma hızlandırması; ağ kuralları ve kozmetik seçiciler.</td></tr><tr><td>Avrupa catch-up TV ve yayıcıları (42 alan adı)</td><td>IMA SDK video reklamları</td><td>IMA nötrelleştirme ile gerçek kapsama: Reklam SDK’sı değiştirilir, böylece oynatıcı reklam aralıkları olmadan içeriğe devam eder.</td></tr><tr><td>SSAI destekleyen Canlı platformlar (örn. Twitch, Kick)</td><td>Sunucu ile birleştirilmiş video reklamları</td><td>Engellenemez: Reklam, içeriğin aynı video akışına birleştirilir; ayrı bir istek olarak değil.</td></tr><tr><td>Bazı reklam destekli abonelik hizmetleri</td><td>Sunucu ile birleştirilmiş veya özel reklamlar</td><td>Oynatıcıların bozulmasını önlemek için bilinçli olarak hariç tutulmuştur; reklam teslimatı zaten araya girilebilir değildir.</td></tr><tr><td>Sosyal ve kısa video akışları</td><td>Yerel akış reklamları</td><td>Sadece izleyici izleme kuralları; özel video reklam nötrelleştirme yoktur.</td></tr></table>",
+        "<p>Platforma özel sayfalar: <a href=\"/youtube-ad-blocker\">YouTube reklam engelleyici</a>, <a href=\"/twitch-ad-blocker\">Twitch</a>, <a href=\"/prime-video-ad-blocker\">Prime Video</a>, <a href=\"/spotify-ad-blocker\">Spotify</a>, <a href=\"/disney-plus-ad-blocker\">Disney+</a> ve <a href=\"/catch-up-tv-ad-blocker-uk\">İngiltere</a>, <a href=\"/catch-up-tv-ad-blocker-italy\">İtalya</a>, <a href=\"/catch-up-tv-ad-blocker-germany\">Almanya</a>, <a href=\"/catch-up-tv-ad-blocker-france\">Fransa</a> ve <a href=\"/catch-up-tv-ad-blocker-spain\">İspanya</a> için catch-up TV reklam engelleyici.</p>"
+      ]
+    },
+    {
+      "h2": "YouTube akış hattının neden farklı olduğu",
+      "body": [
+        "<p>YouTube, AdOff’te tek platform olup, bunun için özel bir uçtan uca işlem hattına sahiptir. Öyle olması gerekir: YouTube standart IMA SDK’yı kullanmaz, bu nedenle genel stub hiçbir zaman tetiklenemez. Bunun yerine uzantı, oynatıcı yanıtını okumasından önce oynatıcıdan reklam zamanlamasını çıkarır, reklam aralıklarını talep eden oynatıcı API çağrılarını kancalar, reklam uç noktalarına ağ kurallarını uygular ve kalan reklam öğelerini kozmetik seçicilerle gizler.</p>",
+        "<p>Yine de bir ara verme anı kaçarsa, o anı beklemek yerine oynatma hızla atlar. Detaylar için <a href=\"/youtube-ad-blocker\">YouTube reklam engelleyici</a> ve <a href=\"/skip-youtube-ads-automatically\">otomatik reklam atlama</a> sayfalarına bakın.</p>"
+      ]
+    },
+    {
+      "h2": "Shorts, duvarlar ve anti-reklam engelleme silahlanma yarışı",
+      "body": [
+        "<p>Üç tekrarlayan durum, kendi dikkatlerini gerektirir. Kısa dikey video akışlarındaki reklamlar, oynatıcı reklamları değil, kaydırma birimleri olduğu için, dürüst sınırlarla birlikte kozmetik filtreleme ile ele alınır — bkz. <a href=\"/block-youtube-shorts-ads\">shorts reklamlarını engelleme</a>. Oynatıcının kilidini açmak için engelleyicinizi devre dışı bırakmanızı gerektiren anti-reklam engelleyici duvarları ise ayrı bir sorundur ve <a href=\"/youtube-anti-adblock-wall\">anti-reklam engelleyici duvarlar</a> ile <a href=\"/bypass-anti-adblock\">algılamayı atlatma</a> konularında ele alınır.</p>",
+        "<p>Ve bir reklam engelleyici çalışmayı durdurmuş gibi göründüğünde, nedeni neredeyse her zaman bir platform değişikliğidir, sizin yaptığınız bir şey değildir. Sorun giderme adımları <a href=\"/youtube-ad-blocker-not-working\">reklam engelleyici çalışmıyor</a> ve <a href=\"/video-player-not-working-with-ad-blocker\">oynatıcı sorunları</a> sayfalarında yer alır.</p>"
+      ]
+    },
+    {
+      "h2": "Akış reklam engellemenin ulaşamadığı yerler",
+      "body": [
+        "<p>Sınırlar konusunda açık olmak: Sunucu tarafında reklam ekleme, reklam video akışının içinde bulunduğu için hiçbir uzantı tarafından engellenemez. Telefondaki yerel uygulamalar, tarayıcı uzantılarının erişim alanı dışındadır — mobilde gerçekçi seçenekler, <a href=\"/youtube-ads-on-phone\">telefondaki reklamlar</a> ve <a href=\"/android-dns\">Android’de ağ düzeyinde DNS</a> başlıklı sayfalarda açıklanmıştır. Akıllı TV’ler, tarayıcının tamamen dışındaki kendi uygulamalarını çalıştırır; bu konu <a href=\"/smart-tv-ad-blocking\">akıllı TV reklam engelleme</a> başlıklı sayfada ele alınmıştır. Ayrıca hiçbir uzantı kalıcı sonuçlar vaatleyemez: platformlar reklam dağıtımını sık sık değiştirir ve kapsama alanı bu değişikliklere göre şekillenir.</p>"
+      ]
+    },
+    {
+      "h2": "2026 yılında bir akış reklam engelleyici seçmek",
+      "body": [
+        "<p>Video engelleyicileri karşılaştırırken önemli olan sorular şunlardır: Engelleme, zamanlama katmanında mı çalışır, yoksa yalnızca öğeleri gizler mi? Video reklam SDK’sı için bir çözümü var mı mı? Anti-reklam engelleme algılamasını ele alıyor mu? SSAI konusunda dürüst mü? <a href=\"/best-ad-blocker-for-streaming-2026\">2026 yılında akış için en iyi reklam engelleyiciler</a> ve genel <a href=\"/best-ad-blocker-2026\">2026 karşılaştırması</a> başlığındaki karşılaştırmalar bu kriterleri uygular.</p>",
+        "<p>AdOff ücretsizdir, herhangi bir hesap gerektirmez ve Chrome, Firefox, Safari, Edge ve Opera’da çalışır.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Reklam engelleyiciler, akış platformlarındaki reklamları kaldırabilir mi?",
+      "a": "Evet, reklamlar istemci tarafında teslim edildiğinde. Oynatıcı, reklam SDK’sına ayrı çağrılar yaparak reklamları talep ettiğinde, bir engelleyici bu çağrıları engelleyebilir veya değiştirebilir. Reklamlar doğrudan video akışına entegre edildiğinde (sunucu tarafında reklam ekleme), hiçbir tarayıcı uzantısı bunları kaldıramaz."
+    },
+    {
+      "q": "AdOff, Prime Video’da reklamları engeller mi?",
+      "a": "Hayır, ve bunu bilerek yapar. Prime Video, özel sunucu tarafı reklam teslimatı kullanır ve oynatıcılarını bozmak riskiyle oynatıcıları engellemek yerine uzantı, bu platformları hariç tutar."
+    },
+    {
+      "q": "Neden reklam engelleyiciler Twitch reklamlarını engelleyemiyor?",
+      "a": "Twitch, sunucuda video akışına reklamları ekleyerek gönderir; bu teknik SSAI olarak bilinir. Reklam segmentleri ve içerik segmentleri aynı akışta gelir, bu nedenle engellenecek ayrı bir reklam talebi yoktur."
+    },
+    {
+      "q": "Reklam engelleyiciler akıllı televizyonlarda çalışıyor mu?",
+      "a": "Genellikle hayır. Akıllı TV uygulamaları herhangi bir tarayıcının dışında çalışır, bu nedenle tarayıcı uzantıları onlara erişemez. Ağ seviyesindeki yaklaşımlar (örneğin, router üzerinde DNS filtreleme) izlenmeyi azaltabilir, ancak akış içi video reklamları kalır."
+    },
+    {
+      "q": "AdOff ücretsiz mi?",
+      "a": "Evet. AdOff tamamen ücretsizdir; hiçbir hesap gerektirmez, deneme sürümü yoktur ve hiçbir özellik kilitli değildir. Chrome, Firefox, Safari, Edge ve Opera’da kullanılır."
+    },
+    {
+      "q": "Platform bir şey değiştirdiğinde engelleme hâlâ işe yarar mı?",
+      "a": "Platformlar reklam teslimatını sık sık değiştirir, bu nedenle kapsama alanı değişebilir. Hiçbir engelleyici kalıcı sonuçlar garantileyemez; önemli olan, engelleyicinin güncellemelerin yapıldığıdır. Büyük platform değişikliklerinden sonra ara sıra boşluklar beklenmelidir."
+    }
+  ],
+  "related": [
+    {
+      "href": "/youtube-ad-blocker",
+      "text": "YouTube reklam engelleyici: 2026 yılında nasıl çalışır?"
+    },
+    {
+      "href": "/preroll-midroll-postroll-explained",
+      "text": "Ön-rolled, orta-rolled ve son-rolled reklamların açıklaması"
+    },
+    {
+      "href": "/best-ad-blocker-for-streaming-2026",
+      "text": "2026 yılında akış için en iyi reklam engelleyici"
+    }
+  ],
+  "cta": {
+    "h3": "Reklam araları olmadan izleyin",
+    "p": "AdOff ücretsizdir, herhangi bir hesaba ihtiyaç duymaz ve Chrome, Firefox, Safari, Edge ve Opera’da çalışır.",
+    "btn": "AdOff’u ücretsiz kurun"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

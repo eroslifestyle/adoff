@@ -1,0 +1,91 @@
+{
+  "slug": "skip-youtube-ads-automatically",
+  "lang": "tr",
+  "title": "YouTube Reklamlarını Otomatik Olarak Atla: Nasıl Çalışır? | AdOff",
+  "description": "YouTube’da otomatik reklam atlaması: Oynatıcıdan önce zamanlama kaldırma, yedek çözüm olarak 16x hızlı ileri sarma ve atlamayla engellemenin neden farklı olduğunu…",
+  "h1": "YouTube Reklamlarını Otomatik Olarak Atla: Bunun Arkasındaki İki Mekanizma",
+  "answer": "YouTube’da otomatik atlamalar iki katmanda çalışır. İlk olarak, engelleyici, oynatıcının veri isteğini engeller ve sayfa bunu okumadan önce reklam zamanlamasını kaldırır, böylece çoğu reklam asla yüklenmez. İkinci olarak, bunlardan kaçan her şey 16 kat hızla ileri sarılır. Pratikte neredeyse hiç reklam görmezsiniz ve bir reklam geçtiğinde sadece bir saniye sürer.",
+  "sections": [
+    {
+      "h2": "“Reklamları otomatik atlamak” aslında ne anlama gelir?",
+      "body": [
+        "<p>Kişilerin bir araya koyduğu iki çok farklı sonuç vardır. “Atlamak”, bir reklamın başlatılıp izlenmeden kapatılması veya ileri sarılması anlamına gelirken, “almamak” reklamın hiç yüklenmemesi demektir. Modern bir engelleyici ikinci sonucu hedefler ve birinci sonuca geri döner — tam olarak bu şekilde AdOff geliştirilmiştir.</p>"
+      ]
+    },
+    {
+      "h2": "1. Katman: Oynatıcı tarafından okunmadan önce reklam zamanlamasının kaldırılması",
+      "body": [
+        "<p>Bir videoyu açtığınızda, oynatıcı yapılandırma bilgilerini çeker ve bu yanıt, reklamların ne zaman ve nerede oynatılacağını içerir. AdOff, bu uç noktaya yönelik <code>fetch</code> ve XHR isteklerini engeller ve sayfa bunu okumadan önce yanıt nesnesinden reklam zamanlamasını temizler. Oynatıcı, hiçbir reklam aralığı planlanmamış şekilde başlar, bu nedenle çoğu durumda reklamla ilgili hiçbir istek yapılmaz.</p>"
+      ]
+    },
+    {
+      "h2": "2. Katman: Güvenlik ağı olarak 16 kat hızlı ilerletme",
+      "body": [
+        "<p>Hiçbir filtre %100 mükemmel değildir ve platform, oynatıcı mantığını düzenli olarak değiştirir. Bir reklam yine de ilk katmandan kaçarsa, AdOff bunu 16 kat hızla ileri sarar. Kısa bir titreme fark edebilirsiniz; reklam, otuz saniyelik bir süre yerine yalnızca bir saniyelik bir maliyet yaratır. Bu ikinci katman, güncellemeler arasında deneyimin akıcı kalmasını sağlar.</p>"
+      ]
+    },
+    {
+      "h2": "Geri kalan işlem hattı: Ağ ve görünürlük filtreleme",
+      "body": [
+        "<p>Bu iki katmanın etrafında, AdOff aynı zamanda reklam istatistikleri uç noktalarına, orta oynatma aralığı isteklerine ve reklam olarak işaretlenmiş video akışlarına yönelik 180 statik ağ kuralını da çalıştırır; ayrıca afişleri, akış reklamlarını ve oynatıcı katmanlarını gizleyen kozmetik filtreleme uygular. Katmanlar birbirini tamamlar: ağ kuralları trafiği keserken, oynatıcı düzeyindeki mekanizmalar video deneyimine gömülü olanları ele alır.</p>"
+      ]
+    },
+    {
+      "h2": "Neden her reklam atlanamaz?",
+      "body": [
+        "<p>Sunucu tarafında (SSAI) video akışına eklenmiş reklamlar, video verisinin bir parçasıdır ve ayrı bir istek değildir, bu nedenle hiçbir uzantı bunları temiz bir şekilde kaldıramaz. YouTube’da günümüzde nadirdir, ancak bilinmesi değer yaygın bir bilgidir. Ayrıca platformda yapılan bir değişiklikten hemen sonra, bir güncelleme gelene kadar fast-forward katmanının normalden daha fazla iş yapması gerekebilir.</p>"
+      ]
+    },
+    {
+      "h2": "Otomatik atlamayı çalıştırmak için ihtiyacınız olanlar",
+      "body": [
+        "<ul><li>AdOff’un desteklediği tarayıcılar: Chrome, Firefox, Safari, Edge veya Opera — masaüstü tarayıcılarda çalışır, yerel uygulamalarda veya akıllı TV’lerde çalışmaz.</li><li>Uzantının etkinleştirilmiş olması ve sitenin durdurulmuş veya beyaz listeye alınmış olmaması.</li><li>Zamanında güncellenmiş bir sürümün kullanılması, çünkü reklam teslimatı zamanla değişir.</li></ul>",
+        "<p>Kurulum bir dakikadan az sürer: yükleyin, simgeyi sabitleyin, bitti. Bir hesap gerekmez, deneme süresi yoktur ve hiçbir ücret ödenmez — AdOff herkes için ücretsizdir.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "AdOff, YouTube reklamlarını ben hiçbir şeye tıklamadan nasıl atlatıyor?",
+      "a": "İki katmandan oluşur. Oyuncunun veri isteğini engeller ve sayfa bunu okumadan önce yanıttan reklam programını çıkarır, böylece çoğu reklam asla yüklenmez. Kaçan her şey otomatik olarak 16 kat hızla ileri sarılır."
+    },
+    {
+      "q": "Reklamları atlamak, onları engellemekle aynı mı?",
+      "a": "Tam olarak değil. Engelleme, ideal olarak reklamın hiç istenmemesini veya yüklenmemesini sağlar. Atlama ise reklamın başlamasını sağlar ancak hemen reddedilir. AdOff, öncelikle tam kaldırma hedefler ve kaçanlar için 16 kat hızlı ileri sarma yöntemini yedek olarak kullanır."
+    },
+    {
+      "q": "Neden bazen hala bir reklamın kısa bir ekranı görüyorum?",
+      "a": "Platform, oyuncu mantığını değiştirdiğinde, bazı reklamlar program kaldırma katmanını atlayarak geçebilir; ancak güncelleme gelene kadar bunlar 16 kat hızlı ileri sarma katmanı tarafından ele alınır, böylece tam bir reklam yerine sadece kısa bir titreme görürsünüz."
+    },
+    {
+      "q": "Otomatik atlama, YouTube mobil uygulamasında da çalışıyor mu?",
+      "a": "Hayır. Eklentiler yalnızca masaüstü tarayıcılarda çalışır. Android veya iOS native uygulamalarında ve akıllı televizyonlarda, tarayıcı tabanlı reklam engelleyicilerin hiçbir etkisi yoktur."
+    },
+    {
+      "q": "Otomatik atlamak için bir hesaba veya ücretli plana ihtiyacım var mı?",
+      "a": "Hayır. AdOff herkes için ücretsizdir, hesap gerektirmez, deneme süresi yoktur ve ücretli bir sürümü de bulunmaz. Tarayıcınıza yükleyin ve ilk videodan itibaren atlama özelliği çalışır."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Akış reklam engelleme: tam rehber"
+    },
+    {
+      "href": "/block-video-ads",
+      "text": "Herhangi bir sitede video reklamlarını nasıl engellersiniz?"
+    },
+    {
+      "href": "/youtube-premium-vs-ad-blocker",
+      "text": "YouTube Premium vs ücretsiz bir reklam engelleyici"
+    }
+  ],
+  "cta": {
+    "h3": "Reklamların kendilerini atlamasına izin verin",
+    "p": "İki otomatik katman: reklamlar yüklenmeden önce kaldırılır, geçerlerse 16x hızla ileri sarılır. Ücretsiz, hesap gerektirmez.",
+    "btn": "AdOff’ı yükleyin"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

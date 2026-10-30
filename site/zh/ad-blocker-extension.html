@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <script>
+    (function(){try{var t=localStorage.getItem("adoff_theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>什么是广告拦截扩展，它如何工作 免费广告拦截 | AdOff</title>
+  <meta name="description" content="广告拦截扩展是安装在浏览器里的小型附加组件，过滤你访问页面上的加载内容：广告请求被取消，页面中残留的广告元素被隐藏，一些拦截器还会处理视频广告。本页解释这类扩展如何工作、它安装了什么、请求哪些权限及其原因，以及 Manifest V3 带来的变化。" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <link rel="canonical" href="https://adoff.app/zh/ad-blocker-extension" />
+  <link rel="alternate" hreflang="it" href="https://adoff.app/it/ad-blocker-extension" />
+  <link rel="alternate" hreflang="en" href="https://adoff.app/ad-blocker-extension" />
+  <link rel="alternate" hreflang="de" href="https://adoff.app/de/ad-blocker-extension" />
+  <link rel="alternate" hreflang="fr" href="https://adoff.app/fr/ad-blocker-extension" />
+  <link rel="alternate" hreflang="es" href="https://adoff.app/es/ad-blocker-extension" />
+  <link rel="alternate" hreflang="pt" href="https://adoff.app/pt/ad-blocker-extension" />
+  <link rel="alternate" hreflang="ru" href="https://adoff.app/ru/ad-blocker-extension" />
+  <link rel="alternate" hreflang="ar" href="https://adoff.app/ar/ad-blocker-extension" />
+  <link rel="alternate" hreflang="zh" href="https://adoff.app/zh/ad-blocker-extension" />
+  <link rel="alternate" hreflang="hi" href="https://adoff.app/hi/ad-blocker-extension" />
+  <link rel="alternate" hreflang="ja" href="https://adoff.app/ja/ad-blocker-extension" />
+  <link rel="alternate" hreflang="ko" href="https://adoff.app/ko/ad-blocker-extension" />
+  <link rel="alternate" hreflang="tr" href="https://adoff.app/tr/ad-blocker-extension" />
+  <link rel="alternate" hreflang="id" href="https://adoff.app/id/ad-blocker-extension" />
+  <link rel="alternate" hreflang="pl" href="https://adoff.app/pl/ad-blocker-extension" />
+  <link rel="alternate" hreflang="x-default" href="https://adoff.app/ad-blocker-extension" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="什么是广告拦截扩展，它如何工作 免费广告拦截 | AdOff" />
+  <meta property="og:description" content="广告拦截扩展是安装在浏览器里的小型附加组件，过滤你访问页面上的加载内容：广告请求被取消，页面中残留的广告元素被隐藏，一些拦截器还会处理视频广告。本页解释这类扩展如何工作、它安装了什么、请求哪些权限及其原因，以及 Manifest V3 带来的变化。" />
+  <meta property="og:image" content="https://adoff.app/assets/og-image.png" />
+  <meta property="og:url" content="https://adoff.app/zh/ad-blocker-extension" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="什么是广告拦截扩展，它如何工作 免费广告拦截 | AdOff" />
+  <meta name="twitter:description" content="广告拦截扩展是安装在浏览器里的小型附加组件，过滤你访问页面上的加载内容：广告请求被取消，页面中残留的广告元素被隐藏，一些拦截器还会处理视频广告。本页解释这类扩展如何工作、它安装了什么、请求哪些权限及其原因，以及 Manifest V3 带来的变化。" />
+  <meta name="twitter:image" content="https://adoff.app/assets/og-image.png" />
+  <link rel="icon" href="/assets/icon128.png" type="image/png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a1a" />
+
+  <link rel="preload" id="adoff-font" href="/assets/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin /><style id="adoff-critical">@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:optional;src:url("/assets/fonts/InterVariable.woff2") format("woff2-variations")}@font-face{font-family:"Inter";font-style:italic;font-weight:100 900;font-display:optional;src:url("/assets/fonts/InterVariable-Italic.woff2") format("woff2-variations")}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}:root{--deep-space:     #0a0a1a;--midnight-blue:  #12122a;--shield-purple:  #7c5cfc;--shield-purple-light: #b8a9ff;--shield-purple-dark:  #4c3ad4;--soft-purple:    #b8a9ff;--pure-white:     #ffffff;--steel-gray:     #8a8aaa;--success-green:  #4ade80;--alert-red:      #f43f5e;--bg:           var(--deep-space);--surface:      var(--midnight-blue);--surface-2:    #1a1a36;--surface-warm: #15152e;--text:         #e2e2f0;--text-muted:   var(--steel-gray);--text-dim:     #80809a;--accent:       var(--shield-purple);--accent-btn:   #7252f8;--accent-light: var(--shield-purple-light);--accent-dim:   var(--shield-purple-dark);--accent-soft:  rgba(124, 92, 252, 0.12);--accent-line:  rgba(124, 92, 252, 0.34);--success:      var(--success-green);--success-bg:   rgba(74, 222, 128, 0.10);--danger:       var(--alert-red);--danger-bg:    rgba(244, 63, 94, 0.08);--border:        rgba(124, 92, 252, 0.18);--border-strong: rgba(124, 92, 252, 0.48);--border-subtle: rgba(255, 255, 255, 0.06);--radius-sm:  8px;--radius:     12px;--radius-lg:  18px;--radius-pill: 999px;--ease:       cubic-bezier(0.2, 0.8, 0.2, 1);--t-fast:     150ms var(--ease);--t:          220ms var(--ease);--t-slow:     420ms var(--ease);--container:        min(64rem, 92vw);--container-wide:   min(72rem, 94vw);--primary:        var(--accent);--primary-light:  var(--accent-light);--primary-dark:   var(--accent-dim);--card:           var(--surface);--card-hover:     var(--surface-2);--error:          var(--danger);--warning:        var(--accent);--shadow:         0 1px 0 var(--border-strong);--shadow-glow:    0 0 40px rgba(124, 92, 252, 0.18);--shadow-card:    0 4px 24px rgba(0, 0, 0, 0.4);--transition:     var(--t)}html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}body{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:17px;line-height:1.65;overflow-x:hidden}a{color:var(--accent-light);text-decoration:none;transition:color var(--t)}a:hover{color:var(--pure-white)}strong{color:var(--text);font-weight:700}h1,h2{font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;font-weight:800;line-height:1.1;letter-spacing:-0.025em;color:var(--text)}h1{font-size:clamp(2.4rem,5.5vw,4.2rem)}h2{font-size:clamp(1.7rem,3.8vw,2.8rem)}h1 em,h2 em,.hero__headline em{font-style:italic;color:var(--accent);font-weight:800}.container,.container--wide{margin:0 auto;padding:0 24px}.container{max-width:var(--container)}.container--wide{max-width:var(--container-wide)}section{padding:clamp(72px,9vw,116px) 0}.wordmark{display:inline-flex;align-items:baseline;font-family:"Inter",sans-serif;font-weight:800;letter-spacing:-0.04em;line-height:1;color:var(--pure-white)}.wordmark__off{color:var(--accent)}.wordmark__dot{color:var(--accent)}.wordmark--hero{font-size:clamp(2.8rem,7vw,5rem);margin-bottom:24px;display:flex;width:fit-content}.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 26px;border-radius:var(--radius);font-family:"Inter",sans-serif;font-size:0.98rem;font-weight:600;letter-spacing:-0.005em;text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform var(--t),background var(--t),color var(--t),border-color var(--t),box-shadow var(--t);white-space:normal;text-align:center;line-height:1.3;font-variant-numeric:tabular-nums}.btn--primary{background:var(--accent-btn);color:var(--pure-white);border-color:var(--accent-btn);box-shadow:0 0 0 0 var(--accent-line)}.btn--primary:hover{background:var(--accent-light);color:var(--deep-space);border-color:var(--accent-light);transform:translateY(-1px);box-shadow:0 0 0 4px var(--accent-soft);text-decoration:none}.btn--primary:active{transform:translateY(0)}.btn--outline{background:transparent;color:var(--text);border:1px solid var(--border-strong)}.btn--outline:hover{border-color:var(--accent);color:var(--accent-light);background:transparent;text-decoration:none}.btn--ghost{background:transparent;color:var(--text-muted);border-color:transparent;padding:12px 14px}.btn--ghost:hover{color:var(--accent-light);text-decoration:none}.btn--lg{padding:18px 34px;font-size:1.05rem}.btn--xl{padding:18px 34px;font-size:1.05rem;border-radius:var(--radius)}.nav__inner{max-width:var(--container-wide);margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}.nav__logo{display:flex;align-items:center;gap:10px;color:var(--pure-white);text-decoration:none}.nav__logo:hover{color:var(--accent-light)}.nav__logo img{width:28px;height:28px;border-radius:6px;object-fit:contain}.nav__links{display:flex;align-items:center;gap:28px;list-style:none}.nav__links a{color:var(--text-muted);font-size:0.92rem;font-weight:500;text-decoration:none;transition:color var(--t)}.nav__links a:hover{color:var(--pure-white)}.hero{padding:clamp(72px,11vw,140px) 0 clamp(48px,7vw,80px);position:relative;overflow:hidden}.hero::before{content:'';position:absolute;top:-160px;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(ellipse at center,rgba(124,92,252,0.10) 0%,transparent 65%);pointer-events:none;z-index:0}.hero>.container{position:relative;z-index:1}.hero__media{position:relative;margin:clamp(36px,6vw,64px) auto 0;max-width:700px}.hero__shots{display:flex;align-items:center;justify-content:center;gap:20px}.hero__shots-main,.hero__shots-pop{height:auto;border-radius:12px;border:1px solid var(--border);box-shadow:0 18px 44px rgba(0,0,0,0.5)}.hero__shots-main{width:60%}.hero__shots-pop{width:27%;border-color:var(--border-strong)}@media (max-width:620px){.hero__shots{flex-direction:column;align-items:center;gap:16px}.hero__shots-main,.hero__shots-pop{width:100%;max-width:380px}}.hero__eyebrow{font-family:"Inter",sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-light);margin-bottom:22px;display:inline-flex;align-items:center;gap:10px}.hero__eyebrow-dot{width:7px;height:7px;border-radius:50%;background:var(--success);flex-shrink:0;box-shadow:0 0 12px rgba(74,222,128,0.6)}.hero__headline,.hero__title{font-family:"Inter",sans-serif;font-size:clamp(2.5rem,6vw,4.4rem);font-weight:800;line-height:1.05;letter-spacing:-0.03em;margin-bottom:28px;color:var(--text);background:none;-webkit-text-fill-color:currentColor;background-clip:unset;-webkit-background-clip:unset;max-width:22ch}.hero__headline em{font-style:italic;color:var(--accent);-webkit-text-fill-color:var(--accent)}.hero__tagline{font-family:"Inter",sans-serif;font-style:italic;font-size:clamp(1.3rem,2.8vw,1.7rem);font-weight:600;color:var(--accent-light);margin:0 0 18px;letter-spacing:-0.01em}.hero__sub{font-size:clamp(1.05rem,2vw,1.2rem);color:var(--text-muted);max-width:56ch;margin:0 0 36px;line-height:1.65}.hero__sub strong{color:var(--text);font-weight:600}.hero__cta-group{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:32px}.hero__trust-strip{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;color:var(--text-dim);font-size:0.86rem}.hero__trust-strip span{display:inline-flex;align-items:center;gap:6px}.hero__trust-strip .dot-sep{color:var(--border-strong)}.hero__note{margin-top:14px;font-size:0.85rem;color:var(--text-dim)}.social-proof__divider{width:1px;height:36px;background:var(--border-subtle);flex-shrink:0}@media (max-width:640px){.social-proof__divider{display:none}}.stealth__arrow{font-family:"Inter",sans-serif;align-self:center;font-size:1.8rem;color:var(--accent);padding:0 6px}.plan-card .btn{width:100%;justify-content:center;text-align:center;margin-top:auto;min-height:44px;font-size:0.94rem}.reveal{opacity:1;transform:none}.reveal-delay-1{transition-delay:0.06s}.reveal-delay-2{transition-delay:0.12s}.reveal-delay-3{transition-delay:0.18s}.reveal-delay-4{transition-delay:0.24s}@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}*,*::before,*::after{animation-duration:0.001ms!important;transition-duration:0.001ms!important}}@media (max-width:980px){.stealth__arrow{display:none}}@media (max-width:768px){body{font-size:16px}section{padding:60px 0}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}.wordmark--hero{font-size:clamp(2.2rem,11vw,3.6rem)}}@media (max-width:480px){.hero__cta-group{flex-direction:column}.btn--lg,.btn--xl{width:100%}}:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}a:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.skip-link{position:absolute;left:-9999px;top:0;z-index:1000;padding:12px 20px;background:var(--accent);color:var(--pure-white);border-radius:0 0 var(--radius) 0;font-weight:600}.skip-link:focus{left:0}body,body h1,body h2,body h3,body h4,body h5,body h6,body p,body span,body div,body section,body article,body blockquote,body figcaption,body ul,body ol,body li,body label,body small,body .article-page,body .article-page h1,body .article-page h2,body .article-page h3,body .article-page p,body .article-page li,body .legal-page,body .legal-page p,body .legal-page h2,body .tech-card,body .tech-card p,body .step-list,body .step-list li,body .cta-box,body .cta-box p{text-align:center}html[dir="rtl"] body,html[dir="rtl"] body *{text-align:center}html[dir="rtl"] table,html[dir="rtl"] table *,html[dir="rtl"] .compare__table,html[dir="rtl"] .compare__table *,html[dir="rtl"] .plan-features,html[dir="rtl"] .plan-features *,html[dir="rtl"] pre,html[dir="rtl"] code{text-align:right}body *:not(table):not(tr):not(td):not(th):not(thead):not(tbody):not(tfoot):not(pre):not(code):not(.plan-features):not(.plan-features *):not(.guarantee__list):not(.guarantee__list *):not(.compare__table):not(.compare__table *):not(.faq-item__panel):not(.faq-item__panel *):not(input):not(textarea):not(select):not(.ticket-form):not(.ticket-form *):not(form):not(form *):not(.ba-col__list):not(.ba-col__list *){text-align:center!important}html[dir="rtl"] body *:not(table):not(tr):not(td):not(th):not(pre):not(code):not(.plan-features *):not(.compare__table *){text-align:center!important}body .section-title,body .section-label,body .section-sub,body .hero__headline,body .hero__sub,body .hero__tagline,body .hero__eyebrow,body .hero__note,body .guarantee__title,body .guarantee__sub,body .problem__twist h3,body .problem__twist p,body .solution__reveal,body .final-cta__headline,body .platforms__footnote,body .stealth__how h2,body .stealth__callout,body .platforms-card__title,body .platforms-card__cat,body .platforms-card__brands,body .platforms-card__note,body .feature-card__title,body .feature-card__desc,body .feature-card__benefit,body .pain-card__title,body .pain-card__desc,body .pain-card__number,body .trust-card__title,body .trust-card__desc,body .testi-card__name,body .testi-card__role,body .testi-card__quote,body .plan-name,body .plan-note,body .plan-features,body .step__title,body .step__desc,body .how-step__title,body .how-step__desc,body .compare-badge-wrap,body .compare-badge,body article.article-page>*,body .legal-page>*{margin-left:auto!important;margin-right:auto!important}body article.article-page p,body article.article-page h1,body article.article-page h2,body article.article-page h3,body article.article-page ul,body article.article-page ol{max-width:70ch;margin-left:auto!important;margin-right:auto!important}body .solution__points,body .solution__points li,body .solution__points li *,body .ba-col__list,body .ba-col__list li,body .ba-col__list li *,body ul li:has(>.g-check),body ul li:has(>svg),body ul li:has(>.check),body .feature-card__benefit,body .feature-card__benefit *,body .stealth-tech__list,body .stealth-tech__list li,body .stealth-tech__list li *,body .compare__row,body .compare__row *,body .compare__cell,body ul[class*="__list"],body ul[class*="__list"] li,body ul[class*="__list"] li *,body ol[class*="__list"],body ol[class*="__list"] li,body ol[class*="__list"] li *{text-align:left!important;margin-left:0!important;margin-right:0!important}body .solution__points,body .ba-col__list,body .stealth-tech__list,body ul[class*="__list"]{display:inline-block;text-align:left!important;margin-left:auto!important;margin-right:auto!important}body .btn,body a.btn,body button.btn,body .wordmark,body .wordmark--inline,body .wordmark-tagline,body .solution__brand,body .hero__cta-group,body .hero__cta-group>*,body .cta-group,body .cta-group>*,body .final-cta,body .final-cta>*,body .install-cta,body .install-cta>*{margin-left:auto!important;margin-right:auto!important}body .hero__cta-group,body .cta-group{display:flex!important;justify-content:center!important;flex-wrap:wrap!important;gap:12px}body .solution__brand,body p:has(>.wordmark),body div:has(>a.btn:only-child){text-align:center!important;display:block}@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.001ms!important;transition-duration:0.001ms!important}}@media (max-width:768px){body{font-size:16px}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}}table th{font-variant-numeric:tabular-nums lining-nums}thead th{padding:16px 20px;text-align:left;font-family:"Inter",sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);white-space:nowrap}thead th:first-child{color:var(--pure-white)}@media (max-width:768px){body{font-size:16px}.hero{padding:60px 0 48px}.nav__links{display:none}.hero__headline{max-width:100%}.hero__cta-group{width:100%}.hero__cta-group .btn{flex:1;min-width:0}thead{display:none}}table *{text-align:left}img{max-width:100%;display:block}h1,h2,h3{font-family:"Inter",-apple-system,BlinkMacSystemFont,sans-serif;font-weight:800;line-height:1.1;letter-spacing:-0.025em;color:var(--text)}h3{font-weight:700;font-size:clamp(1.05rem,2vw,1.25rem);letter-spacing:-0.005em}.step{text-align:left;padding:0}code{text-align:left}</style><link rel="preload" href="/style.css?v=be9cdea8" as="style" onload="this.onload=null;this.rel='stylesheet'" /><noscript><link rel="stylesheet" href="/style.css?v=be9cdea8" /></noscript>
+  <style>
+    .article-page { max-width: 780px; margin: 0 auto; padding: 84px 24px 100px; }
+    .article-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--text); margin-bottom: 16px; line-height: 1.2; }
+    .article-page h2 { font-size: 1.5rem; color: var(--text); margin: 44px 0 14px; }
+    .article-page h3 { font-size: 1.15rem; color: var(--text); margin: 28px 0 10px; }
+    .article-page p { color: var(--text-muted); line-height: 1.8; margin-bottom: 16px; }
+    .article-page strong { color: var(--text); }
+    .article-page code { background:#1f1f3a; padding:2px 6px; border-radius:5px; color:#c9b8ff; font-size:0.92em; }
+    .answer-box { background:#12122a; border:1px solid rgba(124,92,252,0.25); border-radius:8px; padding:24px; margin:0 0 36px; }
+    .answer-box p { margin:0; color:var(--text); font-size:1.05rem; }
+    .cta-section { background:linear-gradient(135deg,rgba(124,92,252,.14),rgba(124,92,252,.03)); border:1px solid #2a2a4a; border-radius:16px; padding:32px; text-align:center; margin-top:48px; }
+    .cta-section h3 { color: var(--text); margin:0 0 8px; }
+    .cta-section p { margin:0 0 20px; color: var(--text-muted); }
+    .cta-section .btn { display:inline-block; padding:14px 28px; background:#fff; color:var(--text); font-weight:700; border-radius:12px; text-decoration:none; }
+  </style>
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "什么是广告拦截扩展，它如何工作 | AdOff",
+  "description": "What an ad blocker extension is, how it is installed, which permissions it needs and why, how it differs from a standalone app, and what changes with Manifest V3.",
+  "image": "https://adoff.app/assets/og-image.png",
+  "author": {
+    "@type": "Organization",
+    "name": "AdOff"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "AdOff"
+  },
+  "datePublished": "2026-09-20",
+  "dateModified": "2026-09-20",
+  "inLanguage": "zh"
+}
+  </script>
+  <script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "什么是广告拦截扩展？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "它是安装在浏览器里的小型附加组件——Chrome、Firefox、Edge、Safari、Opera 等都支持——过滤你访问页面上的广告。AdOff 是一款广告拦截扩展，拦截广告请求、隐藏广告元素、处理视频广告，对所有人免费。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "为什么广告拦截扩展需要这么多权限？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "要过滤页面，扩展必须能看到它，并能在你可能访问的任何网站上取消网络请求。宽泛的权限正是为此。真正该问的是开发者拿这个访问权做了什么：值得信赖的拦截器会明确声明不收集浏览数据。AdOff 一概不收集。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Manifest V3 改变了什么?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Chrome 的 Manifest V3 用声明式规则引擎取代了旧的请求拦截 API。像 AdOff 这样为它而设计的优质拦截器依然高效拦截；基于已移除 API 的老扩展则失去了大部分能力。"
+      }
+    }
+  ]
+}
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "AdOff", "item": "https://adoff.app/"},
+      {"@type": "ListItem", "position": 2, "name": "什么是广告拦截扩展，它如何工作 | AdOff", "item": "https://adoff.app/zh/ad-blocker-extension"}
+    ]
+  }
+  </script>
+</head>
+<body>
+  <main>
+    <article class="article-page">
+      <h1 data-i18n="ad_blocker_extension.what.an.ad.blocker.extension.is.and.how.it">什么是广告拦截扩展，它如何工作</h1>
+      <div class="answer-box"><p data-i18n="ad_blocker_extension.an.ad.blocker.extension.is.a.small.add.on.t">广告拦截扩展是安装在浏览器里的小型附加组件，过滤你访问页面上的加载内容：广告请求被取消，页面中残留的广告元素被隐藏，一些拦截器还会处理视频广告。本页解释这类扩展如何工作、它安装了什么、请求哪些权限及其原因，以及 Manifest V3 带来的变化。</p></div>
+
+      <h2 data-i18n="ad_blocker_extension.how.an.extension.blocks.ads">扩展如何拦截广告</h2>
+      <p data-i18n="ad_blocker_extension.under.the.hood.an.ad.blocker.extensi">在底层，广告拦截扩展工作在两个层面。网络层面，它查询一份规则列表——匹配已知广告和跟踪器地址的模式——并在任何数据下载前取消匹配的请求。页面层面，它检查渲染后的文档，用样式隐藏残留的广告容器，不留下空盒子。像 AdOff 这样的扩展结合了两个层面，更好的还会加上按站点的上下文：视频广告处理和反反拦截检查的防护。</p>
+
+      <h2 data-i18n="ad_blocker_extension.installing.one">安装一个</h2>
+      <p data-i18n="ad_blocker_extension.installation.takes.a.minute.you.inst">安装只需一分钟。你可以从浏览器的附加组件商店安装——Chrome Web Store、Firefox Add-ons、Edge Add-ons 商店或 Safari 的对应商店——或者在提供时直接从开发者网站下载安装包。安装后，扩展通常会在地址栏附近显示一个图标；从那里可以查看拦截了什么、在特定网站上暂停，或完全关闭。开始拦截通常不需要任何配置。</p>
+
+      <h2 data-i18n="ad_blocker_extension.permissions.why.so.many">权限：为什么这么多</h2>
+      <p data-i18n="ad_blocker_extension.an.ad.blocker.asks.for.broad.permis">广告拦截器会请求宽泛的权限，原因是结构性的：它必须能够读取并过滤你可能访问的每个网站上的页面，并检查这些页面发出的请求。权限本身并不是危险信号——没有它，扩展根本无法工作。重要的是开发者用这个访问权做什么。值得信赖的拦截器会明确声明：不收集浏览数据，不向服务器发送任何内容。安装任何东西之前，请先查看隐私政策。</p>
+
+      <h2 data-i18n="ad_blocker_extension.extension.vs.standalone.app">扩展 vs 独立应用</h2>
+      <p data-i18n="ad_blocker_extension.a.standalone.ad.blocking.app.works.o">独立的广告拦截应用在浏览器之外工作：它可能过滤全系统流量或运行自己的本地代理，覆盖浏览器之外的部分应用，代价是更繁琐的设置和对系统更深的介入。扩展则完全活在浏览器内：更轻量、一分钟装好、经过附加组件商店审核，并且浏览器走到哪里它就工作到哪里——包括其他操作系统。如果你的广告大多出现在网页上，扩展是更简单也更安全的选择；原生应用里的广告无论如何都超出了它的能力范围。</p>
+
+      <h2 data-i18n="ad_blocker_extension.what.changed.with.manifest.v3">Manifest V3 改变了什么</h2>
+      <p data-i18n="ad_blocker_extension.chrome.manifest.v3.is.the.biggest.p">Chrome 的 Manifest V3 是这个品类多年来最大的平台变革。它用一个声明式引擎取代了让扩展拦截并改写每个网络请求的 API：拦截器预先声明规则，由浏览器执行。做得好，拦截依然有效——AdOff 是 MV3 原生扩展，在新规则下依然完整工作。而基于旧 API 的扩展在 Chrome 上失去了大部分能力。Firefox 和 Safari 也在向类似模式靠拢，因此 MV3 就绪度已成为现代广告拦截器的实际试金石。</p>
+
+      <h2 data-i18n="ad_blocker_extension.frequently.asked.questions">常见问题</h2>
+      <h3 data-i18n="ad_blocker_extension.what.is.an.ad.blocker.extension">什么是广告拦截扩展？</h3>
+      <p data-i18n="ad_blocker_extension.it.is.a.small.add.on.installed.in.yo">它是安装在浏览器里的小型附加组件——Chrome、Firefox、Edge、Safari、Opera 等都支持——过滤你访问页面上的广告。AdOff 是一款广告拦截扩展，拦截广告请求、隐藏广告元素、处理视频广告，对所有人免费。</p>
+      <h3 data-i18n="ad_blocker_extension.why.do.ad.blocker.extensions.need.so">为什么广告拦截扩展需要这么多权限？</h3>
+      <p data-i18n="ad_blocker_extension.to.filter.a.page.an.extension.must.b">要过滤页面，扩展必须能看到它，并能在你可能访问的任何网站上取消网络请求。宽泛的权限正是为此。真正该问的是开发者拿这个访问权做了什么：值得信赖的拦截器会明确声明不收集浏览数据。AdOff 一概不收集。</p>
+      <h3 data-i18n="ad_blocker_extension.what.changed.with.manifest.v3">Manifest V3 改变了什么?</h3>
+      <p data-i18n="ad_blocker_extension.chrome.manifest.v3.replaced.the.old.">Chrome 的 Manifest V3 用声明式规则引擎取代了旧的请求拦截 API。像 AdOff 这样为它而设计的优质拦截器依然高效拦截；基于已移除 API 的老扩展则失去了大部分能力。</p>
+      <div class="cta-section">
+        <h3 data-i18n="ad_blocker_extension.a.modern.mv3.native.ad.blocker.exte">现代的 MV3 原生广告拦截扩展</h3>
+        <p data-i18n="ad_blocker_extension.adoff.installs.in.a.minute.blocks.ad">AdOff 一分钟装好，拦截广告和跟踪器、处理视频广告、不收集浏览数据。免费，适用于所有主流浏览器。</p>
+        <a href="/install.html" class="btn">免费下载 AdOff →</a>
+      </div>
+    </article>
+  </main>
+    <script src="/adoff-i18n.js?v=9c17e196" defer></script>
+  <script src="/adoff-nav.js?v=aa5d5c66"></script>
+  <script src="/adoff-footer.js?v=06c40593"></script>
+  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(()=>{})});}</script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+{
+  "name": "Idempotency Check (Redis)",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "idempotency-check",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "2976655a-7383-4eb9-a46b-41bd2f721178"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.key !== undefined && $json.workflow_id !== undefined }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "validate-input",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "generic",
+        "operation": "executeCommand",
+        "command": "SET",
+        "key": "={{ `idem:${$json.workflow_id}:${$json.key}` }}",
+        "ttl": "={{ $json.ttl_seconds || 300 }}",
+        "mode": "NX"
+      },
+      "id": "redis-set-nx",
+      "name": "Redis SET (NX)",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 2,
+      "position": [
+        650,
+        300
+      ],
+      "credentials": {
+        "redis": "adoff-redis-credential-001"
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.value === 1 || $json === true }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "is-new-request",
+      "name": "Is New Request?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 200,
+        "responseBody": "={{ { is_duplicate: false, key: $json.key, workflow_id: $json.workflow_id, message: 'request accepted' } }}"
+      },
+      "id": "response-new-request",
+      "name": "Response: New Request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 200,
+        "responseBody": "={{ { is_duplicate: true, key: $json.key, workflow_id: $json.workflow_id, message: 'duplicate request, skipping' } }}"
+      },
+      "id": "response-duplicate",
+      "name": "Response: Duplicate",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 400,
+        "responseBody": "={{ { is_duplicate: null, key: $json.key, workflow_id: $json.workflow_id, error: 'missing key or workflow_id' } }}"
+      },
+      "id": "response-error",
+      "name": "Response: Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        650,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Redis SET (NX)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Response: Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis SET (NX)": {
+      "main": [
+        [
+          {
+            "node": "Is New Request?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is New Request?": {
+      "main": [
+        [
+          {
+            "node": "Response: New Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Response: Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "id": "w27-idempotency-check"
+}

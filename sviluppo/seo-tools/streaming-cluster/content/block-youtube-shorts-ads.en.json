@@ -1,0 +1,94 @@
+{
+  "slug": "block-youtube-shorts-ads",
+  "lang": "en",
+  "title": "How to Block YouTube Shorts Ads (2026) | AdOff",
+  "description": "Shorts ads are feed units, not player ads. How they differ from pre-rolls, why cosmetic filtering is the right tool, and what the honest limits are.",
+  "h1": "Blocking Ads in YouTube Shorts: Feed Ads, Not Video Ads",
+  "answer": "Ads in YouTube Shorts are native feed units inserted between vertical videos as you scroll, not pre-rolls inside the player. They are page elements, not scheduled player breaks, so they are handled by cosmetic filtering: CSS and DOM rules that hide the ad containers. Coverage is real but has limits when formats change.",
+  "sections": [
+    {
+      "h2": "Shorts ads are a different species from video ads",
+      "body": [
+        "<p>When a pre-roll plays before a normal video, the player requests it, plays it, then resumes your video. Shorts work differently: as you swipe through the feed, some of the items in that feed are simply ads. They look like Shorts, they scroll like Shorts, and they are part of the same feed response — they are not a separate ad break the player schedules.</p>",
+        "<p>This distinction decides the whole blocking strategy. Player-level tools (scheduling removal, playback acceleration) have nothing to act on here, because no break is ever scheduled.</p>"
+      ]
+    },
+    {
+      "h2": "Why cosmetic filtering is the right tool for feed ads",
+      "body": [
+        "<p>A feed ad is a page element with a predictable structure: containers, labels like a sponsored marker, and renderer components unique to ad units. Cosmetic filtering works by matching those structures with CSS selectors and DOM rules, and hiding the ad containers before or as they render, so the feed item never becomes visible.</p>",
+        "<p>AdOff applies dedicated cosmetic selectors for the video platform's short-form pages, on top of its generic ad selectors that run on every site. The same selectors are enforced twice: as injected CSS and in the DOM-scanning layer, so an element hidden one way is also removed the other. Details in <a href=\"/how-it-works\">how AdOff works</a>.</p>"
+      ]
+    },
+    {
+      "h2": "What cosmetic filtering can and cannot do in the feed",
+      "body": [
+        "<p>What it can do: hide ad units whose structure matches the selectors, and remove the sponsored labels and overlay tiles that ride along with them. On a stable format this is reliable and cheap — no waiting, no countdowns, the ad simply never appears in your swipe stream.</p>",
+        "<p>What it cannot do: guarantee coverage of formats that have not shipped yet. If the platform changes the structure of a feed ad unit, the selectors stop matching until they are updated. This is an honest limitation of every cosmetic approach, and it applies to <a href=\"/youtube-ad-blocker-not-working\">every ad blocker</a>, not just one.</p>"
+      ]
+    },
+    {
+      "h2": "Why network-level blocking alone does not cover Shorts",
+      "body": [
+        "<p>Blocking ad networks at the DNS or network level (see <a href=\"/android-dns\">DNS-based blocking on Android</a>) stops requests to known ad servers. But feed ads on the video platform are often delivered through the same domains and requests as the content feed itself, so a network filter that removed them would break the whole feed. That is why the practical work happens in the browser, at the DOM level, where ad units and content units can be told apart by structure.</p>"
+      ]
+    },
+    {
+      "h2": "How to block Shorts ads in practice",
+      "body": [
+        "<p>The setup is the same as for the rest of the video platform: install a browser extension that includes short-form cosmetic selectors, keep the protection enabled, and let the CSS and DOM layers do the work — nothing to configure per video. AdOff covers this for free on Chrome, Firefox, Safari, Edge and Opera, with no account.</p>",
+        "<p>If you notice an ad unit slipping through, it usually means the format changed; the fix arrives with the selector update. The full context for that situation is in <a href=\"/youtube-ad-blocker-not-working\">what to do when the ad blocker stops working</a>.</p>"
+      ]
+    },
+    {
+      "h2": "How Shorts ads fit into the bigger blocking picture",
+      "body": [
+        "<p>Feed ads are one of four ad types on the platform; the others live inside the player. A complete setup needs both stories: scheduling-layer blocking for pre-rolls and mid-rolls, cosmetic filtering for feed units and overlays. The umbrella view of how these layers combine — and where each platform stands — is in <a href=\"/streaming-ad-blocking\">streaming ad blocking explained</a>, and the position-specific detail in <a href=\"/youtube-ad-blocker\">the YouTube ad blocker guide</a>.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Are ads in YouTube Shorts the same as normal video ads?",
+      "a": "No. Shorts ads are native feed units inserted between vertical videos as you scroll. Normal video ads are scheduled breaks inside the player. Different delivery means a different blocking technique."
+    },
+    {
+      "q": "How are Shorts ads blocked, then?",
+      "a": "Through cosmetic filtering: CSS and DOM rules that recognize the structure of ad containers in the feed and hide them before they render. The video ad scheduling layer has nothing to act on, because no ad break is scheduled in a feed."
+    },
+    {
+      "q": "Can all Shorts ads be hidden?",
+      "a": "Most current formats, yes, but not with a promise attached: if the platform ships a new feed ad structure, the selectors stop matching until they are updated. Cosmetic coverage follows the formats that exist."
+    },
+    {
+      "q": "Why doesn't DNS-level ad blocking remove Shorts ads?",
+      "a": "Because feed ads are typically delivered through the same domains as the content feed itself. A network filter that blocked those requests would break the entire feed. Only in-browser filtering can separate the two by page structure."
+    },
+    {
+      "q": "Does AdOff block Shorts ads and is it free?",
+      "a": "AdOff applies short-form cosmetic selectors as part of its free protection on Chrome, Firefox, Safari, Edge and Opera, with no account required. As with all cosmetic filtering, coverage tracks the current ad formats rather than promising a fixed result."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Streaming ad blocking: what works in 2026"
+    },
+    {
+      "href": "/youtube-ad-blocker",
+      "text": "YouTube ad blocker: how it works in 2026"
+    },
+    {
+      "href": "/youtube-midroll-ads-explained",
+      "text": "YouTube mid-roll ads explained"
+    }
+  ],
+  "cta": {
+    "h3": "Scroll the feed, skip the ads",
+    "p": "AdOff filters feed ads on short-form video for free. No account, works on Chrome, Firefox, Safari, Edge and Opera.",
+    "btn": "Install AdOff free"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}

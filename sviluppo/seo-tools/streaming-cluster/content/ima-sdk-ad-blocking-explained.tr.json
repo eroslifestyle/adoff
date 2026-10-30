@@ -1,0 +1,105 @@
+{
+  "slug": "ima-sdk-ad-blocking-explained",
+  "lang": "tr",
+  "title": "IMA SDK Reklam Engelleme Açıklaması | AdOff",
+  "description": "Google’un IMA SDK’sı video reklamları yükler, oynatıcıda reklam isteğinin yaşam döngüsü ve “içeriği devam ettir” yanıtını veren stub’ın bunu nasıl nötralize ettiği.",
+  "h1": "IMA SDK reklam engelleme, açıklandı",
+  "answer": "Google IMA SDK, video oynatıcıların reklam talep etmek ve oynatmak için kullandığı kütüphanedir. Bu SDK’yı ağ düzeyinde engellemek, oynatıcıları bozar; bu nedenle AdOff, onu her reklam talebine hemen “içeriği devam ettir” olayı döndüren bir stub ile değiştirir: oynatıcı çalışır, reklamlar asla yüklenmez.",
+  "sections": [
+    {
+      "h2": "IMA SDK’nın aslında ne olduğu",
+      "body": [
+        "<p><strong>İnteraktif Medya Reklamları (IMA) SDK</strong>, Google’ın video reklamlar için istemci tarafı kütüphanesidir. Bir web sitesinin bir videoyu gelir getirmek istemesi durumunda genellikle kendi reklam oynatıcısını oluşturmaz; bunun yerine <code>imasdk.googleapis.com/js/sdkloader/ima3.js</code> (veya dinamik varyantı <code>ima3_dai.js</code>) yükler, bir <code>AdDisplayContainer</code> başlatır ve SDK’ya bir reklam etiketi URL’si verir. SDK, bu işlem sonucunda bir VAST yanıtı çeker, reklamı oynatıcı içinde işler, izlenme ve dörtlük (quartile) verilerini izler ve nihayetinde kontrolü yayıncının içeriğine geri verir.</p>",
+        "<p>Çünkü tek bir etki alanı üzerinden sunulan tek bir ortak betik olduğu için IMA SDK, web video reklamcılığında en çok kullanılan tek engel noktasıdır: bir kez etkisiz hale getirildiğinde, bunun üzerine inşa edilen tüm oynatıcılar reklam sunmayı durdurur.</p>"
+      ]
+    },
+    {
+      "h2": "Bir reklam isteğinin yaşam döngüsü",
+      "body": [
+        "<p>İzleyici oynat düğmesine bastığında, oynatıcı genellikle bu sırayı çalıştırır:</p>",
+        "<ol><li>Sayfa, Google sunucularından <code>ima3.js</code> dosyasını yükler.</li><li>Oynatıcı, reklam yükleyici oluşturur ve bir reklam sunucusuna işaret eden bir reklam etiketiyle reklamları ister.</li><li>SDK, reklamı (genellikle DoubleClick üzerinden bir VAST/VMAP belgesi olarak) getirir, işler ve reklam medyasını videonun üzerindeki bir kapsayıcıya yerleştirir.</li><li>İzleme pikselleri tetiklenir; oynatıcı bekler.</li><li>Reklam bittiğinde (veya hata verdiğinde), SDK <code>CONTENT_RESUME_REQUESTED</code> olayını tetikler ve oynatıcı gerçek videoyu oynatmaya devam eder.</li></ol>",
+        "<p>Son etkinlik kilit noktadır: Oyuncu, bu etkinliği beklemek için yazılır. SDK’yı kontrol eden, içeriğin yeniden başlatılmasını ne zaman yapacağını belirler.</p>"
+      ]
+    },
+    {
+      "h2": "SDK’nın sadece engellenmesinin oynatıcıları neden bozduğu",
+      "body": [
+        "<p>Ham yaklaşım, <code>imasdk.googleapis.com</code>’u ağ düzeyinde engellemek ve işi burada bitirmektir. Sorun ise: birçok oynatıcı, başarısız veya eksik bir SDK’yı ölümcül bir hata olarak yorumlayıp videoyu hiç başlatmayı reddeder; bunun yerine içerik yerine bir yükleme döngüsü veya “Reklam engelleyici algılandı” engelini gösterir.</p>",
+        "<p>Bu, klasik ağ düzeyi engelleyicilerin video reklamlara karşı zayıf olmasının nedenidir: reklam isteğini durdurabilirler, ancak oynatıcının “şimdi devam edebilir miyim?” sorusunu yanıtlayamazlar. Bunu ancak SDK’yı temsil eden bir şey yapabilir.</p>"
+      ]
+    },
+    {
+      "h2": "Yerine koyma yoluyla nötrleştirme: stub yaklaşımı",
+      "body": [
+        "<p>AdOff, farklı bir yol izler: SDK’yı engellemez, onu <strong>değiştirir</strong>. IMA SDK’nın orta API’sini taklit eden bir stub, orijinal SDK’nın yerine yerleştirilir; böylece oynatıcı hâlâ çalışan bir SDK “görür” — ancak bu SDK, her reklam aralığının boş olduğunu varsayar.</p>",
+        "<p>Oynatıcı, <code>adsManager.start()</code> metodunu çağırdığında, stub hemen <code>CONTENT_RESUME_REQUESTED</code> olayını tetikler. Oynatıcı, içeriği anında oynatmaya devam eder. Hiçbir reklam çekilmez, hiçbir reklam gösterilmez ve oynatıcı, eksik bir şey fark etmediği için asla bir hata durumuna geçmez.</p>"
+      ]
+    },
+    {
+      "h2": "Aynı stub için iki dağıtım kanalı",
+      "body": [
+        "<p>AdOff, farklı siteler SDK’yı farklı şekilde yüklediği için aynı stub’ı iki kanal üzerinden gönderir:</p>",
+        "<ul><li><strong>Sayfa içi enjeksiyon.</strong> Hariç tutulmamış sitelerde, ana dünya betiği, oynatıcı başlatılmadan önce <code>window.google.ima</code> tanımlar; bu sayede paketlenmiş veya harici olarak yüklenen SDK, stub ile değiştirilir.</li><li><strong>Ağ yönlendirmesi.</strong> 42 Avrupa yayıcı etki alanı için, declarativeNetRequest kuralları, <code>ima3.js</code> ve <code>ima3_dai.js</code> isteklerini eklentiye dahil edilmiş stub dosyasına yönlendirir. Sayfa, Google SDK’sını düşündüğü şeyi yükler ve bunun yerine AdOff’ın SDK’sını alır.</li></ul>",
+        "<p>Her iki kanal da aynı sonuca ulaşır: Oyuncu, duyarlı bir SDK alır; izleyici, içerik alır.</p>"
+      ]
+    },
+    {
+      "h2": "Bu yaklaşımın ulaştığı ve ulaşmadığı yerler",
+      "body": [
+        "<p>Stub, istemci tarafında IMA tabanlı reklamları etkisiz hale getirir. Reklamlar, teslimat öncesinde video akışına kendiliğinden eklenen <a href=\"/server-side-ad-insertion-explained\">sunucu tarafı reklam ekleme (SSAI)</a> yöntemini etkilemez; bu durumda engellenecek bir SDK çağrısı bulunmaz. Kendi reklam hattını kullanan premium abonelik hizmetleri, oynatıcılarının çalışmaya devam etmesi için bilinçli olarak hariç tutulmuştur.</p>",
+        "<p>Ana video platformu, bunun için özel bir hattı da alır: Reklam zamanlaması, sayfanın okumasından önce oynatıcıdan çıkarılır ve kaçan her şey hızlı ileri sarılır.</p>"
+      ]
+    },
+    {
+      "h2": "Bu durumun reklam engelleme geleceğinin neden önemli olduğu",
+      "body": [
+        "<p>Reklam platformları, basit engelleyicilerin bunlarla başa çıkamaması nedeniyle doğrudan istemci tarafı SDK’larına ağırlık kaydırıyor. Oyuncuyu yormak yerine onu cevaplandıran bir yaklaşım, dayanıklıdır: her reklam URL’sini listelemeye değil, içeriğin devam etmesi için SDK’nın kendi sözleşmesine dayanır.</p>",
+        "<p>AdOff, Chrome, Firefox, Safari, Edge ve Opera için ücretsiz, hesapsız, Manifest V3 uzantısıdır ve video engelleme katmanı herkes için dahildir.</p>"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "IMA SDK’yi engellemek, onu değiştirmekle aynı mı?",
+      "a": "Hayır. Ağı düzeyinde engellemek, oynatıcıların içeriğin tekrar oynatılabileceğini belirten SDK sinyalini beklemesinden dolayı videoyun oynatılmasını genellikle engeller. Bunun yerine bir stub (sabitlenmiş kod) kullanmak, oynatıcının tamamen işlevsel kalmasını sağlarken hiçbir reklamın asla istenmesini engeller."
+    },
+    {
+      "q": "Takviye (stub), bir reklam isteği aldığında ne olur?",
+      "a": "Bu stub, oynatıcıların beklediği aynı API arayüzünü sunar. Reklamları başlatmak istendiğinde, hemen içerik yeniden oynatma (content-resume) olayını tetikler; böylece hiçbir reklam çekilmeden veya işlenmeden oynatma işlemi devam eder."
+    },
+    {
+      "q": "Bir IMA takvibi (stub), sunucu tarafı reklam ekleme (server-side ad insertion) ile çalışır mı?",
+      "a": "Hayır. SSAI (Sunucu Tarafı İçerik Eklemesi) ile reklamlar, teslimat öncesinde sunucu tarafında video akışına eklenir; bu nedenle istemci tarafında SDK çağrısı yapılmaz ve engellenecek bir nokta yoktur. Sunucu tarafı eklemesi, farklı önlemler gerektirir ve bir tarayıcı eklentisinin ele alamayacağı bir konudur."
+    },
+    {
+      "q": "Bu tür bir uzantıyı hangi tarayıcılar çalıştırabilir?",
+      "a": "AdOff, Manifest V3 üzerine inşa edilmiştir ve Chrome, Firefox, Safari, Edge ile Opera’da çalışır. IMA nötrleştirme katmanı, herhangi bir hesap veya kaydolma gerektirmeksizin ücretsiz sürümde dahil edilmiştir."
+    },
+    {
+      "q": "Bir site, SDK’nın değiştirildiğini algılayabilir mi?",
+      "a": "Bu, gizlilik katmanının (stealth layer) tam olarak amacıdır: tuzak yemi (bait) sahteciliği ve fetch/XHR engelleme, ortamı anti-reklam engelleme betiklerine sıradan bir ortam gibi gösterir. Platformlar tespit yöntemlerini sık sık değiştirdiğinden hiçbir yöntem kalıcı değildir."
+    }
+  ],
+  "related": [
+    {
+      "href": "/streaming-ad-blocking",
+      "text": "Akış reklam engelleme: tam rehber"
+    },
+    {
+      "href": "/preroll-midroll-postroll-explained",
+      "text": "Ön-sarma, orta-sarma, son-sarma: video reklam formatları açıklanıyor"
+    },
+    {
+      "href": "/how-it-works",
+      "text": "AdOff’in nasıl çalıştığı: katman katman"
+    }
+  ],
+  "cta": {
+    "h3": "Gerçek oynatıcılarda nasıl işlediğini görün",
+    "p": "AdOff, reklam SDK’sını anında devam ettirme için bir stub ile değiştirir; herkes için ücretsizdir, hesap gerektirmez.",
+    "btn": "AdOff’i ücretsiz kurun"
+  },
+  "report": null,
+  "date_published": "2026-09-20",
+  "date_modified": "2026-09-20"
+}
